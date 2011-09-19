@@ -170,10 +170,8 @@ public class MainDelegate implements Launcher {
             sling = new Sling(notifiable, logger, resProvider, props) {
 
                 // overwrite the loadPropertiesOverride method to inject the
-                // command
-                // line arguments unconditionally. These will not be persisted
-                // in any
-                // properties file, though
+                // command line arguments unconditionally. These will not be
+                // persisted in any properties file, though
                 protected void loadPropertiesOverride(
                         Map<String, String> properties) {
                     if (commandLine != null) {
@@ -207,6 +205,16 @@ public class MainDelegate implements Launcher {
     private static void parseCommandLine(Map<String, String> args,
             Map<String, String> props) {
 
+        /*
+         * NOTE: We expect command line args to be suitable to use as
+         * properties to launch Sling. Any standalone Java application
+         * command line args have to be translated into Sling launcher
+         * properties by the Main class. For deployment of the Launchpad
+         * JAR into older launchers we keep converting existing command
+         * line args for now. New command line arguments must solely be
+         * known and converted in the Main class and not here.
+         */
+
         for (Entry<String, String> arg : args.entrySet()) {
             if (arg.getKey().length() == 1) {
                 String value = arg.getValue();
@@ -216,16 +224,7 @@ public class MainDelegate implements Launcher {
                             terminate("Missing log level value", 1);
                             continue;
                         }
-                        try {
-                            int logLevel = Integer.parseInt(value);
-                            value = toLogLevel(logLevel);
-                        } catch (NumberFormatException nfe) {
-                            // might be a log level string
-                            value = checkLogLevel(value);
-                        }
-                        if (value != null) {
-                            props.put(PROP_LOG_LEVEL, value);
-                        }
+                        props.put(PROP_LOG_LEVEL, value);
                         break;
 
                     case 'f':
@@ -273,37 +272,23 @@ public class MainDelegate implements Launcher {
                         break;
                 }
             } else {
-                terminate("Unrecognized option " + arg.getKey(), 1);
+                info("Setting " + arg.getKey() + "=" + arg.getValue(), null);
+                props.put(arg.getKey(), arg.getValue());
             }
         }
-    }
-
-    /** Converts the loglevel code to a loglevel string name */
-    private static String toLogLevel(int level) {
-        if (level >= 0 && level < logLevels.length) {
-            return logLevels[level];
-        }
-
-        terminate("Bad log level: " + level, 1);
-        return null;
-    }
-
-    /**
-     * Verifies the log level is one of the known values, returns null otherwise
-     */
-    private static String checkLogLevel(String level) {
-        for (int i = 0; i < logLevels.length; i++) {
-            if (logLevels[i].equalsIgnoreCase(level)) {
-                return logLevels[i];
-            }
-        }
-
-        terminate("Bad log level: " + level, 1);
-        return null;
     }
 
     /** Return the log level code for the string */
     private static int toLogLevelInt(String level, int defaultLevel) {
+        try {
+            int logLevel = Integer.parseInt(level);
+            if (logLevel >= 0 && logLevel < logLevels.length) {
+                return logLevel;
+            }
+        } catch (NumberFormatException nfe) {
+            // might be a log level string
+        }
+
         for (int i = 0; i < logLevels.length; i++) {
             if (logLevels[i].equalsIgnoreCase(level)) {
                 return i;

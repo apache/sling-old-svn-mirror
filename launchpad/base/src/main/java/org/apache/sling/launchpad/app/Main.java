@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Loader;
@@ -35,7 +36,7 @@ import org.apache.sling.launchpad.base.shared.SharedConstants;
 /**
  * The <code>Main</code> is the externally visible Standalone Java Application
  * launcher for Sling. Please refer to the full description <i>The Sling
- * Launchpad</i> on the Sling Wiki for a full description of this class.
+ * Launchpad</i> on the Sling Web Site for a full description of this class.
  * <p>
  * Logging goes to standard output for informational messages and to standard
  * error for error messages.
@@ -43,54 +44,252 @@ import org.apache.sling.launchpad.base.shared.SharedConstants;
  * This class goes into the secondary artifact with the classifier <i>app</i> to
  * be used as the main class when starting the Java Application.
  *
- * @see <a href="http://cwiki.apache.org/SLING/the-sling-launchpad.html">The
+ * @see <a href="http://sling.apache.org/site/the-sling-launchpad.html">The
  *      Sling Launchpad</a>
  */
-public class Main extends Thread implements Notifiable {
+public class Main {
 
     // The name of the environment variable to consult to find out
     // about sling.home
     private static final String ENV_SLING_HOME = "SLING_HOME";
 
+    /**
+     * The name of the configuration property indicating the
+     * {@link ControlAction} to be taken in the {@link #doControlAction()}
+     * method.
+     */
+    protected static final String PROP_CONTROL_ACTION = "sling.control.action";
+
+    /** The Sling configuration property name setting the initial log level */
+    private static final String PROP_LOG_LEVEL = "org.apache.sling.commons.log.level";
+
+    /** The Sling configuration property name setting the initial log file */
+    private static final String PROP_LOG_FILE = "org.apache.sling.commons.log.file";
+
+    /**
+     * The configuration property setting the port on which the HTTP service
+     * listens
+     */
+    private static final String PROP_PORT = "org.osgi.service.http.port";
+
+    /**
+     * The main entry point to the Sling Launcher Standalone Java Application.
+     * This method is generally only called by the Java VM to launch Sling.
+     *
+     * @param args The command line arguments supplied when starting the Sling
+     *            Launcher through the Java VM.
+     */
     public static void main(String[] args) {
-        new Main(args);
-    }
-
-    private final Map<String, String> commandLineArgs;
-
-    private final String slingHome;
-
-    private final Loader loader;
-
-    private Launcher sling;
-
-    private Main(String[] args) {
-
-        // set the thread name
-        super("Apache Sling Terminator");
-
-        this.commandLineArgs = parseCommandLine(args);
+        final Map<String, String> rawArgs = parseCommandLine(args);
 
         // support usage first
-        doHelp();
+        if (doHelp(rawArgs)) {
+            System.exit(0);
+        }
 
-        // check for control commands (might exit)
-        doControlCommand();
+        final Map<String, String> props = convertCommandLineArgs(rawArgs);
+        if (props == null) {
+            System.exit(1);
+        }
+
+        Main main = new Main(props);
+
+        // check for control commands
+        int rc = main.doControlAction();
+        if (rc >= 0) {
+            System.exit(rc);
+        }
+
+        // finally start Sling
+        main.doStart();
+    }
+
+    /**
+     * The map of command line arguments where the keys are the actual
+     * property names as known to the OSGi Framework and its installed
+     * bundles.
+     */
+    private final Map<String, String> commandLineArgs;
+
+    /**
+     * The shutdown hook installed into the Java VM after Sling has been
+     * started. The hook is removed again when Sling is being shut down
+     * or the {@link Notified notifier} is notified of the framework shutdown.
+     *
+     * @see #addShutdownHook()
+     * @see #removeShutdownHook()
+     */
+    private Thread shutdownHook;
+
+    /**
+     * The absolute path to the home directory of the launched Sling
+     * application. This corresponds to the value of the <code>sling.home</code>
+     * framework property.
+     *
+     * @see #getSlingHome(Map)
+     */
+    private String slingHome;
+
+    /**
+     * The {@link Loader} class used to create the Framework class loader and
+     * to launch the framework.
+     */
+    private Loader loader;
+
+    /**
+     * The actual launcher accessed through the {@link #loader} to launch
+     * the OSGi Framework.
+     */
+    private Launcher sling;
+
+    /**
+     * Creates an instance of this main loader class. The provided arguments are
+     * used to configure the OSGi framework being launched with the
+     * {@link #startSling(URL)} method.
+     *
+     * @param args The map of configuration properties to be supplied to the
+     *            OSGi framework. The keys in this map are assumed to be usefull
+     *            without translation to the launcher and the OSGi Framework. If
+     *            this parameter is <code>null</code> and empty map without
+     *            configuration is assumed.
+     */
+    protected Main(Map<String, String> args) {
+        this.commandLineArgs = (args == null)
+                ? new HashMap<String, String>()
+                : args;
+    }
+
+    /**
+     * After instantiating this class, this method may be called to help with
+     * the communication with a running Sling instance. To setup this
+     * communication the configuration properties supplied to the constructor
+     * are evaluated as follows:
+     * <p>
+     * <table>
+     * <tr>
+     * <td><code>j</code></td>
+     * <td>Specifies the socket to use for the control connection. This
+     * specification is of the form <i>host:port</i> where the host can be a
+     * host name or IP Address and may be omitted (along with the separating
+     * colon) and port is just the numberic port number at which to listen. The
+     * default is <i>localhost:63000</i>. It is suggested to not use an
+     * externally accessible interface for security reasons because there is no
+     * added security on this control channel for now.</td>
+     * </tr>
+     * <tr>
+     * <td><code>{@value #PROP_CONTROL_ACTION}</code></td>
+     * <td>The actual action to execute:
+     * <ul>
+     * <b>start</b> -- Start the listener on the configured socket and expect
+     * commands there. This action is useful only when launching the Sling
+     * application since this action helps manage a running system.
+     * </ul>
+     * <ul>
+     * <b>stop</b> -- Connects to the listener running on the configured socket
+     * and send the command to terminate the Sling Application. If this command
+     * is used, it is expected the Sling Application will not start.
+     * </ul>
+     * <ul>
+     * <b>status</b> -- Connects to the listener running on the configured
+     * socket and query about its status. If this command is used, it is
+     * expected the Sling Application will not start.
+     * </ul>
+     * </td>
+     * </tr>
+     * </table>
+     * <p>
+     * After this method has executed the <code>j</code> and
+     * {@link #PROP_CONTROL_ACTION} properties have been removed from the
+     * configuration properties.
+     * <p>
+     * While the {@link #doStart()} and {@link #doStop()} methods may be called
+     * multiple times this method should only be called once after creating this
+     * class's instance.
+     *
+     * @return An code indicating whether the Java VM is expected to be
+     *         terminated or not. If <code>-1</code> is returned, the VM should
+     *         continue as intended, maybe starting the Sling Application. This
+     *         code is returned if the start action (or no action at all) is
+     *         supplied. Otherwise the VM should terminate with the returned
+     *         code as its exit code. For the stop action, this will be zero. For
+     *         the status action, this will be a LSB compliant code for daemon
+     *         status check: 0 (application running), 1 (Programm Dead), 3
+     *         (Programm Not Running), 4 (Unknown Problem).
+     */
+    protected int doControlAction() {
+        String commandSocketSpec = commandLineArgs.remove("j");
+        if ("j".equals(commandSocketSpec)) {
+            commandSocketSpec = null;
+        }
+
+        ControlAction action = getControlAction();
+        if (action != null) {
+            ControlListener sl = new ControlListener(this, commandSocketSpec);
+            switch (action) {
+                case START:
+                    sl.listen();
+                    break;
+                case STATUS:
+                    return sl.statusServer();
+                case STOP:
+                    sl.shutdownServer();
+                    return 0;
+                default:
+                    error("Unsupported control action: " + action, null);
+            }
+        }
+
+        return -1;
+    }
+
+    private ControlAction getControlAction() {
+        Object action = this.commandLineArgs.remove(PROP_CONTROL_ACTION);
+        if (action != null) {
+            if (action instanceof ControlAction) {
+                return (ControlAction) action;
+            }
+
+            try {
+                return ControlAction.valueOf(action.toString());
+            } catch (IllegalArgumentException iae) {
+                error("Illegal control action value: " + action, null);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Starts the application with the configuration supplied with the
+     * configuration properties when this instance has been created.
+     * <p>
+     * Calling this method multiple times before calling {@link #doStop()} will
+     * cause a message to be printed and <code>true</code> being returned.
+     *
+     * @return <code>true</code> if startup was successfull or the application
+     *         is considered to be started already. Otherwise an error message
+     *         has been logged and <code>false</code> is returned.
+     */
+    protected boolean doStart() {
+
+        // prevent duplicate start
+        if (this.slingHome != null) {
+            info("Apache Sling has already been started", null);
+            return true;
+        }
 
         // sling.home from the command line or system properties, else default
-        this.slingHome = getSlingHome(commandLineArgs);
+        String slingHome = getSlingHome(commandLineArgs);
         File slingHomeFile = new File(slingHome);
-        if (slingHomeFile.isAbsolute()) {
-            info("Starting Apache Sling in " + slingHome, null);
-        } else {
-            info("Starting Apache Sling in " + slingHome + " ("
-                + slingHomeFile.getAbsolutePath() + ")", null);
+        if (!slingHomeFile.isAbsolute()) {
+            slingHome = slingHomeFile.getAbsolutePath();
         }
+        info("Starting Apache Sling in " + slingHome, null);
+        this.slingHome = slingHome;
 
         // The Loader helper
         Loader loaderTmp = null;
         try {
-            loaderTmp = new Loader(slingHome) {
+            loaderTmp = new Loader(slingHomeFile) {
                 @Override
                 protected void info(String msg) {
                     Main.info(msg, null);
@@ -98,126 +297,61 @@ public class Main extends Thread implements Notifiable {
             };
         } catch (IllegalArgumentException iae) {
             startupFailure(iae.getMessage(), null);
+            return false;
         }
         this.loader = loaderTmp;
 
-        Runtime.getRuntime().addShutdownHook(this);
-
         // ensure up-to-date launcher jar
-        startSling(getClass().getResource(
+        return startSling(getClass().getResource(
             SharedConstants.DEFAULT_SLING_LAUNCHER_JAR));
     }
 
-    // ---------- Shutdown support for control listener and shutdown hook
+    /**
+     * Maybe called by the application to cause the Sling Application to
+     * properly terminate by stopping the OSGi Framework.
+     * <p>
+     * After calling this method the Sling Application can be started again
+     * by calling the {@link #doStart()} method.
+     * <p>
+     * Calling this method multiple times without calling the {@link #doStart()}
+     * method in between has no effect after the Sling Application has been
+     * terminated.
+     */
+    protected void doStop() {
+        this.stopSling();
+    }
 
-    void shutdown() {
+    private void addShutdownHook() {
+        if (this.shutdownHook == null) {
+            this.shutdownHook = new Thread(new ShutdownHook(),
+                "Apache Sling Terminator");
+            Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+        }
+    }
+
+    private void removeShutdownHook() {
         // remove the shutdown hook, will fail if called from the
         // shutdown hook itself. Otherwise this prevents shutdown
         // from being called again
-        try {
-            Runtime.getRuntime().removeShutdownHook(this);
-        } catch (Throwable t) {
-            // don't care for problems removing the hook
-        }
+        Thread shutdownHook = this.shutdownHook;
+        this.shutdownHook = null;
 
-        // now really shutdown sling
-        if (sling != null) {
-            info("Stopping Apache Sling", null);
-            sling.stop();
-        }
-    }
-
-    // ---------- Notifiable interface
-
-    /**
-     * The framework has been stopped by calling the <code>Bundle.stop()</code>
-     * on the system bundle. This actually terminates the Sling Standalone
-     * application.
-     */
-    public void stopped() {
-        /**
-         * This method is called if the framework is stopped from within by
-         * calling stop on the system bundle or if the framework is stopped
-         * because the VM is going down and the shutdown hook has initated the
-         * shutdown In any case we ensure the reference to the framework is
-         * removed and remove the shutdown hook (but don't care if that fails).
-         */
-
-        info("Apache Sling has been stopped", null);
-
-        // clear the reference to the framework
-        sling = null;
-
-        // remove the shutdown hook, the framework has terminated and
-        // we do not need to do anything else
-        try {
-            Runtime.getRuntime().removeShutdownHook(this);
-        } catch (Throwable t) {
-            // don't care for problems removing the hook
-        }
-    }
-
-    /**
-     * The framework has been stopped with the intent to be restarted by calling
-     * either of the <code>Bundle.update</code> methods on the system bundle.
-     * <p>
-     * If an <code>InputStream</code> was provided, this has been copied to a
-     * temporary file, which will be used in place of the existing launcher jar
-     * file.
-     *
-     * @param updateFile The temporary file to replace the existing launcher jar
-     *            file. If <code>null</code> the existing launcher jar will be
-     *            used again.
-     */
-    public void updated(File updateFile) {
-
-        // clear the reference to the framework
-        sling = null;
-
-        // ensure we have a VM as clean as possible
-        loader.cleanupVM();
-
-        if (updateFile == null) {
-
-            info("Restarting Framework and Apache Sling", null);
-            startSling(null);
-
-        } else {
-
-            info("Restarting Framework with update from " + updateFile, null);
+        if (shutdownHook != null) {
             try {
-                startSling(updateFile.toURI().toURL());
-            } catch (MalformedURLException mue) {
-                error("Cannot get URL for file " + updateFile, mue);
-            } finally {
-                updateFile.delete();
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (Throwable t) {
+                // don't care for problems removing the hook
             }
-
         }
     }
 
-    // --------- Thread
-
-    /**
-     * Called when the Java VM is being terminiated, for example because the
-     * KILL signal has been sent to the process. This method calls stop on the
-     * launched Sling instance to terminate the framework before returning.
-     */
-    @Override
-    public void run() {
-        info("Java VM is shutting down", null);
-        shutdown();
-    }
-
-    // ---------- internal
-
-    private void startSling(URL launcherJar) {
+    private boolean startSling(final URL launcherJar) {
         if (launcherJar != null) {
             try {
-                info("Checking launcher JAR in folder " + slingHome, null);
                 loader.installLauncherJar(launcherJar);
             } catch (IOException ioe) {
                 startupFailure("Failed installing " + launcherJar, ioe);
+                return false;
             }
         } else {
             info("No Launcher JAR to install", null);
@@ -229,13 +363,14 @@ public class Main extends Thread implements Notifiable {
         } catch (IllegalArgumentException iae) {
             startupFailure("Failed loading Sling class "
                 + SharedConstants.DEFAULT_SLING_MAIN, iae);
+            return false;
         }
 
         if (object instanceof Launcher) {
 
             // configure the launcher
             Launcher sling = (Launcher) object;
-            sling.setNotifiable(this);
+            sling.setNotifiable(new Notified());
             sling.setCommandLine(commandLineArgs);
             sling.setSlingHome(slingHome);
 
@@ -244,63 +379,34 @@ public class Main extends Thread implements Notifiable {
             if (sling.start()) {
                 info("Startup completed", null);
                 this.sling = sling;
-            } else {
-                error("There was a problem launching Apache Sling", null);
+                addShutdownHook();
+                return true;
             }
+
+            error("There was a problem launching Apache Sling", null);
         }
+
+        return false;
     }
 
-    /**
-     * Parses the command line arguments into a map of strings indexed by
-     * strings. This method suppports single character option names only at the
-     * moment. Each pair of an option name and its value is stored into the
-     * map. If a single dash '-' character is encountered the rest of the command
-     * line are interpreted as option names and are stored in the map unmodified
-     * as entries with the same key and value.
-     * <table>
-     * <tr><th>Command Line</th><th>Mapping</th></tr>
-     * <tr><td>x</td><td>x -> x</td></tr>
-     * <tr><td>-y z</td><td>y -> z</td></tr>
-     * <tr><td>-yz</td><td>y -> z</td></tr>
-     * <tr><td>-y -z</td><td>y -> y, z -> z</td></tr>
-     * <tr><td>-y x - -z a</td><td>y -> x, -z -> -z, a -> a</td></tr>
-     * </table>
-     *
-     * @param args The command line to parse
-     *
-     * @return The map of command line options and their values
-     */
-    static Map<String, String> parseCommandLine(String[] args) {
-        Map<String, String> commandLine = new HashMap<String, String>();
-        boolean readUnparsed = false;
-        for (int argc = 0; args != null && argc < args.length; argc++) {
-            String arg = args[argc];
+    void stopSling() {
+        removeShutdownHook();
 
-            if (readUnparsed) {
-                commandLine.put(arg, arg);
-            } else if (arg.startsWith("-")) {
-                if (arg.length() == 1) {
-                   readUnparsed = true;
-                } else {
-                    String key = String.valueOf(arg.charAt(1));
-                    if (arg.length() > 2) {
-                        commandLine.put(key, arg.substring(2));
-                    } else {
-                        argc++;
-                        if (argc < args.length
-                            && (args[argc].equals("-") || !args[argc].startsWith("-"))) {
-                            commandLine.put(key, args[argc]);
-                        } else {
-                            commandLine.put(key, key);
-                            argc--;
-                        }
-                    }
-                }
-            } else {
-                commandLine.put(arg, arg);
-            }
+        // now really shutdown sling
+        if (this.sling != null) {
+            info("Stopping Apache Sling", null);
+            this.sling.stop();
+            this.sling = null;
         }
-        return commandLine;
+
+        // clean and VM caches
+        if (this.loader != null) {
+            this.loader.cleanupVM();
+            this.loader = null;
+        }
+
+        // further cleanup
+        this.slingHome = null;
     }
 
     /**
@@ -319,7 +425,7 @@ public class Main extends Thread implements Notifiable {
     private static String getSlingHome(Map<String, String> commandLine) {
         String source = null;
 
-        String slingHome = commandLine.get("c");
+        String slingHome = commandLine.get(SharedConstants.SLING_HOME);
         if (slingHome != null) {
 
             source = "command line";
@@ -354,18 +460,17 @@ public class Main extends Thread implements Notifiable {
     private void startupFailure(String message, Throwable cause) {
         error("Launcher JAR access failure: " + message, cause);
         error("Shutting Down", null);
-        System.exit(1);
     }
 
     // ---------- logging
 
     // emit an informational message to standard out
-    static void info(String message, Throwable t) {
-        log(System.out, "*INFO*", message, t);
+    protected static void info(String message, Throwable t) {
+        log(System.out, "*INFO *", message, t);
     }
 
     // emit an error message to standard err
-    static void error(String message, Throwable t) {
+    protected static void error(String message, Throwable t) {
         log(System.err, "*ERROR*", message, t);
     }
 
@@ -391,23 +496,74 @@ public class Main extends Thread implements Notifiable {
         if (t != null) {
             t.printStackTrace(new PrintStream(out) {
                 @Override
-                public void println(String x) {
-                    synchronized (this) {
-                        print(linePrefix);
-                        super.println(x);
-                        flush();
-                    }
+                public void print(String x) {
+                    super.print(linePrefix);
+                    super.print(x);
                 }
             });
         }
     }
 
-    /** prints a simple usage plus optional error message and exists */
-    private void doHelp() {
-        if (commandLineArgs.remove("h") != null) {
+    /**
+     * Parses the command line arguments into a map of strings indexed by
+     * strings. This method suppports single character option names only at the
+     * moment. Each pair of an option name and its value is stored into the
+     * map. If a single dash '-' character is encountered the rest of the command
+     * line are interpreted as option names and are stored in the map unmodified
+     * as entries with the same key and value.
+     * <table>
+     * <tr><th>Command Line</th><th>Mapping</th></tr>
+     * <tr><td>x</td><td>x -> x</td></tr>
+     * <tr><td>-y z</td><td>y -> z</td></tr>
+     * <tr><td>-yz</td><td>y -> z</td></tr>
+     * <tr><td>-y -z</td><td>y -> y, z -> z</td></tr>
+     * <tr><td>-y x - -z a</td><td>y -> x, -z -> -z, a -> a</td></tr>
+     * </table>
+     *
+     * @param args The command line to parse
+     *
+     * @return The map of command line options and their values
+     */
+    // default accessor to enable unit tests wihtout requiring reflection
+    static Map<String, String> parseCommandLine(String... args) {
+        Map<String, String> commandLine = new HashMap<String, String>();
+        boolean readUnparsed = false;
+        for (int argc = 0; args != null && argc < args.length; argc++) {
+            String arg = args[argc];
+
+            if (readUnparsed) {
+                commandLine.put(arg, arg);
+            } else if (arg.startsWith("-")) {
+                if (arg.length() == 1) {
+                   readUnparsed = true;
+                } else {
+                    String key = String.valueOf(arg.charAt(1));
+                    if (arg.length() > 2) {
+                        commandLine.put(key, arg.substring(2));
+                    } else {
+                        argc++;
+                        if (argc < args.length
+                            && (args[argc].equals("-") || !args[argc].startsWith("-"))) {
+                            commandLine.put(key, args[argc]);
+                        } else {
+                            commandLine.put(key, key);
+                            argc--;
+                        }
+                    }
+                }
+            } else {
+                commandLine.put(arg, arg);
+            }
+        }
+        return commandLine;
+    }
+
+    /** prints a simple usage plus optional error message */
+    private static boolean doHelp(Map<String, String> args) {
+        if (args.remove("h") != null) {
             System.out.println("usage: "
                 + Main.class.getName()
-                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -a address ] [ -p port ] [ -h ]");
+                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -i launchpadhome ] [ -a address ] [ -p port ] [ -h ]");
 
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Apache Sling (uses -j)");
@@ -416,29 +572,183 @@ public class Main extends Thread implements Notifiable {
             System.out.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
             System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
             System.out.println("    -c slinghome  the sling context directory (default sling)");
+            System.out.println("    -i launchpadhome  the launchpad directory (default slinghome)");
             System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
             System.out.println("    -p port       the port to listen to (default 8080)");
             System.out.println("    -h            prints this usage message");
 
-            System.exit(0);
+            return true;
+        }
+        return false;
+    }
+
+    // default accessor to enable unit tests wihtout requiring reflection
+    static Map<String, String> convertCommandLineArgs(
+            Map<String, String> rawArgs) {
+        final HashMap<String, String> props = new HashMap<String, String>();
+        boolean errorArg = false;
+        for (Entry<String, String> arg : rawArgs.entrySet()) {
+            if (arg.getKey().length() == 1) {
+                String value = arg.getValue();
+                switch (arg.getKey().charAt(0)) {
+                    case 'j':
+                        // copy control connection spec unchecked
+                        props.put(arg.getKey(), arg.getValue());
+                        break;
+
+                    case 'l':
+                        if (value == arg.getKey()) {
+                            errorArg("-l", "Missing log level value");
+                            errorArg = true;
+                            continue;
+                        }
+                        props.put(PROP_LOG_LEVEL, value);
+                        break;
+
+                    case 'f':
+                        if (value == arg.getKey()) {
+                            errorArg("-f", "Missing log file value");
+                            errorArg = true;
+                            continue;
+                        } else if ("-".equals(value)) {
+                            value = "";
+                        }
+                        props.put(PROP_LOG_FILE, value);
+                        break;
+
+                    case 'c':
+                        if (value == arg.getKey()) {
+                            errorArg("-c", "Missing directory value");
+                            errorArg = true;
+                            continue;
+                        }
+                        props.put(SharedConstants.SLING_HOME, value);
+                        break;
+
+                    case 'i':
+                        if (value == arg.getKey()) {
+                            errorArg("-i", "Missing launchpad directory value");
+                            errorArg = true;
+                            continue;
+                        }
+                        props.put(SharedConstants.SLING_LAUNCHPAD, value);
+                        break;
+
+                    case 'a':
+                        if (value == arg.getKey()) {
+                            errorArg("-a", "Missing address value");
+                            errorArg = true;
+                            continue;
+                        }
+                        info(
+                            "Setting the address to bind to is not supported, binding to 0.0.0.0",
+                            null);
+                        break;
+
+                    case 'p':
+                        if (value == arg.getKey()) {
+                            errorArg("-p", "Missing port value");
+                            errorArg = true;
+                            continue;
+                        }
+                        try {
+                            // just to verify it is a number
+                            Integer.parseInt(value);
+                            props.put(PROP_PORT, value);
+                        } catch (RuntimeException e) {
+                            errorArg("-p", "Bad port: " + value);
+                            errorArg = true;
+                        }
+                        break;
+
+                    default:
+                        errorArg("-" + arg.getKey(), "Unrecognized option");
+                        errorArg = true;
+                        break;
+                }
+            } else if ("start".equals(arg.getKey())
+                || "stop".equals(arg.getKey()) || "status".equals(arg.getKey())) {
+                props.put(arg.getKey(), arg.getValue());
+            } else {
+                errorArg(arg.getKey(), "Unrecognized option");
+                errorArg = true;
+            }
+        }
+        return errorArg ? null : props;
+    }
+
+    private static void errorArg(String option, String message) {
+        error(String.format("%s: %s (use -h for more information)", option,
+            message), null);
+    }
+
+    private class ShutdownHook implements Runnable {
+        public void run() {
+            info("Java VM is shutting down", null);
+            Main.this.stopSling();
         }
     }
 
-    private void doControlCommand() {
-        String commandSocketSpec = commandLineArgs.remove("j");
-        if ("j".equals(commandSocketSpec)) {
-            commandSocketSpec = null;
+    private class Notified implements Notifiable {
+
+        /**
+         * The framework has been stopped by calling the
+         * <code>Bundle.stop()</code> on the system bundle. This actually
+         * terminates the Sling Standalone application.
+         */
+        public void stopped() {
+            /**
+             * This method is called if the framework is stopped from within by
+             * calling stop on the system bundle or if the framework is stopped
+             * because the VM is going down and the shutdown hook has initated
+             * the shutdown In any case we ensure the reference to the framework
+             * is removed and remove the shutdown hook (but don't care if that
+             * fails).
+             */
+
+            Main.info("Apache Sling has been stopped", null);
+
+            Main.this.sling = null;
+            Main.this.stopSling();
         }
 
-        ControlListener sl = new ControlListener(this, commandSocketSpec);
-        if (commandLineArgs.remove(ControlListener.COMMAND_STOP) != null) {
-            sl.shutdownServer();
-            System.exit(0);
-        } else if (commandLineArgs.remove(ControlListener.COMMAND_STATUS) != null) {
-            final int status = sl.statusServer();
-            System.exit(status);
-        } else if (commandLineArgs.remove("start") != null) {
-            sl.listen();
+        /**
+         * The framework has been stopped with the intent to be restarted by
+         * calling either of the <code>Bundle.update</code> methods on the
+         * system bundle.
+         * <p>
+         * If an <code>InputStream</code> was provided, this has been copied to
+         * a temporary file, which will be used in place of the existing
+         * launcher jar file.
+         *
+         * @param updateFile The temporary file to replace the existing launcher
+         *            jar file. If <code>null</code> the existing launcher jar
+         *            will be used again.
+         */
+        public void updated(File updateFile) {
+
+            Main.this.sling = null;
+            Main.this.stopSling();
+
+            if (updateFile == null) {
+
+                Main.info("Restarting Framework and Apache Sling", null);
+                Main.this.startSling(null);
+
+            } else {
+
+                Main.info(
+                    "Restarting Framework with update from " + updateFile, null);
+                try {
+                    Main.this.startSling(updateFile.toURI().toURL());
+                } catch (MalformedURLException mue) {
+                    Main.error("Cannot get URL for file " + updateFile, mue);
+                } finally {
+                    updateFile.delete();
+                }
+
+            }
         }
     }
+
 }
