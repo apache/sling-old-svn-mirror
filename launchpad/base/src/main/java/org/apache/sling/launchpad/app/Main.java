@@ -60,6 +60,14 @@ public class Main {
      */
     protected static final String PROP_CONTROL_ACTION = "sling.control.action";
 
+    /**
+     * The name of the configuration property indicating the socket to use for
+     * the control connection. The value of this property is either just a port
+     * number (in which case the host is assumed to be <code>localhost</code>)
+     * or a host name (or IP address) and port number separated by a colon.
+     */
+    protected static final String PROP_CONTROL_SOCKET = "sling.control.socket";
+
     /** The Sling configuration property name setting the initial log level */
     private static final String PROP_LOG_LEVEL = "org.apache.sling.commons.log.level";
 
@@ -167,7 +175,7 @@ public class Main {
      * <p>
      * <table>
      * <tr>
-     * <td><code>j</code></td>
+     * <td><code>{@value #PROP_CONTROL_SOCKET}</code></td>
      * <td>Specifies the socket to use for the control connection. This
      * specification is of the form <i>host:port</i> where the host can be a
      * host name or IP Address and may be omitted (along with the separating
@@ -217,14 +225,10 @@ public class Main {
      *         (Programm Not Running), 4 (Unknown Problem).
      */
     protected int doControlAction() {
-        String commandSocketSpec = commandLineArgs.remove("j");
-        if ("j".equals(commandSocketSpec)) {
-            commandSocketSpec = null;
-        }
-
         ControlAction action = getControlAction();
         if (action != null) {
-            ControlListener sl = new ControlListener(this, commandSocketSpec);
+            ControlListener sl = new ControlListener(this,
+                commandLineArgs.remove(PROP_CONTROL_SOCKET));
             switch (action) {
                 case START:
                     sl.listen();
@@ -592,8 +596,12 @@ public class Main {
                 String value = arg.getValue();
                 switch (arg.getKey().charAt(0)) {
                     case 'j':
-                        // copy control connection spec unchecked
-                        props.put(arg.getKey(), arg.getValue());
+                        if (value == arg.getKey()) {
+                            errorArg("-j", "Missing host:port value");
+                            errorArg = true;
+                            continue;
+                        }
+                        props.put(PROP_CONTROL_SOCKET, value);
                         break;
 
                     case 'l':
