@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.servlets.get.impl;
+package org.apache.sling.servlets.compat.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;

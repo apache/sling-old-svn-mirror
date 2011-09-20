@@ -143,6 +143,7 @@
         <module>bundles/servlets/resolver</module>
         <module>bundles/servlets/get</module>
         <module>bundles/servlets/post</module>
+        <module>bundles/servlets/compat</module>
 
         <!-- Scripting Support -->
         <module>bundles/scripting/api</module>
