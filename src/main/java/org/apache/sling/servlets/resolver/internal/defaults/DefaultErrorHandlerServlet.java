@@ -70,7 +70,7 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
         }
 
         // start the response message
-        PrintWriter pw = sendIntro((HttpServletResponse) res, statusCode,
+        final PrintWriter pw = sendIntro((HttpServletResponse) res, statusCode,
             statusMessage, requestUri, servletName);
 
         // write the exception message
@@ -79,7 +79,7 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
 
         // dump the stack trace
         if (req.getAttribute(SlingConstants.ERROR_EXCEPTION) instanceof Throwable) {
-            Throwable throwable = (Throwable) req.getAttribute(SlingConstants.ERROR_EXCEPTION);
+            final Throwable throwable = (Throwable) req.getAttribute(SlingConstants.ERROR_EXCEPTION);
             pw.println("<h3>Exception:</h3>");
             pw.println("<pre>");
             pw.flush();
@@ -90,7 +90,7 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
 
         // dump the request progress tracker
         if (req instanceof SlingHttpServletRequest) {
-            RequestProgressTracker tracker = ((SlingHttpServletRequest) req).getRequestProgressTracker();
+            final RequestProgressTracker tracker = ((SlingHttpServletRequest) req).getRequestProgressTracker();
             pw.println("<h3>Request Progress:</h3>");
             pw.println("<pre>");
             pw.flush();
@@ -135,15 +135,18 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
      * Sets the response status and content type header and starts the the
      * response HTML text with the header, and an introductory phrase.
      */
-    private PrintWriter sendIntro(HttpServletResponse response, int statusCode,
-            String statusMessageIn, String requestUri, String servletName)
-            throws IOException {
+    private PrintWriter sendIntro(final HttpServletResponse response,
+            final int statusCode,
+            final String statusMessageIn,
+            final String requestUri,
+            final String servletName)
+    throws IOException {
 
         final String statusMessage = ResponseUtil.escapeXml(statusMessageIn);
 
         // set the status code and content type in the response
         final PrintWriter pw;
-        if(!response.isCommitted()) {
+        if (!response.isCommitted()) {
 
             response.reset();
             response.setStatus(statusCode);
@@ -154,7 +157,11 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
             pw.println("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">");
             pw.println("<html>");
             pw.println("<head>");
-            pw.println("<title>" + statusCode + " " + statusMessage + "</title>");
+            pw.print("<title>");
+            pw.print(statusCode);
+            pw.print(" ");
+            pw.print(statusMessage);
+            pw.println("</title>");
             pw.println("</head>");
             pw.println("<body>");
 
@@ -167,12 +174,18 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
 
         }
 
-        pw.println("<h1>" + statusMessage + " (" + statusCode + ")</h1>");
-        pw.print("<p>The requested URL " + ResponseUtil.escapeXml(requestUri)
-            + " resulted in an error");
+        pw.print("<h1>");
+        pw.print(statusMessage);
+        pw.print(" (");
+        pw.print(statusCode);
+        pw.println(")</h1>");
+        pw.print("<p>The requested URL ");
+        pw.print(ResponseUtil.escapeXml(requestUri));
+        pw.print(" resulted in an error");
 
         if (servletName != null) {
-            pw.print(" in " + servletName);
+            pw.print(" in ");
+            pw.print(ResponseUtil.escapeXml(servletName));
         }
 
         pw.println(".</p>");
@@ -184,11 +197,11 @@ public class DefaultErrorHandlerServlet extends GenericServlet {
      * Ends the response sending with an apache-style server line and closes the
      * body and html tags of the HTML response text.
      */
-    private void sendEpilogue(PrintWriter pw) {
+    private void sendEpilogue(final PrintWriter pw) {
         pw.println("<hr>");
-        pw.println("<address>" + getServletContext().getServerInfo()
-            + "</address>");
-
+        pw.print("<address>");
+        pw.print(ResponseUtil.escapeXml(getServletContext().getServerInfo()));
+        pw.println("</address>");
         pw.println("</body>");
         pw.println("</html>");
     }
