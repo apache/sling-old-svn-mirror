@@ -66,9 +66,11 @@ public class DefaultErrorHandler implements ErrorHandler {
      * This method logs error and does not write back and response data if the
      * response has already been committed.
      */
-    public void handleError(int status, String message,
-            SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws IOException {
+    public void handleError(final int status,
+            String message,
+            final SlingHttpServletRequest request,
+            final SlingHttpServletResponse response)
+    throws IOException {
 
         if (message == null) {
             message = "HTTP ERROR:" + String.valueOf(status);
@@ -90,16 +92,20 @@ public class DefaultErrorHandler implements ErrorHandler {
      * This method logs error and does not write back and response data if the
      * response has already been committed.
      */
-    public void handleError(Throwable throwable,
-            SlingHttpServletRequest request, SlingHttpServletResponse response)
-            throws IOException {
+    public void handleError(final Throwable throwable,
+            final SlingHttpServletRequest request,
+            final SlingHttpServletResponse response)
+    throws IOException {
         sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
             throwable.getMessage(), throwable, request, response);
     }
 
-    private void sendError(int status, String message, Throwable throwable,
-            HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    private void sendError(final int status,
+            final String message,
+            final Throwable throwable,
+            final HttpServletRequest request,
+            final HttpServletResponse response)
+    throws IOException {
 
         if (response.isCommitted()) {
             log.error(
@@ -108,7 +114,7 @@ public class DefaultErrorHandler implements ErrorHandler {
         } else {
 
             // error situation
-            String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
+            final String servletName = (String) request.getAttribute(ERROR_SERVLET_NAME);
             String requestURI = (String) request.getAttribute(ERROR_REQUEST_URI);
             if (requestURI == null) {
                 requestURI = request.getRequestURI();
@@ -121,7 +127,7 @@ public class DefaultErrorHandler implements ErrorHandler {
             response.setStatus(status);
             response.setContentType("text/html; charset=UTF-8");
 
-            PrintWriter pw = response.getWriter();
+            final PrintWriter pw = response.getWriter();
             pw.println("<html><head><title>");
             pw.println(ResponseUtil.escapeXml(message));
             pw.println("</title></head><body><h1>");
@@ -133,33 +139,39 @@ public class DefaultErrorHandler implements ErrorHandler {
                 pw.println("Internal error (no Exception to report)");
             }
             pw.println("</h1><p>");
-            pw.println("RequestURI="
-                + ResponseUtil.escapeXml(request.getRequestURI()));
+            pw.print("RequestURI=");
+            pw.println(ResponseUtil.escapeXml(request.getRequestURI()));
             if (servletName != null) {
-                pw.println("</p>Servlet=" + servletName + "<p>");
+                pw.println("</p><p>Servlet=");
+                pw.println(ResponseUtil.escapeXml(servletName));
             }
             pw.println("</p>");
 
             if (throwable != null) {
+                final PrintWriter escapingWriter = new PrintWriter(
+                        ResponseUtil.getXmlEscapingWriter(pw));
                 pw.println("<h3>Exception stacktrace:</h3>");
                 pw.println("<pre>");
-                throwable.printStackTrace(pw);
+                pw.flush();
+                throwable.printStackTrace(escapingWriter);
+                escapingWriter.flush();
                 pw.println("</pre>");
 
-                RequestProgressTracker tracker = ((SlingHttpServletRequest) request).getRequestProgressTracker();
+                final RequestProgressTracker tracker = ((SlingHttpServletRequest) request).getRequestProgressTracker();
                 pw.println("<h3>Request Progress:</h3>");
                 pw.println("<pre>");
-                tracker.dump(pw);
+                pw.flush();
+                tracker.dump(new PrintWriter(escapingWriter));
+                escapingWriter.flush();
                 pw.println("</pre>");
             }
 
             pw.println("<hr /><address>");
-            pw.println(serverInfo);
+            pw.println(ResponseUtil.escapeXml(serverInfo));
             pw.println("</address></body></html>");
 
             // commit the response
             response.flushBuffer();
-
         }
     }
 }
