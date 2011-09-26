@@ -20,6 +20,7 @@
                 org.apache.sling.api.resource.ResourceResolver,
                 org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
+                org.apache.sling.api.request.ResponseUtil,
                 java.util.Iterator"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
@@ -28,10 +29,10 @@
     final ResourceResolver resolver = resource.getResourceResolver();
 %><html>
   <head>
-    <title>Tag <%= name %></title>
+    <title>Tag <%= ResponseUtil.escapeXml(name) %></title>
   </head>
   <body>
-<h1>Tag <%=name %></h1>
+<h1>Tag <%=ResponseUtil.escapeXml(name) %></h1>
 <div class="photolist">
 <%
     int i = 0;

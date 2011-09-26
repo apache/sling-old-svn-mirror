@@ -19,7 +19,8 @@
 %><%@page import="org.apache.sling.api.resource.Resource,
                 org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
-                org.apache.sling.sample.slingshot.Constants" %><%
+                org.apache.sling.sample.slingshot.Constants,
+                org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="photo">
@@ -35,14 +36,14 @@
     }
 %>
     <a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><img src="<%=imagePath%>" width="100" height="100"/></a><br/>
-    <p><a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><%= photoName %></a></p>
+    <p><a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><%= ResponseUtil.escapeXml(photoName) %></a></p>
     <p>Tags:&nbsp;
 <%
     String[] values = attr.get("slingshot:tags", String[].class);
     if  (values != null ) {
         for(int k=0;k<values.length;k++) {
             if (k>0) out.write(", ");
-            out.write(values[k]);
+            out.write(ResponseUtil.escapeXml(values[k]));
         }
     }
 %>

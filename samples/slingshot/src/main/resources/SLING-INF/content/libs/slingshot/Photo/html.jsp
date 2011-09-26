@@ -17,7 +17,8 @@
     under the License.
 --%><%@page session="false" %><%
 %><%@page import="org.apache.sling.api.resource.ResourceUtil,
-                  org.apache.sling.api.resource.ValueMap"%><%
+                  org.apache.sling.api.resource.ValueMap,
+                  org.apache.sling.api.request.ResponseUtil"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
     final ValueMap attributes = ResourceUtil.getValueMap(resource);
@@ -29,15 +30,15 @@
   <body>
     <h1><%= photoName %></h1>
     <img src="<%=resource.getName() %>"/>
-    <p>Description: <%=attributes.get("jcr:description", "")%></p>
-    <p>Location: <%=attributes.get("slingshot:location", "")%></p>
-    <p>Tags:&nbsp
+    <p>Description: <%=ResponseUtil.escapeXml(attributes.get("jcr:description", ""))%></p>
+    <p>Location: <%=ResponseUtil.escapeXml(attributes.get("slingshot:location", ""))%></p>
+    <p>Tags:&nbsp;
 <%
     String[] values = attributes.get("slingshot:tags", String[].class);
     if  (values != null ) {
         for(int k=0;k<values.length;k++) {
             if(k>0) out.write(", ");
-            out.write(values[k]);
+            out.write(ResponseUtil.escapeXml(values[k]));
         }
         
     }

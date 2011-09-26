@@ -7,16 +7,22 @@ and files as photos.
 Getting Started
 ===============
 
-This component uses a Maven 2 (http://maven.apache.org/) build
+This component uses a Maven 3 (http://maven.apache.org/) build
 environment. It requires a Java 5 JDK (or higher) and Maven (http://maven.apache.org/)
-2.0.10 or later. We recommend to use the latest Maven version.
+3.0.2 or later. We recommend to use the latest Maven version.
 
-If you have Maven 2 installed, you can compile and
+If you have Maven 3 installed, you can compile and
 package the jar using the following command:
 
     mvn package
 
-See the Maven 2 documentation for other build features.
+See the Maven 3 documentation for other build features.
+
+Install the built bundle using the web console and go to
+
+http://localhost:8080/slingshot/albums.html
+
+
 
 The latest source code for this component is available in the
 Subversion (http://subversion.tigris.org/) source repository of
@@ -26,4 +32,3 @@ you can checkout the latest source using the following command:
     svn checkout http://svn.apache.org/repos/asf/sling/trunk/samples/slingshot
 
 See the Subversion documentation for other source control features.
-

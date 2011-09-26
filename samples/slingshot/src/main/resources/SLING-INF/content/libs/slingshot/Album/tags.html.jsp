@@ -19,7 +19,8 @@
 %><%@page import="java.util.Iterator,
                   org.apache.sling.api.resource.Resource,
                   org.apache.sling.api.resource.ResourceUtil,
-                  org.apache.sling.api.resource.ValueMap" %><%
+                  org.apache.sling.api.resource.ValueMap,
+                  org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="tags">
@@ -31,7 +32,7 @@
        while ( ni.hasNext() ) {
            final Resource current = ni.next();
            final ValueMap attr = ResourceUtil.getValueMap(current);
-           %><div class="tag"><a href="<%= request.getContextPath() %><%= current.getPath() %>.html"><%=current.getName() %></a></div><%
+           %><div class="tag"><a href="<%= request.getContextPath() %><%= current.getPath() %>.html"><%=ResponseUtil.escapeXml(current.getName()) %></a></div><%
        }
    }
    %>

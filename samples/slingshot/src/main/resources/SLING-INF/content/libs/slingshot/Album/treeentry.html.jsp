@@ -18,10 +18,11 @@
 --%><%@page session="false" %><%
 %><%@page import="org.apache.sling.api.resource.Resource,
                   org.apache.sling.api.resource.ResourceUtil,
-                  org.apache.sling.api.resource.ValueMap" %><%
+                  org.apache.sling.api.resource.ValueMap,
+                  org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
   ValueMap attributes = ResourceUtil.getValueMap(resource);
   Resource parent = resource.getParent();
   String name = resource.getName();
-%>- <a href="<%=parent.getName() %>/<%=name %>.slingshot.html"><%=attributes.get("jcr:title", name) %></a><br/>
+%>- <a href="<%=parent.getName() %>/<%=name %>.slingshot.html"><%=ResponseUtil.escapeXml(attributes.get("jcr:title", name)) %></a><br/>
