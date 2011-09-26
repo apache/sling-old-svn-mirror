@@ -21,7 +21,8 @@
                   org.apache.sling.api.resource.Resource,
                   org.apache.sling.api.resource.ResourceUtil,
                   org.apache.sling.api.resource.ValueMap,
-                  org.apache.sling.sample.slingshot.Constants" %><%
+                  org.apache.sling.sample.slingshot.Constants,
+                  org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 %><div class="trail"><div class="trailpart">Trail:</div>
@@ -36,7 +37,7 @@
         do {
             final ValueMap parentAttr = ResourceUtil.getValueMap(parent);
             final String parentName = parent.getName();
-            parents.add(new Object[] {prefix + parentName, parentAttr.get("jcr:title", parentName)});
+            parents.add(new Object[] {prefix + parentName, ResponseUtil.escapeXml(parentAttr.get("jcr:title", parentName))});
             parent = parent.getParent();
             prefix = prefix + "../";
             if ( parent.getPath().equals(Constants.APP_ROOT) ) {

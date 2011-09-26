@@ -17,12 +17,13 @@
     under the License.
 --%><%@page session="false" %><%
 %><%@page import="org.apache.sling.api.resource.ResourceUtil,
-                org.apache.sling.api.resource.ValueMap" %><%
+                org.apache.sling.api.resource.ValueMap,
+                org.apache.sling.api.request.ResponseUtil" %><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
 
     final ValueMap attributes = ResourceUtil.getValueMap(resource);
-    final String albumName = attributes.get("jcr:title", ResourceUtil.getName(resource));
+    final String albumName = ResponseUtil.escapeXml(attributes.get("jcr:title", ResourceUtil.getName(resource)));
 %><html>
   <head>
     <title>Album <%= albumName %></title>
