@@ -67,7 +67,15 @@ class PackageAdminClassLoader extends ClassLoader {
      */
     private Bundle findBundleForPackage(final String pckName) {
         final ExportedPackage exportedPackage = this.packageAdmin.getExportedPackage(pckName);
-        final Bundle bundle = (exportedPackage == null ? null : exportedPackage.getExportingBundle());
+        Bundle bundle = null;
+        if (exportedPackage != null && !exportedPackage.isRemovalPending() ) {
+            bundle = exportedPackage.getExportingBundle();
+            if ( bundle != null ) {
+                if ( bundle.getState() != Bundle.ACTIVE ) {
+                    bundle = null;
+                }
+            }
+        }
         return bundle;
     }
 
