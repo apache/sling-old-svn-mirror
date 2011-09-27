@@ -61,8 +61,12 @@ public class ClassLoadingTest {
             will(returnValue(ep));
             allowing(ep).getExportingBundle();
             will(returnValue(bundle));
+            allowing(ep).isRemovalPending();
+            will(returnValue(false));
             allowing(bundle).getBundleId();
             will(returnValue(2L));
+            allowing(bundle).getState();
+            will(returnValue(Bundle.ACTIVE));
             one(bundle).loadClass("org.apache.sling.test.A"); inSequence(sequence);
             will(returnValue(java.util.Map.class));
             one(bundle).loadClass("org.apache.sling.test.A"); inSequence(sequence);
