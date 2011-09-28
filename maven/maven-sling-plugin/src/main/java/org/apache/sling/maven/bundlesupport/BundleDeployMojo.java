@@ -28,11 +28,11 @@ import org.apache.maven.project.MavenProject;
  * Deploy a JAR representing an OSGi Bundle. This method posts the bundle built
  * by maven to an OSGi Bundle Repository accepting the bundle. The plugin uses
  * a </em>multipart/format-data</em> POST request to just post the file to
- * the URL configured in the <code>obr</code> property. 
+ * the URL configured in the <code>obr</code> property.
  *
  * @goal deploy
  * @phase deploy
- * @description deploy an OSGi bundle jar to the Day OBR
+ * @description deploy an OSGi bundle jar to an OBR
  */
 public class BundleDeployMojo extends AbstractBundleDeployMojo {
 
@@ -41,12 +41,12 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
      * project to be executed. This property may be set by the
      * <code>sling.deploy.skip</code> comparable to the <code>maven.test.skip</code>
      * property to prevent running the unit tests.
-     * 
+     *
      * @parameter expression="${sling.deploy.skip}" default-value="false"
      * @required
      */
     private boolean skip;
-    
+
 	/**
      * The directory for the generated JAR.
      *
@@ -82,7 +82,7 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
 
         super.execute();
     }
-    
+
     @Override
     protected String getJarFileName() {
         return buildDirectory + "/" + jarName;
@@ -111,7 +111,7 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
             }
             return changeVersion(jarFile, project.getVersion(), newVersion);
         }
-        
+
         // if this is a final release append "final"
         try {
             final ArtifactVersion v = this.project.getArtifact().getSelectedVersion();
@@ -122,7 +122,7 @@ public class BundleDeployMojo extends AbstractBundleDeployMojo {
         } catch (OverConstrainedVersionException ocve) {
             // we ignore this and don't append "final"!
         }
-        
+
         // just return the file in case of some issues
         return jarFile;
     }
