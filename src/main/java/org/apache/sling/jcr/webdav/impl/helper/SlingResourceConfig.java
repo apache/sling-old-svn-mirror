@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.webdav.impl.helper;
 
+import org.apache.jackrabbit.server.io.CopyMoveManager;
 import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.webdav.simple.DefaultItemFilter;
@@ -45,6 +46,8 @@ public class SlingResourceConfig extends ResourceConfig {
 
     private final PropertyManager propertyManager;
 
+    private final CopyMoveManager copyMoveManager;
+
     private final String servletContextPath;
 
     private final Dictionary<String, String> servletInitParams;
@@ -52,10 +55,12 @@ public class SlingResourceConfig extends ResourceConfig {
     public SlingResourceConfig(MimeTypeService mimeTypeService,
             Dictionary<?, ?> config,
             IOManager ioManager,
-            PropertyManager propertyManager) {
+            PropertyManager propertyManager,
+            CopyMoveManager copyMoveManager) {
         super(new SlingTikaDetector(mimeTypeService));
         this.ioManager = ioManager;
         this.propertyManager = propertyManager;
+        this.copyMoveManager = copyMoveManager;
         collectionTypes = OsgiUtil.toStringArray(
             config.get(SlingWebDavServlet.COLLECTION_TYPES),
             SlingWebDavServlet.COLLECTION_TYPES_DEFAULT);
@@ -106,6 +111,11 @@ public class SlingResourceConfig extends ResourceConfig {
     @Override
     public PropertyManager getPropertyManager() {
         return propertyManager;
+    }
+
+    @Override
+    public CopyMoveManager getCopyMoveManager() {
+        return copyMoveManager;
     }
 
     @Override

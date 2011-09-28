@@ -32,12 +32,14 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.jackrabbit.server.io.CopyMoveHandler;
 import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.server.io.PropertyHandler;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.webdav.impl.handler.SlingCopyMoveManager;
 import org.apache.sling.jcr.webdav.impl.handler.SlingIOManager;
 import org.apache.sling.jcr.webdav.impl.handler.SlingPropertyManager;
 import org.apache.sling.jcr.webdav.impl.helper.SlingLocatorFactory;
@@ -72,7 +74,8 @@ import org.osgi.service.http.NamespaceException;
     @Property(name = "sling.servlet.methods", value = "*", propertyPrivate = true) })
     @References({
         @Reference(name = SlingWebDavServlet.IOHANDLER_REF_NAME, referenceInterface = IOHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-        @Reference(name = SlingWebDavServlet.PROPERTYHANDLER_REF_NAME, referenceInterface = PropertyHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+        @Reference(name = SlingWebDavServlet.PROPERTYHANDLER_REF_NAME, referenceInterface = PropertyHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+        @Reference(name = SlingWebDavServlet.COPYMOVEHANDLER_REF_NAME, referenceInterface = CopyMoveHandler.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 public class SlingWebDavServlet extends SimpleWebdavServlet {
 
@@ -125,6 +128,8 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
     static final String PROPERTYHANDLER_REF_NAME = "PropertyHandler";
 
+    static final String COPYMOVEHANDLER_REF_NAME = "CopyMoveHandler";
+
     @Reference
     private SlingRepository repository;
 
@@ -139,6 +144,9 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
     private final SlingPropertyManager propertyManager = new SlingPropertyManager(
         PROPERTYHANDLER_REF_NAME);
+
+    private final SlingCopyMoveManager copyMoveManager = new SlingCopyMoveManager(
+        COPYMOVEHANDLER_REF_NAME);
 
     private SlingResourceConfig resourceConfig;
 
@@ -206,11 +214,13 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
         this.ioManager.setComponentContext(context);
         this.propertyManager.setComponentContext(context);
+        this.copyMoveManager.setComponentContext(context);
 
         resourceConfig = new SlingResourceConfig(mimeTypeService,
             context.getProperties(),
             ioManager,
-            propertyManager);
+            propertyManager,
+            copyMoveManager);
 
         // Register servlet, and set the contextPath field to signal successful
         // registration
@@ -231,6 +241,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
         this.resourceConfig = null;
         this.ioManager.setComponentContext(null);
         this.propertyManager.setComponentContext(null);
+        this.copyMoveManager.setComponentContext(null);
     }
 
     public void bindIOHandler(final ServiceReference ioHandlerReference) {
@@ -247,5 +258,13 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
     public void unbindPropertyHandler(final ServiceReference propertyHandlerReference) {
         this.propertyManager.unbindPropertyHandler(propertyHandlerReference);
+    }
+
+    public void bindCopyMoveHandler(final ServiceReference copyMoveHandlerReference) {
+        this.copyMoveManager.bindCopyMoveHandler(copyMoveHandlerReference);
+    }
+
+    public void unbindCopyMoveHandler(final ServiceReference copyMoveHandlerReference) {
+        this.copyMoveManager.unbindCopyMoveHandler(copyMoveHandlerReference);
     }
 }

@@ -33,6 +33,9 @@ import org.apache.jackrabbit.server.io.ImportContext;
 import org.apache.jackrabbit.server.io.PropertyExportContext;
 import org.apache.jackrabbit.server.io.PropertyHandler;
 import org.apache.jackrabbit.server.io.PropertyImportContext;
+import org.apache.jackrabbit.server.io.CopyMoveHandler;
+import org.apache.jackrabbit.server.io.CopyMoveContext;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -55,7 +58,7 @@ import javax.jcr.RepositoryException;
     @Property(name = SlingWebDavServlet.TYPE_NONCOLLECTIONS, value = SlingWebDavServlet.TYPE_NONCOLLECTIONS_DEFAULT, propertyPrivate = false),
     @Property(name = SlingWebDavServlet.TYPE_CONTENT, value = SlingWebDavServlet.TYPE_CONTENT_DEFAULT, propertyPrivate = false) })
 @Service
-public class DefaultHandlerService implements IOHandler, PropertyHandler {
+public class DefaultHandlerService implements IOHandler, PropertyHandler, CopyMoveHandler {
 
     private DefaultHandler delegatee;
 
@@ -148,5 +151,21 @@ public class DefaultHandlerService implements IOHandler, PropertyHandler {
             PropertyImportContext importContext, boolean isCollection)
             throws RepositoryException {
         return delegatee.importProperties(importContext, isCollection);
+    }
+
+    public boolean canCopy(CopyMoveContext context, DavResource source, DavResource destination) {
+        return delegatee.canCopy(context, source, destination);
+    }
+
+    public boolean copy(CopyMoveContext context, DavResource source, DavResource destination) throws DavException {
+        return delegatee.copy(context, source, destination);
+    }
+
+    public boolean canMove(CopyMoveContext context, DavResource source, DavResource destination) {
+        return delegatee.canMove(context, source, destination);
+    }
+
+    public boolean move(CopyMoveContext context, DavResource source, DavResource destination) throws DavException {
+      return delegatee.move(context, source, destination);
     }
 }
