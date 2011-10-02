@@ -82,7 +82,7 @@ public class LogManager {
         logConfigManager.setDefaultConfiguration(getBundleConfiguration(context));
 
         // get our own logger
-        log = LoggerFactory.getLogger(LogServiceFactory.class);
+        log = LoggerFactory.getLogger(LogManager.class);
         log.info("LogManager: Logging set up from context");
 
         // prepare registration properties (will be reused)

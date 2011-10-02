@@ -16,14 +16,8 @@
  */
 package org.apache.sling.commons.log.internal;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.service.log.LogReaderService;
-import org.osgi.service.log.LogService;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
@@ -34,40 +28,15 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  */
 public class Activator implements BundleActivator {
 
-    private static final String VENDOR = "The Apache Software Foundation";
-
     private static final String JUL_SUPPORT = "org.apache.sling.commons.log.julenabled";
 
     private LogManager logManager;
-
-    private LogSupport logSupport;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
         logManager = new LogManager(context);
-
-        logSupport = new LogSupport();
-        context.addBundleListener(logSupport);
-        context.addFrameworkListener(logSupport);
-        context.addServiceListener(logSupport);
-
-        LogServiceFactory lsf = new LogServiceFactory(logSupport);
-        Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, lsf.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling LogService implementation");
-        props.put(Constants.SERVICE_VENDOR, VENDOR);
-        context.registerService(LogService.class.getName(), lsf, props);
-
-        LogReaderServiceFactory lrsf = new LogReaderServiceFactory(logSupport);
-        props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling LogReaderService implementation");
-        props.put(Constants.SERVICE_VENDOR, VENDOR);
-        context.registerService(LogReaderService.class.getName(), lrsf, props);
 
         if (Boolean.parseBoolean(context.getProperty(JUL_SUPPORT))) {
             SLF4JBridgeHandler.install();
@@ -79,14 +48,6 @@ public class Activator implements BundleActivator {
      */
     public void stop(final BundleContext context) throws Exception {
         SLF4JBridgeHandler.uninstall();
-
-        if (logSupport != null) {
-            context.removeBundleListener(logSupport);
-            context.removeFrameworkListener(logSupport);
-            context.removeServiceListener(logSupport);
-            logSupport.shutdown();
-            logSupport = null;
-        }
 
         if (logManager != null) {
             logManager.shutdown();

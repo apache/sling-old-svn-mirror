@@ -31,12 +31,10 @@
     <version>2.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>Apache Sling OSGi LogService Implementation</name>
+    <name>Apache Sling SLF4J Implementation</name>
     <description>
-        Implementation of the OSGi Compendium Log Service using SLF4J
-        on top of a private implementation. In addition to providing the
-        implemented SLF4J API, the Log4J and Jakarta Commons Logging APIs
-        are provided with implementations on top of the SLF4J API.
+        This bundle implements the SLF4J API with support for dynamic
+        configuration through OSGi Configuration Admin Service.
     </description>
 
     <scm>
@@ -64,23 +62,16 @@
                             http://sling.apache.org/site/logging.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.commons.logging;version=1.1.1,
-                            org.apache.log4j;version=1.2.16,
-                            org.slf4j;version=${slf4j.version},
-                            org.osgi.service.log
+                            org.slf4j.impl;version=${slf4j.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.log.*,
-                            org.apache.commons.logging.impl,
-                            org.slf4j.impl,
-                            org.slf4j.helpers,org.slf4j.spi
                         </Private-Package>
                         <Import-Package>
+                            !org.slf4j.impl,
                             javax.servlet.*;resolution:=optional,
                             org.osgi.framework;version=1.3,
-                            org.slf4j;org.osgi.service.log;version="[$(version;==;$(@)),$(version;=+;$(@)))",
-                            !org.apache.commons.logging,
-                            !org.apache.log4j,
+                            org.slf4j;version="[$(version;==;$(@)),$(version;=+;$(@)))",
                             *
                         </Import-Package>
                         <DynamicImport-Package>
@@ -109,27 +100,11 @@
     </reporting>
 
     <dependencies>
-        <!-- Redirection of commons logging and log4j to SLF4J -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>log4j-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -143,18 +118,19 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-            <scope>compile</scope>
-            <optional>true</optional>
+            <version>4.0.0</version>
         </dependency>
         
         <!-- servlet API for the web console plugin -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>servlet-api</artifactId>
+            <version>2.3</version>
         </dependency>
 
         <!--  OSGi Command Line Shell support -->        

@@ -1,21 +1,13 @@
-Apache Sling OSGi LogService Implementation
+Apache Sling SLF4J Implementation
 
 
-=================================================
-Welcome to Sling - OSGi LogService Implementation
-=================================================
+=======================================
+Welcome to Sling - SLF4J Implementation
+=======================================
 
-The "log" project defines an OSGi Bundle (Logging) which provides three
-components:
-
-  (1) An implementation of the Log Service Specification contained in
-      the OSGi Service Platform Service Compendium book.
-      
-  (2) The SLF4J API package (org.slfj), Apache Commons Logging API
-      package (org.apache.commons.logging) and Log4J package
-      (org.apache.log4j) for clients to use.
-      
-  (3) Backend logging implementation of the SLF4J interfaces.
+The "log" project implements the SLF4J SPI and thus operates as the backend
+for the SLF4J API. The SLF4j API bundle must be installed along with this
+bundle to provide full SLF4J logging support.
   
 The Logging bundle should be installed as one of the first modules in
 the OSGi framework and - provided the framework supports start levels -
