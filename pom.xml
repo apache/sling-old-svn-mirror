@@ -110,6 +110,7 @@
         <module>bundles/commons/classloader</module>
         <module>bundles/commons/json</module>
         <module>bundles/commons/log</module>
+        <module>bundles/commons/logservice</module>
         <module>bundles/commons/mime</module>
         <module>bundles/commons/osgi</module>
         <module>bundles/commons/scheduler</module>
