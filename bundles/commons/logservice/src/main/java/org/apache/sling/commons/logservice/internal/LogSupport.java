@@ -18,7 +18,7 @@ package org.apache.sling.commons.logservice.internal;
 
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -67,7 +67,15 @@ public class LogSupport implements BundleListener, ServiceListener,
 
     // The loggers by bundle id used for logging messages originated from
     // specific bundles
-    private Map<Long, Logger> loggers = new HashMap<Long, Logger>();
+    @SuppressWarnings("serial")
+    private Map<Long, Logger> loggers = new LinkedHashMap<Long, Logger>(16,
+        0.75f, true) {
+        private static final int MAX_SIZE = 50;
+
+        protected boolean removeEldestEntry(Map.Entry<Long, Logger> eldest) {
+            return size() > MAX_SIZE;
+        }
+    };
 
     // the worker thread actually sending LogEvents to LogListeners
     private LogEntryDispatcher logEntryDispatcher;
@@ -233,6 +241,8 @@ public class LogSupport implements BundleListener, ServiceListener,
                 message = "BundleEvent UPDATED";
                 break;
             case BundleEvent.UNINSTALLED:
+                // remove any cached logger for the uninstalled bundle
+                ungetLogger(event.getBundle());
                 message = "BundleEvent UNINSTALLED";
                 break;
             case BundleEvent.RESOLVED:
@@ -366,7 +376,10 @@ public class LogSupport implements BundleListener, ServiceListener,
      */
     private Logger getLogger(Bundle bundle) {
         Long bundleId = new Long((bundle == null) ? 0 : bundle.getBundleId());
-        Logger log = loggers.get(bundleId);
+        Logger log;
+        synchronized (loggers) {
+            log = loggers.get(bundleId);
+        }
         if (log == null) {
 
             String name;
@@ -392,9 +405,22 @@ public class LogSupport implements BundleListener, ServiceListener,
             }
 
             log = LoggerFactory.getLogger(name);
-            loggers.put(bundleId, log);
+            synchronized (loggers) {
+                loggers.put(bundleId, log);
+            }
         }
         return log;
+    }
+
+    /**
+     * Removes the cached logger for the given bundle, for example if the
+     * bundle is uninstalled and thus there will be no more logs from this
+     * bundle.
+     */
+    private void ungetLogger(Bundle bundle) {
+        synchronized (loggers) {
+            loggers.remove(bundle.getBundleId());
+        }
     }
 
     /**
