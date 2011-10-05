@@ -41,12 +41,12 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.scripting.SlingScriptConstants;
+import org.apache.sling.scripting.core.impl.helper.ProxyScriptEngineManager;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -75,7 +75,12 @@ public class ScriptEngineManagerFactory implements BundleListener {
      */
     private ServiceTracker eventAdminTracker;
 
-    private volatile ScriptEngineManager scriptEngineManager;
+    /**
+     * The proxy to the actual ScriptEngineManager. This proxy is actually
+     * registered as the ScriptEngineManager service for the lifetime of
+     * this factory.
+     */
+    private final ProxyScriptEngineManager scriptEngineManager = new ProxyScriptEngineManager();
 
     private final Set<Bundle> engineSpiBundles = new HashSet<Bundle>();
 
@@ -85,49 +90,36 @@ public class ScriptEngineManagerFactory implements BundleListener {
 
     /**
      * Refresh the script engine manager.
-     * This method is called from within a synchronized block,
-     * no other sync is required!
      */
-    private ScriptEngineManager refreshScriptEngineManager() {
-        if ( this.scriptEngineManager != null ) {
-            return this.scriptEngineManager;
-        }
-
-        if (scriptEngineManagerRegistration != null) {
-            scriptEngineManagerRegistration.unregister();
-            scriptEngineManagerRegistration = null;
-        }
-
+    private void refreshScriptEngineManager() {
         // create (empty) script engine manager
         final ClassLoader loader = getClass().getClassLoader();
         final SlingScriptEngineManager tmp = new SlingScriptEngineManager(loader);
 
         // register script engines from bundles
         final SortedSet<Object> extensions = new TreeSet<Object>();
-        for (final Bundle bundle : this.engineSpiBundles) {
-            extensions.addAll(registerFactories(tmp, bundle));
+        synchronized (this.engineSpiBundles) {
+            for (final Bundle bundle : this.engineSpiBundles) {
+                extensions.addAll(registerFactories(tmp, bundle));
+            }
         }
 
         // register script engines from registered services
-        for (final Map.Entry<ScriptEngineFactory, Map<Object, Object>> factory : this.engineSpiServices.entrySet()) {
-            extensions.addAll(registerFactory(tmp, factory.getKey(), factory.getValue()));
+        synchronized (this.engineSpiServices) {
+            for (final Map.Entry<ScriptEngineFactory, Map<Object, Object>> factory : this.engineSpiServices.entrySet()) {
+                extensions.addAll(registerFactory(tmp, factory.getKey(),
+                    factory.getValue()));
+            }
         }
 
-        scriptEngineManager = tmp;
-
-        if (bundleContext != null) {
-            scriptEngineManagerRegistration = bundleContext.registerService(
-                new String[] { ScriptEngineManager.class.getName(), SlingScriptEngineManager.class.getName() },
-                scriptEngineManager,
-                new Hashtable<String, Object>());
-        }
+        scriptEngineManager.setDelegatee(tmp);
 
         // Log messages to verify which ScriptEngine is actually used
         // for our registered extensions
         if (log.isInfoEnabled()) {
             for (Object o : extensions) {
                 final String ext = o.toString();
-                final ScriptEngine e = scriptEngineManager.getEngineByExtension(ext);
+                final ScriptEngine e = tmp.getEngineByExtension(ext);
                 if (e == null) {
                     log.warn("No ScriptEngine found for extension '{}' that was just registered", ext);
                 } else {
@@ -136,7 +128,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
                 }
             }
         }
-        return tmp;
     }
 
     @SuppressWarnings("unchecked")
@@ -186,20 +177,19 @@ public class ScriptEngineManagerFactory implements BundleListener {
     // ---------- BundleListener interface -------------------------------------
 
     public void bundleChanged(BundleEvent event) {
-        if (event.getType() == BundleEvent.STARTED && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
-
-            synchronized ( this ) {
+        if (event.getType() == BundleEvent.STARTED
+            && event.getBundle().getEntry(ENGINE_FACTORY_SERVICE) != null) {
+            synchronized (this.engineSpiBundles) {
                 this.engineSpiBundles.add(event.getBundle());
-                this.scriptEngineManager = null;
-                this.refreshScriptEngineManager();
             }
-
-        } else if (event.getType() == BundleEvent.STOPPED  ) {
-            synchronized ( this ) {
-                if ( this.engineSpiBundles.remove(event.getBundle()) ) {
-                    this.scriptEngineManager = null;
-                    this.refreshScriptEngineManager();
-                }
+            this.refreshScriptEngineManager();
+        } else if (event.getType() == BundleEvent.STOPPED) {
+            boolean refresh;
+            synchronized (this.engineSpiBundles) {
+                refresh = this.engineSpiBundles.remove(event.getBundle());
+            }
+            if (refresh) {
+                this.refreshScriptEngineManager();
             }
         }
     }
@@ -216,19 +206,23 @@ public class ScriptEngineManagerFactory implements BundleListener {
         this.bundleContext.addBundleListener(this);
 
         Bundle[] bundles = this.bundleContext.getBundles();
-        for (Bundle bundle : bundles) {
-            if (bundle.getState() == Bundle.ACTIVE && bundle.getEntry(ENGINE_FACTORY_SERVICE) != null) {
-                synchronized ( this ) {
+        synchronized (this.engineSpiBundles) {
+            for (Bundle bundle : bundles) {
+                if (bundle.getState() == Bundle.ACTIVE
+                    && bundle.getEntry(ENGINE_FACTORY_SERVICE) != null) {
                     this.engineSpiBundles.add(bundle);
-                    this.scriptEngineManager = null;
                 }
             }
         }
 
         // create a script engine manager
-        synchronized ( this ) {
-            this.refreshScriptEngineManager();
-        }
+        this.refreshScriptEngineManager();
+
+        scriptEngineManagerRegistration = this.bundleContext.registerService(
+            new String[] { ScriptEngineManager.class.getName(),
+                SlingScriptEngineManager.class.getName() },
+            scriptEngineManager, new Hashtable<String, Object>());
+
         org.apache.sling.scripting.core.impl.ScriptEngineConsolePlugin.initPlugin(context.getBundleContext(), this);
     }
 
@@ -241,41 +235,45 @@ public class ScriptEngineManagerFactory implements BundleListener {
             scriptEngineManagerRegistration.unregister();
             scriptEngineManagerRegistration = null;
         }
+
         synchronized ( this ) {
             this.engineSpiBundles.clear();
             this.engineSpiServices.clear();
         }
-        scriptEngineManager = null;
+
+        scriptEngineManager.setDelegatee(null);
+
         if (this.eventAdminTracker != null) {
             this.eventAdminTracker.close();
             this.eventAdminTracker = null;
         }
+
         this.bundleContext = null;
     }
 
     protected void bindScriptEngineFactory(final ScriptEngineFactory scriptEngineFactory, final Map<Object, Object> props) {
         if (scriptEngineFactory != null) {
-            synchronized ( this ) {
+            synchronized ( this.engineSpiServices) {
                 this.engineSpiServices.put(scriptEngineFactory, props);
-                if ( this.scriptEngineManager != null ) {
-                    this.scriptEngineManager = null;
-                    this.refreshScriptEngineManager();
-                }
             }
+
+            this.refreshScriptEngineManager();
+
             // send event
             postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_ADDED, scriptEngineFactory);
         }
     }
 
     protected void unbindScriptEngineFactory(final ScriptEngineFactory scriptEngineFactory) {
-        synchronized ( this ) {
-            if ( this.engineSpiServices.remove(scriptEngineFactory) != null ) {
-                if ( this.scriptEngineManager != null ) {
-                    this.scriptEngineManager = null;
-                    this.refreshScriptEngineManager();
-                }
-            }
+        boolean refresh;
+        synchronized (this.engineSpiServices) {
+            refresh = this.engineSpiServices.remove(scriptEngineFactory) != null;
         }
+
+        if (refresh) {
+            this.refreshScriptEngineManager();
+        }
+
         // send event
         postEvent(SlingScriptConstants.TOPIC_SCRIPT_ENGINE_FACTORY_REMOVED, scriptEngineFactory);
     }
@@ -315,12 +313,6 @@ public class ScriptEngineManagerFactory implements BundleListener {
      * Refresh the manager if changes occured.
      */
     ScriptEngineManager getScriptEngineManager() {
-        ScriptEngineManager sem = this.scriptEngineManager;
-        if ( sem == null ) {
-            synchronized ( this ) {
-                sem = this.refreshScriptEngineManager();
-            }
-        }
-        return sem;
+        return this.scriptEngineManager;
     }
 }
