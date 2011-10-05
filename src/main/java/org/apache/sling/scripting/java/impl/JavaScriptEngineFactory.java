@@ -238,7 +238,8 @@ public class JavaScriptEngineFactory
 
             wrapper = new ServletWrapper(servletConfig,
                                          ioProvider,
-                                         scriptName);
+                                         scriptName,
+                                         scriptHelper);
             this.ioProvider.getServletCache().addWrapper(scriptName, wrapper);
 
             return wrapper;
