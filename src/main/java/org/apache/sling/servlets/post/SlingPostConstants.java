@@ -465,4 +465,12 @@ public interface SlingPostConstants {
      */
     public static final String RP_CHECKIN = RP_PREFIX + "checkin";
 
+    /**
+     * Name of the request attribute (not parameter) indicating that a post operation
+     * should not invoke session.save() upon completion.
+     * 
+     * @since 2.1.2
+     */
+    public static final String ATTR_SKIP_SESSION_HANDLING = "skip-session-handling";
+
 }

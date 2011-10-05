@@ -124,7 +124,8 @@ public abstract class AbstractPostOperation implements PostOperation {
                         break;
                 }
             }
-            if (session.hasPendingChanges()) {
+
+            if (isSessionSaveRequired(session, request)) {
                 session.save();
             }
 
@@ -144,7 +145,7 @@ public abstract class AbstractPostOperation implements PostOperation {
 
         } finally {
             try {
-                if (session.hasPendingChanges()) {
+                if (isSessionSaveRequired(session, request)) {
                     session.refresh(false);
                 }
             } catch (RepositoryException e) {
@@ -186,6 +187,15 @@ public abstract class AbstractPostOperation implements PostOperation {
 
     protected boolean isSkipCheckin(SlingHttpServletRequest request) {
         return !getVersioningConfiguration(request).isAutoCheckin();
+    }
+
+    protected boolean isSkipSessionHandling(SlingHttpServletRequest request) {
+        return Boolean.parseBoolean((String) request.getAttribute(SlingPostConstants.ATTR_SKIP_SESSION_HANDLING)) == true;
+    }
+
+    protected boolean isSessionSaveRequired(Session session, SlingHttpServletRequest request)
+            throws RepositoryException {
+        return !isSkipSessionHandling(request) && session.hasPendingChanges();
     }
 
     /**
