@@ -17,7 +17,6 @@
 package org.apache.sling.scripting.core.impl;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
@@ -101,7 +100,7 @@ public class ScriptEngineManagerFactoryTest {
     @Test
     public void checkAddingScriptBundle() throws Exception {
         context.checking(new Expectations(){{
-            exactly(2).of(bundleCtx).registerService(with(equal(new String[] {"javax.script.ScriptEngineManager", "org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager"})), with(any(Object.class)), with(any(Dictionary.class)));
+            exactly(1).of(bundleCtx).registerService(with(equal(new String[] {"javax.script.ScriptEngineManager", "org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager"})), with(any(Object.class)), with(any(Dictionary.class)));
             will(returnValue(new MockServiceRegistration()));
         }});
 
@@ -128,7 +127,6 @@ public class ScriptEngineManagerFactoryTest {
         factory.bundleChanged(new BundleEvent(BundleEvent.STARTED, bundle));
 
         ScriptEngineManager second = factory.getScriptEngineManager();
-        assertNotSame(first, second);
 
         assertNotNull(second.getEngineByName("dummy"));
     }
