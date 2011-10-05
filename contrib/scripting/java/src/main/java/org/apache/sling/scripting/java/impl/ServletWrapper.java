@@ -17,8 +17,16 @@
 
 package org.apache.sling.scripting.java.impl;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -27,6 +35,7 @@ import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilerMessage;
@@ -54,10 +63,18 @@ public class ServletWrapper {
     /** The path to the servlet. */
     private final String sourcePath;
 
+    private final SlingScriptHelper scriptHelper;
+
     /** Flag for handling modifications. */
     private volatile long lastModificationTest = 0L;
 
-    /** The compiled and instantiated servlet. */
+    /** The compiled class. */
+    private volatile Class<?> theServletClass;
+
+    /**
+     * The compiled and instantiated servlet. This field may be null in which case a new servlet
+     * instance is created per request.
+     */
     private volatile Servlet theServlet;
 
     /** Flag handling an unavailable exception. */
@@ -71,11 +88,13 @@ public class ServletWrapper {
      */
     public ServletWrapper(final ServletConfig config,
                           final SlingIOProvider ioProvider,
-                          final String servletPath) {
+                          final String servletPath,
+                          final SlingScriptHelper scriptHelper) {
         this.config = config;
         this.ioProvider = ioProvider;
         this.sourcePath = servletPath;
         this.className = CompilerUtil.mapSourcePath(this.sourcePath).substring(1).replace('/', '.');
+        this.scriptHelper = scriptHelper;
     }
 
     /**
@@ -87,6 +106,7 @@ public class ServletWrapper {
     public void service(HttpServletRequest request,
                          HttpServletResponse response)
     throws Exception {
+        Servlet servlet = null;
         try {
             if ((available > 0L) && (available < Long.MAX_VALUE)) {
                 if (available > System.currentTimeMillis()) {
@@ -116,7 +136,7 @@ public class ServletWrapper {
                 throw compileException;
             }
 
-            final Servlet servlet = getServlet();
+             servlet = getServlet();
 
             // invoke the servlet
             if (servlet instanceof SingleThreadModel) {
@@ -140,6 +160,10 @@ public class ServletWrapper {
                 (HttpServletResponse.SC_SERVICE_UNAVAILABLE,
                  ex.getMessage());
             logger.error("Java servlet {} is unavailable.", this.sourcePath);
+        } finally {
+            if (servlet != null && theServlet == null) {
+                servlet.destroy();
+            }
         }
     }
 
@@ -165,10 +189,8 @@ public class ServletWrapper {
      * Check if the used classloader is still valid
      */
     private boolean checkReload() {
-        final Servlet servlet = this.theServlet;
-        final Class<?> servletClass  = servlet != null ? servlet.getClass() : null;
-        if ( servletClass != null && servletClass.getClassLoader() instanceof DynamicClassLoader ) {
-            return !((DynamicClassLoader)servletClass.getClassLoader()).isLive();
+        if ( theServletClass != null && theServletClass.getClassLoader() instanceof DynamicClassLoader ) {
+            return !((DynamicClassLoader)theServletClass.getClassLoader()).isLive();
         }
         return false;
     }
@@ -187,12 +209,72 @@ public class ServletWrapper {
                 }
             }
         }
+
+        if (theServlet == null && theServletClass != null) {
+            final Servlet servlet = (Servlet) theServletClass.newInstance();
+            servlet.init(this.config);
+
+            injectFields(servlet);
+
+            return servlet;
+        }
+
         return theServlet;
     }
 
+    private void injectFields(Servlet servlet) {
+        for (Field field : theServletClass.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Inject.class)) {
+                field.setAccessible(true);
+                try {
+                    Type type = field.getGenericType();
+                    if (type instanceof Class) {
+                        Class<?> injectedClass = (Class<?>) type;
+                        if (injectedClass.isInstance(scriptHelper)) {
+                            field.set(servlet, scriptHelper);
+                        } else if (injectedClass.isArray()) {
+                            Object[] services = scriptHelper.getServices(injectedClass.getComponentType(), null);
+                            Object arr = Array.newInstance(injectedClass.getComponentType(), services.length);
+                            for (int i = 0; i < services.length; i++) {
+                                Array.set(arr, i, services[i]);
+                            }
+                            field.set(servlet, arr);
+                        } else {
+                            field.set(servlet, scriptHelper.getService(injectedClass));
+                        }
+                    } else if (type instanceof ParameterizedType) {
+                        ParameterizedType ptype = (ParameterizedType) type;
+                        if (ptype.getActualTypeArguments().length != 1) {
+                            logger.warn("Field {} of {} has more than one type parameter.", field.getName(), sourcePath);
+                            continue;
+                        }
+                        Class<?> collectionType = (Class<?>) ptype.getRawType();
+                        if (!(collectionType.equals(Collection.class) ||
+                                collectionType.equals(List.class))) {
+                            logger.warn("Field {} of {} was not an injectable collection type.", field.getName(), sourcePath);
+                            continue;
+                        }
+                        
+                        Class<?> serviceType = (Class<?>) ptype.getActualTypeArguments()[0];
+                        Object[] services = scriptHelper.getServices(serviceType, null);
+                        field.set(servlet, Arrays.asList(services));
+                    } else {
+                        logger.warn("Field {} of {} was not an injectable type.", field.getName(), sourcePath);
+                    }
+                } catch (IllegalArgumentException e) {
+                    logger.error(String.format("Unable to inject into field %s of %s.", field.getName(), sourcePath), e);
+                } catch (IllegalAccessException e) {
+                    logger.error(String.format("Unable to inject into field %s of %s.", field.getName(), sourcePath), e);
+                } finally {
+                    field.setAccessible(false);
+                }
+            }
+        }
+    }
+
     /**
-     * Compile the servlet java class
-     * and instantiate the servlet
+     * Compile the servlet java class. If the compiled class has
+     * injected fields, don't create an instance of it.
      */
     private void compile()
     throws Exception {
@@ -209,12 +291,14 @@ public class ServletWrapper {
             if ( errors != null && errors.size() > 0 ) {
                 throw CompilerException.create(errors, this.sourcePath);
             }
-            if ( result.didCompile() || this.theServlet == null ) {
+            if ( result.didCompile() || this.theServletClass == null ) {
                 destroy();
-                final Class<?> servletClass = result.loadCompiledClass(this.className);
-                final Servlet servlet = (Servlet) servletClass.newInstance();
-                servlet.init(this.config);
+                this.theServletClass = result.loadCompiledClass(this.className);
+            }
 
+            if ( !hasInjectedFields(this.theServletClass) ) {
+                final Servlet servlet = (Servlet) theServletClass.newInstance();
+                servlet.init(this.config);
                 this.theServlet = servlet;
             }
         } catch (final Exception ex) {
@@ -224,6 +308,15 @@ public class ServletWrapper {
         } finally {
             this.lastModificationTest = System.currentTimeMillis();
         }
+    }
+
+    private static boolean hasInjectedFields(Class<?> clazz) {
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(Inject.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Compiler exception .*/
