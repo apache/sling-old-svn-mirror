@@ -175,7 +175,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     /**
      * @component
      */
-    private MavenFileFilter mavenFileFilter;
+    protected MavenFileFilter mavenFileFilter;
 
     /**
      * The zip unarchiver.

@@ -36,9 +36,7 @@ import java.util.Set;
 
 import org.apache.felix.framework.Logger;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
@@ -104,18 +102,6 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
      *            default-value="src/test/resources"
      */
     private File resourceProviderRoot;
-
-    /**
-     * @component
-     */
-    private MavenFileFilter mavenFileFilter;
-
-    /**
-     * @parameter expression="${session}"
-     * @required
-     * @readonly
-     */
-    private MavenSession mavenSession;
 
     private LaunchpadContentProvider resourceProvider = new LaunchpadContentProvider() {
 
