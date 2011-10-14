@@ -69,7 +69,8 @@
             description="%log.file.size.description" />
     </metatype:OCD>
     <metatype:Designate
-        pid="org.apache.sling.commons.log.LogManager.factory.writer">
+        pid="org.apache.sling.commons.log.LogManager.factory.writer"
+        factoryPid="org.apache.sling.commons.log.LogManager.factory.writer">
         <metatype:Object
             ocdref="org.apache.sling.commons.log.LogManager.factory.writer" />
     </metatype:Designate>
@@ -102,7 +103,8 @@
             cardinality="2147483647" />
     </metatype:OCD>
     <metatype:Designate
-        pid="org.apache.sling.commons.log.LogManager.factory.config">
+        pid="org.apache.sling.commons.log.LogManager.factory.config"
+        factoryPid="org.apache.sling.commons.log.LogManager.factory.config">
         <metatype:Object
             ocdref="org.apache.sling.commons.log.LogManager.factory.config" />
     </metatype:Designate>
