@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -70,9 +71,9 @@ public class RequestHistoryConsolePlugin {
         }
     }
 
-    public static void initPlugin(BundleContext context, int maxRequests) {
+    public static void initPlugin(BundleContext context, int maxRequests, List<Pattern> storePatterns) {
         if (instance == null) {
-            Plugin tmp = new Plugin(maxRequests);
+            Plugin tmp = new Plugin(maxRequests, storePatterns);
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(Constants.SERVICE_DESCRIPTION,
                 "Web Console Plugin to display information about recent Sling requests");
@@ -104,11 +105,14 @@ public class RequestHistoryConsolePlugin {
     public static final class Plugin extends HttpServlet {
 
         private final RequestInfoMap requests;
+        
+        private final List<Pattern> storePatterns;
 
-        Plugin(int maxRequests) {
-            requests = (maxRequests > 0)
+        Plugin(int maxRequests, List<Pattern> storePatterns) {
+            this.requests = (maxRequests > 0)
                     ? new RequestInfoMap(maxRequests)
                     : null;
+            this.storePatterns = storePatterns;
         }
 
         public void deactivate() {
@@ -122,9 +126,23 @@ public class RequestHistoryConsolePlugin {
 
         private void addRequest(SlingHttpServletRequest r) {
             if (requests != null) {
-                synchronized (requests) {
-                    RequestInfo info = new RequestInfo(r);
-                    requests.put(info.getKey(), info);
+                String requestPath = r.getPathInfo();
+                boolean accept = true;
+                if (storePatterns != null && storePatterns.size() > 0) {
+                    accept = false;
+                    for (Pattern pattern : storePatterns) {
+                        if (pattern.matcher(requestPath).matches()) {
+                            accept = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (accept) {
+                    synchronized (requests) {
+                        RequestInfo info = new RequestInfo(r);
+                        requests.put(info.getKey(), info);
+                    }
                 }
             }
         }
