@@ -38,7 +38,7 @@ object BundleFS {
     abstract class BundleEntry(url: URL, parent: DirEntry) extends AbstractFile {
       require(url != null, "url must not be null")
       lazy val (path: String, name: String) = getPathAndName(url)
-      lazy val fullName: String = (path::name::Nil).filter(!_.isEmpty).mkString("/")
+      lazy val fullName: String = (path::name::Nil).filter(_.size != 0).mkString("/")
 
       /**
        * @return null
