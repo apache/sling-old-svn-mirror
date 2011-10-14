@@ -20,10 +20,13 @@ package org.apache.sling.engine.impl;
 
 import java.io.IOException;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletException;
@@ -37,6 +40,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -102,6 +106,9 @@ public class SlingMainServlet extends GenericServlet {
 
     @Property(intValue = RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT)
     private static final String PROP_MAX_RECORD_REQUESTS = "sling.max.record.requests";
+
+    @Property(unbounded=PropertyUnbounded.ARRAY)
+    private static final String PROP_TRACK_PATTERNS_REQUESTS = "sling.store.pattern.requests";
 
     @Property
     private static final String PROP_DEFAULT_PARAMETER_ENCODING = "sling.default.parameter.encoding";
@@ -406,7 +413,12 @@ public class SlingMainServlet extends GenericServlet {
             int maxRequests = OsgiUtil.toInteger(
                 componentConfig.get(PROP_MAX_RECORD_REQUESTS),
                 RequestHistoryConsolePlugin.STORED_REQUESTS_COUNT);
-            RequestHistoryConsolePlugin.initPlugin(bundleContext, maxRequests);
+            String[] patterns = OsgiUtil.toStringArray(componentConfig.get(PROP_TRACK_PATTERNS_REQUESTS), new String[0]);
+            List<Pattern> compiledPatterns = new ArrayList<Pattern>(patterns.length);
+            for (String pattern : patterns) {
+                compiledPatterns.add(Pattern.compile(pattern));
+            }
+            RequestHistoryConsolePlugin.initPlugin(bundleContext, maxRequests, compiledPatterns);
         } catch (Throwable t) {
             log.debug(
                 "Unable to register web console request recorder plugin.", t);
