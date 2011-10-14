@@ -87,6 +87,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private Node rootWs2Node;
 
     private JcrResourceListener listener;
+    
+    String vanity;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -116,6 +118,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node https = map.addNode("https", "sling:Mapping");
         https.addNode("localhost.443", "sling:Mapping");
 
+        // define a vanity path for the rootPath
+        vanity = "testVanity";
+        rootNode.setProperty("sling:vanityPath", vanity);
+        rootNode.addMixin("sling:VanityPath");
+        
         session.save();
 
         resFac = new JcrResourceResolverFactoryImpl();
@@ -1281,6 +1288,40 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         assertEquals(".print.html/suffix.pdf",
             res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+    }
+    
+    public void testResolveVanityPath() throws Exception {
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + vanity + ".print.html");
+
+        HttpServletRequest request = new ResourceResolverTestRequest(path);
+        Resource res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
+
+        assertEquals(".print.html",
+                res.getResourceMetadata().getResolutionPathInfo());
+
+        assertNotNull(res.adaptTo(Node.class));
+        assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/"
+                + vanity + ".print.html/suffix.pdf");
+
+        request = new ResourceResolverTestRequest(path);
+        res = resResolver.resolve(request, path);
+        assertNotNull(res);
+        assertEquals(rootPath, res.getPath());
+        assertEquals(rootNode.getPrimaryNodeType().getName(),
+                res.getResourceType());
+
+        assertEquals(".print.html/suffix.pdf",
+                res.getResourceMetadata().getResolutionPathInfo());
 
         assertNotNull(res.adaptTo(Node.class));
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
