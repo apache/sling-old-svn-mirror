@@ -385,6 +385,29 @@ public class RegisteredResourceImpl
     }
 
     /**
+     * Compare two resources where we know that they point to the same entity and have the
+     * same URL!
+     */
+    public static boolean isSameResource(final RegisteredResourceImpl a, final RegisteredResourceImpl b) {
+        if (a.getType().equals(InstallableResource.TYPE_BUNDLE)) {
+            // we need a special comparison for bundles
+
+            // Compare version
+            final Version va = new Version((String)a.getAttribute(Constants.BUNDLE_VERSION));
+            final Version vb = new Version((String)b.getAttribute(Constants.BUNDLE_VERSION));
+            if ( !vb.equals(va) ) {
+                return false;
+            }
+            final boolean isSnapshot = va.toString().contains("SNAPSHOT");
+            if ( !isSnapshot ) {
+                return true;
+            }
+        }
+        // we just compare the digest
+        return a.getDigest().equals(b.getDigest());
+    }
+
+    /**
      * Compare resources.
      * First we compare the entity id - the entity id contains the resource type
      * together with an entity identifier for the to be installed resource like

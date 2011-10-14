@@ -271,13 +271,25 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         // If an object with same url is already present, replace with the
         // new one which might have different attributes
         boolean first = true;
-        for(final TaskResource rr : resources) {
+        final Iterator<TaskResource> taskIter = this.resources.iterator();
+        while ( taskIter.hasNext() ) {
+            final TaskResource rr = taskIter.next();
             if ( rr.getURL().equals(r.getURL()) ) {
-                LOGGER.debug("Cleanup obsolete resource: {}", rr);
-                this.cleanup(rr);
-                resources.remove(rr);
-                if ( first && rr.equals(r) ) {
-                    ((RegisteredResourceImpl)r).setState(rr.getState());
+                boolean removeAndCleanup = true;
+                if ( first ) {
+                    if ( RegisteredResourceImpl.isSameResource((RegisteredResourceImpl)rr, (RegisteredResourceImpl)r) ) {
+                        // same resource, just replace
+                        ((RegisteredResourceImpl)r).setState(rr.getState());
+                    } else if (rr.getState() == ResourceState.INSTALLED) {
+                        // it's not the same, but the first one is installed, so uninstall
+                        ((RegisteredResourceImpl)rr).setState(ResourceState.UNINSTALL);
+                        removeAndCleanup = false;
+                    }
+                }
+                if ( removeAndCleanup ) {
+                    LOGGER.debug("Cleanup obsolete resource: {}", rr);
+                    taskIter.remove();
+                    this.cleanup(rr);
                 }
                 break;
             }
@@ -319,10 +331,12 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     public boolean compact() {
         boolean changed = false;
         final List<TaskResource> toDelete = new ArrayList<TaskResource>();
+        boolean first = true;
         for(final TaskResource r : resources) {
-            if ( r.getState() == ResourceState.UNINSTALLED ) {
+            if ( r.getState() == ResourceState.UNINSTALLED || (!first && r.getState() == ResourceState.UNINSTALL) ) {
                 toDelete.add(r);
             }
+            first = false;
         }
         for(final RegisteredResource r : toDelete) {
             changed = true;

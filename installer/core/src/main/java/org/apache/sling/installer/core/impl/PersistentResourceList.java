@@ -231,10 +231,12 @@ public class PersistentResourceList {
         }
         // iterate over untransformed resources and remove
         // the resource with that url
-        for(final RegisteredResource rr : this.untransformedResources) {
+        final Iterator<RegisteredResource> i = this.untransformedResources.iterator();
+        while ( i.hasNext() ) {
+            final RegisteredResource rr = i.next();
             if ( rr.getURL().equals(url) ) {
                 ((RegisteredResourceImpl)rr).cleanup();
-                this.untransformedResources.remove(rr);
+                i.remove();
                 break;
             }
         }
