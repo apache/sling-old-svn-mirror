@@ -352,27 +352,16 @@ public class JcrResourceResolverFactoryImpl implements
         return null;
     }
 
-    /** If uri is a virtual URI returns the real URI, otherwise returns null */
-    String virtualToRealUri(String virtualUri) {
-        return (virtualURLMap != null)
-                ? (String) virtualURLMap.get(virtualUri)
-                : null;
-    }
-
     /**
-     * If uri is a real URI for any virtual URI, the virtual URI is returned,
-     * otherwise returns null
+     * This method is called from {@link MapEntries}
      */
-    String realToVirtualUri(String realUri) {
-        return (virtualURLMap != null)
-                ? (String) virtualURLMap.getKey(realUri)
-                : null;
-    }
-
     public BidiMap getVirtualURLMap() {
         return virtualURLMap;
     }
 
+    /**
+     * This method is called from {@link MapEntries}
+     */
     public Mapping[] getMappings() {
         return mappings;
     }
