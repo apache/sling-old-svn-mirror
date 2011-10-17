@@ -46,7 +46,10 @@ import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,6 +80,8 @@ public class MapEntries implements EventHandler {
 
     private final ServiceRegistration registration;
 
+    private final ServiceTracker eventAdminTracker;
+
     private MapEntries() {
         factory = null;
         resolver = null;
@@ -86,15 +91,18 @@ public class MapEntries implements EventHandler {
         resolveMaps = Collections.<MapEntry> emptyList();
         mapMaps = Collections.<MapEntry> emptyList();
         this.registration = null;
+        this.eventAdminTracker = null;
     }
 
     public MapEntries(final JcrResourceResolverFactoryImpl factory,
-                      final BundleContext bundleContext)
+                      final BundleContext bundleContext,
+                      final ServiceTracker eventAdminTracker)
     throws LoginException {
         this.resolver = factory.getAdministrativeResourceResolver(null);
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
         this.mapRootPrefix = this.mapRoot + "/";
+        this.eventAdminTracker = eventAdminTracker;
 
         init();
         final Dictionary<String, String> props = new Hashtable<String, String>();
@@ -135,6 +143,8 @@ public class MapEntries implements EventHandler {
 
             this.resolveMaps = newResolveMaps;
             this.mapMaps = new TreeSet<MapEntry>(newMapMaps.values());
+
+            sendChangeEvent();
 
         } finally {
 
@@ -187,7 +197,7 @@ public class MapEntries implements EventHandler {
 
     // ---------- EventListener interface
 
-    public void handleEvent(final org.osgi.service.event.Event event) {
+    public void handleEvent(final Event event) {
         boolean handleEvent = false;
         final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
         if ( this.resolver != null && path != null ) {
@@ -211,6 +221,19 @@ public class MapEntries implements EventHandler {
     }
 
     // ---------- internal
+
+    /**
+     * Send an OSGi event
+     */
+    private void sendChangeEvent() {
+        final EventAdmin ea = (EventAdmin) this.eventAdminTracker.getService();
+        if ( ea != null ) {
+            // we hard code the topic here and don't use SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED
+            // to avoid requiring the latest API version for this bundle to work
+            final Event event = new Event("org/apache/sling/api/resource/ResourceResolverMapping/CHANGED", (Dictionary<?,?>)null);
+            ea.postEvent(event);
+        }
+    }
 
     private void loadResolverMap(final ResourceResolver resolver,
             Collection<MapEntry> resolveEntries,

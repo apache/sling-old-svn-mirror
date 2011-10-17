@@ -87,7 +87,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private Node rootWs2Node;
 
     private JcrResourceListener listener;
-    
+
     String vanity;
 
     protected void setUp() throws Exception {
@@ -122,7 +122,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         vanity = "testVanity";
         rootNode.setProperty("sling:vanityPath", vanity);
         rootNode.addMixin("sling:VanityPath");
-        
+
         session.save();
 
         resFac = new JcrResourceResolverFactoryImpl();
@@ -148,9 +148,22 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mapRootField.setAccessible(true);
         mapRootField.set(resFac, "/etc/map");
 
+        final EventAdmin mockVoidEA = new EventAdmin() {
+
+            public void postEvent(Event event) {
+                // nothing to do
+            }
+
+            public void sendEvent(Event event) {
+                // nothing to do
+            }
+        };
+        final ServiceTracker voidTracker = mock(ServiceTracker.class);
+        when(voidTracker.getService()).thenReturn(mockVoidEA);
+
         Field mapEntriesField = resFac.getClass().getDeclaredField("mapEntries");
         mapEntriesField.setAccessible(true);
-        mapEntries = new MapEntries(resFac, mock(BundleContext.class));
+        mapEntries = new MapEntries(resFac, mock(BundleContext.class), voidTracker);
         mapEntriesField.set(resFac, mapEntries);
 
         try {
@@ -1292,7 +1305,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertNotNull(res.adaptTo(Node.class));
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
     }
-    
+
     public void testResolveVanityPath() throws Exception {
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + vanity + ".print.html");
