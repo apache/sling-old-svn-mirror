@@ -94,7 +94,7 @@
                             http://sling.apache.org/site/sling-api.html
                         </Bundle-DocURL>
                         <Export-Package>
-                            org.apache.sling.api;version=2.1,
+                            org.apache.sling.api;version=2.2,
                             org.apache.sling.api.adapter;version=2.2,
                             org.apache.sling.api.auth;version=1.0,
                             org.apache.sling.api.request;version=2.2,

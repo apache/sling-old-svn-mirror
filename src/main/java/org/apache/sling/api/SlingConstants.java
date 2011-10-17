@@ -301,6 +301,12 @@ public class SlingConstants {
     public static final String TOPIC_RESOURCE_PROVIDER_REMOVED = "org/apache/sling/api/resource/ResourceProvider/REMOVED";
 
     /**
+     * The topic for the OSGi event which is sent when the resource mapping changes.
+     * @since 2.2.0
+     */
+    public static final String TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
+
+    /**
      * The name of the event property holding the resource path.
      * @since 2.0.6
      */
