@@ -464,7 +464,7 @@ public class JcrResourceResolverFactoryImpl implements
 
         // set up the map entries from configuration
         try {
-            mapEntries = new MapEntries(this, componentContext.getBundleContext());
+            mapEntries = new MapEntries(this, componentContext.getBundleContext(), this.eventAdminTracker);
         } catch (Exception e) {
             log.error(
                 "activate: Cannot access repository, failed setting up Mapping Support",
