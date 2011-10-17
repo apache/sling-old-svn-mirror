@@ -22,15 +22,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +46,6 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 
 /**
@@ -64,7 +60,7 @@ public class JcrPropertyMap
 
     /** The underlying node. */
     private final Node node;
-    
+
     /** A cache for the properties. */
     final Map<String, JcrPropertyMapCacheEntry> cache;
 
