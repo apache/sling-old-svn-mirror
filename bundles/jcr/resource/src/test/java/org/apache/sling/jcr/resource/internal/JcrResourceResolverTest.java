@@ -1726,7 +1726,52 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mapped = resResolver.map(child.getPath() + selExt);
         assertEquals(path, mapped);
     }
+    
+    public void testMapResourceAlias() throws Exception {
+    	// define an alias for the rootPath
+        String alias = "testAlias";
+        rootNode.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
+        session.save();
+    	
+    	String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + alias); 
+        String mapped = resResolver.map(rootNode.getPath());
+        assertEquals(path, mapped);
+        Node child = rootNode.addNode("child");
+        session.save();
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + alias+"/child");
+        mapped = resResolver.map(child.getPath());
+        assertEquals(path, mapped);
+     }
 
+    public void testMapResourceAliasJcrContent() throws Exception {
+        // define an alias for the rootPath in the jcr:content child node
+        String alias = "testAlias";
+        Node content = rootNode.addNode("jcr:content", "nt:unstructured");
+        content.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
+        session.save();
+        
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + alias); 
+        String mapped = resResolver.map(rootNode.getPath());
+        assertEquals(path, mapped);
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + alias+"/_jcr_content"); 
+        mapped = resResolver.map(content.getPath());
+        assertEquals(path, mapped);
+        
+        Node child = content.addNode("child");
+        session.save();
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + alias+"/_jcr_content/child");
+        mapped = resResolver.map(child.getPath());
+        assertEquals(path, mapped);
+    }
+    
     public void test_resolve() throws Exception {
 
         Node child = rootNode.addNode("child");

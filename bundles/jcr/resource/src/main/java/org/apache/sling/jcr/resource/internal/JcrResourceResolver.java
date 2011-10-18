@@ -645,7 +645,7 @@ public class JcrResourceResolver
             String path = res.getPath();
             while ( path != null ) {
                 String alias = null;
-                if ( current != null ) {
+                if ( current != null && !path.endsWith("jcr:content")) {
                     alias = getProperty(current, PROP_ALIAS);
                 }
                 if (alias == null || alias.length() == 0) {
