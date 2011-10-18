@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestDispatcherOptions;
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceWrapper;
 import org.slf4j.Logger;
@@ -177,6 +178,7 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         SlingHttpServletRequest cRequest = RequestData.unwrap(request);
         RequestData rd = RequestData.getRequestData(cRequest);
         String absPath = getAbsolutePath(cRequest, path);
+        RequestProgressTracker requestProgressTracker = cRequest.getRequestProgressTracker();
 
         // if the response is not an HttpServletResponse, fail gracefully not
         // doing anything
@@ -187,7 +189,9 @@ public class SlingRequestDispatcher implements RequestDispatcher {
         }
 
         if (resource == null) {
-
+            String timerName = "resolveIncludedResource(" + absPath + ")";
+            requestProgressTracker.startTimer(timerName);
+            
             // resolve the absolute path in the resource resolver, using
             // only those parts of the path as if it would be request path
             resource = cRequest.getResourceResolver().resolve(absPath);
@@ -199,11 +203,15 @@ public class SlingRequestDispatcher implements RequestDispatcher {
                     absPath);
                 return;
             }
+            
+            requestProgressTracker.logTimer(timerName,
+                    "path={0} resolves to Resource={1}",
+                    absPath, resource);
         }
 
         // ensure request path info and optional merges
         SlingRequestPathInfo info = getMergedRequestPathInfo(cRequest);
-        cRequest.getRequestProgressTracker().log(
+        requestProgressTracker.log(
             "Including resource {0} ({1})", resource, info);
         rd.getSlingRequestProcessor().dispatchRequest(request, sResponse, resource,
             info, include);
