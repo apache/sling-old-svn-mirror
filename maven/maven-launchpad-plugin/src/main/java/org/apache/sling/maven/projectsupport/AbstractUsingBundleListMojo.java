@@ -17,7 +17,6 @@
 package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -48,7 +47,6 @@ import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.interpolation.InterpolationException;
@@ -359,6 +357,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 bundleList.add(def.toBundle());
             }
         }
+        addDependencies(bundleList);
         if (bundleExclusions != null) {
             for (ArtifactDefinition def : bundleExclusions) {
                 bundleList.remove(def.toBundle(), false);
@@ -511,16 +510,6 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         KnowledgeBase base = KnowledgeBaseFactory.newKnowledgeBase();
         base.addKnowledgePackages(builder.getKnowledgePackages());
         return base;
-    }
-
-    private BundleList readBundleList(File file) throws IOException, XmlPullParserException {
-        BundleListXpp3Reader reader = new BundleListXpp3Reader();
-        FileInputStream fis = new FileInputStream(file);
-        try {
-            return reader.read(fis);
-        } finally {
-            fis.close();
-        }
     }
 
     private void copyProperties(final Properties source, final Properties dest) {
