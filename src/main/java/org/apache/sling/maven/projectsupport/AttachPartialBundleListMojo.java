@@ -17,13 +17,17 @@
 package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
+import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Writer;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 /**
  * Attaches the bundle list as a project artifact.
@@ -54,12 +58,11 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
      * @parameter default-value="${project.build.directory}/bundleListconfig"
      */
     private File configOutputDir;
-
+    
     /**
-     * @parameter expression="${ignoreBundleListConfig}"
-     *            default-value="false"
+     * @parameter default-value="${project.build.directory}/list.xml"
      */
-    private boolean ignoreBundleListConfig;
+    private File bundleListOutput;
 
     /**
      * The zip archiver.
@@ -69,7 +72,30 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
     private ZipArchiver zipArchiver;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        project.getArtifact().setFile(bundleListFile);
+        final BundleList bundleList;
+        if (bundleListFile.exists()) {
+            try {
+                bundleList = readBundleList(bundleListFile);
+            } catch (IOException e) {
+                throw new MojoExecutionException("Unable to read bundle list file", e);
+            } catch (XmlPullParserException e) {
+                throw new MojoExecutionException("Unable to read bundle list file", e);
+            }
+        } else {
+            bundleList = new BundleList();
+        }
+        
+        addDependencies(bundleList);
+        
+        BundleListXpp3Writer writer = new BundleListXpp3Writer();
+        try {
+            writer.write(new FileWriter(bundleListOutput), bundleList);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Unable to write bundle list", e);
+        }
+        
+        project.getArtifact().setFile(bundleListOutput);
+
         this.getLog().info("Attaching bundle list configuration");
         try {
             this.attachConfigurations();

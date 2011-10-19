@@ -16,6 +16,8 @@
  */
 package org.apache.sling.maven.projectsupport;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.model.Dependency;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.codehaus.plexus.util.StringUtils;
 
@@ -45,16 +47,34 @@ public class ArtifactDefinition {
     public ArtifactDefinition() {
     }
 
-    public ArtifactDefinition(Bundle bundle, int startLevel) {
-		this.groupId = bundle.getGroupId();
-		this.artifactId = bundle.getArtifactId();
-		this.type = bundle.getType();
-		this.version = bundle.getVersion();
-		this.classifier = bundle.getClassifier();
-		this.startLevel = startLevel;
-	}
+    public ArtifactDefinition(Artifact artifact, int startLevel) {
+        this.groupId = artifact.getGroupId();
+        this.artifactId = artifact.getArtifactId();
+        this.type = artifact.getType();
+        this.version = artifact.getVersion();
+        this.classifier = artifact.getClassifier();
+        this.startLevel = startLevel;
+    }
 
-	public String getArtifactId() {
+    public ArtifactDefinition(Dependency dependency, int startLevel) {
+        this.groupId = dependency.getGroupId();
+        this.artifactId = dependency.getArtifactId();
+        this.type = dependency.getType();
+        this.version = dependency.getVersion();
+        this.classifier = dependency.getClassifier();
+        this.startLevel = startLevel;
+    }
+    
+    public ArtifactDefinition(Bundle bundle, int startLevel) {
+        this.groupId = bundle.getGroupId();
+        this.artifactId = bundle.getArtifactId();
+        this.type = bundle.getType();
+        this.version = bundle.getVersion();
+        this.classifier = bundle.getClassifier();
+        this.startLevel = startLevel;
+    }
+
+    public String getArtifactId() {
         return artifactId;
     }
 
@@ -184,6 +204,14 @@ public class ArtifactDefinition {
         bnd.setClassifier(classifier);
         bnd.setStartLevel(startLevel);
         return bnd;
+    }
+    
+    public static Bundle toBundle(Artifact artifact, int startLevel) {
+        return new ArtifactDefinition(artifact, startLevel).toBundle();
+    }
+    
+    public static Bundle toBundle(Dependency dependency, int startLevel) {
+        return new ArtifactDefinition(dependency, startLevel).toBundle();
     }
 
 }

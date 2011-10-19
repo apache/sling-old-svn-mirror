@@ -17,10 +17,17 @@
 package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.List;
 
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
+import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 public abstract class AbstractBundleListMojo extends AbstractMojo {
 
@@ -90,7 +97,42 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      */
     protected File standaloneSlingBootstrap;
 
+    /**
+     * @parameter expression="${ignoreBundleListConfig}"
+     *            default-value="false"
+     */
+    protected boolean ignoreBundleListConfig;
+
+    /**
+     * The start level to be used when generating the bundle list.
+     * 
+     * @parameter default-value="-1"
+     */
+    private int dependencyStartLevel;
+
     protected File getConfigDirectory() {
         return this.configDirectory;
+    }
+
+    protected BundleList readBundleList(File file) throws IOException, XmlPullParserException {
+        BundleListXpp3Reader reader = new BundleListXpp3Reader();
+        FileInputStream fis = new FileInputStream(file);
+        try {
+            return reader.read(fis);
+        } finally {
+            fis.close();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected void addDependencies(final BundleList bundleList) {
+        if (dependencyStartLevel >= 0) {
+            final List<Dependency> dependencies = project.getDependencies();
+            for (Dependency dependency : dependencies) {
+                if (!PARTIAL.equals(dependency.getType())) {
+                    bundleList.add(ArtifactDefinition.toBundle(dependency, dependencyStartLevel));
+                }
+            }
+        }
     }
 }
