@@ -72,7 +72,9 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
      * @see org.osgi.service.cm.ConfigurationListener#configurationEvent(org.osgi.service.cm.ConfigurationEvent)
      */
     public void configurationEvent(ConfigurationEvent e) {
-    	events.add(e);
+        synchronized ( events ) {
+            events.add(e);
+        }
 	}
 
 	@Test
@@ -162,8 +164,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     	final Configuration c = ca.getConfiguration(cfgPid);
     	c.update(cfgData);
         waitForConfigValue("After manual installation", cfgPid, TIMEOUT, "foo", "bar");
-		Condition cond = new Condition() { public boolean isTrue() { return events.size() == 1; }};
-        waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
+        waitForCondition("Expected one ConfigurationEvents since beginning of test", TIMEOUT, new ConfigCondition(cfgPid, 1));
 
         installer.updateResources(URL_SCHEME, getInstallableResource(cfgPid, cfgData), null);
 
@@ -171,7 +172,54 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         cfgData.put("foo", "changed");
         installer.updateResources(URL_SCHEME, getInstallableResource(cfgPid, cfgData), null);
         waitForConfigValue("After changing value", cfgPid, TIMEOUT, "foo", "changed");
-		cond = new Condition() { public boolean isTrue() { return events.size() == 2; }};
-        waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, cond);
+        waitForCondition("Expected two ConfigurationEvents since beginning of test", TIMEOUT, new ConfigCondition(cfgPid, 2));
+    }
+
+    protected final class ConfigCondition extends Condition {
+
+        private final String pid;
+
+        private final int maxCount;
+
+        public ConfigCondition(final String pid, final int count) {
+            this.pid = pid;
+            this.maxCount = count;
+        }
+
+        @Override
+        boolean isTrue() throws Exception {
+            int count = 0;
+            synchronized ( events ) {
+                for(final ConfigurationEvent e : events) {
+                    if ( pid.equals(e.getPid()) ) {
+                        count++;
+                    }
+                }
+            }
+            return count == maxCount;
+        }
+
+        @Override
+        String additionalInfo() {
+            final StringBuilder sb = new StringBuilder("Expected ");
+            sb.append(maxCount);
+            sb.append(" events for ");
+            sb.append(pid);
+            sb.append(". Received events: [");
+            boolean first = true;
+            synchronized ( events ) {
+                for(final ConfigurationEvent e : events) {
+                    if ( !first) {
+                        sb.append(", ");
+                    }
+                    first = false;
+                    sb.append(e.getPid());
+                    sb.append(':');
+                    sb.append(e.getType());
+                }
+            }
+            sb.append("]");
+            return sb.toString();
+        }
     }
 }
