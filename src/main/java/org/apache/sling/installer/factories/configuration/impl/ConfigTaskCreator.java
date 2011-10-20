@@ -69,7 +69,15 @@ public class ConfigTaskCreator
 
         final InstallTask result;
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
-		    result = new ConfigRemoveTask(group, this.configAdmin);
+            // if this is an uninstall, check if we have to install an older version
+            // in this case we should do an update instead of uninstall/install (!)
+            final TaskResource second = group.getNextActiveResource();
+            if ( second != null &&
+                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
+                result = new ChangeStateTask(group, ResourceState.UNINSTALLED);
+            } else {
+                result = new ConfigRemoveTask(group, this.configAdmin);
+            }
 		} else {
 	        result = new ConfigInstallTask(group, this.configAdmin);
 		}
