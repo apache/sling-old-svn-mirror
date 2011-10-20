@@ -50,6 +50,8 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
      */
     private final static String FORCE_INSTALL_VERSION = "force.install.version";
 
+    private final static String SPECIAL_ATTR = "sling.osgi.installer.special";
+
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
@@ -166,8 +168,9 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
             }
         }
         final String symbolicName = (String)toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME);
+        final boolean isInstallerCoreBundle = this.bundleContext.getBundle().getSymbolicName().equals(symbolicName);
 
-		// Uninstall
+        // Uninstall
         final InstallTask result;
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
             // find the info with the exact version
@@ -184,7 +187,13 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
                     logger.debug("Detected downgrad of bundle {}", symbolicName);
                     result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
 	            } else {
-	                result = new BundleRemoveTask(resourceList, this);
+	                // prevent uninstalling the installer itself!
+	                if ( isInstallerCoreBundle ) {
+	                    logger.debug("Prevent completely uninstalling installer bundle {}", symbolicName);
+	                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
+	                } else {
+	                    result = new BundleRemoveTask(resourceList, this);
+	                }
 	            }
 		    } else {
 	            logger.debug("Bundle {}:{} is not installed anymore - nothing to remove.", symbolicName,
@@ -219,17 +228,33 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
                                     + " is not installed, bundle with higher version is already installed.");
                     }
 			    } else if (compare == 0 && this.isSnapshot(newVersion)) {
+			        // check if system bundle or installer bundle
+			        if ( isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
+			            if ( toActivate.getAttribute(SPECIAL_ATTR) != null ) {
+			                toActivate.setAttribute(SPECIAL_ATTR, null);
+			                result = new ChangeStateTask(resourceList, ResourceState.INSTALLED);
+			                return result;
+                        }
+		                toActivate.setAttribute(SPECIAL_ATTR, "installingsnapshot");
+			        }
 			        // installed, same version but SNAPSHOT
 			        doUpdate = true;
 			    }
                 if (doUpdate) {
 
                     logger.debug("Scheduling update of {}", toActivate);
+                    // check if this is the system bundle
                     if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
                         result = new SystemBundleUpdateTask(resourceList, this);
+                        // check if this is a installer update
+                    } else if ( isInstallerCoreBundle ) {
+                        result = new InstallerBundleUpdateTask(resourceList, this);
                     } else {
                         result = new BundleUpdateTask(resourceList, this);
                     }
+                } else if ( compare == 0 && (isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName)) ) {
+                    // the installer core bundle / system bundle has been updated, just set state
+                    result = new ChangeStateTask(resourceList, ResourceState.INSTALLED);
                 } else {
                     logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
                     result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
