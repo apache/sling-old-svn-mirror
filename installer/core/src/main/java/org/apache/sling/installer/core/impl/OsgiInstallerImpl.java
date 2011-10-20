@@ -72,6 +72,9 @@ public class OsgiInstallerImpl
     extends Thread
     implements BundleListener, FrameworkListener, OsgiInstaller, ResourceChangeListener {
 
+    /** Internal key for tasks to be executed async. */
+    public static final String ASYNC_TASK_KEY = "EXECUTE TASK ASYNC";
+
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
@@ -113,6 +116,8 @@ public class OsgiInstallerImpl
 
     private final InstallListener listener;
 
+    private volatile boolean running = false;
+
     /** Constructor */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
@@ -141,11 +146,13 @@ public class OsgiInstallerImpl
 
         // wake up sleeping thread
         this.wakeUp();
-        this.logger.debug("Waiting for installer thread to stop");
-        try {
-            this.join();
-        } catch (InterruptedException e) {
-            // we simply ignore this
+        if ( this.running ) {
+            this.logger.debug("Waiting for installer thread to stop");
+            try {
+                this.join();
+            } catch (InterruptedException e) {
+                // we simply ignore this
+            }
         }
 
         // remove file util
@@ -175,59 +182,69 @@ public class OsgiInstallerImpl
 
     @Override
     public void run() {
-        this.init();
-        while (active) {
-            listener.onEvent(new InstallationEvent() {
+        this.running = true;
+        try {
+            this.init();
+            while (active) {
+                listener.onEvent(new InstallationEvent() {
 
-                public TYPE getType() {
-                    return TYPE.STARTED;
-                }
-
-                public Object getSource() {
-                    return null;
-                }
-            });
-            logger.debug("Starting new cycle");
-
-            this.mergeNewlyRegisteredResources();
-
-            // invoke transformers
-            this.transformResources();
-
-            // execute tasks
-            final SortedSet<InstallTask> tasks = this.computeTasks();
-            final boolean tasksCreated = !tasks.isEmpty();
-
-            this.executeTasks(tasks);
-
-            // clean up and save
-            this.cleanupInstallableResources();
-
-            // if we don't have any tasks, we go to sleep
-            if (!tasksCreated) {
-                synchronized ( this.resourcesLock ) {
-  		            // before we go to sleep, check if new resources arrived in the meantime
-                    if ( !this.hasNewResources()) {
-                        // No tasks to execute - wait until new resources are
-                        // registered
-                        logger.debug("No tasks to process, going idle");
-                        listener.onEvent(new InstallationEvent() {
-
-                            public TYPE getType() {
-                                return TYPE.SUSPENDED;
-                            }
-
-                            public Object getSource() {
-                                return null;
-                            }
-                        });
-                        try {
-                            this.resourcesLock.wait();
-                        } catch (InterruptedException ignore) {}
-                        logger.debug("Notified of new resources, back to work");
+                    public TYPE getType() {
+                        return TYPE.STARTED;
                     }
+
+                    public Object getSource() {
+                        return null;
+                    }
+                });
+                logger.debug("Starting new installer cycle");
+
+                this.mergeNewlyRegisteredResources();
+
+                // invoke transformers
+                this.transformResources();
+
+                // execute tasks
+                final SortedSet<InstallTask> tasks = this.computeTasks();
+                final boolean tasksCreated = !tasks.isEmpty();
+
+                // execute tasks and see if we have to stop processing
+                if ( this.executeTasks(tasks) ) {
+
+                    // clean up and save
+                    this.cleanupInstallableResources();
+
+                    // if we don't have any tasks, we go to sleep
+                    if (!tasksCreated) {
+                        synchronized ( this.resourcesLock ) {
+          		            // before we go to sleep, check if new resources arrived in the meantime
+                            if ( !this.hasNewResources()) {
+                                // No tasks to execute - wait until new resources are
+                                // registered
+                                logger.debug("No tasks to process, going idle");
+                                listener.onEvent(new InstallationEvent() {
+
+                                    public TYPE getType() {
+                                        return TYPE.SUSPENDED;
+                                    }
+
+                                    public Object getSource() {
+                                        return null;
+                                    }
+                                });
+                                try {
+                                    this.resourcesLock.wait();
+                                } catch (InterruptedException ignore) {}
+                                logger.debug("Notified of new resources, back to work");
+                            }
+                        }
+                    }
+                } else {
+                    // stop processing
+                    this.active = false;
                 }
             }
+        } finally {
+            this.running = false;
         }
     }
 
@@ -519,15 +536,23 @@ public class OsgiInstallerImpl
     /**
      * Execute all tasks
      */
-    private void executeTasks(final SortedSet<InstallTask> tasks) {
+    private boolean executeTasks(final SortedSet<InstallTask> tasks) {
         if ( !tasks.isEmpty() ) {
 
+            final List<InstallTask> asyncTasks = new ArrayList<InstallTask>();
             final InstallationContext ctx = new InstallationContext() {
 
                 public void addTaskToNextCycle(final InstallTask t) {
-                    logger.debug("adding task to next cycle: {}", t);
-                    synchronized (tasksForNextCycle) {
-                        tasksForNextCycle.add(t);
+                    if ( t.getSortKey().equals(ASYNC_TASK_KEY) ) {
+                        logger.debug("Adding async task: {}", t);
+                        synchronized (asyncTasks) {
+                            asyncTasks.add(t);
+                        }
+                    } else {
+                        logger.debug("Adding task to next cycle: {}", t);
+                        synchronized (tasksForNextCycle) {
+                            tasksForNextCycle.add(t);
+                        }
                     }
                 }
 
@@ -555,8 +580,38 @@ public class OsgiInstallerImpl
                     logger.error("Uncaught exception during task execution!", t);
                 }
             }
+            // save new state
             persistentList.save();
+
+            // let's check if we have async tasks and no other tasks
+            if ( this.active && !asyncTasks.isEmpty() ) {
+                final boolean isEmpty;
+                synchronized ( tasksForNextCycle ) {
+                    isEmpty = tasksForNextCycle.isEmpty();
+                }
+                if ( isEmpty ) {
+                    // compact list and save if required
+                    this.cleanupInstallableResources();
+                    final InstallTask task = asyncTasks.get(0);
+                    final Thread t = new Thread() {
+
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(2000L);
+                            } catch (final InterruptedException ie) {
+                                // ignore
+                            }
+                            task.execute(ctx);
+                        }
+                    };
+                    t.start();
+                    return false;
+                }
+            }
+
         }
+        return true;
     }
 
     /**

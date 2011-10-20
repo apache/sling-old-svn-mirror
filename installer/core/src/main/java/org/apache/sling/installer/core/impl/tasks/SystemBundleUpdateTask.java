@@ -21,12 +21,16 @@ package org.apache.sling.installer.core.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.AbstractInstallTask;
+import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Update the system bundle from a RegisteredResource.
@@ -45,58 +49,76 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
     @Override
     public void execute(final InstallationContext ctx) {
-        // restart system bundle
-        if ( this.getResource() == null ) {
-            this.restartSystemBundleDelayed();
+        final Bundle systemBundle = this.creator.getBundleContext().getBundle(0);
+        // sanity check
+        if ( systemBundle == null ) {
             return;
         }
-        final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
-        final Bundle b = this.creator.getMatchingBundle(symbolicName, null);
-        if (b == null) {
-            throw new IllegalStateException("Bundle to update (" + symbolicName + ") not found");
-        }
 
-        InputStream is = null;
-        try {
-            is = getResource().getInputStream();
-            if (is == null) {
-                throw new IllegalStateException(
-                        "RegisteredResource provides null InputStream, cannot update bundle: "
-                        + getResource());
-            }
-            // delayed system bundle update
-            final InputStream backgroundIS = is;
-            is = null;
-            final Thread t = new Thread(new Runnable() {
+        // restart system bundle
+        if ( this.getResource() == null ) {
+            // do an async update
+            ctx.addTaskToNextCycle(new InstallTask(this.getResourceGroup()) {
 
-                /**
-                 * @see java.lang.Runnable#run()
-                 */
-                public void run() {
+                private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+                @Override
+                public String getSortKey() {
+                    return OsgiInstallerImpl.ASYNC_TASK_KEY;
+                }
+
+                @Override
+                public void execute(final InstallationContext ctx) {
                     try {
-                        Thread.sleep(800);
-                    } catch(InterruptedException ignored) {
-                    }
-                    try {
-                        b.update(backgroundIS);
-                    } catch (final BundleException be) {
-                        getLogger().warn("Unable to update system bundle", be);
-                    } finally {
-                        try {
-                            backgroundIS.close();
-                        } catch (IOException ignore) {}
+                        systemBundle.update();
+                    } catch (final BundleException e) {
+                        logger.warn("Updating system bundle failed - unable to retry: " + this, e);
                     }
                 }
             });
-            t.setDaemon(true);
-            t.start();
-        } catch (final IOException e) {
-            this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
-        } finally {
-            if ( is != null ) {
-                try {
-                    is.close();
-                } catch (IOException ignore) {}
+        } else {
+            InputStream is = null;
+            try {
+                is = getResource().getInputStream();
+                if (is == null) {
+                    throw new IllegalStateException(
+                            "RegisteredResource provides null InputStream, cannot update bundle: "
+                            + getResource());
+                }
+                // delayed system bundle update
+                final InputStream backgroundIS = is;
+                is = null;
+                ctx.addTaskToNextCycle(new InstallTask(this.getResourceGroup()) {
+
+                    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+                    @Override
+                    public String getSortKey() {
+                        return OsgiInstallerImpl.ASYNC_TASK_KEY;
+                    }
+
+                    @Override
+                    public void execute(final InstallationContext ctx) {
+                        try {
+                            systemBundle.update(backgroundIS);
+                        } catch (final BundleException e) {
+                            logger.warn("Updating system bundle failed - unable to retry: " + this, e);
+                        } finally {
+                            try {
+                                backgroundIS.close();
+                            } catch (IOException ignore) {}
+                        }
+                    }
+                });
+            } catch (final IOException e) {
+                this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+                this.setFinishedState(ResourceState.IGNORED);
+            } finally {
+                if ( is != null ) {
+                    try {
+                        is.close();
+                    } catch (IOException ignore) {}
+                }
             }
         }
     }
@@ -104,32 +126,5 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
     @Override
     public String getSortKey() {
         return BUNDLE_UPDATE_ORDER + getResource().getURL();
-    }
-
-    private void restartSystemBundleDelayed() {
-        final Bundle systemBundle = this.creator.getBundleContext().getBundle(0);
-        // sanity check
-        if ( systemBundle == null ) {
-            return;
-        }
-        final Thread t = new Thread(new Runnable() {
-
-            /**
-             * @see java.lang.Runnable#run()
-             */
-            public void run() {
-                try {
-                    Thread.sleep(800);
-                } catch(InterruptedException ignored) {
-                }
-                try {
-                    systemBundle.update();
-                } catch (final BundleException be) {
-                    getLogger().warn("Unable to refresh system bundle", be);
-                }
-            }
-        });
-        t.setDaemon(true);
-        t.start();
     }
 }
