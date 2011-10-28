@@ -48,12 +48,12 @@ import org.osgi.service.http.HttpService;
  * service registry.
  *
  */
-@Component(label = "%dav.name", description = "%dav.description", metatype = true)
-@Properties( { @Property(name = "alias", value = "/server", propertyPrivate = true),
-        @Property(name = "init.resource-path-prefix", value = "/server", propertyPrivate = true),
+@Component(label = "%dav.name", description = "%dav.description")
+@Properties( { @Property(name = "alias", value = "/server"),
+        @Property(name = "init.resource-path-prefix", value = "/server"),
         @Property(name = "init.missing-auth-mapping", value = ""),
-        @Property(name = "service.description", value = "Sling JcrRemoting Servlet", propertyPrivate = true),
-        @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true) })
+        @Property(name = "service.description", value = "Sling JcrRemoting Servlet"),
+        @Property(name = "service.vendor", value = "The Apache Software Foundation") })
 public class SlingDavExServlet extends JcrRemotingServlet {
 
     private static final String INIT_KEY_PREFIX = "init.";
