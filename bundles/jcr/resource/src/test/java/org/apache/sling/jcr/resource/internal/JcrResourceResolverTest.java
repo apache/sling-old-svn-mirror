@@ -1304,6 +1304,19 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         assertNotNull(res.adaptTo(Node.class));
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
+        
+        path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
+                + "/" + alias + "/" + alias + ".print.html");
+        res = resResolver.resolve(request, path);
+        assertEquals("GET request resolution does not go up the path",
+                Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
+        
+        Node child = rootNode.addNode("child", "nt:unstructured");
+        child.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
+        session.save();
+        
+        res = resResolver.resolve(request, path);   
+        assertEquals(child.getPath(), res.getPath());
     }
 
     public void testResolveVanityPath() throws Exception {
