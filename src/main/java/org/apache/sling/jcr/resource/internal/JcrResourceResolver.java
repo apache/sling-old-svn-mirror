@@ -95,6 +95,12 @@ public class JcrResourceResolver
 
     public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
 
+    // The suffix of a resource being a content node of some parent
+    // such as nt:file. The slash is included to prevent false
+    // positives for the String.endsWith check for names like
+    // "xyzjcr:content"
+    private static final String JCR_CONTENT_LEAF = "/jcr:content";
+
     @SuppressWarnings("deprecation")
     private static final String DEFAULT_QUERY_LANGUAGE = Query.XPATH;
 
@@ -645,7 +651,7 @@ public class JcrResourceResolver
             String path = res.getPath();
             while ( path != null ) {
                 String alias = null;
-                if ( current != null && !path.endsWith("jcr:content")) {
+                if ( current != null && !path.endsWith(JCR_CONTENT_LEAF)) {
                     alias = getProperty(current, PROP_ALIAS);
                 }
                 if (alias == null || alias.length() == 0) {
@@ -1195,16 +1201,18 @@ public class JcrResourceResolver
         Iterator<Resource> children = listChildren(parent);
         while (children.hasNext()) {
             child = children.next();
-            String[] aliases = getProperty(child, PROP_ALIAS, String[].class);
-            if (aliases != null) {
-                for (String alias : aliases) {
-                    if (childName.equals(alias)) {
-                        LOGGER.debug(
-                            "getChildInternal: Found Resource {} with alias {} to use",
-                            child, childName);
-                        return child;
-                    }
-                }
+            if (!child.getPath().endsWith(JCR_CONTENT_LEAF)){
+            	String[] aliases = getProperty(child, PROP_ALIAS, String[].class);
+            	if (aliases != null) {
+            		for (String alias : aliases) {
+            			if (childName.equals(alias)) {
+            				LOGGER.debug(
+            						"getChildInternal: Found Resource {} with alias {} to use",
+            						child, childName);
+            				return child;
+            			}
+            		}
+            	}
             }
         }
 
