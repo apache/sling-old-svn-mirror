@@ -163,6 +163,10 @@ public class QuartzScheduler implements Scheduler {
      * @throws SchedulerException
      */
     protected org.quartz.Scheduler init(final String poolName) throws SchedulerException {
+
+        // SLING-2261 Prevent Quartz from checking for updates
+        System.setProperty("org.terracotta.quartz.skipUpdateCheck", Boolean.TRUE.toString());
+
         final ThreadPoolManager tpm = this.threadPoolManager;
         // sanity null check
         if ( tpm == null ) {
