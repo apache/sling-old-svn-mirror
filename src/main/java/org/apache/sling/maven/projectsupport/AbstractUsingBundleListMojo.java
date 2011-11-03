@@ -20,42 +20,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.metadata.ArtifactMetadataRetrievalException;
-import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
-import org.apache.maven.artifact.versioning.VersionRange;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
-import org.codehaus.plexus.interpolation.InterpolationException;
-import org.codehaus.plexus.interpolation.Interpolator;
-import org.codehaus.plexus.interpolation.PrefixedObjectValueSource;
-import org.codehaus.plexus.interpolation.PropertiesBasedValueSource;
-import org.codehaus.plexus.interpolation.StringSearchInterpolator;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
@@ -113,20 +91,6 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     private ArtifactDefinition[] bundleExclusions;
 
     /**
-     * Used to look up Artifacts in the remote repository.
-     *
-     * @component
-     */
-    private ArtifactFactory factory;
-
-    /**
-     * Used to look up Artifacts in the remote repository.
-     *
-     * @component hint="maven"
-     */
-    private ArtifactMetadataSource metadataSource;
-
-    /**
      * If true, include the default bundles.
      *
      * @parameter default-value="true"
@@ -134,41 +98,9 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     private boolean includeDefaultBundles;
 
     /**
-     * Location of the local repository.
-     *
-     * @parameter expression="${localRepository}"
-     * @readonly
-     * @required
-     */
-    private ArtifactRepository local;
-
-    /**
-     * List of Remote Repositories used by the resolver.
-     *
-     * @parameter expression="${project.remoteArtifactRepositories}"
-     * @readonly
-     * @required
-     */
-    private List<?> remoteRepos;
-
-    /**
-     * Used to look up Artifacts in the remote repository.
-     *
-     * @component
-     */
-    private ArtifactResolver resolver;
-
-    /**
      * @parameter
      */
     private File[] rewriteRuleFiles;
-
-    /**
-     * @parameter expression="${session}
-     * @required
-     * @readonly
-     */
-    protected MavenSession mavenSession;
 
     /**
      * @component
@@ -231,64 +163,6 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * initialized.
      */
     protected abstract void executeWithArtifacts() throws MojoExecutionException, MojoFailureException;
-
-    /**
-     * Get a resolved Artifact from the coordinates found in the artifact
-     * definition.
-     *
-     * @param def the artifact definition
-     * @return the artifact, which has been resolved
-     * @throws MojoExecutionException
-     */
-    protected Artifact getArtifact(ArtifactDefinition def) throws MojoExecutionException {
-        return getArtifact(def.getGroupId(), def.getArtifactId(), def.getVersion(), def.getType(), def.getClassifier());
-    }
-
-    /**
-     * Get a resolved Artifact from the coordinates provided
-     *
-     * @return the artifact, which has been resolved.
-     * @throws MojoExecutionException
-     */
-    protected Artifact getArtifact(String groupId, String artifactId, String version, String type, String classifier)
-            throws MojoExecutionException {
-        Artifact artifact;
-        VersionRange vr;
-
-        try {
-            vr = VersionRange.createFromVersionSpec(version);
-        } catch (InvalidVersionSpecificationException e) {
-            vr = VersionRange.createFromVersion(version);
-        }
-
-        if (StringUtils.isEmpty(classifier)) {
-            artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, null, Artifact.SCOPE_COMPILE);
-        } else {
-            artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, classifier,
-                    Artifact.SCOPE_COMPILE);
-        }
-
-        // This code kicks in when the version specifier is a range.
-        if (vr.getRecommendedVersion() == null) {
-            try {
-                List<?> availVersions = metadataSource.retrieveAvailableVersions(artifact, local, remoteRepos);
-                ArtifactVersion resolvedVersion = vr.matchVersion(availVersions);
-                artifact.setVersion(resolvedVersion.toString());
-            } catch (ArtifactMetadataRetrievalException e) {
-                throw new MojoExecutionException("Unable to find version for artifact", e);
-            }
-
-        }
-
-        try {
-            resolver.resolve(artifact, remoteRepos, local);
-        } catch (ArtifactResolutionException e) {
-            throw new MojoExecutionException("Unable to resolve artifact.", e);
-        } catch (ArtifactNotFoundException e) {
-            throw new MojoExecutionException("Unable to find artifact.", e);
-        }
-        return artifact;
-    }
 
     protected BundleList getBundleList() {
         return bundleList;
@@ -434,49 +308,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
 
         rewriteBundleList(bundleList);
     }
-
-    private void interpolateProperties(BundleList bundleList) throws MojoExecutionException {
-        Interpolator interpolator = createInterpolator();
-        for (final StartLevel sl : bundleList.getStartLevels()) {
-            for (final Bundle bndl : sl.getBundles()) {
-                try {
-                    bndl.setArtifactId(interpolator.interpolate(bndl.getArtifactId()));
-                    bndl.setGroupId(interpolator.interpolate(bndl.getGroupId()));
-                    bndl.setVersion(interpolator.interpolate(bndl.getVersion()));
-                    bndl.setClassifier(interpolator.interpolate(bndl.getClassifier()));
-                    bndl.setType(interpolator.interpolate(bndl.getType()));
-                } catch (InterpolationException e) {
-                    throw new MojoExecutionException("Unable to interpolate properties for bundle " + bndl.toString(), e);
-                }
-            }
-        }
-
-    }
-
-    private Interpolator createInterpolator() {
-        StringSearchInterpolator interpolator = new StringSearchInterpolator();
-
-        final Properties props = new Properties();
-        props.putAll(project.getProperties());
-        props.putAll(mavenSession.getExecutionProperties());
-
-        interpolator.addValueSource(new PropertiesBasedValueSource(props));
-
-        // add ${project.foo}
-        interpolator.addValueSource(new PrefixedObjectValueSource(Arrays.asList("project", "pom"), project, true));
-
-        // add ${session.foo}
-        interpolator.addValueSource(new PrefixedObjectValueSource("session", mavenSession));
-
-        // add ${settings.foo}
-        final Settings settings = mavenSession.getSettings();
-        if (settings != null) {
-            interpolator.addValueSource(new PrefixedObjectValueSource("settings", settings));
-        }
-
-        return interpolator;
-    }
-
+    
     private void rewriteBundleList(BundleList bundleList) throws MojoExecutionException {
         if (rewriteRuleFiles != null) {
             KnowledgeBase knowledgeBase = createKnowledgeBase(rewriteRuleFiles);

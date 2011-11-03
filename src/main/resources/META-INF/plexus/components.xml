@@ -28,6 +28,7 @@
             <id>default</id>
             <!-- START SNIPPET: bundle-lifecycle -->
             <phases>
+              <validate>org.apache.sling:maven-launchpad-plugin:validate-bundle-list</validate>
               <package>org.apache.sling:maven-launchpad-plugin:attach-partial-bundle-list</package>
               <install>org.apache.maven.plugins:maven-install-plugin:install</install>
               <deploy>org.apache.maven.plugins:maven-deploy-plugin:deploy</deploy>
