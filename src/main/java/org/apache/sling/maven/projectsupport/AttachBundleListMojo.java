@@ -29,6 +29,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleLis
  *
  * @goal attach-bundle-list
  * @phase package
+ * @requiresDependencyResolution test
  * @description attach the bundle list as a project artifact
  */
 public class AttachBundleListMojo extends AbstractUsingBundleListMojo {

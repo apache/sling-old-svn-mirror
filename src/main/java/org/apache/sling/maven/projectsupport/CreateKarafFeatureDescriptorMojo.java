@@ -36,6 +36,7 @@ import org.jdom.output.XMLOutputter;
  * @goal create-karaf-descriptor
  * @phase package
  * @description create a karaf feature descriptor
+ * @requiresDependencyResolution test
  */
 public class CreateKarafFeatureDescriptorMojo extends AbstractUsingBundleListMojo {
 

@@ -30,6 +30,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
  * to SNAPSHOT versions.
  *
  * @goal check-bundle-list-for-snapshots
+ * @requiresDependencyResolution test
  *
  */
 public class CheckBundleListForSnapshotsMojo extends AbstractUsingBundleListMojo {
