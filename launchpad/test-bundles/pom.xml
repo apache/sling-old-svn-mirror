@@ -43,6 +43,14 @@
                 <extensions>true</extensions>
                 <configuration>
                     <dependencyStartLevel>0</dependencyStartLevel>
+                    <includeDependencies>
+                        <startLevel>
+                            <level>1</level>
+                            <includeArtifactIds>
+                                org.apache.sling.servlets.compat
+                            </includeArtifactIds>
+                        </startLevel>
+                    </includeDependencies>
                 </configuration>
             </plugin>
         </plugins>
