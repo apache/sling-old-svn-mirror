@@ -34,6 +34,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  *
  * @goal attach-partial-bundle-list
  * @phase package
+ * @requiresDependencyResolution test
  * @description attach the partial bundle list as a project artifact
  */
 public class AttachPartialBundleListMojo extends AbstractBundleListMojo {

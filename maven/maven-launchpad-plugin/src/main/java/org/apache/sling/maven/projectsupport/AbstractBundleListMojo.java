@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -41,6 +42,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.apache.maven.settings.Settings;
+import org.apache.maven.shared.artifact.filter.collection.ArtifactFilterException;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
@@ -66,8 +68,13 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     protected File bundleListFile;
 
     /**
+     * @parameter
+     */
+    private ConfigurationStartLevel[] includeDependencies;
+
+    /**
      * The Maven project.
-     *
+     * 
      * @parameter expression="${project}"
      * @required
      * @readonly
@@ -195,7 +202,16 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     }
 
     @SuppressWarnings("unchecked")
-    protected void addDependencies(final BundleList bundleList) {
+    protected void addDependencies(final BundleList bundleList) throws MojoExecutionException {
+        if (includeDependencies != null) {
+            for (ConfigurationStartLevel startLevel : includeDependencies) {
+                Set<Artifact> artifacts = getArtifacts(startLevel);
+                for (Artifact artifact : artifacts) {
+                    bundleList.add(ArtifactDefinition.toBundle(artifact, startLevel.getLevel()));
+                }
+            }
+        }
+
         if (dependencyStartLevel >= 0) {
             final List<Dependency> dependencies = project.getDependencies();
             for (Dependency dependency : dependencies) {
@@ -204,6 +220,21 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<Artifact> getArtifacts(ConfigurationStartLevel startLevel) throws MojoExecutionException {
+        // start with all artifacts.
+        Set<Artifact> artifacts = project.getArtifacts();
+
+        // perform filtering
+        try {
+            artifacts = startLevel.buildFilter(project).filter(artifacts);
+        } catch (ArtifactFilterException e) {
+            throw new MojoExecutionException(e.getMessage(), e);
+        }
+        
+        return artifacts;
     }
 
     protected void interpolateProperties(BundleList bundleList) throws MojoExecutionException {

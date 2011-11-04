@@ -27,6 +27,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleLis
  * Output the bundle list back to the console.
  * 
  * @goal output-bundle-list
+ * @requiresDependencyResolution test
  * 
  */
 public class OutputBundleListMojo extends AbstractUsingBundleListMojo {
