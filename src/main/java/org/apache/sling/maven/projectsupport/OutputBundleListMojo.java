@@ -35,7 +35,7 @@ public class OutputBundleListMojo extends AbstractUsingBundleListMojo {
     protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
         BundleListXpp3Writer writer = new BundleListXpp3Writer();
         try {
-            writer.write(new OutputStreamWriter(System.out), getBundleList());
+            writer.write(new OutputStreamWriter(System.out), getInitializedBundleList());
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write bundle list", e);
         }

@@ -44,7 +44,7 @@ public class CheckBundleListForSnapshotsMojo extends AbstractUsingBundleListMojo
     @Override
     protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
         List<Bundle> snapshots = new ArrayList<Bundle>();
-        BundleList bundleList = getBundleList();
+        BundleList bundleList = getInitializedBundleList();
         for (StartLevel level : bundleList.getStartLevels()) {
             for (Bundle bundle : level.getBundles()) {
                 if (isSnapshot(bundle)) {

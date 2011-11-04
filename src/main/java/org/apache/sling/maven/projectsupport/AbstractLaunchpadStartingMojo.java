@@ -108,7 +108,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
         public Iterator<String> getChildren(String path) {
             if (path.equals(BUNDLE_PATH_PREFIX)) {
                 final Set<String> levels = new HashSet<String>();
-                for (final StartLevel level : getBundleList().getStartLevels()) {
+                for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
                     // we treat the boot level as level 1
                     if ( level.getStartLevel() == -1 ) {
                         levels.add(BUNDLE_PATH_PREFIX + "/1/");
@@ -148,7 +148,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
                     final int startLevel = Integer.parseInt(startLevelInfo);
 
                     final List<String> bundles = new ArrayList<String>();
-                    for (final StartLevel level : getBundleList().getStartLevels()) {
+                    for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
                         if (level.getStartLevel() == startLevel || (startLevel == 1 && level.getStartLevel() == -1)) {
                             for (final Bundle bundle : level.getBundles()) {
                                 final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);

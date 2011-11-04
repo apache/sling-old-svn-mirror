@@ -36,24 +36,24 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 public class ValidateBundleListMojo extends AbstractBundleListMojo {
    
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final BundleList bundleList;
+        final BundleList initializedBundleList;
         if (bundleListFile.exists()) {
             try {
-                bundleList = readBundleList(bundleListFile);
+                initializedBundleList = readBundleList(bundleListFile);
             } catch (IOException e) {
                 throw new MojoExecutionException("Unable to read bundle list file", e);
             } catch (XmlPullParserException e) {
                 throw new MojoExecutionException("Unable to read bundle list file", e);
             }
         } else {
-            bundleList = new BundleList();
+            initializedBundleList = new BundleList();
         }
         
-        addDependencies(bundleList);
+        addDependencies(initializedBundleList);
 
-        interpolateProperties(bundleList);
+        interpolateProperties(initializedBundleList);
         
-        for (StartLevel sl : bundleList.getStartLevels()) {
+        for (StartLevel sl : initializedBundleList.getStartLevels()) {
             for (Bundle bundle : sl.getBundles()) {
                 getArtifact(new ArtifactDefinition(bundle, -1));
             }
