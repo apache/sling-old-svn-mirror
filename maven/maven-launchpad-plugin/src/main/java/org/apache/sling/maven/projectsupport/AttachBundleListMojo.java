@@ -49,7 +49,7 @@ public class AttachBundleListMojo extends AbstractUsingBundleListMojo {
         FileWriter fw = null;
         try {
             fw = new FileWriter(outputFile);
-            writer.write(fw, getBundleList());
+            writer.write(fw, getInitializedBundleList());
             projectHelper.attachArtifact(project, TYPE, CLASSIFIER, outputFile);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to output effective bundle list", e);

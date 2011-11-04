@@ -72,24 +72,24 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
     private ZipArchiver zipArchiver;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
-        final BundleList bundleList;
+        final BundleList initializedBundleList;
         if (bundleListFile.exists()) {
             try {
-                bundleList = readBundleList(bundleListFile);
+                initializedBundleList = readBundleList(bundleListFile);
             } catch (IOException e) {
                 throw new MojoExecutionException("Unable to read bundle list file", e);
             } catch (XmlPullParserException e) {
                 throw new MojoExecutionException("Unable to read bundle list file", e);
             }
         } else {
-            bundleList = new BundleList();
+            initializedBundleList = new BundleList();
         }
         
-        addDependencies(bundleList);
+        addDependencies(initializedBundleList);
         
         BundleListXpp3Writer writer = new BundleListXpp3Writer();
         try {
-            writer.write(new FileWriter(bundleListOutput), bundleList);
+            writer.write(new FileWriter(bundleListOutput), initializedBundleList);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write bundle list", e);
         }

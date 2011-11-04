@@ -78,7 +78,7 @@ public class CreateKarafFeatureDescriptorMojo extends AbstractUsingBundleListMoj
         feature.setAttribute("name", featureName);
         feature.setAttribute("version", featureVersion);
 
-        BundleList bundleList = getBundleList();
+        BundleList bundleList = getInitializedBundleList();
         for (StartLevel level : bundleList.getStartLevels()) {
             for (Bundle bundle : level.getBundles()) {
                 String bundleRef = String.format("mvn:%s/%s/%s", bundle.getGroupId(), bundle.getArtifactId(), bundle

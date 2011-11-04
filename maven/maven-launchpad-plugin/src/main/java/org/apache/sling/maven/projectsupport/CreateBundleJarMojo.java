@@ -41,148 +41,148 @@ import org.codehaus.plexus.util.DirectoryScanner;
  */
 public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
 
-	/**
-	 * The list of resources we want to add to the bundle JAR file.
-	 *
-	 * @parameter
-	 */
-	private Resource[] resources;
+    /**
+     * The list of resources we want to add to the bundle JAR file.
+     *
+     * @parameter
+     */
+    private Resource[] resources;
 
-	/**
-	 * The output directory.
-	 *
-	 * @parameter default-value="${project.build.directory}"
-	 */
-	private File outputDirectory;
+    /**
+     * The output directory.
+     *
+     * @parameter default-value="${project.build.directory}"
+     */
+    private File outputDirectory;
 
-	/**
-	 * Name of the generated JAR.
-	 *
-	 * @parameter default-value="${project.artifactId}-${project.version}"
-	 * @required
-	 */
-	private String jarName;
+    /**
+     * Name of the generated JAR.
+     *
+     * @parameter default-value="${project.artifactId}-${project.version}"
+     * @required
+     */
+    private String jarName;
 
-	/**
-	 * The Jar archiver.
-	 *
-	 * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="jar"
-	 */
-	private JarArchiver jarArchiver;
+    /**
+     * The Jar archiver.
+     *
+     * @component role="org.codehaus.plexus.archiver.Archiver" roleHint="jar"
+     */
+    private JarArchiver jarArchiver;
 
-	private static final String CLASSIFIER = "bundles";
+    private static final String CLASSIFIER = "bundles";
 
-	public static final String[] DEFAULT_INCLUDES = { "**/**" };
+    public static final String[] DEFAULT_INCLUDES = { "**/**" };
 
-	private void addBundles() throws MojoExecutionException {
-		BundleList bundles = getBundleList();
+    private void addBundles() throws MojoExecutionException {
+        BundleList bundles = getInitializedBundleList();
 
-		for (StartLevel level : bundles.getStartLevels()) {
-			for (Bundle bundle : level.getBundles()) {
-				Artifact artifact = getArtifact(new ArtifactDefinition(bundle,
-						level.getStartLevel()));
-				final String destFileName = getPathForArtifact(level.getStartLevel(), artifact.getFile().getName());
-				try {
-					jarArchiver.addFile(artifact.getFile(), destFileName);
-				} catch (ArchiverException e) {
-					throw new MojoExecutionException(
-							"Unable to add file to bundle jar file: "
-									+ artifact.getFile().getAbsolutePath(), e);
-				}
-			}
-		}
-	}
+        for (StartLevel level : bundles.getStartLevels()) {
+            for (Bundle bundle : level.getBundles()) {
+                Artifact artifact = getArtifact(new ArtifactDefinition(bundle,
+                        level.getStartLevel()));
+                final String destFileName = getPathForArtifact(level.getStartLevel(), artifact.getFile().getName());
+                try {
+                    jarArchiver.addFile(artifact.getFile(), destFileName);
+                } catch (ArchiverException e) {
+                    throw new MojoExecutionException(
+                            "Unable to add file to bundle jar file: "
+                                    + artifact.getFile().getAbsolutePath(), e);
+                }
+            }
+        }
+    }
 
-	private void addResources(Resource resource) throws MojoExecutionException {
-		getLog().info(
-				String.format("Adding resources [%s] to [%s]", resource
-						.getDirectory(), resource.getTargetPath()));
-		String[] fileNames = getFilesToCopy(resource);
-		for (int i = 0; i < fileNames.length; i++) {
-			String targetFileName = fileNames[i];
-			if (resource.getTargetPath() != null) {
-				targetFileName = resource.getTargetPath() + File.separator
-						+ targetFileName;
-			}
+    private void addResources(Resource resource) throws MojoExecutionException {
+        getLog().info(
+                String.format("Adding resources [%s] to [%s]", resource
+                        .getDirectory(), resource.getTargetPath()));
+        String[] fileNames = getFilesToCopy(resource);
+        for (int i = 0; i < fileNames.length; i++) {
+            String targetFileName = fileNames[i];
+            if (resource.getTargetPath() != null) {
+                targetFileName = resource.getTargetPath() + File.separator
+                        + targetFileName;
+            }
 
-			try {
-				jarArchiver.addFile(new File(resource.getDirectory(),
-						fileNames[i]), targetFileName);
-			} catch (ArchiverException e) {
-				throw new MojoExecutionException(
-						"Unable to add resources to JAR file", e);
-			}
+            try {
+                jarArchiver.addFile(new File(resource.getDirectory(),
+                        fileNames[i]), targetFileName);
+            } catch (ArchiverException e) {
+                throw new MojoExecutionException(
+                        "Unable to add resources to JAR file", e);
+            }
 
-		}
-	}
+        }
+    }
 
-	private File createJARFile() throws MojoExecutionException {
-		File jarFile = new File(outputDirectory, jarName + "-" + CLASSIFIER
-				+ "." + JAR);
-		jarArchiver.setDestFile(jarFile);
+    private File createJARFile() throws MojoExecutionException {
+        File jarFile = new File(outputDirectory, jarName + "-" + CLASSIFIER
+                + "." + JAR);
+        jarArchiver.setDestFile(jarFile);
 
-		addBundles();
-		addResources();
+        addBundles();
+        addResources();
 
-		try {
-			jarArchiver.createArchive();
-		} catch (ArchiverException e) {
-			throw new MojoExecutionException(
-					"Unable to create bundle jar file", e);
-		} catch (IOException e) {
-			throw new MojoExecutionException(
-					"Unable to create bundle jar file", e);
-		}
+        try {
+            jarArchiver.createArchive();
+        } catch (ArchiverException e) {
+            throw new MojoExecutionException(
+                    "Unable to create bundle jar file", e);
+        } catch (IOException e) {
+            throw new MojoExecutionException(
+                    "Unable to create bundle jar file", e);
+        }
 
-		return jarFile;
-	}
+        return jarFile;
+    }
 
-	private void addResources() throws MojoExecutionException {
-		if (resources != null) {
-			for (Resource resource : resources) {
-				if (!(new File(resource.getDirectory())).isAbsolute()) {
-					resource.setDirectory(project.getBasedir() + File.separator
-							+ resource.getDirectory());
-				}
-				addResources(resource);
-			}
-		}
-	}
+    private void addResources() throws MojoExecutionException {
+        if (resources != null) {
+            for (Resource resource : resources) {
+                if (!(new File(resource.getDirectory())).isAbsolute()) {
+                    resource.setDirectory(project.getBasedir() + File.separator
+                            + resource.getDirectory());
+                }
+                addResources(resource);
+            }
+        }
+    }
 
-	@Override
-	protected void executeWithArtifacts() throws MojoExecutionException,
-			MojoFailureException {
-		File jarFile = createJARFile();
-		projectHelper.attachArtifact(project, JAR, CLASSIFIER, jarFile);
-	}
+    @Override
+    protected void executeWithArtifacts() throws MojoExecutionException,
+            MojoFailureException {
+        File jarFile = createJARFile();
+        projectHelper.attachArtifact(project, JAR, CLASSIFIER, jarFile);
+    }
 
-	/**
-	 * Returns a list of filenames that should be copied over to the destination
-	 * directory.
-	 *
-	 * @param resource
-	 *            the resource to be scanned
-	 * @return the array of filenames, relative to the sourceDir
-	 */
-	@SuppressWarnings("unchecked")
+    /**
+     * Returns a list of filenames that should be copied over to the destination
+     * directory.
+     *
+     * @param resource
+     *            the resource to be scanned
+     * @return the array of filenames, relative to the sourceDir
+     */
+    @SuppressWarnings("unchecked")
     private static String[] getFilesToCopy(Resource resource) {
-		DirectoryScanner scanner = new DirectoryScanner();
-		scanner.setBasedir(resource.getDirectory());
-		if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
-			scanner.setIncludes((String[]) resource.getIncludes().toArray(
-					new String[resource.getIncludes().size()]));
-		} else {
-			scanner.setIncludes(DEFAULT_INCLUDES);
-		}
-		if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
-			scanner.setExcludes((String[]) resource.getExcludes().toArray(
-					new String[resource.getExcludes().size()]));
-		}
+        DirectoryScanner scanner = new DirectoryScanner();
+        scanner.setBasedir(resource.getDirectory());
+        if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
+            scanner.setIncludes((String[]) resource.getIncludes().toArray(
+                    new String[resource.getIncludes().size()]));
+        } else {
+            scanner.setIncludes(DEFAULT_INCLUDES);
+        }
+        if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
+            scanner.setExcludes((String[]) resource.getExcludes().toArray(
+                    new String[resource.getExcludes().size()]));
+        }
 
-		scanner.addDefaultExcludes();
+        scanner.addDefaultExcludes();
 
-		scanner.scan();
+        scanner.scan();
 
-		return scanner.getIncludedFiles();
-	}
+        return scanner.getIncludedFiles();
+    }
 }

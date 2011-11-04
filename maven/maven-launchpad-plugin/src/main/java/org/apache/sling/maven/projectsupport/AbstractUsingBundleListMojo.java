@@ -81,7 +81,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      */
     private ArtifactDefinition[] additionalBundles;
 
-    private BundleList bundleList;
+    private BundleList initializedBundleList;
 
     /**
      * Bundles which should be removed from the project's bundles directory.
@@ -164,8 +164,8 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      */
     protected abstract void executeWithArtifacts() throws MojoExecutionException, MojoFailureException;
 
-    protected BundleList getBundleList() {
-        return bundleList;
+    protected BundleList getInitializedBundleList() {
+        return initializedBundleList;
     }
 
     /**
@@ -211,30 +211,30 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     private final void initBundleList() throws IOException, XmlPullParserException, MojoExecutionException {
         initArtifactDefinitions();
         if (isCurrentArtifact(defaultBundleList)) {
-            bundleList = readBundleList(bundleListFile);
+            initializedBundleList = readBundleList(bundleListFile);
         } else {
-            bundleList = new BundleList();
+            initializedBundleList = new BundleList();
             if (includeDefaultBundles) {
                 Artifact defBndListArtifact = getArtifact(defaultBundleList.getGroupId(),
                         defaultBundleList.getArtifactId(), defaultBundleList.getVersion(), defaultBundleList.getType(),
                         defaultBundleList.getClassifier());
                 getLog().info("Using bundle list file from " + defBndListArtifact.getFile().getAbsolutePath());
-                bundleList = readBundleList(defBndListArtifact.getFile());
+                initializedBundleList = readBundleList(defBndListArtifact.getFile());
             }
 
             if (bundleListFile.exists()) {
-                bundleList.merge(readBundleList(bundleListFile));
+                initializedBundleList.merge(readBundleList(bundleListFile));
             }
         }
         if (additionalBundles != null) {
             for (ArtifactDefinition def : additionalBundles) {
-                bundleList.add(def.toBundle());
+                initializedBundleList.add(def.toBundle());
             }
         }
-        addDependencies(bundleList);
+        addDependencies(initializedBundleList);
         if (bundleExclusions != null) {
             for (ArtifactDefinition def : bundleExclusions) {
-                bundleList.remove(def.toBundle(), false);
+                initializedBundleList.remove(def.toBundle(), false);
             }
         }
 
@@ -244,7 +244,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 getLog().info(
                         String.format("merging partial bundle list for %s:%s:%s", artifact.getGroupId(),
                                 artifact.getArtifactId(), artifact.getVersion()));
-                bundleList.merge(readBundleList(artifact.getFile()));
+                initializedBundleList.merge(readBundleList(artifact.getFile()));
 
                 // check for configuration artifact
                 Artifact cfgArtifact = null;
@@ -302,11 +302,11 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
 
 
-        initBundleList(bundleList);
+        initBundleList(initializedBundleList);
 
-        interpolateProperties(bundleList);
+        interpolateProperties(initializedBundleList);
 
-        rewriteBundleList(bundleList);
+        rewriteBundleList(initializedBundleList);
     }
     
     private void rewriteBundleList(BundleList bundleList) throws MojoExecutionException {
