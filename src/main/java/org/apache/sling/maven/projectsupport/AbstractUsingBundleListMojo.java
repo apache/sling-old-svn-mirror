@@ -93,7 +93,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     /**
      * If true, include the default bundles.
      *
-     * @parameter default-value="true"
+     * @parameter expression="${includeDefaultBundles}" default-value="true"
      */
     private boolean includeDefaultBundles;
 
