@@ -186,7 +186,7 @@ public interface AuthenticationHandler {
      * @param response The response object to which to send the request.
      * @return <code>true</code> if the handler is able to send an authentication
      *         inquiry for the given request. <code>false</code> otherwise.
-     * @throws IOException If an error occurrs sending the authentication
+     * @throws IOException If an error occurs sending the authentication
      *             inquiry to the client.
      */
     boolean requestCredentials(HttpServletRequest request,
@@ -198,7 +198,7 @@ public interface AuthenticationHandler {
      *
      * @param request The request object.
      * @param response The response object to which to send the request.
-     * @throws IOException If an error occurrs asking the client to drop any
+     * @throws IOException If an error occurs asking the client to drop any
      *             authentication traces.
      */
     void dropCredentials(HttpServletRequest request,

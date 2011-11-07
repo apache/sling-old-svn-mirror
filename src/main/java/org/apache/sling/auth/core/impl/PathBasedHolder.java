@@ -29,7 +29,7 @@ import org.osgi.framework.ServiceReference;
  * <ul>
  * <li>Provide location of control through its path fields</li>
  * <li>Support orderability of instances by being <code>Comparable</code> and
- * odering according to the {@link #fullPath} and the
+ * ordering according to the {@link #fullPath} and the
  * <code>ServiceReference</code> of the provider service</li>
  * <li>Support {@link #equals(Object)} and {@link #hashCode()} compatible with
  * the <code>Comparable</code> implementation.</li>

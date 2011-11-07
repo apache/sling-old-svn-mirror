@@ -93,7 +93,7 @@ class HttpBasicAuthenticationHandler extends
      * @param response The response object which may be used to send the
      *            information on the request failure to the user.
      * @return A valid Credentials instance identifying the request user,
-     *         DOING_AUTH if the handler is in an authentication trasaction with
+     *         DOING_AUTH if the handler is in an authentication transaction with
      *         the client or null if the request does not contain authentication
      *         information. In case of DOING_AUTH, the method has sent back a
      *         401 requesting the client to provide credentials.
@@ -137,7 +137,7 @@ class HttpBasicAuthenticationHandler extends
     }
 
     /**
-     * Sends a 401/UNATUHORIZED response if the request has an Authorization
+     * Sends a 401/UNAUTHORIZED response if the request has an Authorization
      * header and if this handler is configured to actually send this response
      * in response to a request to drop the credentials; that is if full support
      * has been enabled in the

@@ -110,7 +110,7 @@ public interface AuthenticationSupport {
      * @param response The HTTP response to send any response to in case of
      *            problems.
      * @return <code>true</code> if authentication succeeded and the request
-     *         attribtues are set. If <code>false</code> is returned the request
+     *         attributes are set. If <code>false</code> is returned the request
      *         is immediately terminated and no request attributes are set.
      */
     boolean handleSecurity(HttpServletRequest request,

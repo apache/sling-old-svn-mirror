@@ -51,20 +51,20 @@ public abstract class AbstractAuthenticationHandler extends
      *
      * @see #isValidateRequest(HttpServletRequest)
      * @see #sendValid(HttpServletResponse)
-     * @see #sendInvalid(HttpServletResponse, Object)
+     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
      * @since 1.0.2 (Bundle version 1.0.4)
      */
     private static final String PAR_J_VALIDATE = "j_validate";
 
     /**
      * The name of the request header set by the
-     * {@link #sendInvalid(HttpServletResponse, Object)} method if the provided
+     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
      * credentials cannot be used for login.
      * <p>
      * This header may be inspected by clients for a reason why the request
      * failed.
      *
-     * @see #sendInvalid(HttpServletResponse, Object)
+     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
      * @since 1.0.2 (Bundle version 1.0.4)
      */
     private static final String X_REASON = "X-Reason";
@@ -194,7 +194,7 @@ public abstract class AbstractAuthenticationHandler extends
      *            the target is modified to be the root of the request's context.
      * @param params The map of parameters to be added to the target path. This
      *            may be <code>null</code>.
-     * @throws IOException If an error occurrs sending the redirect request
+     * @throws IOException If an error occurs sending the redirect request
      * @throws IllegalStateException If the response was committed or if a
      *             partial URL is given and cannot be converted into a valid URL
      * @throws InternalError If the UTF-8 character encoding is not supported by
@@ -373,7 +373,7 @@ public abstract class AbstractAuthenticationHandler extends
         try {
             response.setStatus(HttpServletResponse.SC_OK);
 
-            // expressely tell we have no content but set content type
+            // explicitly tell we have no content but set content type
             // to prevent firefox from trying to parse the response
             // (SLING-1841)
             response.setContentType("text/plain");
@@ -392,12 +392,14 @@ public abstract class AbstractAuthenticationHandler extends
     }
 
     /**
-     * Sends a 403/FORBIDDEN response to a credential validation request
-     * providing the given reason as the value of the {@link #X_REASON} header.
+     * Sends a 403/FORBIDDEN response optionally stating the reason for
+     * this response code in the {@link #X_REASON} header. The value for
+     * the {@link #X_REASON} header is taken from
+     * {@link AuthenticationHandler#FAILURE_REASON} request attribute if
+     * set.
      *
+     * @param request The request object
      * @param response The response object
-     * @param reason The reason to set on the header; not expected to be
-     *            <code>null</code>
      * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static void sendInvalid(final HttpServletRequest request,

@@ -74,7 +74,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      * @param response the current response
      * @returns the result of calling
      *          {@link #doRequestCredentials(HttpServletRequest, HttpServletResponse)}
-     * @throws IOException if an error occurrs interacting with the client
+     * @throws IOException if an error occurs interacting with the client
      */
     public final boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -94,7 +94,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      *
      * @param request the current request
      * @param response the current response
-     * @throws IOException if an error occurrs interacting with the client
+     * @throws IOException if an error occurs interacting with the client
      */
     public final void dropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -133,7 +133,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      * @param request The current request
      * @param response The current response
      * @return as returned from the called authentication handler
-     * @throws IOException if an error occurrs sending back any response to the
+     * @throws IOException if an error occurs sending back any response to the
      *             client.
      * @see #requestCredentials(HttpServletRequest, HttpServletResponse)
      */
@@ -146,7 +146,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      *
      * @param request The current request
      * @param response The current response
-     * @throws IOException if an error occurrs sending back any response to the
+     * @throws IOException if an error occurs sending back any response to the
      *             client.
      * @see #dropCredentials(HttpServletRequest, HttpServletResponse)
      */
@@ -180,7 +180,7 @@ public abstract class AbstractAuthenticationHandlerHolder extends
      * @param request The request object whose attribute is to be set.
      * @param name The name of the attribute to be set.
      * @param value The new value of the attribute. If this is <code>null</code>
-     *            the attribte is actually removed from the request.
+     *            the attribute is actually removed from the request.
      * @return The previous value of the named request attribute or
      *         <code>null</code> if it was not set.
      */
