@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * The <code>Authenticator</code> interface defines the service interface which
- * may be used by applications to enfore requests to be authenticated (see
+ * may be used by applications to enforce requests to be authenticated (see
  * {@link #login(HttpServletRequest, HttpServletResponse)}) or to end enforced
  * authentication (see {@link #logout(HttpServletRequest, HttpServletResponse)}
  * ). As such this service may be looked at as the functionality to enable
