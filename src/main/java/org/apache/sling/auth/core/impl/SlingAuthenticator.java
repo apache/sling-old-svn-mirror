@@ -39,6 +39,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.scr.annotations.Services;
@@ -155,6 +156,22 @@ public class SlingAuthenticator implements Authenticator,
     public static final String PAR_REALM_NAME = "auth.http.realm";
 
     /**
+     * Default request URI suffix to expect to be handled by authentication
+     * handlers and not expecting to cause
+     * {@link #handleSecurity(HttpServletRequest, HttpServletResponse)} to
+     * return <code>true</code>.
+     */
+    private static final String DEFAULT_AUTH_URI_SUFFIX = "/j_security_check";
+
+    /**
+     * The name of the configuration property used to set a (potentially
+     * empty) list of request URI suffixes intended to be handled by
+     * authentication handlers.
+     */
+    @Property(value = DEFAULT_AUTH_URI_SUFFIX, unbounded = PropertyUnbounded.ARRAY)
+    public static final String PAR_AUTH_URI_SUFFIX = "auth.uri.suffix";
+
+    /**
      * The name of the {@link AuthenticationInfo} property providing the option
      * {@link org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler}
      * handler to be called back on login failure or success.
@@ -205,6 +222,15 @@ public class SlingAuthenticator implements Authenticator,
 
     /** Cache control flag */
     private boolean cacheControl;
+
+    /**
+     * The configured URI suffices indicating a authentication requests and
+     * requiring redirects and thus returning <code>false</code> from the
+     * #handleSecurity method.
+     * <p>
+     * This will be <code>null</code> if there are no suffices to consider.
+     */
+    private String[] authUriSuffices;
 
     /** HTTP Basic authentication handler */
     private HttpBasicAuthenticationHandler httpBasicHandler;
@@ -310,6 +336,9 @@ public class SlingAuthenticator implements Authenticator,
             }
         }
 
+        authUriSuffices = OsgiUtil.toStringArray(properties.get(PAR_AUTH_URI_SUFFIX),
+            new String[] { DEFAULT_AUTH_URI_SUFFIX });
+
         // don't require authentication for login/logout servlets
         authRequiredCache.addHolder(new AuthenticationRequirementHolder(
             LoginServlet.SERVLET_PATH, false, null));
@@ -387,55 +416,60 @@ public class SlingAuthenticator implements Authenticator,
             return true;
         } else if (sessionAttr != null) {
             // warn and remove existing non-session
-            log.warn(
-                "handleSecurity: Overwriting existing ResourceResolver attribute ({})",
-                sessionAttr);
+            log.warn("handleSecurity: Overwriting existing ResourceResolver attribute ({})", sessionAttr);
             request.removeAttribute(REQUEST_ATTRIBUTE_RESOLVER);
         }
 
-        AuthenticationInfo authInfo = null;
-        try {
-            // 1. Ask all authentication handlers to try to extract credentials
-            authInfo = getAuthenticationInfo(request, response);
-
-            // 2. Check Credentials
-            if (authInfo == AuthenticationInfo.DOING_AUTH) {
-
-                log.debug("handleSecurity: ongoing authentication in the handler");
-                return false;
-
-            } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
-
-                log.debug("handleSecurity: Credentials present but not valid, request authentication again");
-                AbstractAuthenticationHandler.setLoginResourceAttribute(
-                    request, request.getRequestURI());
-                doLogin(request, response);
-                return false;
-
-            } else if (authInfo == null) {
-                // create an empty authentication info object which can be used
-                // with the post processors
-                AuthenticationInfo anonInfo = new AuthenticationInfo(
-                    "anonymous");
-                postProcess(anonInfo, request, response);
-
-                log.debug("handleSecurity: No credentials in the request, anonymous");
-                return getAnonymousResolver(request, response);
-
-            } else {
-
-                log.debug("handleSecurity: Trying to get a session for {}",
-                    authInfo.getUser());
-                return getResolver(request, response, authInfo);
-
-            }
-        } catch (LoginException e) {
-            if (authInfo != null) {
-                handleLoginFailure(request, response, authInfo.getUser(), e);
-            } else {
-            handleLoginFailure(request, response, "<null>", e);
-            }
+        boolean process = doHandleSecurity(request, response);
+        if (process && expectAuthenticationHandler(request)) {
+            log.warn("handleSecurity: AuthenticationHandler did not block request; access denied");
+            request.removeAttribute(AuthenticationHandler.FAILURE_REASON);
+            AbstractAuthenticationHandler.sendInvalid(request, response);
             return false;
+        }
+
+        return process;
+    }
+
+    private boolean doHandleSecurity(HttpServletRequest request, HttpServletResponse response) {
+
+        // 1. Ask all authentication handlers to try to extract credentials
+        final AuthenticationInfo authInfo = getAuthenticationInfo(request, response);
+
+        // 2. PostProcess credentials
+        final AuthenticationInfo aiPostProc = (authInfo == null)
+                ? new AuthenticationInfo("anonymous", "[null]")
+                : authInfo;
+        try {
+            postProcess(aiPostProc, request, response);
+        } catch (LoginException e) {
+            handleLoginFailure(request, response, aiPostProc.getUser(), e);
+            return false;
+        }
+
+        // 3. Check Credentials
+        if (authInfo == AuthenticationInfo.DOING_AUTH) {
+
+            log.debug("doHandleSecurity: ongoing authentication in the handler");
+            return false;
+
+        } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
+
+            log.debug("doHandleSecurity: Credentials present but not valid, request authentication again");
+            AbstractAuthenticationHandler.setLoginResourceAttribute(request, request.getRequestURI());
+            doLogin(request, response);
+            return false;
+
+        } else if (authInfo == null) {
+
+            log.debug("doHandleSecurity: No credentials in the request, anonymous");
+            return getAnonymousResolver(request, response);
+
+        } else {
+
+            log.debug("doHandleSecurity: Trying to get a session for {}", authInfo.getUser());
+            return getResolver(request, response, authInfo);
+
         }
     }
 
@@ -598,9 +632,7 @@ public class SlingAuthenticator implements Authenticator,
 
     // ---------- internal
 
-    private AuthenticationInfo getAuthenticationInfo(
-            HttpServletRequest request, HttpServletResponse response)
-    		throws LoginException {
+    private AuthenticationInfo getAuthenticationInfo(HttpServletRequest request, HttpServletResponse response) {
 
         // Get the path used to select the authenticator, if the SlingServlet
         // itself has been requested without any more info, this will be null
@@ -621,9 +653,6 @@ public class SlingAuthenticator implements Authenticator,
                             request, response);
 
                         if (authInfo != null) {
-                            // post process the AuthenticationInfo object
-                            postProcess(authInfo, request, response);
-
                             // add the feedback handler to the info (may be null)
                             authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER,
                                 holder.getFeedbackHandler());
@@ -640,9 +669,6 @@ public class SlingAuthenticator implements Authenticator,
             final AuthenticationInfo authInfo = httpBasicHandler.extractCredentials(
                 request, response);
             if (authInfo != null) {
-                // post process the AuthenticationInfo object
-                postProcess(authInfo, request, response);
-
                 authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER, httpBasicHandler);
                 return authInfo;
             }
@@ -757,6 +783,18 @@ public class SlingAuthenticator implements Authenticator,
         return false;
 
     }
+
+    private boolean expectAuthenticationHandler(final HttpServletRequest request) {
+        if (this.authUriSuffices != null) {
+            final String requestUri = request.getRequestURI();
+            for (final String uriSuffix : this.authUriSuffices) {
+                if (requestUri.endsWith(uriSuffix)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+   }
 
     /** Try to acquire an anonymous ResourceResolver */
     private boolean getAnonymousResolver(final HttpServletRequest request,
