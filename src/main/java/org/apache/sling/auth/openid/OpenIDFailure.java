@@ -61,7 +61,7 @@ public enum OpenIDFailure {
      * Indicates failure of the verification of the supplied authentication
      * information with the OpenID Provider.
      */
-    VERIFICATION("Authentication verfication failed"),
+    VERIFICATION("Authentication verification failed"),
 
     /**
      * Indicates failure to find a matching Repository user for the supplied

@@ -343,7 +343,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
                 // prepare the url for the return_to parameter
                 final String url = getBaseUrl(request);
 
-                // set the ream/trustroot from configuraiton or the root url
+                // set the realm/trustroot from configuration or the root url
                 final String trustRoot = (realm == null) ? url : realm;
 
                 // append the resource URL to the returnTo address
@@ -384,7 +384,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
      * @param request The request object
      * @param response The response object to which to send the request
      * @return <code>true</code> is always returned by this handler
-     * @throws IOException if an error occurrs sending back the response.
+     * @throws IOException if an error occurs sending back the response.
      */
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException {
@@ -442,6 +442,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
         }
     }
 
+    @Override
     public void authenticationFailed(HttpServletRequest request,
             HttpServletResponse response, AuthenticationInfo authInfo) {
 
@@ -470,6 +471,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
         }
     }
 
+    @Override
     public boolean authenticationSucceeded(HttpServletRequest request,
             HttpServletResponse response, AuthenticationInfo authInfo) {
 
@@ -491,7 +493,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
      * <li>No user is available from the request at all</li>
      * </ul>
      * <p>
-     * If no user is available or any error occurrs while trying to discover the
+     * If no user is available or any error occurs while trying to discover the
      * user from the request, <code>null</code> is returned.
      *
      * @param relyingParty The <code>RelyingParty</code> object used to discover
