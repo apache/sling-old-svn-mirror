@@ -65,7 +65,7 @@ public final class OpenIDConstants {
      * <code>requestCredentials</code> method providing to authenticated OpenID
      * identity. This parameter is only set if the
      * {@link #OPENID_FAILURE_REASON} is {@link OpenIDFailure#REPOSITORY} and
-     * can be used to offer the user assistence with associating an existing JCR
+     * can be used to offer the user assistance with associating an existing JCR
      * user with the OpenID identity.
      */
     public static final String OPENID_IDENTITY = "j_openid_identity";
