@@ -86,7 +86,7 @@ class TokenStore {
     private volatile int currentToken = 0;
 
     /**
-     * A ring of tokens used to encypt.
+     * A ring of tokens used to encrypt.
      */
     private volatile SecretKey[] currentTokens;
 
@@ -416,7 +416,7 @@ class TokenStore {
      * <code>java.io.tmpdir</code> folder.</li>
      * </ul>
      * <p>
-     * <b>NOTE</b> This method generates entropy fast but not necessairily
+     * <b>NOTE</b> This method generates entropy fast but not necessarily
      * secure enough for seeding the random number generator.
      *
      * @return bytes of entropy

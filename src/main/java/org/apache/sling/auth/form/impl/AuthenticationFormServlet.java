@@ -64,6 +64,7 @@ public class AuthenticationFormServlet extends AbstractAuthenticationFormServlet
      * @return The "translated" reason to render the login form or an empty
      *         string if there is no specific reason
      */
+    @Override
     protected String getReason(final HttpServletRequest request) {
         // return the resource attribute if set to a non-empty string
         Object resObj = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
