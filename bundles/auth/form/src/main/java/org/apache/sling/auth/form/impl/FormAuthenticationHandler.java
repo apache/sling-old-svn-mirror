@@ -463,7 +463,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         // to the j_security_check URL
         if (REQUEST_METHOD.equals(request.getMethod())
         		&& request.getRequestURI().endsWith(REQUEST_URL_SUFFIX)) {
-        	
+
             if (DefaultAuthenticationFeedbackHandler.handleRedirect(request, response)) {
             	// terminate request, all done in the default handler
             	result = false;
@@ -809,11 +809,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /**
      * The <code>AuthenticationStorage</code> interface abstracts the API
-     * required to store the {@link CookieAuthData} in an HTTP cookie or in an
-     * HTTP Session. The concrete class -- {@link CookieExtractor} or
-     * {@link SessionExtractor} -- is selected using the
-     * {@link CookieAuthenticationHandler#PAR_AUTH_HASH_STORAGE} configuration
-     * parameter, {@link CookieExtractor} by default.
+     * required to store the authentication data in an HTTP cookie or in an
+     * HTTP Session. The concrete class -- {@link CookieStorage} or
+     * {@link SessionStorage} -- is selected using the
+     * {@link FormAuthenticationHandler#PAR_AUTH_STORAGE} configuration
+     * parameter, {@link CookieStorage} by default.
      */
     private static interface AuthenticationStorage {
         String extractAuthenticationInfo(HttpServletRequest request);
@@ -825,8 +825,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     /**
-     * The <code>CookieExtractor</code> class supports storing the
-     * {@link CookieAuthData} in an HTTP Cookie.
+     * The <code>CookieStorage</code> class supports storing the
+     * authentication data in an HTTP Cookie.
      */
     private static class CookieStorage implements AuthenticationStorage {
 
@@ -965,8 +965,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     /**
-     * The <code>SessionExtractor</code> class provides support to store the
-     * {@link CookieAuthData} in an HTTP Session.
+     * The <code>SessionStorage</code> class provides support to store the
+     * authentication data in an HTTP Session.
      */
     private static class SessionStorage implements AuthenticationStorage {
         private final String sessionAttributeName;
