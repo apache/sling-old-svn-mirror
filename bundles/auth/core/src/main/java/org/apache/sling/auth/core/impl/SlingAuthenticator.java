@@ -400,7 +400,7 @@ public class SlingAuthenticator implements Authenticator,
      * @param response The response object which may be used to send the
      *            information on the request failure to the user.
      * @return <code>true</code> if request processing should continue assuming
-     *         successfull authentication. If <code>false</code> is returned it
+     *         successful authentication. If <code>false</code> is returned it
      *         is assumed a response has been sent to the client and the request
      *         is terminated.
      */
@@ -532,7 +532,7 @@ public class SlingAuthenticator implements Authenticator,
         // no handler could send an authentication request, throw
         if (!done) {
             int size = 0;
-            for(int m = 0; !done && m < holderListArray.length; m++) {
+            for (int m = 0; m < holderListArray.length; m++) {
                 if ( holderListArray[m] != null ) {
                     size += holderListArray[m].size();
                 }
@@ -556,9 +556,9 @@ public class SlingAuthenticator implements Authenticator,
 
         final String path = getHandlerSelectionPath(request);
         final List<AbstractAuthenticationHandlerHolder>[] holderListArray = this.authHandlerCache.findApplicableHolder(request);
-        for(int m = 0; m < holderListArray.length; m++) {
+        for (int m = 0; m < holderListArray.length; m++) {
             final List<AbstractAuthenticationHandlerHolder> holderList = holderListArray[m];
-            if ( holderList != null ) {
+            if (holderList != null) {
                 for (int i = 0; i < holderList.size(); i++) {
                     AbstractAuthenticationHandlerHolder holder = holderList.get(i);
                     if (path.startsWith(holder.path)) {
@@ -643,9 +643,9 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         final List<AbstractAuthenticationHandlerHolder>[] localArray = this.authHandlerCache.findApplicableHolder(request);
-        for(int m = 0; m < localArray.length; m++) {
+        for (int m = 0; m < localArray.length; m++) {
             final List<AbstractAuthenticationHandlerHolder> local = localArray[m];
-            if ( local != null ) {
+            if (local != null) {
                 for (int i = 0; i < local.size(); i++) {
                     AbstractAuthenticationHandlerHolder holder = local.get(i);
                     if (pathInfo.startsWith(holder.path)) {
@@ -697,7 +697,7 @@ public class SlingAuthenticator implements Authenticator,
      * Try to acquire a ResourceResolver as indicated by authInfo
      *
      * @return <code>true</code> if request processing should continue assuming
-     *         successfull authentication. If <code>false</code> is returned it
+     *         successful authentication. If <code>false</code> is returned it
      *         is assumed a response has been sent to the client and the request
      *         is terminated.
      */
@@ -937,7 +937,7 @@ public class SlingAuthenticator implements Authenticator,
      * Basic Authentication is completely switched of a 403/FORBIDDEN response
      * is sent back instead.</li>
      * <li>If the request is considered an
-     * {@link #isAjaxRequest(HttpServletRequest) Ajax request} a 403/FORBIDDIN
+     * {@link #isAjaxRequest(HttpServletRequest) Ajax request} a 403/FORBIDDEN
      * response is simply sent back because we assume an Ajax requestor cannot
      * properly handle any request for credentials graciously.</li>
      * <li>Otherwise the {@link #login(HttpServletRequest, HttpServletResponse)}
@@ -947,7 +947,7 @@ public class SlingAuthenticator implements Authenticator,
      * client.</li>
      * </ul>
      * <p>
-     * If a 403/FORBIDDEN response is sent back the {@link #X_REASON} header is
+     * If a 403/FORBIDDEN response is sent back the {@link AbstractAuthenticationHandler#X_REASON} header is
      * set to a either the value of the
      * {@link AuthenticationHandler#FAILURE_REASON} request attribute or to some
      * generic description describing the reason. To actually send the response
@@ -1124,7 +1124,7 @@ public class SlingAuthenticator implements Authenticator,
      * Sends the session cookie for the name session with the given age in
      * seconds. This sends a Version 1 cookie.
      *
-     * @param response The {@link DeliveryHttpServletResponse} on which to send
+     * @param response The {@link HttpServletResponse} on which to send
      *            back the cookie.
      * @param user The name of the user to impersonate as. This will be quoted
      *            and used as the cookie value.
@@ -1185,7 +1185,7 @@ public class SlingAuthenticator implements Authenticator,
      * place for this request. Else the parameter is assumed to contain the name
      * of a user to impersonate as.
      *
-     * @param req The {@link DeliveryHttpServletRequest} optionally containing
+     * @param req The {@link HttpServletRequest} optionally containing
      *            the sudo parameter.
      * @param authInfo The authentication info into which the
      *            <code>sudo.user.id</code> property is set to the impersonator
@@ -1197,7 +1197,7 @@ public class SlingAuthenticator implements Authenticator,
 
         /**
          * sudo parameter : empty or missing to continue to use the setting
-         * already stored in the session; or "-" to remove impersonationa
+         * already stored in the session; or "-" to remove impersonation
          * altogether (also from the session); or the handle of a user page to
          * impersonate as that user (if possible)
          */
@@ -1292,7 +1292,7 @@ public class SlingAuthenticator implements Authenticator,
      * is set to a non-null string, the request is redirected to the context
      * root.
      * <p>
-     * The response is not reset though, since the hanlder may have set states
+     * The response is not reset though, since the handler may have set states
      * such as an updated HTTP session or some Cookie
      *
      * @param request The request providing the redirect target
@@ -1307,7 +1307,7 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // find the redirect target from the resource attribute or parameter
-        // falling back to the reuest context path (or /) if not set
+        // falling back to the request context path (or /) if not set
         String target = AbstractAuthenticationHandler.getLoginResource(request,
             request.getContextPath());
         if (target.length() == 0) {
@@ -1564,7 +1564,7 @@ public class SlingAuthenticator implements Authenticator,
                     }
                 }
 
-                // register the hodlers
+                // register the holders
                 AbstractAuthenticationHandlerHolder[] holders = holderList.toArray(new AbstractAuthenticationHandlerHolder[holderList.size()]);
                 for (AbstractAuthenticationHandlerHolder holder : holders) {
                     authHandlerCache.addHolder(holder);

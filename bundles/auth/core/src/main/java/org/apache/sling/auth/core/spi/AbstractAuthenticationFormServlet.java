@@ -65,7 +65,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
      * expected to not be included and for the response to not be committed yet
      * because it first resets the response.
      *
-     * @throws IOException if an error occurrs preparing or sending back the
+     * @throws IOException if an error occurs preparing or sending back the
      *             login form
      * @throws IllegalStateException if the response has already been committed
      *             and thus response reset is not possible.
@@ -85,7 +85,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
      * expected to not be included and for the response to not be committed yet
      * because it first resets the response.
      *
-     * @throws IOException if an error occurrs preparing or sending back the
+     * @throws IOException if an error occurs preparing or sending back the
      *             login form
      * @throws IllegalStateException if the response has already been committed
      *             and thus response reset is not possible.
@@ -142,7 +142,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
      * there is no <code>resource</code> request parameter.
      *
      * @param request The request providing the <code>resource</code> parameter.
-     * @return The target to redirect after sucessfully login or an empty string
+     * @return The target to redirect after successfully login or an empty string
      *         if no specific target has been requested.
      */
     protected String getResource(final HttpServletRequest request) {
@@ -195,7 +195,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
      * Load the raw unmodified form from the bundle (through the class loader).
      *
      * @return The raw form as a string
-     * @throws IOException If an error occurrs reading the "file" or if the
+     * @throws IOException If an error occurs reading the "file" or if the
      *             class loader cannot provide the form data.
      */
     private String getRawForm() throws IOException {
