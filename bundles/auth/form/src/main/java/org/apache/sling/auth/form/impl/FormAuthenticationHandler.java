@@ -211,7 +211,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * <p>
      * This name is derived from the prescription in the Servlet API 2.4
      * Specification, Section SRV.12.5.3.1 Login Form Notes: <i>In order for the
-     * authentication to proceeed appropriately, the action of the login form
+     * authentication to proceed appropriately, the action of the login form
      * must always be set to <code>j_security_check</code>.</i>
      */
     private static final String REQUEST_URL_SUFFIX = "/j_security_check";
@@ -417,6 +417,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * sure the authentication data is removed either by removing the cookie or
      * by remove the HTTP Session attribute.
      */
+    @Override
     public void authenticationFailed(HttpServletRequest request,
             HttpServletResponse response, AuthenticationInfo authInfo) {
 
@@ -433,7 +434,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
     }
 
     /**
-     * Called after successfull login with the given authentication info. This
+     * Called after successful login with the given authentication info. This
      * implementation ensures the authentication data is set in either the
      * cookie or the HTTP session with the correct security tokens.
      * <p>
@@ -445,12 +446,13 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * removed from the cookie or the HTTP session and future requests will not
      * be authenticated any longer.
      */
+    @Override
     public boolean authenticationSucceeded(HttpServletRequest request,
             HttpServletResponse response, AuthenticationInfo authInfo) {
 
         /*
          * Note: This method is called if this handler provided credentials
-         * which succeeded loging into the repository
+         * which succeeded login into the repository
          */
 
         // ensure fresh authentication data
@@ -519,9 +521,9 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
      * <p>
      * This method is intended to be called in case authentication succeeded.
      *
-     * @param request The curent request
+     * @param request The current request
      * @param response The current response
-     * @param authInfo The authentication info used to successfull log in
+     * @param authInfo The authentication info used to successful log in
      */
     private void refreshAuthData(final HttpServletRequest request,
             final HttpServletResponse response,
