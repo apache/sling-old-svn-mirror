@@ -60,19 +60,15 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.4</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-DocURL>
                             http://sling.apache.org/site/authentication.html
                         </Bundle-DocURL>
-                        <Export-Package>
-                            org.apache.sling.auth.core;version=1.0.0,
-                            org.apache.sling.auth.core.spi;version=1.0.4,
-                            org.apache.sling.engine.auth;version=2.0.6
-                        </Export-Package>
                         <Import-Package>
-                            org.apache.sling.api.auth;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            org.apache.sling.api.auth;provide:=true,
                             *
                         </Import-Package>
                         <Private-Package>
@@ -143,6 +139,11 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>biz.aqute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.43.0</version>
         </dependency>
 
         <!-- Test Dependencies -->
