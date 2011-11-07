@@ -141,7 +141,7 @@
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>biz.aqute</groupId>
+            <groupId>biz.aQute</groupId>
             <artifactId>bndlib</artifactId>
             <version>1.43.0</version>
         </dependency>
