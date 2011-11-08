@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.auth.core.AuthenticationSupport;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.osgi.service.http.HttpContext;
 
 class AuthHttpContext implements HttpContext {
@@ -67,6 +68,7 @@ class AuthHttpContext implements HttpContext {
     throws IOException {
         final AuthenticationSupport localAuthenticator = this.authenticator;
         if ( localAuthenticator != null ) {
+            request.setAttribute(AuthenticationHandler.REQUEST_LOGIN_PARAMETER, "BASIC");
             return localAuthenticator.handleSecurity(request, response);
         }
         // send 503/SERVICE UNAVAILABLE, flush to ensure delivery
