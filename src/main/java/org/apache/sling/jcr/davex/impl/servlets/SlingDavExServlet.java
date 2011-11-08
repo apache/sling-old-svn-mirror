@@ -65,13 +65,13 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     private HttpService httpService;
 
     @Reference
-    private AuthenticationSupport authentiator;
+    private AuthenticationSupport authSupport;
 
     @Activate
     protected void activate(final ComponentContext ctx)
     throws Exception {
         final AuthHttpContext context = new AuthHttpContext();
-        context.setAuthenticationSupport(authentiator);
+        context.setAuthenticationSupport(authSupport);
 
         final String alias = (String)ctx.getProperties().get("alias");
         final Dictionary<String, String> initProps = new Hashtable<String, String>();
