@@ -57,7 +57,8 @@
                         </Import-Package>
                         <Embed-Dependency>
                             jackrabbit-jcr-server,
-                            jackrabbit-webdav
+                            jackrabbit-webdav,
+                            org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/OsgiUtil.class
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -88,13 +89,13 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
             <version>2.2.9</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-webdav</artifactId>
             <version>2.2.9</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -107,6 +108,18 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.auth.core</artifactId>
             <version>1.0.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.0.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.settings</artifactId>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
 
