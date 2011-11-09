@@ -17,17 +17,14 @@
 package org.apache.sling.jcr.davex.impl.servlets;
 
 import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
-
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -38,25 +35,36 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
+import org.apache.jackrabbit.webdav.util.CSRFUtil;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
-import org.osgi.service.component.ComponentContext;
+import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.service.http.HttpService;
+import org.slf4j.LoggerFactory;
 
 /**
  * DavEx WebDav servlet which acquires a Repository instance via the OSGi
  * service registry.
  *
  */
-@Component(label = "%dav.name", description = "%dav.description")
-@Properties( { @Property(name = "alias", value = "/server"),
-        @Property(name = "init.resource-path-prefix", value = "/server"),
-        @Property(name = "init.missing-auth-mapping", value = ""),
-        @Property(name = "service.description", value = "Sling JcrRemoting Servlet"),
-        @Property(name = "service.vendor", value = "The Apache Software Foundation") })
+@SuppressWarnings("serial")
+@Component(metatype = true, label = "%dav.name", description = "%dav.description")
+@Properties({ @Property(name = "service.description", value = "Sling JcrRemoting Servlet"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation") })
 public class SlingDavExServlet extends JcrRemotingServlet {
 
-    private static final String INIT_KEY_PREFIX = "init.";
+    /**
+     * Default value for the DavEx servlet registration.
+     */
+    private static final String DEFAULT_ALIAS = "/server";
+
+    /**
+     * Name of the property to configure the location for the DavEx servlet
+     * registration. Default for the property is {@link #DEFAULT_ALIAS}.
+     */
+    @Property(value=DEFAULT_ALIAS)
+    private static final String PROP_ALIAS = "alias";
 
     @Reference
     private Repository repository;
@@ -67,35 +75,52 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     @Reference
     private AuthenticationSupport authSupport;
 
+    @Reference
+    private SlingSettingsService slingSettings;
+
+    /**
+     * The path at which the DavEx servlet has successfully been
+     * registered in the {@link #activate(Map)} method. If this is
+     * <code>null</code> the DavEx servlet is not registered with the
+     * Http Service.
+     */
+    private String servletAlias;
+
     @Activate
-    protected void activate(final ComponentContext ctx)
-    throws Exception {
+    protected void activate(final Map<String, ?> config) {
         final AuthHttpContext context = new AuthHttpContext();
         context.setAuthenticationSupport(authSupport);
 
-        final String alias = (String)ctx.getProperties().get("alias");
+        final String alias = OsgiUtil.toString(config.get(PROP_ALIAS), DEFAULT_ALIAS);
+
+        // prepare DavEx servlet config
         final Dictionary<String, String> initProps = new Hashtable<String, String>();
-        @SuppressWarnings("unchecked")
-        final Enumeration<String> keyEnum = ctx.getProperties().keys();
-        while ( keyEnum.hasMoreElements() ) {
-            final String key = keyEnum.nextElement();
-            if ( key.startsWith(INIT_KEY_PREFIX) ) {
-                final String paramKey = key.substring(INIT_KEY_PREFIX.length());
-                final Object paramValue = ctx.getProperties().get(key);
 
-                if (paramValue != null) {
-                    initProps.put(paramKey, paramValue.toString());
-                }
-            }
+        // prefix to the servlet
+        initProps.put(INIT_PARAM_RESOURCE_PATH_PREFIX, alias);
+
+        // put the tmp files into Sling home -- or configurable ???
+        initProps.put(INIT_PARAM_HOME, slingSettings.getSlingHome() + "/jackrabbit");
+        initProps.put(INIT_PARAM_TMP_DIRECTORY, "tmp");
+
+        // disable CSRF checks for now (should be handled by Sling)
+        initProps.put(INIT_PARAM_CSRF_PROTECTION, CSRFUtil.DISABLED);
+
+        // register and handle registration failure
+        try {
+            this.httpService.registerServlet(alias, this, initProps, context);
+            this.servletAlias = alias;
+        } catch (Exception e) {
+            LoggerFactory.getLogger(getClass()).error("activate: Failed registering DavEx Servlet at " + alias, e);
         }
-
-        this.httpService.registerServlet(alias, this, initProps, context);
     }
 
     @Deactivate
-    protected void deactivate(final Map<String, Object> props) {
-        final String alias = (String)props.get("alias");
-        this.httpService.unregister(alias);
+    protected void deactivate() {
+        if (this.servletAlias != null) {
+            this.httpService.unregister(servletAlias);
+            this.servletAlias = null;
+        }
     }
 
     @Override
@@ -112,7 +137,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
             public Session getSession(final HttpServletRequest req,
                     final Repository repository,
                     final String workspace)
-            throws LoginException, ServletException, RepositoryException {
+            throws LoginException, RepositoryException {
                 final ResourceResolver resolver = (ResourceResolver) req.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
                 if ( resolver != null ) {
                     final Session session = resolver.adaptTo(Session.class);
