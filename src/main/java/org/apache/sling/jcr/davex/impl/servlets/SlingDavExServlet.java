@@ -68,7 +68,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
      * registration. Default for the property is {@link #DEFAULT_DAV_ROOT}.
      */
     @Property(value=DEFAULT_DAV_ROOT)
-    private static final String PROP_DAV_ROOT = "dav.root";
+    private static final String PROP_DAV_ROOT = "alias";
 
     /**
      * The name of the service property of the registered dummy service to cause
