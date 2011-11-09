@@ -19,6 +19,7 @@ package org.apache.sling.jcr.davex.impl.servlets;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
+
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
@@ -40,6 +41,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +54,8 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 @Component(metatype = true, label = "%dav.name", description = "%dav.description")
-@Properties({ @Property(name = "service.description", value = "Sling JcrRemoting Servlet"),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation") })
+@Properties({ @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling JcrRemoting Servlet"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class SlingDavExServlet extends JcrRemotingServlet {
 
     /**
@@ -65,6 +69,12 @@ public class SlingDavExServlet extends JcrRemotingServlet {
      */
     @Property(value=DEFAULT_ALIAS)
     private static final String PROP_ALIAS = "alias";
+
+    /**
+     * The name of the service property of the registered dummy service to cause
+     * the path to the DavEx servlet to not be subject to forced authentication.
+     */
+    private static final String PAR_AUTH_REQ = "sling.auth.requirements";
 
     @Reference
     private Repository repository;
@@ -86,8 +96,16 @@ public class SlingDavExServlet extends JcrRemotingServlet {
      */
     private String servletAlias;
 
+    /**
+     * The dummy service registration to convey to the Sling Authenticator
+     * that everything under the alias must not be forcibly authenticated.
+     * This will be <code>null</code> if the DavEx servlet registration
+     * fails.
+     */
+    private ServiceRegistration dummyService;
+
     @Activate
-    protected void activate(final Map<String, ?> config) {
+    protected void activate(final BundleContext bundleContext, final Map<String, ?> config) {
         final AuthHttpContext context = new AuthHttpContext();
         context.setAuthenticationSupport(authSupport);
 
@@ -110,6 +128,13 @@ public class SlingDavExServlet extends JcrRemotingServlet {
         try {
             this.httpService.registerServlet(alias, this, initProps, context);
             this.servletAlias = alias;
+
+            java.util.Properties dummyServiceProperties = new java.util.Properties();
+            dummyServiceProperties.put(Constants.SERVICE_VENDOR, config.get(Constants.SERVICE_VENDOR));
+            dummyServiceProperties.put(Constants.SERVICE_DESCRIPTION,
+                "Helper for " + config.get(Constants.SERVICE_DESCRIPTION));
+            dummyServiceProperties.put(PAR_AUTH_REQ, "-" + alias);
+            this.dummyService = bundleContext.registerService("java.lang.Object", new Object(), dummyServiceProperties);
         } catch (Exception e) {
             LoggerFactory.getLogger(getClass()).error("activate: Failed registering DavEx Servlet at " + alias, e);
         }
@@ -117,6 +142,11 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
     @Deactivate
     protected void deactivate() {
+        if (this.dummyService != null) {
+            this.dummyService.unregister();
+            this.dummyService = null;
+        }
+
         if (this.servletAlias != null) {
             this.httpService.unregister(servletAlias);
             this.servletAlias = null;
