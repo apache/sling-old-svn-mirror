@@ -61,14 +61,14 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     /**
      * Default value for the DavEx servlet registration.
      */
-    private static final String DEFAULT_ALIAS = "/server";
+    private static final String DEFAULT_DAV_ROOT = "/server";
 
     /**
      * Name of the property to configure the location for the DavEx servlet
-     * registration. Default for the property is {@link #DEFAULT_ALIAS}.
+     * registration. Default for the property is {@link #DEFAULT_DAV_ROOT}.
      */
-    @Property(value=DEFAULT_ALIAS)
-    private static final String PROP_ALIAS = "alias";
+    @Property(value=DEFAULT_DAV_ROOT)
+    private static final String PROP_DAV_ROOT = "dav.root";
 
     /**
      * The name of the service property of the registered dummy service to cause
@@ -109,13 +109,13 @@ public class SlingDavExServlet extends JcrRemotingServlet {
         final AuthHttpContext context = new AuthHttpContext();
         context.setAuthenticationSupport(authSupport);
 
-        final String alias = OsgiUtil.toString(config.get(PROP_ALIAS), DEFAULT_ALIAS);
+        final String davRoot = OsgiUtil.toString(config.get(PROP_DAV_ROOT), DEFAULT_DAV_ROOT);
 
         // prepare DavEx servlet config
         final Dictionary<String, String> initProps = new Hashtable<String, String>();
 
         // prefix to the servlet
-        initProps.put(INIT_PARAM_RESOURCE_PATH_PREFIX, alias);
+        initProps.put(INIT_PARAM_RESOURCE_PATH_PREFIX, davRoot);
 
         // put the tmp files into Sling home -- or configurable ???
         initProps.put(INIT_PARAM_HOME, slingSettings.getSlingHome() + "/jackrabbit");
@@ -126,17 +126,17 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
         // register and handle registration failure
         try {
-            this.httpService.registerServlet(alias, this, initProps, context);
-            this.servletAlias = alias;
+            this.httpService.registerServlet(davRoot, this, initProps, context);
+            this.servletAlias = davRoot;
 
             java.util.Properties dummyServiceProperties = new java.util.Properties();
             dummyServiceProperties.put(Constants.SERVICE_VENDOR, config.get(Constants.SERVICE_VENDOR));
             dummyServiceProperties.put(Constants.SERVICE_DESCRIPTION,
                 "Helper for " + config.get(Constants.SERVICE_DESCRIPTION));
-            dummyServiceProperties.put(PAR_AUTH_REQ, "-" + alias);
+            dummyServiceProperties.put(PAR_AUTH_REQ, "-" + davRoot);
             this.dummyService = bundleContext.registerService("java.lang.Object", new Object(), dummyServiceProperties);
         } catch (Exception e) {
-            LoggerFactory.getLogger(getClass()).error("activate: Failed registering DavEx Servlet at " + alias, e);
+            LoggerFactory.getLogger(getClass()).error("activate: Failed registering DavEx Servlet at " + davRoot, e);
         }
     }
 
