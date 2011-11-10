@@ -36,7 +36,11 @@ public class DavExIntegrationTest extends HttpTestBase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        configureServerBeforeTest();
         repository = JcrUtils.getRepository(HTTP_BASE_URL + "/server/");
+    }
+
+    protected void configureServerBeforeTest() throws Exception {
     }
 
     public void testDescriptor() throws Exception {
@@ -68,7 +72,11 @@ public class DavExIntegrationTest extends HttpTestBase {
 
     @Override
     protected void tearDown() throws Exception {
-        super.tearDown();
         repository = null;
+        configureServerAfterTest();
+        super.tearDown();
+    }
+
+    protected void configureServerAfterTest() throws Exception {
     }
 }
