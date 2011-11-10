@@ -29,12 +29,20 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeProvider;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
@@ -42,17 +50,11 @@ import org.osgi.service.log.LogService;
 /**
  * The <code>MimeTypeServiceImpl</code> is the official implementation of the
  * {@link MimeTypeService} interface.
- *
- * @scr.component immediate="false" label="%mime.service.name"
- *                description="%mime.service.description"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description"
- *               value="Apache Sling MIME Type Service"
- * @scr.service interface="org.apache.sling.commons.mime.MimeTypeService"
- * @scr.reference name="MimeTypeProvider"
- *                interface="org.apache.sling.commons.mime.MimeTypeProvider"
- *                cardinality="0..n" policy="dynamic"
  */
+@Component(metatype = true, label = "%mime.service.name", description = "%mime.service.description")
+@Service(MimeTypeService.class)
+@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling MIME Type Service")
+@Reference(name = "MimeTypeProvider", referenceInterface = MimeTypeProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     public static final String CORE_MIME_TYPES = "/META-INF/core_mime.types";
@@ -60,9 +62,10 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
     public static final String MIME_TYPES = "/META-INF/mime.types";
 
     /** @scr.property cardinality="-2147483647" type="String" */
+    @Property(unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_MIME_TYPES = "mime.types";
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private LogService logService;
 
     private Map<String, String> mimeTab = new HashMap<String, String>();
