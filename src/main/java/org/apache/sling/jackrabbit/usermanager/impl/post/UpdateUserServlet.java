@@ -84,7 +84,7 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * @scr.property name="sling.servlet.selectors" value="update"
  */
 public class UpdateUserServlet extends AbstractUserPostServlet 
-		implements UpdateUser {
+        implements UpdateUser {
     private static final long serialVersionUID = 5874621724096106496L;
 
     /*
@@ -101,26 +101,26 @@ public class UpdateUserServlet extends AbstractUserPostServlet
         Resource resource = request.getResource();
         Session session = request.getResourceResolver().adaptTo(Session.class);
         updateUser(session,
-        		resource.getName(),
-				request.getRequestParameterMap(), 
-				changes);
+                resource.getName(),
+                request.getRequestParameterMap(), 
+                changes);
     }
     
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.UpdateUser#updateUser(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
-	 */
-	public User updateUser(Session jcrSession, String name,
-			Map<String, ?> properties, List<Modification> changes)
-			throws RepositoryException {
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.UpdateUser#updateUser(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
+     */
+    public User updateUser(Session jcrSession, String name,
+            Map<String, ?> properties, List<Modification> changes)
+            throws RepositoryException {
         
-		User user;
+        User user;
         UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable instanceof User) {
-        	user = (User)authorizable;
+            user = (User)authorizable;
         } else {
             throw new ResourceNotFoundException(
-            	"User to update could not be determined");
+                "User to update could not be determined");
         }
         
         String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
@@ -138,19 +138,19 @@ public class UpdateUserServlet extends AbstractUserPostServlet
             // has supplied the relevant properties
             String disabledParam = convertToString(properties.get(":disabled"));
             if ("true".equalsIgnoreCase(disabledParam)) {
-            	//set the user as disabled
-            	String disabledReason = convertToString(properties.get(":disabledReason"));
-            	if (disabledReason == null) {
-            		disabledReason = "";
-            	}
-            	user.disable(disabledReason);
+                //set the user as disabled
+                String disabledReason = convertToString(properties.get(":disabledReason"));
+                if (disabledReason == null) {
+                    disabledReason = "";
+                }
+                user.disable(disabledReason);
             } else if ("false".equalsIgnoreCase(disabledParam)) {
-            	//re-enable a disabled user
-            	user.disable(null);
+                //re-enable a disabled user
+                user.disable(null);
             }
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to update user.", re);
         }
         return user;
-	}    
+    }    
 }

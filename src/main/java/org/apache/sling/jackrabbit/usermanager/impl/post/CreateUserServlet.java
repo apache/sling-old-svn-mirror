@@ -170,7 +170,7 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
         Dictionary<?, ?> props = componentContext.getProperties();
         Object propValue = props.get(PROP_SELF_REGISTRATION_ENABLED);
         if (propValue instanceof Boolean) {
-        	selfRegistrationEnabled = (Boolean)propValue;
+            selfRegistrationEnabled = (Boolean)propValue;
         } else if (propValue instanceof String) {
             selfRegistrationEnabled = Boolean.parseBoolean((String) propValue);
         } else {
@@ -178,7 +178,7 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
         }
         
         this.userAdminGroupName = OsgiUtil.toString(props.get(PAR_USER_ADMIN_GROUP_NAME),
-        		DEFAULT_USER_ADMIN_GROUP_NAME);
+                DEFAULT_USER_ADMIN_GROUP_NAME);
         log.info("User Admin Group Name {}", this.userAdminGroupName);
     }
 
@@ -197,32 +197,32 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
         String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
-    	User user = createUser(session, 
-    						principalName, 
-    						request.getParameter("pwd"),
-    						request.getParameter("pwdConfirm"),
-    						request.getRequestParameterMap(), 
-    						changes);
-    	
+        User user = createUser(session, 
+                            principalName, 
+                            request.getParameter("pwd"),
+                            request.getParameter("pwdConfirm"),
+                            request.getRequestParameterMap(), 
+                            changes);
+        
         String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
-    			+ user.getID();
+                + user.getID();
         response.setPath(userPath);
         response.setLocation(externalizePath(request, userPath));
         response.setParentLocation(externalizePath(request,
             AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));
     }
     
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.CreateUser#createUser(javax.jcr.Session, java.lang.String, java.lang.String, java.lang.String, java.util.Map, java.util.List)
-	 */
-	public User createUser(Session jcrSession, 
-							String name, 
-							String password,
-							String passwordConfirm, 
-							Map<String, ?> properties,
-							List<Modification> changes) 
-			throws RepositoryException {
-		
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.CreateUser#createUser(javax.jcr.Session, java.lang.String, java.lang.String, java.lang.String, java.util.Map, java.util.List)
+     */
+    public User createUser(Session jcrSession, 
+                            String name, 
+                            String password,
+                            String passwordConfirm, 
+                            Map<String, ?> properties,
+                            List<Modification> changes) 
+            throws RepositoryException {
+        
         if (jcrSession == null) {
             throw new RepositoryException("JCR Session not found");
         }
@@ -235,15 +235,15 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
             administrator = currentUser.isAdmin();
             
             if (!administrator) {
-				//check if the user is a member of the 'User administrator' group
-				Authorizable userAdmin = um.getAuthorizable(this.userAdminGroupName);
-				if (userAdmin instanceof Group) {
-					boolean isMember = ((Group)userAdmin).isMember(currentUser);
-					if (isMember) {
-						administrator = true;
-					}
-				}
-            	
+                //check if the user is a member of the 'User administrator' group
+                Authorizable userAdmin = um.getAuthorizable(this.userAdminGroupName);
+                if (userAdmin instanceof Group) {
+                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
+                    if (isMember) {
+                        administrator = true;
+                    }
+                }
+                
             }
         } catch ( Exception ex ) {
             log.warn("Failed to determine if the user is an admin, assuming not. Cause: "+ex.getMessage());
@@ -275,11 +275,11 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
         boolean useAdminSession = !administrator && selfRegistrationEnabled;
         try {
             if (useAdminSession) {
-            	//the current user doesn't have permission to create the user,
-            	// but self-registration is enabled, so use an admin session
-            	// to do the work.
+                //the current user doesn't have permission to create the user,
+                // but self-registration is enabled, so use an admin session
+                // to do the work.
                 selfRegSession = getSession();
-            }        	
+            }           
 
             UserManager userManager = AccessControlUtil.getUserManager(selfRegSession);
             Authorizable authorizable = userManager.getAuthorizable(name);
@@ -307,24 +307,24 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
                 }
                 
                 if (useAdminSession) {
-                	//lookup the user from the user session so we can return a live object
+                    //lookup the user from the user session so we can return a live object
                     UserManager userManager2 = AccessControlUtil.getUserManager(jcrSession);
                     Authorizable authorizable2 = userManager2.getAuthorizable(user.getID());
                     if (authorizable2 instanceof User) {
-                    	user = (User)authorizable2;
+                        user = (User)authorizable2;
                     } else {
-                    	user = null;
+                        user = null;
                     }
                 }                
             }
         } finally {
             if (useAdminSession) {
-            	//done with the self-reg admin session, so clean it up
+                //done with the self-reg admin session, so clean it up
                 ungetSession(selfRegSession);
-            }        	
+            }           
         }
-		
-		return user;
-	}
+        
+        return user;
+    }
     
 }

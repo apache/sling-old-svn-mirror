@@ -85,11 +85,11 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * @scr.property name="sling.servlet.selectors" value="update"
  */
 public class UpdateGroupServlet extends AbstractGroupPostServlet 
-		implements UpdateGroup {
+        implements UpdateGroup {
     private static final long serialVersionUID = -8292054361992488797L;
 
     /** @scr.reference */
-	private JcrResourceResolverFactory resourceResolverFactory;
+    private JcrResourceResolverFactory resourceResolverFactory;
     
     /*
      * (non-Javadoc)
@@ -105,30 +105,30 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
         Resource resource = request.getResource();
         Session session = request.getResourceResolver().adaptTo(Session.class);
         updateGroup(session,
-        				resource.getName(),
-        				request.getRequestParameterMap(), 
-        				changes);
+                        resource.getName(),
+                        request.getRequestParameterMap(), 
+                        changes);
     }
     
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.UpdateGroup#updateGroup(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
-	 */
-	public Group updateGroup(Session jcrSession, 
-								String name,
-								Map<String, ?> properties, 
-								List<Modification> changes)
-			throws RepositoryException {
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.UpdateGroup#updateGroup(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
+     */
+    public Group updateGroup(Session jcrSession, 
+                                String name,
+                                Map<String, ?> properties, 
+                                List<Modification> changes)
+            throws RepositoryException {
 
-		Group group = null;
+        Group group = null;
         UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable instanceof Group) {
-        	group = (Group)authorizable;
+            group = (Group)authorizable;
         } else {
             throw new ResourceNotFoundException(
-            	"Group to update could not be determined");
+                "Group to update could not be determined");
         }
-		
+        
         String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
             + group.getID();
 
@@ -143,19 +143,19 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
             // update the group memberships
             ResourceResolver resourceResolver = null;
             try {
-            	//create a resource resolver to resolve the relative paths used for group membership values
+                //create a resource resolver to resolve the relative paths used for group membership values
                 resourceResolver = resourceResolverFactory.getResourceResolver(jcrSession);
                 Resource baseResource = resourceResolver.getResource(groupPath);
                 updateGroupMembership(baseResource, properties, group, changes);
             } finally {
-            	if (resourceResolver != null) {
-            		resourceResolver.close();
-            	}
+                if (resourceResolver != null) {
+                    resourceResolver.close();
+                }
             }
         } catch (RepositoryException re) {
             throw new RepositoryException("Failed to update group.", re);
         }
         return group;
-	}
+    }
     
 }

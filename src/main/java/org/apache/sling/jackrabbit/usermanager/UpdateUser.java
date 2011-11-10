@@ -36,20 +36,20 @@ import org.apache.sling.servlets.post.Modification;
  */
 public interface UpdateUser {
 
-	/**
-	 * Update a user in the repository
-	 * 
-	 * @param jcrSession the JCR session of the user updating the user
-	 * @param name The name of the user to update (required)
-	 * @param properties Extra properties to update on the user. The entry values should be either a String or String[] (optional)
+    /**
+     * Update a user in the repository
+     * 
+     * @param jcrSession the JCR session of the user updating the user
+     * @param name The name of the user to update (required)
+     * @param properties Extra properties to update on the user. The entry values should be either a String or String[] (optional)
      * @param changes The list of changes for this operation (optional)
      * @return the user that was updated or null if not found 
-	 * @throws RepositoryException
-	 */
-	public User updateUser(Session jcrSession,
-							String name,
-							Map<String, ?> properties,
-							List<Modification> changes
-				) throws RepositoryException;
-	
+     * @throws RepositoryException
+     */
+    public User updateUser(Session jcrSession,
+                            String name,
+                            Map<String, ?> properties,
+                            List<Modification> changes
+                ) throws RepositoryException;
+    
 }
