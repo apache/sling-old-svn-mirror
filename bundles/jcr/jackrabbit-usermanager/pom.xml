@@ -34,7 +34,7 @@
     <description>
         Provides ResourceProvider and SlingPostOperations for the Jackrabbit
         UserManager.
-	</description>
+    </description>
 
     <scm>
         <connection>
@@ -60,9 +60,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-						<Export-Package>
+                        <Export-Package>
                             org.apache.sling.jackrabbit.usermanager;version=2.1.0,
-						</Export-Package>
+                        </Export-Package>
                         <Private-Package>
                             org.apache.sling.jackrabbit.usermanager.impl.*
                         </Private-Package>
@@ -121,7 +121,7 @@
             <version>2.0.6</version>
             <scope>provided</scope>
         </dependency>
-		<dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
