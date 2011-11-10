@@ -58,9 +58,6 @@
                         <Bundle-DocURL>
                             http://sling.apache.org/site/mime-type-support.html
                         </Bundle-DocURL>
-                        <Private-Package>
-                            org.apache.sling.commons.mime.internal
-                        </Private-Package>
                         <Import-Package>
                             javax.servlet.*;resolution:=optional,
                             org.apache.felix.webconsole;resolution:=optional,
