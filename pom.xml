@@ -66,6 +66,7 @@
                         <Import-Package>
                             javax.servlet.*;resolution:=optional,
                             org.apache.felix.webconsole;resolution:=optional,
+                            org.apache.tika.*;resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
@@ -91,6 +92,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.0.2-incubator</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -99,6 +101,12 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
