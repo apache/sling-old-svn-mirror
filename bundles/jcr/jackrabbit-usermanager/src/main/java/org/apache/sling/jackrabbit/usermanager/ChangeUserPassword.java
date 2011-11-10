@@ -35,24 +35,24 @@ import org.apache.sling.servlets.post.Modification;
  */
 public interface ChangeUserPassword {
 
-	/**
-	 * Update the password of a user in the repository
-	 * 
-	 * @param jcrSession the JCR session of the user updating the user
-	 * @param name The name of the user to update (required)
-	 * @param oldPassword The current password of the user (required for non-admin users)
-	 * @param newPassword The password value to apply (required)
-	 * @param newPasswordConfirm The password value to apply again (required)
+    /**
+     * Update the password of a user in the repository
+     * 
+     * @param jcrSession the JCR session of the user updating the user
+     * @param name The name of the user to update (required)
+     * @param oldPassword The current password of the user (required for non-admin users)
+     * @param newPassword The password value to apply (required)
+     * @param newPasswordConfirm The password value to apply again (required)
      * @param changes The list of changes for this operation (optional)
-	 * @return the user whose password was changed
-	 * @throws RepositoryException
-	 */
-	public User changePassword(Session jcrSession,
-							String name,
-							String oldPassword,
-							String newPassword,
-							String newPasswordConfirm,
-							List<Modification> changes
-				) throws RepositoryException;
-	
+     * @return the user whose password was changed
+     * @throws RepositoryException
+     */
+    public User changePassword(Session jcrSession,
+                            String name,
+                            String oldPassword,
+                            String newPassword,
+                            String newPasswordConfirm,
+                            List<Modification> changes
+                ) throws RepositoryException;
+    
 }

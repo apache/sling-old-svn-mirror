@@ -49,9 +49,9 @@ public abstract class AbstractGroupPostServlet extends
      * @throws RepositoryException
      */
     protected void updateGroupMembership(Resource baseResource,
-    									Map<String, ?> properties,
-							            Authorizable authorizable, 
-							            List<Modification> changes)
+                                        Map<String, ?> properties,
+                                        Authorizable authorizable, 
+                                        List<Modification> changes)
             throws RepositoryException {
         if (authorizable.isGroup()) {
             Group group = ((Group) authorizable);
@@ -106,23 +106,23 @@ public abstract class AbstractGroupPostServlet extends
      * @param resolver the resource resolver for this request.
      * @return the authorizable, or null if no authorizable was found.
      */
-	private Authorizable getAuthorizable(Resource baseResource, 
-						    		String member, 
-						    		UserManager userManager,
-						    		ResourceResolver resolver) {
-		Authorizable memberAuthorizable = null;
-		try {
-			memberAuthorizable = userManager.getAuthorizable(member);
-		} catch (RepositoryException e) {
-			// if we can't find the members then it may be resolvable as a resource.
-		}
-		if ( memberAuthorizable == null ) {
-			Resource res = resolver.getResource(baseResource, member);
-			if (res != null) {
-				memberAuthorizable = res.adaptTo(Authorizable.class);
-			}
-		}
-		return memberAuthorizable;
-	}
+    private Authorizable getAuthorizable(Resource baseResource, 
+                                    String member, 
+                                    UserManager userManager,
+                                    ResourceResolver resolver) {
+        Authorizable memberAuthorizable = null;
+        try {
+            memberAuthorizable = userManager.getAuthorizable(member);
+        } catch (RepositoryException e) {
+            // if we can't find the members then it may be resolvable as a resource.
+        }
+        if ( memberAuthorizable == null ) {
+            Resource res = resolver.getResource(baseResource, member);
+            if (res != null) {
+                memberAuthorizable = res.adaptTo(Authorizable.class);
+            }
+        }
+        return memberAuthorizable;
+    }
 
 }

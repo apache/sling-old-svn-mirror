@@ -138,7 +138,7 @@ public abstract class AbstractAuthorizablePostServlet extends
 
                 String typeHintValue = convertToString(e.getValue());
                 if (typeHintValue != null) {
-                	prop.setTypeHintValue(typeHintValue);
+                    prop.setTypeHintValue(typeHintValue);
                 }
 
                 continue;
@@ -508,186 +508,186 @@ public abstract class AbstractAuthorizablePostServlet extends
     }
 
     
-	protected String convertToString(Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		
-		if (obj instanceof String) {
-			return (String)obj;
-		} else if (obj instanceof String[]) {
-			String [] values = (String[])obj;
-			if (values.length > 0) {
-				return values[0];
-			}
-			return null;
-		} else if (obj instanceof RequestParameter) {
-			((RequestParameter)obj).getString();
-		} else if (obj instanceof RequestParameter[]) {
-			RequestParameter[] values = (RequestParameter[])obj;
-			if (values.length > 0) {
-				return values[0].getString();
-			}
-			return null;
-		}
-		return null;
-	}
+    protected String convertToString(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        
+        if (obj instanceof String) {
+            return (String)obj;
+        } else if (obj instanceof String[]) {
+            String [] values = (String[])obj;
+            if (values.length > 0) {
+                return values[0];
+            }
+            return null;
+        } else if (obj instanceof RequestParameter) {
+            ((RequestParameter)obj).getString();
+        } else if (obj instanceof RequestParameter[]) {
+            RequestParameter[] values = (RequestParameter[])obj;
+            if (values.length > 0) {
+                return values[0].getString();
+            }
+            return null;
+        }
+        return null;
+    }
     
-	protected String[] convertToStringArray(Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		
-		if (obj instanceof String) {
-			return new String[] {(String)obj};
-		} else if (obj instanceof String[]) {
-			return (String[])obj;
-		} else if (obj instanceof RequestParameter) {
-			return new String[] {((RequestParameter)obj).getString()};
-		} else if (obj instanceof RequestParameter[]) {
-			RequestParameter[] values = (RequestParameter[])obj;
-			String [] strValues = new String[values.length];
-			for (int i=0; i < values.length; i++) {
-				strValues[i] = values[i].getString();
-			}
-			return strValues;
-		}
-		return null;
-	}
+    protected String[] convertToStringArray(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        
+        if (obj instanceof String) {
+            return new String[] {(String)obj};
+        } else if (obj instanceof String[]) {
+            return (String[])obj;
+        } else if (obj instanceof RequestParameter) {
+            return new String[] {((RequestParameter)obj).getString()};
+        } else if (obj instanceof RequestParameter[]) {
+            RequestParameter[] values = (RequestParameter[])obj;
+            String [] strValues = new String[values.length];
+            for (int i=0; i < values.length; i++) {
+                strValues[i] = values[i].getString();
+            }
+            return strValues;
+        }
+        return null;
+    }
 
-	protected RequestParameter[] convertToRequestParameterArray(Object obj) {
-		if (obj == null) {
-			return null;
-		}
-		
-		if (obj instanceof String) {
-			return new RequestParameter[] {
-				new RequestParameterImpl((String)obj, null)	
-			};
-		} else if (obj instanceof String[]) {
-			String [] strValues = (String[])obj;
-			RequestParameter [] values = new RequestParameter[strValues.length];
-			for (int i=0; i < strValues.length; i++) {
-				values[i] = new RequestParameterImpl(strValues[i], null);
-			}
-			return values;
-		} else if (obj instanceof RequestParameter) {
-			return new RequestParameter[] {(RequestParameter)obj};
-		} else if (obj instanceof RequestParameter[]) {
-			return (RequestParameter[])obj;
-		}
-		return null;
-	}
-	
-	static class RequestParameterImpl implements RequestParameter {
+    protected RequestParameter[] convertToRequestParameterArray(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        
+        if (obj instanceof String) {
+            return new RequestParameter[] {
+                new RequestParameterImpl((String)obj, null) 
+            };
+        } else if (obj instanceof String[]) {
+            String [] strValues = (String[])obj;
+            RequestParameter [] values = new RequestParameter[strValues.length];
+            for (int i=0; i < strValues.length; i++) {
+                values[i] = new RequestParameterImpl(strValues[i], null);
+            }
+            return values;
+        } else if (obj instanceof RequestParameter) {
+            return new RequestParameter[] {(RequestParameter)obj};
+        } else if (obj instanceof RequestParameter[]) {
+            return (RequestParameter[])obj;
+        }
+        return null;
+    }
+    
+    static class RequestParameterImpl implements RequestParameter {
 
-	    private String value;
-	    private String encoding;
+        private String value;
+        private String encoding;
 
-	    private byte[] content;
+        private byte[] content;
 
-	    RequestParameterImpl(String value, String encoding) {
-	    	this.encoding = encoding;
-	        this.value = value;
-	        this.content = null;
-	    }
+        RequestParameterImpl(String value, String encoding) {
+            this.encoding = encoding;
+            this.value = value;
+            this.content = null;
+        }
 
-	    String getEncoding() {
-	        return this.encoding;
-	    }
-	    
-	    void setEncoding(String encoding) {
-	        // recode this parameter by encoding the string with the current
-	        // encoding and decode the bytes with the encoding
-	        try {
-	            this.value = getString(encoding);
-	        } catch (UnsupportedEncodingException uee) {
-	            throw new SlingUnsupportedEncodingException(uee);
-	        }
-	        this.encoding = encoding;
-	    }
+        String getEncoding() {
+            return this.encoding;
+        }
+        
+        void setEncoding(String encoding) {
+            // recode this parameter by encoding the string with the current
+            // encoding and decode the bytes with the encoding
+            try {
+                this.value = getString(encoding);
+            } catch (UnsupportedEncodingException uee) {
+                throw new SlingUnsupportedEncodingException(uee);
+            }
+            this.encoding = encoding;
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#get()
-	     */
-	    public byte[] get() {
-	        if (content == null) {
-	            try {
-	                content = getString().getBytes(getEncoding());
-	            } catch (Exception e) {
-	                // UnsupportedEncodingException, IllegalArgumentException
-	                content = getString().getBytes();
-	            }
-	        }
-	        return content;
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#get()
+         */
+        public byte[] get() {
+            if (content == null) {
+                try {
+                    content = getString().getBytes(getEncoding());
+                } catch (Exception e) {
+                    // UnsupportedEncodingException, IllegalArgumentException
+                    content = getString().getBytes();
+                }
+            }
+            return content;
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#getContentType()
-	     */
-	    public String getContentType() {
-	        // none known for www-form-encoded parameters
-	        return null;
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#getContentType()
+         */
+        public String getContentType() {
+            // none known for www-form-encoded parameters
+            return null;
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#getInputStream()
-	     */
-	    public InputStream getInputStream() {
-	        return new ByteArrayInputStream(this.get());
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#getInputStream()
+         */
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(this.get());
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#getFileName()
-	     */
-	    public String getFileName() {
-	        // no original file name
-	        return null;
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#getFileName()
+         */
+        public String getFileName() {
+            // no original file name
+            return null;
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#getSize()
-	     */
-	    public long getSize() {
-	        return this.get().length;
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#getSize()
+         */
+        public long getSize() {
+            return this.get().length;
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#getString()
-	     */
-	    public String getString() {
-	        return value;
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#getString()
+         */
+        public String getString() {
+            return value;
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#getString(java.lang.String)
-	     */
-	    public String getString(String encoding)
-	            throws UnsupportedEncodingException {
-	        return new String(this.get(), encoding);
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#getString(java.lang.String)
+         */
+        public String getString(String encoding)
+                throws UnsupportedEncodingException {
+            return new String(this.get(), encoding);
+        }
 
-	    /**
-	     * @see org.apache.sling.api.request.RequestParameter#isFormField()
-	     */
-	    public boolean isFormField() {
-	        // www-form-encoded are always form fields
-	        return true;
-	    }
+        /**
+         * @see org.apache.sling.api.request.RequestParameter#isFormField()
+         */
+        public boolean isFormField() {
+            // www-form-encoded are always form fields
+            return true;
+        }
 
-	    public String toString() {
-	        return this.getString();
-	    }
-	}
-	
-	static class SlingUnsupportedEncodingException extends SlingIOException {
+        public String toString() {
+            return this.getString();
+        }
+    }
+    
+    static class SlingUnsupportedEncodingException extends SlingIOException {
 
-	    private static final long serialVersionUID = -4482276105859280247L;
+        private static final long serialVersionUID = -4482276105859280247L;
 
-	    SlingUnsupportedEncodingException(UnsupportedEncodingException uee) {
-	        super(uee);
-	    }
+        SlingUnsupportedEncodingException(UnsupportedEncodingException uee) {
+            super(uee);
+        }
 
-	}
+    }
     
 }

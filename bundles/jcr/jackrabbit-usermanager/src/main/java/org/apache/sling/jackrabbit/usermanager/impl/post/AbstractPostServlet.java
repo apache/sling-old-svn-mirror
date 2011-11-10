@@ -45,9 +45,9 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractPostServlet extends
         SlingAllMethodsServlet {
 
-	private static final long serialVersionUID = 7408267654653472120L;
-	
-	/**
+    private static final long serialVersionUID = 7408267654653472120L;
+    
+    /**
      * default log
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -161,11 +161,11 @@ public abstract class AbstractPostServlet extends
      * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
      */
     protected HtmlResponse createHtmlResponse(SlingHttpServletRequest req) {
-    	if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(req.getResponseContentType())) {
-    		return new JSONResponse();
-    	} else {
+        if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(req.getResponseContentType())) {
+            return new JSONResponse();
+        } else {
             return new HtmlResponse();
-    	}
+        }
     }
     
     /**

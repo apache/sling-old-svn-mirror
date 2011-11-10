@@ -34,17 +34,17 @@ import org.apache.sling.servlets.post.Modification;
  */
 public interface DeleteUser {
 
-	/**
-	 * Deletes a user from the repository
-	 * 
-	 * @param jcrSession the JCR session of the user creating the user
-	 * @param name The name of the user to delete (required)
+    /**
+     * Deletes a user from the repository
+     * 
+     * @param jcrSession the JCR session of the user creating the user
+     * @param name The name of the user to delete (required)
      * @param changes The list of changes for this operation (optional)
-	 * @throws RepositoryException
-	 */
-	public void deleteUser(Session jcrSession,
-							String name,
-							List<Modification> changes
-				) throws RepositoryException;
-	
+     * @throws RepositoryException
+     */
+    public void deleteUser(Session jcrSession,
+                            String name,
+                            List<Modification> changes
+                ) throws RepositoryException;
+    
 }

@@ -106,207 +106,207 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
     private String groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
     
     
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddGroup(javax.jcr.Session)
-	 */
-	public boolean canAddGroup(Session jcrSession) {
-		try {
-			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
-			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddGroup(javax.jcr.Session)
+     */
+    public boolean canAddGroup(Session jcrSession) {
+        try {
+            UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+            Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
 
-			if (currentUser != null) {
-				if (((User)currentUser).isAdmin()) {
-					return true; //admin user has full control
-				}
-				
-				//check if the user is a member of the 'Group administrator' group
-				Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-				if (groupAdmin instanceof Group) {
-					boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			}
-		} catch (RepositoryException e) {
-			log.warn("Failed to determine if {} can add a new group", jcrSession.getUserID());
-		}
-		return false;
-	}
+            if (currentUser != null) {
+                if (((User)currentUser).isAdmin()) {
+                    return true; //admin user has full control
+                }
+                
+                //check if the user is a member of the 'Group administrator' group
+                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
+                if (groupAdmin instanceof Group) {
+                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to determine if {} can add a new group", jcrSession.getUserID());
+        }
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddUser(javax.jcr.Session)
-	 */
-	public boolean canAddUser(Session jcrSession) {
-		try {
-			//if self-registration is enabled, then anyone can create a user
-			if (componentContext != null) {
-				String filter = "(&(sling.servlet.resourceTypes=sling/users)(|(sling.servlet.methods=POST)(sling.servlet.selectors=create)))";
-				BundleContext bundleContext = componentContext.getBundleContext();
-				ServiceReference[] serviceReferences = bundleContext.getServiceReferences(Servlet.class.getName(), filter);
-				if (serviceReferences != null) {
-					String propName = "self.registration.enabled";
-					for (ServiceReference serviceReference : serviceReferences) {
-						Object propValue = serviceReference.getProperty(propName);
-						if (propValue != null) {
-							boolean selfRegEnabled = Boolean.TRUE.equals(propValue);
-							if (selfRegEnabled) {
-								return true;
-							}
-							break;
-						}
-					}
-				}
-			}
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canAddUser(javax.jcr.Session)
+     */
+    public boolean canAddUser(Session jcrSession) {
+        try {
+            //if self-registration is enabled, then anyone can create a user
+            if (componentContext != null) {
+                String filter = "(&(sling.servlet.resourceTypes=sling/users)(|(sling.servlet.methods=POST)(sling.servlet.selectors=create)))";
+                BundleContext bundleContext = componentContext.getBundleContext();
+                ServiceReference[] serviceReferences = bundleContext.getServiceReferences(Servlet.class.getName(), filter);
+                if (serviceReferences != null) {
+                    String propName = "self.registration.enabled";
+                    for (ServiceReference serviceReference : serviceReferences) {
+                        Object propValue = serviceReference.getProperty(propName);
+                        if (propValue != null) {
+                            boolean selfRegEnabled = Boolean.TRUE.equals(propValue);
+                            if (selfRegEnabled) {
+                                return true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
 
-			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
-			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
-			if (currentUser != null) {
-				if (((User)currentUser).isAdmin()) {
-					return true; //admin user has full control
-				}
-				
-				//check if the user is a member of the 'User administrator' group
-				Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-				if (userAdmin instanceof Group) {
-					boolean isMember = ((Group)userAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			}
-		} catch (RepositoryException e) {
-			log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
-		} catch (InvalidSyntaxException e) {
-			log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
-		}
-		return false;
-	}
+            UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+            Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
+            if (currentUser != null) {
+                if (((User)currentUser).isAdmin()) {
+                    return true; //admin user has full control
+                }
+                
+                //check if the user is a member of the 'User administrator' group
+                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
+                if (userAdmin instanceof Group) {
+                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
+        } catch (InvalidSyntaxException e) {
+            log.warn("Failed to determine if {} can add a new user", jcrSession.getUserID());
+        }
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canRemove(javax.jcr.Session, java.lang.String)
-	 */
-	public boolean canRemove(Session jcrSession, String principalId) {
-		try {
-			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
-			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canRemove(javax.jcr.Session, java.lang.String)
+     */
+    public boolean canRemove(Session jcrSession, String principalId) {
+        try {
+            UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+            Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
 
-			if (((User)currentUser).isAdmin()) {
-				return true; //admin user has full control
-			}
+            if (((User)currentUser).isAdmin()) {
+                return true; //admin user has full control
+            }
 
-			Authorizable authorizable = userManager.getAuthorizable(principalId);
-			if (authorizable instanceof User) {
-				//check if the user is a member of the 'User administrator' group
-				Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-				if (userAdmin instanceof Group) {
-					boolean isMember = ((Group)userAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			} else if (authorizable instanceof Group) {
-				//check if the user is a member of the 'Group administrator' group
-				Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-				if (groupAdmin instanceof Group) {
-					boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			}
-		} catch (RepositoryException e) {
-			log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
-		}
-		return false;
-	}
+            Authorizable authorizable = userManager.getAuthorizable(principalId);
+            if (authorizable instanceof User) {
+                //check if the user is a member of the 'User administrator' group
+                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
+                if (userAdmin instanceof Group) {
+                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            } else if (authorizable instanceof Group) {
+                //check if the user is a member of the 'Group administrator' group
+                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
+                if (groupAdmin instanceof Group) {
+                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
+        }
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canUpdateGroupMembers(javax.jcr.Session, java.lang.String)
-	 */
-	public boolean canUpdateGroupMembers(Session jcrSession, String groupId) {
-		try {
-			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
-			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canUpdateGroupMembers(javax.jcr.Session, java.lang.String)
+     */
+    public boolean canUpdateGroupMembers(Session jcrSession, String groupId) {
+        try {
+            UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+            Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
 
-			if (((User)currentUser).isAdmin()) {
-				return true; //admin user has full control
-			}
+            if (((User)currentUser).isAdmin()) {
+                return true; //admin user has full control
+            }
 
-			Authorizable authorizable = userManager.getAuthorizable(groupId);
-			if (authorizable instanceof Group) {
-				//check if the user is a member of the 'Group administrator' group
-				Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-				if (groupAdmin instanceof Group) {
-					boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-				
-				//check if the user is a member of the 'User administrator' group
-				Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-				if (userAdmin instanceof Group) {
-					boolean isMember = ((Group)userAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			}
-		} catch (RepositoryException e) {
-			log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), groupId);
-		}
-		return false;
-	}
+            Authorizable authorizable = userManager.getAuthorizable(groupId);
+            if (authorizable instanceof Group) {
+                //check if the user is a member of the 'Group administrator' group
+                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
+                if (groupAdmin instanceof Group) {
+                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+                
+                //check if the user is a member of the 'User administrator' group
+                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
+                if (userAdmin instanceof Group) {
+                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), groupId);
+        }
+        return false;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canUpdateProperties(javax.jcr.Session, java.lang.String)
-	 */
-	public boolean canUpdateProperties(Session jcrSession, String principalId) {
-		try {
-			if (jcrSession.getUserID().equals(principalId)) {
-				//user is allowed to update it's own properties
-				return true;
-			}
-			
-			UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
-			Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.AuthorizablePrivilegesInfo#canUpdateProperties(javax.jcr.Session, java.lang.String)
+     */
+    public boolean canUpdateProperties(Session jcrSession, String principalId) {
+        try {
+            if (jcrSession.getUserID().equals(principalId)) {
+                //user is allowed to update it's own properties
+                return true;
+            }
+            
+            UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+            Authorizable currentUser = userManager.getAuthorizable(jcrSession.getUserID());
 
-			if (((User)currentUser).isAdmin()) {
-				return true; //admin user has full control
-			}
+            if (((User)currentUser).isAdmin()) {
+                return true; //admin user has full control
+            }
 
-			Authorizable authorizable = userManager.getAuthorizable(principalId);
-			if (authorizable instanceof User) {
-				//check if the user is a member of the 'User administrator' group
-				Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
-				if (userAdmin instanceof Group) {
-					boolean isMember = ((Group)userAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			} else if (authorizable instanceof Group) {
-				//check if the user is a member of the 'Group administrator' group
-				Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
-				if (groupAdmin instanceof Group) {
-					boolean isMember = ((Group)groupAdmin).isMember(currentUser);
-					if (isMember) {
-						return true;
-					}
-				}
-			}
-		} catch (RepositoryException e) {
-			log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
-		}
-		return false;
-	}
+            Authorizable authorizable = userManager.getAuthorizable(principalId);
+            if (authorizable instanceof User) {
+                //check if the user is a member of the 'User administrator' group
+                Authorizable userAdmin = userManager.getAuthorizable(this.userAdminGroupName);
+                if (userAdmin instanceof Group) {
+                    boolean isMember = ((Group)userAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            } else if (authorizable instanceof Group) {
+                //check if the user is a member of the 'Group administrator' group
+                Authorizable groupAdmin = userManager.getAuthorizable(this.groupAdminGroupName);
+                if (groupAdmin instanceof Group) {
+                    boolean isMember = ((Group)groupAdmin).isMember(currentUser);
+                    if (isMember) {
+                        return true;
+                    }
+                }
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to determine if {} can remove authorizable {}", jcrSession.getUserID(), principalId);
+        }
+        return false;
+    }
 
 
-	// ---------- SCR Integration ----------------------------------------------
+    // ---------- SCR Integration ----------------------------------------------
 
-	//keep track of the bundle context
-	private ComponentContext componentContext;
+    //keep track of the bundle context
+    private ComponentContext componentContext;
 
     /**
      * Called by SCR to activate the component.
@@ -320,21 +320,21 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
             throws InvalidKeyException, NoSuchAlgorithmException,
             IllegalStateException, UnsupportedEncodingException {
 
-    	this.componentContext = componentContext;
-    	
+        this.componentContext = componentContext;
+        
         Dictionary<?, ?> properties = componentContext.getProperties();
 
         this.userAdminGroupName = OsgiUtil.toString(properties.get(PAR_USER_ADMIN_GROUP_NAME),
-        		DEFAULT_USER_ADMIN_GROUP_NAME);
+                DEFAULT_USER_ADMIN_GROUP_NAME);
         log.info("User Admin Group Name {}", this.userAdminGroupName);
 
         this.groupAdminGroupName = OsgiUtil.toString(properties.get(PAR_GROUP_ADMIN_GROUP_NAME), 
-        		DEFAULT_GROUP_ADMIN_GROUP_NAME);
+                DEFAULT_GROUP_ADMIN_GROUP_NAME);
         log.info("Group Admin Group Name {}", this.groupAdminGroupName);
     }
 
     protected void deactivate(ComponentContext componentContext) {
-    	this.userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
-    	this.groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
+        this.userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
+        this.groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
     }
 }

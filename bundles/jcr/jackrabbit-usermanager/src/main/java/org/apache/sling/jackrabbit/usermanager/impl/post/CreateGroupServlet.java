@@ -88,7 +88,7 @@ public class CreateGroupServlet extends AbstractGroupPostServlet implements Crea
     private static final long serialVersionUID = -1084915263933901466L;
 
     /** @scr.reference */
-	private JcrResourceResolverFactory resourceResolverFactory;
+    private JcrResourceResolverFactory resourceResolverFactory;
     
     /*
      * (non-Javadoc)
@@ -105,28 +105,28 @@ public class CreateGroupServlet extends AbstractGroupPostServlet implements Crea
         Session session = request.getResourceResolver().adaptTo(Session.class);
         String principalName = request.getParameter(SlingPostConstants.RP_NODE_NAME);
         Group group = createGroup(session, 
-        		principalName, 
-        		request.getRequestParameterMap(), 
-        		changes);
+                principalName, 
+                request.getRequestParameterMap(), 
+                changes);
 
         String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-        	+ group.getID();
+            + group.getID();
         response.setPath(groupPath);
         response.setLocation(externalizePath(request, groupPath));
         response.setParentLocation(externalizePath(request,
             AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH));
         
     }
-	
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.CreateGroup#createGroup(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
-	 */
-	public Group createGroup(Session jcrSession, final String name,
-			Map<String, ?> properties, List<Modification> changes)
-			throws RepositoryException {
+    
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.CreateGroup#createGroup(javax.jcr.Session, java.lang.String, java.util.Map, java.util.List)
+     */
+    public Group createGroup(Session jcrSession, final String name,
+            Map<String, ?> properties, List<Modification> changes)
+            throws RepositoryException {
         // check that the parameter values have valid values.
-		if (jcrSession == null) {
-			throw new IllegalArgumentException("JCR Session not found");
+        if (jcrSession == null) {
+            throw new IllegalArgumentException("JCR Session not found");
         }
 
         if (name == null || name.length() == 0) {
@@ -162,18 +162,18 @@ public class CreateGroupServlet extends AbstractGroupPostServlet implements Crea
             // update the group memberships
             ResourceResolver resourceResolver = null;
             try {
-            	//create a resource resolver to resolve the relative paths used for group membership values
+                //create a resource resolver to resolve the relative paths used for group membership values
                 resourceResolver = resourceResolverFactory.getResourceResolver(jcrSession);
                 Resource baseResource = resourceResolver.getResource(AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PATH);
                 updateGroupMembership(baseResource, properties, group, changes);
             } finally {
-            	if (resourceResolver != null) {
-            		resourceResolver.close();
-            	}
+                if (resourceResolver != null) {
+                    resourceResolver.close();
+                }
             }
         }
         
         return group;
-	}
+    }
     
 }

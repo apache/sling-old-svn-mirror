@@ -88,7 +88,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * @scr.property name="sling.servlet.selectors" value="delete"
  */
 public class DeleteAuthorizableServlet extends AbstractPostServlet
-		implements DeleteUser, DeleteGroup, DeleteAuthorizables {
+        implements DeleteUser, DeleteGroup, DeleteAuthorizables {
     private static final long serialVersionUID = 5874621724096106496L;
 
     /*
@@ -107,10 +107,10 @@ public class DeleteAuthorizableServlet extends AbstractPostServlet
         Resource resource = request.getResource();
         String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
         if (applyTo != null) {
-        	deleteAuthorizables(session,
-        			resource,
-        			applyTo, 
-        			changes);
+            deleteAuthorizables(session,
+                    resource,
+                    applyTo, 
+                    changes);
         } else {
             Authorizable item = resource.adaptTo(Authorizable.class);
             if (item == null) {
@@ -119,70 +119,70 @@ public class DeleteAuthorizableServlet extends AbstractPostServlet
                 htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND, msg);
                 throw new ResourceNotFoundException(msg);
             } else {
-            	if (item instanceof User) {
-            		deleteUser(session, item.getID(), changes);
-            	} else if (item instanceof Group) {
-            		deleteGroup(session, item.getID(), changes);
-            	}
+                if (item instanceof User) {
+                    deleteUser(session, item.getID(), changes);
+                } else if (item instanceof Group) {
+                    deleteGroup(session, item.getID(), changes);
+                }
             }
         }
     }
     
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.DeleteUser#deleteUser(javax.jcr.Session, java.lang.String, java.util.List)
-	 */
-	public void deleteUser(Session jcrSession, String name,
-			List<Modification> changes) throws RepositoryException {
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.DeleteUser#deleteUser(javax.jcr.Session, java.lang.String, java.util.List)
+     */
+    public void deleteUser(Session jcrSession, String name,
+            List<Modification> changes) throws RepositoryException {
 
-		User user;
-		UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        User user;
+        UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable instanceof User) {
-        	user = (User)authorizable;
+            user = (User)authorizable;
         } else {
             throw new ResourceNotFoundException(
-        		"User to delete could not be determined");
+                "User to delete could not be determined");
         }
         
         String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
-							+ user.getID();
+                            + user.getID();
         user.remove();
         changes.add(Modification.onDeleted(userPath));
-	}
-	
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.DeleteGroup#deleteGroup(javax.jcr.Session, java.lang.String, java.util.List)
-	 */
-	public void deleteGroup(Session jcrSession, 
-							String name,
-							List<Modification> changes) throws RepositoryException {
+    }
+    
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.DeleteGroup#deleteGroup(javax.jcr.Session, java.lang.String, java.util.List)
+     */
+    public void deleteGroup(Session jcrSession, 
+                            String name,
+                            List<Modification> changes) throws RepositoryException {
 
-		Group group;
-		UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
+        Group group;
+        UserManager userManager = AccessControlUtil.getUserManager(jcrSession);
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable instanceof Group) {
-        	group = (Group)authorizable;
+            group = (Group)authorizable;
         } else {
             throw new ResourceNotFoundException(
-        		"Group to delete could not be determined");
+                "Group to delete could not be determined");
         }
         
         String groupPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
-								+ group.getID();
+                                + group.getID();
         group.remove();
         changes.add(Modification.onDeleted(groupPath));
-	}
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables#deleteAuthorizables(javax.jcr.Session, org.apache.sling.api.resource.Resource, java.lang.String[], java.util.List)
-	 */
-	public void deleteAuthorizables(Session jcrSession, 
-									Resource baseResource,
-									String[] paths, 
-									List<Modification> changes)
-			throws RepositoryException {
+    /* (non-Javadoc)
+     * @see org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables#deleteAuthorizables(javax.jcr.Session, org.apache.sling.api.resource.Resource, java.lang.String[], java.util.List)
+     */
+    public void deleteAuthorizables(Session jcrSession, 
+                                    Resource baseResource,
+                                    String[] paths, 
+                                    List<Modification> changes)
+            throws RepositoryException {
 
-		ApplyToIterator iterator = new ApplyToIterator(baseResource, paths);
+        ApplyToIterator iterator = new ApplyToIterator(baseResource, paths);
         while (iterator.hasNext()) {
             Resource resource = iterator.next();
             Authorizable item = resource.adaptTo(Authorizable.class);
@@ -191,7 +191,7 @@ public class DeleteAuthorizableServlet extends AbstractPostServlet
                 changes.add(Modification.onDeleted(resource.getPath()));
             }
         }
-	}
+    }
 
     private static class ApplyToIterator implements Iterator<Resource> {
 

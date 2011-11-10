@@ -35,19 +35,19 @@ import org.apache.sling.servlets.post.Modification;
  */
 public interface DeleteAuthorizables {
 
-	/**
-	 * Deletes one or more users or groups from the repository
-	 * 
-	 * @param jcrSession the JCR session of the user creating the user
-	 * @param baseResource the base resource to calculate the relative paths from (required)
-	 * @param paths An array of relative resource paths to Authorizables to be deleted (required)
+    /**
+     * Deletes one or more users or groups from the repository
+     * 
+     * @param jcrSession the JCR session of the user creating the user
+     * @param baseResource the base resource to calculate the relative paths from (required)
+     * @param paths An array of relative resource paths to Authorizables to be deleted (required)
      * @param changes The list of changes for this operation (optional)
-	 * @throws RepositoryException
-	 */
-	public void deleteAuthorizables(Session jcrSession,
-							Resource baseResource,
-							String [] paths,
-							List<Modification> changes
-				) throws RepositoryException;
-	
+     * @throws RepositoryException
+     */
+    public void deleteAuthorizables(Session jcrSession,
+                            Resource baseResource,
+                            String [] paths,
+                            List<Modification> changes
+                ) throws RepositoryException;
+    
 }
