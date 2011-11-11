@@ -68,7 +68,7 @@ public class AnonymousAccessConfigServlet extends SlingAllMethodsServlet impleme
         String action = request.getParameter("action");
         if ("disable".equals(action)) {
             int existingModifiedCounter = modifiedCounter;
-            Configuration config = configAdmin.getConfiguration(AUTH_PID);
+            Configuration config = configAdmin.getConfiguration(AUTH_PID, null);
             Dictionary props = config.getProperties();
             if (props == null) {
                 props = new Hashtable();
@@ -78,7 +78,7 @@ public class AnonymousAccessConfigServlet extends SlingAllMethodsServlet impleme
             waitForModified(existingModifiedCounter, TIMEOUT);
         } else if ("enable".equals(action)) {
             int existingModifiedCounter = modifiedCounter;
-            Configuration config = configAdmin.getConfiguration(AUTH_PID);
+            Configuration config = configAdmin.getConfiguration(AUTH_PID, null);
             Dictionary props = config.getProperties();
             if (props == null) {
                 props = new Hashtable();
