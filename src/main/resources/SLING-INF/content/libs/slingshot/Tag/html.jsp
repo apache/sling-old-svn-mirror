@@ -21,6 +21,7 @@
                 org.apache.sling.api.resource.ResourceUtil,
                 org.apache.sling.api.resource.ValueMap,
                 org.apache.sling.api.request.ResponseUtil,
+                org.apache.sling.sample.slingshot.Constants,
                 java.util.Iterator"%><%
 %><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
 %><sling:defineObjects/><%
@@ -39,9 +40,12 @@
     final Iterator<Resource> fi = resolver.findResources("SELECT * FROM nt:file WHERE jcr:path LIKE '/slingshot/albums/%' AND slingshot:tags='" + name + "'", "sql");
     while ( fi.hasNext()) {
         final Resource current = fi.next();
-        %>
+        if ( current.isResourceType(Constants.RESOURCETYPE_PHOTO) 
+                && Constants.includeAsMedia(current)) {
+          %>
         <sling:include resource="<%= current %>" resourceType="slingshot/Photo" replaceSelectors="main"/>
-        <%
+          <%
+        }
     }
 %>
 </div>
