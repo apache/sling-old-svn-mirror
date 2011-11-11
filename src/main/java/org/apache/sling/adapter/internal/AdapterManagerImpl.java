@@ -29,11 +29,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
@@ -46,14 +54,16 @@ import org.slf4j.LoggerFactory;
  * {@link AdapterManager} interface and is registered as a service for that
  * interface to be used by any clients.
  *
- * @scr.component metatype="no" immediate="true"
- * @scr.property name="service.description" value="Sling Adapter Manager"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service
- * @scr.reference name="AdapterFactory"
- *                interface="org.apache.sling.api.adapter.AdapterFactory"
- *                cardinality="0..n" policy="dynamic"
  */
+@Component(immediate=true)
+@Service
+@Properties({
+    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Adapter Manager"),
+    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
+    
+})
+@Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
+    cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
 public class AdapterManagerImpl implements AdapterManager {
 
     private Logger log = LoggerFactory.getLogger(getClass());
@@ -94,8 +104,8 @@ public class AdapterManagerImpl implements AdapterManager {
 
     /**
      * The service tracker for the event admin
-     * @scr.reference cardinality="0..1" policy="dynamic"
      */
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private EventAdmin eventAdmin;
 
     // ---------- AdapterManager interface -------------------------------------
