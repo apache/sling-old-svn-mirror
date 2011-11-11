@@ -33,6 +33,8 @@ import org.apache.sling.servlets.post.Modification;
  * This interface is not intended to be implemented by bundles. It is
  * implemented by this bundle and may be used by client bundles.
  * </p>
+ * 
+ * @since 2.2.0
  */
 public interface UpdateUser {
 
