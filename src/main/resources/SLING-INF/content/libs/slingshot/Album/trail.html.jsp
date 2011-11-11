@@ -46,7 +46,7 @@
         } while ( continueProcessing);
     }  
     for(int k=parents.size()-1;k>=0;k--) {
-      %><div class="trailpart" style="padding:3px;"><a href="<%=parents.get(k)[0] %>.slingshot.html"><%=parents.get(k)[1] %></a></div><%
+      %><div class="trailpart" style="padding:3px;"><a href="<%=parents.get(k)[0] %>.html"><%=parents.get(k)[1] %></a></div><%
     }
   %>
 </div>

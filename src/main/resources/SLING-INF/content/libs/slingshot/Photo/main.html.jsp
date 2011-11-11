@@ -26,7 +26,6 @@
 %><div class="photo">
 <%
     final ValueMap attr = ResourceUtil.getValueMap(resource);
-    final String albumName = resource.getParent().getName();
     final String photoName = attr.get("jcr:title", resource.getName());
     final String relPath = resource.getPath();
     String imagePath = relPath;
@@ -35,8 +34,8 @@
         imagePath = previewPath;
     }
 %>
-    <a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><img src="<%=imagePath%>" width="100" height="100"/></a><br/>
-    <p><a href="<%= request.getContextPath() %><%=relPath%>.slingshot.html"><%= ResponseUtil.escapeXml(photoName) %></a></p>
+    <a href="<%= request.getContextPath() %><%=relPath%>.html"><img src="<%=imagePath%>" width="100" height="100"/></a><br/>
+    <p><a href="<%= request.getContextPath() %><%=relPath%>.html"><%= ResponseUtil.escapeXml(photoName) %></a></p>
     <p>Tags:&nbsp;
 <%
     String[] values = attr.get("slingshot:tags", String[].class);

@@ -25,4 +25,4 @@
   ValueMap attributes = ResourceUtil.getValueMap(resource);
   Resource parent = resource.getParent();
   String name = resource.getName();
-%>- <a href="<%=parent.getName() %>/<%=name %>.slingshot.html"><%=ResponseUtil.escapeXml(attributes.get("jcr:title", name)) %></a><br/>
+%>- <a href="<%=parent.getName() %>/<%=name %>.html"><%=ResponseUtil.escapeXml(attributes.get("jcr:title", name)) %></a><br/>
