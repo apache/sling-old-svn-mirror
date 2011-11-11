@@ -23,7 +23,6 @@
 %><sling:defineObjects/><%
     final ValueMap attributes = ResourceUtil.getValueMap(resource);
     final String photoName = ResponseUtil.escapeXml(attributes.get("jcr:title", resource.getName()));
-    final String albumName = ResponseUtil.escapeXml(ResourceUtil.getValueMap(resource.getParent()).get("jcr:title", resource.getParent().getName()));
 %><html>
   <head>
     <title><%= photoName %></title>
@@ -31,21 +30,13 @@
   <body>
     <h1><%= photoName %></h1>
     <img src="<%=resource.getName() %>"/>
-    <p>Description: <%=ResponseUtil.escapeXml(attributes.get("jcr:description", ""))%></p>
-    <p>Location: <%=ResponseUtil.escapeXml(attributes.get("slingshot:location", ""))%></p>
-    <p>Tags:&nbsp;
-<%
-    String[] values = attributes.get("slingshot:tags", String[].class);
-    if  (values != null ) {
-        for(int k=0;k<values.length;k++) {
-            if(k>0) out.write(", ");
-            out.write(ResponseUtil.escapeXml(values[k]));
-        }
-        
-    }
-%>
-    </p>
-    <p><a href="<%=resource.getName() %>.edit.html">Edit</a></p>
-    <p>Album: <a href="../<%=resource.getParent().getName() %>.html"><%= albumName %></a></p>
+    <form method="POST" action="<%=resource.getName() %>">
+      <input type="hidden" name=":redirect" value="<%=resource.getName() %>.html"/>
+      <p>Title: <input name="jcr:title" value="<%=photoName%>"/></p>
+      <p>Description: <input name="jcr:description" value="<%=ResponseUtil.escapeXml(attributes.get("jcr:description", ""))%>"/></p>
+      <p>Location: <input name="slingshot:location" value="<%=ResponseUtil.escapeXml(attributes.get("slingshot:location", ""))%>"/></p>
+      <button name="save">Save</button>
+      <p><a href="<%=resource.getName() %>.html">Cancel</a></p>
+    </form>
   </body>
 </html>
