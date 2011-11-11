@@ -18,6 +18,7 @@ package org.apache.sling.launchpad.testservices.servlets;
 
 import java.io.IOException;
 import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.servlet.ServletException;
 
@@ -69,6 +70,9 @@ public class AnonymousAccessConfigServlet extends SlingAllMethodsServlet impleme
             int existingModifiedCounter = modifiedCounter;
             Configuration config = configAdmin.getConfiguration(AUTH_PID);
             Dictionary props = config.getProperties();
+            if (props == null) {
+                props = new Hashtable();
+            }
             props.put(PROP_AUTH_ANNONYMOUS, Boolean.FALSE);
             config.update(props);
             waitForModified(existingModifiedCounter, TIMEOUT);
@@ -76,6 +80,9 @@ public class AnonymousAccessConfigServlet extends SlingAllMethodsServlet impleme
             int existingModifiedCounter = modifiedCounter;
             Configuration config = configAdmin.getConfiguration(AUTH_PID);
             Dictionary props = config.getProperties();
+            if (props == null) {
+                props = new Hashtable();
+            }
             props.put(PROP_AUTH_ANNONYMOUS, Boolean.TRUE);
             config.update(props);
             waitForModified(existingModifiedCounter, TIMEOUT);
