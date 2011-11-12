@@ -20,18 +20,23 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.script.Bindings;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.osgi.framework.Constants;
 
 /**
  * BindingsValuesProvider for currentNode and currentSession object.
- *
- * @scr.component metatype="no"
- * @scr.service
- *
- * @scr.property name="service.description" value="Apache Sling CurrentNode BindingsValuesProvider"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
+@Component
+@Service
+@Properties({
+    @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling CurrentNode BindingsValuesProvider"),
+    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
+})
 public class JcrObjectsBindingsValuesProvider implements BindingsValuesProvider {
 
 
