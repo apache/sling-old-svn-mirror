@@ -395,6 +395,13 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
             return false;
         }
 
+        //check the referer to see if the request is for this handler
+        if (!checkReferer(request, loginForm)) {
+        	//not for this handler, so return
+        	return false;
+        }
+        
+
         // requestAuthentication is only called after a failedauthentication
         // so it makes sense to remove any existing login
         final RelyingParty relyingParty = getRelyingParty(request);
