@@ -80,7 +80,7 @@ import org.slf4j.LoggerFactory;
  * First attempt of an resource resolver factory implementation.
  * WORK IN PROGRESS - see SLING-1262
  */
-@Component(immediate=true, label="%resource.resolver.name", description="%resource.resolver.description", specVersion="1.1")
+@Component(immediate=true, label="%resource.resolver.name", description="%resource.resolver.description", specVersion="1.1", metatype=true)
 @Service(value={JcrResourceResolverFactory.class, ResourceResolverFactory.class})
 @Properties({
     @Property(name = Constants.SERVICE_DESCRIPTION, value="Sling JcrResourceResolverFactory Implementation"),
@@ -402,7 +402,7 @@ public class JcrResourceResolverFactoryImpl implements
         final Dictionary<?, ?> properties = componentContext.getProperties();
 
         BidiMap virtuals = new TreeBidiMap();
-        String[] virtualList = (String[]) properties.get(PROP_VIRTUAL);
+        String[] virtualList = OsgiUtil.toStringArray(properties.get(PROP_VIRTUAL));
         for (int i = 0; virtualList != null && i < virtualList.length; i++) {
             String[] parts = Mapping.split(virtualList[i]);
             virtuals.put(parts[0], parts[2]);
