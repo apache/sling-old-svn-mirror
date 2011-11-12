@@ -35,6 +35,15 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.TreeBidiMap;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -50,6 +59,7 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.ResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.RootResourceProviderEntry;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderEntry;
+import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -67,23 +77,20 @@ import org.slf4j.LoggerFactory;
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
  *
- * @scr.component immediate="true" label="%resource.resolver.name"
- *                description="%resource.resolver.description" specVersion="1.1"
- * @scr.property name="service.description"
- *                value="Sling JcrResourceResolverFactory Implementation"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="org.apache.sling.jcr.resource.JcrResourceResolverFactory"
- * @scr.service interface="org.apache.sling.api.resource.ResourceResolverFactory"
- * @scr.reference name="ResourceProvider"
- *                interface="org.apache.sling.api.resource.ResourceProvider"
- *                cardinality="0..n" policy="dynamic"
- * @scr.reference name="ResourceDecorator"
- *                interface="org.apache.sling.api.resource.ResourceDecorator"
- *                cardinality="0..n" policy="dynamic"
- *
  * First attempt of an resource resolver factory implementation.
  * WORK IN PROGRESS - see SLING-1262
  */
+@Component(immediate=true, label="%resource.resolver.name", description="%resource.resolver.description", specVersion="1.1")
+@Service(value={JcrResourceResolverFactory.class, ResourceResolverFactory.class})
+@Properties({
+    @Property(name = Constants.SERVICE_DESCRIPTION, value="Sling JcrResourceResolverFactory Implementation"),
+    @Property(name = Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
+    
+})
+@References({
+    @Reference(name="ResourceProvider", referenceInterface=ResourceProvider.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC),
+    @Reference(name="ResourceDecorator", referenceInterface=ResourceDecorator.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)    
+})
 public class JcrResourceResolverFactoryImpl implements
         JcrResourceResolverFactory, ResourceResolverFactory {
 
@@ -98,15 +105,15 @@ public class JcrResourceResolverFactoryImpl implements
         }
     }
 
+    private static final boolean DEFAULT_MULTIWORKSPACE = false;
+
     /**
      * Special value which, if passed to listener.workspaces, will have resource
      * events fired for all workspaces.
      */
     public static final String ALL_WORKSPACES = "*";
 
-    /**
-     * @scr.property values.1="/apps" values.2="/libs"
-     */
+    @Property(value={"/apps", "/libs" })
     public static final String PROP_PATH = "resource.resolver.searchpath";
 
     /**
@@ -129,13 +136,12 @@ public class JcrResourceResolverFactoryImpl implements
      * The default value of this property if no configuration is provided is
      * <code>true</code>.
      *
-     * @scr.property value="true" type="Boolean"
      */
+    @Property(boolValue=true)
     private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
 
-    /**
-     * @scr.property value="true" type="Boolean"
-     */
+
+    @Property(boolValue=true)
     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
 
     /**
@@ -143,37 +149,23 @@ public class JcrResourceResolverFactoryImpl implements
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
-     *
-     * @scr.property values.1="/:/"
      */
+    @Property(value="/:/", unbounded=PropertyUnbounded.ARRAY)
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
 
-    /**
-     * @scr.property values.1="/:/" values.2="/content/:/"
-     *               values.3="/system/docroot/:/"
-     */
+    @Property(value={"/:/", "/content/:/", "/system/docroot/:/"})
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
-    /**
-     * @scr.property valueRef="MapEntries.DEFAULT_MAP_ROOT"
-     */
+    @Property(value=MapEntries.DEFAULT_MAP_ROOT)
     private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
 
-    /**
-     * @scr.property valueRef="DEFAULT_MULTIWORKSPACE"
-     */
+    @Property(boolValue=DEFAULT_MULTIWORKSPACE)
     private static final String PROP_MULTIWORKSPACE = "resource.resolver.multiworkspace";
-
-    private static final boolean DEFAULT_MULTIWORKSPACE = false;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /**
-     * The JCR Repository we access to resolve resources
-     *
-     * @scr.reference
-     */
+    @Reference
     private SlingRepository repository;
 
     /** Tracker for the resource decorators. */
@@ -211,8 +203,8 @@ public class JcrResourceResolverFactoryImpl implements
      */
     private ServiceTracker eventAdminTracker;
 
-    /** The dynamic class loader
-     * @scr.reference cardinality="0..1" policy="dynamic" */
+    /** The dynamic class loader */
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public JcrResourceResolverFactoryImpl() {
