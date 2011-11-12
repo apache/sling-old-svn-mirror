@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>12</version>
+        <relativePath>../../parent/pom.xml</relativePath>
+    </parent>
+
+    <artifactId>org.apache.sling.fragment.ws</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Apache Sling System Bundle Extension: WS APIs</name>
+    <description>
+        Adds the WS API packages to the system bundle exports.
+        The list of packages is derived from the packages available
+        in the Java 7 platform. The system bundle exporting these
+        packages gives no guarantee the platform provides them.
+        For proper setup it is suggested to either install an
+        extension fragment adapted to the platform or to install
+        regular API packages as bundles.
+    </description>
+
+    <properties>
+        <fragment.ws.version>0.0.0.fragment_ws</fragment.ws.version>
+    </properties>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <instructions>
+                        <Fragment-Host>
+                            system.bundle;extension:=framework
+                        </Fragment-Host>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <forceCreation>true</forceCreation>
+                    <archive>
+                        <manifestFile>
+                            ${project.build.outputDirectory}/META-INF/MANIFEST.MF
+                        </manifestFile>
+                        <manifestEntries>
+                            <Export-Package>
+							 javax.jws.soap;version="${fragment.ws.version}",
+							 javax.jws;version="${fragment.ws.version}",
+							 javax.xml.soap;uses:="javax.activation,javax.xml.namespace,org.w3c.dom,javax.xml.transform.dom,javax.xml.transform";version="${fragment.ws.version}",
+							 javax.xml.ws.handler.soap;uses:="javax.xml.ws.handler,javax.xml.namespace,javax.xml.soap,javax.xml.bind";version="${fragment.ws.version}",
+							 javax.xml.ws.handler;uses:="javax.xml.ws,javax.xml.namespace";version="${fragment.ws.version}",
+							 javax.xml.ws.http;uses:="javax.xml.ws";version="${fragment.ws.version}",
+							 javax.xml.ws.soap;uses:="javax.xml.ws.spi,javax.xml.ws,javax.xml.soap";version="${fragment.ws.version}",
+							 javax.xml.ws.spi.http;version="${fragment.ws.version}",
+							 javax.xml.ws.spi;uses:="javax.xml.ws,javax.xml.ws.wsaddressing,javax.xml.transform,org.w3c.dom,javax.xml.namespace,javax.xml.ws.handler,javax.xml.bind";version="${fragment.ws.version}",
+							 javax.xml.ws.wsaddressing;uses:="javax.xml.bind.annotation,javax.xml.namespace,org.w3c.dom,javax.xml.transform,javax.xml.bind,javax.xml.ws,javax.xml.ws.spi";version="${fragment.ws.version}",
+							 javax.xml.ws;uses:="javax.xml.ws.handler,javax.xml.ws.spi,javax.xml.ws.spi.http,javax.xml.transform,org.w3c.dom,javax.xml.bind.annotation,javax.xml.transform.stream,javax.xml.bind,javax.xml.namespace";version="${fragment.ws.version}"
+                            </Export-Package>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
