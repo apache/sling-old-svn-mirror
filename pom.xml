@@ -37,6 +37,10 @@
         packages to the system bundle exports.
     </description>
 
+    <properties>
+        <fragment.transaction.version>0.0.0.fragment_transaction</fragment.transaction.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -69,8 +73,8 @@
                         </manifestFile>
                         <manifestEntries>
                             <Export-Package>
-                                javax.transaction,
-                                javax.transaction.xa
+                                javax.transaction;version="${fragment.transaction.version}",
+                                javax.transaction.xa;version="${fragment.transaction.version}"
                             </Export-Package>
                         </manifestEntries>
                     </archive>
