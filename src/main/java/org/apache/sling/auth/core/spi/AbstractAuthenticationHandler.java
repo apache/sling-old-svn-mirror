@@ -20,6 +20,8 @@ package org.apache.sling.auth.core.spi;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -420,4 +422,29 @@ public abstract class AbstractAuthenticationHandler extends
             // TODO: log.error("Failed to send 403/Forbidden response", ioe);
         }
     }
+    
+	/**
+	 * Check if the request is for this authentication handler.
+	 * 
+	 * @param request the current request
+	 * @return true if the referer matches this handler, or false otherwise
+	 */
+	public static boolean checkReferer(HttpServletRequest request, String loginForm) {
+		//SLING-2165: if a Referer header is supplied check if it matches the login path for this handler
+        String referer = request.getHeader("Referer");
+        if (referer != null) {
+        	String expectedPath = String.format("%s%s", request.getContextPath(), loginForm);
+        	try {
+            	URL uri = new URL(referer);
+            	if (!expectedPath.equals(uri.getPath())) {
+            		//not for this selector, so let the next one handle it.
+            		return false;
+            	}
+        	} catch (MalformedURLException e) {
+        		LoggerFactory.getLogger(AbstractAuthenticationHandler.class)
+        			.debug("Failed to parse the referer value for the login form " + loginForm, e);
+        	}
+        }
+        return true;
+	}    
 }
