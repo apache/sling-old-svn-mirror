@@ -353,6 +353,12 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             return false;
         }
 
+        //check the referer to see if the request is for this handler
+        if (!checkReferer(request, loginForm)) {
+        	//not for this handler, so return
+        	return false;
+        }
+        
         final String resource = setLoginResourceAttribute(request,
             request.getRequestURI());
 
