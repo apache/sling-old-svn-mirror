@@ -35,10 +35,16 @@
     <description>
         Adds the XML API packages to the system bundle exports.
         The list of packages is derived from the packages available
-        in the Java 5 platform. To use more recent XML APIs either
-        modify this bundle to also export those package from the
-        platform or install respective API bundles.
+        in the Java 7 platform. The system bundle exporting these
+        packages gives no guarantee the platform provides them.
+        For proper setup it is suggested to either install an
+        extension fragment adapted to the platform or to install
+        regular API packages as bundles.
     </description>
+
+    <properties>
+        <fragment.xml.version>0.0.0.fragment_xml</fragment.xml.version>
+    </properties>
 
     <build>
         <plugins>
@@ -72,29 +78,39 @@
                         </manifestFile>
                         <manifestEntries>
                             <Export-Package>
-                                javax.xml,
-                                javax.xml.datatype,
-                                javax.xml.namespace,
-                                javax.xml.parsers,
-                                javax.xml.transform,
-                                javax.xml.transform.dom,
-                                javax.xml.transform.sax,
-                                javax.xml.transform.stream,
-                                javax.xml.validation,
-                                javax.xml.xpath,
-                                org.w3c.dom,
-                                org.w3c.dom.bootstrap,
-                                org.w3c.dom.css,
-                                org.w3c.dom.events,
-                                org.w3c.dom.html,
-                                org.w3c.dom.ls,
-                                org.w3c.dom.ranges,
-                                org.w3c.dom.stylesheets,
-                                org.w3c.dom.traversal,
-                                org.w3c.dom.views,
-                                org.xml.sax,
-                                org.xml.sax.ext,
-                                org.xml.sax.helpers
+                                javax.xml.bind.annotation.adapters;uses:="javax.xml.bind";version="${fragment.xml.version}",
+                                javax.xml.bind.annotation;uses:="javax.xml.transform,javax.xml.bind,javax.xml.parsers,javax.xml.transform.dom,org.w3c.dom";version="${fragment.xml.version}",
+                                javax.xml.bind.attachment;uses:="javax.activation";version="${fragment.xml.version}",
+                                javax.xml.bind.helpers;uses:="javax.xml.bind.annotation.adapters,javax.xml.transform.dom,org.w3c.dom,org.xml.sax,javax.xml.bind.attachment,javax.xml.stream,javax.xml.transform,javax.xml.transform.stream,javax.xml.validation,javax.xml.transform.sax,javax.xml.bind,javax.xml.parsers";version="${fragment.xml.version}",
+                                javax.xml.bind.util;uses:="javax.xml.transform.sax,javax.xml.bind,org.xml.sax,org.xml.sax.ext,org.xml.sax.helpers";version="${fragment.xml.version}",
+                                javax.xml.bind;uses:="javax.xml.validation,javax.xml.namespace,javax.xml.datatype,javax.xml.transform,javax.xml.bind.annotation,javax.xml.transform.stream,org.w3c.dom,javax.xml.bind.attachment,javax.xml.stream,javax.xml.bind.annotation.adapters,org.xml.sax";version="${fragment.xml.version}",
+                                javax.xml.crypto.dom;uses:="javax.xml.crypto,org.w3c.dom";version="${fragment.xml.version}",
+                                javax.xml.crypto.dsig.dom;uses:="javax.xml.crypto.dsig,javax.xml.crypto,org.w3c.dom,javax.xml.crypto.dom";version="${fragment.xml.version}",
+                                javax.xml.crypto.dsig.keyinfo;uses:="javax.xml.crypto";version="${fragment.xml.version}",
+                                javax.xml.crypto.dsig.spec;uses:="javax.xml.crypto";version="${fragment.xml.version}",
+                                javax.xml.crypto.dsig;uses:="javax.xml.crypto,javax.xml.crypto.dsig.spec,javax.xml.crypto.dsig.keyinfo";version="${fragment.xml.version}",
+                                javax.xml.crypto;uses:="javax.xml.crypto.dsig.keyinfo";version="${fragment.xml.version}",
+                                javax.xml.datatype;uses:="javax.xml.namespace";version="${fragment.xml.version}",
+                                javax.xml.namespace;version="${fragment.xml.version}",
+                                javax.xml.parsers;uses:="javax.xml.validation,org.w3c.dom,org.xml.sax,org.xml.sax.helpers";version="${fragment.xml.version}",
+                                javax.xml.stream.events;uses:="javax.xml.namespace,javax.xml.stream";version="${fragment.xml.version}",
+                                javax.xml.stream.util;uses:="javax.xml.stream,javax.xml.stream.events,javax.xml.namespace";version="${fragment.xml.version}",
+                                javax.xml.stream;uses:="javax.xml.stream.events,javax.xml.namespace,javax.xml.stream.util,javax.xml.transform";version="${fragment.xml.version}",
+                                javax.xml.transform.dom;uses:="javax.xml.transform,org.w3c.dom";version="${fragment.xml.version}",
+                                javax.xml.transform.sax;uses:="org.xml.sax.ext,javax.xml.transform,org.xml.sax,javax.xml.transform.stream";version="${fragment.xml.version}",
+                                javax.xml.transform.stax;uses:="javax.xml.stream,javax.xml.transform,javax.xml.stream.events";version="${fragment.xml.version}",
+                                javax.xml.transform.stream;uses:="javax.xml.transform";version="${fragment.xml.version}",
+                                javax.xml.transform;version="${fragment.xml.version}",
+                                javax.xml.validation;uses:="org.w3c.dom.ls,javax.xml.transform,javax.xml.transform.stream,org.xml.sax,org.w3c.dom";version="${fragment.xml.version}",
+                                javax.xml.xpath;uses:="org.xml.sax,javax.xml.namespace";version="${fragment.xml.version}",
+                                javax.xml;version="${fragment.xml.version}",
+                                org.w3c.dom.bootstrap;uses:="org.w3c.dom";version="${fragment.xml.version}",
+                                org.w3c.dom.events;uses:="org.w3c.dom,org.w3c.dom.views";version="${fragment.xml.version}",
+                                org.w3c.dom.ls;uses:="org.w3c.dom,org.w3c.dom.events,org.w3c.dom.traversal";version="${fragment.xml.version}",
+                                org.w3c.dom;version="${fragment.xml.version}",
+                                org.xml.sax.ext;uses:="org.xml.sax,org.xml.sax.helpers";version="${fragment.xml.version}",
+                                org.xml.sax.helpers;uses:="org.xml.sax";version="${fragment.xml.version}",
+                                org.xml.sax;version="${fragment.xml.version}"
                             </Export-Package>
                         </manifestEntries>
                     </archive>
