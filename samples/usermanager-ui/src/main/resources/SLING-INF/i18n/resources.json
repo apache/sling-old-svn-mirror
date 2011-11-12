@@ -77,7 +77,7 @@
         "prop.label.loginEnabled": {
             "jcr:primaryType": "sling:MessageEntry",
             "sling:key": "prop.label.loginEnabled",
-            "sling:message": "Login Enabled"
+            "sling:message": "Is Login Enabled"
         },
         "prop.label.loginEnabled.yes": {
             "jcr:primaryType": "sling:MessageEntry",

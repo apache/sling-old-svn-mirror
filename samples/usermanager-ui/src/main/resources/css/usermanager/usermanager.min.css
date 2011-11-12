@@ -36,11 +36,10 @@ img,a img{border:0}
 .info-msg-text{margin-left:5px}
 #find-authorizables-form fieldset{border:0;margin:0;padding:0;line-height:20px}
 .search-empty-msg{line-height:100px;font-size:large;font-weight:bold;text-align:center}
-#authorizables-body{min-width:750px}
 #find-authorizables-quick-nav{padding:2px 4px}
-#authorizables-results-body{margin-top:5px}
+#authorizables-results-body,#authorizables-results-progress{margin-top:5px}
 #find-authorizables-quick-nav label{width:auto;padding:3px 5px}
-#find-authorizables-quick-nav .ui-button-text-only .ui-button-text{line-height:1;padding:3px 3px;font-size:10pt}
+#find-authorizables-quick-nav .ui-button-text-only .ui-button-text{line-height:1;padding:1px 1px;font-size:10pt}
 #find-authorizables-block .ui-button-text-only .ui-button-text{line-height:1;padding:5px 5px;font-size:10pt}
 #search-result-paging .ui-button-text-only .ui-button-text{line-height:1;font-size:10pt}
 #search-result-paging span#current_page{margin-left:6px;margin-right:6px}
@@ -49,29 +48,29 @@ img,a img{border:0}
 #search-result td,#search-result th{padding:5px}
 #search-result tr.odd{background-color:#eee}
 #find-authorizables-header{margin-bottom:5px}
-#find-authorizables-header h3{font-size:14px;font-weight:bold;display:inline;line-height:33px}
+#find-authorizables-header h3{font-size:14px;font-weight:bold;display:inline;line-height:33px;border-style:none}
 #create-user-form,#create-group-form{margin:0;padding:0}
 #create-user-form fieldset,#create-group-form fieldset{border:0;margin:0;padding:0;line-height:20px}
-#create-user-form label,#create-group-form label{float:left;display:inline;width:15%;text-align:right}
-#create-user-form input,#create-group-form input{margin-left:10px;width:75%}
+#create-user-form label,#create-group-form label{float:left;display:inline;width:20%;text-align:right}
+#create-user-form input,#create-group-form input{margin-left:10px;width:70%}
 #create-user-form button,#create-group-form button{margin-left:10px}
 #update-user-form,#update-password-form,#update-group-form{margin:0;padding:0}
 #update-user-form fieldset,#update-password-form fieldset,#update-group-form fieldset,#remove-user-form fieldset,#remove-group-form fieldset,#add-property-form fieldset,#add-group-member-form fieldset{border:0;margin:0;padding:0;line-height:20px}
-#update-user-form label,#update-password-form label,#update-group-form label,#add-property-form label,#add-group-member-form label{float:left;display:inline;width:15%;text-align:right}
-#update-user-form input,#update-password-form input,#update-group-form input,#add-property-form input,#add-group-member-form input{margin-left:10px;width:75%}
+#update-user-form label,#update-password-form label,#update-group-form label,#add-property-form label,#add-group-member-form label{float:left;display:inline;width:20%;text-align:right}
+#update-user-form input,#update-password-form input,#update-group-form input,#add-property-form input,#add-group-member-form input{margin-left:10px;width:70%}
 #update-user-form button,#update-password-form button,#update-group-form button{margin-left:10px}
 #update-user-form ol,#update-group-form ol{float:left;display:inline;width:65%;margin:0 5px 0 10px;padding-left:0;list-style-position:inside;list-style-type:none}
 #update-password-body{margin-top:10px}
-#update-password-form label{width:15%;text-align:right}
-#update-password-form input{margin-left:10px;width:75%}
+#update-password-form label{width:20%;text-align:right}
+#update-password-form input{margin-left:10px;width:70%}
 #update-password-form button{margin-left:10px}
 #loginStatusInput label,#loginStatusInput input{width:auto;float:none}
 #loginStatusInput{width:75%}
 #disabledReasonPanel label{width:auto;margin-left:15px;float:none}
-#disabledReasonPanel input{width:57%}
+#disabledReasonPanel input{width:42%}
 .prop-line{margin-bottom:5px;line-height:26px}
 .prop-line .remove-property,.prop-line .remove-member{position:absolute;margin:5px 5px}
 .ui-autocomplete-loading{background:white url('../../images/ui-anim_basic_16x16.gif') right center no-repeat}
 .noscript-hide{display:none}
 input.error,textarea.error{border:1px dotted red}
-label.error,label.error{color:red;font-style:italic;font-weight:bold;margin-left:15%;padding-left:10px;text-align:left!important;width:auto!important}
+label.error,label.error{color:red;font-style:italic;font-weight:bold;margin-left:20%;padding-left:10px;text-align:left!important;width:auto!important}

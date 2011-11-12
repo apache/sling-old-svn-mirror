@@ -15,20 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var isLoggedIn = request.getUserPrincipal() != null && !"anonymous".equals(request.getRemoteUser());
+if (!isLoggedIn) {
+     //anonymous user can't do anything here, so don't show a page.
+     response.sendError(404);
+} else {
+	var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
 
-var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
+	//header options
+	request.setAttribute("page.title", rb.getString("page.title.find.authorizables"));
 
-//header options
-request.setAttribute("page.title", rb.getString("page.title.find.authorizables"));
+	//page sidebar template
+	request.setAttribute("sidebar.template", resource.path + ".sidebar.html");
+	request.setAttribute("sidebar.template.options", "sling/usermgmt");
 
-//page sidebar template
-request.setAttribute("sidebar.template", resource.path + ".sidebar.html");
-request.setAttribute("sidebar.template.options", "sling/usermgmt");
+	//page body template
+	request.setAttribute("body.template", resource.path + ".body.html");
+	//request.setAttribute("body.template.options", "sling/userManager");
 
-//page body template
-request.setAttribute("body.template", resource.path + ".body.html");
-//request.setAttribute("body.template.options", "sling/userManager");
-
-//render the page using the default page template
-sling.include(resource.path + ".page.html", "sling/usermgmt");
+	//render the page using the default page template
+	sling.include(resource.path + ".page.html", "sling/usermgmt");
+}
 %>

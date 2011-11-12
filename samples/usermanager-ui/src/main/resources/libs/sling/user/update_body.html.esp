@@ -152,14 +152,14 @@ if ("admin".equals(request.getRemoteUser())) {
                 } /* endwhile */
             %>
 
-            <p id="updateSubmitBtns" class="ui-helper-clearfix">
+            <div id="updateSubmitBtns" class="ui-helper-clearfix">
                 <label>&#160;</label>
                 <% if (canEdit) { %><button accesskey="u" id="updateUserBtn" type="submit"><%=rb.getString("button.save")%></button><% } %>
                 <span class="noscript-hide">
                 <% if (canRemove) { %><a href="#" id="removeUserLink"><%=rb.getString("link.remove")%></a> | <% } %>
                 <% if (canEdit) { %><a href="#" id="add_property"><%=rb.getString("link.add.property")%></a><% } %>
                 </span>
-            </p>
+            </div>
         </fieldset>
     </form>
 </div>
@@ -177,7 +177,7 @@ if ("admin".equals(request.getRemoteUser())) {
 
 <% if (canRemove) { %>
 <div id="remove-user-dialog" title='<%=rb.getString("dialog.title.confirm.remove")%>' style="display:none">
-    <form id='remove-user-form' action="<%=resource.path%>.delete.html" method="post">
+    <form id='remove-user-form' action="<%=request.contextPath%><%=resource.path%>.delete.html" method="post">
     <fieldset>
         <input type="hidden" name=":redirect" value="<%=request.contextPath%>/system/userManager/user.html" />
         <p>

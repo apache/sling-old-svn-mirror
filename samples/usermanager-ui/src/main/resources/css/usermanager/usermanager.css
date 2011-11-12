@@ -183,17 +183,13 @@ img, a img
     text-align: center;
 }
 
-#authorizables-body
-{    
-    min-width: 750px;   
-}
-
 #find-authorizables-quick-nav
 {
     padding: 2px 4px;
 }
 
-#authorizables-results-body
+#authorizables-results-body,
+#authorizables-results-progress
 {
     margin-top: 5px;
 }
@@ -207,7 +203,7 @@ img, a img
 #find-authorizables-quick-nav .ui-button-text-only .ui-button-text
 {
     line-height: 1;
-    padding: 3px 3px;
+    padding: 1px 1px;
     font-size: 10pt;        
 }
 #find-authorizables-block .ui-button-text-only .ui-button-text
@@ -262,6 +258,7 @@ img, a img
     font-weight: bold; 
     display: inline; 
     line-height: 33px; 
+    border-style: none;
 }
 
 
@@ -290,7 +287,7 @@ img, a img
 {
     float: left;
     display: inline;
-    width: 15%;
+    width: 20%;
     text-align: right;
 }
 
@@ -298,7 +295,7 @@ img, a img
 #create-group-form input
 {
     margin-left: 10px;
-    width: 75%;
+    width: 70%;
 }
 
 #create-user-form button,
@@ -341,7 +338,7 @@ img, a img
 {
     float: left;
     display: inline;
-    width: 15%;
+    width: 20%;
     text-align: right;
 }
 
@@ -352,7 +349,7 @@ img, a img
 #add-group-member-form input
 {
     margin-left: 10px;
-    width: 75%;
+    width: 70%;
 }
 
 #update-user-form button,
@@ -381,14 +378,14 @@ img, a img
     
 #update-password-form label 
 {
-    width: 15%;
+    width: 20%;
     text-align: right;
 }
 
 #update-password-form input 
 {
     margin-left: 10px;
-    width: 75%;
+    width: 70%;
 }
 
 #update-password-form button 
@@ -417,7 +414,7 @@ img, a img
 
 #disabledReasonPanel input 
 {
-	width: 57%;
+	width: 42%;
 }
 
 .prop-line 
@@ -461,7 +458,7 @@ label.error, label.error
     color: red;
     font-style: italic;
     font-weight: bold;
-    margin-left: 15%;
+    margin-left: 20%;
     padding-left: 10px;
     text-align: left !important;
     width: auto !important;

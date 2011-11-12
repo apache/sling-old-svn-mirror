@@ -15,6 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var isLoggedIn = request.getUserPrincipal() != null && !"anonymous".equals(request.getRemoteUser());
+if (!isLoggedIn) {
+     //anonymous user can't do anything here, so don't show a page.
+     response.sendError(404);
+} else {
 
 var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
 var searchType = request.getAttribute("search.type");
@@ -116,3 +121,4 @@ var noMatches = searchResults != null && !searchResults.hasNext();
     </table>
 <% } /*endelse*/ %>
 </div>
+<% } /*endelse (isLoggedIn) */ %>

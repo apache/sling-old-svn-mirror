@@ -15,10 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var isLoggedIn = request.getUserPrincipal() != null && !"anonymous".equals(request.getRemoteUser());
+if (!isLoggedIn) {
+     //anonymous user can't do anything here, so don't show a page.
+     response.sendError(404);
+} else {
 
 var searchType = 1; //search only users
 request.setAttribute("search.type", searchType);
 
 //delegate the 'authorizables' script to render the page
 sling.include(resource.path + ".searchresult.html", "sling/userManager");
+
+} /* endelse */
 %>

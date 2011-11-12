@@ -16,6 +16,11 @@
  * limitations under the License.
  */
 
+var isLoggedIn = request.getUserPrincipal() != null && !"anonymous".equals(request.getRemoteUser());
+if (!isLoggedIn) {
+     //anonymous user can't do anything here, so don't show a page.
+     response.sendError(404);
+} else {
 var rb = request.getResourceBundle("org.apache.sling.usermgr.Resources", null);
 
 var title = request.getAttribute("page.title");
@@ -45,7 +50,7 @@ if (oParam == null) {
             <input type="hidden" id="searchOffset" name="o" value="<%=oParam%>" />
 
             <div id='find-authorizables-header' class="ui-widget-header ui-corner-all ui-helper-clearfix">
-                <h3 class="usermgmt-header"><%=title%></h3>
+                <h3 class="ui-widget-header usermgmt-header"><%=title%></h3>
                 <span id="find-authorizables-block">
                     <input id="findAuthorizablesQuery" type="text" name="q" value="<%=qParam%>" />
                     <button accesskey="s" id="findAuthorizablesBtn" type="submit"><%=rb.getString("button.search")%></button>
@@ -72,3 +77,4 @@ if (oParam == null) {
     
     <% sling.include(resource.path + ".searchresult.html"); %>    
 </div>
+<% } /*endelse (isLoggedIn) */ %>

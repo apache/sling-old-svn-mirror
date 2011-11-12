@@ -173,7 +173,7 @@ function displayName(path) {
 
 <% if (canRemove) { %>
 <div id="remove-group-dialog" title='<%=rb.getString("dialog.title.confirm.remove")%>' style="display:none">
-    <form id='remove-group-form' action="<%=resource.path%>.delete.html" method="post">
+    <form id='remove-group-form' action="<%=request.contextPath%><%=resource.path%>.delete.html" method="post">
     <fieldset>
         <input type="hidden" name=":redirect" value="<%=request.contextPath%>/system/userManager/group.html" />
         <p>

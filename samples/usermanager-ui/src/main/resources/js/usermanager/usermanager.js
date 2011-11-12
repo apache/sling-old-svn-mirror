@@ -165,6 +165,9 @@ UserManager.Authorizables = {
             //reset the paging to the first page
             $('#searchOffset').val(0);
 
+            //clear value from the search input
+            $("#findAuthorizablesQuery").val("");
+            
             //do the search
             UserManager.Authorizables.runSearchFn();
             return false;
@@ -184,12 +187,9 @@ UserManager.Authorizables = {
                 $('#radioNone').attr('checked', true);
                 $('#radioNone').button('refresh');
             }
-
-            //reset the paging to the first page
-            $('#searchOffset').val(0);
             
             //do the search
-            UserManager.Authorizables.runSearchFn();
+            UserManager.Authorizables.runSearchFn(0);
             return false;
         });
 
@@ -210,8 +210,8 @@ UserManager.Authorizables = {
     progressFn: function() {
         //inject a progress block
         $('#authorizables-results-body')
-            .after('<div id="authorizables-results-progress" style="text-align:center"><img src="' + UserManager.contextPath + '/css/usermgmt/images/ajax-loader.gif" alt="' + UserManager.messages["searching.progress.msg"] +  '"/></div>');
-
+            .after('<div id="authorizables-results-progress" class="search-empty-msg ui-corner-all ui-state-highlight">' + UserManager.messages["searching.progress.msg"] + '</div>');
+        
         //done with this.
         UserManager.Authorizables.progressFnId = null;
     },
@@ -287,6 +287,7 @@ UserManager.Authorizables = {
         $('#find-authorizables-quick-nav input[value="' + (hashParams.sp == undefined ? "" : hashParams.sp) + '"]')
             .attr("checked", true)
             .button('refresh');
+        
         //fill in the offset value
         $('#searchOffset').val(hashParams.o == undefined ? "0" : hashParams.o);
 
@@ -541,7 +542,7 @@ UserManager.Group.Update = {
                 type: 'POST',
                 data: formData,
                 success: function( data, textStatus, xmlHttpRequest ) {
-                    $("#content").load(UserManager.contextPath + data.path + ".update_body.html", function() {
+            		$("#update-group-body").parent().load(UserManager.contextPath + data.path + ".update_body.html", function() {
                         $("#update-group-body span.info-msg-text").html(UserManager.messages["group.updated.msg"]);
                         $("#update-group-body div.info-msg-block").show();
                     });
@@ -942,7 +943,7 @@ UserManager.User.Update = {
                 data: formData,
                 success: function( data, textStatus, xmlHttpRequest ) {
                     //reload the update body content
-                    $("#content").load(UserManager.contextPath + data.path + ".update_body.html", function() {
+                    $("#update-user-body").parent().load(UserManager.contextPath + data.path + ".update_body.html", function() {
                         //inject a success message
                         $("#update-user-body span.info-msg-text").html(UserManager.messages["user.updated.msg"]);
                         $("#update-user-body div.info-msg-block").show();
@@ -951,6 +952,10 @@ UserManager.User.Update = {
                     setTimeout(function() {
                         //re-init the page since we just replaced the body
                         UserManager.User.Update.init();
+
+                        if ($("#update-password-form").length > 0) {
+                            UserManager.User.UpdatePassword.init();
+                        }
 
                         //make visible any elements that require scripting to be enabled 
                         $(".noscript-hide").removeClass("noscript-hide");
