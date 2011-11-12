@@ -105,6 +105,7 @@
         <module>bundles/extensions/framework-extension-transaction</module>
         <module>bundles/extensions/framework-extension-xml</module>
         <module>bundles/extensions/framework-extension-activation</module>
+        <module>bundles/extensions/framework-extension-ws</module>
 
         <!-- The commons sub project -->
         <module>bundles/commons/classloader</module>
