@@ -87,6 +87,12 @@ public class SelectorAuthenticationHandler extends
     public boolean requestCredentials(HttpServletRequest request,
             HttpServletResponse response) {
 
+        //check the referer to see if the request is for this handler
+        if (!checkReferer(request, loginForm)) {
+        	//not for this handler, so return
+        	return false;
+        }
+    	
         HashMap<String, String> params = new HashMap<String, String>();
         params.put(Authenticator.LOGIN_RESOURCE,
             getLoginResource(request, null));
