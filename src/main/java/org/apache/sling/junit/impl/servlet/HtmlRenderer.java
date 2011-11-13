@@ -142,7 +142,7 @@ public class HtmlRenderer extends RunListener implements Renderer {
         super.testFinished(description);
         output.print("<p class='finished'>Test finished: ");
         HtmlFilter.escape(output, description.toString());
-        output.println("</p>");
+        output.println("</p></div>");
     }
 
     @Override
