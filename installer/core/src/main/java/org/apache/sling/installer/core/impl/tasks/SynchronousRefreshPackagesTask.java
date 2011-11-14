@@ -82,9 +82,10 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
 
         // Refreshing packages might cause some bundles to be stopped,
         // make sure all currently active ones are restarted after
-        // this task executes
+        // this task has executed
+        // we don't check for fragments!
     	for(final Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
-    	    if ( BundleStartTask.isBundleActive(b) ) {
+    	    if ( BundleStartTask.isBundleActive(b) && BundleStartTask.getFragmentHostHeader(b) == null ) {
     	        final InstallTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
     			ctx.addTaskToCurrentCycle(t);
     			this.getLogger().debug("Added {} to restart bundle if needed after refreshing packages", t);
