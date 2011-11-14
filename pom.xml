@@ -69,14 +69,15 @@
                             org.apache.sling.engine.impl.*
                         </Private-Package>
                         <Import-Package>
+                            org.apache.commons.fileupload;version=1.2,
+                            org.apache.commons.fileupload.disk;version=1.2,
+                            org.apache.commons.fileupload.portlet;version=1.2,
+                            org.apache.commons.fileupload.servlet;version=1.2,
                             org.osgi.service.useradmin;
                             javax.portlet;
                             org.apache.commons.math.*;resolution:=optional,
                             *
                         </Import-Package>
-                        <Embed-Dependency>
-                            commons-fileupload
-                        </Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -140,7 +141,7 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.1.1</version>
+            <version>1.2.2</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
