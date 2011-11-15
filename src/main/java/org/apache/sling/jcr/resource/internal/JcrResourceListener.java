@@ -20,9 +20,11 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -136,7 +138,7 @@ public class JcrResourceListener implements EventListener {
             return;
         }
         final Map<String, Event> addedEvents = new HashMap<String, Event>();
-        final Map<String, Event> changedEvents = new HashMap<String, Event>();
+        final Map<String, ChangedAttributes> changedEvents = new HashMap<String, ChangedAttributes>();
         final Map<String, Event> removedEvents = new HashMap<String, Event>();
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
@@ -151,19 +153,27 @@ public class JcrResourceListener implements EventListener {
                      || event.getType() == Event.PROPERTY_REMOVED
                      || event.getType() == Event.PROPERTY_CHANGED ) {
                     final int lastSlash = eventPath.lastIndexOf('/');
-                    changedEvents.put(eventPath.substring(0, lastSlash), event);
+                    final String nodePath = eventPath.substring(0, lastSlash);
+                    final String propName = eventPath.substring(lastSlash + 1);
+                    if ( !addedEvents.containsKey(nodePath) ) {
+                        this.updateChangedEvent(changedEvents, nodePath, event, propName);
+                    }
                 } else if ( event.getType() == Event.NODE_ADDED ) {
                     // check if this is a remove/add operation
-                    if ( removedEvents.containsKey(eventPath) ) {
-                        changedEvents.put(eventPath, event);
+                    if ( removedEvents.remove(eventPath) != null ) {
+                        this.updateChangedEvent(changedEvents, eventPath, event, null);
                     } else {
+                        changedEvents.remove(eventPath);
                         addedEvents.put(eventPath, event);
                     }
+
                 } else if ( event.getType() == Event.NODE_REMOVED) {
-                    // check if this is a add/remove operation
-                    if ( !addedEvents.containsKey(eventPath) ) {
-                        removedEvents.put(eventPath, event);
-                    }
+                    // remove is the strongest operation, therefore remove all removed
+                    // paths from changed and added
+                    addedEvents.remove(eventPath);
+                    changedEvents.remove(eventPath);
+
+                    removedEvents.put(eventPath, event);
                 }
             } catch (final RepositoryException e) {
                 logger.error("Error during modification: {}", e.getMessage());
@@ -171,11 +181,6 @@ public class JcrResourceListener implements EventListener {
         }
 
         for (final Entry<String, Event> e : removedEvents.entrySet()) {
-            // remove is the strongest operation, therefore remove all removed
-            // paths from changed and added
-            addedEvents.remove(e.getKey());
-            changedEvents.remove(e.getKey());
-
             // Launch an OSGi event
             final Dictionary<String, String> properties = new Hashtable<String, String>();
             properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(e.getKey()));
@@ -186,19 +191,76 @@ public class JcrResourceListener implements EventListener {
             localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_REMOVED, properties));
         }
 
-        // add is stronger than changed
         for (final Entry<String, Event> e : addedEvents.entrySet()) {
-            changedEvents.remove(e.getKey());
-
             // Launch an OSGi event.
-            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED, localEA);
+            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED, localEA, null);
         }
 
         // Send the changed events.
-        for (final Entry<String, Event> e : changedEvents.entrySet()) {
+        for (final Entry<String, ChangedAttributes> e : changedEvents.entrySet()) {
             // Launch an OSGi event.
-            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_CHANGED, localEA);
+            sendOsgiEvent(e.getKey(), e.getValue().firstEvent, SlingConstants.TOPIC_RESOURCE_CHANGED, localEA, e.getValue());
         }
+    }
+
+    private static final class ChangedAttributes {
+
+        private final Event firstEvent;
+
+        public ChangedAttributes(final Event event) {
+            this.firstEvent = event;
+        }
+
+        public Set<String> addedAttributes, changedAttributes, removedAttributes;
+
+        public void addEvent(final Event event, final String propName) {
+            if ( event.getType() == Event.PROPERTY_ADDED ) {
+                if ( removedAttributes != null ) {
+                    removedAttributes.remove(propName);
+                }
+                if ( addedAttributes == null ) {
+                    addedAttributes = new HashSet<String>();
+                }
+                addedAttributes.add(propName);
+            } else if ( event.getType() == Event.PROPERTY_REMOVED ) {
+                if ( addedAttributes != null ) {
+                    addedAttributes.remove(propName);
+                }
+                if ( removedAttributes == null ) {
+                    removedAttributes = new HashSet<String>();
+                }
+                removedAttributes.add(propName);
+            } else if ( event.getType() == Event.PROPERTY_CHANGED ) {
+                if ( changedAttributes == null ) {
+                    changedAttributes = new HashSet<String>();
+                }
+                changedAttributes.add(propName);
+            }
+        }
+
+        public void addProperties(final Dictionary<String, Object> properties) {
+            // we're not using the Constants from SlingConstants here to avoid the requirement of the latest
+            // SLING API to be available!!
+            if ( addedAttributes != null )  {
+                properties.put("resourceAddedAttributes", addedAttributes.toArray(new String[addedAttributes.size()]));
+            }
+            if ( changedAttributes != null )  {
+                properties.put("resourceChangedAttributes", changedAttributes.toArray(new String[changedAttributes.size()]));
+            }
+            if ( removedAttributes != null )  {
+                properties.put("resourceRemovedAttributes", removedAttributes.toArray(new String[removedAttributes.size()]));
+            }
+        }
+    }
+
+    private void updateChangedEvent(final Map<String, ChangedAttributes> changedEvents, final String path,
+            final Event event, final String propName) {
+        ChangedAttributes storedEvent = changedEvents.get(path);
+        if ( storedEvent == null ) {
+            storedEvent = new ChangedAttributes(event);
+            changedEvents.put(path, storedEvent);
+        }
+        storedEvent.addEvent(event, propName);
     }
 
     /**
@@ -208,7 +270,8 @@ public class JcrResourceListener implements EventListener {
      * @param topic The topic that should be used for the OSGi event.
      * @param localEA The OSGi Event Admin that can be used to post events.
      */
-    private void sendOsgiEvent(String path, final Event event, final String topic, final EventAdmin localEA) {
+    private void sendOsgiEvent(String path, final Event event, final String topic, final EventAdmin localEA,
+            final ChangedAttributes changedAttributes) {
         path = createWorkspacePath(path);
         Resource resource = this.resolver.getResource(path);
         if ( resource != null ) {
@@ -228,7 +291,7 @@ public class JcrResourceListener implements EventListener {
                     }
                 }
             }
-            final Dictionary<String, String> properties = new Hashtable<String, String>();
+            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
             properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
             properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
             final String resourceType = resource.getResourceType();
@@ -241,6 +304,9 @@ public class JcrResourceListener implements EventListener {
             }
             if ( this.isExternal(event) ) {
                 properties.put("event.application", "unknown");
+            }
+            if ( changedAttributes != null ) {
+                changedAttributes.addProperties(properties);
             }
             localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
         }
