@@ -612,28 +612,34 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                 long count = 0;
                 while ( result.hasNext() && count < maxLoad ) {
                     final Node eventNode = result.nextNode();
-                    final String propPath = eventNode.getPath() + '/' + JCRHelper.NODE_PROPERTY_CREATED;
-                    if ( session.itemExists(propPath) ) {
-                        eventCreated = eventNode.getProperty(JCRHelper.NODE_PROPERTY_CREATED).getLong();
-                        if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
-                            count++;
+                    try {
+                        if ( eventNode.hasProperty(JCRHelper.NODE_PROPERTY_CREATED) ) {
+                            eventCreated = eventNode.getProperty(JCRHelper.NODE_PROPERTY_CREATED).getLong();
+                            if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
+                                count++;
+                            }
                         }
+                    } catch (final RepositoryException re) {
+                        this.logger.error("Unable to load stored job from " + eventNode, re);
                     }
                 }
                 // now we have to add all jobs with the same created time!
                 boolean done = false;
                 while ( result.hasNext() && !done ) {
                     final Node eventNode = result.nextNode();
-                    final String propPath = eventNode.getPath() + '/' + JCRHelper.NODE_PROPERTY_CREATED;
-                    if ( session.itemExists(propPath) ) {
-                        final long created = eventNode.getProperty(JCRHelper.NODE_PROPERTY_CREATED).getLong();
-                        if ( created == eventCreated ) {
-                            if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
-                                count++;
+                    try {
+                        if ( eventNode.hasProperty(JCRHelper.NODE_PROPERTY_CREATED) ) {
+                            final long created = eventNode.getProperty(JCRHelper.NODE_PROPERTY_CREATED).getLong();
+                            if ( created == eventCreated ) {
+                                if ( tryToLoadJob(eventNode, this.unloadedJobs) ) {
+                                    count++;
+                                }
+                            } else {
+                                done = true;
                             }
-                        } else {
-                            done = true;
                         }
+                    } catch (final RepositoryException re) {
+                        this.logger.error("Unable to load stored job from " + eventNode, re);
                     }
                 }
                 // have we processed all jobs?
@@ -641,7 +647,7 @@ public class PersistenceHandler implements EventListener, Runnable, EventHandler
                     eventCreated = -1;
                 }
                 logger.debug("Loaded {} jobs and new since {}", count, eventCreated);
-            } catch (RepositoryException re) {
+            } catch (final RepositoryException re) {
                 this.logger.error("Exception during initial loading of stored jobs.", re);
             } finally {
                 if ( session != null ) {
