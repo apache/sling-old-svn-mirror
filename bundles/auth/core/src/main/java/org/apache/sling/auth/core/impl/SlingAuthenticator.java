@@ -48,6 +48,7 @@ import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
@@ -1303,20 +1304,21 @@ public class SlingAuthenticator implements Authenticator,
 
         // nothing more to do if the response has already been committed
         if (response.isCommitted()) {
+            log.debug("redirectAfterLogout: Response has already been committed, not redirecting");
             return;
         }
 
         // find the redirect target from the resource attribute or parameter
-        // falling back to the request context path (or /) if not set
-        String target = AbstractAuthenticationHandler.getLoginResource(request,
-            request.getContextPath());
-        if (target.length() == 0) {
+        // falling back to the request context path (or /) if not set or invalid
+        String target = AbstractAuthenticationHandler.getLoginResource(request, request.getContextPath());
+        if (!AuthUtil.isRedirectValid(request, target)) {
+            log.warn("redirectAfterLogout: Desired redirect target '{}' is invalid; redirecting to '/'", target);
             target = "/";
         }
 
         // redirect to there
         try {
-            response.sendRedirect(target);
+            response.sendRedirect(request.getContextPath() + target);
         } catch (IOException e) {
             log.error("Failed to redirect to the page: " + target, e);
         }
