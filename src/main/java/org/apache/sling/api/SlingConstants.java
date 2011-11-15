@@ -280,6 +280,9 @@ public class SlingConstants {
      * in the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
      * and {@link #PROPERTY_RESOURCE_TYPE} poperties.
+     * Since 2.2.0 the event might contain these properties {@link #PROPERTY_ADDED_ATTRIBUTES},
+     * {@link #PROPERTY_REMOVED_ATTRIBUTES}, {@link #PROPERTY_CHANGED_ATTRIBUTES}. All of them are
+     * optional.
      * @since 2.0.6
      */
     public static final String TOPIC_RESOURCE_CHANGED = "org/apache/sling/api/resource/Resource/CHANGED";
@@ -329,6 +332,30 @@ public class SlingConstants {
      * @since 2.0.6
      */
     public static final String PROPERTY_RESOURCE_SUPER_TYPE = "resourceSuperType";
+
+    /**
+     * The name of the event property holding the changed attribute names
+     * of a resource for an {@link #TOPIC_RESOURCE_CHANGED} event.
+     * The value of the property is a string array.
+     * @since 2.2.0
+     */
+    public static final String PROPERTY_CHANGED_ATTRIBUTES = "resourceChangedAttributes";
+
+    /**
+     * The name of the event property holding the added attribute names
+     * of a resource for an {@link #TOPIC_RESOURCE_CHANGED} event.
+     * The value of the property is a string array.
+     * @since 2.2.0
+     */
+    public static final String PROPERTY_ADDED_ATTRIBUTES = "resourceAddedAttributes";
+
+    /**
+     * The name of the event property holding the removed attribute names
+     * of a resource for an {@link #TOPIC_RESOURCE_CHANGED} event.
+     * The value of the property is a string array.
+     * @since 2.2.0
+     */
+    public static final String PROPERTY_REMOVED_ATTRIBUTES = "resourceRemovedAttributes";
 
     /**
      * The topic for the OSGi event which is sent when an adapter factory has been added.
