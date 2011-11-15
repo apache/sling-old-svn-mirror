@@ -104,24 +104,13 @@ public class ReferrerFilter implements Filter {
                 while(ias.hasMoreElements()){
                     final InetAddress ia = ias.nextElement();
                     final String address = ia.getHostAddress().trim().toLowerCase();
-                    final String name = ia.getHostName().trim().toLowerCase();
                     if ( ia instanceof Inet4Address ) {
                         referrers.add("http://" + address + ":0");
                         referrers.add("https://" + address + ":0");
-                        referrers.add("http://" + name + ":0");
-                        referrers.add("https://" + name + ":0");
-                        if (name.indexOf('.')>-1){
-                            int index = name.indexOf('.');
-                            String host = name.substring(0, index);
-                            referrers.add("http://" + host.trim().toLowerCase() + ":0");
-                            referrers.add("https://" + host.trim().toLowerCase() + ":0");
-                        }
                     }
                     if ( ia instanceof Inet6Address ) {
                         referrers.add("http://[" + address + "]" + ":0");
                         referrers.add("https://[" + address + "]" + ":0");
-                        referrers.add("http://[" + name + "]" + ":0");
-                        referrers.add("https://[" + name + "]" + ":0");
                     }
                 }
             }
@@ -335,7 +324,7 @@ public class ReferrerFilter implements Filter {
     /**
      * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
      */
-    public void init(FilterConfig arg0) throws ServletException {
+    public void init(final FilterConfig config) throws ServletException {
         // nothing to do
     }
 
@@ -352,8 +341,7 @@ public class ReferrerFilter implements Filter {
          * Print out the allowedReferrers
          * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
          */
-        @SuppressWarnings("unused")
-        public void printConfiguration(PrintWriter pw) {
+        public void printConfiguration(final PrintWriter pw) {
             pw.println("Current Apache Sling Referrer Filter Allowed Referrers:");
             pw.println();
             for (final URL url : allowedReferrers) {
