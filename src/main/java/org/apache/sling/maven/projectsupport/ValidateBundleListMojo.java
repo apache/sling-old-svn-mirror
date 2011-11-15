@@ -24,6 +24,8 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
 
 /**
  * Validate that the artifacts listed in a bundle list are valid
@@ -51,7 +53,7 @@ public class ValidateBundleListMojo extends AbstractBundleListMojo {
         
         addDependencies(initializedBundleList);
 
-        interpolateProperties(initializedBundleList);
+        interpolateProperties(initializedBundleList, project, mavenSession);
         
         for (StartLevel sl : initializedBundleList.getStartLevels()) {
             for (Bundle bundle : sl.getBundles()) {

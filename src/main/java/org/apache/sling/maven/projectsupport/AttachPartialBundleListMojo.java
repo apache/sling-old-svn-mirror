@@ -28,6 +28,7 @@ import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
 
 /**
  * Attaches the bundle list as a project artifact.

@@ -20,6 +20,8 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Dependency;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.codehaus.plexus.util.StringUtils;
+import org.codehaus.plexus.util.xml.Xpp3Dom;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.*;
 
 /**
  * The definition of an artifact.
@@ -74,6 +76,15 @@ public class ArtifactDefinition {
         this.startLevel = startLevel;
     }
 
+    public ArtifactDefinition(Xpp3Dom config) {
+        this.groupId = nodeValue(config, "groupId", null);
+        this.artifactId = nodeValue(config, "artifactId", null);
+        this.type = nodeValue(config, "type", null);
+        this.version = nodeValue(config, "version", null);
+        this.classifier = nodeValue(config, "classifier", null);
+        this.startLevel = nodeValue(config, "startLevel", 0);
+    }
+
     public String getArtifactId() {
         return artifactId;
     }
@@ -124,7 +135,7 @@ public class ArtifactDefinition {
 
     @Override
     public String toString() {
-        return "AdditionalBundle [artifactId=" + artifactId + ", classifier="
+        return "ArtifactDefinition [artifactId=" + artifactId + ", classifier="
                 + classifier + ", groupId=" + groupId + ", startLevel="
                 + startLevel + ", type=" + type + ", version=" + version + "]";
     }
@@ -205,6 +216,18 @@ public class ArtifactDefinition {
         bnd.setStartLevel(startLevel);
         return bnd;
     }
+
+    public Dependency toDependency() {
+        Dependency dep = new Dependency();
+        dep.setArtifactId(artifactId);
+        dep.setGroupId(groupId);
+        dep.setVersion(version);
+        if (type != null) {
+            dep.setType(type);
+        }
+        dep.setClassifier(classifier);
+        return dep;
+    }
     
     public static Bundle toBundle(Artifact artifact, int startLevel) {
         return new ArtifactDefinition(artifact, startLevel).toBundle();
@@ -212,6 +235,10 @@ public class ArtifactDefinition {
     
     public static Bundle toBundle(Dependency dependency, int startLevel) {
         return new ArtifactDefinition(dependency, startLevel).toBundle();
+    }
+
+    public static Dependency toDependency(Bundle bundle) {
+        return new ArtifactDefinition(bundle, 0).toDependency();
     }
 
 }
