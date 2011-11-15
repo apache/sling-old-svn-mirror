@@ -74,6 +74,20 @@
                     </filters>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.plexus</groupId>
+                <artifactId>plexus-component-metadata</artifactId>
+                <version>1.5.5</version>
+                <executions>
+                    <execution>
+                        <id>generate-metadata</id>
+                        <goals>
+                            <goal>generate-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -98,15 +112,20 @@
     </reporting>
 
     <dependencies>
+       <dependency>
+           <groupId>org.apache.maven</groupId>
+           <artifactId>maven-core</artifactId>
+           <version>3.0</version>
+       </dependency>
+       <dependency>
+           <groupId>org.apache.maven</groupId>
+           <artifactId>maven-compat</artifactId>
+           <version>3.0</version>
+       </dependency>
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-plugin-api</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-archiver</artifactId>
-            <version>2.0</version>
+            <version>3.0</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
@@ -128,6 +147,16 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
             <version>2.3</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>maven-project</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>maven-artifact-manager</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
@@ -164,11 +193,23 @@
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-filtering</artifactId>
             <version>1.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>maven-project</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-osgi</artifactId>
             <version>0.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>maven-project</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.drools</groupId>
@@ -179,6 +220,16 @@
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>versions-maven-plugin</artifactId>
             <version>1.2</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>maven-project</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>maven-artifact-manager</artifactId>
+                    <groupId>org.apache.maven</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

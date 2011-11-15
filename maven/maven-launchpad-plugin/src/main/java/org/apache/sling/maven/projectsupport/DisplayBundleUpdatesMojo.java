@@ -81,13 +81,13 @@ public class DisplayBundleUpdatesMojo extends AbstractMojo {
      * @parameter expression="${project.remoteArtifactRepositories}"
      * @readonly
      */
-    private List remoteArtifactRepositories;
+    private List<ArtifactRepository> remoteArtifactRepositories;
 
     /**
      * @parameter expression="${project.pluginArtifactRepositories}"
      * @readonly
      */
-    private List remotePluginRepositories;
+    private List<ArtifactRepository> remotePluginRepositories;
 
     /**
      * @parameter expression="${localRepository}"

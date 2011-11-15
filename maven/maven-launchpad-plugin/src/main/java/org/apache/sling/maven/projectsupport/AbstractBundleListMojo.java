@@ -17,11 +17,7 @@
 package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
@@ -41,19 +37,9 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.settings.Settings;
 import org.apache.maven.shared.artifact.filter.collection.ArtifactFilterException;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.io.xpp3.BundleListXpp3Reader;
-import org.codehaus.plexus.interpolation.InterpolationException;
-import org.codehaus.plexus.interpolation.Interpolator;
-import org.codehaus.plexus.interpolation.PrefixedObjectValueSource;
-import org.codehaus.plexus.interpolation.PropertiesBasedValueSource;
-import org.codehaus.plexus.interpolation.StringSearchInterpolator;
 import org.codehaus.plexus.util.StringUtils;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 
 public abstract class AbstractBundleListMojo extends AbstractMojo {
 
@@ -178,7 +164,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
      * @readonly
      * @required
      */
-    private List<?> remoteRepos;
+    private List<ArtifactRepository> remoteRepos;
 
     /**
      * Used to look up Artifacts in the remote repository.
@@ -191,17 +177,6 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         return this.configDirectory;
     }
 
-    protected BundleList readBundleList(File file) throws IOException, XmlPullParserException {
-        BundleListXpp3Reader reader = new BundleListXpp3Reader();
-        FileInputStream fis = new FileInputStream(file);
-        try {
-            return reader.read(fis);
-        } finally {
-            fis.close();
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     protected void addDependencies(final BundleList bundleList) throws MojoExecutionException {
         if (includeDependencies != null) {
             for (ConfigurationStartLevel startLevel : includeDependencies) {
@@ -235,48 +210,6 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         }
         
         return artifacts;
-    }
-
-    protected void interpolateProperties(BundleList bundleList) throws MojoExecutionException {
-        Interpolator interpolator = createInterpolator();
-        for (final StartLevel sl : bundleList.getStartLevels()) {
-            for (final Bundle bndl : sl.getBundles()) {
-                try {
-                    bndl.setArtifactId(interpolator.interpolate(bndl.getArtifactId()));
-                    bndl.setGroupId(interpolator.interpolate(bndl.getGroupId()));
-                    bndl.setVersion(interpolator.interpolate(bndl.getVersion()));
-                    bndl.setClassifier(interpolator.interpolate(bndl.getClassifier()));
-                    bndl.setType(interpolator.interpolate(bndl.getType()));
-                } catch (InterpolationException e) {
-                    throw new MojoExecutionException("Unable to interpolate properties for bundle " + bndl.toString(), e);
-                }
-            }
-        }
-
-    }
-
-    private Interpolator createInterpolator() {
-        StringSearchInterpolator interpolator = new StringSearchInterpolator();
-
-        final Properties props = new Properties();
-        props.putAll(project.getProperties());
-        props.putAll(mavenSession.getExecutionProperties());
-
-        interpolator.addValueSource(new PropertiesBasedValueSource(props));
-
-        // add ${project.foo}
-        interpolator.addValueSource(new PrefixedObjectValueSource(Arrays.asList("project", "pom"), project, true));
-
-        // add ${session.foo}
-        interpolator.addValueSource(new PrefixedObjectValueSource("session", mavenSession));
-
-        // add ${settings.foo}
-        final Settings settings = mavenSession.getSettings();
-        if (settings != null) {
-            interpolator.addValueSource(new PrefixedObjectValueSource("settings", settings));
-        }
-
-        return interpolator;
     }
 
     /**
@@ -318,7 +251,7 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
                 // This code kicks in when the version specifier is a range.
                 if (vr.getRecommendedVersion() == null) {
                     try {
-                        List<?> availVersions = metadataSource.retrieveAvailableVersions(artifact, local, remoteRepos);
+                        List<ArtifactVersion> availVersions = metadataSource.retrieveAvailableVersions(artifact, local, remoteRepos);
                         ArtifactVersion resolvedVersion = vr.matchVersion(availVersions);
                         artifact.setVersion(resolvedVersion.toString());
                     } catch (ArtifactMetadataRetrievalException e) {

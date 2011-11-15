@@ -164,7 +164,6 @@ public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
      *            the resource to be scanned
      * @return the array of filenames, relative to the sourceDir
      */
-    @SuppressWarnings("unchecked")
     private static String[] getFilesToCopy(Resource resource) {
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(resource.getDirectory());

@@ -43,6 +43,9 @@ import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
 import org.drools.io.ResourceFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
+import org.apache.sling.maven.projectsupport.BundleListUtils.ArtifactDefinitionsCallback;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
 
 public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo {
 
@@ -141,6 +144,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     public final void execute() throws MojoFailureException, MojoExecutionException {
         try {
             initBundleList();
+            extractConfigurations();
         } catch (MojoExecutionException e) {
             throw e;
         } catch (Exception e) {
@@ -183,10 +187,6 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     protected void initBundleList(BundleList bundleList) {
     }
 
-    protected boolean isCurrentArtifact(ArtifactDefinition def) {
-        return (def.getGroupId().equals(project.getGroupId()) && def.getArtifactId().equals(project.getArtifactId()));
-    }
-
     /**
      * Initialize the artifact definitions using defaults inside the plugin JAR.
      *
@@ -195,22 +195,22 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @throws MojoExecutionException
      */
     private final void initArtifactDefinitions() throws IOException {
-        Properties dependencies = new Properties();
-        dependencies.load(getClass().getResourceAsStream(
-                "/org/apache/sling/maven/projectsupport/dependencies.properties"));
+        BundleListUtils.initArtifactDefinitions(getClass().getClassLoader(), new ArtifactDefinitionsCallback() {
+            
+            public void initArtifactDefinitions(Properties dependencies) {
+                if (defaultBundleList == null) {
+                    defaultBundleList = new ArtifactDefinition();
+                }
+                defaultBundleList.initDefaults(dependencies.getProperty("defaultBundleList"));
 
-        if (defaultBundleList == null) {
-            defaultBundleList = new ArtifactDefinition();
-        }
-        defaultBundleList.initDefaults(dependencies.getProperty("defaultBundleList"));
-
-        initArtifactDefinitions(dependencies);
+                AbstractUsingBundleListMojo.this.initArtifactDefinitions(dependencies);
+            }
+        });
     }
 
-    @SuppressWarnings("unchecked")
     private final void initBundleList() throws IOException, XmlPullParserException, MojoExecutionException {
         initArtifactDefinitions();
-        if (isCurrentArtifact(defaultBundleList)) {
+        if (BundleListUtils.isCurrentArtifact(project, defaultBundleList)) {
             initializedBundleList = readBundleList(bundleListFile);
         } else {
             initializedBundleList = new BundleList();
@@ -245,68 +245,82 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                         String.format("merging partial bundle list for %s:%s:%s", artifact.getGroupId(),
                                 artifact.getArtifactId(), artifact.getVersion()));
                 initializedBundleList.merge(readBundleList(artifact.getFile()));
-
-                // check for configuration artifact
-                Artifact cfgArtifact = null;
-                try {
-                    cfgArtifact = getArtifact(artifact.getGroupId(),
-                            artifact.getArtifactId(),
-                            artifact.getVersion(),
-                            AttachPartialBundleListMojo.CONFIG_TYPE,
-                            AttachPartialBundleListMojo.CONFIG_CLASSIFIER);
-                } catch (final MojoExecutionException ignore) {
-                    // we just ignore this
-                }
-                if ( cfgArtifact != null ) {
-                    getLog().info(
-                            String.format("merging partial bundle list configuration for %s:%s:%s", cfgArtifact.getGroupId(),
-                                    cfgArtifact.getArtifactId(), cfgArtifact.getVersion()));
-
-                    // extract
-                    zipUnarchiver.setSourceFile(cfgArtifact.getFile());
-                    try {
-                        this.tmpOutputDir.mkdirs();
-                        zipUnarchiver.setDestDirectory(this.tmpOutputDir);
-                        zipUnarchiver.extract();
-
-                        final File slingDir = new File(this.tmpOutputDir, "sling");
-                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_PROPS), 0);
-                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_WEBAPP_PROPS), 1);
-                        this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_PROPS), 2);
-                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_BOOTSTRAP), 0);
-                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_WEBAPP_BOOTSTRAP), 1);
-                        this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_BOOTSTRAP), 2);
-
-                        // and now configurations
-                        if ( this.overlayConfigDir == null ) {
-                            this.tempConfigDir.mkdirs();
-                            if ( this.getConfigDirectory().exists() ) {
-                                FileUtils.copyDirectory(this.getConfigDirectory(), this.tempConfigDir,
-                                        null, FileUtils.getDefaultExcludesAsString());
-                            }
-                            this.overlayConfigDir = this.tempConfigDir;
-                        }
-                        final File configDir = new File(this.tmpOutputDir, "config");
-                        if ( configDir.exists() ) {
-                            FileUtils.copyDirectory(configDir, this.tempConfigDir,
-                                    null, FileUtils.getDefaultExcludesAsString());
-                        }
-                    } catch (final ArchiverException ae) {
-                        throw new MojoExecutionException("Unable to extract configuration archive.",ae);
-                    } finally {
-                        // and delete at the end
-                        FileUtils.deleteDirectory(this.tmpOutputDir);
-                    }
-                }
             }
         }
 
 
         initBundleList(initializedBundleList);
 
-        interpolateProperties(initializedBundleList);
+        interpolateProperties(initializedBundleList, project, mavenSession);
 
         rewriteBundleList(initializedBundleList);
+    }
+    
+    private final void extractConfigurations() throws MojoExecutionException, IOException {
+        final Set<Artifact> dependencies = project.getDependencyArtifacts();
+        for (Artifact artifact : dependencies) {
+            if (PARTIAL.equals(artifact.getType())) {
+                getLog().info(
+                        String.format("merging configuration from partial bundle list for %s:%s:%s", artifact.getGroupId(),
+                                artifact.getArtifactId(), artifact.getVersion()));
+                extractConfiguration(artifact);
+            }
+        }
+    }
+
+    private void extractConfiguration(Artifact artifact) throws MojoExecutionException, IOException {
+        // check for configuration artifact
+        Artifact cfgArtifact = null;
+        try {
+            cfgArtifact = getArtifact(artifact.getGroupId(),
+                    artifact.getArtifactId(),
+                    artifact.getVersion(),
+                    AttachPartialBundleListMojo.CONFIG_TYPE,
+                    AttachPartialBundleListMojo.CONFIG_CLASSIFIER);
+        } catch (final MojoExecutionException ignore) {
+            // we just ignore this
+        }
+        if ( cfgArtifact != null ) {
+            getLog().info(
+                    String.format("merging partial bundle list configuration for %s:%s:%s", cfgArtifact.getGroupId(),
+                            cfgArtifact.getArtifactId(), cfgArtifact.getVersion()));
+
+            // extract
+            zipUnarchiver.setSourceFile(cfgArtifact.getFile());
+            try {
+                this.tmpOutputDir.mkdirs();
+                zipUnarchiver.setDestDirectory(this.tmpOutputDir);
+                zipUnarchiver.extract();
+
+                final File slingDir = new File(this.tmpOutputDir, "sling");
+                this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_PROPS), 0);
+                this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_WEBAPP_PROPS), 1);
+                this.readSlingProperties(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_PROPS), 2);
+                this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_COMMON_BOOTSTRAP), 0);
+                this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_WEBAPP_BOOTSTRAP), 1);
+                this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_BOOTSTRAP), 2);
+
+                // and now configurations
+                if ( this.overlayConfigDir == null ) {
+                    this.tempConfigDir.mkdirs();
+                    if ( this.getConfigDirectory().exists() ) {
+                        FileUtils.copyDirectory(this.getConfigDirectory(), this.tempConfigDir,
+                                null, FileUtils.getDefaultExcludesAsString());
+                    }
+                    this.overlayConfigDir = this.tempConfigDir;
+                }
+                final File configDir = new File(this.tmpOutputDir, "config");
+                if ( configDir.exists() ) {
+                    FileUtils.copyDirectory(configDir, this.tempConfigDir,
+                            null, FileUtils.getDefaultExcludesAsString());
+                }
+            } catch (final ArchiverException ae) {
+                throw new MojoExecutionException("Unable to extract configuration archive.",ae);
+            } finally {
+                // and delete at the end
+                FileUtils.deleteDirectory(this.tmpOutputDir);
+            }
+        }
     }
     
     private void rewriteBundleList(BundleList bundleList) throws MojoExecutionException {
