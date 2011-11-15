@@ -19,7 +19,7 @@
 
 /**
  * Provides the authentication helper service as well as a number
- * of utility functions in the {@link org.apache.sling.auth.core.Util}
+ * of utility functions in the {@link org.apache.sling.auth.core.AuthUtil}
  * class.
  *
  * @version 1.1
