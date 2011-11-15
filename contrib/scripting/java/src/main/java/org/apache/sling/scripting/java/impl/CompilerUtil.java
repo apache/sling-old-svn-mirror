@@ -30,11 +30,22 @@ public class CompilerUtil {
         } else {
             str = path;
         }
-        final int pos = str.lastIndexOf("/");
-        if ( pos == -1 ) {
-            return makeJavaIdentifier(str);
+        final StringBuilder sb = new StringBuilder();
+        int pos = 0;
+        int start = 0;
+        while ( pos < str.length() ) {
+            final char c = str.charAt(pos);
+            if ( c == '/' ) {
+                if ( start != pos ) {
+                    sb.append(makeJavaIdentifier(str.substring(start, pos)));
+                }
+                sb.append(c);
+                start = pos + 1;
+            }
+            pos++;
         }
-        return str.substring(0, pos + 1) + makeJavaIdentifier(str.substring(pos + 1));
+        sb.append(makeJavaIdentifier(str.substring(start)));
+        return sb.toString();
     }
 
     /**
