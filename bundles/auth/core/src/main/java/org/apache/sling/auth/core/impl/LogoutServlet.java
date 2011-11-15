@@ -71,8 +71,7 @@ public class LogoutServlet extends SlingAllMethodsServlet {
         final Authenticator authenticator = this.authenticator;
         if (authenticator != null) {
             try {
-                AbstractAuthenticationHandler.setLoginResourceAttribute(
-                    request, request.getContextPath());
+                AbstractAuthenticationHandler.setLoginResourceAttribute(request, null);
                 authenticator.logout(request, response);
                 return;
             } catch (IllegalStateException ise) {
