@@ -91,8 +91,7 @@ public class WebConsolePrinter {
                     pw.print  ("Group ");
                     pw.println(group);
                     pw.println("---------------------------------------------------------------------------");
-                    @SuppressWarnings("unchecked")
-                    final Set<JobKey> keys = s.getJobKeys(GroupMatcher.groupEquals(group));
+                    final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
                     for(final JobKey key : keys) {
                         final JobDetail detail = s.getJobDetail(key);
                         pw.print("Job : ");

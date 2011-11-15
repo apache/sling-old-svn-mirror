@@ -17,7 +17,6 @@
 package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -333,14 +332,10 @@ public class QuartzScheduler implements Scheduler {
                        final boolean canRunConcurrently)
     throws SchedulerException {
         final Trigger cronTrigger;
-        try {
-            cronTrigger = TriggerBuilder.newTrigger()
-                .withIdentity(name)
-                .withSchedule(CronScheduleBuilder.cronSchedule(schedulingExpression))
-                .build();
-        } catch (final ParseException pe) {
-            throw new IllegalArgumentException("Error during parsing of cron '" + schedulingExpression + "' : " + pe.getMessage(), pe);
-        }
+        cronTrigger = TriggerBuilder.newTrigger()
+            .withIdentity(name)
+            .withSchedule(CronScheduleBuilder.cronSchedule(schedulingExpression))
+            .build();
         this.scheduleJob(name, job, config, cronTrigger, canRunConcurrently);
     }
 
