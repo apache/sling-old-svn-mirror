@@ -26,6 +26,7 @@ import java.util.jar.Manifest;
 
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
 
 public class Util {
 
@@ -55,7 +56,7 @@ public class Util {
     /**
      * Read the manifest from supplied input stream, which is closed before return.
      */
-    private static Manifest getManifest(final RegisteredResource rsrc)
+    private static Manifest getManifest(final RegisteredResource rsrc, final Logger logger)
     throws IOException {
         final InputStream ins = rsrc.getInputStream();
 
@@ -67,6 +68,12 @@ public class Util {
                 jis = new JarInputStream(ins);
                 result= jis.getManifest();
 
+                // SLING-2288 : if this is a jar file, but the manifest is not the first entry
+                //              log a warning
+                if ( rsrc.getURL().endsWith(".jar") && result == null ) {
+                    logger.warn("Resource {} does not have the manifest as its first entry in the archive. If this is " +
+                                "a bundle, make sure to put the manifest first in the jar file.", rsrc.getURL());
+                }
             } finally {
 
                 // close the jar stream or the inputstream, if the jar
@@ -97,9 +104,9 @@ public class Util {
     /**
      * Read the bundle info from the manifest (if available)
      */
-    public static BundleHeaders readBundleHeaders(final RegisteredResource resource) {
+    public static BundleHeaders readBundleHeaders(final RegisteredResource resource, final Logger logger) {
         try {
-            final Manifest m = Util.getManifest(resource);
+            final Manifest m = Util.getManifest(resource, logger);
             if (m != null) {
                 final String sn = m.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
                 if (sn != null) {
