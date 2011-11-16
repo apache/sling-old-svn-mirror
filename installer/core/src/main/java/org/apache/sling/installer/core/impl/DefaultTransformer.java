@@ -78,7 +78,7 @@ public class DefaultTransformer
      * @return
      */
     private TransformationResult[] checkBundle(final RegisteredResource resource) {
-        final Util.BundleHeaders headers = Util.readBundleHeaders(resource);
+        final Util.BundleHeaders headers = Util.readBundleHeaders(resource, logger);
         if ( headers != null ) {
             // check the version for validity
             boolean validVersion = true;
