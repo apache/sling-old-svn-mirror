@@ -24,9 +24,11 @@ import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
-import org.osgi.service.packageadmin.PackageAdmin;
 
-/** Execute an OSGi "refresh packages" operation, synchronously */
+/**
+ * Execute an OSGi "refresh packages" operation, synchronously
+ * by waiting until a package refresh event occurs.
+ */
 public class SynchronousRefreshPackagesTask extends AbstractInstallTask implements FrameworkListener {
 
     /** Tracker for the package admin. */
@@ -34,10 +36,14 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
 
     private static final String REFRESH_PACKAGES_ORDER = "60-";
 
-    /** Max time allowed to refresh packages (TODO configurable??) */
-    public static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
+    /** Max time allowed to refresh packages */
+    private static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 30;
 
-	private volatile int packageRefreshEventsCount;
+    /** Max time between the checks if the event has occured */
+    private static final long MAX_SLEEP = 250L;
+
+    /** Counter for package refresh events. */
+    private volatile int packageRefreshEventsCount;
 
 	public SynchronousRefreshPackagesTask(final BundleTaskCreator btc) {
 	    super(null);
@@ -68,10 +74,6 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
 		return getClass().getSimpleName();
 	}
 
-    private PackageAdmin getPackageAdmin() {
-        return this.bundleTaskCreator.getPackageAdmin();
-    }
-
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
@@ -96,22 +98,23 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
         // if one happened very recently and there's nothing to refresh
         this.bundleTaskCreator.getBundleContext().addFrameworkListener(this);
         try {
-            this.getPackageAdmin().refreshPackages(null);
-            while(true) {
-                if(System.currentTimeMillis() > timeout) {
+            this.bundleTaskCreator.getPackageAdmin().refreshPackages(null);
+            while (true) {
+                if (System.currentTimeMillis() > timeout) {
                     this.getLogger().warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {}"
         	    				+ " seconds after refresh", MAX_REFRESH_PACKAGES_WAIT_SECONDS);
                     break;
                 }
-                if(packageRefreshEventsCount >= targetEventCount) {
+                if (packageRefreshEventsCount >= targetEventCount) {
                     final long delta = System.currentTimeMillis() - start;
                     this.getLogger().debug("FrameworkEvent.PACKAGES_REFRESHED received {}"
         	    				+ " msec after refreshPackages call", delta);
                     break;
                 }
                 try {
-                    Thread.sleep(250L);
-                } catch(InterruptedException ignore) {
+                    Thread.sleep(MAX_SLEEP);
+                } catch (final InterruptedException ignore) {
+                    // ignore
                 }
             }
         } finally {

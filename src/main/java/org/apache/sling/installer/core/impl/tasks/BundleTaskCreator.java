@@ -156,7 +156,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 
 	    // check if symbolic name and version is provided in the attributes
         if ( toActivate.getAttribute(Constants.BUNDLE_SYMBOLICNAME) == null ) {
-            final Util.BundleHeaders headers = Util.readBundleHeaders(toActivate);
+            final Util.BundleHeaders headers = Util.readBundleHeaders(toActivate, logger);
             if ( headers == null ) {
                 logger.info("Resource of type bundle {} is not really a bundle - manifest entries are missing.", toActivate);
                 return new ChangeStateTask(resourceList, ResourceState.IGNORED);
