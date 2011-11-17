@@ -216,8 +216,8 @@ public class ArtifactDefinition {
         bnd.setStartLevel(startLevel);
         return bnd;
     }
-
-    public Dependency toDependency() {
+    
+    public Dependency toDependency(String scope) {
         Dependency dep = new Dependency();
         dep.setArtifactId(artifactId);
         dep.setGroupId(groupId);
@@ -226,6 +226,7 @@ public class ArtifactDefinition {
             dep.setType(type);
         }
         dep.setClassifier(classifier);
+        dep.setScope(scope);
         return dep;
     }
     
@@ -237,8 +238,8 @@ public class ArtifactDefinition {
         return new ArtifactDefinition(dependency, startLevel).toBundle();
     }
 
-    public static Dependency toDependency(Bundle bundle) {
-        return new ArtifactDefinition(bundle, 0).toDependency();
+    public static Dependency toDependency(Bundle bundle, String scope) {
+        return new ArtifactDefinition(bundle, 0).toDependency(scope);
     }
 
 }

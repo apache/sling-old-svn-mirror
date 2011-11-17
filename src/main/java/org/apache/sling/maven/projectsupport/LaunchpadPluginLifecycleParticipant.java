@@ -50,6 +50,8 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 public class LaunchpadPluginLifecycleParticipant extends AbstractMavenLifecycleParticipant {
 
     private static final String PLUGIN_ID = "maven-launchpad-plugin";
+    
+    private static final String PROVIDED = "provided";
 
     @Requirement
     private Logger log;
@@ -104,12 +106,12 @@ public class LaunchpadPluginLifecycleParticipant extends AbstractMavenLifecycleP
             if (hasPreparePackageExecution()) {
                 if (includeDefaultBundles && !isCurrentArtifact(project, defaultBundleList)) {
                     log.debug(String.format("adding default bundle list (%s) to dependencies of project %s", defaultBundleList, project));
-                    project.getDependencies().add(defaultBundleList.toDependency());
+                    project.getDependencies().add(defaultBundleList.toDependency(PROVIDED));
                 }
 
                 if (hasJarPackagingExecution()) {
                     log.debug(String.format("adding jar web support (%s) to dependencies of project %s", jarWebSupport, project));
-                    project.getDependencies().add(jarWebSupport.toDependency());
+                    project.getDependencies().add(jarWebSupport.toDependency(PROVIDED));
                 }
             }
         }
@@ -134,7 +136,7 @@ public class LaunchpadPluginLifecycleParticipant extends AbstractMavenLifecycleP
             for (StartLevel startLevel : bundleList.getStartLevels()) {
                 for (Bundle bundle : startLevel.getBundles()) {
                     log.debug(String.format("adding bundle (%s) from bundle list to dependencies of project %s", bundle, project));
-                    project.getDependencies().add(ArtifactDefinition.toDependency(bundle));
+                    project.getDependencies().add(ArtifactDefinition.toDependency(bundle, PROVIDED));
                 }
             }
         }
