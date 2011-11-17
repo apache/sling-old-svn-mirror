@@ -191,13 +191,13 @@
                         <goals>
                             <goal>prepare-package</goal>
                         </goals>
-                        <configuration>
-                            <defaultBundleList>
-                                <version>${project.version}</version>
-                            </defaultBundleList>
-                        </configuration>
                     </execution>
-                </executions>
+                </executions>    
+                <configuration>
+                    <defaultBundleList>
+                        <version>${project.version}</version>
+                    </defaultBundleList>
+                </configuration>
             </plugin>
 
             <!--
