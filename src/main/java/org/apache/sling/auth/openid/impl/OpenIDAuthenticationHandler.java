@@ -769,7 +769,13 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
                     new String(cookieSecret));
             }
 
-            relyingParty = RelyingParty.newInstance(openIdProps);
+            final ClassLoader oldTCCL = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+            try {
+                relyingParty = RelyingParty.newInstance(openIdProps);
+            } finally {
+                Thread.currentThread().setContextClassLoader(oldTCCL);
+            }
         }
         return relyingParty;
     }
