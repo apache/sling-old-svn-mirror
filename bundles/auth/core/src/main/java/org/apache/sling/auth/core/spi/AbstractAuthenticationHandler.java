@@ -32,9 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.auth.Authenticator;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.auth.core.AuthenticationSupport;
+import org.apache.sling.auth.core.AuthUtil;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -205,7 +203,7 @@ public abstract class AbstractAuthenticationHandler extends
      *             missing.
      * @since 1.0.2 (Bundle version 1.0.4)
      * @since 1.0.4 (bundle version 1.0.8) the target is validated with the
-     *      {@link #isRedirectValid(HttpServletRequest, String)} method.
+     *      {@link AuthUtil#isRedirectValid(HttpServletRequest, String)} method.
      */
     public static void sendRedirect(final HttpServletRequest request,
             final HttpServletResponse response, final String target,
@@ -213,7 +211,7 @@ public abstract class AbstractAuthenticationHandler extends
         StringBuilder b = new StringBuilder();
         b.append(request.getContextPath());
 
-        if (isRedirectValid(request, target)) {
+        if (AuthUtil.isRedirectValid(request, target)) {
             b.append(target);
         } else {
             b.append("/");
@@ -287,45 +285,10 @@ public abstract class AbstractAuthenticationHandler extends
      *
      * @since 1.0.4 (bundle version 1.0.8)
      */
+    @Deprecated
     public static boolean isRedirectValid(final HttpServletRequest request,
             final String target) {
-        if (target == null || target.length() == 0) {
-            LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
-                "isRedirectValid: Redirect target must not be empty or null");
-            return false;
-        }
-
-        if (target.contains("://")) {
-            LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
-                "isRedirectValid: Redirect target '{}' must not be an URL",
-                target);
-            return false;
-        }
-
-        final int query = target.indexOf('?');
-        final String path = (query > 0) ? target.substring(0, query) : target;
-
-        if (request != null) {
-            ResourceResolver resolver = (ResourceResolver) request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
-            if (resolver != null) {
-                final boolean isValid = !ResourceUtil.isNonExistingResource(resolver.resolve(
-                    request, path));
-                if (!isValid) {
-                    LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
-                        "isRedirectValid: Redirect target '{}' does not resolve to an existing resource",
-                        target);
-                }
-                return isValid;
-            }
-        }
-
-        final boolean isValid = target.startsWith("/");
-        if (!isValid) {
-            LoggerFactory.getLogger(AbstractAuthenticationHandler.class).warn(
-                "isRedirectValid: Redirect target '{}' must be an absolute path",
-                target);
-        }
-        return isValid;
+        return AuthUtil.isRedirectValid(request, target);
     }
 
     /**
@@ -422,10 +385,10 @@ public abstract class AbstractAuthenticationHandler extends
             // TODO: log.error("Failed to send 403/Forbidden response", ioe);
         }
     }
-    
+
 	/**
 	 * Check if the request is for this authentication handler.
-	 * 
+	 *
 	 * @param request the current request
 	 * @return true if the referer matches this handler, or false otherwise
 	 */
@@ -446,5 +409,5 @@ public abstract class AbstractAuthenticationHandler extends
         	}
         }
         return true;
-	}    
+	}
 }
