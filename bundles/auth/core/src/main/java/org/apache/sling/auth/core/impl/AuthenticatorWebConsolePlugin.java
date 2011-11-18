@@ -69,6 +69,10 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
 
         printAuthenticationRequirements(pw);
 
+        pw.println("<tr><td colspan='2'>&nbsp;</td></tr>");
+
+        printAuthenticationConfiguration(pw);
+
         pw.println("</table>");
     }
 
@@ -114,7 +118,28 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
             pw.println("</tr>");
 
         }
-
     }
 
+    private void printAuthenticationConfiguration(PrintWriter pw) {
+        final String anonUser = slingAuthenticator.getAnonUserName();
+        final String sudoCookie = slingAuthenticator.getSudoCookieName();
+        final String sudoParam = slingAuthenticator.getSudoParameterName();
+
+        pw.println("<tr>");
+        pw.println("<th class='content container' colspan='3'>Miscellaneous Configuration</td>");
+        pw.println("</tr>");
+        pw.println("</tr>");
+        pw.println("<tr>");
+        pw.println("<td class='content'>Impersonation Cookie</td>");
+        pw.printf("<td class='content' colspan='2'>%s</td>%n", sudoCookie);
+        pw.println("</tr>");
+        pw.println("<tr>");
+        pw.println("<td class='content'>Impersonation Parameter</td>");
+        pw.printf("<td class='content' colspan='2'>%s</td>%n", sudoParam);
+        pw.println("</tr>");
+        pw.println("<tr>");
+        pw.println("<td class='content'>Anonymous User Name</td>");
+        pw.printf("<td class='content' colspan='2'>%s</td>%n", (anonUser == null) ? "(default)" : anonUser);
+        pw.println("</tr>");
+    }
 }

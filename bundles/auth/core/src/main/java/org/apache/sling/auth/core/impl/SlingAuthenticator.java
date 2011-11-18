@@ -25,7 +25,6 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
@@ -113,6 +112,12 @@ public class SlingAuthenticator implements Authenticator,
 
     @Property(cardinality = 2147483647)
     private static final String PAR_AUTH_REQ = "sling.auth.requirements";
+
+    @Property()
+    private static final String PAR_ANONYMOUS_USER = "sling.auth.anonymous.user";
+
+    @Property() // TODO: This should be a PASSWORD type
+    private static final String PAR_ANONYMOUS_PASSWORD = "sling.auth.anonymous.password";
 
     /**
      * Value of the {@link #PAR_HTTP_AUTH} property to fully enable the built-in
@@ -230,6 +235,23 @@ public class SlingAuthenticator implements Authenticator,
      */
     private String[] authUriSuffices;
 
+    /**
+     * The name of the user to assume for anonymous access. By default this is
+     * <code>null</code> to use <code>null</code> credentials and thus use the
+     * system provided identification.
+     *
+     * @see #getAnonymousCredentials()
+     */
+    private String anonUser;
+
+    /**
+     * The password to use for anonymous access. This property is only used if
+     * the {@link #anonUser} field is not <code>null</code>.
+     *
+     * @see #getAnonymousCredentials()
+     */
+    private char[] anonPassword;
+
     /** HTTP Basic authentication handler */
     private HttpBasicAuthenticationHandler httpBasicHandler;
 
@@ -330,6 +352,15 @@ public class SlingAuthenticator implements Authenticator,
                         authReq, null));
                 }
             }
+        }
+
+        final String anonUser = OsgiUtil.toString(properties.get(PAR_ANONYMOUS_USER), "");
+        if (anonUser.length() > 0) {
+            this.anonUser = anonUser;
+            this.anonPassword = OsgiUtil.toString(properties.get(PAR_ANONYMOUS_PASSWORD), "").toCharArray();
+        } else {
+            this.anonUser = null;
+            this.anonPassword = null;
         }
 
         authUriSuffices = OsgiUtil.toStringArray(properties.get(PAR_AUTH_URI_SUFFIX),
@@ -629,6 +660,25 @@ public class SlingAuthenticator implements Authenticator,
         return authRequiredCache.getHolders();
     }
 
+    /**
+     * Returns the name of the user to assume for requests without credentials.
+     * This may be <code>null</code> if not configured and the default anonymous
+     * user is to be used.
+     * <p>
+     * The configured password cannot be requested.
+     */
+    String getAnonUserName() {
+        return anonUser;
+    }
+
+    String getSudoCookieName() {
+        return sudoCookieName;
+    }
+
+    String getSudoParameterName() {
+        return sudoParameterName;
+    }
+
     // ---------- internal
 
     private AuthenticationInfo getAuthenticationInfo(HttpServletRequest request, HttpServletResponse response) {
@@ -805,7 +855,8 @@ public class SlingAuthenticator implements Authenticator,
 
             try {
 
-                ResourceResolver resolver = resourceResolverFactory.getResourceResolver(null);
+                Map<String, Object> credentials = getAnonymousCredentials();
+                ResourceResolver resolver = resourceResolverFactory.getResourceResolver(credentials);
 
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
@@ -868,6 +919,25 @@ public class SlingAuthenticator implements Authenticator,
 
         // fallback to anonymous not allowed (aka authentication required)
         return false;
+    }
+
+    /**
+     * Returns credentials to use for anonymous resource access. If an anonymous
+     * user is configued, this returns an {@link AuthenticationInfo} instance
+     * whose authentication type is <code>null</code> and the user name and
+     * password are set according to the {@link #PAR_ANONYMOUS_USER} and
+     * {@link #PAR_ANONYMOUS_PASSWORD} configurations. Otherwise
+     * <code>null</code> is returned.
+     */
+    private Map<String, Object> getAnonymousCredentials() {
+        if (this.anonUser != null) {
+            AuthenticationInfo info = new AuthenticationInfo(null);
+            info.setUser(this.anonUser);
+            info.setPassword(this.anonPassword);
+            return info;
+        }
+
+        return null;
     }
 
     private void handleLoginFailure(final HttpServletRequest request,
