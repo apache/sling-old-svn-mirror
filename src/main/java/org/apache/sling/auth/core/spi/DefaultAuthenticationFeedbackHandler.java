@@ -21,7 +21,9 @@ package org.apache.sling.auth.core.spi;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.auth.core.AuthenticationSupport;
+import org.apache.sling.auth.core.AuthUtil;
 import org.slf4j.LoggerFactory;
 
 public class DefaultAuthenticationFeedbackHandler implements
@@ -110,10 +112,11 @@ public class DefaultAuthenticationFeedbackHandler implements
             int lastSlash = path.lastIndexOf('/');
             path = (lastSlash > 0) ? path.substring(0, lastSlash + 1) : path;
             redirect = path.concat(redirect);
+            redirect = ResourceUtil.normalize(redirect);
         }
 
         // absolute target (in the servlet context)
-        if (!AbstractAuthenticationHandler.isRedirectValid(request, redirect)) {
+        if (!AuthUtil.isRedirectValid(request, redirect)) {
             LoggerFactory.getLogger(DefaultAuthenticationFeedbackHandler.class).error(
                 "handleRedirect: Redirect target '{}' is invalid, redirecting to '/'",
                 redirect);
