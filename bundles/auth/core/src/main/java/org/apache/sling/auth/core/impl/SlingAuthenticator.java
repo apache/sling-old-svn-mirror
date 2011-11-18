@@ -42,7 +42,6 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.scr.annotations.Services;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.resource.LoginException;
@@ -83,9 +82,7 @@ import org.slf4j.LoggerFactory;
  * URL.
  */
 @Component(name = "org.apache.sling.engine.impl.auth.SlingAuthenticator", label = "%auth.name", description = "%auth.description", metatype = true)
-@Services( { @Service(value = Authenticator.class),
-    @Service(value = AuthenticationSupport.class),
-    @Service(value = ServletRequestListener.class) })
+@Service(value = { Authenticator.class, AuthenticationSupport.class, ServletRequestListener.class })
 @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
 public class SlingAuthenticator implements Authenticator,
         AuthenticationSupport, ServletRequestListener {
@@ -322,10 +319,8 @@ public class SlingAuthenticator implements Authenticator,
 
         authRequiredCache.clear();
 
-        boolean flag = OsgiUtil.toBoolean(
-            properties.get(PAR_ANONYMOUS_ALLOWED), DEFAULT_ANONYMOUS_ALLOWED);
-        authRequiredCache.addHolder(new AuthenticationRequirementHolder("/",
-            !flag, null));
+        final boolean anonAllowed = OsgiUtil.toBoolean(properties.get(PAR_ANONYMOUS_ALLOWED), DEFAULT_ANONYMOUS_ALLOWED);
+        authRequiredCache.addHolder(new AuthenticationRequirementHolder("/", !anonAllowed, null));
 
         String[] authReqs = OsgiUtil.toStringArray(properties.get(PAR_AUTH_REQ));
         if (authReqs != null) {
@@ -351,16 +346,19 @@ public class SlingAuthenticator implements Authenticator,
             serviceListener.registerServices();
         }
 
-        // register as a service !
-        final String realm = OsgiUtil.toString(properties.get(PAR_REALM_NAME),
-            DEFAULT_REALM);
-        final String http = OsgiUtil.toString(properties.get(PAR_HTTP_AUTH),
-            HTTP_AUTH_PREEMPTIVE);
+        final String http;
+        if (anonAllowed) {
+            http = OsgiUtil.toString(properties.get(PAR_HTTP_AUTH), HTTP_AUTH_PREEMPTIVE);
+        } else {
+            http = HTTP_AUTH_ENABLED;
+            log.debug("modified: Anonymous Access is denied thus HTTP Basic Authentication is fully enabled");
+        }
+
         if (HTTP_AUTH_DISABLED.equals(http)) {
             httpBasicHandler = null;
         } else {
-            httpBasicHandler = new HttpBasicAuthenticationHandler(realm,
-                HTTP_AUTH_ENABLED.equals(http));
+            final String realm = OsgiUtil.toString(properties.get(PAR_REALM_NAME), DEFAULT_REALM);
+            httpBasicHandler = new HttpBasicAuthenticationHandler(realm, HTTP_AUTH_ENABLED.equals(http));
         }
     }
 
