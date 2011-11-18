@@ -23,6 +23,9 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.auth.core.AuthConstants;
+import org.apache.sling.auth.core.AuthUtil;
+import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
@@ -43,15 +46,21 @@ final class AuthenticationHandlerHolder extends
     // the supported authentication type of the handler
     private final String authType;
 
+    // whether requestCredentials only for browsers
+    private final boolean browserOnlyRequestCredentials;
+
     AuthenticationHandlerHolder(final String fullPath,
             final AuthenticationHandler handler,
             final ServiceReference serviceReference) {
         super(fullPath, serviceReference);
 
+        final String browserOnly = OsgiUtil.toString(serviceReference.getProperty(AuthConstants.AUTH_HANDLER_BROWSER_ONLY), null);
+
         // assign the fields
         this.handler = handler;
-        this.authType = OsgiUtil.toString(
-            serviceReference.getProperty(TYPE_PROPERTY), null);
+        this.authType = OsgiUtil.toString(serviceReference.getProperty(TYPE_PROPERTY), null);
+        this.browserOnlyRequestCredentials = "true".equalsIgnoreCase(browserOnly)
+            || "yes".equalsIgnoreCase(browserOnly);
     }
 
     @Override
@@ -109,10 +118,12 @@ final class AuthenticationHandlerHolder extends
      * Returns <code>true</code> if the <code>requestCredentials</code> method
      * of the held authentication handler should be called or not:
      * <ul>
+     * <li>If the handler handles all clients or the request is assumed to be
+     * coming from a browser</li>
      * <li>If the authentication handler is registered without an authentication
      * type</li>
-     * <li>If the <code>sling:authRequestLogin</code> request parameter is not
-     * set</li>
+     * <li>If the <code>sling:authRequestLogin</code> request parameter or
+     * attribute is not set</li>
      * <li>If the <code>sling:authRequestLogin</code> is set to the same value
      * as the authentication type of the held authentication handler.</li>
      * <ul>
@@ -126,12 +137,17 @@ final class AuthenticationHandlerHolder extends
      *         should be called.
      */
     private boolean doesRequestCredentials(final HttpServletRequest request) {
-        // no configured authentication type, always request credentials
+
+        if (browserOnlyRequestCredentials && !AuthUtil.isBrowserRequest(request)) {
+            return false;
+        }
+
         if (authType == null) {
             return true;
         }
 
-        final String requestLogin = request.getParameter(REQUEST_LOGIN_PARAMETER);
+        final String requestLogin = AbstractAuthenticationHandler.getAttributeOrParameter(request,
+            REQUEST_LOGIN_PARAMETER, null);
         return requestLogin == null || authType.equals(requestLogin);
     }
 }
