@@ -96,7 +96,8 @@ class JcrPropertyResource extends JcrItemResource {
                 return (AdapterType) getProperty().getValue();
 
             } else if (type == Node.class
-                && getProperty().getType() == PropertyType.REFERENCE) {
+                && (getProperty().getType() == PropertyType.REFERENCE ||
+                    getProperty().getType() == PropertyType.WEAKREFERENCE)) {
                 return (AdapterType) getProperty().getNode();
 
             } else if (type == InputStream.class) {
