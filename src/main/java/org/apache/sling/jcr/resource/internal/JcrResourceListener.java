@@ -271,7 +271,6 @@ public class JcrResourceListener implements EventListener {
         path = createWorkspacePath(path);
 
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        properties.put(SlingConstants.PROPERTY_PATH, path);
         properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
         if ( this.isExternal(event) ) {
             properties.put("event.application", "unknown");
@@ -293,6 +292,7 @@ public class JcrResourceListener implements EventListener {
                                 final Resource parentResource = ResourceUtil.getParent(resource);
                                 if (parentResource != null) {
                                     resource = parentResource;
+                                    path = resource.getPath();
                                 }
                             }
                         } catch (RepositoryException re) {
@@ -309,8 +309,15 @@ public class JcrResourceListener implements EventListener {
                 if (resourceSuperType != null) {
                     properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
                 }
+            } else {
+                logger.error(
+                    "sendOsgiEvent: Resource at {} not found, which is not expected for an added or modified node",
+                    path);
             }
         }
+
+        // set the path (might have been changed for nt:file content)
+        properties.put(SlingConstants.PROPERTY_PATH, path);
 
         localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
     }
