@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,36 +38,16 @@ import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
-import org.apache.sling.installer.core.impl.Activator;
 import org.apache.sling.installer.core.impl.EntityResourceList;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 
 @SuppressWarnings("serial")
 public class OsgiInstallerWebConsolePlugin extends GenericServlet {
 
     private final OsgiInstallerImpl installer;
 
-    public static ServiceRegistration register(final BundleContext bundleContext,
-            final OsgiInstallerImpl installer) {
-        final OsgiInstallerWebConsolePlugin plugin = new OsgiInstallerWebConsolePlugin(
-                installer);
-        final Hashtable<String, Object> props = new Hashtable<String, Object>();
-        props.put("felix.webconsole.label", "osgi-installer");
-        props.put("felix.webconsole.title", "OSGi Installer");
-        props.put("felix.webconsole.configprinter.modes", new String[] {"zip", "txt"});
-        props.put(Constants.SERVICE_VENDOR, Activator.VENDOR);
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "OSGi Installer Web Console Plugin");
-        return bundleContext.registerService("javax.servlet.Servlet", plugin,
-            props);
-    }
-
-    private OsgiInstallerWebConsolePlugin(
-            final OsgiInstallerImpl installer) {
+    public OsgiInstallerWebConsolePlugin(final OsgiInstallerImpl installer) {
         this.installer = installer;
     }
 
