@@ -24,18 +24,16 @@ import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
-import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 
 /** Start a bundle given its bundle ID
  *  Restarts if the bundle does not start on the first try,
  *  but only after receiving a bundle or framework event,
  *  indicating that it's worth retrying
  */
-public class BundleStartTask extends AbstractInstallTask {
+public class BundleStartTask extends AbstractBundleTask {
 
     private static final String BUNDLE_START_ORDER = "70-";
 
@@ -47,12 +45,9 @@ public class BundleStartTask extends AbstractInstallTask {
 	private long eventsCountForRetrying;
 	private int retryCount = 0;
 
-	private final BundleTaskCreator creator;
-
-	public BundleStartTask(final TaskResourceGroup r, final long bundleId, final BundleTaskCreator btc) {
-	    super(r);
+		public BundleStartTask(final TaskResourceGroup r, final long bundleId, final BundleTaskCreator btc) {
+	    super(r, btc);
         this.bundleId = bundleId;
-        this.creator = btc;
         this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
         final TaskResource rr = this.getResource();
 	    if ( rr != null && rr.getTemporaryAttribute(ATTR_RC) != null ) {
@@ -69,36 +64,6 @@ public class BundleStartTask extends AbstractInstallTask {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + ": bundle " + bundleId;
-	}
-
-	/**
-	 * Check if the bundle is active.
-	 * This is true if the bundle has the active state or of the bundle
-	 * is in the starting state and has the lazy activation policy.
-	 * Or if the bundle is a fragment, it's considered active as well
-	 */
-	public static boolean isBundleActive(final Bundle b) {
-	    if ( b.getState() == Bundle.ACTIVE ) {
-	        return true;
-	    }
-	    if ( b.getState() == Bundle.STARTING && isLazyActivatian(b) ) {
-	        return true;
-	    }
-	    return ( getFragmentHostHeader(b) != null );
-	}
-
-	/**
-         * Gets the bundle's Fragment-Host header.
-         */
-	public static String getFragmentHostHeader(final Bundle b) {
-	    return (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
-	}
-
-	/**
-	 * Check if the bundle has the lazy activation policy
-	 */
-	private static boolean isLazyActivatian(final Bundle b) {
-        return Constants.ACTIVATION_LAZY.equals(b.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY));
 	}
 
 	/**
@@ -125,7 +90,7 @@ public class BundleStartTask extends AbstractInstallTask {
             return;
         }
 
-        final Bundle b = this.creator.getBundleContext().getBundle(bundleId);
+        final Bundle b = this.getBundleContext().getBundle(bundleId);
 		if (b == null) {
 		    this.getLogger().info("Cannot start bundle, id not found: {}", bundleId);
 			return;
@@ -134,10 +99,10 @@ public class BundleStartTask extends AbstractInstallTask {
         final String fragmentHostHeader = getFragmentHostHeader(b);
         if (fragmentHostHeader != null) {
             this.getLogger().debug("Need to do a refresh of the bundle's host");
-            for (final Bundle bundle : this.creator.getBundleContext().getBundles()) {
+            for (final Bundle bundle : this.getBundleContext().getBundles()) {
                 if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
                     this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
-                    this.creator.getPackageAdmin().refreshPackages(new Bundle[] { bundle });
+                    this.getPackageAdmin().refreshPackages(new Bundle[] { bundle });
                     break;
                 }
             }

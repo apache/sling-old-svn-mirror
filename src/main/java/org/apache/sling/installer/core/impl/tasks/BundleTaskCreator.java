@@ -18,9 +18,6 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.InstallTask;
@@ -30,7 +27,6 @@ import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.apache.sling.installer.core.impl.Util;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
@@ -62,8 +58,6 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 
     /** Interface of the start level */
     private static String START_LEVEL_NAME = StartLevel.class.getName();
-
-    private static final String MAVEN_SNAPSHOT_MARKER = "SNAPSHOT";
 
     /** Tracker for the package admin. */
     private ServiceTracker packageAdminTracker;
@@ -119,29 +113,6 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
         return (PackageAdmin)this.packageAdminTracker.getService();
     }
 
-    /** Holds the bundle info that we need, makes it easier to test
-     *  without an OSGi framework */
-    static class BundleInfo {
-        final String symbolicName;
-        final Version version;
-        final int state;
-        final long id;
-
-        BundleInfo(String symbolicName, Version version, int state, long id) {
-            this.symbolicName = symbolicName;
-            this.version = version;
-            this.state = state;
-            this.id = id;
-        }
-
-        BundleInfo(Bundle b) {
-            this.symbolicName = b.getSymbolicName();
-            this.version = new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
-            this.state = b.getState();
-            this.id = b.getBundleId();
-        }
-    }
-
 	/**
      * Create a bundle task - install, update or remove
      *
@@ -174,7 +145,8 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
         final InstallTask result;
 		if (toActivate.getState() == ResourceState.UNINSTALL) {
             // find the info with the exact version
-            final BundleInfo info = this.getBundleInfo(symbolicName,
+            final BundleInfo info = this.getBundleInfo(
+                    symbolicName,
                     (String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
 		    // Remove corresponding bundle if present and if we installed it
 		    if ( info != null ) {
@@ -227,7 +199,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
                         logger.debug("Bundle " + info.symbolicName + " " + newVersion
                                     + " is not installed, bundle with higher version is already installed.");
                     }
-			    } else if (compare == 0 && this.isSnapshot(newVersion)) {
+			    } else if (compare == 0 && BundleInfo.isSnapshot(newVersion)) {
 			        // check if system bundle or installer bundle
 			        if ( isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
 			            if ( toActivate.getAttribute(SPECIAL_ATTR) != null ) {
@@ -265,62 +237,7 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
 		return result;
 	}
 
-	protected BundleInfo getBundleInfo(final String symbolicName, final String version) {
-		final Bundle b = this.getMatchingBundle(symbolicName, version);
-		if (b == null) {
-		    return null;
-        }
-		return new BundleInfo(b);
-	}
-
-    /**
-     * Finds the bundle with given symbolic name in our bundle context.
-     */
-    public Bundle getMatchingBundle(final String bundleSymbolicName, final String version) {
-        Bundle match = null;
-        if (bundleSymbolicName != null) {
-            // check if this is the system bundle
-            if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(bundleSymbolicName) ) {
-                return bundleContext.getBundle(0);
-            }
-            final List<Bundle> matchingBundles = new ArrayList<Bundle>();
-            final Bundle[] bundles = bundleContext.getBundles();
-            for (Bundle bundle : bundles) {
-                if (bundleSymbolicName.equals(bundle.getSymbolicName())) {
-                    matchingBundles.add(bundle);
-                }
-            }
-            if ( matchingBundles.size() > 0 ) {
-                final Version searchVersion = (version == null ? null : new Version(version));
-                if ( searchVersion == null || searchVersion.compareTo(getBundleVersion(matchingBundles.get(0))) == 0 ) {
-                    match = matchingBundles.get(0);
-                }
-                for(int i=1; i<matchingBundles.size(); i++) {
-                    final Bundle current = matchingBundles.get(i);
-                    if ( searchVersion == null ) {
-                        if ( getBundleVersion(match).compareTo(getBundleVersion(current)) < 0 ) {
-                            match = current;
-                        }
-                    } else {
-                        if ( searchVersion.compareTo(getBundleVersion(current)) == 0 ) {
-                            match = current;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        return match;
-    }
-
-    private Version getBundleVersion(final Bundle b) {
-        return new Version((String)b.getHeaders().get(Constants.BUNDLE_VERSION));
-    }
-
-    /**
-     * Check if the version is a snapshot version
-     */
-    public boolean isSnapshot(Version v) {
-        return v.toString().indexOf(MAVEN_SNAPSHOT_MARKER) >= 0;
+    protected BundleInfo getBundleInfo(final String symbolicName, final String version) {
+        return BundleInfo.getBundleInfo(this.getBundleContext(), symbolicName, version);
     }
 }

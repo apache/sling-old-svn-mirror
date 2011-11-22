@@ -66,9 +66,6 @@ public class RefreshOptionalPackagesTask extends AbstractInstallTask {
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
-        if ( true ) {
-            return;
-        }
         getLogger().info("** Invoking refresh optional packages!");
         final PackageAdmin packageAdmin = this.getPackageAdmin();
 
