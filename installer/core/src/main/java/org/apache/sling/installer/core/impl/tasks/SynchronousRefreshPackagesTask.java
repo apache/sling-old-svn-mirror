@@ -20,7 +20,6 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
@@ -29,10 +28,8 @@ import org.osgi.framework.FrameworkListener;
  * Execute an OSGi "refresh packages" operation, synchronously
  * by waiting until a package refresh event occurs.
  */
-public class SynchronousRefreshPackagesTask extends AbstractInstallTask implements FrameworkListener {
-
-    /** Tracker for the package admin. */
-    private final BundleTaskCreator bundleTaskCreator;
+public class SynchronousRefreshPackagesTask extends AbstractBundleTask
+    implements FrameworkListener {
 
     private static final String REFRESH_PACKAGES_ORDER = "60-";
 
@@ -46,8 +43,7 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
     private volatile int packageRefreshEventsCount;
 
 	public SynchronousRefreshPackagesTask(final BundleTaskCreator btc) {
-	    super(null);
-	    this.bundleTaskCreator = btc;
+	    super(null, btc);
 	}
 
     /**
@@ -86,9 +82,9 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
         // make sure all currently active ones are restarted after
         // this task has executed
         // we don't check for fragments!
-    	for(final Bundle b : this.bundleTaskCreator.getBundleContext().getBundles()) {
-    	    if ( BundleStartTask.isBundleActive(b) && BundleStartTask.getFragmentHostHeader(b) == null ) {
-    	        final InstallTask t = new BundleStartTask(null, b.getBundleId(), this.bundleTaskCreator);
+    	for(final Bundle b : this.getBundleContext().getBundles()) {
+    	    if ( this.isBundleActive(b) && this.getFragmentHostHeader(b) == null ) {
+    	        final InstallTask t = new BundleStartTask(null, b.getBundleId(), this.getCreator());
     			ctx.addTaskToCurrentCycle(t);
     			this.getLogger().debug("Added {} to restart bundle if needed after refreshing packages", t);
     		}
@@ -96,9 +92,9 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
 
         // It seems like (at least with Felix 1.0.4) we won't get a FrameworkEvent.PACKAGES_REFRESHED
         // if one happened very recently and there's nothing to refresh
-        this.bundleTaskCreator.getBundleContext().addFrameworkListener(this);
+        this.getBundleContext().addFrameworkListener(this);
         try {
-            this.bundleTaskCreator.getPackageAdmin().refreshPackages(null);
+            this.getPackageAdmin().refreshPackages(null);
             while (true) {
                 if (System.currentTimeMillis() > timeout) {
                     this.getLogger().warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {}"
@@ -118,7 +114,7 @@ public class SynchronousRefreshPackagesTask extends AbstractInstallTask implemen
                 }
             }
         } finally {
-        	this.bundleTaskCreator.getBundleContext().removeFrameworkListener(this);
+        	this.getBundleContext().removeFrameworkListener(this);
         }
 	}
 }

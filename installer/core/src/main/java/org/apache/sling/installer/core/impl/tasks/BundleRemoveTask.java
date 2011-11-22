@@ -21,7 +21,6 @@ package org.apache.sling.installer.core.impl.tasks;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
-import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
@@ -30,16 +29,13 @@ import org.osgi.framework.Constants;
  *  Creates a SynchronousRefreshPackagesTask when
  *  executed.
  */
-public class BundleRemoveTask extends AbstractInstallTask {
+public class BundleRemoveTask extends AbstractBundleTask {
 
     private static final String BUNDLE_REMOVE_ORDER = "30-";
 
-    private final BundleTaskCreator creator;
-
     public BundleRemoveTask(final TaskResourceGroup r,
                             final BundleTaskCreator creator) {
-        super(r);
-        this.creator = creator;
+        super(r, creator);
     }
 
     /**
@@ -48,7 +44,7 @@ public class BundleRemoveTask extends AbstractInstallTask {
     public void execute(InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final String version = (String)getResource().getAttribute(Constants.BUNDLE_VERSION);
-        final Bundle b = this.creator.getMatchingBundle(symbolicName, version);
+        final Bundle b = BundleInfo.getMatchingBundle(this.getBundleContext(), symbolicName, version);
         if (b == null) {
             // nothing to do, so just stop
             this.setFinishedState(ResourceState.IGNORED);
@@ -62,7 +58,7 @@ public class BundleRemoveTask extends AbstractInstallTask {
             b.uninstall();
             ctx.log("Uninstalled bundle {} from resource {}", b, getResource());
             this.setFinishedState(ResourceState.UNINSTALLED);
-            ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.creator));
+            ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.getCreator()));
         } catch (final BundleException be) {
             this.getLogger().debug("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);
         }

@@ -21,22 +21,20 @@ package org.apache.sling.installer.core.impl.tasks;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
-import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
 import org.osgi.service.startlevel.StartLevel;
 
-/** Install a bundle supplied as a RegisteredResource.
- *  Creates a BundleStartTask to start the bundle */
-public class BundleInstallTask extends AbstractInstallTask {
+/**
+ * Install a bundle supplied as a RegisteredResource.
+ * Creates a BundleStartTask to start the bundle.
+ */
+public class BundleInstallTask extends AbstractBundleTask {
 
     private static final String BUNDLE_INSTALL_ORDER = "50-";
 
-    private final BundleTaskCreator creator;
-
     public BundleInstallTask(final TaskResourceGroup r,
             final BundleTaskCreator creator) {
-        super(r);
-        this.creator = creator;
+        super(r, creator);
     }
 
     /**
@@ -67,9 +65,9 @@ public class BundleInstallTask extends AbstractInstallTask {
             }
         }
         // get the start level service (if possible) so we can set the initial start level
-        final StartLevel startLevelService = this.creator.getStartLevel();
+        final StartLevel startLevelService = this.getStartLevel();
         try {
-            final Bundle b = this.creator.getBundleContext().installBundle(getResource().getURL(), getResource().getInputStream());
+            final Bundle b = this.getBundleContext().installBundle(getResource().getURL(), getResource().getInputStream());
             ctx.log("Installed bundle {} from resource {}", b, getResource());
             // optionally set the start level
             if ( startLevel > 0 ) {
@@ -83,8 +81,7 @@ public class BundleInstallTask extends AbstractInstallTask {
 
             // mark this resource as installed and to be started
             this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
-            ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.creator));
-            ctx.addTaskToNextCycle(new RefreshOptionalPackagesTask(this.creator));
+            ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.getCreator()));
         } catch (Exception ex) {
             // if something goes wrong we simply try it again
             this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
