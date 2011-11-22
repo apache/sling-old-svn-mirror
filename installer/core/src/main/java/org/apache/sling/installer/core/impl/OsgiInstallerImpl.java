@@ -132,7 +132,11 @@ public class OsgiInstallerImpl
      * Deactivate
      */
     public void deactivate() {
-        this.active = false;
+        // wake up sleeping thread
+        synchronized (this.resourcesLock) {
+            this.active = false;
+            this.resourcesLock.notify();
+        }
 
         // Stop service trackers.
         this.factoryTracker.close();
@@ -144,14 +148,14 @@ public class OsgiInstallerImpl
 
         this.listener.dispose();
 
-        // wake up sleeping thread
-        this.wakeUp();
         if ( this.running ) {
             this.logger.debug("Waiting for installer thread to stop");
-            try {
-                this.join();
-            } catch (InterruptedException e) {
-                // we simply ignore this
+            while ( this.running ) {
+                try {
+                    this.join(50L);
+                } catch (InterruptedException e) {
+                    // we simply ignore this
+                }
             }
         }
 
@@ -217,7 +221,7 @@ public class OsgiInstallerImpl
                     if (!tasksCreated) {
                         synchronized ( this.resourcesLock ) {
           		            // before we go to sleep, check if new resources arrived in the meantime
-                            if ( !this.hasNewResources()) {
+                            if ( !this.hasNewResources() && this.active ) {
                                 // No tasks to execute - wait until new resources are
                                 // registered
                                 logger.debug("No tasks to process, going idle");

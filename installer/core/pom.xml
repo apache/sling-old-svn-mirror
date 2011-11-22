@@ -54,9 +54,11 @@
 						<Bundle-Activator>
 							org.apache.sling.installer.core.impl.Activator
                         </Bundle-Activator>
-                        <Import-Package>
-                            javax.servlet;javax.servlet.http;resolution:=optional,*
-                        </Import-Package>
+                        <DynamicImport-Package>
+                            <!-- plug into the web console -->
+                            javax.servlet;
+                            javax.servlet.http;version="[2.3,3)"
+                        </DynamicImport-Package>
 						<Export-Package>
 							org.apache.sling.installer.api;version=3.1.0,
                             org.apache.sling.installer.api.event;version=1.0.0,
