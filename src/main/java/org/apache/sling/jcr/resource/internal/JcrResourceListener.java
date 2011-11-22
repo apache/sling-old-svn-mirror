@@ -182,13 +182,7 @@ public class JcrResourceListener implements EventListener {
 
         for (final Entry<String, Event> e : removedEvents.entrySet()) {
             // Launch an OSGi event
-            final Dictionary<String, String> properties = new Hashtable<String, String>();
-            properties.put(SlingConstants.PROPERTY_PATH, createWorkspacePath(e.getKey()));
-            properties.put(SlingConstants.PROPERTY_USERID, e.getValue().getUserID());
-            if ( this.isExternal(e.getValue()) ) {
-                properties.put("event.application", "unknown");
-            }
-            localEA.postEvent(new org.osgi.service.event.Event(SlingConstants.TOPIC_RESOURCE_REMOVED, properties));
+            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_REMOVED, localEA, null);
         }
 
         for (final Entry<String, Event> e : addedEvents.entrySet()) {
@@ -265,6 +259,7 @@ public class JcrResourceListener implements EventListener {
 
     /**
      * Send an OSGi event based on a JCR Observation Event.
+     *
      * @param path The path too the node where the event occurred.
      * @param event The JCR observation event.
      * @param topic The topic that should be used for the OSGi event.
@@ -272,44 +267,52 @@ public class JcrResourceListener implements EventListener {
      */
     private void sendOsgiEvent(String path, final Event event, final String topic, final EventAdmin localEA,
             final ChangedAttributes changedAttributes) {
+
         path = createWorkspacePath(path);
-        Resource resource = this.resolver.getResource(path);
-        if ( resource != null ) {
-            // check for nt:file nodes
-            if ( path.endsWith("/jcr:content") ) {
-                final Node node = resource.adaptTo(Node.class);
-                if ( node != null ) {
-                    try {
-                        if (node.getParent().isNodeType("nt:file") ) {
-                            final Resource parentResource = ResourceUtil.getParent(resource);
-                            if ( parentResource != null ) {
-                                resource = parentResource;
+
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        properties.put(SlingConstants.PROPERTY_PATH, path);
+        properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
+        if ( this.isExternal(event) ) {
+            properties.put("event.application", "unknown");
+        }
+        if ( changedAttributes != null ) {
+            changedAttributes.addProperties(properties);
+        }
+
+        if (!SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
+            Resource resource = this.resolver.getResource(path);
+            if (resource != null) {
+                // check for nt:file nodes
+                if (path.endsWith("/jcr:content")) {
+                    final Node node = resource.adaptTo(Node.class);
+                    if (node != null) {
+                        try {
+                            if (node.getParent().isNodeType("nt:file")) {
+                                @SuppressWarnings("deprecation")
+                                final Resource parentResource = ResourceUtil.getParent(resource);
+                                if (parentResource != null) {
+                                    resource = parentResource;
+                                }
                             }
+                        } catch (RepositoryException re) {
+                            // ignore this
                         }
-                    } catch (RepositoryException re) {
-                        // ignore this
                     }
                 }
+
+                final String resourceType = resource.getResourceType();
+                if (resourceType != null) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+                }
+                final String resourceSuperType = resource.getResourceSuperType();
+                if (resourceSuperType != null) {
+                    properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                }
             }
-            final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-            properties.put(SlingConstants.PROPERTY_PATH, resource.getPath());
-            properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
-            final String resourceType = resource.getResourceType();
-            if ( resourceType != null ) {
-                properties.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-            }
-            final String resourceSuperType = resource.getResourceSuperType();
-            if ( resourceSuperType != null ) {
-                properties.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
-            }
-            if ( this.isExternal(event) ) {
-                properties.put("event.application", "unknown");
-            }
-            if ( changedAttributes != null ) {
-                changedAttributes.addProperties(properties);
-            }
-            localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
         }
+
+        localEA.postEvent(new org.osgi.service.event.Event(topic, properties));
     }
 
     private boolean isExternal(final Event event) {
