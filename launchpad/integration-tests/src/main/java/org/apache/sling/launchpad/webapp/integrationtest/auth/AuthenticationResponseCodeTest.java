@@ -136,8 +136,9 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         params.add(new NameValuePair("j_username", "garbage"));
         params.add(new NameValuePair("j_password", "garbage"));
 
+        // simulate a browser request
         List<Header> headers = new ArrayList<Header>();
-        headers.add(new Header("Accept", "text/html"));
+        headers.add(new Header("User-Agent", "Mozilla/5.0 Sling Integration Test"));
 
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check",
                 HttpServletResponse.SC_MOVED_TEMPORARILY, params, headers, null);
