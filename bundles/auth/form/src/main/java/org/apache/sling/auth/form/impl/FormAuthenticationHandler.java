@@ -49,6 +49,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
@@ -354,11 +355,11 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         //check the referer to see if the request is for this handler
-        if (!checkReferer(request, loginForm)) {
+        if (!AuthUtil.checkReferer(request, loginForm)) {
         	//not for this handler, so return
         	return false;
         }
-        
+
         final String resource = setLoginResourceAttribute(request,
             request.getRequestURI());
 
