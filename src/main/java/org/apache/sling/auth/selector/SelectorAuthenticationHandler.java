@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.auth.Authenticator;
+import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.commons.osgi.OsgiUtil;
@@ -88,11 +89,11 @@ public class SelectorAuthenticationHandler extends
             HttpServletResponse response) {
 
         //check the referer to see if the request is for this handler
-        if (!checkReferer(request, loginForm)) {
+        if (!AuthUtil.checkReferer(request, loginForm)) {
         	//not for this handler, so return
         	return false;
         }
-    	
+
         HashMap<String, String> params = new HashMap<String, String>();
         params.put(Authenticator.LOGIN_RESOURCE,
             getLoginResource(request, null));
