@@ -110,7 +110,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         final String requestUrl = HTTP_BASE_URL + "/junk?param1=1";
         HttpMethod get = new GetMethod(requestUrl);
         get.setRequestHeader("Referer", requestUrl);
-        get.setRequestHeader("Accept", "text/*"); // simulate a browser request
+        get.setRequestHeader("User-Agent", "Mozilla/5.0 Sling Integration Test");
         int status = httpClient.executeMethod(get);
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, status);
     }
@@ -122,7 +122,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
 
         List<Header> headers = new ArrayList<Header>();
         headers.add(new Header("X-Requested-With", "XMLHttpRequest"));
-        headers.add(new Header("Accept", "text/html"));
+        headers.add(new Header("User-Agent", "Mozilla/5.0 Sling Integration Test"));
 
         HttpMethod post = assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_FORBIDDEN,
                 params, headers, null);
@@ -164,7 +164,7 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         params.add(new NameValuePair("j_password", "garbage"));
 
         List<Header> headers = new ArrayList<Header>();
-        headers.add(new Header("Accept", "application/xml"));
+        headers.add(new Header("User-Agent", "Mozilla/5.0 Sling Integration Test"));
 
         assertPostStatus(HTTP_BASE_URL + "/j_security_check", HttpServletResponse.SC_UNAUTHORIZED, params, null);
     }
