@@ -77,21 +77,6 @@ public final class AuthConstants {
      */
     public static final String AUTH_HANDLER_BROWSER_ONLY = "sling.auth.browser-only";
 
-    /**
-     * The name of the request parameter (or request attribute) indicating the
-     * workspace to use.
-     * <p>
-     * The {@link AuthenticationSupport} service implemented by this bundle will
-     * respect this parameter and attribute and ensure the
-     * <code>jcr.user.workspace</code> attribute of the
-     * {@link org.apache.sling.auth.core.spi.AuthenticationInfo} used for
-     * accessing the resource resolver is set to this value (unless the property
-     * has already been set by the
-     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} providing
-     * the {@link org.apache.sling.auth.core.spi.AuthenticationInfo} instance).
-     */
-    public static final String J_WORKSPACE = "j_workspace";
-
     private AuthConstants() {
     }
 

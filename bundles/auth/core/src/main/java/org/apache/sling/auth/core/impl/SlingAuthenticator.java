@@ -438,13 +438,10 @@ public class SlingAuthenticator implements Authenticator,
         final AuthenticationInfo authInfo = getAuthenticationInfo(request, response);
 
         // 2. PostProcess credentials
-        final AuthenticationInfo aiPostProc = (authInfo == null)
-                ? new AuthenticationInfo("anonymous", "[null]")
-                : authInfo;
         try {
-            postProcess(aiPostProc, request, response);
+            postProcess(authInfo, request, response);
         } catch (LoginException e) {
-            handleLoginFailure(request, response, aiPostProc.getUser(), e);
+            handleLoginFailure(request, response, authInfo.getUser(), e);
             return false;
         }
 
@@ -461,10 +458,10 @@ public class SlingAuthenticator implements Authenticator,
             doLogin(request, response);
             return false;
 
-        } else if (authInfo == null) {
+        } else if (authInfo.getAuthType() == null) {
 
             log.debug("doHandleSecurity: No credentials in the request, anonymous");
-            return getAnonymousResolver(request, response);
+            return getAnonymousResolver(request, response, authInfo);
 
         } else {
 
@@ -695,8 +692,8 @@ public class SlingAuthenticator implements Authenticator,
         }
 
         // no handler found for the request ....
-        log.debug("getAuthenticationInfo: no handler could extract credentials");
-        return null;
+        log.debug("getAuthenticationInfo: no handler could extract credentials; assuming anonymous");
+        return getAnonymousCredentials();
     }
 
     /**
@@ -818,16 +815,14 @@ public class SlingAuthenticator implements Authenticator,
 
     /** Try to acquire an anonymous ResourceResolver */
     private boolean getAnonymousResolver(final HttpServletRequest request,
-            final HttpServletResponse response) {
+            final HttpServletResponse response, final AuthenticationInfo authInfo) {
 
         // Get an anonymous session if allowed, or if we are handling
         // a request for the login servlet
         if (isAnonAllowed(request)) {
 
             try {
-
-                Map<String, Object> credentials = getAnonymousCredentials();
-                ResourceResolver resolver = resourceResolverFactory.getResourceResolver(credentials);
+                ResourceResolver resolver = resourceResolverFactory.getResourceResolver(authInfo);
 
                 // check whether the client asked for redirect after
                 // authentication and/or impersonation
@@ -898,17 +893,15 @@ public class SlingAuthenticator implements Authenticator,
      * whose authentication type is <code>null</code> and the user name and
      * password are set according to the {@link #PAR_ANONYMOUS_USER} and
      * {@link #PAR_ANONYMOUS_PASSWORD} configurations. Otherwise
-     * <code>null</code> is returned.
+     * the user name and password fields are just <code>null</code>.
      */
-    private Map<String, Object> getAnonymousCredentials() {
+    private AuthenticationInfo getAnonymousCredentials() {
+        AuthenticationInfo info = new AuthenticationInfo(null);
         if (this.anonUser != null) {
-            AuthenticationInfo info = new AuthenticationInfo(null);
             info.setUser(this.anonUser);
             info.setPassword(this.anonPassword);
-            return info;
         }
-
-        return null;
+        return info;
     }
 
     private void handleLoginFailure(final HttpServletRequest request,
