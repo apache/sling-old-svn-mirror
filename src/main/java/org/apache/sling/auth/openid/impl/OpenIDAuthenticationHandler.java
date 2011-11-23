@@ -36,6 +36,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.auth.Authenticator;
+import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
@@ -396,11 +397,11 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         //check the referer to see if the request is for this handler
-        if (!checkReferer(request, loginForm)) {
+        if (!AuthUtil.checkReferer(request, loginForm)) {
         	//not for this handler, so return
         	return false;
         }
-        
+
 
         // requestAuthentication is only called after a failedauthentication
         // so it makes sense to remove any existing login
