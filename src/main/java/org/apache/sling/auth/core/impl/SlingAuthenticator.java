@@ -49,7 +49,6 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
@@ -180,34 +179,6 @@ public class SlingAuthenticator implements Authenticator,
      * handler to be called back on login failure or success.
      */
     private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
-
-    /**
-     * Request header commonly set by Ajax Frameworks to indicate the request is
-     * posted as an Ajax request. The value set is expected to be
-     * {@link #XML_HTTP_REQUEST}.
-     * <p>
-     * This header is known to be set by JQuery, ExtJS and Prototype. Other
-     * client-side JavaScript framework most probably also set it.
-     *
-     * @see #isAjaxRequest(HttpServletRequest)
-     */
-    private static final String X_REQUESTED_WITH = "X-Requested-With";
-
-    /**
-     * The expected value of the {@link #X_REQUESTED_WITH} request header to
-     * identify a request as an Ajax request.
-     *
-     * @see #isAjaxRequest(HttpServletRequest)
-     */
-    private static final String XML_HTTP_REQUEST = "XMLHttpRequest";
-
-    /**
-     * The name of the <code>Accept</code> header which must not exists to
-     * consider a request an initial WebDAV request.
-     *
-     * @see #isBrowserRequest(HttpServletRequest)
-     */
-    private static final String HEADER_ACCEPT = "Accept";
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -454,7 +425,7 @@ public class SlingAuthenticator implements Authenticator,
         if (process && expectAuthenticationHandler(request)) {
             log.warn("handleSecurity: AuthenticationHandler did not block request; access denied");
             request.removeAttribute(AuthenticationHandler.FAILURE_REASON);
-            AbstractAuthenticationHandler.sendInvalid(request, response);
+            AuthUtil.sendInvalid(request, response);
             return false;
         }
 
@@ -486,7 +457,7 @@ public class SlingAuthenticator implements Authenticator,
         } else if (authInfo == AuthenticationInfo.FAIL_AUTH) {
 
             log.debug("doHandleSecurity: Credentials present but not valid, request authentication again");
-            AbstractAuthenticationHandler.setLoginResourceAttribute(request, request.getRequestURI());
+            AuthUtil.setLoginResourceAttribute(request, request.getRequestURI());
             doLogin(request, response);
             return false;
 
@@ -800,8 +771,8 @@ public class SlingAuthenticator implements Authenticator,
 
             // client requested validation, which succeeds, thus send
             // success response and close the resolver
-            if (AbstractAuthenticationHandler.isValidateRequest(request)) {
-                AbstractAuthenticationHandler.sendValid(response);
+            if (AuthUtil.isValidateRequest(request)) {
+                AuthUtil.sendValid(response);
                 resolver.close();
                 return false;
             }
@@ -1046,11 +1017,11 @@ public class SlingAuthenticator implements Authenticator,
     private void doLogin(HttpServletRequest request,
             HttpServletResponse response) {
 
-        if (!AbstractAuthenticationHandler.isValidateRequest(request)) {
+        if (!AuthUtil.isValidateRequest(request)) {
 
-            if (isBrowserRequest(request) && !isLoginLoop(request)) {
+            if (AuthUtil.isBrowserRequest(request) && !isLoginLoop(request)) {
 
-                if (!isAjaxRequest(request)) {
+                if (!AuthUtil.isAjaxRequest(request)) {
                     try {
 
                         login(request, response);
@@ -1099,34 +1070,7 @@ public class SlingAuthenticator implements Authenticator,
         ensureAttribute(request, AuthenticationHandler.FAILURE_REASON,
             "Authentication Failed");
 
-        AbstractAuthenticationHandler.sendInvalid(request, response);
-    }
-
-    /**
-     * Determine if this request comes from a web browser which accepts
-     * anything.
-     *
-     * @param request The current request
-     * @return <code>true</code> if the request can be considered a browser
-     *         request.
-     */
-    private boolean isBrowserRequest(final HttpServletRequest request) {
-        return request.getHeader(HEADER_ACCEPT) != null;
-    }
-
-    /**
-     * Returns <code>true</code> if the request is to be considered an AJAX
-     * request placed using the <code>XMLHttpRequest</code> browser host object.
-     * Currently a request is considered an AJAX request if the client sends the
-     * <i>X-Requested-With</i> request header set to <code>XMLHttpRequest</code>
-     * .
-     *
-     * @param request The current request
-     * @return <code>true</code> if the request can be considered an AJAX
-     *         request.
-     */
-    private boolean isAjaxRequest(final HttpServletRequest request) {
-        return XML_HTTP_REQUEST.equals(request.getHeader(X_REQUESTED_WITH));
+        AuthUtil.sendInvalid(request, response);
     }
 
     /**
@@ -1378,7 +1322,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // find the redirect target from the resource attribute or parameter
         // falling back to the request context path (or /) if not set or invalid
-        String target = AbstractAuthenticationHandler.getLoginResource(request, request.getContextPath());
+        String target = AuthUtil.getLoginResource(request, request.getContextPath());
         if (!AuthUtil.isRedirectValid(request, target)) {
             log.warn("redirectAfterLogout: Desired redirect target '{}' is invalid; redirecting to '/'", target);
             target = "/";

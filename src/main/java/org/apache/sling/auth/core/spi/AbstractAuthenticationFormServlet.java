@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.auth.core.AuthUtil;
+
 /**
  * The <code>AbstractAuthenticationFormServlet</code> provides a basic
  * implementation of a simple servlet to render a login form for authentication
@@ -132,7 +134,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
         form = form.replace("${j_reason}", getReason(request));
         form = form.replace("${requestContextPath}", getContextPath(request));
         form = form.replace("${contextPath}", request.getContextPath());
-        
+
         return form;
     }
 
@@ -146,7 +148,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
      *         if no specific target has been requested.
      */
     protected String getResource(final HttpServletRequest request) {
-        return AbstractAuthenticationHandler.getLoginResource(request, "");
+        return AuthUtil.getLoginResource(request, "");
     }
 
     /**
@@ -180,7 +182,7 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
         if (query > 0) {
             contextPath = contextPath.substring(0, query);
         }
-        
+
         return removeEndingSlash(contextPath);
     }
 

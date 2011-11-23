@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.auth.core.AuthConstants;
 import org.apache.sling.auth.core.AuthUtil;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
@@ -146,8 +145,7 @@ final class AuthenticationHandlerHolder extends
             return true;
         }
 
-        final String requestLogin = AbstractAuthenticationHandler.getAttributeOrParameter(request,
-            REQUEST_LOGIN_PARAMETER, null);
+        final String requestLogin = AuthUtil.getAttributeOrParameter(request, REQUEST_LOGIN_PARAMETER, null);
         return requestLogin == null || authType.equals(requestLogin);
     }
 }

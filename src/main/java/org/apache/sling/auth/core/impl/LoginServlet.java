@@ -35,7 +35,7 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.AuthUtil;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,8 +79,7 @@ public class LoginServlet extends SlingAllMethodsServlet {
         // through the login servlet), redirect to root now assuming we are
         // authenticated.
         if (request.getAuthType() != null) {
-            final String resourcePath = AbstractAuthenticationHandler.getLoginResource(
-                request, null);
+            final String resourcePath = AuthUtil.getLoginResource(request, null);
             if (isSelf(resourcePath)) {
                 String redirectTarget = request.getContextPath() + "/";
                 log.warn(
@@ -96,7 +95,7 @@ public class LoginServlet extends SlingAllMethodsServlet {
             try {
 
                 // set the login resource to select the authenticator
-                AbstractAuthenticationHandler.setLoginResourceAttribute(request, null);
+                AuthUtil.setLoginResourceAttribute(request, null);
                 authenticator.login(request, response);
                 return;
 

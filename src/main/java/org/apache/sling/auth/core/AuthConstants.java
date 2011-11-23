@@ -19,14 +19,37 @@
 package org.apache.sling.auth.core;
 
 /**
- * The <code>AuthConstants</code> provides a collection of constants used
- * to configure and customize the Sling authentication infrastructure.
+ * The <code>AuthConstants</code> provides a collection of constants used to
+ * configure and customize the Sling authentication infrastructure.
  * <p>
  * This class can neither be extended from nor can it be instantiated.
  *
  * @since 1.1 (bundle version 1.0.8)
  */
 public final class AuthConstants {
+
+    /**
+     * The name of the request parameter indicating that the submitted username
+     * and password should just be checked and a status code be set for success
+     * (200/OK) or failure (403/FORBIDDEN).
+     *
+     * @see #isValidateRequest(HttpServletRequest)
+     * @see #sendValid(HttpServletResponse)
+     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     */
+    public static final String PAR_J_VALIDATE = "j_validate";
+
+    /**
+     * The name of the request header set by the
+     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
+     * credentials cannot be used for login.
+     * <p>
+     * This header may be inspected by clients for a reason why the request
+     * failed.
+     *
+     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
+     */
+    public static final String X_REASON = "X-Reason";
 
     /**
      * Service Registration property which may be set by an
@@ -53,6 +76,21 @@ public final class AuthConstants {
      * called regardless of this property.
      */
     public static final String AUTH_HANDLER_BROWSER_ONLY = "sling.auth.browser-only";
+
+    /**
+     * The name of the request parameter (or request attribute) indicating the
+     * workspace to use.
+     * <p>
+     * The {@link AuthenticationSupport} service implemented by this bundle will
+     * respect this parameter and attribute and ensure the
+     * <code>jcr.user.workspace</code> attribute of the
+     * {@link org.apache.sling.auth.core.spi.AuthenticationInfo} used for
+     * accessing the resource resolver is set to this value (unless the property
+     * has already been set by the
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} providing
+     * the {@link org.apache.sling.auth.core.spi.AuthenticationInfo} instance).
+     */
+    public static final String J_WORKSPACE = "j_workspace";
 
     private AuthConstants() {
     }

@@ -25,7 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
@@ -171,8 +171,7 @@ class HttpBasicAuthenticationHandler extends
      *         or attribute is set to any value.
      */
     private boolean isLoginRequested(HttpServletRequest request) {
-        return AbstractAuthenticationHandler.getAttributeOrParameter(request,
-            REQUEST_LOGIN_PARAMETER, null) != null;
+        return AuthUtil.getAttributeOrParameter(request, REQUEST_LOGIN_PARAMETER, null) != null;
     }
 
     /**
