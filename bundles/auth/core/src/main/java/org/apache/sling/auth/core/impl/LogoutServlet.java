@@ -32,7 +32,7 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.AuthUtil;
 import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ public class LogoutServlet extends SlingAllMethodsServlet {
         final Authenticator authenticator = this.authenticator;
         if (authenticator != null) {
             try {
-                AbstractAuthenticationHandler.setLoginResourceAttribute(request, null);
+                AuthUtil.setLoginResourceAttribute(request, null);
                 authenticator.logout(request, response);
                 return;
             } catch (IllegalStateException ise) {

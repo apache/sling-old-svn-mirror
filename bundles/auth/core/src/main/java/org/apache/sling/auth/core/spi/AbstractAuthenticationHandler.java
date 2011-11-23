@@ -19,55 +19,26 @@
 package org.apache.sling.auth.core.spi;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.auth.core.AuthUtil;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>AbstractAuthenticationHandler</code> implements the
  * <code>AuthenticationHandler</code> interface and extends the
  * {@link DefaultAuthenticationFeedbackHandler} providing some helper methods
  * which may be used by authentication handlers.
+ *
+ * @deprecated since Bundle 1.0.8; {@link AuthenticationHandler} implementations
+ *             should extend {@link DefaultAuthenticationFeedbackHandler}
+ *             directly and use the utility methods in the {@link AuthUtil}
+ *             class.
  */
-public abstract class AbstractAuthenticationHandler extends
-        DefaultAuthenticationFeedbackHandler implements AuthenticationHandler {
-
-    /**
-     * The name of the request parameter indicating that the submitted username
-     * and password should just be checked and a status code be set for success
-     * (200/OK) or failure (403/FORBIDDEN).
-     *
-     * @see #isValidateRequest(HttpServletRequest)
-     * @see #sendValid(HttpServletResponse)
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
-     * @since 1.0.2 (Bundle version 1.0.4)
-     */
-    private static final String PAR_J_VALIDATE = "j_validate";
-
-    /**
-     * The name of the request header set by the
-     * {@link #sendInvalid(HttpServletRequest, HttpServletResponse)} method if the provided
-     * credentials cannot be used for login.
-     * <p>
-     * This header may be inspected by clients for a reason why the request
-     * failed.
-     *
-     * @see #sendInvalid(HttpServletRequest, HttpServletResponse)
-     * @since 1.0.2 (Bundle version 1.0.4)
-     */
-    private static final String X_REASON = "X-Reason";
+@Deprecated
+public abstract class AbstractAuthenticationHandler extends DefaultAuthenticationFeedbackHandler implements
+        AuthenticationHandler {
 
     /**
      * Returns the value of the named request attribute or parameter as a string
@@ -86,22 +57,13 @@ public abstract class AbstractAuthenticationHandler extends
      *            request.
      * @return The attribute, parameter or <code>defaultValue</code> as defined
      *         above.
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#getAttributeOrParameter(HttpServletRequest, String, String)}
      */
-    public static String getAttributeOrParameter(
-            final HttpServletRequest request, final String name,
+    @Deprecated
+    public static String getAttributeOrParameter(final HttpServletRequest request, final String name,
             final String defaultValue) {
-
-        final String resourceAttr = getAttributeString(request, name);
-        if (resourceAttr != null) {
-            return resourceAttr;
-        }
-
-        final String resource = request.getParameter(name);
-        if (resource != null && resource.length() > 0) {
-            return resource;
-        }
-
-        return defaultValue;
+        return AuthUtil.getAttributeOrParameter(request, name, defaultValue);
     }
 
     /**
@@ -116,11 +78,12 @@ public abstract class AbstractAuthenticationHandler extends
      * @param defaultLoginResource The default login resource value
      * @return The non-empty redirection target or
      *         <code>defaultLoginResource</code>.
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#getLoginResource(HttpServletRequest, String)}
      */
-    public static String getLoginResource(final HttpServletRequest request,
-            String defaultLoginResource) {
-        return getAttributeOrParameter(request, Authenticator.LOGIN_RESOURCE,
-            defaultLoginResource);
+    @Deprecated
+    public static String getLoginResource(final HttpServletRequest request, String defaultLoginResource) {
+        return AuthUtil.getLoginResource(request, defaultLoginResource);
     }
 
     /**
@@ -141,23 +104,12 @@ public abstract class AbstractAuthenticationHandler extends
      *            ignored if it is <code>null</code> or an empty string.
      * @return returns the value of resource request attribute
      * @since 1.0.2 (Bundle version 1.0.4)
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#setLoginResourceAttribute(HttpServletRequest, String)}
      */
-    public static String setLoginResourceAttribute(
-            final HttpServletRequest request, final String defaultValue) {
-        String resourceAttr = getAttributeString(request,
-            Authenticator.LOGIN_RESOURCE);
-        if (resourceAttr == null) {
-            final String resourcePar = request.getParameter(Authenticator.LOGIN_RESOURCE);
-            if (resourcePar != null && resourcePar.length() > 0) {
-                resourceAttr = resourcePar;
-            } else if (defaultValue != null && defaultValue.length() > 0) {
-                resourceAttr = defaultValue;
-            } else {
-                resourceAttr = "/";
-            }
-            request.setAttribute(Authenticator.LOGIN_RESOURCE, resourceAttr);
-        }
-        return resourceAttr;
+    @Deprecated
+    public static String setLoginResourceAttribute(final HttpServletRequest request, final String defaultValue) {
+        return AuthUtil.setLoginResourceAttribute(request, defaultValue);
     }
 
     /**
@@ -188,10 +140,11 @@ public abstract class AbstractAuthenticationHandler extends
      * @param response The response used to send the redirect to the client.
      * @param target The target path to redirect the client to. This parameter
      *            must not be prefixed with the request's context path because
-     *            this will be added by this method. If this parameter is not
-     *            a valid target request as per the
+     *            this will be added by this method. If this parameter is not a
+     *            valid target request as per the
      *            {@link #isRedirectValid(HttpServletRequest, String)} method
-     *            the target is modified to be the root of the request's context.
+     *            the target is modified to be the root of the request's
+     *            context.
      * @param params The map of parameters to be added to the target path. This
      *            may be <code>null</code>.
      * @throws IOException If an error occurs sending the redirect request
@@ -203,53 +156,15 @@ public abstract class AbstractAuthenticationHandler extends
      *             missing.
      * @since 1.0.2 (Bundle version 1.0.4)
      * @since 1.0.4 (bundle version 1.0.8) the target is validated with the
-     *      {@link AuthUtil#isRedirectValid(HttpServletRequest, String)} method.
+     *        {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}
+     *        method.
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#sendRedirect(HttpServletRequest, HttpServletResponse, String, Map)}
      */
-    public static void sendRedirect(final HttpServletRequest request,
-            final HttpServletResponse response, final String target,
-            Map<String, String> params) throws IOException {
-        StringBuilder b = new StringBuilder();
-        b.append(request.getContextPath());
-
-        if (AuthUtil.isRedirectValid(request, target)) {
-            b.append(target);
-        } else {
-            b.append("/");
-        }
-
-        if (params == null) {
-            params = new HashMap<String, String>();
-        }
-
-        // ensure the login resource is provided with the redirect
-        if (params.get(Authenticator.LOGIN_RESOURCE) == null) {
-            String resource = request.getRequestURI();
-            if (request.getQueryString() != null) {
-                resource += "?" + request.getQueryString();
-            }
-            params.put(Authenticator.LOGIN_RESOURCE, resource);
-        }
-
-        b.append('?');
-        Iterator<Entry<String, String>> ei = params.entrySet().iterator();
-        while (ei.hasNext()) {
-            Entry<String, String> entry = ei.next();
-            if (entry.getKey() != null && entry.getValue() != null) {
-                try {
-                    b.append(entry.getKey()).append('=').append(
-                        URLEncoder.encode(entry.getValue(), "UTF-8"));
-                } catch (UnsupportedEncodingException uee) {
-                    throw new InternalError(
-                        "Unexpected UnsupportedEncodingException for UTF-8");
-                }
-
-                if (ei.hasNext()) {
-                    b.append('&');
-                }
-            }
-        }
-
-        response.sendRedirect(b.toString());
+    @Deprecated
+    public static void sendRedirect(final HttpServletRequest request, final HttpServletResponse response,
+            final String target, Map<String, String> params) throws IOException {
+        AuthUtil.sendRedirect(request, response, target, params);
     }
 
     /**
@@ -257,16 +172,14 @@ public abstract class AbstractAuthenticationHandler extends
      * valid according to the following list of requirements:
      * <ul>
      * <li>The <code>target</code> is neither <code>null</code> nor an empty
-     *   string</li>
+     * string</li>
      * <li>The <code>target</code> is not an URL which is identified by the
-     *   character sequence <code>://</code> separating the scheme from the
-     *   host</li>
+     * character sequence <code>://</code> separating the scheme from the host</li>
      * <li>If a <code>ResourceResolver</code> is available as a request
-     *   attribute the <code>target</code> must resolve to an existing resource
-     *   </li>
+     * attribute the <code>target</code> must resolve to an existing resource</li>
      * <li>If a <code>ResourceResolver</code> is <i>not</i> available as a
-     *   request attribute the <code>target</code> must be an absolute path
-     *   starting with a slash character</li>
+     * request attribute the <code>target</code> must be an absolute path
+     * starting with a slash character</li>
      * </ul>
      * <p>
      * If any of the conditions does not hold, the method returns
@@ -274,40 +187,19 @@ public abstract class AbstractAuthenticationHandler extends
      * <i>org.apache.sling.auth.core.spi.AbstractAuthenticationHandler</i>
      * logger.
      *
-     *
-     * @param request Providing the <code>ResourceResolver</code> attribute
-     *   and the context to resolve the resource from the <code>target</code>.
-     *   This may be <code>null</code> which cause the target to not be
-     *   validated with a <code>ResoureResolver</code>
+     * @param request Providing the <code>ResourceResolver</code> attribute and
+     *            the context to resolve the resource from the
+     *            <code>target</code>. This may be <code>null</code> which cause
+     *            the target to not be validated with a
+     *            <code>ResoureResolver</code>
      * @param target The redirect target to validate
-     * @return <code>true</code> if the redirect target can be considered
-     *  valid
-     *
-     * @since 1.0.4 (bundle version 1.0.8)
+     * @return <code>true</code> if the redirect target can be considered valid
+     * @since 1.0.4 (bundle version 1.0.8), use
+     *        {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}
      */
     @Deprecated
-    public static boolean isRedirectValid(final HttpServletRequest request,
-            final String target) {
+    public static boolean isRedirectValid(final HttpServletRequest request, final String target) {
         return AuthUtil.isRedirectValid(request, target);
-    }
-
-    /**
-     * Returns the name request attribute if it is a non-empty string value.
-     *
-     * @param request The request from which to retrieve the attribute
-     * @param name The name of the attribute to return
-     * @return The named request attribute or <code>null</code> if the attribute
-     *         is not set or is not a non-empty string value.
-     */
-    private static String getAttributeString(final HttpServletRequest request,
-            final String name) {
-        Object resObj = request.getAttribute(name);
-        if ((resObj instanceof String) && ((String) resObj).length() > 0) {
-            return (String) resObj;
-        }
-
-        // not set or not a non-empty string
-        return null;
     }
 
     /**
@@ -323,9 +215,12 @@ public abstract class AbstractAuthenticationHandler extends
      * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
      *         to <code>true</code>.
      * @since 1.0.2 (Bundle version 1.0.4)
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#isValidateRequest(HttpServletRequest)}
      */
+    @Deprecated
     public static boolean isValidateRequest(final HttpServletRequest request) {
-        return "true".equalsIgnoreCase(request.getParameter(PAR_J_VALIDATE));
+        return AuthUtil.isValidateRequest(request);
     }
 
     /**
@@ -333,81 +228,28 @@ public abstract class AbstractAuthenticationHandler extends
      *
      * @param response The response object
      * @since 1.0.2 (Bundle version 1.0.4)
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#sendValid(HttpServletResponse)}
      */
+    @Deprecated
     public static void sendValid(final HttpServletResponse response) {
-        try {
-            response.setStatus(HttpServletResponse.SC_OK);
-
-            // explicitly tell we have no content but set content type
-            // to prevent firefox from trying to parse the response
-            // (SLING-1841)
-            response.setContentType("text/plain");
-            response.setContentLength(0);
-
-            // prevent the client from aggressively caching the response
-            // (SLING-1841)
-            response.setHeader("Pragma", "no-cache");
-            response.setHeader("Cache-Control", "no-cache");
-            response.addHeader("Cache-Control", "no-store");
-
-            response.flushBuffer();
-        } catch (IOException ioe) {
-            // TODO: log.error("Failed to send 200/OK response", ioe);
-        }
+        AuthUtil.sendValid(response);
     }
 
     /**
-     * Sends a 403/FORBIDDEN response optionally stating the reason for
-     * this response code in the {@link #X_REASON} header. The value for
-     * the {@link #X_REASON} header is taken from
-     * {@link AuthenticationHandler#FAILURE_REASON} request attribute if
-     * set.
+     * Sends a 403/FORBIDDEN response optionally stating the reason for this
+     * response code in the {@link #X_REASON} header. The value for the
+     * {@link #X_REASON} header is taken from
+     * {@link AuthenticationHandler#FAILURE_REASON} request attribute if set.
      *
      * @param request The request object
      * @param response The response object
      * @since 1.0.2 (Bundle version 1.0.4)
+     * @deprecated since Bundle 1.0.8, use
+     *             {@link AuthUtil#sendInvalid(HttpServletRequest, HttpServletResponse)}
      */
-    public static void sendInvalid(final HttpServletRequest request,
-            final HttpServletResponse response) {
-        try {
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-
-            Object reason = request.getAttribute(AuthenticationHandler.FAILURE_REASON);
-            if (reason != null) {
-                response.setHeader(X_REASON, reason.toString());
-                response.setContentType("text/plain");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().println(reason);
-            }
-
-            response.flushBuffer();
-        } catch (IOException ioe) {
-            // TODO: log.error("Failed to send 403/Forbidden response", ioe);
-        }
+    @Deprecated
+    public static void sendInvalid(final HttpServletRequest request, final HttpServletResponse response) {
+        AuthUtil.sendInvalid(request, response);
     }
-
-	/**
-	 * Check if the request is for this authentication handler.
-	 *
-	 * @param request the current request
-	 * @return true if the referer matches this handler, or false otherwise
-	 */
-	public static boolean checkReferer(HttpServletRequest request, String loginForm) {
-		//SLING-2165: if a Referer header is supplied check if it matches the login path for this handler
-        String referer = request.getHeader("Referer");
-        if (referer != null) {
-        	String expectedPath = String.format("%s%s", request.getContextPath(), loginForm);
-        	try {
-            	URL uri = new URL(referer);
-            	if (!expectedPath.equals(uri.getPath())) {
-            		//not for this selector, so let the next one handle it.
-            		return false;
-            	}
-        	} catch (MalformedURLException e) {
-        		LoggerFactory.getLogger(AbstractAuthenticationHandler.class)
-        			.debug("Failed to parse the referer value for the login form " + loginForm, e);
-        	}
-        }
-        return true;
-	}
 }
