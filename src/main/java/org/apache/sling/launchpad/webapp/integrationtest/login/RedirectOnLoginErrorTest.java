@@ -34,7 +34,7 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
 	/** Execute a POST request and check status
      * @return the HttpMethod executed
      * @throws IOException */
-    private HttpMethod assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, 
+    private HttpMethod assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams,
     					String assertMessage, String referer) throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
@@ -42,9 +42,9 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
 
         //set the referer to indicate where we came from
         post.setRequestHeader("Referer", referer);
-        
+
         //set Accept header to trick sling into treating the request as from a browser
-        post.setRequestHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+        post.setRequestHeader("User-Agent", "Mozilla/5.0 Sling Integration Test");
 
         if(postParams!=null) {
             final NameValuePair [] nvp = {};
@@ -64,11 +64,11 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
         }
         return post;
     }
-	
+
     /**
      * Test SLING-2165.  Login Error should redirect back to the referrer
      * login page.
-     * 
+     *
      * @throws Exception
      */
     public void testRedirectToSelectorLoginFormAfterLoginError() throws Exception {
@@ -77,12 +77,12 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
         params.add(new NameValuePair("j_username", "___bogus___"));
         params.add(new NameValuePair("j_password", "not_a_real_user"));
         final String loginPageUrl = String.format("%s/system/sling/selector/login", HTTP_BASE_URL);
-		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check", 
-        		HttpServletResponse.SC_MOVED_TEMPORARILY, 
-        		params, 
+		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check",
+        		HttpServletResponse.SC_MOVED_TEMPORARILY,
+        		params,
         		null,
         		loginPageUrl);
-        
+
         final Header locationHeader = post.getResponseHeader("Location");
         String location = locationHeader.getValue();
         int queryStrStart = location.indexOf('?');
@@ -95,7 +95,7 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
     /**
      * Test SLING-2165.  Login Error should redirect back to the referrer
      * login page.
-     * 
+     *
      * @throws Exception
      */
     public void testRedirectToOpenIDLoginFormAfterLoginError() throws Exception {
@@ -103,12 +103,12 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("openid_identifier", "___bogus___"));
         final String loginPageUrl = String.format("%s/system/sling/openid/login", HTTP_BASE_URL);
-		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check", 
-        		HttpServletResponse.SC_MOVED_TEMPORARILY, 
-        		params, 
+		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check",
+        		HttpServletResponse.SC_MOVED_TEMPORARILY,
+        		params,
         		null,
         		loginPageUrl);
-        
+
         final Header locationHeader = post.getResponseHeader("Location");
         String location = locationHeader.getValue();
         int queryStrStart = location.indexOf('?');
@@ -121,7 +121,7 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
     /**
      * Test SLING-2165.  Login Error should redirect back to the referrer
      * login page.
-     * 
+     *
      * @throws Exception
      */
     public void testRedirectToLoginFormAfterLoginError() throws Exception {
@@ -130,12 +130,12 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
         params.add(new NameValuePair("j_username", "___bogus___"));
         params.add(new NameValuePair("j_password", "not_a_real_user"));
         final String loginPageUrl = String.format("%s/system/sling/form/login", HTTP_BASE_URL);
-		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check", 
-        		HttpServletResponse.SC_MOVED_TEMPORARILY, 
-        		params, 
+		PostMethod post = (PostMethod)assertPostStatus(HTTP_BASE_URL + "/j_security_check",
+        		HttpServletResponse.SC_MOVED_TEMPORARILY,
+        		params,
         		null,
         		loginPageUrl);
-        
+
         final Header locationHeader = post.getResponseHeader("Location");
         String location = locationHeader.getValue();
         int queryStrStart = location.indexOf('?');
