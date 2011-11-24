@@ -106,10 +106,10 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
     @Activate
     protected void activate(final BundleContext bundleContext, final Map<String, ?> config) {
-        final AuthHttpContext context = new AuthHttpContext();
-        context.setAuthenticationSupport(authSupport);
-
         final String davRoot = OsgiUtil.toString(config.get(PROP_DAV_ROOT), DEFAULT_DAV_ROOT);
+
+        final AuthHttpContext context = new AuthHttpContext(davRoot);
+        context.setAuthenticationSupport(authSupport);
 
         // prepare DavEx servlet config
         final Dictionary<String, String> initProps = new Hashtable<String, String>();
