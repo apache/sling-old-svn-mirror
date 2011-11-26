@@ -36,7 +36,12 @@ public class DefaultContentCreatorTest {
                 return false;
             }
 
-            @Override
+			@Override
+			public boolean isAutoCheckout() {
+				return true;
+			}
+
+			@Override
             public boolean isIgnoredImportProvider(String extension) {
                 return false;
             }
@@ -53,6 +58,8 @@ public class DefaultContentCreatorTest {
         
         contentCreator.prepareParsing(parentNode, null);
         this.mockery.checking(new Expectations() {{
+        	allowing(parentNode).isNodeType("mix:versionable"); will(returnValue(Boolean.FALSE));
+        	allowing(parentNode).getParent(); will(returnValue(null));
             oneOf (parentNode).hasProperty("foo"); will(returnValue(Boolean.TRUE));
             oneOf (parentNode).setProperty(with(equal("foo")), with(equal("bar")));
         }});
@@ -69,6 +76,11 @@ public class DefaultContentCreatorTest {
             public boolean isCheckin() {
                 return false;
             }
+
+            @Override
+			public boolean isAutoCheckout() {
+				return true;
+			}
 
             @Override
             public boolean isIgnoredImportProvider(String extension) {
