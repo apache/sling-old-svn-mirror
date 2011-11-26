@@ -3,5 +3,6 @@
 	"jcr:mixinTypes": [
 		"mix:referenceable",
 		"mix:versionable"
-	]
+	],
+	"abc": "def"
 }

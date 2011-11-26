@@ -32,6 +32,7 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
@@ -281,6 +282,81 @@ public class PostServletImportTest extends HttpTestBase {
 		assertTrue(jsonObj2.getBoolean("jcr:isCheckedOut"));
     }
 
+    /**
+     * SLING-2108 Test import operation which auto checks out versionable nodes.
+     */
+    public void testImportAutoCheckoutNodes() throws IOException, JSONException {
+        final String testPath = TEST_BASE_PATH;
+        Map<String, String> props = new HashMap<String, String>();
+        String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
+        urlsToDelete.add(testNode);
+
+        //1. first create some content to update.
+        props.clear();
+        props.put(SlingPostConstants.RP_OPERATION,
+        		SlingPostConstants.OPERATION_IMPORT);
+
+        String testNodeName = "testNode_" + String.valueOf(random.nextInt());
+        props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
+        testFile = getTestFile(getClass().getResourceAsStream("/integration-test/servlets/post/testimport3.json"));
+        props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
+        props.put(SlingPostConstants.RP_CHECKIN, "true");
+        String importedNodeUrl = testClient.createNode(HTTP_BASE_URL + testPath, new NameValuePairList(props), null, true,
+        		testFile, SlingPostConstants.RP_CONTENT_FILE, null);
+
+        // assert content at new location
+        String content = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+		JSONObject jsonObj = new JSONObject(content);
+		assertNotNull(jsonObj);
+
+		//assert that the versionable node is checked in.
+		assertFalse(jsonObj.getBoolean("jcr:isCheckedOut"));
+
+
+		//2. try an update with the :autoCheckout value set to false
+        List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+        postParams.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+        						SlingPostConstants.OPERATION_IMPORT));
+        postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT_TYPE, "json"));
+        postParams.add(new NameValuePair(SlingPostConstants.RP_CHECKIN, "true"));
+        postParams.add(new NameValuePair(SlingPostConstants.RP_REPLACE_PROPERTIES, "true"));
+        postParams.add(new NameValuePair(SlingPostConstants.RP_AUTO_CHECKOUT, "false"));
+        postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT, "{ \"abc\": \"def2\" }"));
+        assertPostStatus(importedNodeUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, "Expected error from VersionException");
+
+		//3. now try an update with the :autoCheckout value set to true
+        postParams.clear();
+        postParams.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+				SlingPostConstants.OPERATION_IMPORT));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT_TYPE, "json"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_CHECKIN, "true"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_REPLACE_PROPERTIES, "true"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_AUTO_CHECKOUT, "true"));
+		postParams.add(new NameValuePair(SlingPostConstants.RP_CONTENT, "{ \"abc\": \"def2\" }"));
+		postParams.add(new NameValuePair(":http-equiv-accept", "application/json,*/*;q=0.9"));
+        HttpMethod post = assertPostStatus(importedNodeUrl, HttpServletResponse.SC_CREATED, postParams, "Expected 201 status");
+        
+        String responseBodyAsString = post.getResponseBodyAsString();
+		JSONObject responseJSON = new JSONObject(responseBodyAsString);
+        JSONArray changes = responseJSON.getJSONArray("changes");
+        JSONObject checkoutChange = changes.getJSONObject(0);
+        assertEquals("checkout", checkoutChange.getString("type"));
+		
+        // assert content at new location
+        String content2 = getContent(importedNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+		JSONObject jsonObj2 = new JSONObject(content2);
+		assertNotNull(jsonObj2);
+		
+		//make sure it was really updated
+		assertEquals("def2", jsonObj2.getString("abc"));
+		
+		//assert that the versionable node is checked back in.
+		assertFalse(jsonObj.getBoolean("jcr:isCheckedOut"));		
+    }
+    
     /**
      * Test import operation for a posted json file
      */

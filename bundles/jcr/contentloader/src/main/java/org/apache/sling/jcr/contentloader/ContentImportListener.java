@@ -64,4 +64,17 @@ public interface ContentImportListener {
      */
 	void onReorder(String orderedPath, String beforeSibbling);
 	
+    /**
+     * A versionable Node has been checked in. The source path provides the path of the 
+     * newly checked in Node.
+     * @since 2.1.4
+     */
+	void onCheckin(String srcPath);
+
+	/**
+     * A versionable Node has been checked out. The source path provides the path of the 
+     * newly checked out Node.
+     * @since 2.1.4
+     */
+	void onCheckout(String srcPath);
 }

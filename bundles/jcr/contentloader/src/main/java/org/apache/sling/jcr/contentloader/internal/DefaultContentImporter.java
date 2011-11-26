@@ -117,6 +117,9 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         // finally checkin versionable nodes
         for (final Node versionable : contentCreator.getVersionables()) {
             versionable.checkin();
+            if ( importListener != null ) {
+            	importListener.onCheckin(versionable.getPath());
+            }
         }
     }
 

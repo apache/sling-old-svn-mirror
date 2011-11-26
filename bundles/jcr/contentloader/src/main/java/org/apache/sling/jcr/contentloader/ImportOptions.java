@@ -46,6 +46,16 @@ public abstract class ImportOptions {
 	public abstract boolean isCheckin();
 
 	/**
+	 * Specifies whether versionable nodes is automatically checked out when
+	 * necessary.
+	 * @return true to checkout the versionable nodes, false otherwise
+     * @since 2.1.4
+	 */
+	public boolean isAutoCheckout() {
+		return true;
+	}
+
+	/**
 	 * Check if the import provider for the given file extension should
 	 * be ignored.
 	 * 

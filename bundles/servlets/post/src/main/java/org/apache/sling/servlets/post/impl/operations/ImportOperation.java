@@ -113,6 +113,7 @@ public class ImportOperation extends AbstractCreateOperation {
         final boolean replace = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE));
         final boolean replaceProperties = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_REPLACE_PROPERTIES));
         final boolean checkin = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_CHECKIN));
+        final boolean autoCheckout = "true".equalsIgnoreCase(getRequestParamAsString(request, SlingPostConstants.RP_AUTO_CHECKOUT));
 
         String basePath = getItemPath(request);
         basePath = removeAndValidateWorkspace(basePath, request.getResourceResolver().adaptTo(Session.class));
@@ -176,7 +177,12 @@ public class ImportOperation extends AbstractCreateOperation {
                                 return checkin;
                             }
 
-                            @Override
+							@Override
+							public boolean isAutoCheckout() {
+								return autoCheckout;
+							}
+
+							@Override
                             public boolean isIgnoredImportProvider(
                                     String extension) {
                                 // this probably isn't important in this context.
@@ -219,7 +225,14 @@ public class ImportOperation extends AbstractCreateOperation {
                             }
 
                             public void onCopy(String srcPath, String destPath) {
-                                changes.add(Modification.onMoved(srcPath, destPath));
+                                changes.add(Modification.onCopied(srcPath, destPath));
+                            }
+
+                            public void onCheckin(String srcPath) {
+                                changes.add(Modification.onCheckin(srcPath));
+                            }
+                            public void onCheckout(String srcPath) {
+                                changes.add(Modification.onCheckout(srcPath));
                             }
                         });
             }

@@ -50,6 +50,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import javax.jcr.Item;
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -251,6 +252,7 @@ public class DefaultContentCreator implements ContentCreator {
         if ( !isParentImport || this.parentNodeStack.size() > 1 ) {
             // if node already exists but should be overwritten, delete it
             if (!this.ignoreOverwriteFlag && this.configuration.isOverwrite() && parentNode.hasNode(name)) {
+            	checkoutIfNecessary(parentNode);
                 parentNode.getNode(name).remove();
             }
 
@@ -263,6 +265,7 @@ public class DefaultContentCreator implements ContentCreator {
             } else if (primaryNodeType == null) {
 
                 // no explicit node type, use repository default
+            	checkoutIfNecessary(parentNode);
                 node = parentNode.addNode(name);
                 addNodeToCreatedList(node);
                 if ( this.importListener != null ) {
@@ -271,6 +274,7 @@ public class DefaultContentCreator implements ContentCreator {
             } else {
 
                 // explicit primary node type
+            	checkoutIfNecessary(parentNode);
                 node = parentNode.addNode(name, primaryNodeType);
                 addNodeToCreatedList(node);
                 if ( this.importListener != null ) {
@@ -319,6 +323,7 @@ public class DefaultContentCreator implements ContentCreator {
             String propPath = node.getPath() + "/" + name;
             String uuid = getUUID(node.getSession(), propPath, getAbsPath(node, value));
             if (uuid != null) {
+                checkoutIfNecessary(node);
                 node.setProperty(name, uuid, propertyType);
                 
                 if ( this.importListener != null ) {
@@ -337,6 +342,7 @@ public class DefaultContentCreator implements ContentCreator {
                 }
             }
         } else if ( propertyType == PropertyType.DATE ) {
+            checkoutIfNecessary(node);
             try {
               node.setProperty(name, parseDateString(value) );
             }
@@ -348,6 +354,7 @@ public class DefaultContentCreator implements ContentCreator {
             	this.importListener.onCreate(node.getProperty(name).getPath());
             }
         } else {
+            checkoutIfNecessary(node);
             if (propertyType == PropertyType.UNDEFINED) {
                 node.setProperty(name, value);
             } else {
@@ -383,6 +390,7 @@ public class DefaultContentCreator implements ContentCreator {
                 if (uuids[i] == null) hasAll = false;
             }
 
+            checkoutIfNecessary(node);
             node.setProperty(name, uuids, propertyType);
             if ( this.importListener != null ) {
             	this.importListener.onCreate(node.getProperty(name).getPath());
@@ -392,6 +400,7 @@ public class DefaultContentCreator implements ContentCreator {
                 delayedMultipleReferences.put(propPath, uuidOrPaths);
             }
         } else if ( propertyType == PropertyType.DATE ) {
+            checkoutIfNecessary(node);
             try {
               // This modification is to remove the colon in the JSON Timezone
               ValueFactory valueFactory = node.getSession().getValueFactory();
@@ -412,6 +421,7 @@ public class DefaultContentCreator implements ContentCreator {
             	this.importListener.onCreate(node.getProperty(name).getPath());
             }
         } else {
+            checkoutIfNecessary(node);
             if (propertyType == PropertyType.UNDEFINED) {
                 node.setProperty(name, values);
             } else {
@@ -536,6 +546,7 @@ public class DefaultContentCreator implements ContentCreator {
             String name = getName(property);
             Node parentNode = getParentNode(session, property);
             if (parentNode != null) {
+                checkoutIfNecessary(parentNode);
                 if (parentNode.hasProperty(name) && parentNode.getProperty(name).getDefinition().isMultiple()) {
                     boolean hasAll = true;
                     String[] uuidOrPaths = delayedMultipleReferences.get(property);
@@ -640,6 +651,7 @@ public class DefaultContentCreator implements ContentCreator {
         }
         if ( value == null ) {
             if ( node.hasProperty(name) ) {
+            	checkoutIfNecessary(node);
             	String propPath = node.getProperty(name).getPath();
                 node.getProperty(name).remove();
                 if ( this.importListener != null ) {
@@ -647,6 +659,7 @@ public class DefaultContentCreator implements ContentCreator {
                 }
             }
         } else {
+        	checkoutIfNecessary(node);
             final Value jcrValue = this.createValue(node.getSession().getValueFactory(), value);
             node.setProperty(name, jcrValue);
             if ( this.importListener != null ) {
@@ -665,6 +678,7 @@ public class DefaultContentCreator implements ContentCreator {
         }
         if ( values == null || values.length == 0 ) {
             if ( node.hasProperty(name) ) {
+            	checkoutIfNecessary(node);
             	String propPath = node.getProperty(name).getPath();
                 node.getProperty(name).remove();
                 if ( this.importListener != null ) {
@@ -672,6 +686,7 @@ public class DefaultContentCreator implements ContentCreator {
                 }
             }
         } else {
+        	checkoutIfNecessary(node);
             final Value[] jcrValues = new Value[values.length];
             for(int i = 0; i < values.length; i++) {
                 jcrValues[i] = this.createValue(node.getSession().getValueFactory(), values[i]);
@@ -752,6 +767,7 @@ public class DefaultContentCreator implements ContentCreator {
                 if ( newNodeType == null ) {
                     return false;
                 }
+            	checkoutIfNecessary(node);
                 final Node n = node.addNode(token, newNodeType);
                 addNodeToCreatedList(n);
                 if ( this.importListener != null ) {
@@ -925,4 +941,46 @@ public class DefaultContentCreator implements ContentCreator {
         }
         return res.toString();
     }
+    
+
+    /**
+     * Find an ancestor that is versionable
+     */
+    protected Node findVersionableAncestor(Node node) throws RepositoryException {
+    	if (node == null) {
+    		return null;
+    	} else  if (isVersionable(node)) {
+            return node;
+        } else {
+            try {
+                node = node.getParent();
+                return findVersionableAncestor(node);
+            } catch (ItemNotFoundException e) {
+                // top-level
+                return null;
+            }
+        }
+    }
+
+    protected boolean isVersionable(Node node) throws RepositoryException {
+        return node.isNodeType("mix:versionable");
+    }
+
+    /**
+     * Checkout the node if needed
+     */
+    protected void checkoutIfNecessary(Node node) throws RepositoryException {
+        if (this.configuration.isAutoCheckout()) {
+            Node versionableNode = findVersionableAncestor(node);
+            if (versionableNode != null) {
+                if (!versionableNode.isCheckedOut()) {
+                    versionableNode.checkout();
+                    if ( this.importListener != null ) {
+                    	this.importListener.onCheckout(versionableNode.getPath());
+                    }
+                }
+            }
+        }
+    }
+    
 }

@@ -68,6 +68,12 @@ public class PathEntry extends ImportOptions {
     public static final String CHECKIN_DIRECTIVE = "checkin";
 
     /**
+     * The autoCheckout directive specifying whether versionable nodes should be
+     * checked out when necessary
+     */
+    public static final String AUTOCHECKOUT_DIRECTIVE = "autoCheckout";
+
+    /**
      * The ignore import providers directive specifying whether the available {@link ImportProvider}s
      * should be used during content loading. This is a string value that defaults to the empty
      * string..
@@ -90,6 +96,9 @@ public class PathEntry extends ImportOptions {
     /** Should versionable nodes be checked in? */
     private final boolean checkin;
 
+    /** Should versionable nodes be auto checked out when necessary? */
+    private final boolean autoCheckout;
+    
     /** Which import providers should be ignored? @since 2.0.4 */
     private final List<String> ignoreImportProviders;
 
@@ -172,6 +181,14 @@ public class PathEntry extends ImportOptions {
             this.checkin = false;
         }
 
+        // autoCheckout directive
+        final String autoCheckoutValue = entry.getDirectiveValue(AUTOCHECKOUT_DIRECTIVE);
+        if (autoCheckoutValue != null) {
+            this.autoCheckout = Boolean.valueOf(autoCheckoutValue);
+        } else {
+            this.autoCheckout = true;
+        }
+
         // expand directive
         this.ignoreImportProviders = new ArrayList<String>();
         final String expandValue = entry.getDirectiveValue(IGNORE_IMPORT_PROVIDERS_DIRECTIVE);
@@ -224,8 +241,16 @@ public class PathEntry extends ImportOptions {
     public boolean isCheckin() {
         return this.checkin;
     }
-
+    
     /* (non-Javadoc)
+	 * @see org.apache.sling.jcr.contentloader.ImportOptions#isAutoCheckout()
+	 */
+	@Override
+	public boolean isAutoCheckout() {
+		return this.autoCheckout;
+	}
+
+	/* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.internal.ImportOptions#isIgnoredImportProvider(java.lang.String)
 	 */
     public boolean isIgnoredImportProvider(String extension) {
