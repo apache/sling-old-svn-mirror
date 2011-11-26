@@ -466,6 +466,14 @@ public interface SlingPostConstants {
     public static final String RP_CHECKIN = RP_PREFIX + "checkin";
 
     /**
+     * Name of the request parameter indicating whether versionable nodes should
+     * be checked in during an {@link SlingPostConstants#OPERATION_IMPORT} operation.
+     * 
+     * @since 2.1.2
+     */
+    public static final String RP_AUTO_CHECKOUT = RP_PREFIX + "autoCheckout";
+
+    /**
      * Name of the request attribute (not parameter) indicating that a post operation
      * should not invoke session.save() upon completion.
      * 
