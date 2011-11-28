@@ -175,5 +175,12 @@
             <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.50.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
