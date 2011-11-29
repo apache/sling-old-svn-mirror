@@ -47,6 +47,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.engine.impl.helper.NullResourceBundle;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
+import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
 import org.osgi.service.http.HttpContext;
@@ -95,7 +96,8 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     public Resource getResource() {
-        return getRequestData().getContentData().getResource();
+        final ContentData cd = getRequestData().getContentData();
+        return (cd == null) ? null : cd.getResource();
     }
 
     public ResourceResolver getResourceResolver() {
@@ -206,7 +208,8 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
      * @see org.apache.sling.api.SlingHttpServletRequest#getRequestPathInfo()
      */
     public RequestPathInfo getRequestPathInfo() {
-        return getRequestData().getContentData().getRequestPathInfo();
+        final ContentData cd = getRequestData().getContentData();
+        return (cd == null) ? null : cd.getRequestPathInfo();
     }
 
     /**
