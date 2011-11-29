@@ -104,6 +104,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
                 } else {
                     this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
                     ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.getCreator()));
+                    ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.getCreator()));
                 }
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
