@@ -24,6 +24,12 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.servlet.Servlet;
+
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -77,16 +83,22 @@ import org.slf4j.LoggerFactory;
  * </code>
  *
  * <h4>Notes</h4>
- *
- *
- * @scr.component immediate="true" label="%changeUserPassword.post.operation.name"
- *                description="%changeUserPassword.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.ChangeUserPassword"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="changePassword"
  */
+@Component (immediate=true, metatype=true,
+		label="%changeUserPassword.post.operation.name",
+		description="%changeUserPassword.post.operation.description")
+@Service (value={
+	Servlet.class,
+	ChangeUserPassword.class
+})		
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes",
+			value="sling/user"),
+	@Property (name="sling.servlet.methods",
+			value="POST"),
+	@Property (name="sling.servlet.selectors",
+			value="changePassword")
+})
 public class ChangeUserPasswordServlet extends AbstractUserPostServlet implements ChangeUserPassword {
     private static final long serialVersionUID = 1923614318474654502L;
 
@@ -96,21 +108,20 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
-     * The name of the configuration parameter providing the 
-     * name of the group whose members are allowed to reset the password
-     * of a user without the 'oldPwd' value.
-     *
-     * @scr.property valueRef="DEFAULT_USER_ADMIN_GROUP_NAME"
-     */
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
-
-    /**
      * The default 'User administrator' group name
      *
      * @see #PAR_USER_ADMIN_GROUP_NAME
      */
     private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
  
+    /**
+     * The name of the configuration parameter providing the 
+     * name of the group whose members are allowed to reset the password
+     * of a user without the 'oldPwd' value.
+     */
+    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
+    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+
     private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
     
     // ---------- SCR integration ---------------------------------------------

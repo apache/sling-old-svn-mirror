@@ -25,6 +25,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -40,15 +44,19 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Resource Provider implementation for jackrabbit UserManager resources.
- *
- * @scr.component immediate="true" label="%authorizable.resourceprovider.name"
- *                description="%authorizable.resourceprovider.description"
- * @scr.property name="service.description"
- *               value="Resource provider implementation for UserManager resources"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="provider.roots" value="/system/userManager/"
- * @scr.service interface="org.apache.sling.api.resource.ResourceProvider"
  */
+@Component (immediate=true, metatype=true,
+		label="%authorizable.resourceprovider.name",
+		description="%authorizable.resourceprovider.description")
+@Service (value=ResourceProvider.class)
+@Properties ({
+	@Property (name="service.description", 
+			value="Resource provider implementation for UserManager resources"),
+	@Property (name="service.vendor",
+			value="The Apache Software Foundation"),
+	@Property (name="provider.roots",
+			value="/system/userManager/")			
+})
 public class AuthorizableResourceProvider implements ResourceProvider {
 
     /**
