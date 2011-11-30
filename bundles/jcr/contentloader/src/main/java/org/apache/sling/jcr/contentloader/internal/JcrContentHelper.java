@@ -31,13 +31,4 @@ public interface JcrContentHelper {
 	 */
 	String getMimeType(String name);
 
-	/**
-	 * Digest the given password using the configured digest algorithm
-	 * 
-	 * @param pwd the password to digest
-	 * @return digested password
-	 * @throws IllegalArgumentException
-	 */
-    String digestPassword(String pwd) throws IllegalArgumentException;
-
 }

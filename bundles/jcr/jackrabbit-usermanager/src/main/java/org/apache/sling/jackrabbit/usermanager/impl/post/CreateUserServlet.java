@@ -293,7 +293,7 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
                     "A principal already exists with the requested name: "
                         + name);
             } else {
-                user = userManager.createUser(name, digestPassword(password));
+                user = userManager.createUser(name, password);
                 String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
                     + user.getID();
                 
