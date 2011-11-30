@@ -28,7 +28,12 @@ import java.util.Map.Entry;
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceNotFoundException;
@@ -77,15 +82,23 @@ import org.apache.sling.servlets.post.Modification;
  * the UserManager. This can be a group or a user, but if its a group, denied permissions
  * will not be added to the group. The group will only contain granted privileges.
  * </p>
- *
- * @scr.component immediate="true" label="%modifyAce.post.operation.name"
- *                description="%modifyAce.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.ModifyAce"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="modifyAce"
  */
+@Component (immediate=true,
+		label="%modifyAce.post.operation.name",
+		description="%modifyAce.post.operation.description"
+)
+@Service (value={
+		Servlet.class,
+		ModifyAce.class
+})
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes", 
+			value="sling/servlet/default"),
+	@Property (name="sling.servlet.methods", 
+			value="POST"),
+	@Property (name="sling.servlet.selectors", 
+			value="modifyAce")
+})
 public class ModifyAceServlet extends AbstractAccessPostServlet implements ModifyAce {
 	private static final long serialVersionUID = -9182485466670280437L;
 
