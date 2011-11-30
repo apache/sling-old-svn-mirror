@@ -28,7 +28,12 @@ import javax.jcr.Session;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
@@ -67,15 +72,21 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * <dt>500</dt>
  * <dd>Failure. HTML explains the failure.</dd>
  * </dl>
- *
- * @scr.component immediate="true" label="%deleteAces.post.operation.name"
- *                description="%deleteAces.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.DeleteAces"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="deleteAce"
  */
+@Component (immediate=true, 
+		label="%deleteAces.post.operation.name", 
+		description="%deleteAces.post.operation.description")
+@Service (value={
+		Servlet.class,
+		DeleteAces.class})
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes", 
+			value="sling/servlet/default"),
+	@Property (name="sling.servlet.methods", 
+			value="POST"),
+	@Property (name="sling.servlet.selectors", 
+			value="deleteAce")
+})
 public class DeleteAcesServlet extends AbstractAccessPostServlet implements DeleteAces {
 	private static final long serialVersionUID = 3784866802938282971L;
 

@@ -22,7 +22,12 @@ import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
@@ -92,16 +97,25 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetAcl;
  * }
  * </pre>
  * </code>
- *
- * @scr.component immediate="true" label="%getAcl.get.operation.name"
- *                description="%getAcl.get.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jcr.jackrabbit.accessmanager.GetAcl"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/servlet/default"
- * @scr.property name="sling.servlet.methods" value="GET"
- * @scr.property name="sling.servlet.selectors" value="acl"
- * @scr.property name="sling.servlet.extensions" value="json"
  */
+@Component (immediate=true,
+		label="%getAcl.get.operation.name",
+		description="%getAcl.get.operation.description"
+)
+@Service (value={
+		Servlet.class,
+		GetAcl.class
+})
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes", 
+			value="sling/servlet/default"),
+	@Property (name="sling.servlet.methods", 
+			value="GET"),
+	@Property (name="sling.servlet.selectors", 
+			value="acl"),
+	@Property (name="sling.servlet.extensions", 
+			value="json"),
+})
 public class GetAclServlet extends AbstractGetAclServlet implements GetAcl {
 	private static final long serialVersionUID = 3391376559396223185L;
 
