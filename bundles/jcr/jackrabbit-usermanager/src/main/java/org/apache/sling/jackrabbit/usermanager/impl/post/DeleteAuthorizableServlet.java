@@ -22,8 +22,13 @@ import java.util.NoSuchElementException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -74,19 +79,28 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * <code>
  * curl -Fgo=1 http://localhost:8080/system/userManager/user/ieb.delete.html
  * </code>
- *
- *
- * @scr.component immediate="true" label="%deleteAuthorizable.post.operation.name"
- *                description="%deleteAuthorizable.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteUser"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteGroup"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.DeleteAuthorizables"
- * @scr.property name="sling.servlet.resourceTypes" values.0="sling/user"
- *               values.1="sling/group" values.2="sling/userManager"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="delete"
  */
+@Component (immediate=true, metatype=true,
+		label="%deleteAuthorizable.post.operation.name",
+		description="%deleteAuthorizable.post.operation.description")
+@Service (value={
+	Servlet.class,
+	DeleteUser.class,
+	DeleteGroup.class,
+	DeleteAuthorizables.class
+})		
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes",
+			value={
+					"sling/user",
+					"sling/group",
+					"sling/userManager"
+				}),
+	@Property (name="sling.servlet.methods",
+			value="POST"),
+	@Property (name="sling.servlet.selectors",
+			value="delete")
+})
 public class DeleteAuthorizableServlet extends AbstractPostServlet
         implements DeleteUser, DeleteGroup, DeleteAuthorizables {
     private static final long serialVersionUID = 5874621724096106496L;

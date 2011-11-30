@@ -21,7 +21,13 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -75,20 +81,27 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/group/testGroup.update.html
  * </code>
- *
- * @scr.component immediate="true" label="%updateGroup.post.operation.name"
- *                description="%updateGroup.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.UpdateGroup"
- * @scr.property name="sling.servlet.resourceTypes" values="sling/group"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="update"
  */
+@Component (immediate=true, metatype=true, 
+		label="%updateGroup.post.operation.name",
+		description="%updateGroup.post.operation.description")
+@Service (value={
+	Servlet.class,
+	UpdateGroup.class
+})		
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes",
+			value="sling/group"),
+	@Property (name="sling.servlet.methods",
+			value="POST"),
+	@Property (name="sling.servlet.selectors",
+			value="update")
+})
 public class UpdateGroupServlet extends AbstractGroupPostServlet 
         implements UpdateGroup {
     private static final long serialVersionUID = -8292054361992488797L;
 
-    /** @scr.reference */
+    @Reference
     private JcrResourceResolverFactory resourceResolverFactory;
     
     /*

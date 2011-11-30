@@ -20,12 +20,14 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
 
+import org.apache.felix.scr.annotations.Component;
 import org.apache.jackrabbit.util.Text;
 import org.osgi.service.component.ComponentContext;
 
 /**
  * Base class for servlets manipulating users
  */
+@Component (componentAbstract=true)
 public abstract class AbstractUserPostServlet extends
         AbstractAuthorizablePostServlet {
     private static final long serialVersionUID = -8401210711297654453L;

@@ -22,7 +22,13 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -30,13 +36,13 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.servlets.HtmlResponse;
-import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.jackrabbit.usermanager.CreateGroup;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
 /**
  * <p>
@@ -75,19 +81,26 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  * </code>
  * 
  * <h4>Notes</h4>
- * 
- * @scr.component immediate="true" label="%createGroup.post.operation.name"
- *                description="%createGroup.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.CreateGroup"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/groups"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="create"
  */
+@Component (immediate=true, metatype=true,
+		label="%createGroup.post.operation.name",
+		description="%createGroup.post.operation.description")
+@Service (value={
+	Servlet.class,
+	CreateGroup.class
+})		
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes",
+			value="sling/groups"),
+	@Property (name="sling.servlet.methods",
+			value="POST"),
+	@Property (name="sling.servlet.selectors",
+			value="create")
+})
 public class CreateGroupServlet extends AbstractGroupPostServlet implements CreateGroup {
     private static final long serialVersionUID = -1084915263933901466L;
 
-    /** @scr.reference */
+    @Reference
     private JcrResourceResolverFactory resourceResolverFactory;
     
     /*

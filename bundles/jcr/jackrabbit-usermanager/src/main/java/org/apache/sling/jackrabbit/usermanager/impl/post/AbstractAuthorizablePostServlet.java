@@ -33,6 +33,8 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.SlingIOException;
 import org.apache.sling.api.request.RequestParameter;
@@ -47,16 +49,19 @@ import org.osgi.service.component.ComponentContext;
 /**
  * Base class for all the POST servlets for the UserManager operations
  */
+@Component (componentAbstract=true)
 public abstract class AbstractAuthorizablePostServlet extends
         AbstractPostServlet {
     private static final long serialVersionUID = -5918670409789895333L;
 
-    /**
-     * @scr.property values.0="EEE MMM dd yyyy HH:mm:ss 'GMT'Z"
-     *               values.1="yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-     *               values.2="yyyy-MM-dd'T'HH:mm:ss" values.3="yyyy-MM-dd"
-     *               values.4="dd.MM.yyyy HH:mm:ss" values.5="dd.MM.yyyy"
-     */
+    @Property (value={
+    		"EEE MMM dd yyyy HH:mm:ss 'GMT'Z",
+    		"yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+    		"yyyy-MM-dd'T'HH:mm:ss",
+    		"yyyy-MM-dd",
+    		"dd.MM.yyyy HH:mm:ss",
+    		"dd.MM.yyyy"
+    })
     private static final String PROP_DATE_FORMAT = "servlet.post.dateFormats";
 
     private DateParser dateParser;

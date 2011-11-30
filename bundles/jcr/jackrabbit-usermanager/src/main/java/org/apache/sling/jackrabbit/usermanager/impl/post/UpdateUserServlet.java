@@ -21,7 +21,12 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -72,17 +77,22 @@ import org.apache.sling.servlets.post.impl.helper.RequestProperty;
  * <code>
  * curl -Fprop1=value2 -Fproperty1=value1 http://localhost:8080/system/userManager/user/ieb.update.html
  * </code>
- * 
- *
- *
- * @scr.component immediate="true" label="%updateUser.post.operation.name"
- *                description="%updateUser.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.UpdateUser"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/user"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="update"
  */
+@Component (immediate=true, metatype=true,
+		label="%updateUser.post.operation.name",
+		description="%updateUser.post.operation.description")
+@Service (value={
+	Servlet.class,
+	UpdateUser.class
+})		
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes",
+			value="sling/user"),
+	@Property (name="sling.servlet.methods",
+			value="POST"),
+	@Property (name="sling.servlet.selectors",
+			value="update")
+})
 public class UpdateUserServlet extends AbstractUserPostServlet 
         implements UpdateUser {
     private static final long serialVersionUID = 5874621724096106496L;

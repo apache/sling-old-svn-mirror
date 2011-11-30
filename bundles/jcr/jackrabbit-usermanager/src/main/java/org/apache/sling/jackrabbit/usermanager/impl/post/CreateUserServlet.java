@@ -22,7 +22,13 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -30,13 +36,13 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.commons.osgi.OsgiUtil;
-import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.apache.sling.jackrabbit.usermanager.CreateUser;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,16 +85,22 @@ import org.slf4j.LoggerFactory;
  * <code>
  * curl -F:name=ieb -Fpwd=password -FpwdConfirm=password -Fproperty1=value1 http://localhost:8080/system/userManager/user.create.html
  * </code>
- *
- *
- * @scr.component immediate="true" label="%createUser.post.operation.name"
- *                description="%createUser.post.operation.description"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.service interface="org.apache.sling.jackrabbit.usermanager.CreateUser"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/users"
- * @scr.property name="sling.servlet.methods" value="POST"
- * @scr.property name="sling.servlet.selectors" value="create"
  */
+@Component (immediate=true, metatype=true, inherit=true,
+		label="%createUser.post.operation.name",
+		description="%createUser.post.operation.description")
+@Service(value={
+		Servlet.class,
+		CreateUser.class
+})		
+@Properties ({
+	@Property (name="sling.servlet.resourceTypes",
+			value="sling/users"),
+	@Property (name="sling.servlet.methods",
+			value="POST"),
+	@Property (name="sling.servlet.selectors",
+			value="create")
+})
 public class CreateUserServlet extends AbstractUserPostServlet implements CreateUser {
     private static final long serialVersionUID = 6871481922737658675L;
 
@@ -97,24 +109,14 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
      */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /**
-     * @scr.property label="%self.registration.enabled.name"
-     *               description="%self.registration.enabled.description"
-     *               valueRef="DEFAULT_SELF_REGISTRATION_ENABLED"
-     */
+    private static final boolean DEFAULT_SELF_REGISTRATION_ENABLED = false;
+
+    @Property (label="%self.registration.enabled.name",
+    		description="%self.registration.enabled.description",
+    		boolValue=DEFAULT_SELF_REGISTRATION_ENABLED)
     private static final String PROP_SELF_REGISTRATION_ENABLED = "self.registration.enabled";
 
-    private static final Boolean DEFAULT_SELF_REGISTRATION_ENABLED = Boolean.FALSE;
-
     private Boolean selfRegistrationEnabled = DEFAULT_SELF_REGISTRATION_ENABLED;
-
-    /**
-     * The name of the configuration parameter providing the 
-     * 'User administrator' group name.
-     *
-     * @scr.property valueRef="DEFAULT_USER_ADMIN_GROUP_NAME"
-     */
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
     /**
      * The default 'User administrator' group name
@@ -123,25 +125,26 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
      */
     private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
  
+    /**
+     * The name of the configuration parameter providing the 
+     * 'User administrator' group name.
+     */
+    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
+    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+
     private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
     
     /**
      * The JCR Repository we access to resolve resources
-     *
-     * @scr.reference
      */
+    @Reference
     private SlingRepository repository;
-
-    /** Returns the JCR repository used by this service. */
-    protected SlingRepository getRepository() {
-        return repository;
-    }
 
     /**
      * Returns an administrative session to the default workspace.
      */
     private Session getSession() throws RepositoryException {
-        return getRepository().loginAdministrative(null);
+        return repository.loginAdministrative(null);
     }
 
     /**

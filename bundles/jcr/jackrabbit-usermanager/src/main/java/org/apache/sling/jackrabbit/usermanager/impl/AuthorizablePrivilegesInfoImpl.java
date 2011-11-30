@@ -25,6 +25,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
@@ -59,25 +63,19 @@ import org.slf4j.LoggerFactory;
  * <li>group membership can only be edited by members of the 'Group administrator'
  * and the 'User administrator' group.</li>
  * </ul>
- * 
- * @scr.component immediate="true" metatype="no"
- * @scr.service
- *
- * @scr.property name="service.description" value="User/Group Privileges Information"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
+@Component (immediate=true, metatype=true)
+@Service (value=AuthorizablePrivilegesInfo.class)
+@Properties ({
+	@Property (name="service.description",
+			value="User/Group Privileges Information"),
+	@Property (name="service.vendor",
+			value="The Apache Software Foundation")
+})
 public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInfo {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    /**
-     * The name of the configuration parameter providing the 
-     * 'User administrator' group name.
-     *
-     * @scr.property valueRef="DEFAULT_USER_ADMIN_GROUP_NAME"
-     */
-    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
 
     /**
      * The default 'User administrator' group name
@@ -86,15 +84,14 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
      */
     private static final String DEFAULT_USER_ADMIN_GROUP_NAME = "UserAdmin";
  
-    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
-
     /**
      * The name of the configuration parameter providing the 
-     * 'Group administrator' group name.
-     *
-     * @scr.property valueRef="DEFAULT_GROUP_ADMIN_GROUP_NAME"
+     * 'User administrator' group name.
      */
-    private static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
+    @Property (value=DEFAULT_USER_ADMIN_GROUP_NAME)
+    private static final String PAR_USER_ADMIN_GROUP_NAME = "user.admin.group.name";
+
+    private String userAdminGroupName = DEFAULT_USER_ADMIN_GROUP_NAME;
 
     /**
      * The default 'User administrator' group name
@@ -103,6 +100,13 @@ public class AuthorizablePrivilegesInfoImpl implements AuthorizablePrivilegesInf
      */
     private static final String DEFAULT_GROUP_ADMIN_GROUP_NAME = "GroupAdmin";
  
+    /**
+     * The name of the configuration parameter providing the 
+     * 'Group administrator' group name.
+     */
+    @Property (value=DEFAULT_GROUP_ADMIN_GROUP_NAME)
+    private static final String PAR_GROUP_ADMIN_GROUP_NAME = "group.admin.group.name";
+
     private String groupAdminGroupName = DEFAULT_GROUP_ADMIN_GROUP_NAME;
     
     
