@@ -22,10 +22,7 @@ import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 
 import javax.jcr.InvalidSerializedDataException;
@@ -37,7 +34,6 @@ import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,17 +63,6 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
      * @scr.reference
      */
     private MimeTypeService mimeTypeService;
-
-    /**
-     * To be used for the encryption. E.g. for passwords in
-     * {@link javax.jcr.SimpleCredentials#getPassword()} SimpleCredentials}
-     *
-     * @scr.property valueRef="DEFAULT_PASSWORD_DIGEST_ALGORITHM"
-     */
-    private static final String PROP_PASSWORD_DIGEST_ALGORITHM = "password.digest.algorithm";
-    private static final String DEFAULT_PASSWORD_DIGEST_ALGORITHM = "sha1";
-    private String passwordDigestAlgoritm = null;
-
 
     /* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.ContentImporter#importContent(javax.jcr.Node, java.lang.String, java.io.InputStream, org.apache.sling.jcr.contentloader.ImportOptions, org.apache.sling.jcr.contentloader.ContentImportListener)
@@ -215,23 +200,6 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
     // ---------- JcrContentHelper implementation ---------------------------------------------
 
 	/* (non-Javadoc)
-	 * @see org.apache.sling.jcr.contentloader.internal.JcrContentHelper#digestPassword(java.lang.String)
-	 */
-	public String digestPassword(String pwd) throws IllegalArgumentException {
-        try {
-            StringBuffer password = new StringBuffer();
-            password.append("{").append(passwordDigestAlgoritm).append("}");
-            password.append(DefaultContentCreator.digest(passwordDigestAlgoritm,
-                pwd.getBytes("UTF-8")));
-            return password.toString();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalArgumentException(e.toString());
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException(e.toString());
-        }
-	}
-
-	/* (non-Javadoc)
 	 * @see org.apache.sling.jcr.contentloader.internal.JcrContentHelper#getMimeType(java.lang.String)
 	 */
 	public String getMimeType(String name) {
@@ -240,24 +208,5 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
         MimeTypeService mts = mimeTypeService;
         return (mts != null) ? mts.getMimeType(name) : null;
 	}
-
-
-    // ---------- SCR Integration ---------------------------------------------
-
-    /** Activates this component, called by SCR before registering as a service */
-    protected void activate(ComponentContext componentContext) {
-        Dictionary<?, ?> props = componentContext.getProperties();
-        Object propValue = props.get(PROP_PASSWORD_DIGEST_ALGORITHM);
-        if (propValue instanceof String) {
-            passwordDigestAlgoritm = (String) propValue;
-        } else {
-            passwordDigestAlgoritm = DEFAULT_PASSWORD_DIGEST_ALGORITHM;
-        }
-    }
-
-    /** Deativates this component, called by SCR to take out of service */
-    protected void deactivate(ComponentContext componentContext) {
-        passwordDigestAlgoritm = null;
-    }
 
 }

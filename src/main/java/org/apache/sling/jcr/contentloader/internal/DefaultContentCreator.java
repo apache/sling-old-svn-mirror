@@ -842,9 +842,8 @@ public class DefaultContentCreator implements ContentCreator {
         Authorizable authorizable = userManager.getAuthorizable(name);
         if (authorizable == null) {
             //principal does not exist yet, so create it
-        	String digestedPassword = jcrContentHelper.digestPassword(password);
         	User user = userManager.createUser(name,
-        			digestedPassword,
+        			password,
         			new Principal() {
 						public String getName() {
 							return name;
