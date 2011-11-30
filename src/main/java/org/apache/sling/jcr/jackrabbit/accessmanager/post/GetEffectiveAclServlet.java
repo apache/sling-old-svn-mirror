@@ -114,7 +114,7 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetEffectiveAcl;
 	@Property (name="sling.servlet.selectors", 
 			value="eacl"),
 	@Property (name="sling.servlet.extensions", 
-			value="json"),
+			value="json")
 })
 @SuppressWarnings("serial")
 public class GetEffectiveAclServlet extends AbstractGetAclServlet implements GetEffectiveAcl {

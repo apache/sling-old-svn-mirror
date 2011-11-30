@@ -114,7 +114,7 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetAcl;
 	@Property (name="sling.servlet.selectors", 
 			value="acl"),
 	@Property (name="sling.servlet.extensions", 
-			value="json"),
+			value="json")
 })
 public class GetAclServlet extends AbstractGetAclServlet implements GetAcl {
 	private static final long serialVersionUID = 3391376559396223185L;
