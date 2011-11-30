@@ -233,7 +233,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
         }
 
         try {
-            ((User) authorizable).changePassword(digestPassword(newPassword));
+            ((User) authorizable).changePassword(newPassword);
 
             String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_GROUP_PREFIX
                 + user.getID();
