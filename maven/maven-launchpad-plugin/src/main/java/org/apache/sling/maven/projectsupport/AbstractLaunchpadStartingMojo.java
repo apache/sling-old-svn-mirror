@@ -267,6 +267,9 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
 
             props.put(SharedConstants.SLING_HOME, slingHome);
 
+            // ensure launchpad is set
+            props.put(SharedConstants.SLING_LAUNCHPAD, slingHome);
+
             if (forceBundleLoad) {
                 props.put(SharedConstants.FORCE_PACKAGE_BUNDLE_LOADING, "true");
             }
