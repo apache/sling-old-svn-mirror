@@ -153,6 +153,9 @@
                         <goals>
                             <goal>attach-bundle-list</goal>
                         </goals>
+                        <configuration>
+                            <ignoreBundleListConfig>true</ignoreBundleListConfig>
+                        </configuration>
                     </execution>
                 </executions>
                 <configuration>
