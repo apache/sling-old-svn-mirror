@@ -271,6 +271,25 @@ public class MainTest extends TestCase {
         assertNull(props2);
     }
 
+    public void test_converCommandLineArgs_i() {
+        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("i", "launchpad");
+            }
+        });
+        assertNotNull(props);
+        assertEquals(1, props.size());
+        assertEquals("launchpad", props.get(SharedConstants.SLING_LAUNCHPAD));
+
+        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                final String i = "i";
+                put(i, i);
+            }
+        });
+        assertNull(props2);
+    }
+
     public void test_converCommandLineArgs_a() {
         Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
             {
@@ -305,5 +324,33 @@ public class MainTest extends TestCase {
             }
         });
         assertNull(props2);
+    }
+
+    public void test_converCommandLineArgs_D() {
+        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("D", "name=value");
+            }
+        });
+        assertNotNull(props);
+        assertEquals(1, props.size());
+        assertEquals("value", props.get("name"));
+
+        Map<String, String> props2 = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("D", "flag");
+            }
+        });
+        assertNotNull(props2);
+        assertEquals(1, props2.size());
+        assertEquals("flag", props2.get("flag"));
+
+        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                final String d = "D";
+                put(d, d);
+            }
+        });
+        assertNull(props1);
     }
 }

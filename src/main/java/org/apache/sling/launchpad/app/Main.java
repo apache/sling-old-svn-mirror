@@ -293,7 +293,9 @@ public class Main {
         // The Loader helper
         Loader loaderTmp = null;
         try {
-            loaderTmp = new Loader(slingHome) {
+            final File launchpadHome = getLaunchpadHome(slingHome,
+                commandLineArgs);
+            loaderTmp = new Loader(launchpadHome) {
                 @Override
                 protected void info(String msg) {
                     Main.info(msg, null);
@@ -461,6 +463,39 @@ public class Main {
         return slingHome;
     }
 
+    /**
+     * Define the sling.launchpad parameter implementing the algorithme defined
+     * on the wiki page to find the setting according to this algorithm:
+     * <ol>
+     * <li>Configuration property <code>sling.launchpad</code>. This path is
+     * resolved against the <code>slingHome</code> folder if relative.</li>
+     * <li>Default to same as <code>sling.home</code></li>
+     * </ol>
+     *
+     * @param slingHome The absolute path to the Sling Home folder (aka the
+     *            <code>sling.home</code>.
+     * @param commandLineArgs The configuration properties from where to get the
+     *            <code>sling.launchpad</code> property.
+     * @return The absolute <code>File</code> indicating the launchpad folder.
+     */
+    private static File getLaunchpadHome(final String slingHome,
+            final Map<String, String> commandLineArgs) {
+        String launchpadHomeParam = commandLineArgs.get(SharedConstants.SLING_LAUNCHPAD);
+        if (launchpadHomeParam == null || launchpadHomeParam.length() == 0) {
+            commandLineArgs.put(SharedConstants.SLING_LAUNCHPAD, slingHome);
+            return new File(slingHome);
+        }
+
+        File launchpadHome = new File(launchpadHomeParam);
+        if (!launchpadHome.isAbsolute()) {
+            launchpadHome = new File(slingHome, launchpadHomeParam);
+        }
+
+        commandLineArgs.put(SharedConstants.SLING_LAUNCHPAD,
+            launchpadHome.getAbsolutePath());
+        return launchpadHome;
+    }
+
     private void startupFailure(String message, Throwable cause) {
         error("Launcher JAR access failure: " + message, cause);
         error("Shutting Down", null);
@@ -567,7 +602,7 @@ public class Main {
         if (args.remove("h") != null) {
             System.out.println("usage: "
                 + Main.class.getName()
-                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -i launchpadhome ] [ -a address ] [ -p port ] [ -h ]");
+                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -i launchpadhome ] [ -a address ] [ -p port ] { -D n=v } [ -h ]");
 
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Apache Sling (uses -j)");
@@ -579,6 +614,7 @@ public class Main {
             System.out.println("    -i launchpadhome  the launchpad directory (default slinghome)");
             System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
             System.out.println("    -p port       the port to listen to (default 8080)");
+            System.out.println("    -D n=v        sets property n to value v");
             System.out.println("    -h            prints this usage message");
 
             return true;
@@ -633,6 +669,15 @@ public class Main {
                         props.put(SharedConstants.SLING_HOME, value);
                         break;
 
+                    case 'i':
+                        if (value == arg.getKey()) {
+                            errorArg("-i", "Missing launchpad directory value");
+                            errorArg = true;
+                            continue;
+                        }
+                        props.put(SharedConstants.SLING_LAUNCHPAD, value);
+                        break;
+
                     case 'a':
                         if (value == arg.getKey()) {
                             errorArg("-a", "Missing address value");
@@ -658,6 +703,17 @@ public class Main {
                             errorArg("-p", "Bad port: " + value);
                             errorArg = true;
                         }
+                        break;
+
+                    case 'D':
+                        if (value == arg.getKey()) {
+                            errorArg("-D", "Missing property assignment");
+                            errorArg = true;
+                            continue;
+                        }
+                        String[] parts = value.split("=");
+                        int valueIdx = (parts.length > 1) ? 1 : 0;
+                        props.put(parts[0], parts[valueIdx]);
                         break;
 
                     default:

@@ -46,32 +46,37 @@ import org.apache.sling.commons.osgi.bundleversion.FileBundleVersionInfo;
 public class Loader {
 
     /**
-     * The Sling home folder set by the constructor
+     * The launchpad home folder set by the constructor
      */
-    private final File slingHome;
+    private final File launchpadHome;
 
     /**
-     * Creates a loader instance to load from the given Sling home folder.
-     * Besides ensuring the existence of the Sling home folder, the constructor
-     * also removes all but the most recent launcher JAR files from the Sling
-     * home folder (thus cleaning up from previous upgrades).
+     * Creates a loader instance to load from the given launchpad home folder.
+     * Besides ensuring the existence of the launchpad home folder, the
+     * constructor also removes all but the most recent launcher JAR files from
+     * the Sling home folder (thus cleaning up from previous upgrades).
      *
-     * @param slingHome The Sling home folder. If this is <code>null</code> the
-     *            default value {@link SharedConstants#SLING_HOME_DEFAULT} is
-     *            assumed.
-     * @throws IllegalArgumentException If the Sling home folder exists but is
-     *             not a directory or if the Sling home folder cannot be
-     *             created.
+     * @param launchpadHome The launchpad home folder. This must not be
+     *            <code>null</code> or an empty string.
+     * @throws IllegalArgumentException If the <code>launchpadHome</code>
+     *             argument is <code>null</code> or an empty string or if the
+     *             launchpad home folder exists but is not a directory or if the
+     *             Sling home folder cannot be created.
      */
-    public Loader(final String slingHome) throws IllegalArgumentException {
-        this.slingHome = getSlingHomeFile(slingHome);
+    public Loader(final File launchpadHome) {
+        if (launchpadHome == null) {
+            throw new IllegalArgumentException(
+                "Launchpad Home folder must not be null or empty");
+        }
+
+        this.launchpadHome = getLaunchpadHomeFile(launchpadHome);
         removeOldLauncherJars();
     }
 
     /**
      * Creates an URLClassLoader from a _launcher JAR_ file in the given
-     * slingHome directory and loads and returns the launcher class identified
-     * by the launcherClassName.
+     * launchpadHome directory and loads and returns the launcher class
+     * identified by the launcherClassName.
      *
      * @param launcherClassName The fully qualified name of a class implementing
      *            the Launcher interface. This class must have a public
@@ -123,7 +128,6 @@ public class Loader {
      * </ul>
      * <p>
      * This method must be called when the notifier is called.
-     *
      */
     public void cleanupVM() {
 
@@ -138,35 +142,36 @@ public class Loader {
 
     /**
      * Copies the contents of the launcher JAR as indicated by the URL to the
-     * sling home directory. If the existing file is is a more recent bundle version 
-     * than the supplied launcher JAR file, it is is not replaced.
+     * sling home directory. If the existing file is is a more recent bundle
+     * version than the supplied launcher JAR file, it is is not replaced.
      *
      * @return <code>true</code> if the launcher JAR file has been installed or
      *         updated, <code>false</code> otherwise.
      * @throws IOException If an error occurrs transferring the contents
      */
     public boolean installLauncherJar(URL launcherJar) throws IOException {
+        info("Checking launcher JAR in folder " + launchpadHome);
         final File currentLauncherJarFile = getLauncherJarFile();
 
         // Copy the new launcher jar to a temporary file, and
         // extract bundle version info
         final URLConnection launcherJarConn = launcherJar.openConnection();
         launcherJarConn.setUseCaches(false);
-        final File tmp = new File(slingHome, "Loader_tmp_" + System.currentTimeMillis() + SharedConstants.LAUNCHER_JAR_REL_PATH);
+        final File tmp = new File(launchpadHome, "Loader_tmp_" + System.currentTimeMillis() + SharedConstants.LAUNCHER_JAR_REL_PATH);
         spool(launcherJarConn.getInputStream(), tmp);
         final FileBundleVersionInfo newVi = new FileBundleVersionInfo(tmp);
         boolean installNewLauncher = true;
-        
+
         try {
             if(!newVi.isBundle()) {
                 throw new IllegalArgumentException("New launcher jar is not a bundle, cannot get version info:" + launcherJar);
             }
-            
+
             // Compare versions to decide whether to use the existing or new launcher jar
             if (currentLauncherJarFile.exists()) {
                 final FileBundleVersionInfo currentVi = new FileBundleVersionInfo(currentLauncherJarFile);
                 if(!currentVi.isBundle()) {
-                    throw new IllegalArgumentException("Existing launcher jar is not a bundle, cannot get version info:" 
+                    throw new IllegalArgumentException("Existing launcher jar is not a bundle, cannot get version info:"
                             + currentLauncherJarFile.getAbsolutePath());
                 }
 
@@ -178,9 +183,9 @@ public class Loader {
                     info = "more recent than ours";
                     installNewLauncher = false;
                 }
-                
+
                 if(info != null) {
-                    info("Existing launcher is " + info + ", using it: " 
+                    info("Existing launcher is " + info + ", using it: "
                             + getBundleInfo(currentVi) + " (" + currentLauncherJarFile.getName() + ")");
                 }
             }
@@ -200,7 +205,7 @@ public class Loader {
 
         return installNewLauncher;
     }
-    
+
     /** Return relevant bundle version info for logging */
     static String getBundleInfo(BundleVersionInfo<?> v) {
         final StringBuilder sb = new StringBuilder();
@@ -216,13 +221,13 @@ public class Loader {
      * Removes old candidate launcher JAR files leaving the most recent one as
      * the launcher JAR file to use on next Sling startup.
      *
-     * @param slingHome The Sling home directory location containing the
+     * @param launchpadHome The Sling home directory location containing the
      *            candidate launcher JAR files.
      */
     private void removeOldLauncherJars() {
         final File[] launcherJars = getLauncherJarFiles();
         if (launcherJars != null && launcherJars.length > 0) {
-            
+
             // Remove all files except current one
             final File current = getLauncherJarFile();
             for(File f : launcherJars) {
@@ -241,7 +246,7 @@ public class Loader {
 
             // And ensure the current file has the standard launcher name
             if (!SharedConstants.LAUNCHER_JAR_REL_PATH.equals(current.getName())) {
-                info("Renaming current launcher jar " + current.getName() 
+                info("Renaming current launcher jar " + current.getName()
                         + " to " + SharedConstants.LAUNCHER_JAR_REL_PATH);
                 File launcherFileName = new File(
                         current.getParentFile(),
@@ -296,7 +301,7 @@ public class Loader {
         if (launcherJars == null || launcherJars.length == 0) {
 
             // return a non-existing file naming the desired primary name
-            result = new File(slingHome,
+            result = new File(launchpadHome,
                 SharedConstants.LAUNCHER_JAR_REL_PATH);
 
         } else {
@@ -308,28 +313,28 @@ public class Loader {
     }
 
     /**
-     * Returns all files in the <code>slingHome</code> directory which may be
-     * considered as launcher JAR files, sorted based on their bundle version
+     * Returns all files in the <code>launchpadHome</code> directory which may
+     * be considered as launcher JAR files, sorted based on their bundle version
      * information, most recent last. These files all start with the
      * {@link SharedConstants#LAUNCHER_JAR_REL_PATH}. This list may be empty if
      * the launcher JAR file has not been installed yet.
      *
-     * @param slingHome The sling home directory where the launcher JAR files
-     *            are stored
+     * @param launchpadHome The sling home directory where the launcher JAR
+     *            files are stored
      * @return The list of candidate launcher JAR files, which may be empty.
      *         <code>null</code> is returned if an IO error occurs trying to
      *         list the files.
      */
     private File[] getLauncherJarFiles() {
         // Get list of files with names starting with our prefix
-        final File[] rawList = slingHome.listFiles(new FileFilter() {
+        final File[] rawList = launchpadHome.listFiles(new FileFilter() {
             public boolean accept(File pathname) {
                 return pathname.isFile()
                     && pathname.getName().startsWith(
                         SharedConstants.LAUNCHER_JAR_REL_PATH);
             }
         });
-        
+
         // Keep only those which have valid Bundle headers, and
         // sort them according to the bundle version numbers
         final List<FileBundleVersionInfo> list = new ArrayList<FileBundleVersionInfo>();
@@ -355,34 +360,29 @@ public class Loader {
     }
 
     /**
-     * Returns the <code>slingHome</code> path as a directory. If the directory
-     * does not exist it is created. If creation fails or if
-     * <code>slingHome</code> exists but is not a directory a
+     * Returns the <code>launchpadHome</code> path as a directory. If the
+     * directory does not exist it is created. If creation fails or if
+     * <code>launchpadHome</code> exists but is not a directory a
      * <code>IllegalArgumentException</code> is thrown.
      *
-     * @param slingHome The sling home directory where the launcher JAR files
-     *            are stored
+     * @param launchpadHome The sling home directory where the launcher JAR
+     *            files are stored
      * @return The Sling home directory
-     * @throws IllegalArgumentException if <code>slingHome</code> exists and is
-     *             not a directory or cannot be created as a directory.
+     * @throws IllegalArgumentException if <code>launchpadHome</code> exists and
+     *             is not a directory or cannot be created as a directory.
      */
-    private static File getSlingHomeFile(String slingHome) {
-        if (slingHome == null) {
-            slingHome = SharedConstants.SLING_HOME_DEFAULT;
-        }
-
-        File slingDir = new File(slingHome).getAbsoluteFile();
-        if (slingDir.exists()) {
-            if (!slingDir.isDirectory()) {
-                throw new IllegalArgumentException("Sling Home " + slingDir
+    private static File getLaunchpadHomeFile(File launchpadHome) {
+        if (launchpadHome.exists()) {
+            if (!launchpadHome.isDirectory()) {
+                throw new IllegalArgumentException("Sling Home " + launchpadHome
                     + " exists but is not a directory");
             }
-        } else if (!slingDir.mkdirs()) {
-            throw new IllegalArgumentException("Sling Home " + slingDir
+        } else if (!launchpadHome.mkdirs()) {
+            throw new IllegalArgumentException("Sling Home " + launchpadHome
                 + " cannot be created as a directory");
         }
 
-        return slingDir;
+        return launchpadHome;
     }
 
     private static void closeLauncherJarFile(final File launcherJar) {

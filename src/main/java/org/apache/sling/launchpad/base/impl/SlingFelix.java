@@ -33,7 +33,7 @@ public class SlingFelix extends Felix {
 
     private final Notifiable notifiable;
 
-    private Notifier notifierThread;
+    private Thread notifierThread;
 
     public SlingFelix(Notifiable notifiable, Map<?, ?> props) throws Exception {
         super(props);
@@ -47,8 +47,17 @@ public class SlingFelix extends Felix {
 
     @Override
     public void update(InputStream is) throws BundleException {
-        // get the update file
-        startNotifier(true, is);
+        // get the update file and make sure, the stream is closed
+        try {
+            startNotifier(true, is);
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException ignore) {
+                }
+            }
+        }
 
         // just stop the framework now
         super.stop();
@@ -67,20 +76,20 @@ public class SlingFelix extends Felix {
 
     private synchronized void startNotifier(boolean restart, InputStream ins) {
         if (notifierThread == null) {
-            notifierThread = new Notifier(restart, ins);
+            notifierThread = new Thread(new Notifier(restart, ins),
+                "Sling Notifier");
             notifierThread.setDaemon(false);
             notifierThread.start();
         }
     }
 
-    private class Notifier extends Thread {
+    private class Notifier implements Runnable {
 
         private final boolean restart;
 
         private final File updateFile;
 
         private Notifier(boolean restart, InputStream ins) {
-            super("Sling Notifier");
             this.restart = restart;
 
             if (ins != null) {
@@ -92,25 +101,24 @@ public class SlingFelix extends Felix {
                     // TOOD: log
                     tmpFile = null;
                 }
-                updateFile = tmpFile;
+                this.updateFile = tmpFile;
             } else {
-                updateFile = null;
+                this.updateFile = null;
             }
         }
 
-        @Override
         public void run() {
 
             try {
-                waitForStop(0);
+                SlingFelix.this.waitForStop(0);
             } catch (InterruptedException ie) {
                 // TODO: log
             }
 
             if (restart) {
-                notifiable.updated(updateFile);
+                SlingFelix.this.notifiable.updated(updateFile);
             } else {
-                notifiable.stopped();
+                SlingFelix.this.notifiable.stopped();
             }
         }
     }

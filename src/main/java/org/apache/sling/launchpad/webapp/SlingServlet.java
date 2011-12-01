@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,6 +81,8 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      */
     private static final String SLING_HOME_PREFIX_DEFAULT = "sling/";
 
+    private Map<String, String> properties;
+
     private String slingHome;
 
     private Loader loader;
@@ -107,9 +110,10 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      */
     @Override
     public void init() {
+        this.properties = collectInitParameters();
 
-        slingHome = getSlingHome(null);
-        if (slingHome != null) {
+        this.slingHome = getSlingHome(null);
+        if (this.slingHome != null) {
             startSling();
         } else {
             log("Apache Sling cannot be started yet, because sling.home is not defined yet");
@@ -260,13 +264,11 @@ public class SlingServlet extends GenericServlet implements Notifiable {
     private void startSling(final ServletRequest request) {
         if (startingSling == null) {
             slingHome = getSlingHome((HttpServletRequest) request);
-            Thread starter = new Thread("SlingStarter_"
-                + System.currentTimeMillis()) {
-                @Override
+            Thread starter = new Thread(new Runnable() {
                 public void run() {
                     startSling();
                 }
-            };
+            }, "SlingStarter_" + System.currentTimeMillis());
 
             starter.setDaemon(true);
             starter.start();
@@ -280,7 +282,8 @@ public class SlingServlet extends GenericServlet implements Notifiable {
     private void startSling() {
 
         try {
-            this.loader = new Loader(slingHome) {
+            File launchpadHome = getLaunchpadHome(slingHome);
+            this.loader = new Loader(launchpadHome) {
                 @Override
                 protected void info(String msg) {
                     log(msg);
@@ -350,6 +353,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
             if (sling instanceof Launcher) {
                 Launcher slingLauncher = (Launcher) sling;
                 slingLauncher.setNotifiable(this);
+                slingLauncher.setCommandLine(properties);
                 slingLauncher.setSlingHome(slingHome);
             }
 
@@ -386,6 +390,9 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * does not provide the Servlet API 2.5
      * <code>ServletContext.getContextPath()</code> method and the
      * <code>request</code> parameter is <code>null</code>.
+     * <p>
+     * If <code>sling.home</code> can be retrieved, it is returned as an
+     * absolute path.
      *
      * @param args The command line arguments
      * @return The value to use for sling.home or <code>null</code> if the value
@@ -394,6 +401,8 @@ public class SlingServlet extends GenericServlet implements Notifiable {
     private String getSlingHome(HttpServletRequest request) {
 
         String source = null;
+
+        // access config and context to be able to log the sling.home source
 
         // 1. servlet config parameter
         String slingHome = getServletConfig().getInitParameter(
@@ -440,10 +449,47 @@ public class SlingServlet extends GenericServlet implements Notifiable {
             }
         }
 
-        slingHome = substVars(slingHome, null, null, null);
+        // substitute any ${...} references and make absolute
+        slingHome = substVars(slingHome);
+        slingHome = new File(slingHome).getAbsolutePath();
 
         log("Setting sling.home=" + slingHome + " (" + source + ")");
         return slingHome;
+    }
+
+    /**
+     * Define the sling.launchpad parameter implementing the algorithme defined
+     * on the wiki page to find the setting according to this algorithm:
+     * <ol>
+     * <li>Servlet init parameter <code>sling.launchpad</code>. This path is
+     * resolved against the <code>slingHome</code> folder if relative.</li>
+     * <li>Servlet context init parameter <code>sling.launchpad</code>. This
+     * path is resolved against the <code>slingHome</code> folder if relative.</li>
+     * <li>Default to same as <code>sling.home</code></li>
+     * </ol>
+     * <p>
+     * The absolute path of the returned file is stored as the
+     * <code>sling.launchpad</code> property in the {@link #properties} map.
+     *
+     * @param slingHome The absolute path to the Sling Home folder (aka the
+     *            <code>sling.home</code>.
+     * @return The absolute <code>File</code> indicating the launchpad folder.
+     */
+    private File getLaunchpadHome(final String slingHome) {
+        String launchpadHomeParam = properties.get(SharedConstants.SLING_LAUNCHPAD);
+        if (launchpadHomeParam == null || launchpadHomeParam.length() == 0) {
+            properties.put(SharedConstants.SLING_LAUNCHPAD, slingHome);
+            return new File(slingHome);
+        }
+
+        File launchpadHome = new File(launchpadHomeParam);
+        if (!launchpadHome.isAbsolute()) {
+            launchpadHome = new File(slingHome, launchpadHomeParam);
+        }
+
+        properties.put(SharedConstants.SLING_LAUNCHPAD,
+            launchpadHome.getAbsolutePath());
+        return launchpadHome;
     }
 
     /**
@@ -497,6 +543,19 @@ public class SlingServlet extends GenericServlet implements Notifiable {
 
     // ---------- Property file variable substition support --------------------
 
+    private Map<String, String> collectInitParameters() {
+        HashMap<String, String> props = new HashMap<String, String>();
+        for (Enumeration<String> keys = getServletContext().getInitParameterNames(); keys.hasMoreElements();) {
+            String key = keys.nextElement();
+            props.put(key, getServletContext().getInitParameter(key));
+        }
+        for (Enumeration<String> keys = getServletConfig().getInitParameterNames(); keys.hasMoreElements();) {
+            String key = keys.nextElement();
+            props.put(key, getServletConfig().getInitParameter(key));
+        }
+        return props;
+    }
+
     /**
      * The starting delimiter of variable names (value is "${").
      */
@@ -506,6 +565,14 @@ public class SlingServlet extends GenericServlet implements Notifiable {
      * The ending delimiter of variable names (value is "}").
      */
     private static final String DELIM_STOP = "}";
+
+    private String substVars(final String val) {
+        if (val.contains(DELIM_START)) {
+            return substVars(val, null, null, properties);
+        }
+
+        return val;
+    }
 
     /**
      * This method performs property variable substitution on the specified
