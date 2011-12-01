@@ -46,7 +46,6 @@ import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -153,6 +152,8 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
 
     private Notifiable notifiable;
 
+    private Map<String, String> properties;
+
     private String slingHome;
 
     public void setNotifiable(Notifiable notifiable) {
@@ -160,7 +161,7 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
     }
 
     public void setCommandLine(Map<String, String> args) {
-        // ignore this for now
+        this.properties = args;
     }
 
     public void setSlingHome(String slingHome) {
@@ -343,20 +344,24 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
         // prevent system properties from being considered
         props.put(Sling.SLING_IGNORE_SYSTEM_PROPERTIES, "true");
 
-        // copy context init parameters
-        @SuppressWarnings("unchecked")
-        Enumeration<String> cpe = getServletContext().getInitParameterNames();
-        while (cpe.hasMoreElements()) {
-            String name = cpe.nextElement();
-            props.put(name, getServletContext().getInitParameter(name));
-        }
+        if (this.properties != null) {
+            props.putAll(this.properties);
+        } else {
+            // copy context init parameters
+            @SuppressWarnings("unchecked")
+            Enumeration<String> cpe = getServletContext().getInitParameterNames();
+            while (cpe.hasMoreElements()) {
+                String name = cpe.nextElement();
+                props.put(name, getServletContext().getInitParameter(name));
+            }
 
-        // copy servlet init parameters
-        @SuppressWarnings("unchecked")
-        Enumeration<String> pe = getInitParameterNames();
-        while (pe.hasMoreElements()) {
-            String name = pe.nextElement();
-            props.put(name, getInitParameter(name));
+            // copy servlet init parameters
+            @SuppressWarnings("unchecked")
+            Enumeration<String> pe = getInitParameterNames();
+            while (pe.hasMoreElements()) {
+                String name = pe.nextElement();
+                props.put(name, getInitParameter(name));
+            }
         }
 
         // ensure the Felix Logger loglevel matches the Sling log level
@@ -375,6 +380,11 @@ public class SlingServletDelegate extends GenericServlet implements Launcher {
 
         // set sling home
         props.put(SharedConstants.SLING_HOME, slingHome);
+
+        // ensure sling.launchpad is set
+        if (!props.containsKey(SharedConstants.SLING_LAUNCHPAD)) {
+            props.put(SharedConstants.SLING_LAUNCHPAD, slingHome);
+        }
 
         return props;
     }

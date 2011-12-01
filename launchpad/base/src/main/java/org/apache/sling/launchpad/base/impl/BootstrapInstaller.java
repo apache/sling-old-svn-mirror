@@ -171,11 +171,15 @@ class BootstrapInstaller {
      */
     boolean install() throws IOException {
 
-        String slingHome = bundleContext.getProperty(SharedConstants.SLING_HOME);
-        File slingStartupDir = getSlingStartupDir(slingHome);
+        String launchpadHome = bundleContext.getProperty(SharedConstants.SLING_LAUNCHPAD);
+        if (launchpadHome == null) {
+            launchpadHome = bundleContext.getProperty(SharedConstants.SLING_HOME);
+        }
+        File slingStartupDir = getSlingStartupDir(launchpadHome);
 
         // execute bootstrap commands, if needed
-        final BootstrapCommandFile cmd = new BootstrapCommandFile(logger, new File(slingHome, BOOTSTRAP_CMD_FILENAME));
+        final BootstrapCommandFile cmd = new BootstrapCommandFile(logger,
+            new File(launchpadHome, BOOTSTRAP_CMD_FILENAME));
         boolean requireRestart = cmd.execute(bundleContext);
 
         boolean shouldInstall = false;

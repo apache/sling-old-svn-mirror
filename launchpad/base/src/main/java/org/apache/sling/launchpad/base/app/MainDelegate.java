@@ -136,6 +136,17 @@ public class MainDelegate implements Launcher {
                 commandLine.get(SharedConstants.SLING_HOME));
         }
 
+        // ensure sling.launchpad is set
+        if (!commandLine.containsKey(SharedConstants.SLING_LAUNCHPAD)) {
+            commandLine.put(SharedConstants.SLING_LAUNCHPAD, slingHome);
+        }
+
+        // check sling.properties in the command line
+        final String slingPropertiesProp = commandLine.remove(SharedConstants.SLING_PROPERTIES);
+        if (slingPropertiesProp != null) {
+            props.put(SharedConstants.SLING_PROPERTIES, slingPropertiesProp);
+        }
+
         // set up and configure Felix Logger
         int logLevel;
         if (!commandLine.containsKey(PROP_LOG_LEVEL)) {

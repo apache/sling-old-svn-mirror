@@ -394,7 +394,7 @@ public class Sling {
         // Try to load it from one of these places.
         final Map<String, String> staticProps = new HashMap<String, String>();
 
-        // Read the properties file.
+        // Read the embedded (default) properties file.
         this.load(staticProps, CONFIG_PROPERTIES);
 
         // resolve inclusions (and remove property)
@@ -418,7 +418,7 @@ public class Sling {
 
         // overlay with ${sling.home}/sling.properties
         this.logger.log(Logger.LOG_INFO, "Starting Apache Sling in " + slingHome);
-        File propFile = new File(slingHome, CONFIG_PROPERTIES);
+        File propFile = getSlingProperties(slingHome, staticProps);
         this.load(staticProps, propFile);
 
         // migrate old properties to new properties
@@ -545,6 +545,7 @@ public class Sling {
 
             // remove properties where overlay makes no sense
             tmp.remove(SharedConstants.SLING_HOME);
+            tmp.remove(SharedConstants.SLING_LAUNCHPAD);
             tmp.remove(SharedConstants.SLING_PROPERTIES);
 
             tmp.store(os, "Overlay properties for configuration");
@@ -769,6 +770,20 @@ public class Sling {
     }
 
     // ---------- Property file support ----------------------------------------
+
+    /**
+     * Returns the abstract path name to the <code>sling.properties</code> file.
+     */
+    private File getSlingProperties(final String slingHome,
+            final Map<String, String> properties) {
+        final String prop = properties.get(SharedConstants.SLING_PROPERTIES);
+        if (prop == null) {
+            return new File(slingHome, CONFIG_PROPERTIES);
+        }
+
+        final File propFile = new File(prop);
+        return propFile.isAbsolute() ? propFile : new File(slingHome, prop);
+    }
 
     /**
      * Looks for <code>sling.include</code> and <code>sling.include.*</code>
@@ -1054,8 +1069,8 @@ public class Sling {
             OutputStream os = null;
             try {
                 final long lastModified = url.openConnection().getLastModified();
-                final File slingHome = new File(props.get(SharedConstants.SLING_HOME));
-                final File cmdFile = new File(slingHome, BootstrapInstaller.BOOTSTRAP_CMD_FILENAME);
+                final File launchpadHome = new File(props.get(SharedConstants.SLING_LAUNCHPAD));
+                final File cmdFile = new File(launchpadHome, BootstrapInstaller.BOOTSTRAP_CMD_FILENAME);
                 boolean copyFile = true;
                 if ( cmdFile.exists() && cmdFile.lastModified() >= lastModified ) {
                     copyFile = false;

@@ -108,4 +108,11 @@ public interface SharedConstants {
      */
     public static final String SLING_PROPERTIES_URL = "sling.properties.url";
 
+    /**
+     * The name of the configuration property defining the location for the
+     * Sling launchpad JAR file and the startup folder containing bundles
+     * to be installed by the Bootstrap Installer (value is "sling.launchpad").
+     * @since 2.4.0
+     */
+    public static final String SLING_LAUNCHPAD = "sling.launchpad";
 }
