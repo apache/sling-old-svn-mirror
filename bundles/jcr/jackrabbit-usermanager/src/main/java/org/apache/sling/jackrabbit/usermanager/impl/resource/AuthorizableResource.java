@@ -23,6 +23,8 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -32,6 +34,11 @@ import org.apache.sling.api.resource.ValueMap;
 /**
  * Resource implementation for Authorizable
  */
+@Adaptable(adaptableClass = Resource.class, adapters = {
+    @Adapter({Map.class, ValueMap.class, Authorizable.class}),
+    @Adapter(condition="If the resource is an AuthorizableResource and represents a JCR User", value = User.class),
+    @Adapter(condition="If the resource is an AuthorizableResource and represents a JCR Group", value = Group.class)
+})
 public class AuthorizableResource extends AbstractResource implements Resource {
     private Authorizable authorizable = null;
 
