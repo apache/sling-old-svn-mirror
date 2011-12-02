@@ -43,6 +43,8 @@ import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -67,6 +69,7 @@ import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Adaptable(adaptableClass=ResourceResolver.class, adapters={ @Adapter(Session.class) })
 public class JcrResourceResolver
     extends SlingAdaptable implements ResourceResolver {
 

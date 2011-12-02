@@ -18,10 +18,9 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.InputStream;
+import java.util.Calendar;
+import java.util.Iterator;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -30,10 +29,19 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import java.io.InputStream;
-import java.util.Calendar;
-import java.util.Iterator;
 
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Adaptable(adaptableClass = Resource.class, adapters = {
+        @Adapter(value = { Item.class, Property.class, Value.class, String.class, Boolean.class, Long.class,
+                Double.class, Calendar.class, InputStream.class, Value[].class, String[].class,
+                Boolean[].class, Long[].class, Double[].class }),
+        @Adapter(value = Node.class, condition = "If the resource is a JcrPropertyResource and the property is a reference or weak reference property.") })
 class JcrPropertyResource extends JcrItemResource {
 
     /** default log */

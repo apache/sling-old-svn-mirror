@@ -39,6 +39,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.net.URLFactory;
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -51,6 +53,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a JCR Node */
+@Adaptable(adaptableClass=Resource.class, adapters={
+        @Adapter({Node.class, Map.class, Item.class, ValueMap.class, URL.class}),
+        @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
+        @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
+})
 class JcrNodeResource extends JcrItemResource {
 
     /** marker value for the resourceSupertType before trying to evaluate */
