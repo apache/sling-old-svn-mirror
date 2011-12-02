@@ -79,7 +79,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     private Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
 
     private List<AdaptableDescription> allAdaptables;
-    private Map<Object, AdaptableDescription> adapterServices;
+    private Map<Object, List<AdaptableDescription>> adapterServices;
     private Map<Bundle, List<AdaptableDescription>> adapterBundles;
 
     private ServiceTracker adapterTracker;
@@ -88,14 +88,20 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     public Object addingService(ServiceReference reference) {
         Object service = this.bundleContext.getService(reference);
+        addServiceMetadata(reference, service);
+        return service;
+    }
+
+    private void addServiceMetadata(ServiceReference reference, Object service) {
         final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
         final String condition = OsgiUtil.toString(reference.getProperty(ADAPTER_CONDITION), null);
-        for (final String adaptable : OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES))) {
-            adapterServices.put(service,
-                    new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition));
+        final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final List<AdaptableDescription> descriptions = new ArrayList<AdaptableDescription>(adaptables.length);
+        for (final String adaptable : adaptables) {
+            descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition));
         }
+        adapterServices.put(service, descriptions);
         update();
-        return service;
     }
 
     public void bundleChanged(BundleEvent event) {
@@ -107,13 +113,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     }
 
     public void modifiedService(ServiceReference reference, Object service) {
-        final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
-        final String condition = OsgiUtil.toString(reference.getProperty(ADAPTER_CONDITION), null);
-        for (final String adaptable : OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES))) {
-            adapterServices.put(service,
-                    new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition));
-        }
-        update();
+        addServiceMetadata(reference, service);
     }
 
     public void removedService(ServiceReference reference, Object service) {
@@ -175,7 +175,9 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     private void update() {
         final List<AdaptableDescription> newList = new ArrayList<AdaptableDescription>();
-        newList.addAll(adapterServices.values());
+        for (final List<AdaptableDescription> descriptions : adapterServices.values()) {
+            newList.addAll(descriptions);
+        }
         for (final List<AdaptableDescription> list : adapterBundles.values()) {
             newList.addAll(list);
         }
@@ -185,7 +187,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     protected void activate(ComponentContext ctx) throws InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
-        this.adapterServices = new HashMap<Object, AdaptableDescription>();
+        this.adapterServices = new HashMap<Object, List<AdaptableDescription>>();
         this.adapterBundles = new HashMap<Bundle, List<AdaptableDescription>>();
         for (Bundle bundle : this.bundleContext.getBundles()) {
             if (bundle.getState() == Bundle.ACTIVE) {
