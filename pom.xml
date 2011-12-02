@@ -87,6 +87,7 @@
         <module>parent</module>
 
         <!-- The Maven Plugins and Archeyptes-->
+        <module>maven/adapter-annotations</module>
         <module>maven/maven-jcrocm-plugin</module>
         <module>maven/maven-jspc-plugin</module>
         <module>maven/maven-sling-plugin</module>
