@@ -22,11 +22,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
+@Adaptable(adaptableClass = Resource.class, adapters = @Adapter(value = { Map.class, ValueMap.class }))
 public final class RedirectResource extends SyntheticResource {
 
     static final String RT_SLING_REDIRECT = "sling:redirect";

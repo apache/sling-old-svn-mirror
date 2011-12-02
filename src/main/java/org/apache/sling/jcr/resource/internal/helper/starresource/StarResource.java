@@ -18,16 +18,22 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.starresource;
 
+import java.util.Map;
+
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.api.resource.ValueMap;
 
 /** Used to provide the equivalent of an empty Node for GET requests
  *  to *.something (SLING-344)
  */
+@Adaptable(adaptableClass = Resource.class, adapters = @Adapter(value = { String.class }))
 public class StarResource extends SyntheticResource {
 
     final static String SLASH_STAR = "/*";
