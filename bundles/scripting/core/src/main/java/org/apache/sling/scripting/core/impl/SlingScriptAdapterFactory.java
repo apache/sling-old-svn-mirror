@@ -60,7 +60,8 @@ import org.slf4j.LoggerFactory;
     @Property(name="service.description", value="Default SlingScriptResolver"),
     @Property(name="adaptables", value="org.apache.sling.api.resource.Resource"),
     @Property(name="adapters", value={"org.apache.sling.api.scripting.SlingScript",
-                                      "javax.servlet.Servlet"})
+                                      "javax.servlet.Servlet"}),
+    @Property(name="adapter.condition", value="If the resource's path ends in an extension registered by a script engine.")
 })
 public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvider {
 
