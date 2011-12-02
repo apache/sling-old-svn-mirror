@@ -28,6 +28,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -44,20 +52,21 @@ import org.osgi.service.event.EventAdmin;
  * resource tree where resources are provided ({@link ResourceProvider#ROOTS})
  * and the file system path from where files and folders are mapped into the
  * resource ({@link #PROP_PROVIDER_FILE}).
- *
- * @scr.component name="org.apache.sling.fsprovider.internal.FsResourceProvider"
- *                label="%resource.resolver.name"
- *                description="%resource.resolver.description"
- *                configurationFactory="true"
- *                policy="require"
- * @scr.service interface="ResourceProvider"
- * @scr.property name="service.description" value="Sling Filesystem Resource
- *               Provider"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property nameRef="ResourceProvider.ROOTS"
- * @scr.property nameRef="PROP_PROVIDER_FILE"
- * @scr.property nameRef="PROP_PROVIDER_CHECKINTERVAL" valueRef="DEFAULT_CHECKINTERVAL"
  */
+@Component(
+    name="org.apache.sling.fsprovider.internal.FsResourceProvider",
+    label="%resource.resolver.name",
+    description="%resource.resolver.description",
+    configurationFactory=true,
+    policy=ConfigurationPolicy.REQUIRE,
+    metatype=true
+)
+@Service(ResourceProvider.class)
+@Properties({
+    @Property(name="service.description", value="Sling Filesystem Resource Provider"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name=ResourceProvider.ROOTS)    
+})
 public class FsResourceProvider implements ResourceProvider {
 
     /**
@@ -65,15 +74,17 @@ public class FsResourceProvider implements ResourceProvider {
      * files and folders mapped into the resource tree (value is
      * "provider.file").
      */
+    @Property
     public static final String PROP_PROVIDER_FILE = "provider.file";
 
     /**
      * The name of the configuration property providing the check interval
      * for file changes (value is "provider.checkinterval").
      */
+    @Property(longValue=FsResourceProvider.DEFAULT_CHECKINTERVAL)
     public static final String PROP_PROVIDER_CHECKINTERVAL = "provider.checkinterval";
 
-    public static long DEFAULT_CHECKINTERVAL = 1000;
+    public static final long DEFAULT_CHECKINTERVAL = 1000;
 
     // The location in the resource tree where the resources are mapped
     private String providerRoot;
@@ -87,7 +98,7 @@ public class FsResourceProvider implements ResourceProvider {
     /** The monitor to detect file changes. */
     private FileMonitor monitor;
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private EventAdmin eventAdmin;
 
     /**
