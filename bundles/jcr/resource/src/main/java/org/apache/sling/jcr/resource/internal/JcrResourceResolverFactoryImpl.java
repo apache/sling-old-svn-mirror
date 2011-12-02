@@ -207,6 +207,8 @@ public class JcrResourceResolverFactoryImpl implements
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
+    private JcrItemAdapterFactory jcrItemAdapterFactory;
+
     public JcrResourceResolverFactoryImpl() {
         this.rootProviderEntry = new RootResourceProviderEntry();
 
@@ -495,12 +497,19 @@ public class JcrResourceResolverFactoryImpl implements
             log.debug(
                     "activate: unable to setup web console plugin.", ignore);
         }
+        
+        jcrItemAdapterFactory = new JcrItemAdapterFactory(componentContext.getBundleContext(), this);
     }
 
     private JcrResourceResolverWebConsolePlugin plugin;
 
     /** Deativates this component, called by SCR to take out of service */
     protected void deactivate(final ComponentContext componentContext) {
+        if (jcrItemAdapterFactory != null) {
+            jcrItemAdapterFactory.dispose();
+            jcrItemAdapterFactory = null;
+        }
+        
         if (plugin != null) {
             plugin.dispose();
             plugin = null;

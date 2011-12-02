@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
                 Double.class, Calendar.class, InputStream.class, Value[].class, String[].class,
                 Boolean[].class, Long[].class, Double[].class }),
         @Adapter(value = Node.class, condition = "If the resource is a JcrPropertyResource and the property is a reference or weak reference property.") })
-class JcrPropertyResource extends JcrItemResource {
+public class JcrPropertyResource extends JcrItemResource {
 
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrPropertyResource.class);
@@ -65,6 +65,12 @@ class JcrPropertyResource extends JcrItemResource {
         }
 
         this.setContentLength(property);
+    }
+
+    public JcrPropertyResource(ResourceResolver resourceResolver,
+                               Property property)
+    throws RepositoryException {
+        this(resourceResolver, property.getPath(), property);
     }
 
     public String getResourceType() {
