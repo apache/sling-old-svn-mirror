@@ -97,7 +97,7 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
         ResourceTraversor traversor = null;
         try {
             traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r, tidy);
-            traversor.check();
+			traversor.collectResources();
         } catch (RecursionTooDeepException e) {
             allowDump = false;
             allowedLevel = Integer.parseInt(e.getMessage()); // this is to avoid depending on a SNAPSHOT version of the SLing API.
