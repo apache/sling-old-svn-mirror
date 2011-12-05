@@ -205,6 +205,11 @@ public final class AuthUtil {
      * <code>java.net.URLEncoder</code> with UTF-8 encoding to make it safe for
      * requests</li>
      * </ul>
+     * <p>
+     * After checking the redirect target and creating the target URL from the
+     * parameter map, the response buffer is reset and the
+     * <code>HttpServletResponse.sendRedirect</code> is called. Any headers
+     * already set before calling this method are preserved.
      *
      * @param request The request object used to get the current request URI and
      *            request query string if the <code>params</code> map does not
@@ -213,10 +218,11 @@ public final class AuthUtil {
      * @param response The response used to send the redirect to the client.
      * @param target The target path to redirect the client to. This parameter
      *            must not be prefixed with the request's context path because
-     *            this will be added by this method. If this parameter is not
-     *            a valid target request as per the
+     *            this will be added by this method. If this parameter is not a
+     *            valid target request as per the
      *            {@link #isRedirectValid(HttpServletRequest, String)} method
-     *            the target is modified to be the root of the request's context.
+     *            the target is modified to be the root of the request's
+     *            context.
      * @param params The map of parameters to be added to the target path. This
      *            may be <code>null</code>.
      * @throws IOException If an error occurs sending the redirect request
@@ -228,11 +234,15 @@ public final class AuthUtil {
      *             missing.
      * @since 1.0.2 (Bundle version 1.0.4)
      * @since 1.0.4 (bundle version 1.0.8) the target is validated with the
-     *      {@link AuthUtil#isRedirectValid(HttpServletRequest, String)} method.
+     *        {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}
+     *        method.
      */
     public static void sendRedirect(final HttpServletRequest request,
             final HttpServletResponse response, final String target,
             Map<String, String> params) throws IOException {
+
+        checkAndReset(response);
+
         StringBuilder b = new StringBuilder();
         b.append(request.getContextPath());
 
@@ -316,11 +326,18 @@ public final class AuthUtil {
 
     /**
      * Sends a 200/OK response to a credential validation request.
+     * <p>
+     * This method just overwrites the response status to 200/OK, sends no
+     * content (content length header set to zero) and prevents caching on
+     * clients and proxies. Any other response headers set before calling this
+     * methods are preserved and sent along with the response.
      *
      * @param response The response object
+     * @throws IllegalStateException if the response has already been committed
      * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static void sendValid(final HttpServletResponse response) {
+        checkAndReset(response);
         try {
             response.setStatus(HttpServletResponse.SC_OK);
 
@@ -343,18 +360,24 @@ public final class AuthUtil {
     }
 
     /**
-     * Sends a 403/FORBIDDEN response optionally stating the reason for
-     * this response code in the {@link #X_REASON} header. The value for
-     * the {@link #X_REASON} header is taken from
-     * {@link AuthenticationHandler#FAILURE_REASON} request attribute if
-     * set.
+     * Sends a 403/FORBIDDEN response optionally stating the reason for this
+     * response code in the {@link #X_REASON} header. The value for the
+     * {@link #X_REASON} header is taken from
+     * {@link AuthenticationHandler#FAILURE_REASON} request attribute if set.
+     * <p>
+     * This method just overwrites the response status to 403/FORBIDDEN, adds
+     * the {@link AuthConstants#X_REASON} header and sends the reason as result
+     * back. Any other response headers set before calling this methods are
+     * preserved and sent along with the response.
      *
      * @param request The request object
      * @param response The response object
+     * @throws IllegalStateException if the response has already been committed
      * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static void sendInvalid(final HttpServletRequest request,
             final HttpServletResponse response) {
+        checkAndReset(response);
         try {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
@@ -500,6 +523,21 @@ public final class AuthUtil {
      */
     public static boolean isAjaxRequest(final HttpServletRequest request) {
         return XML_HTTP_REQUEST.equals(request.getHeader(X_REQUESTED_WITH));
+    }
+
+    /**
+     * Checks whether the response has already been committed. If so an
+     * <code>IllegalStateException</code> is thrown. Otherwise the response
+     * buffer is cleared leaving any headers and status already set untouched.
+     *
+     * @param response The response to check and reset.
+     * @throws IllegalStateException if the response has already been committed
+     */
+    private static void checkAndReset(final HttpServletResponse response) {
+        if (response.isCommitted()) {
+            throw new IllegalStateException("Response is already committed");
+        }
+        response.resetBuffer();
     }
 
     /**
