@@ -56,27 +56,29 @@ public class ResourceTraversor {
   }
 
   /**
-   * Check if the resource has less child nodes for the specified amount of levels.
-   * 
+   * Recursive descent from startResource, collecting JSONObjects into startObject.
+   * Throws a RecursionTooDeepException if the maximum number of nodes is reached on a
+   * "deep" traversal (where "deep" === level greateer than 1).
+   *
    * @throws RepositoryException
    * @throws RecursionTooDeepException
    *           When the resource has more child nodes then allowed.
    * @throws JSONException
    */
-  public void check() throws RepositoryException, RecursionTooDeepException,
+  public void collectResources() throws RepositoryException, RecursionTooDeepException,
       JSONException {
-    checkResource(startResource, 0);
+    collectChildren(startResource, 0);
   }
 
   /**
-   * 
+   *
    * @param resource
    * @param currentLevel
    * @throws RecursionTooDeepException
    * @throws JSONException
    * @throws RepositoryException
    */
-  private void checkResource(Resource resource, int currentLevel)
+  private void collectChildren(Resource resource, int currentLevel)
       throws RecursionTooDeepException, JSONException, RepositoryException {
 
     if (maxRecursionLevels == -1 || currentLevel < maxRecursionLevels) {
@@ -84,8 +86,10 @@ public class ResourceTraversor {
       while (children.hasNext()) {
         count++;
         Resource res = children.next();
-        if (count > maxResources) {
-          throw new RecursionTooDeepException(String.valueOf(currentLevel));
+        // SLING-2320: always allow enumeration of one's children;
+        // DOS-limitation is for deeper traversals.
+        if (count > maxResources && maxRecursionLevels > 1) {
+            throw new RecursionTooDeepException(String.valueOf(currentLevel));
         }
         collectResource(res, currentLevel);
         nextQueue.addLast(res);
@@ -99,13 +103,13 @@ public class ResourceTraversor {
         nextQueue = new LinkedList<Resource>();
       }
       Resource nextResource = currentQueue.removeFirst();
-      checkResource(nextResource, currentLevel);
+      collectChildren(nextResource, currentLevel);
     }
   }
 
   /**
    * Adds a resource in the JSON tree.
-   * 
+   *
    * @param resource
    *          The resource to add
    * @param level
@@ -125,7 +129,7 @@ public class ResourceTraversor {
 
   /**
    * Adapt a Resource to a JSON Object.
-   * 
+   *
    * @param resource
    *          The resource to adapt.
    * @return The JSON representation of the Resource
@@ -140,7 +144,7 @@ public class ResourceTraversor {
 
   /**
    * Get the JSON Object where this resource should be added in.
-   * 
+   *
    * @param resource
    * @param level
    * @return
