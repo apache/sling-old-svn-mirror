@@ -226,15 +226,8 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
         appendSelectorsExtensionSuffixQuery(request, target);
 
-        // return the mapped full path and return if already an absolute URI
-        final String finalTarget = request.getResourceResolver().map(request, target.toString());
-        if (isUrl(finalTarget)) {
-            return finalTarget;
-        }
-
-        // otherwise prepend the current request's information
-        return toAbsoluteUri(request.getScheme(), request.getServerName(),
-            request.getServerPort(), finalTarget);
+        // return the mapped full path
+        return request.getResourceResolver().map(request, target.toString());
     }
 
     /**
