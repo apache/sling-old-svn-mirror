@@ -96,133 +96,133 @@ public class RedirectServletTest extends TestCase {
     public void testSameParent() {
         String base = "/a";
         String target = "/b";
-        assertEqualsUri("/b", toRedirect(base, target));
+        assertEqualsUri("/b", toRedirect(base, target), false);
 
         base = "/";
         target = "/a";
-        assertEqualsUri("/a", toRedirect(base, target));
+        assertEqualsUri("/a", toRedirect(base, target), false);
 
         base = "/a/b/c";
         target = "/a/b/d";
-        assertEqualsUri("/a/b/d", toRedirect(base, target));
+        assertEqualsUri("/a/b/d", toRedirect(base, target), false);
     }
 
     public void testTrailingSlash() {
         String base = "/a/b/c/";
         String target = "/a/b/c.html";
-        assertEqualsUri("/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/a/b/c.html", toRedirect(base, target), false);
     }
 
     public void testCommonAncestor() {
         String base = "/a/b/c/d";
         String target = "/a/b/x/y";
-        assertEqualsUri("/a/b/x/y", toRedirect(base, target));
+        assertEqualsUri("/a/b/x/y", toRedirect(base, target), false);
     }
 
     public void testChild() {
         String base = "/a.html";
         String target = "/a/b.html";
-        assertEqualsUri("/a/b.html", toRedirect(base, target));
+        assertEqualsUri("/a/b.html", toRedirect(base, target), false);
 
         base = "/a";
         target = "/a/b.html";
-        assertEqualsUri("/a/b.html", toRedirect(base, target));
+        assertEqualsUri("/a/b.html", toRedirect(base, target), false);
 
         base = "/a";
         target = "/a/b";
-        assertEqualsUri("/a/b", toRedirect(base, target));
+        assertEqualsUri("/a/b", toRedirect(base, target), false);
 
         base = "/a.html";
         target = "/a/b/c.html";
-        assertEqualsUri("/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/a/b/c.html", toRedirect(base, target), false);
 
         base = "/a";
         target = "/a/b/c.html";
-        assertEqualsUri("/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/a/b/c.html", toRedirect(base, target), false);
 
         base = "/a";
         target = "/a/b/c";
-        assertEqualsUri("/a/b/c", toRedirect(base, target));
+        assertEqualsUri("/a/b/c", toRedirect(base, target), false);
     }
 
     public void testChildNonRoot() {
         String base = "/x/a.html";
         String target = "/x/a/b.html";
-        assertEqualsUri("/x/a/b.html", toRedirect(base, target));
+        assertEqualsUri("/x/a/b.html", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "/x/a/b.html";
-        assertEqualsUri("/x/a/b.html", toRedirect(base, target));
+        assertEqualsUri("/x/a/b.html", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "/x/a/b";
-        assertEqualsUri("/x/a/b", toRedirect(base, target));
+        assertEqualsUri("/x/a/b", toRedirect(base, target), false);
 
         base = "/x/a.html";
         target = "/x/a/b/c.html";
-        assertEqualsUri("/x/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/x/a/b/c.html", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "/x/a/b/c.html";
-        assertEqualsUri("/x/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/x/a/b/c.html", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "/x/a/b/c";
-        assertEqualsUri("/x/a/b/c", toRedirect(base, target));
+        assertEqualsUri("/x/a/b/c", toRedirect(base, target), false);
     }
 
     public void testChildRelative() {
         String base = "/a";
         String target = "b.html";
-        assertEqualsUri("/a/b.html", toRedirect(base, target));
+        assertEqualsUri("/a/b.html", toRedirect(base, target), false);
 
         base = "/a";
         target = "b";
-        assertEqualsUri("/a/b", toRedirect(base, target));
+        assertEqualsUri("/a/b", toRedirect(base, target), false);
 
         base = "/a";
         target = "b/c.html";
-        assertEqualsUri("/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/a/b/c.html", toRedirect(base, target), false);
 
         base = "/a";
         target = "b/c";
-        assertEqualsUri("/a/b/c", toRedirect(base, target));
+        assertEqualsUri("/a/b/c", toRedirect(base, target), false);
     }
 
     public void testChildNonRootRelative() {
         String base = "/x/a";
         String target = "b.html";
-        assertEqualsUri("/x/a/b.html", toRedirect(base, target));
+        assertEqualsUri("/x/a/b.html", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "b";
-        assertEqualsUri("/x/a/b", toRedirect(base, target));
+        assertEqualsUri("/x/a/b", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "b/c.html";
-        assertEqualsUri("/x/a/b/c.html", toRedirect(base, target));
+        assertEqualsUri("/x/a/b/c.html", toRedirect(base, target), false);
 
         base = "/x/a";
         target = "b/c";
-        assertEqualsUri("/x/a/b/c", toRedirect(base, target));
+        assertEqualsUri("/x/a/b/c", toRedirect(base, target), false);
     }
 
     public void testUnCommon() {
         String base = "/a/b/c/d";
         String target = "/w/x/y/z";
-        assertEqualsUri("/w/x/y/z", toRedirect(base, target));
+        assertEqualsUri("/w/x/y/z", toRedirect(base, target), false);
     }
 
     public void testSibbling() {
         String base = "/a/b";
         String target0 = "../y/z";
-        assertEqualsUri("/a/y/z", toRedirect(base, target0));
+        assertEqualsUri("/a/y/z", toRedirect(base, target0), false);
 
         String target1 = "../../y/z";
-        assertEqualsUri("/y/z", toRedirect(base, target1));
+        assertEqualsUri("/y/z", toRedirect(base, target1), false);
 
         String target2 = "../../../y/z";
-        assertEqualsUri(base + "/" + target2, toRedirect(base, target2));
+        assertEqualsUri(base + "/" + target2, toRedirect(base, target2), false);
     }
 
     public void testSelectorsEtc() {
@@ -247,11 +247,11 @@ public class RedirectServletTest extends TestCase {
         SlingHttpServletRequest request = new MockSlingHttpServletRequest("/",
             null, null, null, null, "", "/webapp");
         String path = RedirectServlet.toRedirectPath("/index.html", request);
-        assertEqualsUri("/webapp/index.html", path);
+        assertEqualsUri("/webapp/index.html", path, false);
         request = new MockSlingHttpServletRequest("/", null, null, null, null,
             "/", "/webapp");
         path = RedirectServlet.toRedirectPath("/index.html", request);
-        assertEqualsUri("/webapp/index.html", path);
+        assertEqualsUri("/webapp/index.html", path, false);
     }
 
     //---------- Helper
@@ -279,11 +279,15 @@ public class RedirectServletTest extends TestCase {
         String actual = toRedirect(basePath, selectors, extension, suffix,
             queryString, targetPath);
 
-        assertEqualsUri(expected, actual);
+        assertEqualsUri(expected, actual, false);
     }
 
-    private static void assertEqualsUri(String expected, String actual) {
-        assertEquals(TEST_PREFIX + expected, actual);
+    private static void assertEqualsUri(String expected, String actual, boolean isAbsolute) {
+        if (isAbsolute) {
+            assertEquals(expected, actual);
+        } else {
+            assertEquals(expected, actual);
+        }
     }
 
     private static void assertStatus(final int expectedStatus,
