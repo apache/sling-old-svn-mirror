@@ -41,23 +41,21 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.4</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-Category>sling,jcr</Bundle-Category>
                         <Private-Package>
+                            org.apache.jackrabbit.server,
+                            org.apache.jackrabbit.server.jcr,
+                            org.apache.jackrabbit.server.remoting.davex,
+                            org.apache.jackrabbit.server.util,
+                            org.apache.jackrabbit.webdav.jcr.*,
                             org.apache.sling.jcr.davex.impl.*
                         </Private-Package>
-                        <Import-Package>
-                            <!-- ignore HTTP client methods of webdav -->
-                            !org.apache.commons.httpclient.*,
-
-                            <!-- import the rest -->
-                            *
-                        </Import-Package>
                         <Embed-Dependency>
-                            jackrabbit-jcr-server,
-                            jackrabbit-webdav,
+                            jackrabbit-jcr-server;inline=org/apache/jackrabbit/server/io/IOUtil*.class,
                             org.apache.sling.commons.osgi;inline=org/apache/sling/commons/osgi/OsgiUtil.class
                         </Embed-Dependency>
                     </instructions>
@@ -88,13 +86,13 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-server</artifactId>
-            <version>2.2.9</version>
+            <version>2.3.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-webdav</artifactId>
-            <version>2.2.9</version>
+            <version>2.3.4</version>
             <scope>provided</scope>
         </dependency>
 
