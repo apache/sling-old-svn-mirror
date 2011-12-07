@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -79,9 +80,14 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
                     try {
                         maxRecursionLevels = Integer.parseInt(level);
                     } catch (NumberFormatException nfe) {
-                        resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                            "Invalid recursion selector value '" + level + "'");
-                        return;
+                    	//SLING-2324
+                    	if (StringUtils.isNumeric(level)){
+                    		maxRecursionLevels = -1;
+                    	}else{
+                    		resp.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    				"Invalid recursion selector value '" + level + "'");
+                    		return;
+                    	}
                     }
                 }
             }
