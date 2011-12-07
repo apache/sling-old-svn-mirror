@@ -515,12 +515,9 @@ public class JspScriptEngineFactory
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
     public void handleEvent(Event event) {
-        if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic()) ) {
-            this.jspRuntimeContext.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
-        } else if ( SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
-            this.jspRuntimeContext.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
-        } else {
-            this.jspRuntimeContext.handleModification((String)event.getProperty(SlingConstants.PROPERTY_PATH));
+        final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
+        if ( path != null ) {
+            this.jspRuntimeContext.handleModification(path);
         }
     }
 }
