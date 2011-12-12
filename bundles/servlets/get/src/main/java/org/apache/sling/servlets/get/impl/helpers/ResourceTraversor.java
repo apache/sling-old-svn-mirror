@@ -96,7 +96,7 @@ public class ResourceTraversor {
                 Resource res = children.next();
                 // SLING-2320: always allow enumeration of one's children;
                 // DOS-limitation is for deeper traversals.
-                if (count > maxResources && maxRecursionLevels > 1) {
+                if (count > maxResources && maxRecursionLevels != 1) {
                     throw new RecursionTooDeepException(String.valueOf(currentLevel));
                 }
                 collectResource(res, currentLevel);
