@@ -57,7 +57,7 @@ public class MockResourceResolver implements ResourceResolver {
     }
 
     public String map(String resourcePath) {
-        return null;
+        return resourcePath;	// a rather simplistic 1:1 map...
 
     }
 
@@ -154,7 +154,7 @@ public class MockResourceResolver implements ResourceResolver {
     }
 
     public String map(HttpServletRequest request, String resourcePath) {
-        return resourcePath;
+		return request.getContextPath() + resourcePath;
     }
 
     public Resource resolve(HttpServletRequest request, String absPath) {

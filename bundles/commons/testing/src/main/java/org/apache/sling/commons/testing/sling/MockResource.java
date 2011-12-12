@@ -20,6 +20,10 @@ package org.apache.sling.commons.testing.sling;
 
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
+
+import java.util.HashMap;
 
 public class MockResource extends SyntheticResource {
 
@@ -56,4 +60,20 @@ public class MockResource extends SyntheticResource {
     public void setResourceSuperType(String resourceSuperType) {
         this.resourceSuperType = resourceSuperType;
     }
+
+	@SuppressWarnings("unchecked")
+	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+		if (type == ValueMap.class) {
+			ValueMap map = new ValueMapDecorator(new HashMap<String, Object>());
+			if (resourceType != null) {
+				map.put("resourceType", resourceType);
+			}
+			if (resourceSuperType != null) {
+				map.put("resourceSuperType", resourceSuperType);
+			}
+			return (AdapterType) map;
+		}
+		throw new UnsupportedOperationException("AdaptTo " + type.getSimpleName() + " not implemented");
+	}
+
 }
