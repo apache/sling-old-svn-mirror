@@ -55,6 +55,11 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     private final String queryString;
 
+	private final String scheme;
+	private final String server;
+	private final int port;
+	private final String contextPath;
+
     private boolean secure = false;
 
     private MockResourceResolver mockResourceResolver;
@@ -69,13 +74,25 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
 
     public MockSlingHttpServletRequest(String resourcePath, String selectors,
             String extension, String suffix, String queryString) {
-        this.resource = new SyntheticResource(null, resourcePath, RESOURCE_TYPE);
-        this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
-            suffix);
-        this.queryString = queryString;
-
-        setMethod(null);
+		this(resourcePath, selectors, extension, suffix, queryString,
+			resourcePath, null, null, 0, null);
     }
+
+	public MockSlingHttpServletRequest(String resourcePath, String selectors,
+			String extension, String suffix, String queryString,
+			String requestPath, String scheme, String server, int port,
+			String contextPath) {
+		this.resource = new SyntheticResource(null, resourcePath, RESOURCE_TYPE);
+		this.requestPathInfo = new MockRequestPathInfo(selectors, extension,
+			suffix, requestPath);
+		this.queryString = queryString;
+		this.scheme = scheme;
+		this.server = server;
+		this.port = port;
+		this.contextPath = contextPath;
+
+		setMethod(null);
+	}
 
     public void setResourceResolver(MockResourceResolver resolver) {
         this.mockResourceResolver = resolver;
@@ -168,9 +185,9 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
         return null;
     }
 
-    public String getContextPath() {
-        return null;
-    }
+	public String getContextPath() {
+		return contextPath;
+	}
 
     public Cookie[] getCookies() {
         return null;
@@ -353,15 +370,15 @@ public class MockSlingHttpServletRequest implements SlingHttpServletRequest {
     }
 
     public String getScheme() {
-        return null;
+        return scheme;
     }
 
     public String getServerName() {
-        return null;
+        return server;
     }
 
     public int getServerPort() {
-        return 0;
+        return port;
     }
 
     public boolean isSecure() {
