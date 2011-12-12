@@ -28,6 +28,8 @@ import junit.framework.TestCase;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.commons.testing.sling.MockResourceResolver;
+import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 
 public class RedirectServletTest extends TestCase {
 
@@ -244,12 +246,15 @@ public class RedirectServletTest extends TestCase {
     }
 
     public void testEmptyPath() {
-        SlingHttpServletRequest request = new MockSlingHttpServletRequest("/",
-            null, null, null, null, "", "/webapp");
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest("/",
+            null, null, null, null, "", TEST_SCHEME, TEST_HOST, TEST_PORT, "/webapp");
+        request.setResourceResolver(new MockResourceResolver());
         String path = RedirectServlet.toRedirectPath("/index.html", request);
         assertEqualsUri("/webapp/index.html", path, false);
+
         request = new MockSlingHttpServletRequest("/", null, null, null, null,
-            "/", "/webapp");
+            "/", TEST_SCHEME, TEST_HOST, TEST_PORT, "/webapp");
+        request.setResourceResolver(new MockResourceResolver());
         path = RedirectServlet.toRedirectPath("/index.html", request);
         assertEqualsUri("/webapp/index.html", path, false);
     }
@@ -314,8 +319,10 @@ public class RedirectServletTest extends TestCase {
     private static String toRedirect(String basePath, String selectors,
             String extension, String suffix, String queryString,
             String targetPath) {
-        SlingHttpServletRequest request = new MockSlingHttpServletRequest(
-            basePath, selectors, extension, suffix, queryString);
+        MockSlingHttpServletRequest request = new MockSlingHttpServletRequest(
+            basePath, selectors, extension, suffix, queryString,
+            basePath, TEST_SCHEME, TEST_HOST, TEST_PORT, "");
+        request.setResourceResolver(new MockResourceResolver());
         return RedirectServlet.toRedirectPath(targetPath, request);
     }
 
