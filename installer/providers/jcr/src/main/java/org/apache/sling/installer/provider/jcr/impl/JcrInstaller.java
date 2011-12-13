@@ -631,11 +631,11 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
             final String path;
             boolean resourceIsMoved = true;
-            if ( url != null && url.startsWith(URL_SCHEME + ':')) {
+            if ( url != null ) {
                 // update
                 final int pos = url.indexOf(':');
                 final String oldPath = url.substring(pos + 1);
-                final String nodePath = getPathWithHighestPrio(oldPath);
+                final String nodePath = getPathWithHighestPrio(url.startsWith(URL_SCHEME + ':') ? oldPath : this.newConfigPath + id + ".config");
                 // ensure extension 'config'
                 if ( !nodePath.endsWith(".config") ) {
                     if ( session.itemExists(nodePath) ) {
