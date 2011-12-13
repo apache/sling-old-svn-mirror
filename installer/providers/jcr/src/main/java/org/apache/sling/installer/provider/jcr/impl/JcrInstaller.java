@@ -606,6 +606,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         }
         return path;
     }
+
     /**
      * Internal implementation of update handling
      */
@@ -630,7 +631,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
 
             final String path;
             boolean resourceIsMoved = true;
-            if ( url != null ) {
+            if ( url != null && url.startsWith(URL_SCHEME + ':')) {
                 // update
                 final int pos = url.indexOf(':');
                 final String oldPath = url.substring(pos + 1);
