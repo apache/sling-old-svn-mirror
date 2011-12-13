@@ -25,6 +25,7 @@ import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
+import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -43,9 +44,9 @@ public class DefaultTransformer
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /**
-     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener)
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener, RetryHandler)
      */
-    public void init(final BundleContext bctx, final ResourceChangeListener rcl) {
+    public void init(final BundleContext bctx, final ResourceChangeListener rcl, RetryHandler retryHandler) {
         // nothing to do
     }
 

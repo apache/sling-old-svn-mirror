@@ -23,12 +23,17 @@ import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
 import org.apache.sling.installer.core.impl.Util;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
@@ -39,7 +44,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Task creator for bundles
  */
-public class BundleTaskCreator implements InternalService, InstallTaskFactory {
+public class BundleTaskCreator
+    implements InternalService, InstallTaskFactory, FrameworkListener, BundleListener {
 
     /** If this property is set, the bundle is installed if the currently installed version
      * is the version specified by the property.
@@ -68,11 +74,19 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
     /** The bundle context. */
     private BundleContext bundleContext;
 
+    /** The retry handler. */
+    private RetryHandler retryHandler;
+
     /**
-     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener)
+     * @see org.apache.sling.installer.core.impl.InternalService#init(org.osgi.framework.BundleContext, org.apache.sling.installer.api.ResourceChangeListener, RetryHandler)
      */
-    public void init(final BundleContext bc, final ResourceChangeListener listener) {
+    public void init(final BundleContext bc, final ResourceChangeListener listener, final RetryHandler retryHandler) {
         this.bundleContext = bc;
+        this.retryHandler = retryHandler;
+
+        this.bundleContext.addBundleListener(this);
+        this.bundleContext.addFrameworkListener(this);
+
         // create and start tracker
         this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
         this.packageAdminTracker.open();
@@ -84,6 +98,10 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
      * @see org.apache.sling.installer.core.impl.InternalService#deactivate()
      */
     public void deactivate() {
+        if ( this.bundleContext != null ) {
+            this.bundleContext.removeBundleListener(this);
+            this.bundleContext.removeFrameworkListener(this);
+        }
         if ( this.packageAdminTracker != null ) {
             this.packageAdminTracker.close();
             this.packageAdminTracker = null;
@@ -91,6 +109,27 @@ public class BundleTaskCreator implements InternalService, InstallTaskFactory {
         if ( this.startLevelTracker != null ) {
             this.startLevelTracker.close();
             this.startLevelTracker = null;
+        }
+    }
+
+    /**
+     * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
+     */
+    public void frameworkEvent(final FrameworkEvent event) {
+        if ( event.getType() == FrameworkEvent.PACKAGES_REFRESHED ) {
+            logger.debug("Received FrameworkEvent triggering a retry of the installer: {}", event);
+            this.retryHandler.scheduleRetry();
+        }
+    }
+
+    /**
+     * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
+     */
+    public void bundleChanged(final BundleEvent event) {
+        final int t = event.getType();
+        if (t == BundleEvent.INSTALLED || t == BundleEvent.RESOLVED || t == BundleEvent.STARTED || t == BundleEvent.UPDATED) {
+            logger.debug("Received BundleEvent triggering a retry of the installer: {}", event);
+            this.retryHandler.scheduleRetry();
         }
     }
 

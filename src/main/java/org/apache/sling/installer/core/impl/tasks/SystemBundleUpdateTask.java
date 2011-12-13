@@ -26,11 +26,8 @@ import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.AbstractInstallTask;
-import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Update the system bundle from a RegisteredResource.
@@ -58,13 +55,11 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
         // restart system bundle
         if ( this.getResource() == null ) {
             // do an async update
-            ctx.addTaskToNextCycle(new InstallTask(this.getResourceGroup()) {
-
-                private final Logger logger = LoggerFactory.getLogger(this.getClass());
+            ctx.addAsyncTask(new InstallTask(this.getResourceGroup()) {
 
                 @Override
                 public String getSortKey() {
-                    return OsgiInstallerImpl.ASYNC_TASK_KEY;
+                    return BUNDLE_UPDATE_ORDER + getResource().getURL();
                 }
 
                 @Override
@@ -72,7 +67,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
                     try {
                         systemBundle.update();
                     } catch (final BundleException e) {
-                        logger.warn("Updating system bundle failed - unable to retry: " + this, e);
+                        getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
                     }
                 }
             });
@@ -88,13 +83,11 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
                 // delayed system bundle update
                 final InputStream backgroundIS = is;
                 is = null;
-                ctx.addTaskToNextCycle(new InstallTask(this.getResourceGroup()) {
-
-                    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+                ctx.addAsyncTask(new InstallTask(this.getResourceGroup()) {
 
                     @Override
                     public String getSortKey() {
-                        return OsgiInstallerImpl.ASYNC_TASK_KEY;
+                        return BUNDLE_UPDATE_ORDER + getResource().getURL();
                     }
 
                     @Override
@@ -102,11 +95,11 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
                         try {
                             systemBundle.update(backgroundIS);
                         } catch (final BundleException e) {
-                            logger.warn("Updating system bundle failed - unable to retry: " + this, e);
+                            getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
                         } finally {
                             try {
                                 backgroundIS.close();
-                            } catch (IOException ignore) {}
+                            } catch (final IOException ignore) {}
                         }
                     }
                 });
@@ -117,7 +110,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
                 if ( is != null ) {
                     try {
                         is.close();
-                    } catch (IOException ignore) {}
+                    } catch (final IOException ignore) {}
                 }
             }
         }
