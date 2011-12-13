@@ -92,7 +92,7 @@ public class VanityPathTest extends HttpTestBase {
         // ... to the created node
         String location = get.getResponseHeader("Location").getValue();
         assertNotNull(location);
-        assertEquals(createdNodeUrl + ".html", location);
+        assertEquals(removeHttpBase(createdNodeUrl) + ".html", location);
     }
     
     /** test vanity path with 301 redirect */
@@ -118,7 +118,7 @@ public class VanityPathTest extends HttpTestBase {
         // ... to the created node
         String location = get.getResponseHeader("Location").getValue();
         assertNotNull(location);
-        assertEquals(createdNodeUrl + ".html", location);
+        assertEquals(removeHttpBase(createdNodeUrl) + ".html", location);
     }
     
     /** test vanity path with redirect using a non-html extension and a selector */
@@ -143,7 +143,11 @@ public class VanityPathTest extends HttpTestBase {
         // ... to the created node
         String location = get.getResponseHeader("Location").getValue();
         assertNotNull(location);
-        assertEquals(createdNodeUrl + ".test.json", location);
+        assertEquals(removeHttpBase(createdNodeUrl) + ".test.json", location);
+    }
+    
+    private String removeHttpBase(String url) {
+        return url.startsWith(HTTP_BASE_URL) ? url.substring(HTTP_BASE_URL.length()) : url;
     }
 
     /**
