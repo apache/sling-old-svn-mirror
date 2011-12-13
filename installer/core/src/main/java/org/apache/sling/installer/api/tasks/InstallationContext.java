@@ -42,12 +42,21 @@ public interface InstallationContext {
 	 * usually to indicate that a task must be retried
 	 * or the current task is finished and another task
 	 * has to be run.
+	 * @deprecated
 	 */
-	void addTaskToNextCycle(InstallTask t);
+	@Deprecated
+    void addTaskToNextCycle(InstallTask t);
 
 	/**
 	 * Make an entry into the audit log - this should be invoked
 	 * by the tasks whenever something has been installed/uninstalled etc.
 	 */
 	void log(String message, Object... args);
+
+    /**
+     * Add an async task.
+     * This adds a task for asynchronous execution.
+     * @since 1.2.0
+     */
+    void addAsyncTask(InstallTask t);
 }

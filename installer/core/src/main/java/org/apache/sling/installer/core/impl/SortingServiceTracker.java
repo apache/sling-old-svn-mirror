@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
@@ -34,7 +35,7 @@ import org.osgi.util.tracker.ServiceTracker;
 public class SortingServiceTracker<T>
     extends ServiceTracker  {
 
-    private final OsgiInstallerImpl listener;
+    private final RetryHandler listener;
 
     private int lastCount = -1;
 
@@ -49,7 +50,7 @@ public class SortingServiceTracker<T>
      */
     public SortingServiceTracker(final BundleContext context,
             final String clazz,
-            final OsgiInstallerImpl listener) {
+            final RetryHandler listener) {
         super(context, clazz, null);
         this.listener = listener;
     }
@@ -82,7 +83,7 @@ public class SortingServiceTracker<T>
         this.sortedReferences = null;
         if ( listener != null ) {
             // new factory or resource transformer has been added, wake up main thread
-            this.listener.wakeUp();
+            this.listener.scheduleRetry();
         }
         return context.getService(reference);
     }

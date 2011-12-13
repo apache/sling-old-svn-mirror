@@ -16,20 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.core.impl;
-
-import org.apache.sling.installer.api.ResourceChangeListener;
-import org.apache.sling.installer.api.tasks.RetryHandler;
-import org.osgi.framework.BundleContext;
+package org.apache.sling.installer.api.tasks;
 
 /**
- * Internal service interface for easier registration handling.
+ * The retry handler should be informed by external services
+ * whenever something in the system changed which might make
+ * it worth to retry a failed installed.
+ *
+ * The installer retries all unprocessed resources whenever this
+ * retry handler is notified to reschedule. For example a bundle
+ * listener listening for updates/installs/removals of bundles
+ * can inform the retry handler.
+ *
+ * @since 1.2
  */
-public interface InternalService {
+public interface RetryHandler {
 
-    void init(BundleContext bctx, ResourceChangeListener listener, RetryHandler retryHandler);
-
-    void deactivate();
-
-    String getDescription();
+    /**
+     * Schedule a retry.
+     */
+    void scheduleRetry();
 }

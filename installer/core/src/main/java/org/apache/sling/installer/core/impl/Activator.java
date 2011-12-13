@@ -168,7 +168,7 @@ public class Activator implements BundleActivator {
             }
             if ( serviceInterfaces != null ) {
                 this.services.add(service);
-                service.init(context, this.osgiControllerService);
+                service.init(context, this.osgiControllerService, this.osgiControllerService);
                 this.registrations.add(context.registerService(
                         serviceInterfaces, service, props));
             }

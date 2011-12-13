@@ -21,6 +21,15 @@ package org.apache.sling.installer.api.tasks;
 /**
  * Base class for tasks that can be executed by the
  * {@link org.apache.sling.installer.api.OsgiInstaller}.
+ *
+ * The task is invoked by the installer through the {@link #execute(InstallationContext)}
+ * method. During execution the task should use the {@link #setFinishedState(ResourceState)}
+ * or {@link #setFinishedState(ResourceState, String)} method once the task is
+ * performed or the task decided that the task can never be performed.
+ *
+ * If the task needs to be retried, the implementation should just not alter the
+ * state at all. The installer will invoke the tasks at a later time again for
+ * retrying.
  */
 public abstract class InstallTask implements Comparable<InstallTask> {
 
@@ -95,7 +104,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
 
     @Override
 	public final boolean equals(Object o) {
-		if(o instanceof InstallTask) {
+		if (o instanceof InstallTask) {
 			return getSortKey().equals(((InstallTask)o).getSortKey());
 		}
 		return false;
@@ -109,7 +118,7 @@ public abstract class InstallTask implements Comparable<InstallTask> {
     /**
      * All comparisons are based on getSortKey().
      */
-    public final int compareTo(InstallTask o) {
+    public final int compareTo(final InstallTask o) {
         return getSortKey().compareTo(o.getSortKey());
     }
 }

@@ -31,7 +31,7 @@ class MockBundleTaskCreator extends BundleTaskCreator {
     private final Map<String, BundleInfo> fakeBundleInfo = new HashMap<String, BundleInfo>();
 
     public MockBundleTaskCreator() throws IOException {
-        this.init(new MockBundleContext(), null);
+        this.init(new MockBundleContext(), null, null);
     }
 
     void addBundleInfo(String symbolicName, String version, int state) {
