@@ -115,6 +115,21 @@ public class AuthenticationResponseCodeTest extends HttpTestBase {
         assertEquals(HttpServletResponse.SC_UNAUTHORIZED, status);
     }
 
+    public void testPreventLoopIncorrectFormCredentials() throws Exception {
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("j_username", "garbage"));
+        params.add(new NameValuePair("j_password", "garbage"));
+
+        final String requestUrl = HTTP_BASE_URL + "/j_security_check";
+        List<Header> headers = new ArrayList<Header>();
+        headers.add(new Header("Referer", requestUrl));
+        headers.add(new Header("User-Agent", "Mozilla/5.0 Sling Integration Test"));
+
+        HttpMethod post = assertPostStatus(requestUrl, HttpServletResponse.SC_FORBIDDEN, params, headers, null);
+        assertNotNull(post.getResponseHeader("X-Reason"));
+        assertEquals("Username and Password do not match", post.getResponseHeader("X-Reason").getValue());
+    }
+
     public void testXRequestedWithIncorrectCredentials() throws Exception {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new NameValuePair("j_username", "garbage"));
