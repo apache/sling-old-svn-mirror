@@ -1012,9 +1012,9 @@ public class SlingAuthenticator implements Authenticator,
 
         if (!AuthUtil.isValidateRequest(request)) {
 
-            if (AuthUtil.isBrowserRequest(request) && !isLoginLoop(request)) {
+            if (AuthUtil.isBrowserRequest(request)) {
 
-                if (!AuthUtil.isAjaxRequest(request)) {
+                if (!AuthUtil.isAjaxRequest(request) && !isLoginLoop(request)) {
                     try {
 
                         login(request, response);
@@ -1044,8 +1044,6 @@ public class SlingAuthenticator implements Authenticator,
                 // enabled for preemptive credential support, we just request
                 // HTTP Basic credentials. Otherwise (HTTP Basic is fully
                 // switched off, 403 is sent back)
-                // we also do this in case of a redirect loop upon login
-                // (see SLING-1831 for details)
                 if (httpBasicHandler != null) {
                     httpBasicHandler.sendUnauthorized(response);
                     return;
