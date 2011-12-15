@@ -169,11 +169,18 @@ class HttpBasicAuthenticationHandler extends
      * The assumption of this method unconditionally sending back the
      * 401/UNAUTHORIZED response is that this method here is only called if the
      * request actually provided invalid HTTP Basic credentials.
+     * <p>
+     * If the request is a
+     * {@link AuthUtil#isValidateRequest(HttpServletRequest) validation request}
+     * this method actually does nothing to allow for the expected 403/FORBIDDEN
+     * response to be sent.
      */
     @Override
     public void authenticationFailed(HttpServletRequest request, HttpServletResponse response,
             AuthenticationInfo authInfo) {
-        sendUnauthorized(response);
+        if (!AuthUtil.isValidateRequest(request)) {
+            sendUnauthorized(response);
+        }
     }
 
     /**
