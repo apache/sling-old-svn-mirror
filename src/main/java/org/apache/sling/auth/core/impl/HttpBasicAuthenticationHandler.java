@@ -156,6 +156,27 @@ class HttpBasicAuthenticationHandler extends
     }
 
     /**
+     * Called if the credentials extracted by the
+     * {@link #extractCredentials(HttpServletRequest, HttpServletResponse)}
+     * method are not valid and sends back a 401/UNAUTHORIZED response
+     * requesting the credentials again.
+     * <p>
+     * The only way to get a browser (or a client in general) into forgetting
+     * the current credentials and sending different credentials is sending back
+     * such a response. Otherwise the browser sends the same credentials over
+     * and over again.
+     * <p>
+     * The assumption of this method unconditionally sending back the
+     * 401/UNAUTHORIZED response is that this method here is only called if the
+     * request actually provided invalid HTTP Basic credentials.
+     */
+    @Override
+    public void authenticationFailed(HttpServletRequest request, HttpServletResponse response,
+            AuthenticationInfo authInfo) {
+        sendUnauthorized(response);
+    }
+
+    /**
      * Returns true if the {@link #REQUEST_LOGIN_PARAMETER} parameter or request
      * attribute is set to any non-<code>null</code> value.
      * <p>
@@ -221,7 +242,7 @@ class HttpBasicAuthenticationHandler extends
      *
      * @param response The response object to which to send the request
      * @return <code>true</code> if the 401/UNAUTHORIZED method has successfully
-     *         been sent.
+     *         been sent and the response has been committed.
      */
     boolean sendUnauthorized(HttpServletResponse response) {
 
