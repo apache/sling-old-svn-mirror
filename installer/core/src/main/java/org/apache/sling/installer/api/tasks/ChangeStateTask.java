@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.installer.core.impl.tasks;
+package org.apache.sling.installer.api.tasks;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
-import org.apache.sling.installer.api.tasks.InstallationContext;
-import org.apache.sling.installer.api.tasks.TaskResourceGroup;
-import org.apache.sling.installer.api.tasks.ResourceState;
 
 /**
  * Simple general task, setting the state of a registered resource.
+ * @since 1.2
  */
 public class ChangeStateTask extends InstallTask {
 
