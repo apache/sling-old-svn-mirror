@@ -16,6 +16,9 @@
  */
 package org.apache.sling.maven.projectsupport;
 
+import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -28,7 +31,6 @@ import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipArchiver;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
 
 /**
  * Attaches the bundle list as a project artifact.
@@ -60,7 +62,7 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
      * @parameter default-value="${project.build.directory}/bundleListconfig"
      */
     private File configOutputDir;
-    
+
     /**
      * @parameter default-value="${project.build.directory}/list.xml"
      */
@@ -86,16 +88,18 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
         } else {
             initializedBundleList = new BundleList();
         }
-        
+
         addDependencies(initializedBundleList);
-        
-        BundleListXpp3Writer writer = new BundleListXpp3Writer();
+
+        interpolateProperties(initializedBundleList, this.project, this.mavenSession);
+
+        final BundleListXpp3Writer writer = new BundleListXpp3Writer();
         try {
             writer.write(new FileWriter(bundleListOutput), initializedBundleList);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write bundle list", e);
         }
-        
+
         project.getArtifact().setFile(bundleListOutput);
 
         this.getLog().info("Attaching bundle list configuration");
