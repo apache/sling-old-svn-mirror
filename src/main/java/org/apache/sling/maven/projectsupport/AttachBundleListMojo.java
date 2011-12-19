@@ -38,10 +38,6 @@ import org.codehaus.plexus.util.FileUtils;
  */
 public class AttachBundleListMojo extends AbstractUsingBundleListMojo {
 
-    private static final String CLASSIFIER = "bundlelist";
-
-    private static final String TYPE = "xml";
-
     /**
      * @parameter default-value="${project.build.directory}/bundleList.xml"
      */
@@ -67,7 +63,7 @@ public class AttachBundleListMojo extends AbstractUsingBundleListMojo {
         try {
             fw = new FileWriter(outputFile);
             writer.write(fw, getInitializedBundleList());
-            projectHelper.attachArtifact(project, TYPE, CLASSIFIER, outputFile);
+            projectHelper.attachArtifact(project, AttachPartialBundleListMojo.TYPE, AttachPartialBundleListMojo.CLASSIFIER, outputFile);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to output effective bundle list", e);
         } finally {

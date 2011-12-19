@@ -46,6 +46,10 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
     public static final String CONFIG_TYPE = "zip";
 
+    public static final String CLASSIFIER = "bundlelist";
+
+    public static final String TYPE = "xml";
+
     public static final String SLING_COMMON_PROPS = "common.properties";
 
     public static final String SLING_COMMON_BOOTSTRAP = "common.bootstrap.txt";
@@ -100,7 +104,13 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
             throw new MojoExecutionException("Unable to write bundle list", e);
         }
 
-        project.getArtifact().setFile(bundleListOutput);
+        // if this project is a partial bundle list, it's the main artifact
+        if ( project.getPackaging().equals(PARTIAL) ) {
+            project.getArtifact().setFile(bundleListOutput);
+        } else {
+            // otherwise attach it as an additional artifact
+            projectHelper.attachArtifact(project, TYPE, CLASSIFIER, bundleListOutput);
+        }
 
         this.getLog().info("Attaching bundle list configuration");
         try {
