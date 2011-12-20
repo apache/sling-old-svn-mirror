@@ -57,10 +57,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            org.apache.felix.shell;resolution:=optional,
-                            *
-                        </Import-Package>
+                        <DynamicImport-Package>
+                            org.apache.felix.shell;version="[1.0,2)"
+                        </DynamicImport-Package>
                         <Private-Package>
                             org.apache.sling.extensions.threaddump.*
                         </Private-Package>
