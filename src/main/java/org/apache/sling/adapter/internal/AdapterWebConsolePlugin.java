@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,7 +16,8 @@
  */
 package org.apache.sling.adapter.internal;
 
-import static org.apache.sling.api.adapter.AdapterFactory.*;
+import static org.apache.sling.api.adapter.AdapterFactory.ADAPTABLE_CLASSES;
+import static org.apache.sling.api.adapter.AdapterFactory.ADAPTER_CLASSES;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -202,6 +203,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     }
 
     protected void deactivate(ComponentContext ctx) {
+        this.bundleContext.removeBundleListener(this);
         this.adapterTracker.close();
         this.adapterServices = null;
         this.adapterBundles = null;
