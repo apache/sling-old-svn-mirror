@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import org.osgi.framework.Version;
+
 
 /**
  * A task resource is a registered resource which has been
@@ -59,4 +61,11 @@ public interface TaskResource extends RegisteredResource {
      * @param value The attribute value or <code>null</code> to remove it.
      */
     void setTemporaryAttribute(String key, Object value);
+
+    /**
+     * Return the version of the artifact.
+     * @return The version of the artifact or <code>null</code>
+     * @since 1.2
+     */
+    Version getVersion();
 }

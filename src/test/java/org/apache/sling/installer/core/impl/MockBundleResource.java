@@ -28,6 +28,7 @@ import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.osgi.framework.Constants;
+import org.osgi.framework.Version;
 
 /**
  * Mock RegisteredResource that simulates a bundle
@@ -187,5 +188,13 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
         } else {
             this.tempAttributes.put(key, value);
         }
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getVersion()
+     */
+    public Version getVersion() {
+        final String vInfo = (String)this.getAttribute(Constants.BUNDLE_VERSION);
+        return (vInfo == null ? null : new Version(vInfo));
     }
 }
