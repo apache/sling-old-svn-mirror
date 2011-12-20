@@ -45,37 +45,41 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
         try {
             register(bundleContext,
                 new String[] { "org.apache.felix.shell.Command" },
-                new ThreadDumpCommand());
+                new ThreadDumpCommand(), null);
         } catch (Throwable t) {
             // shell service might not be available, don't care
         }
 
         // install Web Console configuration printer
-        try {
-            ThreadDumperPanel tdp = new ThreadDumperPanel();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("felix.webconsole.label", "slingthreads");
+        props.put("felix.webconsole.title", "Threads");
+        props.put("felix.webconsole.configprinter.modes", "always");
 
-            register(bundleContext, new String[] {
-                "org.apache.felix.webconsole.ConfigurationPrinter" }, tdp);
-        } catch (Throwable t) {
-            // web console might not be available, don't care
-        }
+        final ThreadDumperPanel tdp = new ThreadDumperPanel();
+
+        register(bundleContext, new String[] {
+            "org.apache.felix.webconsole.ConfigurationPrinter" }, tdp, props);
     }
 
     public void stop(BundleContext bundleContext) {
         Thread.setDefaultUncaughtExceptionHandler(oldHandler);
     }
 
-    private void register(BundleContext context, String[] serviceNames,
-            Object service) {
+    private void register(final BundleContext context,
+            final String[] serviceNames,
+            final Object service,
+            final Dictionary<String, Object> properties) {
 
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props =
+                (properties == null ? new Hashtable<String, Object>() : properties);
 
         // default settings
-        properties.put(Constants.SERVICE_DESCRIPTION, "Thread Dumper ("
+        props.put(Constants.SERVICE_DESCRIPTION, "Thread Dumper ("
             + serviceNames[0] + ")");
-        properties.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        props.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
 
-        context.registerService(serviceNames, service, properties);
+        context.registerService(serviceNames, service, props);
     }
 
     // ---------- UncaughtExceptionHandler
