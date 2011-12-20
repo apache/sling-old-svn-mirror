@@ -136,6 +136,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return (alias == null ? id : id + '\n' + alias);
     }
 
+    private String getURL(final TaskResource rsrc) {
+        if ( rsrc.getVersion() != null ) {
+            return rsrc.getURL() + " (" + rsrc.getVersion() + ")";
+        }
+        return rsrc.getURL();
+    }
+
     /** Default date format used. */
     private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS yyyy-MMM-dd");
 
@@ -171,13 +178,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     pw.printf("<span style='float: left; margin-left: 1em;'>Active Resources - %s</span>", getType(toActivate));
                     pw.println("</div>");
                     pw.println("<table class='nicetable'><tbody>");
-                    pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL</th><th>State</th></tr>");
+                    pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL (Version)</th><th>State</th></tr>");
                     rt = toActivate.getType();
                 }
                 pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
                         getEntityId(toActivate, group.getAlias()),
                         toActivate.getDigest(),
-                        toActivate.getURL(),
+                        getURL(toActivate),
                         toActivate.getState());
             }
             if ( rt != null ) {
@@ -198,7 +205,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         pw.printf("<span style='float: left; margin-left: 1em;'>Processed Resources - %s</span>", getType(first));
                         pw.println("</div>");
                         pw.println("<table class='nicetable'><tbody>");
-                        pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL</th><th>State</th></tr>");
+                        pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL (Version)</th><th>State</th></tr>");
                         rt = first.getType();
                     }
                     pw.print("<tr><td>");
@@ -206,7 +213,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     pw.print("</td><td>");
                     pw.print(first.getDigest());
                     pw.print("</td><td>");
-                    pw.print(first.getURL());
+                    pw.print(getURL(first));
                     pw.print("</td><td>");
                     pw.print(first.getState());
                     if ( first.getState() == ResourceState.INSTALLED ) {
@@ -222,7 +229,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         final TaskResource resource = iter.next();
                         pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
                             resource.getDigest(),
-                            resource.getURL(),
+                            getURL(resource),
                             resource.getState());
                     }
                 }
@@ -278,7 +285,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                 pw.printf("- %s: %s, %s, %s%n",
                         getEntityId(toActivate, group.getAlias()),
                         toActivate.getDigest(),
-                        toActivate.getURL(),
+                        getURL(toActivate),
                         toActivate.getState());
             }
             pw.println();
@@ -298,13 +305,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     pw.printf("* %s: %s, %s, %s%n",
                             getEntityId(first, group.getAlias()),
                             first.getDigest(),
-                            first.getURL(),
+                            getURL(first),
                             first.getState());
                     while ( iter.hasNext() ) {
                         final TaskResource resource = iter.next();
                         pw.printf("  - %s, %s, %s%n",
                             resource.getDigest(),
-                            resource.getURL(),
+                            getURL(resource),
                             resource.getState());
                     }
                 }
