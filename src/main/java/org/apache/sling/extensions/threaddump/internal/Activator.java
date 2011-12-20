@@ -22,9 +22,12 @@ import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +45,21 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
         Thread.setDefaultUncaughtExceptionHandler(this);
 
         // install thread handler shell command
-        try {
-            register(bundleContext,
-                new String[] { "org.apache.felix.shell.Command" },
-                new ThreadDumpCommand(), null);
-        } catch (Throwable t) {
-            // shell service might not be available, don't care
-        }
+        register(bundleContext,
+            new String[] { "org.apache.felix.shell.Command" },
+            new ServiceFactory() {
+
+                public void ungetService(final Bundle bundle,
+                    final ServiceRegistration reg,
+                    final Object consoleObject) {
+                    // nothing to do
+                }
+
+                public Object getService(final Bundle bundle,
+                    final ServiceRegistration reg) {
+                     return new ThreadDumpCommand();
+                }
+            }, null);
 
         // install Web Console configuration printer
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
@@ -59,7 +70,7 @@ public class Activator implements BundleActivator, UncaughtExceptionHandler {
         final ThreadDumperPanel tdp = new ThreadDumperPanel();
 
         register(bundleContext, new String[] {
-            "org.apache.felix.webconsole.ConfigurationPrinter" }, tdp, props);
+            tdp.getClass().getName() }, tdp, props);
     }
 
     public void stop(BundleContext bundleContext) {
