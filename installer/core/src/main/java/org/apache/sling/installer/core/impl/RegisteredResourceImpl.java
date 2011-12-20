@@ -389,12 +389,11 @@ public class RegisteredResourceImpl
      * same URL!
      */
     public static boolean isSameResource(final RegisteredResourceImpl a, final RegisteredResourceImpl b) {
-        if (a.getType().equals(InstallableResource.TYPE_BUNDLE)) {
-            // we need a special comparison for bundles
-
+        // check if the artifacts have a version
+        final Version va = a.getVersion();
+        final Version vb = b.getVersion();
+        if ( va != null && vb != null ) {
             // Compare version
-            final Version va = new Version((String)a.getAttribute(Constants.BUNDLE_VERSION));
-            final Version vb = new Version((String)b.getAttribute(Constants.BUNDLE_VERSION));
             if ( !vb.equals(va) ) {
                 return false;
             }
@@ -417,20 +416,30 @@ public class RegisteredResourceImpl
         // check entity id first
         int result = a.getEntityId().compareTo(b.getEntityId());
         if ( result == 0 ) {
-            if (a.getType().equals(InstallableResource.TYPE_BUNDLE)) {
-                // we need a special comparison for bundles
-                result = compareBundles(a, b);
-            } else {
-                // all other types: check prio and then digest
-                result = Integer.valueOf(b.getPriority()).compareTo(a.getPriority());
+            // compare versions
+            boolean isSnapshot = true;
 
-                // check digest
-                if ( result == 0 ) {
-                    // higher digest has more priority, must come first so invert comparison
-                    result = b.getDigest().compareTo(a.getDigest());
-                }
+            // Order by version
+            final Version va = a.getVersion();
+            final Version vb = b.getVersion();
+
+            if ( va != null && vb != null ) {
+                isSnapshot = va.toString().contains("SNAPSHOT");
+                // higher version has more priority, must come first so invert comparison
+                result = vb.compareTo(va);
+            }
+
+            // Then by priority, higher values first
+            if (result == 0) {
+                result = Integer.valueOf(b.getPriority()).compareTo(a.getPriority());
+            }
+
+            if (result == 0 && isSnapshot) {
+                // higher digest has more priority, must come first so invert comparison
+                result = b.getDigest().compareTo(a.getDigest());
             }
         }
+
         if ( result == 0 ) {
             if ( a.getState() == ResourceState.INSTALLED ) {
                 return -1;
@@ -439,37 +448,6 @@ public class RegisteredResourceImpl
             }
             result = a.getURL().compareTo(b.getURL());
         }
-        return result;
-    }
-
-    /**
-     * Bundles are compared differently than other resource types:
-     * - higher versions have always priority - regardless of the priority attribute!
-     * - priority matters only if version is same
-     * - if the version is a snapshot version, the serial number and the digest are used
-     *   in addition
-     */
-    private static int compareBundles(final TaskResource a, final TaskResource b) {
-        boolean isSnapshot = false;
-        int result = 0;
-
-        // Order by version
-        final Version va = new Version((String)a.getAttribute(Constants.BUNDLE_VERSION));
-        final Version vb = new Version((String)b.getAttribute(Constants.BUNDLE_VERSION));
-        isSnapshot = va.toString().contains("SNAPSHOT");
-        // higher version has more priority, must come first so invert comparison
-        result = vb.compareTo(va);
-
-        // Then by priority, higher values first
-        if (result == 0) {
-            result = Integer.valueOf(b.getPriority()).compareTo(a.getPriority());
-        }
-
-        if (result == 0 && isSnapshot) {
-            // higher digest has more priority, must come first so invert comparison
-            result = b.getDigest().compareTo(a.getDigest());
-        }
-
         return result;
     }
 
@@ -536,6 +514,9 @@ public class RegisteredResourceImpl
         if ( tr.getAttributes() != null ) {
             this.attributes.putAll(tr.getAttributes());
         }
+        if ( tr.getVersion() != null ) {
+            this.attributes.put(Constants.BUNDLE_VERSION, tr.getVersion().toString());
+        }
     }
 
     /**
@@ -582,5 +563,13 @@ public class RegisteredResourceImpl
         this.url = url;
         final int pos = url.indexOf(':');
         this.urlScheme = url.substring(0, pos);
+    }
+
+    /**
+     * @see org.apache.sling.installer.api.tasks.TaskResource#getVersion()
+     */
+    public Version getVersion() {
+        final String vInfo = (String)this.getAttribute(Constants.BUNDLE_VERSION);
+        return (vInfo == null ? null : new Version(vInfo));
     }
 }

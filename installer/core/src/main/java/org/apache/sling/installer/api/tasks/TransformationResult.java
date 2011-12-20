@@ -21,6 +21,8 @@ package org.apache.sling.installer.api.tasks;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.osgi.framework.Version;
+
 /**
  * A result of a {@link ResourceTransformer}.
  *
@@ -41,6 +43,9 @@ public class TransformationResult {
 
     /** Unique id. */
     private String id;
+
+    /** Optional version. */
+    private Version version;
 
     /** Attributes */
     private Map<String, Object> attributes;
@@ -105,5 +110,23 @@ public class TransformationResult {
      */
     public void setAttributes(final Map<String, Object> attr) {
         this.attributes = attr;
+    }
+
+    /**
+     * Set the version.
+     * @param version The new version
+     * @since 1.2
+     */
+    public void setVersion(final Version version) {
+        this.version = version;
+    }
+
+    /**
+     * Get the version
+     * @return The version or <code>null</code>
+     * @since 1.2
+     */
+    public Version getVersion() {
+        return this.version;
     }
 }
