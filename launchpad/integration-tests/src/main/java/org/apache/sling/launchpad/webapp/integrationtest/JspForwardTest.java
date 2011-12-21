@@ -36,6 +36,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
     private String nodeUrlC;
     private String nodeUrlD;
     private String nodeUrlE;
+    private String nodeUrlF;
     private String scriptPath;
     private String forcedResourceType;
     private Set<String> toDelete = new HashSet<String>();
@@ -66,8 +67,14 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         props.put("pathToInclude", pathToInclude + ".html");
         nodeUrlE = testClient.createNode(url, props);
 
+        // Node F is like E but uses jsp:include
+        props.put("pathToInclude", pathToInclude + ".html");
+        props.put("forwardStyle", "jsp");
+        nodeUrlF = testClient.createNode(url, props);
+
         // Node C is used for the infinite loop detection test
         props.remove("pathToInclude");
+        props.remove("forwardStyle");
         props.put("testInfiniteLoop","true");
         nodeUrlC = testClient.createNode(url, props);
 
@@ -112,6 +119,13 @@ import org.apache.sling.servlets.post.SlingPostConstants;
 
     public void testWithForwardAndExtension() throws IOException {
         final String content = getContent(nodeUrlE + ".html", CONTENT_TYPE_HTML);
+        assertTrue("Content includes JSP marker",content.contains("JSP template"));
+        assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
+        assertTrue("Text of node A is not included (" + content + ")",!content.contains(testTextB));
+    }
+
+    public void testWithJspForward() throws IOException {
+        final String content = getContent(nodeUrlF + ".html", CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertTrue("Text of node A is not included (" + content + ")",!content.contains(testTextB));

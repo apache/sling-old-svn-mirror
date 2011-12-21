@@ -50,6 +50,7 @@ import javax.servlet.jsp.tagext.BodyContent;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.sling.scripting.jsp.SlingPageException;
+import org.apache.sling.scripting.jsp.jasper.Constants;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
 import org.apache.sling.scripting.jsp.jasper.el.ELContextImpl;
 import org.apache.sling.scripting.jsp.jasper.el.ExpressionEvaluatorImpl;
@@ -690,8 +691,64 @@ public class PageContextImpl extends PageContext {
 
 		final String path = getAbsolutePathRelativeToContext(relativeUrlPath);
 
-		throw new SlingPageException(path);
+		final String includeUri = (String) request.getAttribute(Constants.INC_SERVLET_PATH);
+
+        if (includeUri != null)
+            request.removeAttribute(Constants.INC_SERVLET_PATH);
+        try {
+            context.getRequestDispatcher(path).forward(request, response);
+        } finally {
+            if (includeUri != null) {
+                request.setAttribute(Constants.INC_SERVLET_PATH, includeUri);
+            }
+        }
  	}
+
+    public void forwardToErrorPage(final String relativeUrlPath) throws ServletException,
+            IOException {
+        if (SecurityUtil.isPackageProtectionEnabled()) {
+            try {
+                AccessController.doPrivileged(new PrivilegedExceptionAction() {
+                    public Object run() throws Exception {
+                        doForwardToErrorPage(relativeUrlPath);
+                        return null;
+                    }
+                });
+            } catch (PrivilegedActionException e) {
+                Exception ex = e.getException();
+                if (ex instanceof IOException) {
+                    throw (IOException) ex;
+                } else {
+                    throw (ServletException) ex;
+                }
+            }
+        } else {
+            doForwardToErrorPage(relativeUrlPath);
+        }
+    }
+
+    private void doForwardToErrorPage(String relativeUrlPath) throws ServletException,
+            IOException {
+
+        // JSP.4.5 If the buffer was flushed, throw IllegalStateException
+        try {
+            out.clear();
+        } catch (IOException ex) {
+            IllegalStateException ise = new IllegalStateException(Localizer
+                    .getMessage("jsp.error.attempt_to_clear_flushed_buffer"));
+            ise.initCause(ex);
+            throw ise;
+        }
+
+        // Make sure that the response object is not the wrapper for include
+        while (response instanceof ServletResponseWrapperInclude) {
+            response = ((ServletResponseWrapperInclude) response).getResponse();
+        }
+
+        final String path = getAbsolutePathRelativeToContext(relativeUrlPath);
+
+        throw new SlingPageException(path);
+    }
 
 	public BodyContent pushBody() {
 		return (BodyContent) pushBody(null);
@@ -798,7 +855,7 @@ public class PageContextImpl extends PageContext {
 			request.setAttribute("javax.servlet.error.servlet_name", config
 					.getServletName());
 			try {
-				forward(errorPageURL);
+				forwardToErrorPage(errorPageURL);
 			} catch (IllegalStateException ise) {
 				include(errorPageURL);
 			}
