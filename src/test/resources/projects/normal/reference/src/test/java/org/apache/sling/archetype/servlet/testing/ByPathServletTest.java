@@ -14,7 +14,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package ${package};
+package org.apache.sling.archetype.servlet.testing;
 
 import junit.framework.TestCase;
 
