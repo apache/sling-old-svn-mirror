@@ -113,6 +113,14 @@ public class SlingMainServlet extends GenericServlet {
     @Property
     private static final String PROP_DEFAULT_PARAMETER_ENCODING = "sling.default.parameter.encoding";
 
+    /**
+     * Constant copied from <code>SlingConstants</code> to enable compatibility
+     * with older API bundle.
+     *
+     * TODO - remove once Sling API 2.3.0 has been released
+     */
+    private static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
+
     @Reference
     private HttpService httpService;
 
@@ -244,11 +252,12 @@ public class SlingMainServlet extends GenericServlet {
 
             } finally {
 
-
-                // close the resource resolver (not relying on servlet request
-                // listener to do this for now; see SLING-1270)
-                if (resolver != null) {
-                    resolver.close();
+                if (request.getAttribute(ATTR_RESOURCE_RESOLVER_SKIP_CLOSE) == null) {
+                    // close the resource resolver (not relying on servlet request
+                    // listener to do this for now; see SLING-1270)
+                    if (resolver != null) {
+                        resolver.close();
+                    }
                 }
 
                 requestListenerManager.sendEvent( request, SlingRequestEvent.EventType.EVENT_DESTROY );
