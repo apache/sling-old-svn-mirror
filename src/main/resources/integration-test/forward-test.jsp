@@ -39,6 +39,7 @@ private String getProperty(javax.jcr.Node node, String propertyName) {
 String pathToInclude = getProperty(currentNode, "pathToInclude");
 String forceResourceType = getProperty(currentNode, "forceResourceType");
 String testInfiniteLoop = getProperty(currentNode, "testInfiniteLoop");
+String forwardStyle = getProperty(currentNode, "forwardStyle");
 
 // Test 3: Forced Resource Type
 if(pathToInclude != null && forceResourceType != null) {
@@ -49,7 +50,11 @@ else
 
 // Test 1: Simple Forward 
 if(pathToInclude != null) {
-    %><sling:forward path="<%= pathToInclude %>"/><%
+    if ("jsp".equals(forwardStyle)) {
+        %><jsp:forward page="<%= pathToInclude %>"/><%
+    } else {
+        %><sling:forward path="<%= pathToInclude %>"/><%
+    }
 }
 
 else
