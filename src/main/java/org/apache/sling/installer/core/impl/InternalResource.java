@@ -168,7 +168,7 @@ public class InternalResource extends InstallableResource {
     /**
      * Copy the given file and return it.
      */
-    public File getPrivateCopyOfFile() throws IOException {
+    public File getPrivateCopyOfFile() {
         return this.dataFile;
     }
 

@@ -333,13 +333,38 @@ public class OsgiInstallerImpl
             synchronized ( this.resourcesLock ) {
                 if ( updatedResources != null && updatedResources.size() > 0 ) {
                     this.newResources.addAll(updatedResources);
+                    final Set<String> newUrls = new HashSet<String>();
+                    for(final InternalResource rsrc : updatedResources) {
+                        newUrls.add(rsrc.getURL());
+                    }
+                    // now remove this from urlsToRemove
+                    final Iterator<String> urlIter = this.urlsToRemove.iterator();
+                    while ( urlIter.hasNext() && !newUrls.isEmpty() ) {
+                        final String url = urlIter.next();
+                        if ( newUrls.remove(url) ) {
+                            urlIter.remove();
+                        }
+                    }
                     doProcess = true;
                 }
                 if ( ids != null && ids.length > 0 ) {
+                    final Set<String> removedUrls = new HashSet<String>();
                     for(final String id : ids) {
                         final String url = scheme + ':' + id;
                         // Will mark all resources which have r's URL as uninstallable
                         this.urlsToRemove.add(url);
+                        removedUrls.add(url);
+                    }
+                    // now update newResources
+                    final Iterator<InternalResource> rsrcIter = this.newResources.iterator();
+                    while ( rsrcIter.hasNext() && !removedUrls.isEmpty() ) {
+                        final InternalResource rsrc = rsrcIter.next();
+                        if ( removedUrls.remove(rsrc.getURL()) ) {
+                            if ( rsrc.getPrivateCopyOfFile() != null ) {
+                                rsrc.getPrivateCopyOfFile().delete();
+                            }
+                            rsrcIter.remove();
+                        }
                     }
                     doProcess = true;
                 }
@@ -365,6 +390,28 @@ public class OsgiInstallerImpl
             logger.debug("Registered new resource scheme: {}", scheme);
             synchronized (this.resourcesLock) {
                 this.newResourcesSchemes.put(scheme, registeredResources);
+
+                // now update resources and removed resources and remove all for this scheme!
+                final String prefix = scheme + ':';
+                // added resources
+                final Iterator<InternalResource> rsrcIter = this.newResources.iterator();
+                while ( rsrcIter.hasNext() ) {
+                    final InternalResource rsrc = rsrcIter.next();
+                    if ( rsrc.getURL().startsWith(prefix) ) {
+                        if ( rsrc.getPrivateCopyOfFile() != null ) {
+                            rsrc.getPrivateCopyOfFile().delete();
+                        }
+                        rsrcIter.remove();
+                    }
+                }
+                // removed urls
+                final Iterator<String> urlIter = this.urlsToRemove.iterator();
+                while ( urlIter.hasNext() ) {
+                    final String url = urlIter.next();
+                    if ( url.startsWith(prefix) ) {
+                        urlIter.remove();
+                    }
+                }
             }
             this.wakeUp();
         } finally {
