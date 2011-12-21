@@ -87,6 +87,15 @@ public class SlingConstants {
     public static final String ATTR_REQUEST_PATH_INFO = "org.apache.sling.api.include.request_path_info";
 
     /**
+     * The name of a request attribute which, if present, indicates that the
+     * <code>ResourceResolver</code> created by the engine during authentication
+     * should not be automatically closed.
+     * <p>
+     * @since 2.3
+     */
+    public static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
+
+    /**
      * The name of the request attribute containing the
      * <code>HttpServletRequest.getRequestURI()</code> of the request which
      * included the servlet currently being active underlying the
