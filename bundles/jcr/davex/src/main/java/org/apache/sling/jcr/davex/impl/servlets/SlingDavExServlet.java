@@ -20,12 +20,10 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 
-import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -75,6 +73,15 @@ public class SlingDavExServlet extends JcrRemotingServlet {
      * the path to the DavEx servlet to not be subject to forced authentication.
      */
     private static final String PAR_AUTH_REQ = "sling.auth.requirements";
+
+    /**
+     * Constant copied from <code>SlingConstants</code> to enable compatibility
+     * with older API bundle.
+     *
+     * TODO - remove once Sling API 2.3.0 has been released
+     */
+    private static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
+
 
     @Reference
     private Repository repository;
@@ -158,8 +165,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
         return repository;
     }
 
-    private static char[] EMPTY_PW = new char[0];
-
     @Override
     protected SessionProvider getSessionProvider() {
         return new SessionProvider() {
@@ -172,11 +177,11 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                 if ( resolver != null ) {
                     final Session session = resolver.adaptTo(Session.class);
                     // as the session might be longer used by davex than the request
-                    // we have to create a new session!
+                    // we have to tell the engine and authenticators to leave the resource
+                    // resolver open
                     if ( session != null ) {
-                        final Credentials credentials = new SimpleCredentials(session.getUserID(), EMPTY_PW);
-                        final Session newSession = session.impersonate(credentials);
-                        return newSession;
+                        req.setAttribute(ATTR_RESOURCE_RESOLVER_SKIP_CLOSE, "");
+                        return session;
                     }
                 }
                 return null;
