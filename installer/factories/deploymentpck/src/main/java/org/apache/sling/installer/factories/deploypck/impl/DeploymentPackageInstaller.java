@@ -32,6 +32,7 @@ import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.api.tasks.TransformationResult;
+import org.osgi.framework.Version;
 import org.osgi.service.deploymentadmin.DeploymentAdmin;
 
 /**
@@ -67,10 +68,10 @@ public class DeploymentPackageInstaller
                         if (v != null) {
                             final Map<String, Object> attr = new HashMap<String, Object>();
                             attr.put(DEPLOYMENTPACKAGE_SYMBOLICMAME, sn);
-                            attr.put(DEPLOYMENTPACKAGE_VERSION, v.toString());
 
                             final TransformationResult tr = new TransformationResult();
                             tr.setId(sn);
+                            tr.setVersion(new Version(v));
                             tr.setResourceType(TYPE_DP);
                             tr.setAttributes(attr);
 
@@ -105,12 +106,12 @@ public class DeploymentPackageInstaller
                 if (jis != null) {
                     try {
                         jis.close();
-                    } catch (IOException ignore) {
+                    } catch (final IOException ignore) {
                     }
                 } else {
                     try {
                         ins.close();
-                    } catch (IOException ignore) {
+                    } catch (final IOException ignore) {
                     }
                 }
             }
