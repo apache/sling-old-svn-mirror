@@ -147,8 +147,18 @@ abstract class ConfigUtil {
                         + "))");
             }
             if (configs == null || configs.length == 0) {
-                if (createIfNeeded) {
-                    result = ca.createFactoryConfiguration(factoryPid, null);
+                // check for old style with alias pid
+                configs = ca.listConfigurations(
+                        "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID
+                        + "=" + factoryPid + ")(" + ALIAS_KEY + "=" + configPid
+                        + "))");
+
+                if (configs == null || configs.length == 0) {
+                    if (createIfNeeded) {
+                        result = ca.createFactoryConfiguration(factoryPid, null);
+                    }
+                } else {
+                    result = configs[0];
                 }
             } else {
                 result = configs[0];
