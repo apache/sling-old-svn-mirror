@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.core;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -220,7 +221,6 @@ public class ScriptHelper implements SlingScriptHelper {
     /**
      * @see org.apache.sling.api.scripting.SlingScriptHelper#getServices(java.lang.Class, java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     public <ServiceType> ServiceType[] getServices(
             Class<ServiceType> serviceType, String filter)
     throws InvalidServiceFilterSyntaxException {
@@ -231,6 +231,7 @@ public class ScriptHelper implements SlingScriptHelper {
             if (refs != null) {
                 final List<ServiceType> objects = new ArrayList<ServiceType>();
                 for (int i = 0; i < refs.length; i++) {
+                    @SuppressWarnings("unchecked")
                     final ServiceType service = (ServiceType) this.bundleContext.getService(refs[i]);
                     if (service != null) {
                         if ( this.references == null ) {
@@ -241,7 +242,9 @@ public class ScriptHelper implements SlingScriptHelper {
                     }
                 }
                 if (objects.size() > 0) {
-                    result = (ServiceType[]) objects.toArray();
+                    @SuppressWarnings("unchecked")
+                    ServiceType[] srv = (ServiceType[]) Array.newInstance(serviceType, objects.size());
+                    result = objects.toArray(srv);
                 }
             }
             return result;
