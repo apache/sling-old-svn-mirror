@@ -19,15 +19,36 @@
 package org.apache.sling.installer.api;
 
 /**
- * OSGi Service that installs/updates/removes installable data
- * {@link InstallableResource} in the OSGi framework.
+ * Service for installing/updating/removing installable resources
+ * {@link InstallableResource} in an OSGi framework.
  *
- * The client can register a number of such resources, and the
- * installer decides based on the resource weights, bundle version
- * numbers, etc. which ones are actually installed.
+ * The resources are provided by provider components which are
+ * clients of this API. For example a file directory provider might
+ * scan a directory in the file system and provide the artifacts
+ * contained in the configured directory.
  *
- * An InstallableResource can be a bundle, a configuration, and later
- * we might support deployment packages as well.
+ * When such a client starts it should first call
+ * {@link #registerResources(String, InstallableResource[])} and
+ * inform this service about all available resources. In the case
+ * of a file directory provider, this list would contain all
+ * files found in the directory (and sub directories). This is
+ * the rendezvous point. The OSGi installer service compares this
+ * complete list with previous lists it might have and triggers
+ * corresponding tasks like installing new artifacts and
+ * uninstalling removed artifacts.
+ *
+ * Once this rendezvous has been done between a client and the
+ * OSGi installe, the client calls
+ * {@link #updateResources(String, InstallableResource[], String[])}
+ * to inform about changes like new resources or removed resources.
+ *
+ * A single provider should never call these methods in parallel,
+ * before calling any method a previous call must have finished!
+ *
+ * The OSGi installer detects the resources and based on their type
+ * and metadata, the installer decides whether to install them,
+ * update an already installed artifact or simply ignore them.
+ * For example, for bundles the symbolic name and the version is used.
  */
 public interface OsgiInstaller {
 
