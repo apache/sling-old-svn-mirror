@@ -18,7 +18,6 @@ package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
@@ -32,13 +31,10 @@ import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
 import org.apache.maven.artifact.versioning.VersionRange;
 import org.apache.maven.execution.MavenSession;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.apache.maven.shared.artifact.filter.collection.ArtifactFilterException;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.codehaus.plexus.util.StringUtils;
 
 public abstract class AbstractBundleListMojo extends AbstractMojo {
@@ -54,13 +50,8 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     protected File bundleListFile;
 
     /**
-     * @parameter
-     */
-    private ConfigurationStartLevel[] includeDependencies;
-
-    /**
      * The Maven project.
-     * 
+     *
      * @parameter expression="${project}"
      * @required
      * @readonly
@@ -128,13 +119,6 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
     protected MavenSession mavenSession;
 
     /**
-     * The start level to be used when generating the bundle list.
-     * 
-     * @parameter default-value="-1"
-     */
-    private int dependencyStartLevel;
-
-    /**
      * Used to look up Artifacts in the remote repository.
      *
      * @component
@@ -177,41 +161,6 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
         return this.configDirectory;
     }
 
-    protected void addDependencies(final BundleList bundleList) throws MojoExecutionException {
-        if (includeDependencies != null) {
-            for (ConfigurationStartLevel startLevel : includeDependencies) {
-                Set<Artifact> artifacts = getArtifacts(startLevel);
-                for (Artifact artifact : artifacts) {
-                    bundleList.add(ArtifactDefinition.toBundle(artifact, startLevel.getLevel()));
-                }
-            }
-        }
-
-        if (dependencyStartLevel >= 0) {
-            final List<Dependency> dependencies = project.getDependencies();
-            for (Dependency dependency : dependencies) {
-                if (!PARTIAL.equals(dependency.getType())) {
-                    bundleList.add(ArtifactDefinition.toBundle(dependency, dependencyStartLevel));
-                }
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Set<Artifact> getArtifacts(ConfigurationStartLevel startLevel) throws MojoExecutionException {
-        // start with all artifacts.
-        Set<Artifact> artifacts = project.getArtifacts();
-
-        // perform filtering
-        try {
-            artifacts = startLevel.buildFilter(project).filter(artifacts);
-        } catch (ArtifactFilterException e) {
-            throw new MojoExecutionException(e.getMessage(), e);
-        }
-        
-        return artifacts;
-    }
-
     /**
      * Get a resolved Artifact from the coordinates found in the artifact
      * definition.
@@ -234,20 +183,20 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
             throws MojoExecutionException {
                 Artifact artifact;
                 VersionRange vr;
-            
+
                 try {
                     vr = VersionRange.createFromVersionSpec(version);
                 } catch (InvalidVersionSpecificationException e) {
                     vr = VersionRange.createFromVersion(version);
                 }
-            
+
                 if (StringUtils.isEmpty(classifier)) {
                     artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, null, Artifact.SCOPE_COMPILE);
                 } else {
                     artifact = factory.createDependencyArtifact(groupId, artifactId, vr, type, classifier,
                             Artifact.SCOPE_COMPILE);
                 }
-            
+
                 // This code kicks in when the version specifier is a range.
                 if (vr.getRecommendedVersion() == null) {
                     try {
@@ -257,9 +206,9 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
                     } catch (ArtifactMetadataRetrievalException e) {
                         throw new MojoExecutionException("Unable to find version for artifact", e);
                     }
-            
+
                 }
-            
+
                 try {
                     resolver.resolve(artifact, remoteRepos, local);
                 } catch (ArtifactResolutionException e) {

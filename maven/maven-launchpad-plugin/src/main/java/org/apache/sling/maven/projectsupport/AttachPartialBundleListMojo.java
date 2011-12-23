@@ -93,8 +93,6 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
             initializedBundleList = new BundleList();
         }
 
-        addDependencies(initializedBundleList);
-
         interpolateProperties(initializedBundleList, this.project, this.mavenSession);
 
         final BundleListXpp3Writer writer = new BundleListXpp3Writer();
