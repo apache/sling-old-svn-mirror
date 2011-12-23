@@ -30,6 +30,10 @@ public interface InstallTaskFactory {
     /**
      * Creates an {@link InstallTask} for the resource or
      * <code>null</code> if the factory does not support the resource.
+     *
+     * The factory should not alter the state of the resources,
+     * therefore it's not allowed to call one of the setState methods
+     * on the task resource group!
      */
     InstallTask createTask(final TaskResourceGroup toActivate);
 }
