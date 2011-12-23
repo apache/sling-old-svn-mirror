@@ -16,6 +16,9 @@
  */
 package org.apache.sling.maven.projectsupport;
 
+import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,6 +33,7 @@ import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.shared.filtering.MavenFileFilter;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
+import org.apache.sling.maven.projectsupport.BundleListUtils.ArtifactDefinitionsCallback;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -43,9 +47,6 @@ import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
 import org.drools.io.ResourceFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
-import org.apache.sling.maven.projectsupport.BundleListUtils.ArtifactDefinitionsCallback;
-import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
-import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
 
 public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo {
 
@@ -196,7 +197,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      */
     private final void initArtifactDefinitions() throws IOException {
         BundleListUtils.initArtifactDefinitions(getClass().getClassLoader(), new ArtifactDefinitionsCallback() {
-            
+
             public void initArtifactDefinitions(Properties dependencies) {
                 if (defaultBundleList == null) {
                     defaultBundleList = new ArtifactDefinition();
@@ -231,7 +232,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 initializedBundleList.add(def.toBundle());
             }
         }
-        addDependencies(initializedBundleList);
+
         if (bundleExclusions != null) {
             for (ArtifactDefinition def : bundleExclusions) {
                 initializedBundleList.remove(def.toBundle(), false);
@@ -255,7 +256,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
 
         rewriteBundleList(initializedBundleList);
     }
-    
+
     private final void extractConfigurations() throws MojoExecutionException, IOException {
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         for (Artifact artifact : dependencies) {
@@ -322,7 +323,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
             }
         }
     }
-    
+
     private void rewriteBundleList(BundleList bundleList) throws MojoExecutionException {
         if (rewriteRuleFiles != null) {
             KnowledgeBase knowledgeBase = createKnowledgeBase(rewriteRuleFiles);

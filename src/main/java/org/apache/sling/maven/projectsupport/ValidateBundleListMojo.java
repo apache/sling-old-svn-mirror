@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -15,6 +15,9 @@
  * the License.
  */
 package org.apache.sling.maven.projectsupport;
+
+import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
 
 import java.io.IOException;
 
@@ -24,8 +27,6 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import static org.apache.sling.maven.projectsupport.BundleListUtils.readBundleList;
-import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateProperties;
 
 /**
  * Validate that the artifacts listed in a bundle list are valid
@@ -36,7 +37,7 @@ import static org.apache.sling.maven.projectsupport.BundleListUtils.interpolateP
  * @description validate that the artifacts listed in a bundle list are valid
  */
 public class ValidateBundleListMojo extends AbstractBundleListMojo {
-   
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         final BundleList initializedBundleList;
         if (bundleListFile.exists()) {
@@ -50,11 +51,9 @@ public class ValidateBundleListMojo extends AbstractBundleListMojo {
         } else {
             initializedBundleList = new BundleList();
         }
-        
-        addDependencies(initializedBundleList);
 
         interpolateProperties(initializedBundleList, project, mavenSession);
-        
+
         for (StartLevel sl : initializedBundleList.getStartLevels()) {
             for (Bundle bundle : sl.getBundles()) {
                 getArtifact(new ArtifactDefinition(bundle, -1));
