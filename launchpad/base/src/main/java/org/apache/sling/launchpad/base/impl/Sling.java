@@ -924,7 +924,8 @@ public class Sling {
             tmp.load(ins);
 
             for (Map.Entry<Object, Object> entry : tmp.entrySet()) {
-                props.put((String) entry.getKey(), (String) entry.getValue());
+                final String value = (String)entry.getValue();
+                props.put((String) entry.getKey(), (value == null ? null : value.trim()));
             }
         } finally {
             try {
