@@ -36,7 +36,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.engine.ResponseUtil;
+import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.URI;
