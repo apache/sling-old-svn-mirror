@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.engine.ResponseUtil;
 import org.apache.sling.jcr.resource.internal.helper.MapEntries;
 import org.apache.sling.jcr.resource.internal.helper.MapEntry;
 import org.apache.sling.jcr.resource.internal.helper.URI;
@@ -139,8 +140,11 @@ public class JcrResourceResolverWebConsolePlugin extends
         pw.println("<td class='content'>Test</td>");
         pw.print("<td class='content' colspan='2'>");
         pw.print("<form method='post'>");
-        pw.println("<input type='text' name='" + ATTR_TEST + "' value='" + (test != null ? test : "")
-            + "' class='input' size='50'>");
+        pw.print("<input type='text' name='" + ATTR_TEST + "' value='");
+        if ( test != null ) {
+            pw.print(ResponseUtil.escapeXml(test));
+        }
+        pw.println("' class='input' size='50'>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
             + "' value='Resolve' class='submit'>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
@@ -152,7 +156,9 @@ public class JcrResourceResolverWebConsolePlugin extends
         if (msg != null) {
             pw.println("<tr class='content'>");
             pw.println("<td class='content'>&nbsp;</td>");
-            pw.println("<td class='content' colspan='2'>" + msg + "</td>");
+            pw.print("<td class='content' colspan='2'>");
+            pw.print(ResponseUtil.escapeXml(msg));
+            pw.println("</td>");
             pw.println("</tr>");
         }
 
@@ -209,7 +215,7 @@ public class JcrResourceResolverWebConsolePlugin extends
                 // set the result to render the result
                 msg = result.toString();
 
-            } catch (Throwable t) {
+            } catch (final Throwable t) {
 
                 // some error occurred, report it as a result
                 msg = "Test Failure: " + t;
