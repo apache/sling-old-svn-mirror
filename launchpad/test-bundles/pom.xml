@@ -41,37 +41,7 @@
                 <artifactId>maven-launchpad-plugin</artifactId>
                 <version>2.1.1-SNAPSHOT</version>
                 <extensions>true</extensions>
-                <configuration>
-                    <dependencyStartLevel>0</dependencyStartLevel>
-                    <includeDependencies>
-                        <startLevel>
-                            <level>1</level>
-                            <includeArtifactIds>
-                                org.apache.sling.servlets.compat
-                            </includeArtifactIds>
-                        </startLevel>
-                    </includeDependencies>
-                </configuration>
             </plugin>
         </plugins>
     </build>
-    
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.test-services</artifactId>
-            <version>2.0.9-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
-            <version>2.0.8</version>
-            <type>war</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.compat</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
 </project>
