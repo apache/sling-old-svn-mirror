@@ -20,7 +20,7 @@
     </parent>
     <artifactId>org.apache.sling.launchpad.servicemix</artifactId>
     <packaging>pom</packaging>
-    <version>6-SNAPSHOT</version>
+    <version>7-SNAPSHOT</version>
     <name>Apache Sling Launchpad ServiceMix Feature</name>
     <description>
             The Launchpad. Customized for ServiceMix.
@@ -43,9 +43,9 @@
                         </goals>
                         <configuration>
                             <defaultBundleList>
-                                <version>6-SNAPSHOT</version>
+                                <version>7-SNAPSHOT</version>
                             </defaultBundleList>
-                            <featureVersion>6-servicemix-SNAPSHOT</featureVersion>
+                            <featureVersion>7-servicemix-SNAPSHOT</featureVersion>
                             <bundleExclusions>
                                 <bundle>
                                     <groupId>org.apache.felix</groupId>
