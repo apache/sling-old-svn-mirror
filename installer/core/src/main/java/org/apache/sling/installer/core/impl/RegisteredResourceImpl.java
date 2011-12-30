@@ -140,6 +140,12 @@ public class RegisteredResourceImpl
         }
         if ( version > 2 ) {
             this.dataUri = (String)in.readObject();
+        } else if ( InstallableResource.TYPE_CONFIG.equals(this.resourceType) && this.dictionary != null ) {
+            // update digest calculated by older versions
+            final String updatedDigest = FileDataStore.computeDigest(this.dictionary);
+            if ( !updatedDigest.equals(this.digest) ) {
+                this.digest = updatedDigest;
+            }
         }
     }
 
