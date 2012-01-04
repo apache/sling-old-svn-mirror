@@ -18,28 +18,9 @@
  */
 package org.apache.sling.startupfilter;
 
-/** Servlet Filter that blocks access to the Sling main 
- *  servlet during startup, by returning an HTTP 503
- *  or other suitable status code.
- *  
- *  A typical use case is to start this filter before
- *  the Sling main servlet (by setting a lower start level
- *  on its bundle than on the Sling engine bundle), and
- *  deactivating once startup is finished.
- */
-public interface StartupFilter {
-    
-    /** Enable the status filter, which outputs a default status message
-     *  and a concatenation of all status messages returned
-     *  by {@link StartupInfoProvider} services.
-     *  
-     *  The filter is initially enabled.   
+public interface StartupInfoProvider {
+    /** Return startup progress information, which the startup
+     *  filter adds to its HTTP 503 response.  
      */
-    void enable();
-    
-    /** Disable the status filter */
-    void disable();
-    
-    /** True if currently enabled */
-    boolean isEnabled();
+    String getProgressInfo();
 }

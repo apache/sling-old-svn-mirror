@@ -19,8 +19,9 @@
 package org.apache.sling.startupfilter.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.Stack;
+import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -36,9 +37,12 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.startupfilter.StartupFilter;
+import org.apache.sling.startupfilter.StartupInfoProvider;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,25 +56,32 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private ServiceRegistration filterServiceRegistration;
     private BundleContext bundleContext;
-    private final Stack<ProgressInfoProvider> providers = new Stack<ProgressInfoProvider>();
+    private ServiceTracker providersTracker;
+    private int providersTrackerCount = -1;
+    
+    private final List<StartupInfoProvider> providers = new ArrayList<StartupInfoProvider>();
     
     @Property(boolValue=true)
-    public static final String DEFAULT_FILTER_ACTIVE_PROP = "default.filter.active";
+    public static final String ACTIVE_BY_DEFAULT_PROP = "active.by.default";
     private boolean defaultFilterActive;
+    
+    public static final String DEFAULT_MESSAGE = "Startup in progress";
+    
+    @Property(value=DEFAULT_MESSAGE)
+    public static final String DEFAULT_MESSAGE_PROP = "default.message";
+    private String defaultMessage;
     
     /** @inheritDoc */
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        ProgressInfoProvider pip = null;
-        synchronized (this) {
-            if(!providers.isEmpty()) {
-                pip = providers.peek();
-            }
+        updateProviders();
+        
+        final StringBuilder sb = new StringBuilder();
+        sb.append(defaultMessage);
+        for(StartupInfoProvider p : providers) {
+            sb.append('\n');
+            sb.append(p.getProgressInfo());
         }
-        if(pip != null) {
-            ((HttpServletResponse)response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, pip.getInfo());
-        } else {
-            chain.doFilter(request, response);
-        }
+        ((HttpServletResponse)response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, sb.toString());
     }
 
     /** @inheritDoc */
@@ -80,28 +91,54 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     /** @inheritDoc */
     public void init(FilterConfig cfg) throws ServletException {
     }
+    
+    /** If needed, update our list of providers */
+    private void updateProviders() {
+        if(providersTracker.getTrackingCount() != providersTrackerCount) {
+            synchronized(this) {
+                if(providersTracker.getTrackingCount() != providersTrackerCount) {
+                    providers.clear();
+                    final ServiceReference [] refs = providersTracker.getServiceReferences();
+                    if(refs != null) {
+                        for(ServiceReference ref : refs) {
+                            providers.add((StartupInfoProvider)bundleContext.getService(ref));
+                        }
+                    }
+                }
+                providersTrackerCount = providersTracker.getTrackingCount();
+                log.info("Reloaded list of StartupInfoProvider: {}", providers);
+            }
+        }
+    }
 
     @Activate
     protected void activate(ComponentContext ctx) throws InterruptedException {
         bundleContext = ctx.getBundleContext();
-        defaultFilterActive = (Boolean)ctx.getProperties().get(DEFAULT_FILTER_ACTIVE_PROP);
+        
+        providersTracker = new ServiceTracker(bundleContext, StartupInfoProvider.class.getName(), null);
+        providersTracker.open();
+        
+        Object prop = ctx.getProperties().get(DEFAULT_MESSAGE_PROP);
+        defaultMessage = prop == null ? DEFAULT_MESSAGE : prop.toString();
+                
+        prop = ctx.getProperties().get(ACTIVE_BY_DEFAULT_PROP);
+        defaultFilterActive = (prop instanceof Boolean ? (Boolean)prop : false);
         if(defaultFilterActive) {
-            addProgressInfoProvider(DEFAULT_INFO_PROVIDER);
+            enable();
         }
-        log.info("Activated, defaultFilterActive={}", defaultFilterActive);
+        log.info("Activated, enabled={}", isEnabled());
     }
     
     @Deactivate
     protected void deactivate(ComponentContext ctx) throws InterruptedException {
-        unregisterFilter();
+        disable();
+        providersTracker.close();
+        providersTracker = null;
         bundleContext = null;
     }
     
     
-    /** @inheritDoc */
-    public synchronized void addProgressInfoProvider(ProgressInfoProvider pip) {
-        providers.push(pip);
-        log.info("Added {}", pip);
+    public synchronized void enable() {
         if(filterServiceRegistration == null) {
             final Hashtable<String, String> params = new Hashtable<String, String>();
             params.put("filter.scope", "REQUEST");
@@ -110,21 +147,15 @@ public class StartupFilterImpl implements StartupFilter, Filter {
         }
     }
     
-    /** @inheritDoc */
-    public synchronized void removeProgressInfoProvider(ProgressInfoProvider pip) {
-        providers.remove(pip);
-        log.info("Removed {}", pip);
-        if(providers.isEmpty()) {
-            log.info("No more ProgressInfoProviders, unregistering Filter service");
-            unregisterFilter();
-        }
-    }
-    
-    private synchronized void unregisterFilter() {
+    public synchronized void disable() {
         if(filterServiceRegistration != null) {
             filterServiceRegistration.unregister();
             filterServiceRegistration = null;
+            log.info("Filter service disabled");
         }
     }
-     
+    
+    public synchronized boolean isEnabled() {
+        return filterServiceRegistration != null;
+    }
 }
