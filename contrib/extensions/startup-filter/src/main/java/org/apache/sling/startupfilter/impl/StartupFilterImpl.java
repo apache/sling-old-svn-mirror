@@ -83,6 +83,11 @@ public class StartupFilterImpl implements StartupFilter, Filter {
         }
         ((HttpServletResponse)response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, sb.toString());
     }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ": " + (isEnabled() ? "enabled" : "disabled"); 
+    }
 
     /** @inheritDoc */
     public void destroy() {
