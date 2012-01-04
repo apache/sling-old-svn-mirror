@@ -24,6 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
@@ -31,6 +34,8 @@ import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,8 +183,22 @@ public class FsResource extends AbstractResource implements Resource {
                         + " to an URL", mue);
             }
 
+        } else if (type == ValueMap.class) {
+            
+            // this resource simulates nt:file/nt:folder behavior by returning it as resource type
+            // we should simulate the corresponding JCR properties in a value map as well
+            if (file.exists() && file.canRead()) {
+                Map<String,Object> props = new HashMap<String, Object>();
+                props.put("jcr:primaryType", getResourceType());
+                props.put("jcr:createdBy", "system");
+                Calendar lastModifed = Calendar.getInstance();
+                lastModifed.setTimeInMillis(file.lastModified());
+                props.put("jcr:created", lastModifed);
+                return (AdapterType) new ValueMapDecorator(props);
+            }
+            
         }
-
+        
         return super.adaptTo(type);
     }
 
