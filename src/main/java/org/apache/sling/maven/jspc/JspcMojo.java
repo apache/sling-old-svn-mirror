@@ -47,6 +47,7 @@ import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.Compiler;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspConfig;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
+import org.apache.sling.scripting.jsp.jasper.compiler.OriginalTldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
@@ -347,10 +348,6 @@ public class JspcMojo extends AbstractMojo implements Options {
             }
             Thread.currentThread().setContextClassLoader(loader);
 
-            // we only use the class loader and do not need the class path
-            clctxt.setClassLoader(loader);
-            clctxt.setClassPath(null);
-
             Compiler clc = clctxt.createCompiler();
 
             // If compile is set, generate both .java and .class, if
@@ -426,7 +423,7 @@ public class JspcMojo extends AbstractMojo implements Options {
         try {
             context = new JspCServletContext(getLog(), new URL("file:"
                 + uriSourceRoot.replace('\\', '/') + '/'));
-            tldLocationsCache = new TldLocationsCache(context, true);
+            tldLocationsCache = new OriginalTldLocationsCache(context, true);
         } catch (MalformedURLException me) {
             getLog().error("Cannot setup ServletContext", me);
         }
@@ -604,8 +601,7 @@ public class JspcMojo extends AbstractMojo implements Options {
      * @see org.apache.jasper.Options#getJspClassLoader()
      */
     public ClassLoader getJspClassLoader() {
-        // no JSP ClassLoader, use default
-        return null;
+        return this.loader;
     }
 
     /*
