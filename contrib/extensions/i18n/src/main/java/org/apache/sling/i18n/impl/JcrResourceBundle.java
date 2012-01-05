@@ -27,8 +27,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+
 import javax.jcr.query.Query;
 
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.slf4j.Logger;
@@ -48,7 +50,7 @@ public class JcrResourceBundle extends ResourceBundle {
 
     static final String PROP_LANGUAGE = "jcr:language";
 
-    private final HashMap<String, Object> resources;
+    private final Map<String, Object> resources;
 
     private final Locale locale;
 
@@ -101,48 +103,53 @@ public class JcrResourceBundle extends ResourceBundle {
         return resources.get(key);
     }
 
-    private HashMap<String, Object> loadFully(
+    @SuppressWarnings("deprecation")
+    private Map<String, Object> loadFully(
             final ResourceResolver resourceResolver, final String fullLoadQuery) {
         log.debug("Executing full load query {}", fullLoadQuery);
 
         // do an XPath query because this won't go away soon and still
         // (2011/04/04) is the fastest query language ...
-        @SuppressWarnings("deprecation")
-        Iterator<Map<String, Object>> bundles = resourceResolver.queryResources(
-            fullLoadQuery, Query.XPATH);
-
-        String[] path = resourceResolver.getSearchPath();
-
-        List<HashMap<String, Object>> res0 = new ArrayList<HashMap<String, Object>>();
-        for (int i = 0; i < path.length; i++) {
-            res0.add(new HashMap<String, Object>());
+        Iterator<Map<String, Object>> bundles = null;
+        try {
+            bundles = resourceResolver.queryResources(fullLoadQuery, Query.XPATH);
+        } catch (final SlingException se) {
+            log.error("Exception during resource query " + fullLoadQuery, se);
         }
-        HashMap<String, Object> rest = new HashMap<String, Object>();
 
-        while (bundles.hasNext()) {
-            Map<String, Object> row = bundles.next();
-            String jcrPath = (String) row.get(JCR_PATH);
-            String key = (String) row.get(PROP_KEY);
+        final Map<String, Object> rest = new HashMap<String, Object>();
+        if ( bundles != null ) {
+            final String[] path = resourceResolver.getSearchPath();
 
-            if (key == null) {
-                key = ResourceUtil.getName(jcrPath);
-            }
-
-            Map<String, Object> dst = rest;
+            final List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
             for (int i = 0; i < path.length; i++) {
-                if (jcrPath.startsWith(path[i])) {
-                    dst = res0.get(i);
-                    break;
-                }
+                res0.add(new HashMap<String, Object>());
             }
 
-            dst.put(key, row.get(PROP_VALUE));
-        }
+            while (bundles.hasNext()) {
+                final Map<String, Object> row = bundles.next();
+                final String jcrPath = (String) row.get(JCR_PATH);
+                String key = (String) row.get(PROP_KEY);
 
-        for (int i = path.length - 1; i >= 0; i--) {
-            rest.putAll(res0.get(i));
-        }
+                if (key == null) {
+                    key = ResourceUtil.getName(jcrPath);
+                }
 
+                Map<String, Object> dst = rest;
+                for (int i = 0; i < path.length; i++) {
+                    if (jcrPath.startsWith(path[i])) {
+                        dst = res0.get(i);
+                        break;
+                    }
+                }
+
+                dst.put(key, row.get(PROP_VALUE));
+            }
+
+            for (int i = path.length - 1; i >= 0; i--) {
+                rest.putAll(res0.get(i));
+            }
+        }
         return rest;
     }
 
