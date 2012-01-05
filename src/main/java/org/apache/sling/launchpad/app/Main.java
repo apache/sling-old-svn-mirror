@@ -87,7 +87,7 @@ public class Main {
      * @param args The command line arguments supplied when starting the Sling
      *            Launcher through the Java VM.
      */
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         final Map<String, String> rawArgs = parseCommandLine(args);
 
         // support usage first
@@ -100,7 +100,7 @@ public class Main {
             System.exit(1);
         }
 
-        Main main = new Main(props);
+        final Main main = new Main(props);
 
         // check for control commands
         int rc = main.doControlAction();
@@ -136,7 +136,7 @@ public class Main {
      *
      * @see #getSlingHome(Map)
      */
-    private String slingHome;
+    private final String slingHome;
 
     /**
      * The {@link Loader} class used to create the Framework class loader and
@@ -149,6 +149,11 @@ public class Main {
      * the OSGi Framework.
      */
     private Launcher sling;
+
+    /**
+     * Flag to indicate if Sling has already been started.
+     */
+    private boolean started = false;
 
     /**
      * Creates an instance of this main loader class. The provided arguments are
@@ -165,6 +170,13 @@ public class Main {
         this.commandLineArgs = (args == null)
                 ? new HashMap<String, String>()
                 : args;
+        // sling.home from the command line or system properties, else default
+        String home = getSlingHome(commandLineArgs);
+        final File slingHomeFile = new File(home);
+        if (!slingHomeFile.isAbsolute()) {
+            home = slingHomeFile.getAbsolutePath();
+        }
+        this.slingHome = home;
     }
 
     /**
@@ -225,10 +237,10 @@ public class Main {
      *         (Programm Not Running), 4 (Unknown Problem).
      */
     protected int doControlAction() {
-        ControlAction action = getControlAction();
+        final ControlAction action = getControlAction();
         if (action != null) {
-            ControlListener sl = new ControlListener(this,
-                commandLineArgs.remove(PROP_CONTROL_SOCKET));
+            final ControlListener sl = new ControlListener(this,
+                commandLineArgs.remove(PROP_CONTROL_SOCKET), action == ControlAction.START);
             switch (action) {
                 case START:
                     sl.listen();
@@ -238,8 +250,6 @@ public class Main {
                 case STOP:
                     sl.shutdownServer();
                     return 0;
-                default:
-                    error("Unsupported control action: " + action, null);
             }
         }
 
@@ -276,19 +286,13 @@ public class Main {
     protected boolean doStart() {
 
         // prevent duplicate start
-        if (this.slingHome != null) {
+        if ( this.started) {
             info("Apache Sling has already been started", null);
             return true;
         }
 
-        // sling.home from the command line or system properties, else default
-        String slingHome = getSlingHome(commandLineArgs);
-        File slingHomeFile = new File(slingHome);
-        if (!slingHomeFile.isAbsolute()) {
-            slingHome = slingHomeFile.getAbsolutePath();
-        }
         info("Starting Apache Sling in " + slingHome, null);
-        this.slingHome = slingHome;
+        this.started = true;
 
         // The Loader helper
         Loader loaderTmp = null;
@@ -412,7 +416,7 @@ public class Main {
         }
 
         // further cleanup
-        this.slingHome = null;
+        this.started = false;
     }
 
     /**
@@ -464,6 +468,13 @@ public class Main {
     }
 
     /**
+     * Return the absolute path to sling home
+     */
+    public String getSlingHome() {
+        return this.slingHome;
+    }
+
+    /**
      * Define the sling.launchpad parameter implementing the algorithme defined
      * on the wiki page to find the setting according to this algorithm:
      * <ol>
@@ -480,7 +491,7 @@ public class Main {
      */
     private static File getLaunchpadHome(final String slingHome,
             final Map<String, String> commandLineArgs) {
-        String launchpadHomeParam = commandLineArgs.get(SharedConstants.SLING_LAUNCHPAD);
+        final String launchpadHomeParam = commandLineArgs.get(SharedConstants.SLING_LAUNCHPAD);
         if (launchpadHomeParam == null || launchpadHomeParam.length() == 0) {
             commandLineArgs.put(SharedConstants.SLING_LAUNCHPAD, slingHome);
             return new File(slingHome);
