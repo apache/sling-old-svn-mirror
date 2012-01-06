@@ -145,8 +145,9 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     
     public synchronized void enable() {
         if(filterServiceRegistration == null) {
-            final Hashtable<String, String> params = new Hashtable<String, String>();
+            final Hashtable<String, Object> params = new Hashtable<String, Object>();
             params.put("filter.scope", "REQUEST");
+            params.put("filter.order", Integer.MIN_VALUE);
             filterServiceRegistration = bundleContext.registerService(Filter.class.getName(), this, params);
             log.info("Registered {} as a Filter service", this);
         }
