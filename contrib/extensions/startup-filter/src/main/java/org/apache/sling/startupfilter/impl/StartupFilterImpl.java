@@ -72,7 +72,7 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     private String defaultMessage;
     
     /** @inheritDoc */
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse sr, FilterChain chain) throws IOException, ServletException {
         updateProviders();
         
         final StringBuilder sb = new StringBuilder();
@@ -81,7 +81,15 @@ public class StartupFilterImpl implements StartupFilter, Filter {
             sb.append('\n');
             sb.append(p.getProgressInfo());
         }
-        ((HttpServletResponse)response).sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, sb.toString());
+
+        // Do not use setError to avoid triggering the container's error page,
+        // as that might cascade other errors during startup
+        final HttpServletResponse response = (HttpServletResponse)sr;
+        response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        response.setContentType("text/plain");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(sb.toString());
+        response.getWriter().flush();
     }
     
     @Override

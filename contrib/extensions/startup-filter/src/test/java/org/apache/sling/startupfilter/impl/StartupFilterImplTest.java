@@ -20,6 +20,8 @@ package org.apache.sling.startupfilter.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -116,7 +118,7 @@ public class StartupFilterImplTest {
     private HttpServletResponse response;
     private FilterChain chain;
     private int lastReturnedStatus;
-    private String lastReturnedMessage;
+    private StringWriter messageWriter;
     private AtomicInteger activeFilterCount;
     private ServiceRegistration serviceRegistration;
 
@@ -135,17 +137,19 @@ public class StartupFilterImplTest {
         final BundleContext bundleContext = mockery.mock(BundleContext.class); 
         final ComponentContext componentContext = mockery.mock(ComponentContext.class); 
         
-        final Action storeResponse = new Action() {
+        final Action storeStatus = new Action() {
             public void describeTo(Description d) {
                 d.appendText("Store HTTP response values");
             }
 
             public Object invoke(Invocation invocation) throws Throwable {
                 lastReturnedStatus = (Integer)invocation.getParameter(0);
-                lastReturnedMessage = (String)invocation.getParameter(1);
                 return null;
             }
         };
+
+        messageWriter = new StringWriter();
+        final PrintWriter responseWriter = new PrintWriter(messageWriter); 
         
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(StartupFilterImpl.ACTIVE_BY_DEFAULT_PROP, Boolean.TRUE);
@@ -173,8 +177,14 @@ public class StartupFilterImplTest {
                     returnValue(serviceRegistration)
                     ));
             
-            allowing(response).sendError(with(any(Integer.class)), with(any(String.class)));
-            will(storeResponse);
+            allowing(response).setStatus((with(any(Integer.class))));
+            will(storeStatus);
+            
+            allowing(response).setContentType("text/plain");
+            
+            allowing(response).getWriter();
+            will(returnValue(responseWriter));
+            allowing(response).setCharacterEncoding(with(any(String.class)));
             
             allowing(serviceRegistration).unregister();
             will(new ChangeInteger(activeFilterCount, false));
@@ -184,16 +194,17 @@ public class StartupFilterImplTest {
     }
     
     private void assertRequest(final int expectedStatus, final String expectedMessage) throws Exception {
-        lastReturnedMessage = null;
         lastReturnedStatus = -1;
         
         filter.doFilter(request, response, chain);
+        
+        final String responseText = messageWriter.toString();
         
         // status 0 means we expect the request to go through
         assertEquals("Expecting status to match", 
                 expectedStatus, lastReturnedStatus);
         assertEquals("Expecting message to match", 
-                expectedMessage, lastReturnedMessage);
+                expectedMessage, responseText);
     }
     
     @Test
