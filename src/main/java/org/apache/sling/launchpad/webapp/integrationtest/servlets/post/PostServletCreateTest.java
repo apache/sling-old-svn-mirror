@@ -30,9 +30,10 @@ import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
-/** Test node creation via the MicrojaxPostServlet */
+/** Test node creation via the SlingPostServlet */
 public class PostServletCreateTest extends HttpTestBase {
     public static final String TEST_BASE_PATH = "/sling-tests";
+    public static final String SLASH = "/";
     private String postUrl;
 
     @Override
@@ -47,7 +48,7 @@ public class PostServletCreateTest extends HttpTestBase {
     }
 
     public void testCreateNode() throws IOException {
-        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String location = testClient.createNode(postUrl + SLASH, null);
         assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have generated name",
@@ -57,13 +58,39 @@ public class PostServletCreateTest extends HttpTestBase {
     }
 
     public void testCreateNodeWithExtension() throws IOException {
-        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX + ".html", null);
+        final String location = testClient.createNode(postUrl + SLASH + ".html", null);
         assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have generated name",
                 !location.endsWith("/*"));
         assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
                 location.contains(postUrl + "/"));
+    }
+
+    public void testCreateNodeWithStarAndExtension() throws IOException {
+        final String location = testClient.createNode(postUrl + SLASH + "*.html", null);
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must have generated name",
+                !location.endsWith("/*"));
+        assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
+                location.contains(postUrl + "/"));
+    }
+
+    public void testPostWithExtensionNoStar() throws IOException {
+        final String extension = ".html";
+        final String location = testClient.createNode(postUrl + extension, null);
+        assertEquals(
+                "Expecting the original location to be modified, instead of creating a new node",
+                postUrl + extension, location);
+    }
+
+    public void testPostWithExtensionSlashNoStar() throws IOException {
+        final String extension = ".html";
+        final String location = testClient.createNode(postUrl + SLASH + extension, null);
+        assertEquals(
+                "Expecting the original location to be modified, instead of creating a new node",
+                postUrl + SLASH + extension, location);
     }
 
     public void testCreateNodeAtSpecificUrl() throws IOException {
@@ -91,7 +118,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("a","123");
         props.put("b","456");
         props.put("c","some words");
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SLASH, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("some words", content, "out.println(data.c)");
@@ -103,7 +130,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("a","123");
         props.put("subnode/b","456");
         props.put("c","some words");
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SLASH, props);
         final String content = getContent(createdNodeUrl + ".2.json", CONTENT_TYPE_JSON);
         assertJavascript("123", content, "out.println(data.a)");
         assertJavascript("456", content, "out.println(data.subnode.b)");
@@ -118,7 +145,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("./a","123");
         props.put("./b","456");
         props.put("c","not saved");
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String createdNodeUrl = testClient.createNode(postUrl + SLASH, props);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("123456", content, "out.println(data.a + data.b)");
         assertJavascript("undefined", content, "out.println(typeof data.c)");
@@ -133,7 +160,7 @@ public class PostServletCreateTest extends HttpTestBase {
         props.put("STUFF_b","456");
         props.put("c","not saved");
         props.put(":saveParamPrefix","STUFF_");
-        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props,null,false);
+        final String createdNodeUrl = testClient.createNode(postUrl + SLASH, props,null,false);
         final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
         assertJavascript("undefined", content, "out.println(typeof data.a)");
         assertJavascript("undefined", content, "out.println(typeof data.b)");
@@ -147,7 +174,7 @@ public class PostServletCreateTest extends HttpTestBase {
     public void testCreateNodeWithExactName() throws IOException {
     	Map<String,String> nodeProperties = new HashMap<String, String>();
     	nodeProperties.put(SlingPostConstants.RP_NODE_NAME, "exactNodeName");
-        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, nodeProperties);
+        final String location = testClient.createNode(postUrl + SLASH, nodeProperties);
         assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have exact name",
@@ -163,7 +190,7 @@ public class PostServletCreateTest extends HttpTestBase {
      * invalid exact node name. 
      */
     public void testCreateNodeWithInvalidExactName() throws IOException {
-		String location = postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
+		String location = postUrl + SLASH;
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, "exactNodeName*"));
 		//expect a 500 status since the name is invalid
@@ -179,7 +206,7 @@ public class PostServletCreateTest extends HttpTestBase {
     	
     	Map<String,String> nodeProperties = new HashMap<String, String>();
     	nodeProperties.put(SlingPostConstants.RP_NODE_NAME, testNodeName);
-        final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, nodeProperties);
+        final String location = testClient.createNode(postUrl + SLASH, nodeProperties);
         assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
                 "POST must redirect to created resource (" + location + ")");
         assertTrue("Node (" + location + ") must have exact name",
@@ -194,7 +221,7 @@ public class PostServletCreateTest extends HttpTestBase {
 		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(SlingPostConstants.RP_NODE_NAME, testNodeName));
 		//expect a 500 status since the name is not unique
-		assertPostStatus(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
+		assertPostStatus(postUrl + SLASH, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, null);
     }
 
     public void testCreatingNodeUnderFile() throws IOException {
