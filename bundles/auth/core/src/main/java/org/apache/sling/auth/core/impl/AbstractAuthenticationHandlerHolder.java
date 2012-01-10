@@ -153,6 +153,13 @@ public abstract class AbstractAuthenticationHandlerHolder extends
     protected abstract void doDropCredentials(HttpServletRequest request,
             HttpServletResponse response) throws IOException;
 
+    /**
+     * Return the held handler.
+     * 
+     * @return the held handler
+     */
+    protected abstract Object getHandler();
+
     // ---------- internal
 
     /**

@@ -148,4 +148,9 @@ final class AuthenticationHandlerHolder extends
         final String requestLogin = AuthUtil.getAttributeOrParameter(request, REQUEST_LOGIN_PARAMETER, null);
         return requestLogin == null || authType.equals(requestLogin);
     }
+
+    @Override
+    protected AuthenticationHandler getHandler() {
+        return handler;
+    }
 }
