@@ -270,7 +270,7 @@ public class SlingConstants {
      * The topic for the OSGi event which is sent when a resource has been added
      * to the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
-     * and {@link #PROPERTY_RESOURCE_TYPE} poperties.
+     * and {@link #PROPERTY_RESOURCE_TYPE} properties.
      * @since 2.0.6
      */
     public static final String TOPIC_RESOURCE_ADDED = "org/apache/sling/api/resource/Resource/ADDED";
@@ -278,7 +278,7 @@ public class SlingConstants {
     /**
      * The topic for the OSGi event which is sent when a resource has been removed
      * from the resource tree.
-     * The event contains at least the {@link #PROPERTY_PATH}.As the resource has already been removed
+     * The event contains at least the {@link #PROPERTY_PATH}. As the resource has already been removed
      * no further information like resource type etc. might be available.
      * @since 2.0.6
      */
@@ -288,7 +288,7 @@ public class SlingConstants {
      * The topic for the OSGi event which is sent when a resource has been changed
      * in the resource tree.
      * The event contains at least the {@link #PROPERTY_PATH}, {@link #PROPERTY_RESOURCE_SUPER_TYPE}
-     * and {@link #PROPERTY_RESOURCE_TYPE} poperties.
+     * and {@link #PROPERTY_RESOURCE_TYPE} properties.
      * Since 2.2.0 the event might contain these properties {@link #PROPERTY_ADDED_ATTRIBUTES},
      * {@link #PROPERTY_REMOVED_ATTRIBUTES}, {@link #PROPERTY_CHANGED_ATTRIBUTES}. All of them are
      * optional.
