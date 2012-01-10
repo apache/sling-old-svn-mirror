@@ -105,6 +105,11 @@ public final class EngineAuthenticationHandlerHolder extends
     }
 
     @Override
+    protected AuthenticationHandler getHandler() {
+        return handler;
+    }
+
+    @Override
     public String toString() {
         return handler.toString() + " (Legacy API Handler)";
     }

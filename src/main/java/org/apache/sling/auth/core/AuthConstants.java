@@ -77,6 +77,25 @@ public final class AuthConstants {
      */
     public static final String AUTH_HANDLER_BROWSER_ONLY = "sling.auth.browser-only";
 
+    /**
+     * The topic for the OSGi event which is sent when a user has logged in successfully.
+     * The event contains at least the {@link org.apache.sling.api.SlingConstants#PROPERTY_USERID},
+     * and {@link #PROPERTY_AUTH_HANDLER_CLASS} properties.
+     */
+    public static final String TOPIC_LOGIN = "org/apache/sling/auth/core/Authenticator/LOGIN";
+
+    /**
+     * The topic for the OSGi event which is sent when a user has logged out.
+     * The event contains at least the {@link org.apache.sling.api.SlingConstants#PROPERTY_USERID}
+     * property.
+     */
+    public static final String TOPIC_LOGOUT = "org/apache/sling/auth/core/Authenticator/LOGOUT";
+
+    /**
+     * The name of the event property holding the authentication handler class name.
+     */
+    public static final String PROPERTY_AUTH_HANDLER_CLASS = "authHandlerClassName";
+
     private AuthConstants() {
     }
 

@@ -20,6 +20,7 @@ package org.apache.sling.auth.core.impl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
@@ -41,12 +42,15 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.auth.NoAuthenticationHandlerException;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.auth.core.AuthConstants;
 import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
@@ -64,6 +68,8 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.http.HttpContext;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -190,6 +196,14 @@ public class SlingAuthenticator implements Authenticator,
      */
     private static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
 
+    /**
+     * The name of the {@link AuthenticationInfo} property providing the
+     * handler which extracted the credentials. May be an instance of either
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} or
+     * {@link org.apache.sling.auth.sling.engine.auth.AuthenticationHandler}
+     */
+    private static final String AUTH_INFO_PROP_AUTHENTICATION_HANDLER = "$$sling.auth.AuthenticationHandler$$";
+
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
@@ -259,6 +273,12 @@ public class SlingAuthenticator implements Authenticator,
      * ServiceTracker tracking AuthenticationInfoPostProcessor services
      */
     private ServiceTracker authInfoPostProcessorTracker;
+
+    /**
+     * The event admin service.
+     */
+    @Reference(policy=ReferencePolicy.DYNAMIC)
+    private EventAdmin eventAdmin;
 
     // ---------- SCR integration
 
@@ -562,6 +582,8 @@ public class SlingAuthenticator implements Authenticator,
             throw new IllegalStateException("Response already committed");
         }
 
+        String userId = request.getRemoteUser();
+
         final String path = getHandlerSelectionPath(request);
         final List<AbstractAuthenticationHandlerHolder>[] holderListArray = this.authHandlerCache.findApplicableHolder(request);
         for (int m = 0; m < holderListArray.length; m++) {
@@ -588,6 +610,8 @@ public class SlingAuthenticator implements Authenticator,
         if (httpBasicHandler != null) {
             httpBasicHandler.dropCredentials(request, response);
         }
+
+        postLogoutEvent(userId);
 
         redirectAfterLogout(request, response);
     }
@@ -682,6 +706,9 @@ public class SlingAuthenticator implements Authenticator,
                             request, response);
 
                         if (authInfo != null) {
+                            authInfo.put(AUTH_INFO_PROP_AUTHENTICATION_HANDLER,
+                                holder.getHandler());
+
                             // add the feedback handler to the info (may be null)
                             authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER,
                                 holder.getFeedbackHandler());
@@ -789,6 +816,9 @@ public class SlingAuthenticator implements Authenticator,
             // no redirect desired, so continue processing by first setting
             // the request attributes and then returning true
             setAttributes(resolver, authInfo.getAuthType(), request);
+
+            postLoginEvent(authInfo);
+
             return true;
 
         } catch (LoginException re) {
@@ -1336,6 +1366,27 @@ public class SlingAuthenticator implements Authenticator,
             response.sendRedirect(request.getContextPath() + target);
         } catch (IOException e) {
             log.error("Failed to redirect to the page: " + target, e);
+        }
+    }
+
+    private void postLoginEvent(final AuthenticationInfo authInfo) {
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        properties.put(SlingConstants.PROPERTY_USERID, authInfo.getUser());
+        properties.put(AuthConstants.PROPERTY_AUTH_HANDLER_CLASS, authInfo.get(AUTH_INFO_PROP_AUTHENTICATION_HANDLER).getClass().getName());
+
+        EventAdmin localEA = this.eventAdmin;
+        if (localEA != null) {
+            localEA.postEvent(new Event(AuthConstants.TOPIC_LOGIN, properties));
+        }
+    }
+
+    private void postLogoutEvent(final String userId) {
+        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
+        properties.put(SlingConstants.PROPERTY_USERID, userId);
+
+        EventAdmin localEA = this.eventAdmin;
+        if (localEA != null) {
+            localEA.postEvent(new Event(AuthConstants.TOPIC_LOGOUT, properties));
         }
     }
 
