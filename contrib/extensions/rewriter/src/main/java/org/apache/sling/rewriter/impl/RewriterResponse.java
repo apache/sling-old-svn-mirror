@@ -22,6 +22,8 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -35,6 +37,10 @@ import org.xml.sax.ContentHandler;
 /**
  * This response is used to pass the output through the rewriter pipeline.
  */
+@Adaptable(adaptableClass=SlingHttpServletResponse.class, adapters={
+    @Adapter(value=ContentHandler.class,
+            condition="When the response is being processed through the Sling Rewriter filter.")
+})
 class RewriterResponse
     extends SlingHttpServletResponseWrapper {
 
