@@ -180,6 +180,8 @@ public class SlingMainServlet extends GenericServlet {
 
     private ServiceRegistration requestProcessorRegistration;
 
+    private ServiceRegistration requestProcessorMBeanRegistration;
+
     // ---------- Servlet API -------------------------------------------------
 
     public void service(ServletRequest req, ServletResponse res)
@@ -438,7 +440,7 @@ public class SlingMainServlet extends GenericServlet {
             mbeanProps.put("jmx.objectname", "org.apache.sling:type=engine,service=RequestProcessor");
 
             RequestProcessorMBeanImpl mbean = new RequestProcessorMBeanImpl();
-            bundleContext.registerService(RequestProcessorMBean.class.getName(), mbean, mbeanProps);
+            requestProcessorMBeanRegistration = bundleContext.registerService(RequestProcessorMBean.class.getName(), mbean, mbeanProps);
             requestProcessor.setMBean(mbean);
         } catch (Throwable t) {
             log.debug("Unable to register mbean");
@@ -463,6 +465,11 @@ public class SlingMainServlet extends GenericServlet {
         if (requestProcessorRegistration != null) {
             requestProcessorRegistration.unregister();
             requestProcessorRegistration = null;
+        }
+
+        if (requestProcessorMBeanRegistration != null) {
+            requestProcessorMBeanRegistration.unregister();
+            requestProcessorMBeanRegistration = null;
         }
 
         // unregister request recorder plugin
