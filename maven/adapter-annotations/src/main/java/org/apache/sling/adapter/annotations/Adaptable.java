@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The <code>AdaptableInfo</code> annotation defines metadata about an implementation
+ * The <code>Adaptable</code> annotation defines metadata about an implementation
  * of <code>org.apache.sling.api.adapter.Adaptable</code>.
  */
 @Target(ElementType.TYPE)
