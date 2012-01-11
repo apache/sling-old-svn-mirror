@@ -31,17 +31,18 @@ import java.util.TreeSet;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.junit.Test;
 
 public class RegisteredResourceComparatorTest {
 
-    private void assertOrder(Set<RegisteredResource> toTest, RegisteredResource[] inOrder) {
+    private void assertOrder(final Set<RegisteredResource> toTest, final RegisteredResource[] inOrder) {
         assertEquals("Expected sizes to match", toTest.size(), inOrder.length);
         int i = 0;
-        for(RegisteredResource r : toTest) {
+        for(final RegisteredResource r : toTest) {
             final RegisteredResource ref = inOrder[i];
-            assertSame("At index " + i + ", expected toTest and ref to match", ref, r);
+            assertSame("At index " + i + ", expected toTest and ref to match.", ref, r);
             i++;
         }
     }
@@ -51,7 +52,11 @@ public class RegisteredResourceComparatorTest {
     }
 
     private RegisteredResourceImpl getConfig(String url, Dictionary<String, Object> data, int priority, String digest) throws IOException {
-        if(data == null) {
+        return getConfig(url, data, priority, digest, null);
+    }
+
+    private RegisteredResourceImpl getConfig(String url, Dictionary<String, Object> data, int priority, String digest, ResourceState state) throws IOException {
+        if (data == null) {
             data = new Hashtable<String, Object>();
             data.put("foo", "bar");
         }
@@ -68,7 +73,11 @@ public class RegisteredResourceComparatorTest {
                       result
             };
         }
-        return (RegisteredResourceImpl)rr.clone(tr[0]);
+        final RegisteredResourceImpl result = (RegisteredResourceImpl)rr.clone(tr[0]);
+        if ( state != null ) {
+            result.setState(state);
+        }
+        return result;
     }
 
     private void assertOrder(RegisteredResource[] inOrder) {
@@ -190,6 +199,14 @@ public class RegisteredResourceComparatorTest {
         inOrder[1] = getConfig("pidA", null, 0);
         inOrder[2] = getConfig("pidB", null, 1);
         inOrder[3] = getConfig("pidB", null, 0);
+        assertOrder(inOrder);
+    }
+
+    @Test
+    public void testConfigState() throws IOException {
+        final RegisteredResource [] inOrder = new RegisteredResource [2];
+        inOrder[0] = getConfig("pidA", null, 100, "a", ResourceState.INSTALLED);
+        inOrder[1] = getConfig("pidA", null, 100, "b", ResourceState.INSTALL);
         assertOrder(inOrder);
     }
 }
