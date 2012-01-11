@@ -143,6 +143,10 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return rsrc.getURL();
     }
 
+    private String getInfo(final RegisteredResource rsrc) {
+        return rsrc.getDigest() + '/' + String.valueOf(rsrc.getPriority());
+    }
+
     /** Default date format used. */
     private final DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS yyyy-MMM-dd");
 
@@ -178,12 +182,12 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     pw.printf("<span style='float: left; margin-left: 1em;'>Active Resources - %s</span>", getType(toActivate));
                     pw.println("</div>");
                     pw.println("<table class='nicetable'><tbody>");
-                    pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL (Version)</th><th>State</th></tr>");
+                    pw.printf("<tr><th>Entity ID</th><th>Digest/Priority</th><th>URL (Version)</th><th>State</th></tr>");
                     rt = toActivate.getType();
                 }
                 pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
                         getEntityId(toActivate, group.getAlias()),
-                        toActivate.getDigest(),
+                        getInfo(toActivate),
                         getURL(toActivate),
                         toActivate.getState());
             }
@@ -205,13 +209,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         pw.printf("<span style='float: left; margin-left: 1em;'>Processed Resources - %s</span>", getType(first));
                         pw.println("</div>");
                         pw.println("<table class='nicetable'><tbody>");
-                        pw.printf("<tr><th>Entity ID</th><th>Digest</th><th>URL (Version)</th><th>State</th></tr>");
+                        pw.printf("<tr><th>Entity ID</th><th>Digest/Priority</th><th>URL (Version)</th><th>State</th></tr>");
                         rt = first.getType();
                     }
                     pw.print("<tr><td>");
                     pw.print(getEntityId(first, group.getAlias()));
                     pw.print("</td><td>");
-                    pw.print(first.getDigest());
+                    pw.print(getInfo(first));
                     pw.print("</td><td>");
                     pw.print(getURL(first));
                     pw.print("</td><td>");
@@ -228,7 +232,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     while ( iter.hasNext() ) {
                         final TaskResource resource = iter.next();
                         pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
-                            resource.getDigest(),
+                            getInfo(resource),
                             getURL(resource),
                             resource.getState());
                     }
@@ -248,12 +252,12 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     pw.printf("<span style='float: left; margin-left: 1em;'>Untransformed Resources - %s</span>", getType(registeredResource));
                     pw.println("</div>");
                     pw.println("<table class='nicetable'><tbody>");
-                    pw.printf("<tr><th>Digest</th><th>URL</th></tr>");
+                    pw.printf("<tr><th>Digest/Priority</th><th>URL</th></tr>");
 
                     rt = registeredResource.getType();
                 }
                 pw.printf("<tr><td>%s</td><td>%s</td></tr>",
-                    registeredResource.getDigest(),
+                    getInfo(registeredResource),
                     registeredResource.getURL());
             }
             if ( rt != null ) {
@@ -284,7 +288,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                 }
                 pw.printf("- %s: %s, %s, %s%n",
                         getEntityId(toActivate, group.getAlias()),
-                        toActivate.getDigest(),
+                        getInfo(toActivate),
                         getURL(toActivate),
                         toActivate.getState());
             }
@@ -304,13 +308,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     }
                     pw.printf("* %s: %s, %s, %s%n",
                             getEntityId(first, group.getAlias()),
-                            first.getDigest(),
+                            getInfo(first),
                             getURL(first),
                             first.getState());
                     while ( iter.hasNext() ) {
                         final TaskResource resource = iter.next();
                         pw.printf("  - %s, %s, %s%n",
-                            resource.getDigest(),
+                            getInfo(resource),
                             getURL(resource),
                             resource.getState());
                     }
@@ -327,7 +331,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     rt = registeredResource.getType();
                 }
                 pw.printf("- %s, %s%n",
-                        registeredResource.getDigest(),
+                        getInfo(registeredResource),
                         registeredResource.getURL());
             }
         }

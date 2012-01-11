@@ -421,15 +421,17 @@ public class RegisteredResourceImpl
     public static int compare(final TaskResource a, final TaskResource b) {
         // check entity id first
         int result = a.getEntityId().compareTo(b.getEntityId());
+        boolean hasVersion = false;
         if ( result == 0 ) {
             // compare versions
-            boolean isSnapshot = true;
+            boolean isSnapshot = false;
 
             // Order by version
             final Version va = a.getVersion();
             final Version vb = b.getVersion();
 
             if ( va != null && vb != null ) {
+                hasVersion = true;
                 isSnapshot = va.toString().contains("SNAPSHOT");
                 // higher version has more priority, must come first so invert comparison
                 result = vb.compareTo(va);
@@ -446,13 +448,24 @@ public class RegisteredResourceImpl
             }
         }
 
-        if ( result == 0 ) {
+        if ( result == 0 && a.getState() != b.getState() ) {
             if ( a.getState() == ResourceState.INSTALLED ) {
                 return -1;
             } else if ( b.getState() == ResourceState.INSTALLED ) {
                 return 1;
+            } else if ( a.getState() == ResourceState.INSTALL ) {
+                return -1;
+            } else if ( b.getState() == ResourceState.INSTALL ) {
+                return 1;
             }
+        }
+        if ( result == 0 ) {
+            // finally use url and then digest
             result = a.getURL().compareTo(b.getURL());
+            if ( result == 0 && !hasVersion ) {
+                // higher digest has more priority, must come first so invert comparison
+                result = b.getDigest().compareTo(a.getDigest());
+            }
         }
         return result;
     }

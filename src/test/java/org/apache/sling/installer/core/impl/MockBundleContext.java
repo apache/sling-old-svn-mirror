@@ -173,6 +173,7 @@ public class MockBundleContext implements BundleContext {
 
             }
 
+            @SuppressWarnings("rawtypes")
             public Dictionary getHeaders() {
                 // TODO Auto-generated method stub
                 return null;
@@ -208,6 +209,7 @@ public class MockBundleContext implements BundleContext {
                 return null;
             }
 
+            @SuppressWarnings("rawtypes")
             public Dictionary getHeaders(String locale) {
                 // TODO Auto-generated method stub
                 return null;
@@ -217,16 +219,19 @@ public class MockBundleContext implements BundleContext {
                 return "test-bundle";
             }
 
+            @SuppressWarnings("rawtypes")
             public Class loadClass(String name) throws ClassNotFoundException {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @SuppressWarnings("rawtypes")
             public Enumeration getResources(String name) throws IOException {
                 // TODO Auto-generated method stub
                 return null;
             }
 
+            @SuppressWarnings("rawtypes")
             public Enumeration getEntryPaths(String path) {
                 // TODO Auto-generated method stub
                 return null;
@@ -242,6 +247,7 @@ public class MockBundleContext implements BundleContext {
                 return 0;
             }
 
+            @SuppressWarnings("rawtypes")
             public Enumeration findEntries(String path, String filePattern,
                     boolean recurse) {
                 // TODO Auto-generated method stub
@@ -253,6 +259,7 @@ public class MockBundleContext implements BundleContext {
                 return null;
             }
 
+            @SuppressWarnings("rawtypes")
             public Map getSignerCertificates(int signersType) {
                 // TODO Auto-generated method stub
                 return null;
