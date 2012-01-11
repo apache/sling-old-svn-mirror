@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +34,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.sling.adapter.annotations.Adaptable;
+import org.apache.sling.adapter.annotations.Adaptables;
+import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.codehaus.plexus.util.IOUtil;
@@ -54,6 +58,8 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
     private static final int JSON_INDENTATION = 4;
 
     private static final String ADAPTABLE_DESC = "L" + Adaptable.class.getName().replace('.', '/') + ";";
+
+    private static final String ADAPTABLES_DESC = "L" + Adaptables.class.getName().replace('.', '/') + ";";
 
     private static final String DEFAULT_CONDITION = "If the adaptable is a %s.";
 
@@ -106,10 +112,9 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
             final AnnotationDB annotationDb = new AnnotationDB();
             annotationDb.scanArchives(buildOutputDirectory.toURI().toURL());
 
-            final Set<String> annotatedClassNames = annotationDb.getAnnotationIndex().get(Adaptable.class.getName());
-            if (annotatedClassNames.isEmpty()) {
-                getLog().debug("No classes found with adaptable annotations.");
-            }
+            final Set<String> annotatedClassNames = new HashSet<String>();
+            addAnnotatedClasses(annotationDb, annotatedClassNames, Adaptable.class);
+            addAnnotatedClasses(annotationDb, annotatedClassNames, Adaptables.class);
 
             for (final String annotatedClassName : annotatedClassNames) {
                 getLog().info(String.format("found adaptable annotation on %s", annotatedClassName));
@@ -130,6 +135,8 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
                 for (final AnnotationNode annotation : annotations) {
                     if (ADAPTABLE_DESC.equals(annotation.desc)) {
                         parseAdaptableAnnotation(annotation, classNode, descriptor);
+                    } else if (ADAPTABLES_DESC.equals(annotation.desc)) {
+                        parseAdaptablesAnnotation(annotation, classNode, descriptor);
                     }
                 }
 
@@ -153,6 +160,15 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
     }
 
+    private void addAnnotatedClasses(final AnnotationDB annotationDb, final Set<String> annotatedClassNames, final Class<? extends Annotation> clazz) {
+        Set<String> classNames = annotationDb.getAnnotationIndex().get(clazz.getName());
+        if (classNames == null || classNames.isEmpty()) {
+            getLog().debug("No classes found with adaptable annotations.");
+        } else {
+            annotatedClassNames.addAll(classNames);
+        }
+    }
+
     private void addResource() {
         final String ourRsrcPath = this.outputDirectory.getAbsolutePath();
         boolean found = false;
@@ -170,11 +186,30 @@ public class GenerateAdapterMetadataMojo extends AbstractMojo {
 
     }
 
+    private void parseAdaptablesAnnotation(final AnnotationNode annotation, final ClassNode classNode,
+            final JSONObject descriptor) throws JSONException {
+        final Iterator<?> it = annotation.values.iterator();
+        while (it.hasNext()) {
+            Object name = it.next();
+            Object value = it.next();
+            if ("value".equals(name)) {
+                @SuppressWarnings("unchecked")
+                final List<AnnotationNode> annotations = (List<AnnotationNode>) value;
+                for (final AnnotationNode innerAnnotation : annotations) {
+                    if (ADAPTABLE_DESC.equals(innerAnnotation.desc)) {
+                        parseAdaptableAnnotation(innerAnnotation, classNode, descriptor);
+                    }
+                }
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private void parseAdaptableAnnotation(final AnnotationNode annotation, final ClassNode annotatedClass,
             final JSONObject descriptor) throws JSONException {
         String adaptableClassName = null;
         List<AnnotationNode> adapters = null;
+        String servicePid = null;
 
         final List<?> values = annotation.values;
 
