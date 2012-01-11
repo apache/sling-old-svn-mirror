@@ -79,8 +79,9 @@ public final class AuthConstants {
 
     /**
      * The topic for the OSGi event which is sent when a user has logged in successfully.
-     * The event contains at least the {@link org.apache.sling.api.SlingConstants#PROPERTY_USERID},
-     * and {@link #PROPERTY_AUTH_HANDLER_CLASS} properties.
+     * The event contains at least the {@link org.apache.sling.api.SlingConstants#PROPERTY_USERID}
+     * and the {@link org.apache.sling.auth.core.spi.AuthenticationInfo#AUTH_TYPE}
+     * properties.
      */
     public static final String TOPIC_LOGIN = "org/apache/sling/auth/core/Authenticator/LOGIN";
 
@@ -90,11 +91,6 @@ public final class AuthConstants {
      * property.
      */
     public static final String TOPIC_LOGOUT = "org/apache/sling/auth/core/Authenticator/LOGOUT";
-
-    /**
-     * The name of the event property holding the authentication handler class name.
-     */
-    public static final String PROPERTY_AUTH_HANDLER_CLASS = "authHandlerClassName";
 
     private AuthConstants() {
     }

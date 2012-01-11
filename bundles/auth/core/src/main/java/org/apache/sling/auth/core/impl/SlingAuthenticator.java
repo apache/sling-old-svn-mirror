@@ -196,14 +196,6 @@ public class SlingAuthenticator implements Authenticator,
      */
     private static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
 
-    /**
-     * The name of the {@link AuthenticationInfo} property providing the
-     * handler which extracted the credentials. May be an instance of either
-     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} or
-     * {@link org.apache.sling.auth.sling.engine.auth.AuthenticationHandler}
-     */
-    private static final String AUTH_INFO_PROP_AUTHENTICATION_HANDLER = "$$sling.auth.AuthenticationHandler$$";
-
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
@@ -706,9 +698,6 @@ public class SlingAuthenticator implements Authenticator,
                             request, response);
 
                         if (authInfo != null) {
-                            authInfo.put(AUTH_INFO_PROP_AUTHENTICATION_HANDLER,
-                                holder.getHandler());
-
                             // add the feedback handler to the info (may be null)
                             authInfo.put(AUTH_INFO_PROP_FEEDBACK_HANDLER,
                                 holder.getFeedbackHandler());
@@ -1372,7 +1361,7 @@ public class SlingAuthenticator implements Authenticator,
     private void postLoginEvent(final AuthenticationInfo authInfo) {
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(SlingConstants.PROPERTY_USERID, authInfo.getUser());
-        properties.put(AuthConstants.PROPERTY_AUTH_HANDLER_CLASS, authInfo.get(AUTH_INFO_PROP_AUTHENTICATION_HANDLER).getClass().getName());
+        properties.put(AuthenticationInfo.AUTH_TYPE, authInfo.getAuthType());
 
         EventAdmin localEA = this.eventAdmin;
         if (localEA != null) {
