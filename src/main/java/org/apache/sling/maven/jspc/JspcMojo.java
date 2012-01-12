@@ -50,6 +50,7 @@ import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.OriginalTldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
+import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
 
 /**
@@ -331,13 +332,16 @@ public class JspcMojo extends AbstractMojo implements Options {
         }
     }
 
-    private void processFile(String file) throws JasperException {
+    private void processFile(final String file) throws JasperException {
         ClassLoader originalClassLoader = null;
 
         try {
-            String jspUri = file.replace('\\', '/');
-            JspCompilationContext clctxt = new JspCompilationContext(jspUri,
-                false, this, context, null, rctxt);
+            final String jspUri = file.replace('\\', '/');
+            final JspServletWrapper wrapper = new JspServletWrapper(new JspCServletConfig(context), this, jspUri,
+                    false, rctxt);
+
+            final JspCompilationContext clctxt = new JspCompilationContext(jspUri,
+                false, this, context, wrapper, rctxt);
 
             // write to a specific servlet package
             clctxt.setServletPackageName(servletPackage);
@@ -364,7 +368,7 @@ public class JspcMojo extends AbstractMojo implements Options {
                 getLog().info("File up to date: " + file);
             }
 
-        } catch (JasperException je) {
+        } catch (final JasperException je) {
             Throwable rootCause = je;
             while (rootCause instanceof JasperException
                 && ((JasperException) rootCause).getRootCause() != null) {
