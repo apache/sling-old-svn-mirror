@@ -217,7 +217,7 @@ public class XmlReader implements ContentReader {
             if (eventType == XmlPullParser.PROCESSING_INSTRUCTION) {
                 ProcessingInstruction pi = new ProcessingInstruction(this.xmlParser.getText());
                 // Look for a reference to an XSL stylesheet
-                if (pi.getName().equals(XML_STYLESHEET_PROCESSING_INSTRUCTION)) {
+                if (pi.getName().equals(XML_STYLESHEET_PROCESSING_INSTRUCTION) && xmlLocation != null ) {
                     // Rewind the input stream to the beginning, so that it can be transformed with XSL
                     bufferedInput.reset();
                     // Pipe the XML input through the XSL transformer
