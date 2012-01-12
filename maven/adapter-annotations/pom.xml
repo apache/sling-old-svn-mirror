@@ -32,4 +32,10 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>Sling Adapter Annotations</name>
     <description>Annotations used to generate Sling Adapter metadata</description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/adapter-annotations</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/adapter-annotations</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/maven/adapter-annotations</url>
+    </scm>
 </project>
