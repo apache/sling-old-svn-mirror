@@ -27,6 +27,7 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteResultHandler;
 import org.apache.commons.exec.Executor;
+import org.apache.commons.exec.ProcessDestroyer;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.exec.ShutdownHookProcessDestroyer;
 import org.slf4j.Logger;
@@ -161,7 +162,12 @@ public class JarExecutor {
 
         log.info("Executing " + cl);
         e.setStreamHandler(new PumpStreamHandler());
-        e.setProcessDestroyer(new ShutdownHookProcessDestroyer());
+        e.setProcessDestroyer(getProcessDestroyer());
         e.execute(cl, h);
+    }
+    
+    /** Can be overridden to return a custom ProcessDestroyer */
+    protected ProcessDestroyer getProcessDestroyer() {
+        return new ShutdownHookProcessDestroyer();
     }
 }
