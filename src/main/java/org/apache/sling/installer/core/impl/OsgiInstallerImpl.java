@@ -211,7 +211,8 @@ public class OsgiInstallerImpl
                 synchronized ( this.resourcesLock ) {
                     this.retryDuringTaskExecution = false;
                 }
-                if ( this.executeTasks(tasks) ) {
+                final ACTION action = this.executeTasks(tasks);
+                if ( action == ACTION.SLEEP ) {
                     synchronized ( this.resourcesLock ) {
                         // before we go to sleep, check if new resources arrived in the meantime
                         if ( !this.hasNewResources() && this.active && !this.retryDuringTaskExecution) {
@@ -228,7 +229,7 @@ public class OsgiInstallerImpl
                             }
                         }
                     }
-                } else {
+                } else if ( action == ACTION.SHUTDOWN ) {
                     // stop processing
                     this.active = false;
                 }
@@ -575,10 +576,16 @@ public class OsgiInstallerImpl
         return result;
     }
 
+    private enum ACTION {
+        SLEEP,
+        SHUTDOWN,
+        CYCLE
+    };
+
     /**
      * Execute all tasks
      */
-    private boolean executeTasks(final SortedSet<InstallTask> tasks) {
+    private ACTION executeTasks(final SortedSet<InstallTask> tasks) {
         if ( !tasks.isEmpty() ) {
 
             final List<InstallTask> asyncTasks = new ArrayList<InstallTask>();
@@ -623,7 +630,7 @@ public class OsgiInstallerImpl
                 }
             }
             // save new state
-            this.cleanupInstallableResources();
+            final boolean newCycle = this.cleanupInstallableResources();
 
             // let's check if we have async tasks and no other tasks
             if ( this.active && !asyncTasks.isEmpty() ) {
@@ -642,20 +649,25 @@ public class OsgiInstallerImpl
                     }
                 };
                 t.start();
-                return false;
+                return ACTION.SHUTDOWN;
+            }
+            if ( newCycle ) {
+                return ACTION.CYCLE;
             }
 
         }
-        return true;
+        return ACTION.SLEEP;
     }
 
     /**
-     * Clean up and compact
+     * Clean up and compact.
+     * @return <code>true</code> if another cycle should be started.
      */
-    private void cleanupInstallableResources() {
-        this.persistentList.compact();
+    private boolean cleanupInstallableResources() {
+        final boolean result = this.persistentList.compact();
         this.persistentList.save();
         printResources("Compacted");
+        return result;
     }
 
     /**

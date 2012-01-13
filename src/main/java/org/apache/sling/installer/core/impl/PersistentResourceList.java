@@ -270,20 +270,20 @@ public class PersistentResourceList {
 
     /**
      * Compact the internal state and remove empty groups.
+     * @return <code>true</code> if another cycle should be started.
      */
     public boolean compact() {
-        boolean changed = false;
+        boolean startNewCycle = false;
         final Iterator<Map.Entry<String, EntityResourceList>> i = this.data.entrySet().iterator();
         while ( i.hasNext() ) {
             final Map.Entry<String, EntityResourceList> entry = i.next();
 
-            changed |= entry.getValue().compact();
+            startNewCycle |= entry.getValue().compact();
             if ( entry.getValue().isEmpty() ) {
-                changed = true;
                 i.remove();
             }
         }
-        return changed;
+        return startNewCycle;
     }
 
     /**
