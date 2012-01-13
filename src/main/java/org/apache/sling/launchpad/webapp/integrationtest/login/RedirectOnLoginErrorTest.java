@@ -144,4 +144,15 @@ public class RedirectOnLoginErrorTest extends HttpTestBase {
         }
         assertEquals("Expected to remain on the form/login page", loginPageUrl, location);
     }
+
+    /**
+     * Test SLING-2165.  Verify that a GET request to the default login page does not
+     * result in an error condition.
+     *
+     * @throws Exception
+     */
+    public void testGetDefaultLoginPage() throws Exception {
+        final String loginPageUrl = String.format("%s/system/sling/login", HTTP_BASE_URL);
+        assertHttpStatus(loginPageUrl, HttpServletResponse.SC_OK);
+    }
 }
