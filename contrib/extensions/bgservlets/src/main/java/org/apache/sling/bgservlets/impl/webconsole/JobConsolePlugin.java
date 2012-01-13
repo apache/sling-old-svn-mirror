@@ -51,9 +51,9 @@ public class JobConsolePlugin {
     public static final String TITLE = "Background Servlets & Jobs";
     public static final String STATUS_EXTENSION = "html";
 
-    public static void initPlugin(BundleContext context) {
+    public static void initPlugin(BundleContext context, JobConsole jobConsole) {
         if (plugin == null) {
-            Plugin tmp = new Plugin();
+            Plugin tmp = new Plugin(jobConsole);
             tmp.activate(context);
             plugin = tmp;
             log.info("{} activated", plugin);
@@ -74,14 +74,16 @@ public class JobConsolePlugin {
     @SuppressWarnings("serial")
     public static final class Plugin extends AbstractWebConsolePlugin {
         private ServiceRegistration serviceRegistration;
-        private ServiceTracker jobConsoleTracker;
+        private final JobConsole jobConsole;
         private ServiceTracker repositoryTracker;
 
+        public Plugin(JobConsole console) {
+            jobConsole = console;
+        }
+        
         public void activate(BundleContext ctx) {
             super.activate(ctx);
 
-            jobConsoleTracker = new ServiceTracker(ctx, JobConsole.class.getName(), null);
-            jobConsoleTracker.open();
             repositoryTracker = new ServiceTracker(ctx, SlingRepository.class.getName(), null);
             repositoryTracker.open();
 
@@ -100,10 +102,6 @@ public class JobConsolePlugin {
             if (serviceRegistration != null) {
                 serviceRegistration.unregister();
                 serviceRegistration = null;
-            }
-            if (jobConsoleTracker != null) {
-                jobConsoleTracker.close();
-                jobConsoleTracker = null;
             }
             if (repositoryTracker != null) {
                 repositoryTracker.close();
@@ -128,11 +126,6 @@ public class JobConsolePlugin {
             final PrintWriter pw = res.getWriter();
             
             // Access required services
-            final JobConsole console = (JobConsole)jobConsoleTracker.getService();
-            if (console == null) {
-                pw.println("No JobConsole service found");
-                return;
-            }
             final SlingRepository repository = (SlingRepository)repositoryTracker.getService();
             if(repository == null) {
                 pw.println("No SlingRepository service found");
@@ -141,8 +134,8 @@ public class JobConsolePlugin {
             Session s = null;
             try {
                 s = repository.loginAdministrative(repository.getDefaultWorkspace());
-                processCommands(req, pw, s, console);
-                renderJobs(req, pw, s, console);
+                processCommands(req, pw, s, jobConsole);
+                renderJobs(req, pw, s, jobConsole);
             } catch(RepositoryException re) {
                 throw new ServletException("RepositoryExceptio in renderContent()", re);
             } finally {

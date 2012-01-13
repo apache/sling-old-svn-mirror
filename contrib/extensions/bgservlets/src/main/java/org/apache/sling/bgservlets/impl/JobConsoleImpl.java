@@ -28,7 +28,10 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.bgservlets.ExecutionEngine;
@@ -36,11 +39,16 @@ import org.apache.sling.bgservlets.JobConsole;
 import org.apache.sling.bgservlets.JobStatus;
 import org.apache.sling.bgservlets.impl.storage.JobStorageException;
 import org.apache.sling.bgservlets.impl.storage.NodeJobStatusFactory;
+import org.apache.sling.bgservlets.impl.webconsole.JobConsolePlugin;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** JobConsole implementation */
-@Component
+@Component(
+        metatype=true,
+        label="%JobConsoleImpl.label",
+        description="%JobConsoleImpl.description")
 @Service
 public class JobConsoleImpl implements JobConsole {
 
@@ -54,6 +62,9 @@ public class JobConsoleImpl implements JobConsole {
     @Reference
     private NodeJobStatusFactory jobStatusFactory;
     
+    @Property(boolValue=true)
+    private final static String PROP_CONSOLE_PLUGIN_ACTIVE = "console.plugin.active";
+    
     public Iterator<JobStatus> getJobStatus(Session session, boolean activeOnly) {
         if(activeOnly) {
             log.debug("activeOnly is set, getting jobs from ExecutionEngine");
@@ -66,6 +77,22 @@ public class JobConsoleImpl implements JobConsole {
                 throw new JobStorageException("RepositoryException in getJobStatus(query)", re);
             }
         }
+    }
+    
+    @Activate
+    protected void activate(ComponentContext ctx) {
+        final Object obj = ctx.getProperties().get(PROP_CONSOLE_PLUGIN_ACTIVE);
+        final boolean pluginActive = (obj instanceof Boolean ? (Boolean)obj : true);
+        if(pluginActive) {
+            JobConsolePlugin.initPlugin(ctx.getBundleContext(), this);
+        } else {
+            log.info("{} is false, not activating JobConsolePlugin", PROP_CONSOLE_PLUGIN_ACTIVE);
+        }
+    }
+    
+    @Deactivate
+    protected void deactivate(ComponentContext ctx) {
+        JobConsolePlugin.destroyPlugin();
     }
     
     public JobStatus getJobStatus(Session session, String path) {

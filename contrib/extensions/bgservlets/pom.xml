@@ -56,7 +56,6 @@
             <Export-Package>org.apache.sling.bgservlets</Export-Package>
             <Private-Package>org.apache.sling.bgservlets.impl.*</Private-Package>
             <DynamicImport-Package>org.apache.felix.webconsole</DynamicImport-Package>
-            <Bundle-Activator>org.apache.sling.bgservlets.impl.Activator</Bundle-Activator>
             <Sling-Nodetypes>SLING-INF/nodetypes/jobdata.cnd</Sling-Nodetypes>          
           </instructions>
         </configuration>
