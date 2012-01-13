@@ -114,6 +114,11 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
             }
         }
 
+        // prevent useless recursion, we don't need to use equals here(!)
+        if ( resource == request.getResource()
+             && resourceType == null && replaceSelectors == null && addSelectors == null && replaceSuffix == null ) {
+            throw new JspTagException("Resource is including itself without changing resource type, selectors, or suffix!");
+        }
         try {
             // create a dispatcher for the resource or path
             RequestDispatcher dispatcher;
@@ -131,11 +136,11 @@ public abstract class AbstractDispatcherTagHandler extends TagSupport {
                 TagUtil.log(log, pageContext, "No content to include...", null);
             }
 
-        } catch (JspTagException jte) {
+        } catch (final JspTagException jte) {
             throw jte;
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             throw new JspTagException(ioe);
-        } catch (ServletException ce) {
+        } catch (final ServletException ce) {
             throw new JspTagException(TagUtil.getRootCause(ce));
         }
 
