@@ -403,19 +403,21 @@ public final class AuthUtil {
      */
     public static boolean checkReferer(HttpServletRequest request, String loginForm) {
         //SLING-2165: if a Referer header is supplied check if it matches the login path for this handler
-        String referer = request.getHeader("Referer");
-        if (referer != null) {
-            String expectedPath = String.format("%s%s", request.getContextPath(), loginForm);
-            try {
-                URL uri = new URL(referer);
-                if (!expectedPath.equals(uri.getPath())) {
-                    //not for this selector, so let the next one handle it.
-                    return false;
+    	if ("POST".equals(request.getMethod())) {
+            String referer = request.getHeader("Referer");
+            if (referer != null) {
+                String expectedPath = String.format("%s%s", request.getContextPath(), loginForm);
+                try {
+                    URL uri = new URL(referer);
+                    if (!expectedPath.equals(uri.getPath())) {
+                        //not for this selector, so let the next one handle it.
+                        return false;
+                    }
+                } catch (MalformedURLException e) {
+                    getLog().debug("Failed to parse the referer value for the login form " + loginForm, e);
                 }
-            } catch (MalformedURLException e) {
-                getLog().debug("Failed to parse the referer value for the login form " + loginForm, e);
             }
-        }
+    	}
         return true;
     }
 
