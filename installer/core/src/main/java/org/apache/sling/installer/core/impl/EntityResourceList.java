@@ -327,9 +327,10 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
 
     /**
      * Compact the resource group by removing uninstalled entries
+     * @return <code>true</code> if another cycle should be started.
      */
     public boolean compact() {
-        boolean changed = false;
+        boolean startNewCycle = false;
         final List<TaskResource> toDelete = new ArrayList<TaskResource>();
         boolean first = true;
         for(final TaskResource r : resources) {
@@ -339,11 +340,13 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             first = false;
         }
         for(final RegisteredResource r : toDelete) {
-            changed = true;
             resources.remove(r);
+            if ( !this.isEmpty() ) {
+                startNewCycle = true;
+            }
             this.cleanup(r);
             LOGGER.debug("Removing uninstalled from list: {}", r);
         }
-        return changed;
+        return startNewCycle;
     }
 }
