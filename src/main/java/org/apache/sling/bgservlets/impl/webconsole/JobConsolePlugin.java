@@ -171,9 +171,6 @@ public class JobConsolePlugin {
         }
         
         private void renderJobs(HttpServletRequest req, PrintWriter pw, Session s, JobConsole console) {
-            pw.println("TODO: action buttons look bad<br/>");
-            pw.println("TODO: options for max. number of jobs displayed + active only<br/>");
-
             pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
             pw.println("<thead>");
             pw.println("<tr class='content'>");
