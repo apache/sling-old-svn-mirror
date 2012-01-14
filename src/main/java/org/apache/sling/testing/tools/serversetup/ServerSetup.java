@@ -65,9 +65,10 @@ import org.slf4j.LoggerFactory;
  *  to run only some of them in a given test run, speeding up
  *  development and troubleshooting as much as possible.
  *  
- *  See the companion samples/integration-tests module for an
- *  example that uses this class to setup the Sling server
- *  that it tests.
+ *  TODO: the companion samples/integration-tests module 
+ *  should be updated to use this class to setup the Sling server
+ *  that it tests, instead of the SlingTestBase class that it
+ *  currently uses.
  */
 public class ServerSetup {
     private final Logger log = LoggerFactory.getLogger(getClass());
