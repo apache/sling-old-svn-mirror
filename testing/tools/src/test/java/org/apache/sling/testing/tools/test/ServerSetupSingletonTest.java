@@ -16,8 +16,10 @@
  */
 package org.apache.sling.testing.tools.test;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Properties;
 
@@ -40,6 +42,19 @@ public class ServerSetupSingletonTest {
         serverSetup.setConfig(props);
         TestSetupPhase.clearExecutionLog();
         TestSetupPhase.failingPhases = "";
+    }
+
+    @Test
+    public void testProperties() {
+        assertTrue(serverSetup.getConfig() == props);
+    }
+    
+    @Test
+    public void testContext() {
+        final String key = "foo";
+        assertNull(serverSetup.getContext().get(key));
+        serverSetup.getContext().put(key, this);
+        assertEquals(serverSetup.getContext().get(key), this);
     }
     
     @Test
@@ -140,5 +155,31 @@ public class ServerSetupSingletonTest {
         
         assertEquals("Still expecting only one startup phase to have run",
                 "four", TestSetupPhase.executionLog.toString());
+    }
+    
+    @Test(expected=ServerSetup.SetupException.class)
+    public void testDuplicateStartupPhase() throws ServerSetup.SetupException {
+        serverSetup.addSetupPhase(new TestSetupPhase("two", true));
+    }
+    
+    @Test(expected=ServerSetup.SetupException.class)
+    public void testDuplicateShutdownPhase() throws ServerSetup.SetupException {
+        serverSetup.addSetupPhase(new TestSetupPhase("two", false));
+    }
+    
+    @Test
+    public void testAddPhasesLater() throws Exception {
+        props.setProperty(ServerSetup.PHASES_TO_RUN_PROP, "one, B, five, A, two");
+        serverSetup.setConfig(props);
+        serverSetup.addSetupPhase(new TestSetupPhase("A", true));
+        serverSetup.setupTestServer();
+        
+        assertEquals("Expecting all startup phases to have run",
+                "one,A,two", TestSetupPhase.executionLog.toString());
+        
+        serverSetup.addSetupPhase(new TestSetupPhase("B", false));
+        serverSetup.shutdown();
+        assertEquals("Expecting all phases to have run",
+                "one,A,two,B,five", TestSetupPhase.executionLog.toString());
     }
 }

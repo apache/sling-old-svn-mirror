@@ -47,9 +47,14 @@ class TestSetupPhase implements SetupPhase {
     public boolean isStartupPhase() {
         return isStartup;
     }
+    
+    @Override
+    public String toString() {
+        return getDescription();
+    }
 
     public String getDescription() {
-        return "";
+        return getClass().getSimpleName() + "(" + id + ")";
     }
 
     public String getId() {

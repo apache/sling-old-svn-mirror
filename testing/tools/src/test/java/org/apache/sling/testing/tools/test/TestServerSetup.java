@@ -19,7 +19,7 @@ package org.apache.sling.testing.tools.test;
 import org.apache.sling.testing.tools.serversetup.ServerSetup;
 
 public class TestServerSetup extends ServerSetup {
-    public TestServerSetup() {
+    public TestServerSetup() throws ServerSetup.SetupException {
         addSetupPhase(new TestSetupPhase("one", true));
         addSetupPhase(new TestSetupPhase("three", true));
         addSetupPhase(new TestSetupPhase("two", true));
