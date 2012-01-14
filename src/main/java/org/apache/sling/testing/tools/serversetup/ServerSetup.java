@@ -168,7 +168,7 @@ public class ServerSetup {
                     donePhases.add(id);
                 }
             } else {
-                log.info("{} ignored, not in the list of phases to run ({})", p, phasesToRun);
+                log.info("{} ignored, not in phasesToRun ({})", p, phasesToRun);
             }
         }
     }
@@ -182,6 +182,9 @@ public class ServerSetup {
         runRemainingPhases(false);
     }
     
+    /** Return a context that {@SetupPhase} can use to 
+     *  communicate among them and with the outside.
+     */
     public Map<String, Object> getContext() {
         return context;
     }
@@ -204,6 +207,9 @@ public class ServerSetup {
         failedPhases.clear();
     }
     
+    /** Return the configuration Properties that were set
+     *  by {@link #setConfig}
+     */
     public Properties getConfig() {
         return config;
     }
@@ -216,9 +222,9 @@ public class ServerSetup {
     /** Add a SetupPhase to our list. Its ID must be
      *  unique in that list.
      */
-    public void addSetupPhase(SetupPhase p) {
+    public void addSetupPhase(SetupPhase p) throws SetupException {
         if(phases.containsKey(p.getId())) {
-            throw new IllegalArgumentException("A SetupPhase with ID=" + p.getId() + " is already in our list:" + phases.keySet());
+            throw new SetupException("A SetupPhase with ID=" + p.getId() + " is already in our list:" + phases.keySet());
         }
         phases.put(p.getId(), p);
     }
