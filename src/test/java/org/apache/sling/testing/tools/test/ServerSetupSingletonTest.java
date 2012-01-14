@@ -172,12 +172,12 @@ public class ServerSetupSingletonTest {
         props.setProperty(ServerSetup.PHASES_TO_RUN_PROP, "one, B, five, A, two");
         serverSetup.setConfig(props);
         serverSetup.addSetupPhase(new TestSetupPhase("A", true));
+        serverSetup.addSetupPhase(new TestSetupPhase("B", false));
         serverSetup.setupTestServer();
         
         assertEquals("Expecting all startup phases to have run",
                 "one,A,two", TestSetupPhase.executionLog.toString());
         
-        serverSetup.addSetupPhase(new TestSetupPhase("B", false));
         serverSetup.shutdown();
         assertEquals("Expecting all phases to have run",
                 "one,A,two,B,five", TestSetupPhase.executionLog.toString());

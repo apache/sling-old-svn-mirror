@@ -39,7 +39,7 @@ public class StartRunnableJarPhase implements SetupPhase {
                     super.run();
                 } else {
                     log.info(
-                            "{}: {} does not {} phase to run, doing nothing", 
+                            "{}: {} does not allow {} phase to run, doing nothing", 
                             new Object[] { this, owner, shutdownId } );
                 }
             }
@@ -53,6 +53,10 @@ public class StartRunnableJarPhase implements SetupPhase {
             }
             
         };
+    }
+    
+    public String toString() {
+        return getClass().getSimpleName() + "(" + id + ")";
     }
     
     /** @inheritDoc */

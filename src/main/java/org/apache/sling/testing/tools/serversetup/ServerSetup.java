@@ -151,10 +151,19 @@ public class ServerSetup {
     private void runRemainingPhases(boolean startup) throws Exception {
         for(String id : phasesToRun) {
             final SetupPhase p = phases.get(id);
+            
             if(donePhases.contains(id)) {
+                log.debug("SetupPhase with id {} already ran, ignored", id);
                 continue;
             }
-            if(p != null && p.isStartupPhase() == startup) {
+            
+            if(p == null) {
+                log.info("SetupPhase with id {} not found, ignored", id);
+                donePhases.add(id);
+                continue;
+            }
+            
+            if(p.isStartupPhase() == startup) {
                 log.info("Executing {}", p);
                 try {
                     p.run(this);
@@ -168,8 +177,6 @@ public class ServerSetup {
                 } finally {
                     donePhases.add(id);
                 }
-            } else {
-                log.info("{} ignored, not in phasesToRun ({})", p, phasesToRun);
             }
         }
     }
@@ -203,6 +210,10 @@ public class ServerSetup {
             phases[i] = phases[i].trim();
         }
         phasesToRun.addAll(Arrays.asList(phases));
+        
+        if(phasesToRun.isEmpty()) {
+            log.warn("No setup phases defined, {} is empty, is that on purpose?", PHASES_TO_RUN_PROP);
+        }
         
         donePhases.clear();
         failedPhases.clear();
