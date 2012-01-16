@@ -372,7 +372,9 @@ public class JcrResourceListener implements EventListener {
                                 event.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
                             }
                         } else {
-                            logger.error(
+                            // take a quite silent note of not being able to
+                            // resolve the resource
+                            logger.debug(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
                                 path);
                         }
