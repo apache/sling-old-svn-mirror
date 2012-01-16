@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,47 +19,80 @@ package org.apache.sling.engine.impl;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
-import org.apache.commons.math.stat.descriptive.SynchronizedSummaryStatistics;
 import org.apache.sling.engine.jmx.RequestProcessorMBean;
 
 /**
- * This is the implementation of the management interface for the RequestProcessor.
+ * This is the implementation of the management interface for the
+ * RequestProcessor.
  */
-public class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcessorMBean {
+class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcessorMBean {
 
-    private final SynchronizedSummaryStatistics durationStatistics;
+    // number of requests
+    private volatile long n;
 
-    public RequestProcessorMBeanImpl() throws NotCompliantMBeanException {
+    // shortest request
+    private volatile long min;
+
+    // longest request
+    private volatile long max;
+
+    // sum of request durations
+    private volatile double sumX;
+
+    // sum of squared request durations
+    private volatile double sumX2;
+
+    RequestProcessorMBeanImpl() throws NotCompliantMBeanException {
         super(RequestProcessorMBean.class);
-        this.durationStatistics = new SynchronizedSummaryStatistics();
+        resetStatistics();
     }
 
-    public void addRequestDuration(final long value) {
-        durationStatistics.addValue(value);
+    synchronized void addRequestDuration(final long value) {
+        this.n++;
+
+        if (value < this.min) {
+            this.min = value;
+        }
+        if (value > this.max) {
+            this.max = value;
+        }
+
+        this.sumX += value;
+        this.sumX2 += (value * value);
     }
 
     public long getRequestsCount() {
-        return durationStatistics.getN();
+        return this.n;
     }
 
-    public double getMaxRequestDurationMsec() {
-        return durationStatistics.getMax();
+    public long getMinRequestDurationMsec() {
+        return this.min;
     }
 
-    public double getStandardDeviationDurationMsec() {
-        return durationStatistics.getStandardDeviation();
-    }
-    
-    public double getMeanRequestDurationMsec() {
-        return durationStatistics.getMean();
+    public long getMaxRequestDurationMsec() {
+        return this.max;
     }
 
-    public double getMinRequestDurationMsec() {
-        return durationStatistics.getMin();
+    public synchronized double getStandardDeviationDurationMsec() {
+        if (this.n > 1) {
+            // algorithm taken from
+            // http://de.wikipedia.org/wiki/Standardabweichung section
+            // "Berechnung für auflaufende Messwerte"
+            return Math.sqrt((this.sumX2 - this.sumX * this.sumX / this.n) / (this.n - 1));
+        }
+
+        // single data point has no deviation
+        return 0;
     }
-    
-    public void resetStatistics() {
-        durationStatistics.clear();
+
+    public synchronized double getMeanRequestDurationMsec() {
+        return this.sumX / this.n;
+    }
+
+    public synchronized void resetStatistics() {
+        this.min = Long.MAX_VALUE;
+        this.max = 0;
+        this.n = 0;
     }
 
 }
