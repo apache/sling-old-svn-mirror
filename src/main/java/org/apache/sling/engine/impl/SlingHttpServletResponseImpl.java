@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -61,13 +62,13 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
      * each time this component is restarted (system start, bundle start,
      * reconfiguration), the request counter restarts at zero.
      */
-    private static int requestCounter = 0;
+    private static AtomicLong requestCounter = new AtomicLong();
 
     // TODO: more content related headers, namely Content-Language should
     // probably be supported
 
     // the request counter
-    private int requestId;
+    private long requestId;
 
     // the system time in ms when the request entered the system, this is
     // the time this instance was created
@@ -101,7 +102,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
         super(response);
         this.requestData = requestData;
 
-        this.requestId = requestCounter++;
+        this.requestId = requestCounter.getAndIncrement();
         this.requestStart = System.currentTimeMillis();
     }
 
@@ -288,7 +289,7 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
 
     // ---------- Retrieving response information ------------------------------
 
-    public int getRequestId() {
+    public long getRequestId() {
         return this.requestId;
     }
 
