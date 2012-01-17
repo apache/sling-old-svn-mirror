@@ -16,12 +16,12 @@
  */
 package org.apache.sling.maven.projectsupport;
 
-import org.apache.maven.artifact.Artifact;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.*;
+
 import org.apache.maven.model.Dependency;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import static org.apache.sling.maven.projectsupport.BundleListUtils.*;
 
 /**
  * The definition of an artifact.
@@ -47,24 +47,6 @@ public class ArtifactDefinition {
     private String version;
 
     public ArtifactDefinition() {
-    }
-
-    public ArtifactDefinition(Artifact artifact, int startLevel) {
-        this.groupId = artifact.getGroupId();
-        this.artifactId = artifact.getArtifactId();
-        this.type = artifact.getType();
-        this.version = artifact.getVersion();
-        this.classifier = artifact.getClassifier();
-        this.startLevel = startLevel;
-    }
-
-    public ArtifactDefinition(Dependency dependency, int startLevel) {
-        this.groupId = dependency.getGroupId();
-        this.artifactId = dependency.getArtifactId();
-        this.type = dependency.getType();
-        this.version = dependency.getVersion();
-        this.classifier = dependency.getClassifier();
-        this.startLevel = startLevel;
     }
     
     public ArtifactDefinition(Bundle bundle, int startLevel) {
@@ -230,14 +212,6 @@ public class ArtifactDefinition {
         return dep;
     }
     
-    public static Bundle toBundle(Artifact artifact, int startLevel) {
-        return new ArtifactDefinition(artifact, startLevel).toBundle();
-    }
-    
-    public static Bundle toBundle(Dependency dependency, int startLevel) {
-        return new ArtifactDefinition(dependency, startLevel).toBundle();
-    }
-
     public static Dependency toDependency(Bundle bundle, String scope) {
         return new ArtifactDefinition(bundle, 0).toDependency(scope);
     }
