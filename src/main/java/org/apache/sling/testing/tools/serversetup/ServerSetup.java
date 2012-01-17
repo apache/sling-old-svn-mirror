@@ -99,6 +99,9 @@ public class ServerSetup {
     /** List of phases that failed */
     private final Set<String> failedPhases = new HashSet<String>();
     
+    /** Context attribute: server access URL */
+    public static final String SERVER_BASE_URL = "server.base.url";
+    
     /** Shutdown hook thread */
     private Thread shutdownHook;
     
@@ -149,22 +152,24 @@ public class ServerSetup {
     
     /** Run phases that haven't run yet */
     private void runRemainingPhases(boolean startup) throws Exception {
+        final String mode = startup ? "startup" : "shutdown";
         for(String id : phasesToRun) {
             final SetupPhase p = phases.get(id);
             
             if(donePhases.contains(id)) {
-                log.debug("SetupPhase with id {} already ran, ignored", id);
+                log.debug("SetupPhase ({}) with id {} already ran, ignored", mode, id);
                 continue;
             }
             
             if(p == null) {
-                log.info("SetupPhase with id {} not found, ignored", id);
+                log.info("SetupPhase ({}) with id {} not found, ignored", mode, id);
                 donePhases.add(id);
                 continue;
             }
             
             if(p.isStartupPhase() == startup) {
-                log.info("Executing {}", p);
+                log.info("Executing ({}) {}:{}", 
+                        new Object [] { mode, p.getClass().getSimpleName(), p.getDescription()});
                 try {
                     p.run(this);
                 } catch(Exception e) {
