@@ -87,4 +87,27 @@ public class StartRunnableJarPhase implements SetupPhase {
     public String getId() {
         return id;
     }
+    
+    /** Return a SetupPhase that kills the process started by this phase */
+    public SetupPhase getKillPhase(final String id) {
+        return new SetupPhase() {
+            public void run(ServerSetup owner) throws Exception {
+                executor.stop();
+            }
+
+            public boolean isStartupPhase() {
+                // This is not a shutdown phase, it's meant to
+                // use during startup to forcibly kill an instance
+                return true;
+            }
+
+            public String getDescription() {
+                return "Kill the process started by " + StartRunnableJarPhase.this.getDescription();
+            }
+
+            public String getId() {
+                return id;
+            }
+        };
+    }
 }

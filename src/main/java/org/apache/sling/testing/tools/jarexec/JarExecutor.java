@@ -41,6 +41,7 @@ public class JarExecutor {
     private final String javaExecutable;
     private final int serverPort;
     private final Properties config;
+    private Executor executor;
     
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -132,7 +133,7 @@ public class JarExecutor {
         };
         
         final String vmOptions = config.getProperty(PROP_VM_OPTIONS);
-        final Executor e = new DefaultExecutor();
+        executor = new DefaultExecutor();
         final CommandLine cl = new CommandLine(javaExecutable);
         if (vmOptions != null && vmOptions.length() > 0) {
             cl.addArguments(vmOptions);
@@ -157,17 +158,31 @@ public class JarExecutor {
                         + workFolder.getAbsolutePath());
             }
             log.info("Setting working directory for executable jar: {}", workFolder.getAbsolutePath());
-            e.setWorkingDirectory(workFolder);
+            executor.setWorkingDirectory(workFolder);
         }
 
         log.info("Executing " + cl);
-        e.setStreamHandler(new PumpStreamHandler());
-        e.setProcessDestroyer(getProcessDestroyer());
-        e.execute(cl, h);
+        executor.setStreamHandler(new PumpStreamHandler());
+        executor.setProcessDestroyer(getProcessDestroyer());
+        executor.execute(cl, h);
     }
     
     /** Can be overridden to return a custom ProcessDestroyer */
     protected ProcessDestroyer getProcessDestroyer() {
         return new ShutdownHookProcessDestroyer();
+    }
+    
+    /** Stop the process that we started, if any */
+    public void stop() {
+        if(executor == null) {
+            throw new IllegalStateException("Process not started, no Executor set");
+        }
+        final Object d = executor.getProcessDestroyer();
+        if(d instanceof Runnable) {
+            ((Runnable)d).run();
+            log.info("Process destroyed");
+        } else {
+            throw new IllegalStateException(d + " is not a Runnable, cannot destroy process");
+        }
     }
 }
