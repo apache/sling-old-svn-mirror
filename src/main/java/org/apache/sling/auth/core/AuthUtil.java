@@ -481,6 +481,11 @@ public final class AuthUtil {
             return false;
         }
 
+        // special case of requesting the servlet context root path
+        if (ctxPath.length() == target.length()) {
+            return true;
+        }
+
         final String localTarget = target.substring(ctxPath.length());
         if (!localTarget.startsWith("/")) {
             getLog().warn(
