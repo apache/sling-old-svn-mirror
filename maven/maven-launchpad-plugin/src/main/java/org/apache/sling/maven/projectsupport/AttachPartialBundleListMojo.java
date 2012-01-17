@@ -90,7 +90,7 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
                 throw new MojoExecutionException("Unable to read bundle list file", e);
             }
         } else {
-            initializedBundleList = new BundleList();
+            throw new MojoFailureException(String.format("Bundle list file %s does not exist.", bundleListFile.getAbsolutePath()));
         }
 
         interpolateProperties(initializedBundleList, this.project, this.mavenSession);
