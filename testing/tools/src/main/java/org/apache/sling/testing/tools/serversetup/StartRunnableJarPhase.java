@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
  */
 public class StartRunnableJarPhase implements SetupPhase {
 
+    public static final String TEST_SERVER_HOSTNAME = "test.server.hostname";
+    
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final String id;
     private final String description;
@@ -51,8 +53,15 @@ public class StartRunnableJarPhase implements SetupPhase {
             protected ProcessDestroyer getProcessDestroyer() {
                 return destroyer;
             }
-            
         };
+
+        String hostname = config.getProperty(TEST_SERVER_HOSTNAME);
+        if(hostname == null) {
+            hostname = "localhost";
+        }
+        final String url = "http://" + hostname + ":" + executor.getServerPort();
+        log.info("Server base URL={}", url);
+        owner.getContext().put(ServerSetup.SERVER_BASE_URL, url);
     }
     
     public String toString() {
