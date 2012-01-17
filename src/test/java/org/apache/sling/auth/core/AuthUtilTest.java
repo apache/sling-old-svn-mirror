@@ -69,9 +69,28 @@ public class AuthUtilTest {
     }
 
     @Test
-    public void test_isRedirectValid_no_resource_resolver() {
+    public void test_isRedirectValid_invalid_characters() {
         context.checking(new Expectations() {
             {
+                allowing(request).getContextPath();
+                will(returnValue(""));
+                allowing(request).getAttribute(with(any(String.class)));
+                will(returnValue(null));
+            }
+        });
+
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/illegal/</x"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/illegal/>/x"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/illegal/'/x"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/illegal/\"/x"));
+    }
+
+    @Test
+    public void test_isRedirectValid_no_resource_resolver_root_context() {
+        context.checking(new Expectations() {
+            {
+                allowing(request).getContextPath();
+                will(returnValue(""));
                 allowing(request).getAttribute(with(any(String.class)));
                 will(returnValue(null));
             }
@@ -82,7 +101,60 @@ public class AuthUtilTest {
     }
 
     @Test
-    public void test_isRedirectValid_resource_resolver() {
+    public void test_isRedirectValid_no_resource_resolver_non_root_context() {
+        context.checking(new Expectations() {
+            {
+                allowing(request).getContextPath();
+                will(returnValue("/ctx"));
+                allowing(request).getAttribute(with(any(String.class)));
+                will(returnValue(null));
+            }
+        });
+
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "relative/path"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/absolute/path"));
+
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "ctx/relative/path"));
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/ctx/absolute/path"));
+    }
+
+    @Test
+    public void test_isRedirectValid_resource_resolver_root_context() {
+        context.checking(new Expectations() {
+            {
+                allowing(resolver).resolve(with(any(HttpServletRequest.class)), with(equal("/absolute/path")));
+                will(returnValue(new SyntheticResource(resolver, "/absolute/path", "test")));
+
+                allowing(resolver).resolve(with(any(HttpServletRequest.class)), with(equal("relative/path")));
+                will(returnValue(new NonExistingResource(resolver, "relative/path")));
+
+                allowing(resolver).resolve(with(any(HttpServletRequest.class)), with(any(String.class)));
+                will(returnValue(new NonExistingResource(resolver, "/absolute/missing")));
+
+                allowing(request).getAttribute(with(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER));
+                will(returnValue(resolver));
+
+                allowing(request).getAttribute(with(any(String.class)));
+                will(returnValue(null));
+
+                allowing(request).getContextPath();
+                will(returnValue(""));
+            }
+        });
+
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "relative/path"));
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/absolute/path"));
+
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/absolute/missing"));
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/absolute/missing/valid"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/absolute/missing/invalid/<"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/absolute/missing/invalid/>"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/absolute/missing/invalid/'"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/absolute/missing/invalid/\""));
+    }
+
+    @Test
+    public void test_isRedirectValid_resource_resolver_non_root_context() {
         context.checking(new Expectations() {
             {
                 allowing(resolver).resolve(with(any(HttpServletRequest.class)), with(equal("/absolute/path")));
@@ -96,11 +168,19 @@ public class AuthUtilTest {
 
                 allowing(request).getAttribute(with(any(String.class)));
                 will(returnValue(null));
+
+                allowing(request).getContextPath();
+                will(returnValue("/ctx"));
             }
         });
 
         TestCase.assertFalse(AuthUtil.isRedirectValid(request, "relative/path"));
-        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/absolute/path"));
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/absolute/path"));
+
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "ctx/relative/path"));
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/ctx/absolute/path"));
+
+        TestCase.assertFalse(AuthUtil.isRedirectValid(request, "/ctxrelative/path"));
     }
 
     @Test

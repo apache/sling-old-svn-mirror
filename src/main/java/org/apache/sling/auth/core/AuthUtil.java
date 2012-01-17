@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -429,13 +430,18 @@ public final class AuthUtil {
      * string</li>
      * <li>The <code>target</code> is not an URL which is identified by the
      * character sequence <code>://</code> separating the scheme from the host</li>
-     * <li>The <code>target</code> is not normalized; that is it either contains
-     * single or double dots in segments or consecutive slashes</li>
+     * <li>The <code>target</code> is normalized such that it contains no
+     * consecutive slashes and no path segment contains a single or double dot</li>
+     * <li>The <code>target</code> must be prefixed with the servlet context
+     * path</li>
      * <li>If a <code>ResourceResolver</code> is available as a request
-     * attribute the <code>target</code> must resolve to an existing resource</li>
+     * attribute the <code>target</code> (without the servlet context path
+     * prefix) must resolve to an existing resource</li>
      * <li>If a <code>ResourceResolver</code> is <i>not</i> available as a
      * request attribute the <code>target</code> must be an absolute path
-     * starting with a slash character</li>
+     * starting with a slash character does not contain any of the characters
+     * <code>&lt;</code>, <code>&gt;</code>, <code>'</code>, or <code>"</code>
+     * in plain or URL encoding</li>
      * </ul>
      * <p>
      * If any of the conditions does not hold, the method returns
@@ -468,26 +474,65 @@ public final class AuthUtil {
             return false;
         }
 
-        final int query = target.indexOf('?');
-        final String path = (query > 0) ? target.substring(0, query) : target;
+        final String ctxPath = getContextPath(request);
+        if (ctxPath.length() > 0 && !target.startsWith(ctxPath)) {
+            getLog().warn("isRedirectValid: Redirect target '{}' does not start with servlet context path '{}'",
+                target, ctxPath);
+            return false;
+        }
 
-        if (request != null) {
-            ResourceResolver resolver = (ResourceResolver) request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
-            if (resolver != null) {
-                final boolean isValid = !ResourceUtil.isNonExistingResource(resolver.resolve(request, path));
-                if (!isValid) {
-                    getLog().warn("isRedirectValid: Redirect target '{}' does not resolve to an existing resource",
-                        target);
-                }
-                return isValid;
+        final String localTarget = target.substring(ctxPath.length());
+        if (!localTarget.startsWith("/")) {
+            getLog().warn(
+                "isRedirectValid: Redirect target '{}' without servlet context path '{}' must be an absolute path",
+                target, ctxPath);
+            return false;
+        }
+
+        final int query = localTarget.indexOf('?');
+        final String path = (query > 0) ? localTarget.substring(0, query) : localTarget;
+
+        ResourceResolver resolver = getResourceResolver(request);
+        if (resolver != null) {
+            // assume all is fine if the path resolves to a resource
+            if (!ResourceUtil.isNonExistingResource(resolver.resolve(request, path))) {
+                return true;
             }
+
+            // not resolving to a resource, check for illegal characters
         }
 
-        final boolean isValid = target.startsWith("/");
-        if (!isValid) {
-            getLog().warn("isRedirectValid: Redirect target '{}' must be an absolute path", target);
+        final Pattern illegal = Pattern.compile("[<>'\"]");
+        if (illegal.matcher(path).find()) {
+            getLog().warn("isRedirectValid: Redirect target '{}' must not contain any of <>'\"", target);
+            return false;
         }
-        return isValid;
+
+        return true;
+    }
+
+    /**
+     * Returns the context path from the request or an empty string if the
+     * request is <code>null</code>.
+     */
+    private static String getContextPath(final HttpServletRequest request) {
+        if (request != null) {
+            return request.getContextPath();
+        }
+        return "";
+    }
+
+    /**
+     * Returns the resource resolver set as the
+     * {@link AuthenticationSupport#REQUEST_ATTRIBUTE_RESOLVER} request
+     * attribute or <code>null</code> if the request object is <code>null</code>
+     * or the resource resolver is not present.
+     */
+    private static ResourceResolver getResourceResolver(final HttpServletRequest request) {
+        if (request != null) {
+            return (ResourceResolver) request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+        }
+        return null;
     }
 
     /**
