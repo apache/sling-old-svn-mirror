@@ -98,6 +98,7 @@ public class AuthUtilTest {
 
         TestCase.assertFalse(AuthUtil.isRedirectValid(request, "relative/path"));
         TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/absolute/path"));
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/"));
     }
 
     @Test
@@ -116,6 +117,9 @@ public class AuthUtilTest {
 
         TestCase.assertFalse(AuthUtil.isRedirectValid(request, "ctx/relative/path"));
         TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/ctx/absolute/path"));
+
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/ctx/"));
+        TestCase.assertTrue(AuthUtil.isRedirectValid(request, "/ctx"));
     }
 
     @Test
