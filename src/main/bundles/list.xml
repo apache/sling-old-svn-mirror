@@ -250,7 +250,7 @@
         <bundle>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.6.1</version>
+            <version>1.6.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -265,12 +265,12 @@
         <bundle>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.6.1</version>
+            <version>1.6.4</version>
         </bundle>
         <bundle>
             <groupId>org.slf4j</groupId>
             <artifactId>log4j-over-slf4j</artifactId>
-            <version>1.6.1</version>
+            <version>1.6.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
