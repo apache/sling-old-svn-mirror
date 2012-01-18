@@ -39,6 +39,22 @@ public class Activator implements BundleActivator {
         logManager = new LogManager(context);
 
         if (Boolean.parseBoolean(context.getProperty(JUL_SUPPORT))) {
+
+            // make sure configuration is empty unless explicitly set
+            if (System.getProperty("java.util.logging.config.file") == null
+                && System.getProperty("java.util.logging.config.class") == null) {
+                final Thread ct = Thread.currentThread();
+                final ClassLoader old = ct.getContextClassLoader();
+                try {
+                    ct.setContextClassLoader(getClass().getClassLoader());
+                    System.setProperty("java.util.logging.config.class",
+                        "org.apache.sling.commons.log.internal.Activator.DummyLogManagerConfiguration");
+                    java.util.logging.LogManager.getLogManager().reset();
+                } finally {
+                    ct.setContextClassLoader(old);
+                }
+            }
+
             SLF4JBridgeHandler.install();
         }
     }
@@ -53,5 +69,14 @@ public class Activator implements BundleActivator {
             logManager.shutdown();
             logManager = null;
         }
+    }
+
+    /**
+     * The <code>DummyLogManagerConfiguration</code> class is used as
+     * JUL LogginManager configurator to preven reading platform default
+     * configuration which just duplicate log output to be redirected to
+     * SLF4J.
+     */
+    public static class DummyLogManagerConfiguration {
     }
 }
