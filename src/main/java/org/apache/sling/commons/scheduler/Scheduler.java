@@ -30,8 +30,18 @@ import java.util.NoSuchElementException;
 public interface Scheduler {
 
     /** Name of the configuration property to define the period for a job.
-     * The period is expressed in seconds.*/
+     * The period is expressed in seconds.
+     * This property needs to be of type Long.
+     */
     String PROPERTY_SCHEDULER_PERIOD = "scheduler.period";
+
+    /** Name of the configuration property to define if a periodically job
+     * should be scheduled immediate.
+     * Default is to not startup immediate, the job is started the first time
+     * after the period has expired.
+     * This property needs to be of type Boolean.
+     * @since 2.2.0 .*/
+    String PROPERTY_SCHEDULER_IMMEDIATE = "scheduler.immediate";
 
     /** Name of the configuration property to define the cron expression for a job. */
     String PROPERTY_SCHEDULER_EXPRESSION = "scheduler.expression";
@@ -74,6 +84,25 @@ public interface Scheduler {
      * @throws Exception If the job can't be scheduled.
      */
     void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
+    throws Exception;
+
+    /**
+     * Schedule a periodic job.
+     * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
+     * the old job.
+     *
+     * @param name The name of the job - or null. If no name is specified it can't be cancelled.
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
+     * @param period Every period seconds this job is started.
+     * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
+     * @param startImmediate Whether to start the job immediately for the first time or wait for the period to expire.
+     * @throws IllegalArgumentException If the job has not the correct type.
+     * @throws Exception If the job can't be scheduled.
+     * @since 2.2
+     */
+    void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently,
+            boolean startImmediate)
     throws Exception;
 
     /**

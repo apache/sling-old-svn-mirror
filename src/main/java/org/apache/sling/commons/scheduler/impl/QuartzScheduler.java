@@ -47,6 +47,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
+import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.DirectSchedulerFactory;
@@ -181,7 +182,6 @@ public class QuartzScheduler implements Scheduler {
         final String runID = new Date().toString().replace(' ', '_');
         factory.createScheduler(QUARTZ_SCHEDULER_NAME, runID, quartzPool, new RAMJobStore());
         // quartz does not provide a way to get the scheduler by name AND runID, so we have to iterate!
-        @SuppressWarnings("unchecked")
         final Iterator<org.quartz.Scheduler> allSchedulersIter = factory.getAllSchedulers().iterator();
         org.quartz.Scheduler s = null;
         while ( s == null && allSchedulersIter.hasNext() ) {
@@ -348,14 +348,32 @@ public class QuartzScheduler implements Scheduler {
                                final long period,
                                final boolean canRunConcurrently)
     throws SchedulerException {
+        this.addPeriodicJob(name, job, config, period, canRunConcurrently, false);
+    }
+
+    /**
+     * @see org.apache.sling.commons.scheduler.Scheduler#addPeriodicJob(java.lang.String, java.lang.Object, java.util.Map, long, boolean, boolean)
+     */
+    public void addPeriodicJob(final String name,
+            final Object job,
+            final Map<String, Serializable> config,
+            final long period,
+            final boolean canRunConcurrently,
+            final boolean startImmediate)
+    throws SchedulerException {
         final long ms = period * 1000;
         final String jobName = this.getJobName(name);
 
-        final Trigger trigger = TriggerBuilder.newTrigger()
-            .withIdentity(jobName)
-            .startAt(new Date(System.currentTimeMillis() + ms))
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule().repeatForever().withIntervalInMilliseconds(ms))
-            .build();
+        final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger()
+                .withIdentity(jobName)
+                .startAt(new Date(System.currentTimeMillis() + ms))
+                .withSchedule(SimpleScheduleBuilder.simpleSchedule().repeatForever().withIntervalInMilliseconds(ms));
+        final Trigger trigger;
+        if ( startImmediate ) {
+            trigger = builder.startNow().build();
+        } else {
+            trigger = builder.startAt(new Date(System.currentTimeMillis() + ms)).build();
+        }
 
         this.scheduleJob(jobName, job, config, trigger, canRunConcurrently);
     }
@@ -524,7 +542,11 @@ public class QuartzScheduler implements Scheduler {
                             if ( period < 1 ) {
                                 this.logger.debug("Ignoring service {} : scheduler period is less than 1.", ref);
                             } else {
-                                this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true));
+                                boolean immediate = false;
+                                if ( ref.getProperty(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE) != null ) {
+                                    immediate = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE);
+                                }
+                                this.addPeriodicJob(name, job, null, period, (concurrent != null ? concurrent : true), immediate);
                             }
                         } else {
                             this.logger.debug("Ignoring servce {} : no scheduling property found.", ref);
