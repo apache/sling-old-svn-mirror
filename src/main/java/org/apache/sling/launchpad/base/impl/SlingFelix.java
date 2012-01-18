@@ -35,7 +35,7 @@ public class SlingFelix extends Felix {
 
     private Thread notifierThread;
 
-    public SlingFelix(Notifiable notifiable, Map<?, ?> props) throws Exception {
+    public SlingFelix(final Notifiable notifiable, final Map<?, ?> props) throws Exception {
         super(props);
         this.notifiable = notifiable;
     }
@@ -46,7 +46,7 @@ public class SlingFelix extends Felix {
     }
 
     @Override
-    public void update(InputStream is) throws BundleException {
+    public void update(final InputStream is) throws BundleException {
         // get the update file and make sure, the stream is closed
         try {
             startNotifier(true, is);
@@ -69,12 +69,12 @@ public class SlingFelix extends Felix {
         super.stop();
     }
 
-    public void stop(int status) throws BundleException {
+    public void stop(final int status) throws BundleException {
         startNotifier(false, null);
         super.stop(status);
     }
 
-    private synchronized void startNotifier(boolean restart, InputStream ins) {
+    private synchronized void startNotifier(final boolean restart, final InputStream ins) {
         if (notifierThread == null) {
             notifierThread = new Thread(new Notifier(restart, ins),
                 "Sling Notifier");
@@ -89,7 +89,7 @@ public class SlingFelix extends Felix {
 
         private final File updateFile;
 
-        private Notifier(boolean restart, InputStream ins) {
+        private Notifier(final boolean restart, final InputStream ins) {
             this.restart = restart;
 
             if (ins != null) {

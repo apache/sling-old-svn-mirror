@@ -195,9 +195,11 @@ public class Sling {
      *
      * @throws BundleException if the framework cannot be initialized.
      */
-    public Sling(Notifiable notifiable, Logger logger,
-            LaunchpadContentProvider resourceProvider, Map<String, String> propOverwrite)
-            throws BundleException {
+    public Sling(final Notifiable notifiable,
+            final Logger logger,
+            final LaunchpadContentProvider resourceProvider,
+            final Map<String, String> propOverwrite)
+    throws BundleException {
 
         this.logger = logger;
         this.resourceProvider = resourceProvider;
