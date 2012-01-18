@@ -19,15 +19,12 @@
 package org.apache.sling.launchpad.base.impl;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -96,11 +93,6 @@ class BootstrapInstaller {
     static final String PATH_BUNDLES = PATH_RESOURCES + "bundles";
 
     /**
-     * The possible file extensions for a bundle archive file.
-     */
-    private static final String[] BUNDLE_EXTENSIONS = { ".jar", ".war" };
-
-    /**
      * The header which contains the bundle's last modified date.
      */
     static final String BND_LAST_MODIFIED_HEADER = "Bnd-LastModified";
@@ -122,9 +114,6 @@ class BootstrapInstaller {
      * resolved to a valid start level (value is -1).
      */
     private static final int STARTLEVEL_NONE = -1;
-
-    /** The data file which works as a marker to detect the first startup. */
-    private static final String DATA_FILE = "bootstrapinstaller.ser";
 
     /**
      * The name of the bootstrap commands file
@@ -175,7 +164,9 @@ class BootstrapInstaller {
         if (launchpadHome == null) {
             launchpadHome = bundleContext.getProperty(SharedConstants.SLING_HOME);
         }
-        File slingStartupDir = getSlingStartupDir(launchpadHome);
+        final File slingStartupDir = getSlingStartupDir(launchpadHome);
+
+        final StartupHandler startupHandler = new StartupHandler(this.bundleContext, this.logger, slingStartupDir);
 
         // execute bootstrap commands, if needed
         final BootstrapCommandFile cmd = new BootstrapCommandFile(logger,
@@ -185,11 +176,11 @@ class BootstrapInstaller {
         boolean shouldInstall = false;
 
         // see if the loading of bundles from the package is forced
-        String fpblString = bundleContext.getProperty(SharedConstants.FORCE_PACKAGE_BUNDLE_LOADING);
+        final String fpblString = bundleContext.getProperty(SharedConstants.FORCE_PACKAGE_BUNDLE_LOADING);
         if (Boolean.valueOf(fpblString)) {
             shouldInstall = true;
         } else {
-            shouldInstall = !isAlreadyInstalled(bundleContext, slingStartupDir);
+            shouldInstall = startupHandler.getMode() != StartupHandler.StartupMode.RESTART;
         }
 
         if (shouldInstall) {
@@ -240,13 +231,13 @@ class BootstrapInstaller {
             List<Bundle> installed = new LinkedList<Bundle>();
 
             // get all bundles from the startup location and install them
-            requireRestart |= installBundles(slingStartupDir, bundleContext, bySymbolicName, installed);
+            requireRestart |= installBundles(slingStartupDir, bySymbolicName, installed);
 
             // start all the newly installed bundles (existing bundles are not started if they are stopped)
             startBundles(installed);
 
             // mark everything installed
-            markInstalled(bundleContext, slingStartupDir);
+            startupHandler.finished();
         }
 
         // due to the upgrade of a framework extension bundle, the framework
@@ -316,7 +307,7 @@ class BootstrapInstaller {
             // path to the next resource
             String path = res.next();
 
-            if (isBundle(path)) {
+            if (DirectoryUtil.isBundle(path)) {
                 // try to access the bundle file, ignore if not possible
                 InputStream ins = resourceProvider.getResourceAsStream(path);
                 if (ins == null) {
@@ -350,21 +341,6 @@ class BootstrapInstaller {
                 }
             }
         }
-    }
-
-    /**
-     * Determine if a path could be a bundle based on its extension.
-     *
-     * @param path the path to the file
-     * @return true if the path could be a bundle
-     */
-    static boolean isBundle(String path) {
-        for (String extension : BUNDLE_EXTENSIONS) {
-            if (path.endsWith(extension)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -409,19 +385,19 @@ class BootstrapInstaller {
      * @return <code>true</code> if a system bundle fragment was updated which
      *      requires the framework to restart.
      */
-    private boolean installBundles(File slingStartupDir,
-            BundleContext context, Map<String, Bundle> currentBundles,
-            List<Bundle> installed) {
+    private boolean installBundles(final File slingStartupDir,
+            final Map<String, Bundle> currentBundles,
+            final List<Bundle> installed) {
 
         // get the start level service (if possible) so we can set the initial start level
-        ServiceReference ref = context.getServiceReference(StartLevel.class.getName());
+        ServiceReference ref = bundleContext.getServiceReference(StartLevel.class.getName());
         StartLevel startLevelService = (ref != null)
-                ? (StartLevel) context.getService(ref)
+                ? (StartLevel) bundleContext.getService(ref)
                 : null;
 
         boolean requireRestart = false;
         try {
-            File[] directories = slingStartupDir.listFiles(DIRECTORY_FILTER);
+            File[] directories = slingStartupDir.listFiles(DirectoryUtil.DIRECTORY_FILTER);
             for (File levelDir : directories) {
                 // get startlevel from dir name
                 String dirName = levelDir.getName();
@@ -433,17 +409,17 @@ class BootstrapInstaller {
                 }
 
                 // iterate through all files in the startlevel dir
-                File[] bundleFiles = levelDir.listFiles(BUNDLE_FILE_FILTER);
+                File[] bundleFiles = levelDir.listFiles(DirectoryUtil.BUNDLE_FILE_FILTER);
                 for (File bundleFile : bundleFiles) {
                     requireRestart |= installBundle(bundleFile, startLevel,
-                        context, currentBundles, installed, startLevelService);
+                        currentBundles, installed, startLevelService);
                 }
             }
 
         } finally {
             // release the start level service
             if (ref != null) {
-                context.ungetService(ref);
+                bundleContext.ungetService(ref);
             }
         }
 
@@ -463,9 +439,11 @@ class BootstrapInstaller {
      * @return <code>true</code> if a system bundle fragment was updated which
      *      requires the framework to restart.
      */
-    private boolean installBundle(File bundleJar, int startLevel,
-            BundleContext context, Map<String, Bundle> currentBundles,
-            List<Bundle> installed, StartLevel startLevelService) {
+    private boolean installBundle(final File bundleJar,
+            final int startLevel,
+            final Map<String, Bundle> currentBundles,
+            final List<Bundle> installed,
+            final StartLevel startLevelService) {
         // get the manifest for the bundle information
         Manifest manifest = getManifest(bundleJar);
         if (manifest == null) {
@@ -528,7 +506,7 @@ class BootstrapInstaller {
             String location = SCHEME
                 + path.substring(path.lastIndexOf('/') + 1);
             try {
-                Bundle theBundle = context.installBundle(location, ins);
+                Bundle theBundle = bundleContext.installBundle(location, ins);
                 logger.log(Logger.LOG_INFO, "Bundle "
                     + theBundle.getSymbolicName() + " installed from "
                     + location);
@@ -556,15 +534,15 @@ class BootstrapInstaller {
      * provides an active <code>StartLevel</code> service, the start levels of
      * the Bundles is first set to <em>1</em>.
      */
-    private void startBundles(List<Bundle> bundles) {
+    private void startBundles(final List<Bundle> bundles) {
 
         // start all bundles
-        for (Bundle bundle : bundles) {
+        for (final Bundle bundle : bundles) {
             try {
                 if (!isFragment(bundle)) {
                     bundle.start();
                 }
-            } catch (BundleException be) {
+            } catch (final BundleException be) {
                 logger.log(Logger.LOG_ERROR, "Bundle "
                     + bundle.getSymbolicName() + " could not be started", be);
             }
@@ -572,8 +550,8 @@ class BootstrapInstaller {
 
     }
 
-    private int getStartLevel(String path) {
-        String name = path.substring(path.lastIndexOf('/') + 1);
+    private int getStartLevel(final String path) {
+        final String name = path.substring(path.lastIndexOf('/') + 1);
         try {
             int level = Integer.parseInt(name);
             if (level >= 0) {
@@ -582,7 +560,7 @@ class BootstrapInstaller {
 
             logger.log(Logger.LOG_ERROR, "Illegal Runlevel for " + path
                 + ", ignoring");
-        } catch (NumberFormatException nfe) {
+        } catch (final NumberFormatException nfe) {
             logger.log(Logger.LOG_INFO, "Folder " + path
                 + " does not denote start level, ignoring");
         }
@@ -608,7 +586,7 @@ class BootstrapInstaller {
      * @param jarPath The path to the JAR file provided by the resource provider
      *            of this instance.
      */
-    private Manifest getManifest(File jar) {
+    private Manifest getManifest(final File jar) {
         JarFile jarFile = null;
         try {
             jarFile = new JarFile(jar, false);
@@ -637,7 +615,7 @@ class BootstrapInstaller {
      *
      * @param manifest The Manifest from which to extract the header.
      */
-    static String getBundleSymbolicName(Manifest manifest) {
+    static String getBundleSymbolicName(final Manifest manifest) {
         return manifest.getMainAttributes().getValue(
             Constants.BUNDLE_SYMBOLICNAME);
     }
@@ -652,7 +630,7 @@ class BootstrapInstaller {
      * @return <code>true</code> if the manifest does not describe a bundle with
      *         a higher version number.
      */
-    private boolean ignore(Bundle installedBundle, Manifest manifest) {
+    private boolean ignore(final Bundle installedBundle, final Manifest manifest) {
 
         // the bundle is not installed yet, so we have to install it
         if (installedBundle == null) {
@@ -684,7 +662,7 @@ class BootstrapInstaller {
      * Returns <code>true</code> if the bundle must be assumed to be a fragment
      * according to its <code>Fragment-Host</code> header.
      */
-    private static boolean isFragment(Bundle bundle) {
+    private static boolean isFragment(final Bundle bundle) {
         Dictionary<?, ?> headerMap = bundle.getHeaders();
         return headerMap.get(Constants.FRAGMENT_HOST) != null;
     }
@@ -698,7 +676,7 @@ class BootstrapInstaller {
      * @return true if the to-be-installed bundle is newer or if the comparison
      *         fails for some reason
      */
-    private boolean isNewerSnapshot(Bundle installedBundle, Manifest manifest) {
+    private boolean isNewerSnapshot(final Bundle installedBundle, final Manifest manifest) {
         String installedDate = (String) installedBundle.getHeaders().get(
             BND_LAST_MODIFIED_HEADER);
         String toBeInstalledDate = manifest.getMainAttributes().getValue(
@@ -738,143 +716,6 @@ class BootstrapInstaller {
 
     }
 
-    // ---------- Bundle Installation marker file
-
-    private boolean isAlreadyInstalled(BundleContext context,
-            File slingStartupDir) {
-        final File dataFile = context.getDataFile(DATA_FILE);
-        if (dataFile != null && dataFile.exists()) {
-
-            FileInputStream fis = null;
-            try {
-
-                long selfStamp = getSelfTimestamp(slingStartupDir);
-                if (selfStamp > 0) {
-
-                    fis = new FileInputStream(dataFile);
-                    byte[] bytes = new byte[20];
-                    int len = fis.read(bytes);
-                    String value = new String(bytes, 0, len);
-
-                    long storedStamp = Long.parseLong(value);
-
-                    logger.log(Logger.LOG_INFO, String.format("Stored timestamp: %s", storedStamp));
-
-                    return storedStamp >= selfStamp;
-                }
-
-            } catch (NumberFormatException nfe) {
-                // probably still the old value, fallback to assume not
-                // installed
-
-            } catch (IOException ioe) {
-                logger.log(Logger.LOG_ERROR,
-                    "IOException during reading of installed flag.", ioe);
-
-            } finally {
-                if (fis != null) {
-                    try {
-                        fis.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
-        }
-
-        // fallback assuming not installed yet
-        return false;
-    }
-
-    private void markInstalled(BundleContext context, File slingStartupDir) {
-        final File dataFile = context.getDataFile(DATA_FILE);
-        try {
-            final FileOutputStream fos = new FileOutputStream(dataFile);
-            try {
-                fos.write(String.valueOf(getSelfTimestamp(slingStartupDir)).getBytes());
-            } finally {
-                try {
-                    fos.close();
-                } catch (IOException ignore) {
-                }
-            }
-        } catch (IOException ioe) {
-            logger.log(Logger.LOG_ERROR,
-                "IOException during writing of installed flag.", ioe);
-        }
-    }
-
-    /**
-     * Returns the time stamp of JAR file from which this class has been loaded
-     * or -1 if the timestamp cannot be resolved.
-     * <p>
-     * This method assumes that the ClassLoader of this class is an
-     * URLClassLoader and that the first URL entry of this class loader is the
-     * JAR providing this class. This is in fact true as the URLClassLoader has
-     * been created by the launcher from the launcher JAR file.
-     *
-     * @return The last modification time stamp of the launcher JAR file or -1
-     *         if the class loader of this class is not an URLClassLoader or the
-     *         class loader has no URL entries. Both situations are not really
-     *         expected.
-     * @throws IOException If an error occurrs reading accessing the last
-     *             modification time stampe.
-     */
-    private long getSelfTimestamp(File slingStartupDir) throws IOException {
-
-        // the timestamp of the launcher jar
-        long selfStamp = -1;
-        ClassLoader loader = getClass().getClassLoader();
-        if (loader instanceof URLClassLoader) {
-            URLClassLoader urlLoader = (URLClassLoader) loader;
-            URL[] urls = urlLoader.getURLs();
-            if (urls.length > 0) {
-            	URL url = urls[0];
-            	logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", url));
-                selfStamp = urls[0].openConnection().getLastModified();
-            }
-        }
-
-        // check whether any bundle is younger than the launcher jar
-        File[] directories = slingStartupDir.listFiles(DIRECTORY_FILTER);
-        for (File levelDir : directories) {
-
-            // iterate through all files in the startlevel dir
-            File[] jarFiles = levelDir.listFiles(BUNDLE_FILE_FILTER);
-            for (File bundleJar : jarFiles) {
-                if (bundleJar.lastModified() > selfStamp) {
-                	logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", bundleJar));
-                    selfStamp = bundleJar.lastModified();
-                }
-            }
-        }
-
-        logger.log(Logger.LOG_INFO, String.format("Final self timestamp: %s.", selfStamp));
-
-        // return the final stamp (may be -1 if launcher jar cannot be checked
-        // and there are no bundle jar files)
-        return selfStamp;
-    }
-
-    //---------- FileFilter implementations to scan startup folders
-
-    /**
-     * Simple directory filter
-     */
-    private static final FileFilter DIRECTORY_FILTER = new FileFilter() {
-        public boolean accept(File f) {
-            return f.isDirectory();
-        }
-    };
-
-    /**
-     * Simple bundle file filter
-     */
-    private static final FileFilter BUNDLE_FILE_FILTER = new FileFilter() {
-        public boolean accept(File f) {
-            return f.isFile() && isBundle(f.getName());
-        }
-    };
-
     //---------- helper
     /**
      * Simple check to see if a string is blank since
@@ -882,7 +723,7 @@ class BootstrapInstaller {
      * @param str the string to check
      * @return true if the string is null or empty OR false otherwise
      */
-    static boolean isBlank(String str) {
+    static boolean isBlank(final String str) {
         return str == null || str.length() == 0 || str.trim().length() == 0;
     }
 
