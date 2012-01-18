@@ -52,6 +52,7 @@ public class Activator implements BundleActivator {
                     java.util.logging.LogManager.getLogManager().reset();
                 } finally {
                     ct.setContextClassLoader(old);
+                    System.clearProperty("java.util.logging.config.class");
                 }
             }
 
