@@ -115,4 +115,13 @@ public interface SharedConstants {
      * @since 2.4.0
      */
     public static final String SLING_LAUNCHPAD = "sling.launchpad";
+
+    /**
+     * The name of the configuration property defining the startlevel
+     * for installs and updates. The framework starts with this start level
+     * and the startup manager increases the start level one by one until
+     * the initial framework start level is reached (value is "sling.framework.installstartlevel").
+     * @since 2.4.0
+     */
+    public static final String SLING_INSTALL_STARTLEVEL = "sling.framework.installstartlevel";
 }

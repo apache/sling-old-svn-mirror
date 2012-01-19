@@ -220,25 +220,33 @@ public class Sling {
 
         // create the framework and start it
         try {
+            // initiate startup handler
+            final StartupManager startupManager = new StartupManager(props, logger);
+
             Framework tmpFramework = createFramework(notifiable, logger, props);
 
             init(tmpFramework);
 
-            if (new BootstrapInstaller(tmpFramework.getBundleContext(), logger,
-                resourceProvider).install()) {
+            final boolean restart = new BootstrapInstaller(tmpFramework.getBundleContext(), logger,
+                    resourceProvider, startupManager.getMode()).install();
+            startupManager.markInstalled();
+
+            if (restart) {
                 stop(tmpFramework);
                 tmpFramework = createFramework(notifiable, logger, props);
                 init(tmpFramework);
             }
+
+            new DefaultStartupHandler(tmpFramework.getBundleContext(), logger, startupManager);
 
             // finally start
             tmpFramework.start();
 
             // only assign field if start succeeds
             this.framework = tmpFramework;
-        } catch (BundleException be) {
+        } catch (final BundleException be) {
             throw be;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // thrown by SlingFelix constructor
             throw new BundleException("Uncaught Instantiation Issue: " + e, e);
         }

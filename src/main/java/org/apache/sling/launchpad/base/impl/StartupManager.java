@@ -19,15 +19,18 @@
 package org.apache.sling.launchpad.base.impl;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Map;
 
 import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
-import org.osgi.framework.BundleContext;
+import org.apache.sling.launchpad.api.StartupMode;
+import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.osgi.framework.Constants;
 
 /**
  * The <code>StartupHandler</code> tries to detect the startup mode:
@@ -35,16 +38,10 @@ import org.osgi.framework.BundleContext;
  * and a restart without a change (RESTART).
  * @since 2.4.0
  */
-class StartupHandler {
-
-    public enum StartupMode {
-        INSTALL,
-        UPDATE,
-        RESTART
-    }
+public class StartupManager {
 
     /** The data file which works as a marker to detect the first startup. */
-    private static final String DATA_FILE = "bootstrapinstaller.ser";
+    private static final String DATA_FILE = "launchpad-timestamp.txt";
 
     /**
      * The {@link Logger} use for logging messages during installation and
@@ -52,53 +49,69 @@ class StartupHandler {
      */
     private final Logger logger;
 
-    /** The bundle context. */
-    private final BundleContext bundleContext;
-
     private final StartupMode mode;
 
     private final File startupDir;
 
-    private final long selfStamp;
+    private final File confDir;
 
-    StartupHandler(final BundleContext bundleContext,
-            final Logger logger,
-            final File slingStartupDir)
-    throws IOException {
+    private final long targetStartLevel;
+
+    StartupManager(final Map<String, String> properties,
+            final Logger logger) {
         this.logger = logger;
-        this.bundleContext = bundleContext;
-        this.startupDir = slingStartupDir;
-        this.selfStamp = this.getSelfTimestamp();
+        this.startupDir = DirectoryUtil.getStartupDir(properties);
+        this.confDir = DirectoryUtil.getConfigDir(properties);
         this.mode = detectMode();
         this.logger.log(Logger.LOG_INFO, "Starting in mode " + this.mode);
+
+        this.targetStartLevel = Long.valueOf(properties.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL));
+
+        // if this is not a restart, reduce start level
+        if ( this.mode != StartupMode.RESTART ) {
+            final String startLevel = properties.get(SharedConstants.SLING_INSTALL_STARTLEVEL);
+            properties.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, startLevel);
+        }
     }
 
+    /**
+     * Return the startup mode
+     * @return The startup mode
+     */
     public StartupMode getMode() {
         return this.mode;
     }
 
-    public void finished() {
-        this.markInstalled();
+    /**
+     * Return the target start level.
+     * @return Target start level
+     */
+    public long getTargetStartLevel() {
+        return this.targetStartLevel;
     }
 
+    /**
+     * Detect the startup mode by comparing time stamps
+     */
     private StartupMode detectMode() {
-        final File dataFile = this.bundleContext.getDataFile(DATA_FILE);
-        if (dataFile != null && dataFile.exists()) {
+        final File dataFile = new File(this.confDir, DATA_FILE);
+        if (dataFile.exists()) {
 
-            FileInputStream fis = null;
+            FileReader fis = null;
             try {
-                if (this.selfStamp > 0) {
+                final long selfStamp = this.getSelfTimestamp();
+                if (selfStamp > 0) {
 
-                    fis = new FileInputStream(dataFile);
-                    byte[] bytes = new byte[20];
-                    int len = fis.read(bytes);
-                    String value = new String(bytes, 0, len);
+                    fis = new FileReader(dataFile);
+                    final char[] txt = new char[128];
+                    final int len = fis.read(txt);
+                    final String value = new String(txt, 0, len);
 
-                    long storedStamp = Long.parseLong(value);
+                    final long storedStamp = Long.parseLong(value);
 
                     logger.log(Logger.LOG_INFO, String.format("Stored timestamp: %s", storedStamp));
 
-                    return (storedStamp >= this.selfStamp ? StartupMode.RESTART : StartupMode.UPDATE);
+                    return (storedStamp >= selfStamp ? StartupMode.RESTART : StartupMode.UPDATE);
                 }
 
             } catch (final NumberFormatException nfe) {
@@ -120,8 +133,10 @@ class StartupHandler {
         return StartupMode.INSTALL;
     }
 
-    private long getTimeStampOfClass(final Class<?> clazz)
-    throws IOException {
+    /**
+     * Get the timestamp of a class through its url classloader (if possible)
+     */
+    private long getTimeStampOfClass(final Class<?> clazz) {
         long selfStamp = -1;
         final ClassLoader loader = clazz.getClassLoader();
         if (loader instanceof URLClassLoader) {
@@ -130,7 +145,9 @@ class StartupHandler {
             if (urls.length > 0) {
                 final URL url = urls[0];
                 logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", url));
-                selfStamp = urls[0].openConnection().getLastModified();
+                try {
+                    selfStamp = urls[0].openConnection().getLastModified();
+                } catch (final IOException ignore) {}
             }
         }
         return selfStamp;
@@ -152,7 +169,7 @@ class StartupHandler {
      * @throws IOException If an error occurrs reading accessing the last
      *             modification time stampe.
      */
-    private long getSelfTimestamp() throws IOException {
+    private long getSelfTimestamp() {
 
         // the timestamp of the launcher jar and the bootstrap jar
         long selfStamp = this.getTimeStampOfClass(this.getClass());
@@ -163,14 +180,18 @@ class StartupHandler {
 
         // check whether any bundle is younger than the launcher jar
         final File[] directories = this.startupDir.listFiles(DirectoryUtil.DIRECTORY_FILTER);
-        for (final File levelDir : directories) {
+        if ( directories != null ) {
+            for (final File levelDir : directories) {
 
-            // iterate through all files in the startlevel dir
-            final File[] jarFiles = levelDir.listFiles(DirectoryUtil.BUNDLE_FILE_FILTER);
-            for (final File bundleJar : jarFiles) {
-                if (bundleJar.lastModified() > selfStamp) {
-                    logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", bundleJar));
-                    selfStamp = bundleJar.lastModified();
+                // iterate through all files in the startlevel dir
+                final File[] jarFiles = levelDir.listFiles(DirectoryUtil.BUNDLE_FILE_FILTER);
+                if ( jarFiles != null ) {
+                    for (final File bundleJar : jarFiles) {
+                        if (bundleJar.lastModified() > selfStamp) {
+                            logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", bundleJar));
+                            selfStamp = bundleJar.lastModified();
+                        }
+                    }
                 }
             }
         }
@@ -182,12 +203,16 @@ class StartupHandler {
         return selfStamp;
     }
 
-    private void markInstalled() {
-        final File dataFile = this.bundleContext.getDataFile(DATA_FILE);
+    /**
+     * Set the finished installation marker.
+     */
+    public void markInstalled() {
+        final File dataFile = new File(this.confDir, DATA_FILE);
         try {
-            final FileOutputStream fos = new FileOutputStream(dataFile);
+            this.confDir.mkdirs();
+            final FileWriter fos = new FileWriter(dataFile);
             try {
-                fos.write(String.valueOf(this.selfStamp).getBytes());
+                fos.write(String.valueOf(this.getSelfTimestamp()));
             } finally {
                 try { fos.close(); } catch (final IOException ignore) {}
             }

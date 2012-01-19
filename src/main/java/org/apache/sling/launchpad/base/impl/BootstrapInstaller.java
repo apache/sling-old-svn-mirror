@@ -36,6 +36,7 @@ import java.util.jar.Manifest;
 
 import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
+import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.launchpad.base.impl.bootstrapcommands.BootstrapCommandFile;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
@@ -70,11 +71,6 @@ class BootstrapInstaller {
      * (value is "resources/").
      */
     private static final String PATH_RESOURCES = "resources/";
-
-    /**
-     * The path of startup bundles in the sling home
-     */
-    private static final String PATH_STARTUP = "startup/";
 
     /**
      * The location of the core Bundles (value is "resources/corebundles").
@@ -135,7 +131,14 @@ class BootstrapInstaller {
     /** The bundle context. */
     private final BundleContext bundleContext;
 
-    BootstrapInstaller(final BundleContext bundleContext, Logger logger, LaunchpadContentProvider resourceProvider) {
+    /** The startup mode. */
+    private final StartupMode startupMode;
+
+    BootstrapInstaller(final BundleContext bundleContext,
+            final Logger logger,
+            final LaunchpadContentProvider resourceProvider,
+            final StartupMode startupMode) {
+        this.startupMode = startupMode;
         this.logger = logger;
         this.resourceProvider = resourceProvider;
         this.bundleContext = bundleContext;
@@ -166,8 +169,6 @@ class BootstrapInstaller {
         }
         final File slingStartupDir = getSlingStartupDir(launchpadHome);
 
-        final StartupHandler startupHandler = new StartupHandler(this.bundleContext, this.logger, slingStartupDir);
-
         // execute bootstrap commands, if needed
         final BootstrapCommandFile cmd = new BootstrapCommandFile(logger,
             new File(launchpadHome, BOOTSTRAP_CMD_FILENAME));
@@ -180,7 +181,7 @@ class BootstrapInstaller {
         if (Boolean.valueOf(fpblString)) {
             shouldInstall = true;
         } else {
-            shouldInstall = startupHandler.getMode() != StartupHandler.StartupMode.RESTART;
+            shouldInstall = this.startupMode != StartupMode.RESTART;
         }
 
         if (shouldInstall) {
@@ -235,9 +236,6 @@ class BootstrapInstaller {
 
             // start all the newly installed bundles (existing bundles are not started if they are stopped)
             startBundles(installed);
-
-            // mark everything installed
-            startupHandler.finished();
         }
 
         // due to the upgrade of a framework extension bundle, the framework
@@ -262,7 +260,7 @@ class BootstrapInstaller {
      */
     private File getSlingStartupDir(String slingHome) {
         final File slingHomeDir = new File(slingHome);
-        final File slingHomeStartupDir = getOrCreateDirectory(slingHomeDir, PATH_STARTUP);
+        final File slingHomeStartupDir = getOrCreateDirectory(slingHomeDir, DirectoryUtil.PATH_STARTUP);
         return slingHomeStartupDir;
     }
 
@@ -280,7 +278,7 @@ class BootstrapInstaller {
                     || ! parentDir.canRead()
                     || ! parentDir.canWrite() ) {
                 throw new IllegalStateException("Fatal error in bootstrap: Cannot find accessible existing "
-                        +SharedConstants.SLING_HOME+PATH_STARTUP+" directory: " + slingHomeStartupDir);
+                        +SharedConstants.SLING_HOME+DirectoryUtil.PATH_STARTUP+" directory: " + slingHomeStartupDir);
             }
         } else if (! slingHomeStartupDir.mkdirs() ) {
             throw new IllegalStateException("Sling Home " + slingHomeStartupDir + " cannot be created as a directory");
