@@ -57,6 +57,13 @@ public class SimpleScheduler implements Scheduler {
         throw new IllegalArgumentException();
     }
 
+    public void addPeriodicJob(String name, Object job,
+            Map<String, Serializable> config, long period,
+            boolean canRunConcurrently, boolean startImmediate)
+            throws Exception {
+        throw new IllegalArgumentException();
+    }
+
     public void fireJobAt(String name, final Object job,
             Map<String, Serializable> config, final Date date) throws Exception {
         new Thread() {
