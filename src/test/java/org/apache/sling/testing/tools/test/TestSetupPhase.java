@@ -50,10 +50,6 @@ class TestSetupPhase implements SetupPhase {
     
     @Override
     public String toString() {
-        return getDescription();
-    }
-
-    public String getDescription() {
         return getClass().getSimpleName() + "(" + id + ")";
     }
 
