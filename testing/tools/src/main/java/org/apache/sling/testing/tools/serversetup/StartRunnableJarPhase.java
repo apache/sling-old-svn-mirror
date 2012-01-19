@@ -33,9 +33,10 @@ public class StartRunnableJarPhase implements SetupPhase {
         log.info("Server base URL={}", url);
         owner.getContext().put(ServerSetup.SERVER_BASE_URL, url);
     }
-    
+
+    @Override
     public String toString() {
-        return getClass().getSimpleName() + "(" + id + ")";
+        return getClass().getSimpleName() + " (" + id + ") " + description; 
     }
     
     /** @inheritDoc */
@@ -46,11 +47,6 @@ public class StartRunnableJarPhase implements SetupPhase {
     /** @inheritDoc */
     public boolean isStartupPhase() {
         return true;
-    }
-
-    /** @inheritDoc */
-    public String getDescription() {
-        return description;
     }
 
     /** @inheritDoc */
@@ -71,8 +67,9 @@ public class StartRunnableJarPhase implements SetupPhase {
                 return true;
             }
 
-            public String getDescription() {
-                return "Kill the process started by " + StartRunnableJarPhase.this.getDescription();
+            @Override
+            public String toString() {
+                return "Kill the process started by " + StartRunnableJarPhase.this;
             }
 
             public String getId() {

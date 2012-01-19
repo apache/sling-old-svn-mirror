@@ -24,9 +24,6 @@ public interface SetupPhase {
     /** Is this a startup or shutdown phase? */
     public boolean isStartupPhase();
     
-    /** Describe this phase */
-    public String getDescription();
-    
     /** Get the phase ID string, a list of those
      *  is used by {@link ServerSetup} to decide
      *  which phases to run

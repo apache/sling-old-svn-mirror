@@ -169,7 +169,7 @@ public class ServerSetup {
             
             if(p.isStartupPhase() == startup) {
                 log.info("Executing ({}) {}:{}", 
-                        new Object [] { mode, p.getClass().getSimpleName(), p.getDescription()});
+                        new Object [] { mode, p.getClass().getSimpleName(), p});
                 try {
                     p.run(this);
                 } catch(Exception e) {
