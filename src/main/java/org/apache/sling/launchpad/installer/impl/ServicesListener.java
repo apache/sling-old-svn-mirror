@@ -19,13 +19,16 @@
 package org.apache.sling.launchpad.installer.impl;
 
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
+import org.apache.sling.launchpad.api.StartupHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>ServicesListener</code> listens for the required services
@@ -43,12 +46,21 @@ public class ServicesListener {
     /** The listener for the provider. */
     private final Listener providerListener;
 
+    /** The listener for the startup handler. */
+    private final Listener startupListener;
+
+    private ServiceRegistration launchpadListenerReg;
+
+    private volatile boolean installed = false;
+
     public ServicesListener(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.installerListener = new Listener(OsgiInstaller.class.getName());
         this.providerListener = new Listener(LaunchpadContentProvider.class.getName());
+        this.startupListener = new Listener(StartupHandler.class.getName());
         this.installerListener.start();
         this.providerListener.start();
+        this.startupListener.start();
     }
 
     public synchronized void notifyChange() {
@@ -57,7 +69,22 @@ public class ServicesListener {
         final LaunchpadContentProvider lcp = (LaunchpadContentProvider)this.providerListener.getService();
 
         if ( installer != null && lcp != null ) {
-            LaunchpadConfigInstaller.install(installer, lcp);
+            if ( !installed ) {
+                installed = true;
+                LaunchpadConfigInstaller.install(installer, lcp);
+            }
+        }
+        final StartupHandler handler = (StartupHandler)this.startupListener.getService();
+        if ( handler != null ) {
+            if ( launchpadListenerReg == null ) {
+                final LaunchpadListener launchpadListener = new LaunchpadListener(handler);
+                launchpadListenerReg = this.bundleContext.registerService(InstallationListener.class.getName(), launchpadListener, null);
+            }
+        } else {
+            if ( launchpadListenerReg != null ) {
+                launchpadListenerReg.unregister();
+                launchpadListenerReg = null;
+            }
         }
     }
 
@@ -67,6 +94,7 @@ public class ServicesListener {
     public void deactivate() {
         this.installerListener.deactivate();
         this.providerListener.deactivate();
+        this.startupListener.deactivate();
     }
 
     protected final class Listener implements ServiceListener {
