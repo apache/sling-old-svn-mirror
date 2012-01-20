@@ -18,6 +18,9 @@
  */
 package org.apache.sling.launchpad.installer.impl;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
+
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
@@ -78,7 +81,10 @@ public class ServicesListener {
         if ( handler != null ) {
             if ( launchpadListenerReg == null ) {
                 final LaunchpadListener launchpadListener = new LaunchpadListener(handler);
-                launchpadListenerReg = this.bundleContext.registerService(InstallationListener.class.getName(), launchpadListener, null);
+                final Dictionary<String, Object> props = new Hashtable<String, Object>();
+                props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Launchpad Startup Listener");
+                props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+                launchpadListenerReg = this.bundleContext.registerService(InstallationListener.class.getName(), launchpadListener, props);
             }
         } else {
             if ( launchpadListenerReg != null ) {
