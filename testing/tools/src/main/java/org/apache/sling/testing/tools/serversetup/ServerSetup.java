@@ -85,7 +85,7 @@ public class ServerSetup {
     public static final String PROP_NAME_PREFIX = "server.setup";
     
     /** Config property name: comma-separated list of phases to run */
-    public static final String PHASES_TO_RUN_PROP = PROP_NAME_PREFIX + ".phases.to.run";
+    public static final String PHASES_TO_RUN_PROP = PROP_NAME_PREFIX + ".phases";
     
     /** Standard suffix for shutdown tasks IDs */
     public static final String SHUTDOWN_ID_SUFFIX = ".shutdown";
