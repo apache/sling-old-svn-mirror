@@ -380,7 +380,7 @@ public class JcrResourceListener implements EventListener {
                         }
                     }
 
-                    localEa.postEvent(new org.osgi.service.event.Event(topic, event));
+                    localEa.sendEvent(new org.osgi.service.event.Event(topic, event));
                 }
             } catch (Exception e) {
                 logger.warn("processOsgiEventQueue: Unexpected problem processing event " + event, e);
