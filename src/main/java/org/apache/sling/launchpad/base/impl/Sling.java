@@ -323,7 +323,7 @@ public class Sling {
 
         // register the platform MBeanServer
         MBeanServer platformMBeanServer = ManagementFactory.getPlatformMBeanServer();
-        Properties mbeanProps = new Properties();
+        Hashtable<String, Object> mbeanProps = new Hashtable<String, Object>();
         try {
             ObjectName beanName = ObjectName.getInstance("JMImplementation:type=MBeanServerDelegate");
             AttributeList attrs = platformMBeanServer.getAttributes(beanName,
