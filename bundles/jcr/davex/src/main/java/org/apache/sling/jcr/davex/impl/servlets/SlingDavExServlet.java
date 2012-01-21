@@ -124,10 +124,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
         // prefix to the servlet
         initProps.put(INIT_PARAM_RESOURCE_PATH_PREFIX, davRoot);
 
-        // put the tmp files into Sling home -- or configurable ???
-        initProps.put(INIT_PARAM_HOME, slingSettings.getSlingHomePath() + "/jackrabbit");
-        initProps.put(INIT_PARAM_TMP_DIRECTORY, "tmp");
-
         // disable CSRF checks for now (should be handled by Sling)
         initProps.put(INIT_PARAM_CSRF_PROTECTION, CSRFUtil.DISABLED);
 
