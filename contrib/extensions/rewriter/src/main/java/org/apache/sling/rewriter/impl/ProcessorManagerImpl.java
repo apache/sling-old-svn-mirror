@@ -108,8 +108,9 @@ public class ProcessorManagerImpl
         this.initProcessors();
 
         // register event handler
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put("event.topics","org/apache/sling/api/resource/*");
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put("event.topics", new String[] { "org/apache/sling/api/resource/Resource/*",
+            "org/apache/sling/api/resource/ResourceProvider/*" });
         props.put("service.description","Processor Configuration/Modification Handler");
         props.put("service.vendor","The Apache Software Foundation");
 
