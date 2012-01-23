@@ -27,26 +27,14 @@ import junit.framework.TestCase;
 
 import org.apache.sling.jcr.api.SlingRepository;
 
-/** Base class for tests which need a Repository. Uses static
- *  variables to initialize it only once per test run.
+/** Base class for JUnit3-style tests which need a Repository. 
+ *  Should eventually be deprecated in favor of {@link RepositoryProvider}
+ *  which is less intrusive
  */
 public class RepositoryTestBase extends TestCase {
-    private static SlingRepository repository;
     protected Node testRoot;
     protected Session session;
     private int counter;
-    
-    private static class ShutdownThread extends Thread {
-        @Override
-        public void run() {
-            try {
-                RepositoryUtil.stopRepository();
-            } catch(Exception e) {
-                System.out.println("Exception in ShutdownThread:" + e);
-            }
-        }
-        
-    };
     
     @Override
     protected void tearDown() throws Exception {
@@ -74,21 +62,8 @@ public class RepositoryTestBase extends TestCase {
         return testRoot;
     }
 
-    /** Return a Repository - first call initializes it, and a JVM
-     *  shutdown hook is registered to stop it
-     */
+    /** Return a Repository */
     protected SlingRepository getRepository() throws RepositoryException, NamingException {
-        if(repository != null) {
-            return repository;
-        }
-        
-        synchronized (RepositoryTestBase.class) {
-            if(repository == null) {
-                RepositoryUtil.startRepository();
-                repository = RepositoryUtil.getRepository();
-                Runtime.getRuntime().addShutdownHook(new ShutdownThread());
-            }
-            return repository;
-        }
+        return RepositoryProvider.instance().getRepository();
     }
 }
