@@ -97,9 +97,11 @@ import org.slf4j.LoggerFactory;
  * @scr.service interface="ErrorHandler"
  * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
  *                cardinality="0..n" policy="dynamic"
- * @scr.property name="event.topics" values.1="org/apache/sling/api/resource/*"
- *               values.2="javax/script/ScriptEngineFactory/*"
- *               values.3="org/apache/sling/api/adapter/AdapterFactory/*"
+ * @scr.property name="event.topics"
+ *               values.1="org/apache/sling/api/resource/Resource/*"
+ *               values.2="org/apache/sling/api/resource/ResourceProvider/*"
+ *               values.3="javax/script/ScriptEngineFactory/*"
+ *               values.4="org/apache/sling/api/adapter/AdapterFactory/*"
  *               private="true"
  */
 public class SlingServletResolver implements ServletResolver, SlingScriptResolver, ErrorHandler, EventHandler {
