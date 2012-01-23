@@ -27,9 +27,7 @@ import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteResultHandler;
 import org.apache.commons.exec.Executor;
-import org.apache.commons.exec.ProcessDestroyer;
 import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.exec.ShutdownHookProcessDestroyer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +44,8 @@ public class JarExecutor {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final int DEFAULT_PORT = 8765;
+    public static final int DEFAULT_EXIT_TIMEOUT = 30;
+    
     public static final String DEFAULT_JAR_FOLDER = "target/dependency";
     public static final String DEFAULT_JAR_NAME_REGEXP = "org.apache.sling.*jar$";
     public static final String PROP_PREFIX = "jar.executor.";
@@ -55,6 +55,7 @@ public class JarExecutor {
     public static final String PROP_VM_OPTIONS = PROP_PREFIX + "vm.options";
     public static final String PROP_WORK_FOLDER = PROP_PREFIX + "work.folder";
     public static final String PROP_JAR_OPTIONS = PROP_PREFIX + "jar.options";
+    public static final String PROP_EXIT_TIMEOUT_SECONDS = PROP_PREFIX + "exit.timeout.seconds";
     
     @SuppressWarnings("serial")
     public static class ExecutorException extends Exception {
@@ -161,25 +162,24 @@ public class JarExecutor {
             executor.setWorkingDirectory(workFolder);
         }
 
+        String tmStr = config.getProperty(PROP_EXIT_TIMEOUT_SECONDS);
+        final int exitTimeoutSeconds = tmStr == null ? DEFAULT_EXIT_TIMEOUT : Integer.valueOf(tmStr);
+
         log.info("Executing " + cl);
         executor.setStreamHandler(new PumpStreamHandler());
-        executor.setProcessDestroyer(getProcessDestroyer());
+        executor.setProcessDestroyer(
+                new ShutdownHookSingleProcessDestroyer("java -jar " + jarToExecute.getName(), exitTimeoutSeconds));
         executor.execute(cl, h);
     }
     
-    /** Can be overridden to return a custom ProcessDestroyer */
-    protected ProcessDestroyer getProcessDestroyer() {
-        return new ShutdownHookProcessDestroyer();
-    }
-    
-    /** Stop the process that we started, if any */
+    /** Stop the process that we started, if any, and wait for it to exit before returning */
     public void stop() {
         if(executor == null) {
             throw new IllegalStateException("Process not started, no Executor set");
         }
         final Object d = executor.getProcessDestroyer();
-        if(d instanceof Runnable) {
-            ((Runnable)d).run();
+        if(d instanceof ShutdownHookSingleProcessDestroyer) {
+            ((ShutdownHookSingleProcessDestroyer)d).destroyProcess(true);
             log.info("Process destroyed");
         } else {
             throw new IllegalStateException(d + " is not a Runnable, cannot destroy process");
