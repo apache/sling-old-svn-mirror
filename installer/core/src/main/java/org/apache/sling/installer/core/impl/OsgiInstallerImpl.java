@@ -395,16 +395,29 @@ public class OsgiInstallerImpl
                 // now update resources and removed resources and remove all for this scheme!
                 final String prefix = scheme + ':';
                 // added resources
+
                 final Iterator<InternalResource> rsrcIter = this.newResources.iterator();
                 while ( rsrcIter.hasNext() ) {
                     final InternalResource rsrc = rsrcIter.next();
                     if ( rsrc.getURL().startsWith(prefix) ) {
+                        // check if we got the same resource
                         if ( rsrc.getPrivateCopyOfFile() != null ) {
-                            rsrc.getPrivateCopyOfFile().delete();
+                            boolean found = false;
+                            for(final InternalResource newRsrc : registeredResources) {
+                                if ( newRsrc.getURL().equals(rsrc.getURL()) && newRsrc.getPrivateCopyOfFile() == null ) {
+                                    found = true;
+                                    newRsrc.setPrivateCopyOfFile(rsrc.getPrivateCopyOfFile());
+                                    break;
+                                }
+                            }
+                            if ( !found ) {
+                                rsrc.getPrivateCopyOfFile().delete();
+                            }
                         }
                         rsrcIter.remove();
                     }
                 }
+
                 // removed urls
                 final Iterator<String> urlIter = this.urlsToRemove.iterator();
                 while ( urlIter.hasNext() ) {
