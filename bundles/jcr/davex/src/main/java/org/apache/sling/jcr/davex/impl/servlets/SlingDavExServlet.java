@@ -180,16 +180,14 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                         if (requireLongLivedSession(req)) {
                             // as the session might be longer used by davex than
                             // the request we have to create a new session!
-                            final SimpleCredentials credentials = new SimpleCredentials(session.getUserID(), EMPTY_PW);
-                            credentials.setAttribute(SESSION_FLAG_LONG_LIVED, Boolean.TRUE);
-                            final String wsp = session.getWorkspace().getName();
-                            final Session adminSession = SlingDavExServlet.this.repository.loginAdministrative(wsp);
-                            final Session newSession = adminSession.impersonate(credentials);
-                            log.debug("getSession: Creating new Session ({})", newSession);
+                            final Session newSession = getLongLivedSession(session);
+                            log.debug("getSession: Creating new Session ({}) for {}", newSession,
+                                newSession.getUserID());
                             return newSession;
+
                         }
 
-                        log.debug("getSession: Reusing Session ({})", session);
+                        log.debug("getSession: Using Session ({}) from Sling", session);
                         return session;
                     }
                 }
@@ -198,17 +196,63 @@ public class SlingDavExServlet extends JcrRemotingServlet {
             }
 
             public void releaseSession(final Session session) {
-                if (session.getAttribute(SESSION_FLAG_LONG_LIVED) != null) {
-                    log.debug("getSession: Logging out Session ({})", session);
+                if (isLongLivedSession(session)) {
+                    log.debug("releaseSession: Logging out long lived Session ({})", session);
                     session.logout();
                 } else {
-                    log.debug("getSession: Keeping Session ({})", session);
+                    log.debug("releaseSession: Nothing to do with Session ({}) from Sling", session);
                 }
             }
 
             private boolean requireLongLivedSession(final HttpServletRequest req) {
                 final String method = req.getMethod();
                 return REQUEST_METHOD_LOCK.equals(method) || REQUEST_METHOD_SUBSCRIBE.equals(method);
+            }
+
+            /**
+             * Creates a new session for the user of the slingSession in the
+             * same workspace as the slingSession.
+             * <p>
+             * Assumption: The admin session has permission to impersonate
+             * as any user without restriction. If this is not the case
+             * the Session.impersonate method throws a LoginException
+             * which is folded into a RepositoryException.
+             *
+             * @param slingSession The session provided by the Sling
+             *            authentication mechanis,
+             * @return a new session which may (and will) outlast the request
+             * @throws RepositoryException If an error occurrs creating the
+             *             session.
+             */
+            private Session getLongLivedSession(final Session slingSession) throws RepositoryException {
+                Session adminSession = null;
+                final String user = slingSession.getUserID();
+                try {
+                    final SimpleCredentials credentials = new SimpleCredentials(user, EMPTY_PW);
+                    credentials.setAttribute(SESSION_FLAG_LONG_LIVED, Boolean.TRUE);
+
+                    final String wsp = slingSession.getWorkspace().getName();
+                    adminSession = SlingDavExServlet.this.repository.loginAdministrative(wsp);
+
+                    return adminSession.impersonate(credentials);
+
+                } catch (RepositoryException re) {
+
+                    // LoginException from impersonate (missing permission)
+                    // and RepositoryException from loginAdministrative and
+                    // impersonate folded into RepositoryException to
+                    // cause a 403/FORBIDDEN response
+                    throw new RepositoryException("Cannot get session for " + user, re);
+
+                } finally {
+                    if (adminSession != null) {
+                        adminSession.logout();
+                    }
+                }
+            }
+
+            private boolean isLongLivedSession(final Session session) {
+                return session.getAttribute(SESSION_FLAG_LONG_LIVED) != null;
             }
         };
     }
