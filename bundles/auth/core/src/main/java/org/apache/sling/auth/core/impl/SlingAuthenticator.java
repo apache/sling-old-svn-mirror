@@ -26,7 +26,6 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestEvent;
 import javax.servlet.ServletRequestListener;
@@ -54,7 +53,6 @@ import org.apache.sling.auth.core.AuthConstants;
 import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.auth.core.impl.engine.EngineAuthenticationHandlerHolder;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationFeedbackHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
@@ -187,14 +185,6 @@ public class SlingAuthenticator implements Authenticator,
      * handler to be called back on login failure or success.
      */
     private static final String AUTH_INFO_PROP_FEEDBACK_HANDLER = "$$sling.auth.AuthenticationFeedbackHandler$$";
-
-    /**
-     * Constant copied from <code>SlingConstants</code> to enable compatibility
-     * with older API bundle.
-     *
-     * TODO - remove once Sling API 2.3.0 has been released
-     */
-    private static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -618,9 +608,7 @@ public class SlingAuthenticator implements Authenticator,
         ServletRequest request = sre.getServletRequest();
         Object resolverAttr = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
         if (resolverAttr instanceof ResourceResolver) {
-            if (request.getAttribute(ATTR_RESOURCE_RESOLVER_SKIP_CLOSE) == null) {
-                ((ResourceResolver) resolverAttr).close();
-            }
+            ((ResourceResolver) resolverAttr).close();
             request.removeAttribute(REQUEST_ATTRIBUTE_RESOLVER);
         }
     }
