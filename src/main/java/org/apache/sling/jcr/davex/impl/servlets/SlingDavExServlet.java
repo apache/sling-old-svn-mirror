@@ -41,7 +41,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -80,12 +79,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
     private static char[] EMPTY_PW = new char[0];
 
-    private static final String REQUEST_METHOD_SUBSCRIBE = "SUBSCRIBE";
-
-    private static final String REQUEST_METHOD_LOCK = "LOCK";
-
-    private static final String SESSION_FLAG_LONG_LIVED = "$sling.davex$";
-
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -97,9 +90,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
     @Reference
     private AuthenticationSupport authSupport;
-
-    @Reference
-    private SlingSettingsService slingSettings;
 
     /**
      * The path at which the DavEx servlet has successfully been
@@ -177,18 +167,9 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                 if (resolver != null) {
                     final Session session = resolver.adaptTo(Session.class);
                     if (session != null) {
-                        if (requireLongLivedSession(req)) {
-                            // as the session might be longer used by davex than
-                            // the request we have to create a new session!
-                            final Session newSession = getLongLivedSession(session);
-                            log.debug("getSession: Creating new Session ({}) for {}", newSession,
-                                newSession.getUserID());
-                            return newSession;
-
-                        }
-
-                        log.debug("getSession: Using Session ({}) from Sling", session);
-                        return session;
+                        final Session newSession = getLongLivedSession(session);
+                        log.debug("getSession: Creating new Session ({}) for {}", newSession, newSession.getUserID());
+                        return newSession;
                     }
                 }
 
@@ -196,17 +177,8 @@ public class SlingDavExServlet extends JcrRemotingServlet {
             }
 
             public void releaseSession(final Session session) {
-                if (isLongLivedSession(session)) {
-                    log.debug("releaseSession: Logging out long lived Session ({})", session);
-                    session.logout();
-                } else {
-                    log.debug("releaseSession: Nothing to do with Session ({}) from Sling", session);
-                }
-            }
-
-            private boolean requireLongLivedSession(final HttpServletRequest req) {
-                final String method = req.getMethod();
-                return REQUEST_METHOD_LOCK.equals(method) || REQUEST_METHOD_SUBSCRIBE.equals(method);
+                log.debug("releaseSession: Logging out long lived Session ({})", session);
+                session.logout();
             }
 
             /**
@@ -229,13 +201,9 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                 final String user = slingSession.getUserID();
                 try {
                     final SimpleCredentials credentials = new SimpleCredentials(user, EMPTY_PW);
-                    credentials.setAttribute(SESSION_FLAG_LONG_LIVED, Boolean.TRUE);
-
                     final String wsp = slingSession.getWorkspace().getName();
                     adminSession = SlingDavExServlet.this.repository.loginAdministrative(wsp);
-
                     return adminSession.impersonate(credentials);
-
                 } catch (RepositoryException re) {
 
                     // LoginException from impersonate (missing permission)
@@ -249,10 +217,6 @@ public class SlingDavExServlet extends JcrRemotingServlet {
                         adminSession.logout();
                     }
                 }
-            }
-
-            private boolean isLongLivedSession(final Session session) {
-                return session.getAttribute(SESSION_FLAG_LONG_LIVED) != null;
             }
         };
     }
