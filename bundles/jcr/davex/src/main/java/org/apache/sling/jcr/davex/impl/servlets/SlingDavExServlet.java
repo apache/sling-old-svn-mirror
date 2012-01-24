@@ -24,6 +24,8 @@ import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -38,11 +40,13 @@ import org.apache.jackrabbit.webdav.util.CSRFUtil;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.http.HttpService;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -74,17 +78,19 @@ public class SlingDavExServlet extends JcrRemotingServlet {
      */
     private static final String PAR_AUTH_REQ = "sling.auth.requirements";
 
-    /**
-     * Constant copied from <code>SlingConstants</code> to enable compatibility
-     * with older API bundle.
-     *
-     * TODO - remove once Sling API 2.3.0 has been released
-     */
-    private static final String ATTR_RESOURCE_RESOLVER_SKIP_CLOSE = "org.apache.sling.api.resource.ResourceResolver.skip.close";
+    private static char[] EMPTY_PW = new char[0];
 
+    private static final String REQUEST_METHOD_SUBSCRIBE = "SUBSCRIBE";
+
+    private static final String REQUEST_METHOD_LOCK = "LOCK";
+
+    private static final String SESSION_FLAG_LONG_LIVED = "$sling.davex$";
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
-    private Repository repository;
+    private SlingRepository repository;
 
     @Reference
     private HttpService httpService;
@@ -139,7 +145,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
             dummyServiceProperties.put(PAR_AUTH_REQ, "-" + davRoot);
             this.dummyService = bundleContext.registerService("java.lang.Object", new Object(), dummyServiceProperties);
         } catch (Exception e) {
-            LoggerFactory.getLogger(getClass()).error("activate: Failed registering DavEx Servlet at " + davRoot, e);
+            log.error("activate: Failed registering DavEx Servlet at " + davRoot, e);
         }
     }
 
@@ -165,28 +171,45 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     protected SessionProvider getSessionProvider() {
         return new SessionProvider() {
 
-            public Session getSession(final HttpServletRequest req,
-                    final Repository repository,
-                    final String workspace)
-            throws LoginException, RepositoryException {
+            public Session getSession(final HttpServletRequest req, final Repository repository, final String workspace)
+                    throws LoginException, RepositoryException, ServletException {
                 final ResourceResolver resolver = (ResourceResolver) req.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
-                if ( resolver != null ) {
+                if (resolver != null) {
                     final Session session = resolver.adaptTo(Session.class);
-                    // as the session might be longer used by davex than the request
-                    // we have to tell the engine and authenticators to leave the resource
-                    // resolver open
-                    if ( session != null ) {
-                        req.setAttribute(ATTR_RESOURCE_RESOLVER_SKIP_CLOSE, "");
+                    if (session != null) {
+                        if (requireLongLivedSession(req)) {
+                            // as the session might be longer used by davex than
+                            // the request we have to create a new session!
+                            final SimpleCredentials credentials = new SimpleCredentials(session.getUserID(), EMPTY_PW);
+                            credentials.setAttribute(SESSION_FLAG_LONG_LIVED, Boolean.TRUE);
+                            final String wsp = session.getWorkspace().getName();
+                            final Session adminSession = SlingDavExServlet.this.repository.loginAdministrative(wsp);
+                            final Session newSession = adminSession.impersonate(credentials);
+                            log.debug("getSession: Creating new Session ({})", newSession);
+                            return newSession;
+                        }
+
+                        log.debug("getSession: Reusing Session ({})", session);
                         return session;
                     }
                 }
-                return null;
+
+                throw new ServletException("ResourceResolver missing or not providing on JCR Session");
             }
 
             public void releaseSession(final Session session) {
-                session.logout();
+                if (session.getAttribute(SESSION_FLAG_LONG_LIVED) != null) {
+                    log.debug("getSession: Logging out Session ({})", session);
+                    session.logout();
+                } else {
+                    log.debug("getSession: Keeping Session ({})", session);
+                }
+            }
+
+            private boolean requireLongLivedSession(final HttpServletRequest req) {
+                final String method = req.getMethod();
+                return REQUEST_METHOD_LOCK.equals(method) || REQUEST_METHOD_SUBSCRIBE.equals(method);
             }
         };
     }
-
 }
