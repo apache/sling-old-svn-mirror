@@ -121,7 +121,7 @@ public class InternalResource extends InstallableResource {
     private final String url;
 
     /** The data file (if copied) */
-    private final File dataFile;
+    private File dataFile;
 
     /** The resource uri */
     private final String resourceUri;
@@ -170,6 +170,13 @@ public class InternalResource extends InstallableResource {
      */
     public File getPrivateCopyOfFile() {
         return this.dataFile;
+    }
+
+    /**
+     * Set the data file.
+     */
+    public void setPrivateCopyOfFile(final File file) {
+        this.dataFile = file;
     }
 
     /**
