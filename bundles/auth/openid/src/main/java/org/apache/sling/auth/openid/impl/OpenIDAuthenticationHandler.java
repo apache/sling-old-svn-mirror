@@ -32,18 +32,25 @@ import javax.jcr.SimpleCredentials;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
+import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.apache.sling.auth.openid.OpenIDConstants;
 import org.apache.sling.auth.openid.OpenIDFailure;
 import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -58,86 +65,63 @@ import com.dyuproject.openid.manager.CookieBasedUserManager;
  * the authorization steps based on the Authorization header of the HTTP
  * request. This authenticator should eventually support both BASIC and DIGEST
  * authentication methods.
- *
- * @scr.component immediate="false" label="%auth.openid.name"
- *                description="%auth.openid.description"
- *                name="org.apache.sling.auth.openid.OpenIDAuthenticationHandler"
- * @scr.property name="service.description"
- *               value="Apache Sling OpenID Authentication Handler"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property nameRef=
- *               "org.apache.sling.auth.core.spi.AuthenticationHandler.PATH_PROPERTY"
- *               values.0="/"
- * @scr.property nameRef=
- *               "org.apache.sling.auth.core.spi.AuthenticationHandler.TYPE_PROPERTY"
- *               valueRef="OpenIDConstants.OPENID_AUTH" private="true"
- * @scr.service
  */
+@Component(immediate=false, metatype=true, label="%auth.openid.name",
+    description="%auth.openid.description", name="org.apache.sling.auth.openid.OpenIDAuthenticationHandler")
+@Service
+@org.apache.felix.scr.annotations.Properties({
+    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation"),
+    @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling OpenID Authentication Handler"),
+    @Property(name=AuthenticationHandler.PATH_PROPERTY, value="/", unbounded=PropertyUnbounded.ARRAY),
+    @Property(name=AuthenticationHandler.TYPE_PROPERTY, value=OpenIDConstants.OPENID_AUTH, propertyPrivate=true)
+})
 public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    /**
-     * @scr.property valueRef="AuthenticationFormServlet.SERVLET_PATH"
-     */
+    @Property(value=AuthenticationFormServlet.SERVLET_PATH)
     public static final String PROP_LOGIN_FORM = "openid.login.form";
-
-    /**
-     * @scr.property valueRef="DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD"
-     */
-    public static final String PROP_LOGIN_IDENTIFIER_FORM_FIELD = "openid.login.identifier";
 
     public static final String DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD = RelyingParty.DEFAULT_IDENTIFIER_PARAMETER;
 
-    /**
-     * @scr.property valueRef="DEFAULT_EXTERNAL_URL_PREFIX"
-     */
-    public static final String PROP_EXTERNAL_URL_PREFIX = "openid.external.url.prefix";
+    @Property(value=DEFAULT_LOGIN_IDENTIFIER_FORM_FIELD)
+    public static final String PROP_LOGIN_IDENTIFIER_FORM_FIELD = "openid.login.identifier";
 
     public static final String DEFAULT_EXTERNAL_URL_PREFIX = "";
 
-    /**
-     * @scr.property valueRef="DEFAULT_USE_COOKIE" type="Boolean"
-     */
-    public static final String PROP_USE_COOKIE = "openid.use.cookie";
+    @Property(value=DEFAULT_EXTERNAL_URL_PREFIX)
+    public static final String PROP_EXTERNAL_URL_PREFIX = "openid.external.url.prefix";
 
     public static final boolean DEFAULT_USE_COOKIE = true;
 
-    /**
-     * @scr.property valueRef="DEFAULT_COOKIE_DOMAIN"
-     */
-    public static final String PROP_COOKIE_DOMAIN = "openid.cookie.domain";
+    @Property(boolValue=DEFAULT_USE_COOKIE)
+    public static final String PROP_USE_COOKIE = "openid.use.cookie";
 
     public static final String DEFAULT_COOKIE_DOMAIN = "";
 
-    /**
-     * @scr.property valueRef="DEFAULT_COOKIE_NAME"
-     */
-    public static final String PROP_COOKIE_NAME = "openid.cookie.name";
+    @Property(value=DEFAULT_COOKIE_DOMAIN)
+    public static final String PROP_COOKIE_DOMAIN = "openid.cookie.domain";
 
     public static final String DEFAULT_COOKIE_NAME = "sling.openid";
 
-    /**
-     * @scr.property valueRef="DEFAULT_COOKIE_SECRET_KEY"
-     */
-    public static final String PROP_COOKIE_SECRET_KEY = "openid.cookie.secret.key";
+    @Property(value=DEFAULT_COOKIE_NAME)
+    public static final String PROP_COOKIE_NAME = "openid.cookie.name";
 
     public static final String DEFAULT_COOKIE_SECRET_KEY = "secret";
 
-    /**
-     * @scr.property valueRef="DEFAULT_OPENID_USER_ATTR"
-     */
-    private static final String PROP_OPENID_USER_ATTR = "openid.user.attr";
+    @Property(DEFAULT_COOKIE_SECRET_KEY)
+    public static final String PROP_COOKIE_SECRET_KEY = "openid.cookie.secret.key";
 
     private static final String DEFAULT_OPENID_USER_ATTR = "openid.user";
 
-    /**
-     * @scr.property valueRef="DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY"
-     */
-    private static final String PROP_OPEN_ID_IDENTIFIER_PROPERTY = "openid.property.identity";
+    @Property(DEFAULT_OPENID_USER_ATTR)
+    private static final String PROP_OPENID_USER_ATTR = "openid.user.attr";
 
     private static final String DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY = "openid.identity";
+
+    @Property(value=DEFAULT_OPEN_ID_IDENTIFIER_PROPERTY)
+    private static final String PROP_OPEN_ID_IDENTIFIER_PROPERTY = "openid.property.identity";
 
     /**
      * The name of the attribute set on the OpenID user object to cache the
@@ -148,7 +132,7 @@ public class OpenIDAuthenticationHandler extends AbstractAuthenticationHandler {
 
     static final String SLASH = "/";
 
-    /** @scr.reference */
+    @Reference
     private SlingRepository repository;
 
     private Session session;
