@@ -78,19 +78,26 @@ public final class AuthConstants {
     public static final String AUTH_HANDLER_BROWSER_ONLY = "sling.auth.browser-only";
 
     /**
+     * Marker property in the
+     * {@link org.apache.sling.auth.core.spi.AuthenticationInfo} object returned
+     * by the
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler#extractCredentials(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)}
+     * method indicating a first authentication considered to be a login.
+     * <p>
+     * By setting this property to any non-<code>null</code> value an
+     * {@link org.apache.sling.auth.core.spi.AuthenticationHandler} indicates,
+     * that the {@link #TOPIC_LOGIN} event should be fired after successfully
+     * acquiring the <code>ResourceResolver</code>.
+     */
+    public static final String AUTH_INFO_LOGIN = "$$auth.info.login$$";
+
+    /**
      * The topic for the OSGi event which is sent when a user has logged in successfully.
      * The event contains at least the {@link org.apache.sling.api.SlingConstants#PROPERTY_USERID}
      * and the {@link org.apache.sling.auth.core.spi.AuthenticationInfo#AUTH_TYPE}
      * properties.
      */
     public static final String TOPIC_LOGIN = "org/apache/sling/auth/core/Authenticator/LOGIN";
-
-    /**
-     * The topic for the OSGi event which is sent when a user has logged out.
-     * The event contains at least the {@link org.apache.sling.api.SlingConstants#PROPERTY_USERID}
-     * property.
-     */
-    public static final String TOPIC_LOGOUT = "org/apache/sling/auth/core/Authenticator/LOGOUT";
 
     private AuthConstants() {
     }
