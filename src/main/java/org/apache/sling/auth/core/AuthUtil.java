@@ -249,8 +249,10 @@ public final class AuthUtil {
 
         if (AuthUtil.isRedirectValid(request, target)) {
             b.append(target);
-        } else {
+        } else if (request.getContextPath().length() == 0) {
             b.append("/");
+        } else {
+            b.append(request.getContextPath());
         }
 
         if (params == null) {
