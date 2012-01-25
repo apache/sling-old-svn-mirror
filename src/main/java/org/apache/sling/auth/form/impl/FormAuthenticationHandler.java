@@ -49,6 +49,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.auth.core.AuthConstants;
 import org.apache.sling.auth.core.AuthUtil;
 import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
@@ -584,6 +585,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             if (user != null && pwd != null) {
                 info = new AuthenticationInfo(HttpServletRequest.FORM_AUTH,
                     user, pwd.toCharArray());
+                info.put(AuthConstants.AUTH_INFO_LOGIN, new Object());
 
                 // if this request is providing form credentials, we have to
                 // make sure, that the request is redirected after successful
