@@ -125,9 +125,15 @@ public class ServerSetup {
      *  setup phases that have not run yet.
      */
     public synchronized void setupTestServer() throws Exception {
-        // If any phases failed, we're doomed
-        if(!failedPhases.isEmpty()) {
-            throw new SetupException("Some SetupPhases previously failed: " + failedPhases);
+        
+        // On the first call, list our available phases
+        if(donePhases.isEmpty()) {
+            if(log.isInfoEnabled()) {
+                final List<String> ids = new ArrayList<String>();
+                ids.addAll(phases.keySet());
+                Collections.sort(ids);
+                log.info("Will run SetupPhases {} out of {}", phasesToRun, ids);
+            }
         }
         
         // Run all startup phases that didn't run yet
@@ -151,8 +157,15 @@ public class ServerSetup {
     }
     
     /** Run phases that haven't run yet */
-    private void runRemainingPhases(boolean startup) throws Exception {
-        final String mode = startup ? "startup" : "shutdown";
+    private void runRemainingPhases(boolean isStartup) throws Exception {
+        final String mode = isStartup ? "startup" : "shutdown";
+        
+        // In startup mode, fail if any phases failed previously
+        // (in shutdown mode it's probably safer to try to run cleanup phases)
+        if(isStartup && !failedPhases.isEmpty()) {
+            throw new SetupException("Some SetupPhases previously failed: " + failedPhases);
+        }
+        
         for(String id : phasesToRun) {
             final SetupPhase p = phases.get(id);
             
@@ -167,9 +180,8 @@ public class ServerSetup {
                 continue;
             }
             
-            if(p.isStartupPhase() == startup) {
-                log.info("Executing ({}) {}:{}", 
-                        new Object [] { mode, p.getClass().getSimpleName(), p});
+            if(p.isStartupPhase() == isStartup) {
+                log.info("Executing {} phase: {}", mode, p); 
                 try {
                     p.run(this);
                 } catch(Exception e) {
