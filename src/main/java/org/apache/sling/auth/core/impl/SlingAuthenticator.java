@@ -564,8 +564,6 @@ public class SlingAuthenticator implements Authenticator,
             throw new IllegalStateException("Response already committed");
         }
 
-        String userId = request.getRemoteUser();
-
         final String path = getHandlerSelectionPath(request);
         final List<AbstractAuthenticationHandlerHolder>[] holderListArray = this.authHandlerCache.findApplicableHolder(request);
         for (int m = 0; m < holderListArray.length; m++) {
@@ -592,8 +590,6 @@ public class SlingAuthenticator implements Authenticator,
         if (httpBasicHandler != null) {
             httpBasicHandler.dropCredentials(request, response);
         }
-
-        postLogoutEvent(userId);
 
         redirectAfterLogout(request, response);
     }
@@ -740,6 +736,7 @@ public class SlingAuthenticator implements Authenticator,
 
         // prepare the feedback handler
         final AuthenticationFeedbackHandler feedbackHandler = (AuthenticationFeedbackHandler) authInfo.remove(AUTH_INFO_PROP_FEEDBACK_HANDLER);
+        final Object sendLoginEvent = authInfo.remove(AuthConstants.AUTH_INFO_LOGIN);
 
         // try to connect
         try {
@@ -747,6 +744,10 @@ public class SlingAuthenticator implements Authenticator,
             ResourceResolver resolver = resourceResolverFactory.getResourceResolver(authInfo);
 
             setSudoCookie(request, response, authInfo);
+
+            if (sendLoginEvent != null) {
+                postLoginEvent(authInfo);
+            }
 
             // handle success feedback
             if (feedbackHandler != null) {
@@ -793,8 +794,6 @@ public class SlingAuthenticator implements Authenticator,
             // no redirect desired, so continue processing by first setting
             // the request attributes and then returning true
             setAttributes(resolver, authInfo.getAuthType(), request);
-
-            postLoginEvent(authInfo);
 
             return true;
 
@@ -1354,16 +1353,6 @@ public class SlingAuthenticator implements Authenticator,
         EventAdmin localEA = this.eventAdmin;
         if (localEA != null) {
             localEA.postEvent(new Event(AuthConstants.TOPIC_LOGIN, properties));
-        }
-    }
-
-    private void postLogoutEvent(final String userId) {
-        final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        properties.put(SlingConstants.PROPERTY_USERID, userId);
-
-        EventAdmin localEA = this.eventAdmin;
-        if (localEA != null) {
-            localEA.postEvent(new Event(AuthConstants.TOPIC_LOGOUT, properties));
         }
     }
 
