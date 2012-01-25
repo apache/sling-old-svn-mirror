@@ -271,31 +271,31 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         // If an object with same url is already present, replace with the
         // new one which might have different attributes
         boolean first = true;
+        boolean add = true;
         final Iterator<TaskResource> taskIter = this.resources.iterator();
         while ( taskIter.hasNext() ) {
             final TaskResource rr = taskIter.next();
             if ( rr.getURL().equals(r.getURL()) ) {
-                boolean removeAndCleanup = true;
-                if ( first ) {
-                    if ( RegisteredResourceImpl.isSameResource((RegisteredResourceImpl)rr, (RegisteredResourceImpl)r) ) {
-                        // same resource, just replace
-                        ((RegisteredResourceImpl)r).setState(rr.getState());
-                    } else if (rr.getState() == ResourceState.INSTALLED) {
+                if ( RegisteredResourceImpl.isSameResource((RegisteredResourceImpl)rr, (RegisteredResourceImpl)r) ) {
+                    // same resource, just ignore the new one
+                    add = false;
+                } else {
+                    if ( first && rr.getState() == ResourceState.INSTALLED) {
                         // it's not the same, but the first one is installed, so uninstall
                         ((RegisteredResourceImpl)rr).setState(ResourceState.UNINSTALL);
-                        removeAndCleanup = false;
+                    } else {
+                        LOGGER.debug("Cleanup obsolete resource: {}", rr);
+                        taskIter.remove();
+                        this.cleanup(rr);
                     }
-                }
-                if ( removeAndCleanup ) {
-                    LOGGER.debug("Cleanup obsolete resource: {}", rr);
-                    taskIter.remove();
-                    this.cleanup(rr);
                 }
                 break;
             }
             first = false;
         }
-        resources.add(r);
+        if ( add ) {
+            resources.add(r);
+        }
     }
 
     public void remove(final String url) {
