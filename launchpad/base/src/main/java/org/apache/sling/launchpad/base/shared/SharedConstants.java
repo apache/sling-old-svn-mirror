@@ -117,11 +117,25 @@ public interface SharedConstants {
     public static final String SLING_LAUNCHPAD = "sling.launchpad";
 
     /**
+     * The name of the configuration property defining if the startup level
+     * is increased incrementally for installs and startups.
+     * If enabled the framework starts with the start level defined by
+     * {@link #SLING_INSTALL_STARTLEVEL}
+     * and the startup manager increases the start level one by one until
+     * the initial framework start level is reached (value is "sling.framework.install.incremental").
+     * The default value is false, disabling this feature.
+     * @since 2.4.0
+     */
+    public static final String SLING_INSTALL_INCREMENTAL_START = "sling.framework.install.incremental";
+
+    /**
      * The name of the configuration property defining the startlevel
      * for installs and updates. The framework starts with this start level
      * and the startup manager increases the start level one by one until
-     * the initial framework start level is reached (value is "sling.framework.installstartlevel").
+     * the initial framework start level is reached (value is "sling.framework.install.startlevel").
+     * This level is only used if {@link #SLING_INSTALL_INCREMENTAL_START} is
+     * enabled. Default value is 10.
      * @since 2.4.0
      */
-    public static final String SLING_INSTALL_STARTLEVEL = "sling.framework.installstartlevel";
+    public static final String SLING_INSTALL_STARTLEVEL = "sling.framework.install.startlevel";
 }

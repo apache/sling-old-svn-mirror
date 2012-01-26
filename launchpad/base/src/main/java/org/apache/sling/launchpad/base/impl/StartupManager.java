@@ -57,8 +57,10 @@ public class StartupManager {
 
     private final long targetStartLevel;
 
+    private final boolean incrementalStartupEnabled;
+
     StartupManager(final Map<String, String> properties,
-            final Logger logger) {
+                   final Logger logger) {
         this.logger = logger;
         this.startupDir = DirectoryUtil.getStartupDir(properties);
         this.confDir = DirectoryUtil.getConfigDir(properties);
@@ -67,10 +69,12 @@ public class StartupManager {
 
         this.targetStartLevel = Long.valueOf(properties.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL));
 
+        this.incrementalStartupEnabled = Boolean.valueOf(properties.get(SharedConstants.SLING_INSTALL_INCREMENTAL_START));
+
         // if this is not a restart, reduce start level
-        if ( this.mode != StartupMode.RESTART ) {
+        if ( this.mode != StartupMode.RESTART && this.incrementalStartupEnabled ) {
             final String startLevel = properties.get(SharedConstants.SLING_INSTALL_STARTLEVEL);
-            properties.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, startLevel);
+            properties.put(Constants.FRAMEWORK_BEGINNING_STARTLEVEL, startLevel != null ? startLevel : "10");
         }
     }
 
@@ -80,6 +84,13 @@ public class StartupManager {
      */
     public StartupMode getMode() {
         return this.mode;
+    }
+
+    /**
+     * Is the incremental startup enabled?
+     */
+    public boolean isIncrementalStartupEnabled() {
+        return this.incrementalStartupEnabled;
     }
 
     /**

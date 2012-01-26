@@ -88,6 +88,9 @@ public class DefaultStartupHandler
     /** Bundle Context. */
     private final BundleContext bundleContext;
 
+    /** Use incremental start level handling. */
+    private final boolean useIncremental;
+
     /**
      * Constructor.
      * @param context Bundle context
@@ -123,13 +126,15 @@ public class DefaultStartupHandler
         this.startLevelService = (StartLevel)context.getService(context.getServiceReference(StartLevel.class.getName()));
         context.addFrameworkListener(this);
 
-        if ( this.startupMode == StartupMode.RESTART ) {
+        this.useIncremental = this.startupMode != StartupMode.RESTART && manager.isIncrementalStartupEnabled();
+
+        if ( !this.useIncremental ) {
             final Bundle[] bundles = context.getBundles();
-            this.expectedBundlesCount = (bundles != null ? bundles.length : 0);
+            this.expectedBundlesCount = (bundles != null && bundles.length > 0 ? bundles.length : 10);
 
             context.addBundleListener(this);
         } else {
-            this.expectedBundlesCount = 0;
+            this.expectedBundlesCount = 10;
         }
 
         final Thread t = new Thread(this);
@@ -155,7 +160,7 @@ public class DefaultStartupHandler
      */
     public void run() {
         this.bundleContext.registerService(StartupHandler.class.getName(), this, null);
-        logger.log(Logger.LOG_INFO, "Started startup listener with target start level="
+        logger.log(Logger.LOG_INFO, "Started startup handler with target start level="
                + String.valueOf(this.targetStartLevel) + ", and expected bundle count=" + String.valueOf(this.expectedBundlesCount));
         while ( !this.finished.get() ) {
             Boolean doInc = null;
@@ -234,7 +239,7 @@ public class DefaultStartupHandler
         }
         logger.log(Logger.LOG_DEBUG, "Received framework event " + event);
 
-        if ( this.startupMode == StartupMode.RESTART ) {
+        if ( !this.useIncremental ) {
             // restart
             if ( event.getType() == FrameworkEvent.STARTED ) {
                 this.startupFinished();
@@ -281,7 +286,7 @@ public class DefaultStartupHandler
         this.activeBundles.clear();
 
         // unregister listeners
-        if ( this.startupMode == StartupMode.RESTART ) {
+        if ( !this.useIncremental ) {
             this.bundleContext.removeBundleListener(this);
         }
         this.bundleContext.removeFrameworkListener(this);
@@ -292,7 +297,6 @@ public class DefaultStartupHandler
      * @param ratio ratio
      */
     private void startupProgress(final float ratio) {
-        logger.log(Logger.LOG_INFO, "Startup progress " + String.valueOf(ratio));
         final Object[] listeners = this.listenerTracker.getServices();
         if ( listeners != null ) {
             for(final Object l : listeners) {
