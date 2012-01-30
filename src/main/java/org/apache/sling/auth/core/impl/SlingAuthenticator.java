@@ -742,60 +742,40 @@ public class SlingAuthenticator implements Authenticator,
         try {
             handleImpersonation(request, authInfo);
             ResourceResolver resolver = resourceResolverFactory.getResourceResolver(authInfo);
-
-            setSudoCookie(request, response, authInfo);
+            final boolean impersChanged = setSudoCookie(request, response, authInfo);
 
             if (sendLoginEvent != null) {
                 postLoginEvent(authInfo);
             }
 
-            // handle success feedback
+            // provide the resource resolver to the feedback handler
+            request.setAttribute(REQUEST_ATTRIBUTE_RESOLVER, resolver);
+
+            boolean processRequest = true;
+
+            // custom feedback handler with option to redirect
             if (feedbackHandler != null) {
+                processRequest = !feedbackHandler.authenticationSucceeded(request, response, authInfo);
+            }
 
-                // provide the resource resolver to the feedback handler
-                request.setAttribute(REQUEST_ATTRIBUTE_RESOLVER, resolver);
-
-                // call the feedback handler, terminating the request if
-                // so desired by the handler
-                if (feedbackHandler.authenticationSucceeded(request, response,
-                    authInfo)) {
-
-                    // request will now be terminated, so close the resolver
-                    // to release resources
-                    resolver.close();
-
-                    return false;
+            if (processRequest) {
+                if (AuthUtil.isValidateRequest(request)) {
+                    AuthUtil.sendValid(response);
+                    processRequest = false;
+                } else if (impersChanged || feedbackHandler == null) {
+                    processRequest = !DefaultAuthenticationFeedbackHandler.handleRedirect(request, response);
                 }
+            }
 
+            if (processRequest) {
+                // process: set required attributes
+                setAttributes(resolver, authInfo.getAuthType(), request);
             } else {
-
-                // if there is no feedback handler: check whether the client
-                // asked for redirect after authentication and/or impersonation
-                if (DefaultAuthenticationFeedbackHandler.handleRedirect(
-                    request, response)) {
-
-                    // request will now be terminated, so close the resolver
-                    // to release resources
-                    resolver.close();
-
-                    return false;
-                }
-
-            }
-
-            // client requested validation, which succeeds, thus send
-            // success response and close the resolver
-            if (AuthUtil.isValidateRequest(request)) {
-                AuthUtil.sendValid(response);
+                // terminate: cleanup
                 resolver.close();
-                return false;
             }
 
-            // no redirect desired, so continue processing by first setting
-            // the request attributes and then returning true
-            setAttributes(resolver, authInfo.getAuthType(), request);
-
-            return true;
+            return processRequest;
 
         } catch (LoginException re) {
 
@@ -1250,13 +1230,24 @@ public class SlingAuthenticator implements Authenticator,
         return currentSudo;
     }
 
-    private void setSudoCookie(HttpServletRequest req,
+    /**
+     * Sets the impersonation cookie on the response if impersonation actually
+     * changed and returns whether the cookie has been set (or cleared) or not.
+     *
+     * @param req Providing the current sudo cookie value
+     * @param res For setting the sudo cookie
+     * @param authInfo Providing information about desired impersonation
+     * @return <code>true</code> if the cookie has been set or cleared or
+     *         <code>false</code> if the cookie is not modified.
+     */
+    private boolean setSudoCookie(HttpServletRequest req,
             HttpServletResponse res, AuthenticationInfo authInfo) {
         String sudo = (String) authInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
         String currentSudo = getSudoCookieValue(req);
 
         // set the (new) impersonation
-        if (sudo != currentSudo) {
+        final boolean setCookie = sudo != currentSudo;
+        if (setCookie) {
             if (sudo == null) {
                 // Parameter set to "-" to clear impersonation, which was
                 // active due to cookie setting
@@ -1273,6 +1264,8 @@ public class SlingAuthenticator implements Authenticator,
                         sudo);
             }
         }
+
+        return setCookie;
     }
 
     /**
