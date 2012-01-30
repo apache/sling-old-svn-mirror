@@ -81,6 +81,17 @@ public class Main {
     private static final String PROP_PORT = "org.osgi.service.http.port";
 
     /**
+     * The configuration property setting the context path where the HTTP service
+     * mounts itself.
+     */
+    private static final String PROP_CONTEXT_PATH = "org.apache.felix.http.context_path";
+
+    /**
+     * Host name or IP Address of the interface to listen on.
+     */
+    private static final String PROP_HOST = "org.apache.felix.http.host";
+
+    /**
      * The main entry point to the Sling Launcher Standalone Java Application.
      * This method is generally only called by the Java VM to launch Sling.
      *
@@ -623,8 +634,9 @@ public class Main {
             System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
             System.out.println("    -c slinghome  the sling context directory (default sling)");
             System.out.println("    -i launchpadhome  the launchpad directory (default slinghome)");
-            System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any) (not supported yet)");
+            System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any)");
             System.out.println("    -p port       the port to listen to (default 8080)");
+            System.out.println("    -r path       the root servlet context path for the http service (default is /)");
             System.out.println("    -D n=v        sets property n to value v");
             System.out.println("    -h            prints this usage message");
 
@@ -695,9 +707,7 @@ public class Main {
                             errorArg = true;
                             continue;
                         }
-                        info(
-                            "Setting the address to bind to is not supported, binding to 0.0.0.0",
-                            null);
+                        props.put(PROP_HOST, value);
                         break;
 
                     case 'p':
@@ -714,6 +724,15 @@ public class Main {
                             errorArg("-p", "Bad port: " + value);
                             errorArg = true;
                         }
+                        break;
+
+                    case 'r':
+                        if (value == arg.getKey()) {
+                            errorArg("-r", "Missing root path value");
+                            errorArg = true;
+                            continue;
+                        }
+                        props.put(PROP_CONTEXT_PATH, value);
                         break;
 
                     case 'D':
