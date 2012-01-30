@@ -564,6 +564,9 @@ public class SlingAuthenticator implements Authenticator,
             throw new IllegalStateException("Response already committed");
         }
 
+        // make sure impersonation is dropped
+        setSudoCookie(request, response, new AuthenticationInfo("dummy", request.getRemoteUser()));
+
         final String path = getHandlerSelectionPath(request);
         final List<AbstractAuthenticationHandlerHolder>[] holderListArray = this.authHandlerCache.findApplicableHolder(request);
         for (int m = 0; m < holderListArray.length; m++) {
@@ -1233,6 +1236,12 @@ public class SlingAuthenticator implements Authenticator,
     /**
      * Sets the impersonation cookie on the response if impersonation actually
      * changed and returns whether the cookie has been set (or cleared) or not.
+     * <p>
+     * The current impersonation state is taken from the sudo cookie value
+     * while the desired state is taken from the user.impersonation
+     * property of the auth info. If they don't match, the sudo cookie
+     * is set according to the user.impersonation property where the
+     * cookie is actually cleared if the property is <code>null</code>.
      *
      * @param req Providing the current sudo cookie value
      * @param res For setting the sudo cookie
