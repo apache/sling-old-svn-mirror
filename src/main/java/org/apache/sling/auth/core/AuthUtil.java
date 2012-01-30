@@ -166,7 +166,6 @@ public final class AuthUtil {
      *            and the request parameter is not set. This parameter is
      *            ignored if it is <code>null</code> or an empty string.
      * @return returns the value of resource request attribute
-     * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static String setLoginResourceAttribute(
             final HttpServletRequest request, final String defaultValue) {
@@ -192,10 +191,6 @@ public final class AuthUtil {
      * <p>
      * This method implements the following functionality:
      * <ul>
-     * <li>The target path is prefixed with the request's context path to ensure
-     * proper redirection into the same web application. Therefore the
-     * <code>target</code> path parameter must not be prefixed with the context
-     * path.</li>
      * <li>If the <code>params</code> map does not contain a (non-
      * <code>null</code>) value for the {@link Authenticator#LOGIN_RESOURCE
      * resource} entry, such an entry is generated from the request URI and the
@@ -217,10 +212,9 @@ public final class AuthUtil {
      *            have the {@link Authenticator#LOGIN_RESOURCE resource}
      *            parameter set.
      * @param response The response used to send the redirect to the client.
-     * @param target The target path to redirect the client to. This parameter
-     *            must not be prefixed with the request's context path because
-     *            this will be added by this method. If this parameter is not a
-     *            valid target request as per the
+     * @param target The redirect target to validate. This path must be prefixed
+     *            with the request's servlet context path. If this parameter is
+     *            not a valid target request as per the
      *            {@link #isRedirectValid(HttpServletRequest, String)} method
      *            the target is modified to be the root of the request's
      *            context.
@@ -233,10 +227,6 @@ public final class AuthUtil {
      *             the platform. This should not be caught, because it is a real
      *             problem if the encoding required by the specification is
      *             missing.
-     * @since 1.0.2 (Bundle version 1.0.4)
-     * @since 1.0.4 (bundle version 1.0.8) the target is validated with the
-     *        {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}
-     *        method.
      */
     public static void sendRedirect(final HttpServletRequest request,
             final HttpServletResponse response, final String target,
@@ -245,8 +235,6 @@ public final class AuthUtil {
         checkAndReset(response);
 
         StringBuilder b = new StringBuilder();
-        b.append(request.getContextPath());
-
         if (AuthUtil.isRedirectValid(request, target)) {
             b.append(target);
         } else if (request.getContextPath().length() == 0) {
@@ -321,7 +309,6 @@ public final class AuthUtil {
      * @param request The request to provide the parameter to check
      * @return <code>true</code> if the {@link #PAR_J_VALIDATE} parameter is set
      *         to <code>true</code>.
-     * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static boolean isValidateRequest(final HttpServletRequest request) {
         return "true".equalsIgnoreCase(request.getParameter(AuthConstants.PAR_J_VALIDATE));
@@ -337,7 +324,6 @@ public final class AuthUtil {
      *
      * @param response The response object
      * @throws IllegalStateException if the response has already been committed
-     * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static void sendValid(final HttpServletResponse response) {
         checkAndReset(response);
@@ -376,7 +362,6 @@ public final class AuthUtil {
      * @param request The request object
      * @param response The response object
      * @throws IllegalStateException if the response has already been committed
-     * @since 1.0.2 (Bundle version 1.0.4)
      */
     public static void sendInvalid(final HttpServletRequest request,
             final HttpServletResponse response) {
@@ -455,9 +440,9 @@ public final class AuthUtil {
      *            <code>target</code>. This may be <code>null</code> which
      *            causes the target to not be validated with a
      *            <code>ResoureResolver</code>
-     * @param target The redirect target to validate
+     * @param target The redirect target to validate. This path must be
+     *      prefixed with the request's servlet context path.
      * @return <code>true</code> if the redirect target can be considered valid
-     * @since 1.1 (bundle version 1.0.8)
      */
     public static boolean isRedirectValid(final HttpServletRequest request, final String target) {
         if (target == null || target.length() == 0) {
