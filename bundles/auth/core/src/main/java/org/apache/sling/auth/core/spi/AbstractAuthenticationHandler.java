@@ -164,38 +164,17 @@ public abstract class AbstractAuthenticationHandler extends DefaultAuthenticatio
     @Deprecated
     public static void sendRedirect(final HttpServletRequest request, final HttpServletResponse response,
             final String target, Map<String, String> params) throws IOException {
-        AuthUtil.sendRedirect(request, response, target, params);
+        AuthUtil.sendRedirect(request, response, request.getContextPath() + target, params);
     }
 
     /**
-     * Returns <code>true</code> if the given redirect <code>target</code> is
-     * valid according to the following list of requirements:
-     * <ul>
-     * <li>The <code>target</code> is neither <code>null</code> nor an empty
-     * string</li>
-     * <li>The <code>target</code> is not an URL which is identified by the
-     * character sequence <code>://</code> separating the scheme from the host</li>
-     * <li>If a <code>ResourceResolver</code> is available as a request
-     * attribute the <code>target</code> must resolve to an existing resource</li>
-     * <li>If a <code>ResourceResolver</code> is <i>not</i> available as a
-     * request attribute the <code>target</code> must be an absolute path
-     * starting with a slash character</li>
-     * </ul>
-     * <p>
-     * If any of the conditions does not hold, the method returns
-     * <code>false</code> and logs a <i>warning</i> level message with the
-     * <i>org.apache.sling.auth.core.spi.AbstractAuthenticationHandler</i>
-     * logger.
+     * This method calls
+     * {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}.
      *
-     * @param request Providing the <code>ResourceResolver</code> attribute and
-     *            the context to resolve the resource from the
-     *            <code>target</code>. This may be <code>null</code> which cause
-     *            the target to not be validated with a
-     *            <code>ResoureResolver</code>
-     * @param target The redirect target to validate
-     * @return <code>true</code> if the redirect target can be considered valid
-     * @since 1.0.4 (bundle version 1.0.8), use
-     *        {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}
+     * @deprecated This method has been introduced after Bundle release 1.0.6
+     *             but has been replaced with
+     *             {@link AuthUtil#isRedirectValid(HttpServletRequest, String)}.
+     *             Use the latter method.
      */
     @Deprecated
     public static boolean isRedirectValid(final HttpServletRequest request, final String target) {
