@@ -21,9 +21,9 @@ package org.apache.sling.launchpad.app;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.launchpad.base.shared.SharedConstants;
-
 import junit.framework.TestCase;
+
+import org.apache.sling.launchpad.base.shared.SharedConstants;
 
 public class MainTest extends TestCase {
 
@@ -297,7 +297,19 @@ public class MainTest extends TestCase {
             }
         });
         assertNotNull(props);
-        assertEquals(0, props.size());
+        assertEquals(1, props.size());
+        assertEquals("0.0.0.0", props.get("org.apache.felix.http.host"));
+    }
+
+    public void test_converCommandLineArgs_r() {
+        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("r", "/mycontext");
+            }
+        });
+        assertNotNull(props);
+        assertEquals(1, props.size());
+        assertEquals("/mycontext", props.get("org.apache.felix.http.context_path"));
     }
 
     public void test_converCommandLineArgs_p() {
