@@ -227,18 +227,14 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 initializedBundleList.merge(readBundleList(bundleListFile));
             }
         }
+        // add additional bundles
         if (additionalBundles != null) {
             for (ArtifactDefinition def : additionalBundles) {
                 initializedBundleList.add(def.toBundle());
             }
         }
 
-        if (bundleExclusions != null) {
-            for (ArtifactDefinition def : bundleExclusions) {
-                initializedBundleList.remove(def.toBundle(), false);
-            }
-        }
-
+        // check for partial bundle lists
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         for (Artifact artifact : dependencies) {
             if (PARTIAL.equals(artifact.getType())) {
@@ -249,6 +245,12 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
             }
         }
 
+        // handle exclusions
+        if (bundleExclusions != null) {
+            for (ArtifactDefinition def : bundleExclusions) {
+                initializedBundleList.remove(def.toBundle(), false);
+            }
+        }
 
         initBundleList(initializedBundleList);
 
