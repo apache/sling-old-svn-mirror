@@ -67,7 +67,7 @@ import org.slf4j.LoggerFactory;
 public class AdapterManagerImpl implements AdapterManager {
 
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /**
      * The OSGi <code>ComponentContext</code> to retrieve
      * {@link AdapterFactory} service instances.
@@ -365,18 +365,17 @@ public class AdapterManagerImpl implements AdapterManager {
         Map<String, AdapterFactory> afm = new HashMap<String, AdapterFactory>();
 
         // AdapterFactories for this class
-        AdapterFactoryDescriptorMap afdMap;
         synchronized (factories) {
-            afdMap = factories.get(clazz.getName());
-        }
-        if (afdMap != null) {
-            for (AdapterFactoryDescriptor afd : afdMap.values()) {
-                String[] adapters = afd.getAdapters();
-                for (String adapter : adapters) {
-                    if (!afm.containsKey(adapter)) {
-                        final AdapterFactory factory = afd.getFactory();
-                        if ( factory != null ) {
-                            afm.put(adapter, factory);
+            AdapterFactoryDescriptorMap afdMap = factories.get(clazz.getName());
+            if (afdMap != null) {
+                for (AdapterFactoryDescriptor afd : afdMap.values()) {
+                    String[] adapters = afd.getAdapters();
+                    for (String adapter : adapters) {
+                        if (!afm.containsKey(adapter)) {
+                            final AdapterFactory factory = afd.getFactory();
+                            if (factory != null) {
+                                afm.put(adapter, factory);
+                            }
                         }
                     }
                 }
