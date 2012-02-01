@@ -88,6 +88,7 @@ public class InternalResource extends InstallableResource {
             // we always compute a digest
             digest = FileDataStore.computeDigest(dict);
         } else {
+            type = (type != null ? type : InstallableResource.TYPE_FILE);
             if ( resourceUri != null ) {
                 digest = resource.getDigest();
             } else {
@@ -97,7 +98,6 @@ public class InternalResource extends InstallableResource {
                         url,
                         resource.getDigest(),
                         resource.getType());
-                type = (type != null ? type : InstallableResource.TYPE_FILE);
                 if (resource.getDigest() != null && resource.getDigest().length() > 0) {
                     digest = resource.getDigest();
                 } else {
