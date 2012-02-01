@@ -40,7 +40,7 @@
             type="Integer" default="5" name="%log.file.number.name"
             description="%log.file.number.description" />
         <metatype:AD id="org.apache.sling.commons.log.file.size"
-            type="String" default="10mb" name="%log.file.size.name"
+            type="String" default="'.'yyyy-MM-dd" name="%log.file.size.name"
             description="%log.file.size.description" />
         <metatype:AD id="org.apache.sling.commons.log.pattern"
             type="String"
