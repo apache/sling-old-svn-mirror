@@ -30,6 +30,7 @@ import org.apache.felix.framework.Logger;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 /**
@@ -42,6 +43,9 @@ public class StartupManager {
 
     /** The data file which works as a marker to detect the first startup. */
     private static final String DATA_FILE = "launchpad-timestamp.txt";
+
+    /** The old data file. */
+    private static final String OLD_DATA_FILE = "bootstrapinstaller.ser";
 
     /**
      * The {@link Logger} use for logging messages during installation and
@@ -60,11 +64,12 @@ public class StartupManager {
     private final boolean incrementalStartupEnabled;
 
     StartupManager(final Map<String, String> properties,
-                   final Logger logger) {
+                   final Logger logger,
+                   final BundleContext bundleContext) {
         this.logger = logger;
         this.startupDir = DirectoryUtil.getStartupDir(properties);
         this.confDir = DirectoryUtil.getConfigDir(properties);
-        this.mode = detectMode();
+        this.mode = detectMode(bundleContext);
         this.logger.log(Logger.LOG_INFO, "Starting in mode " + this.mode);
 
         this.targetStartLevel = Long.valueOf(properties.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL));
@@ -104,7 +109,7 @@ public class StartupManager {
     /**
      * Detect the startup mode by comparing time stamps
      */
-    private StartupMode detectMode() {
+    private StartupMode detectMode(final BundleContext bundleContext) {
         final File dataFile = new File(this.confDir, DATA_FILE);
         if (dataFile.exists()) {
 
@@ -139,6 +144,13 @@ public class StartupManager {
                     try { fis.close(); } catch (IOException ignore) {}
                 }
             }
+        }
+        // check for old data file
+        final File oldFile = bundleContext.getDataFile(OLD_DATA_FILE);
+        if ( oldFile.exists() ) {
+            // this is an upgrade - remove old file
+            oldFile.delete();
+            return StartupMode.UPDATE;
         }
         // not installed yet - fallback
         return StartupMode.INSTALL;

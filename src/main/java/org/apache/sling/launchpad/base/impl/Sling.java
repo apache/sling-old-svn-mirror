@@ -220,10 +220,10 @@ public class Sling {
 
         // create the framework and start it
         try {
-            // initiate startup handler
-            final StartupManager startupManager = new StartupManager(props, logger);
 
             Framework tmpFramework = createFramework(notifiable, logger, props);
+            // initiate startup handler
+            final StartupManager startupManager = new StartupManager(props, logger, tmpFramework.getBundleContext());
 
             init(tmpFramework);
 
