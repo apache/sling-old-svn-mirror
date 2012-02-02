@@ -18,8 +18,11 @@
  */
 package org.apache.sling.engine.impl.log;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
+
+import org.osgi.service.http.HttpContext;
 
 class RequestLoggerRequest extends HttpServletRequestWrapper {
 
@@ -27,4 +30,35 @@ class RequestLoggerRequest extends HttpServletRequestWrapper {
         super(request);
     }
 
+    @Override
+    public String getRemoteUser() {
+        final Object user = getAttribute(HttpContext.REMOTE_USER);
+        if (user instanceof String) {
+            return (String) user;
+        }
+
+        return super.getRemoteUser();
+    }
+
+    public String getAuthType() {
+        final Object authType = getAttribute(HttpContext.AUTHENTICATION_TYPE);
+        if (authType instanceof String) {
+            return (String) authType;
+        }
+
+        return super.getAuthType();
+    }
+
+    Cookie getCookie(final String name) {
+        final Cookie[] cookies = getCookies();
+        if (cookies != null) {
+            for (int i = 0; i < cookies.length; i++) {
+                if (cookies[i].getName().equals(name)) {
+                    return cookies[i];
+                }
+            }
+        }
+
+        return null;
+    }
 }

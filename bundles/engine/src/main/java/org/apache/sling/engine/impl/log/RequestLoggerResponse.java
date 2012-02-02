@@ -35,7 +35,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-public class RequestLoggerResponse extends HttpServletResponseWrapper {
+class RequestLoggerResponse extends HttpServletResponseWrapper {
 
     // the content type header name
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
@@ -44,8 +44,8 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
     private static final String HEADER_CONTENT_LENGTH = "Content-Length";
 
     /** format for RFC 1123 date string -- "Sun, 06 Nov 1994 08:49:37 GMT" */
-    private final static SimpleDateFormat RFC1123_FORMAT = new SimpleDateFormat(
-        "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+    private final static SimpleDateFormat RFC1123_FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z",
+        Locale.US);
 
     /**
      * The counter for request gone through this filter. As this is the first
@@ -89,7 +89,7 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
     // headers
     private Map<String, Object> headers;
 
-    public RequestLoggerResponse(HttpServletResponse response) {
+    RequestLoggerResponse(HttpServletResponse response) {
         super(response);
 
         this.requestId = requestCounter.getAndIncrement();
@@ -101,20 +101,16 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
      * currently sets the request end time returned by {@link #getRequestEnd()}
      * and which is used to calculate the request duration.
      */
-    public void requestEnd() {
+    void requestEnd() {
         this.requestEnd = System.currentTimeMillis();
     }
 
-//    protected final RequestData getRequestData() {
-//        return requestData;
-//    }
-
-    //---------- SlingHttpServletResponse interface
+    // ---------- SlingHttpServletResponse interface
 
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
         if (this.out == null) {
-            ServletOutputStream sos = getResponse().getOutputStream();
+            ServletOutputStream sos = super.getOutputStream();
             this.out = new LoggerResponseOutputStream(sos);
         }
         return this.out;
@@ -123,14 +119,13 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
     @Override
     public PrintWriter getWriter() throws IOException {
         if (this.writer == null) {
-            PrintWriter pw = getResponse().getWriter();
+            PrintWriter pw = super.getWriter();
             this.writer = new LoggerResponseWriter(pw);
         }
         return this.writer;
     }
 
     // ---------- Error handling through Sling Error Resolver -----------------
-
 
     @Override
     public void sendRedirect(String location) throws IOException {
@@ -293,11 +288,11 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
     /**
      * Stores the name header-value pair in the header map. The name is
      * converted to lower-case before using it as an index in the map.
-     *
+     * 
      * @param name The name of the header to register
      * @param value The value of the header to register
-     * @param add If <code>true</code> the header value is added to the list
-     *            of potentially existing header values. Otherwise the new value
+     * @param add If <code>true</code> the header value is added to the list of
+     *            potentially existing header values. Otherwise the new value
      *            replaces any existing values.
      */
     @SuppressWarnings("unchecked")
@@ -335,10 +330,9 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
      * Converts the time value given as the number of milliseconds since January
      * 1, 1970 to a date and time string compliant with RFC 1123 date
      * specification. The resulting string is compliant with section 3.3.1, Full
-     * Date, of <a href="http://www.faqs.org/rfcs/rfc2616.html">RFC 2616</a>
-     * and may thus be used as the value of date header such as
-     * <code>Date</code>.
-     *
+     * Date, of <a href="http://www.faqs.org/rfcs/rfc2616.html">RFC 2616</a> and
+     * may thus be used as the value of date header such as <code>Date</code>.
+     * 
      * @param date The date value to convert to a string
      * @return The string representation of the date and time value.
      */
@@ -348,7 +342,7 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
         }
     }
 
-    //---------- byte/character counting output channels ----------------------
+    // ---------- byte/character counting output channels ----------------------
 
     // byte transfer counting ServletOutputStream
     private static class LoggerResponseOutputStream extends ServletOutputStream {
@@ -391,8 +385,7 @@ public class RequestLoggerResponse extends HttpServletResponseWrapper {
     // character transfer counting PrintWriter
     private static class LoggerResponseWriter extends PrintWriter {
 
-        private static final int LINE_SEPARATOR_LENGTH = System.getProperty(
-            "line.separator").length();
+        private static final int LINE_SEPARATOR_LENGTH = System.getProperty("line.separator").length();
 
         private int count;
 
