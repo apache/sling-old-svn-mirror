@@ -53,7 +53,6 @@ import org.apache.sling.engine.impl.filter.RequestSlingFilterChain;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.filter.ServletFilterManager.FilterChainType;
 import org.apache.sling.engine.impl.filter.SlingComponentFilterChain;
-import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.request.ContentData;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
@@ -71,8 +70,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     private final DefaultErrorHandler defaultErrorHandler = new DefaultErrorHandler();
 
     private ErrorHandler errorHandler = defaultErrorHandler;
-
-    private RequestLogger requestLogger;
 
     private ServletResolver servletResolver;
 
@@ -93,16 +90,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
     void unsetErrorHandler(final ErrorHandler errorHandler) {
         if (this.errorHandler == errorHandler) {
             this.errorHandler = defaultErrorHandler;
-        }
-    }
-
-    void setRequestLogger(final RequestLogger requestLogger) {
-        this.requestLogger = requestLogger;
-    }
-
-    void unsetRequestLogger(final RequestLogger requestLogger) {
-        if (this.requestLogger == requestLogger) {
-            this.requestLogger = null;
         }
     }
 
@@ -138,11 +125,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
         // record the request for the web console display
         RequestHistoryConsolePlugin.recordRequest(request);
-
-        // request entry log
-        if (requestLogger != null) {
-            requestLogger.logRequestEntry(request, response);
-        }
 
         long startTimestamp = System.currentTimeMillis();
 
@@ -244,11 +226,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             long elapsed = System.currentTimeMillis() - startTimestamp;
             if (mbean != null) {
                 mbean.addRequestDuration(elapsed);
-            }
-
-            // request exit log
-            if (requestLogger != null) {
-                requestLogger.logRequestExit(request, response);
             }
         }
     }

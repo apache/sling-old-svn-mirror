@@ -31,9 +31,8 @@ import java.util.Locale;
 
 import javax.servlet.http.Cookie;
 
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
+import org.apache.sling.engine.impl.request.RequestData;
+import org.osgi.service.http.HttpContext;
 
 /**
  * The <code>CustomLogFormat</code> class implements the support for log format
@@ -73,9 +72,9 @@ class CustomLogFormat {
      *         formatter has not been initialized with a valid log format
      *         pattern.
      */
-    String format(SlingHttpServletRequest request, SlingHttpServletResponseImpl response) {
+    String format(RequestLoggerRequest request, RequestLoggerResponse response) {
         if (this.logParameters != null) {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             for (int i=0; i < this.logParameters.length; i++) {
                 this.logParameters[i].print(buf, request, response);
             }
@@ -273,6 +272,10 @@ class CustomLogFormat {
                 param = new ServerNameParameter();
                 break;
 
+            case 'y':
+                param = new AuthTypeParameter();
+                break;
+
             case 'X': // no supported fall through to default
             case 'I': // no supported fall through to default
             case 'O': // no supported fall through to default
@@ -280,12 +283,13 @@ class CustomLogFormat {
             case 'l': // no supported fall through to default
             case 'e': // no supported fall through to default
             default:
-                param = new NonImplementedParameter((char) c, name);
+                param = new NonImplementedParameter(name);
                 break;
         }
 
         if (param instanceof BaseParameter) {
             BaseParameter baseParam = (BaseParameter) param;
+            baseParam.setParName((char) c);
             baseParam.setRequired(required);
             baseParam.setStatusLimits(statCodes);
         }
@@ -346,7 +350,7 @@ class CustomLogFormat {
     //---------- Parameter support --------------------------------------------
 
     static interface Parameter {
-        void print(StringBuffer dest, SlingHttpServletRequest request, SlingHttpServletResponseImpl response);
+        void print(StringBuilder dest, RequestLoggerRequest request, RequestLoggerResponse response);
     }
 
     static class PlainTextParameter implements Parameter {
@@ -354,8 +358,8 @@ class CustomLogFormat {
         PlainTextParameter(String value) {
             this.value = value;
         }
-        public void print(StringBuffer dest, SlingHttpServletRequest request,
-                SlingHttpServletResponseImpl response) {
+        public void print(StringBuilder dest, RequestLoggerRequest request,
+                RequestLoggerResponse response) {
             dest.append(this.value);
         }
         public String toString() {
@@ -366,23 +370,17 @@ class CustomLogFormat {
     abstract static class BaseParameter implements Parameter {
         private int[] statusLimits;
         private boolean required;
-        private final char parName;
+        private char parName;
         private final String parParam;
-
         private final boolean isRequest;
 
-        protected BaseParameter(int[] statusLimits, boolean required, char parName, String parParam, boolean isRequest) {
-            this.statusLimits = statusLimits;
-            this.required = required;
-            this.parName = parName;
+        protected BaseParameter(String parParam, boolean isRequest) {
             this.parParam = parParam;
             this.isRequest = isRequest;
         }
 
-        protected BaseParameter(char parName, String parParam, boolean isRequest) {
+        public void setParName(char parName) {
             this.parName = parName;
-            this.parParam = parParam;
-            this.isRequest = isRequest;
         }
 
         public void setStatusLimits(int[] statusLimits) {
@@ -393,10 +391,10 @@ class CustomLogFormat {
             this.required = required;
         }
 
-        protected abstract String getValue(SlingHttpServletRequest request);
-        protected abstract String getValue(SlingHttpServletResponseImpl response);
+        protected abstract String getValue(RequestLoggerRequest request);
+        protected abstract String getValue(RequestLoggerResponse response);
 
-        public final void print(StringBuffer dest, SlingHttpServletRequest request, SlingHttpServletResponseImpl response) {
+        public final void print(StringBuilder dest, RequestLoggerRequest request, RequestLoggerResponse response) {
             if (this.printOk(response.getStatus())) {
                 String value = this.isRequest ? this.getValue(request) : this.getValue(response);
                 dest.append((value == null) ? "-" : value);
@@ -516,71 +514,71 @@ class CustomLogFormat {
 
     static class NonImplementedParameter extends BaseParameter {
 
-        NonImplementedParameter(char parName, String parParam) {
-            super(parName, parParam, true);
+        NonImplementedParameter(String parParam) {
+            super(parParam, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class ThreadParameter extends BaseParameter {
         public ThreadParameter(String parParam) {
-            super('P', parParam, true);
+            super(parParam, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return Thread.currentThread().getName();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class ParamParameter extends BaseParameter {
         public ParamParameter(String parParam) {
-            super('M', parParam, true);
+            super(parParam, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getParameter(this.getParParam());
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class IdParameter extends BaseParameter {
         public IdParameter() {
-            super('R', null, false);
+            super(null, false);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return String.valueOf(response.getRequestId());
         }
     }
 
     static class ByteCountParameter extends BaseParameter {
         public ByteCountParameter(char c) {
-            super(c, null, false);
+            super(null, false);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             int count = response.getCount();
             if (count == 0) {
                 return (this.getParName() == 'b') ? "-" : "0";
@@ -615,16 +613,16 @@ class CustomLogFormat {
         private final boolean requestStart;
 
         public TimeParameter(String parParam) {
-            super('t', parParam, false);
+            super(parParam, false);
 
             this.requestStart = parParam== null || !parParam.equals("end");
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             long time = this.requestStart ? response.getRequestStart() : response.getRequestEnd();
             return timeFormatted(time);
         }
@@ -656,15 +654,15 @@ class CustomLogFormat {
     static class DurationParameter extends BaseParameter {
         private final boolean seconds;
         public DurationParameter(boolean seconds) {
-            super((seconds ? 'T' : 'D'), null, false);
+            super(null, false);
             this.seconds = seconds;
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             long time = response.getRequestDuration();
             if (this.seconds) {
                 time /= 1000;
@@ -675,95 +673,98 @@ class CustomLogFormat {
 
     static class RemoteIPParameter extends BaseParameter {
         public RemoteIPParameter() {
-            super('a', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getRemoteAddr();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class RemoteHostParameter extends BaseParameter {
         public RemoteHostParameter() {
-            super('h', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getRemoteHost();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class LocalIPParameter extends BaseParameter {
         public LocalIPParameter() {
-            super('A', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getLocalAddr();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class LocalPortParameter extends BaseParameter {
         public LocalPortParameter() {
-            super('p', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return String.valueOf(request.getServerPort());
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class ServerNameParameter extends BaseParameter {
         public ServerNameParameter() {
-            super('v', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getServerName();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class ContentPathParameter extends BaseParameter {
         public ContentPathParameter() {
-            super('f', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
-            Resource resource = request.getResource();
-            return (resource != null) ? resource.getPath() : null;
+        protected String getValue(RequestLoggerRequest request) {
+            final Object resourcePath = request.getAttribute(RequestData.REQUEST_RESOURCE_PATH_ATTR);
+            if (resourcePath instanceof String) {
+                return (String) resourcePath;
+            }
+            return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class FirstRequestLineParameter extends BaseParameter {
         public FirstRequestLineParameter() {
-            super('r', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             String query = request.getQueryString();
             query = (query == null || query.length() == 0) ? "" : "?" + query;
 
@@ -771,92 +772,116 @@ class CustomLogFormat {
                 + " " + request.getProtocol();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class ProtocolParameter extends BaseParameter {
         public ProtocolParameter() {
-            super('H', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getProtocol();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class MethodParameter extends BaseParameter {
         public MethodParameter() {
-            super('m', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getMethod();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class RequestParameter extends BaseParameter {
         public RequestParameter() {
-            super('U', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return request.getRequestURI();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class QueryParameter extends BaseParameter {
         public QueryParameter() {
-            super('q', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             String query = request.getQueryString();
             return (query == null || query.length() == 0) ? "" : "?" + query;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class UserParameter extends BaseParameter {
         public UserParameter() {
-            super('u', null, true);
+            super(null, true);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
+            final Object user = request.getAttribute(HttpContext.REMOTE_USER);
+            if (user instanceof String) {
+                return (String) user;
+            }
+
             return request.getRemoteUser();
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
+            return null;
+        }
+    }
+
+    static class AuthTypeParameter extends BaseParameter {
+        public AuthTypeParameter() {
+            super(null, true);
+        }
+
+        protected String getValue(RequestLoggerRequest request) {
+            final Object authType = request.getAttribute(HttpContext.AUTHENTICATION_TYPE);
+            if (authType instanceof String) {
+                return (String) authType;
+            }
+
+            return request.getAuthType();
+        }
+
+        protected String getValue(RequestLoggerResponse response) {
             return null;
         }
     }
 
     static class StatusParameter extends BaseParameter {
         public StatusParameter() {
-            super('s', null, false);
+            super(null, false);
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return String.valueOf(response.getStatus());
         }
     }
@@ -864,16 +889,24 @@ class CustomLogFormat {
     static class CookieParameter extends BaseParameter {
         private String cookieName;
         CookieParameter(String cookieName, boolean isRequest) {
-            super('C', cookieName, isRequest);
+            super(cookieName, isRequest);
             this.cookieName = cookieName;
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
-            Cookie cookie = request.getCookie(cookieName);
-            return (cookie == null) ? null : escape(cookie.toString());
+        protected String getValue(RequestLoggerRequest request) {
+            final Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (int i = 0; i < cookies.length; i++) {
+                    if (cookies[i].getName().equals(cookieName)) {
+                        return escape(cookies[i].toString());
+                    }
+                }
+            }
+
+            return null;
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             Cookie cookie = response.getCookie(this.cookieName);
             return (cookie == null) ? null : escape(cookie.toString());
         }
@@ -883,11 +916,11 @@ class CustomLogFormat {
     static class HeaderParameter extends BaseParameter {
         private String headerName;
         HeaderParameter(String headerName, boolean isRequest) {
-            super((isRequest ? 'i' : 'o'), headerName, isRequest);
+            super(headerName, isRequest);
             this.headerName = headerName;
         }
 
-        protected String getValue(SlingHttpServletRequest request) {
+        protected String getValue(RequestLoggerRequest request) {
             Enumeration<?> values = request.getHeaders(this.headerName);
             if (values == null || !values.hasMoreElements()) {
                 return null;
@@ -900,7 +933,7 @@ class CustomLogFormat {
             return escape(value);
         }
 
-        protected String getValue(SlingHttpServletResponseImpl response) {
+        protected String getValue(RequestLoggerResponse response) {
             return escape(response.getHeaders(this.headerName));
         }
     }

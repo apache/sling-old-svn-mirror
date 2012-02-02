@@ -18,21 +18,17 @@
  */
 package org.apache.sling.engine.impl.log;
 
-import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>RequestLogger</code> is a request level filter, which
@@ -42,16 +38,11 @@ import org.osgi.framework.BundleContext;
  * acting just before the request handling terminates.
  *
  */
-@Component(immediate=true,metatype=true,label="%request.log.name",description="%request.log.description")
+@Component(metatype=true,label="%request.log.name",description="%request.log.description")
 @Properties({
     @Property(name="service.description",value="Request Logger"),
     @Property(name="service.vendor",value="The Apache Software Foundation")
 })
-@Service(value=RequestLogger.class)
-@Reference(name="RequestLoggerService",
-       referenceInterface=RequestLoggerService.class,
-       cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-       policy=ReferencePolicy.DYNAMIC)
 public class RequestLogger {
 
     @Property(value="logs/request.log")
@@ -100,20 +91,6 @@ public class RequestLogger {
     private static final String ACCESS_LOG_FORMAT = "%a %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
 
     /**
-     * The list of {@link RequestLoggerService} called when the request enters
-     * processing. The order of the services in this list determined by the
-     * registration order.
-     */
-    private RequestLoggerService[] requestEntry;
-
-    /**
-     * The list of {@link RequestLoggerService} called when the request is about
-     * to exit processing. The order of the services in this list determined by
-     * the registration order.
-     */
-    private RequestLoggerService[] requestExit;
-
-    /**
      * A special request logger service, which writes the request log message at
      * request start time. This logger logs a message with the format
      * {@link #REQUEST_LOG_ENTRY_FORMAT}.
@@ -134,33 +111,11 @@ public class RequestLogger {
      */
     private RequestLoggerService accessLog;
 
-    public void logRequestEntry(SlingHttpServletRequest request, SlingHttpServletResponse response) {
-
-        if (response instanceof SlingHttpServletResponseImpl) {
-            // log the request start
-            if (this.requestEntry != null) {
-                for (int i = 0; i < this.requestEntry.length; i++) {
-                    this.requestEntry[i].log(request,
-                        (SlingHttpServletResponseImpl) response);
-                }
-            }
-        }
-    }
-
-    public void logRequestExit(SlingHttpServletRequest request, SlingHttpServletResponse response) {
-        // signal the end of the request
-        if (response instanceof SlingHttpServletResponseImpl) {
-            SlingHttpServletResponseImpl loggerResponse = (SlingHttpServletResponseImpl) response;
-            loggerResponse.requestEnd();
-
-            // log the request end
-            if (this.requestExit != null) {
-                for (int i = 0; i < this.requestExit.length; i++) {
-                    this.requestExit[i].log(request, loggerResponse);
-                }
-            }
-        }
-    }
+    /**
+     * RequestLoggerService instances created on behalf of the static
+     * configuration.
+     */
+    private Map<ServiceRegistration, RequestLoggerService> services = new HashMap<ServiceRegistration, RequestLoggerService>();
 
     // ---------- SCR Integration ----------------------------------------------
 
@@ -174,16 +129,7 @@ public class RequestLogger {
      * @param osgiContext The OSGi Component Context providing the configuration
      *            data and access into the system.
      */
-    protected void activate(
-            org.osgi.service.component.ComponentContext osgiContext) {
-
-        BundleContext bundleContext = osgiContext.getBundleContext();
-        @SuppressWarnings("unchecked")
-        Dictionary props = osgiContext.getProperties();
-
-        // initialize the FileRequestLog with sling.home as the root for
-        // relative log file paths
-        FileRequestLog.init(bundleContext.getProperty("sling.home"));
+    protected void activate(BundleContext bundleContext, Map<String, Object> props) {
 
         // prepare the request loggers if a name is configured and the
         // request loggers are enabled
@@ -191,31 +137,20 @@ public class RequestLogger {
         Object requestLogEnabled = props.get(PROP_REQUEST_LOG_ENABLED);
         if (requestLogName != null && requestLogEnabled instanceof Boolean
             && ((Boolean) requestLogEnabled).booleanValue()) {
-
             Object requestLogType = props.get(PROP_REQUEST_LOG_OUTPUT_TYPE);
-
-            this.requestLogEntry = this.createRequestLoggerService(bundleContext, true,
-                REQUEST_LOG_ENTRY_FORMAT, requestLogName, requestLogType);
-            this.requestLogExit = this.createRequestLoggerService(bundleContext, false,
-                REQUEST_LOG_EXIT_FORMAT, requestLogName, requestLogType);
-
-            this.bindRequestLoggerService(this.requestLogEntry);
-            this.bindRequestLoggerService(this.requestLogExit);
+            createRequestLoggerService(services, bundleContext, true, REQUEST_LOG_ENTRY_FORMAT, requestLogName,
+                requestLogType);
+            createRequestLoggerService(services, bundleContext, false, REQUEST_LOG_EXIT_FORMAT, requestLogName,
+                requestLogType);
         }
 
         // prepare the access logger if a name is configured and the
         // access logger is enabled
         Object accessLogName = props.get(PROP_ACCESS_LOG_OUTPUT);
         Object accessLogEnabled = props.get(PROP_ACCESS_LOG_ENABLED);
-        if (accessLogName != null && accessLogEnabled instanceof Boolean
-            && ((Boolean) accessLogEnabled).booleanValue()) {
-
+        if (accessLogName != null && accessLogEnabled instanceof Boolean && ((Boolean) accessLogEnabled).booleanValue()) {
             Object accessLogType = props.get(PROP_ACCESS_LOG_OUTPUT_TYPE);
-
-            this.accessLog = this.createRequestLoggerService(bundleContext, false,
-                ACCESS_LOG_FORMAT, accessLogName, accessLogType);
-
-            this.bindRequestLoggerService(this.accessLog);
+            createRequestLoggerService(services, bundleContext, false, ACCESS_LOG_FORMAT, accessLogName, accessLogType);
         }
     }
 
@@ -228,60 +163,12 @@ public class RequestLogger {
      * @param osgiContext The OSGi Component Context providing the configuration
      *            data and access into the system.
      */
-    protected void deactivate(
-            org.osgi.service.component.ComponentContext osgiContext) {
-
-        // remove the loggers if they have been set up
-        if (this.requestLogEntry != null) {
-            this.unbindRequestLoggerService(this.requestLogEntry);
-            this.requestLogEntry.shutdown();
-            this.requestLogEntry = null;
+    protected void deactivate() {
+        for (Entry<ServiceRegistration, RequestLoggerService> entry : services.entrySet()) {
+            entry.getKey().unregister();
+            entry.getValue().shutdown();
         }
-        if (this.requestLogExit != null) {
-            this.unbindRequestLoggerService(this.requestLogExit);
-            this.requestLogExit.shutdown();
-            this.requestLogExit = null;
-        }
-        if (this.accessLog != null) {
-            this.unbindRequestLoggerService(this.accessLog);
-            this.accessLog.shutdown();
-            this.accessLog = null;
-        }
-
-        // hack to ensure all log files are closed
-        FileRequestLog.dispose();
-    }
-
-    /**
-     * Binds a <code>RequestLoggerService</code> to be used during request
-     * filter.
-     *
-     * @param requestLoggerService The <code>RequestLoggerService</code> to
-     *            use.
-     */
-    protected void bindRequestLoggerService(
-            RequestLoggerService requestLoggerService) {
-        if (requestLoggerService.isOnEntry()) {
-            this.requestEntry = this.addService(this.requestEntry, requestLoggerService);
-        } else {
-            this.requestExit = this.addService(this.requestExit, requestLoggerService);
-        }
-    }
-
-    /**
-     * Binds a <code>RequestLoggerService</code> to be used during request
-     * filter.
-     *
-     * @param requestLoggerService The <code>RequestLoggerService</code> to
-     *            use.
-     */
-    protected void unbindRequestLoggerService(
-            RequestLoggerService requestLoggerService) {
-        if (requestLoggerService.isOnEntry()) {
-            this.requestEntry = this.removeService(this.requestEntry, requestLoggerService);
-        } else {
-            this.requestExit = this.removeService(this.requestExit, requestLoggerService);
-        }
+        services.clear();
     }
 
     /**
@@ -306,82 +193,16 @@ public class RequestLogger {
      * @return The functional and prepared <code>RequestLoggerService</code>
      *         instance.
      */
-    private RequestLoggerService createRequestLoggerService(
-            BundleContext bundleContext, boolean onEntry, Object format,
-            Object output, Object outputType) {
+    private static void createRequestLoggerService(Map<ServiceRegistration, RequestLoggerService> services,
+            BundleContext bundleContext, boolean onEntry, Object format, Object output, Object outputType) {
         final Hashtable<String, Object> config = new Hashtable<String, Object>();
-        config.put(RequestLoggerService.PARAM_ON_ENTRY, onEntry
-                ? Boolean.TRUE
-                : Boolean.FALSE);
+        config.put(RequestLoggerService.PARAM_ON_ENTRY, onEntry ? Boolean.TRUE : Boolean.FALSE);
         config.put(RequestLoggerService.PARAM_FORMAT, format);
         config.put(RequestLoggerService.PARAM_OUTPUT, output);
         config.put(RequestLoggerService.PARAM_OUTPUT_TYPE, outputType);
 
-        return new RequestLoggerService(bundleContext, config);
+        final RequestLoggerService service = new RequestLoggerService(bundleContext, config);
+        final ServiceRegistration reg = bundleContext.registerService(service.getClass().getName(), service, config);
+        services.put(reg, service);
     }
-
-    /**
-     * Creates a new list of request logger services from the existing list
-     * appending the new logger. This method does not check, whether the logger
-     * has already been added or not and so may add the the logger multiple
-     * times. It is the responsibility of the caller to make sure to not add
-     * services multiple times.
-     *
-     * @param list The list to add the new service to
-     * @param requestLoggerService The service to append to the list
-     * @param A new list with the added service at the end.
-     */
-    private RequestLoggerService[] addService(RequestLoggerService[] list,
-            RequestLoggerService requestLoggerService) {
-        if (list == null) {
-            return new RequestLoggerService[] { requestLoggerService };
-        }
-
-        // add the service to the list, must not be in the list yet due to
-        // the SCR contract
-        RequestLoggerService[] newList = new RequestLoggerService[list.length + 1];
-        System.arraycopy(list, 0, newList, 0, list.length);
-        newList[list.length] = requestLoggerService;
-
-        return newList;
-    }
-
-    /**
-     * Creates a new list of request logger services from the existing list by
-     * removing the named logger. The logger is searched for by referential
-     * equality (comparing the object references) and not calling the
-     * <code>equals</code> method. If the last element is being removed from
-     * the list, <code>null</code> is returned instead of an empty list.
-     *
-     * @param list The list from which the service is to be removed.
-     * @param requestLoggerService The service to remove.
-     * @return The list without the service. This may be the same list if the
-     *         service is not in the list or may be <code>null</code> if the
-     *         last service has just been removed from the list.
-     */
-    private RequestLoggerService[] removeService(RequestLoggerService[] list,
-            RequestLoggerService requestLoggerService) {
-
-        RequestLoggerService[] newList = null;
-        for (int i = 0; list != null && i < list.length; i++) {
-            if (list[i] == requestLoggerService) {
-                newList = new RequestLoggerService[list.length - 1];
-
-                // if not first take over the leading elements
-                if (i > 0) {
-                    System.arraycopy(list, 0, newList, 0, i);
-                }
-
-                // if not the last element, shift rest to the left
-                if (i < list.length - 1) {
-                    System.arraycopy(list, i + 1, newList, 0, newList.length
-                        - i);
-                }
-            }
-        }
-
-        // return the new list if at least one entry is contained
-        return (newList != null && newList.length > 0) ? newList : null;
-    }
-
 }
