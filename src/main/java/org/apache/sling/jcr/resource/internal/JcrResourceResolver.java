@@ -98,6 +98,8 @@ public class JcrResourceResolver
 
     public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
 
+    public static final String PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS = "sling:status";
+
     // The suffix of a resource being a content node of some parent
     // such as nt:file. The slash is included to prevent false
     // positives for the String.endsWith check for names like
