@@ -34,6 +34,9 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -69,7 +72,7 @@ public class MapEntries implements EventHandler {
 
     private JcrResourceResolverFactoryImpl factory;
 
-    private ResourceResolver resolver;
+    private volatile ResourceResolver resolver;
 
     private final String mapRoot;
 
@@ -79,11 +82,13 @@ public class MapEntries implements EventHandler {
 
     private Collection<String> vanityTargets;
 
-    private boolean initializing = false;
+    private ServiceRegistration registration;
 
-    private final ServiceRegistration registration;
+    private ServiceTracker eventAdminTracker;
 
-    private final ServiceTracker eventAdminTracker;
+    private final Semaphore initTrigger = new Semaphore(0);
+
+    private final ReentrantLock initializing = new ReentrantLock();
 
     private MapEntries() {
         this.factory = null;
@@ -106,16 +111,25 @@ public class MapEntries implements EventHandler {
         this.mapRoot = factory.getMapRoot();
         this.eventAdminTracker = eventAdminTracker;
 
-        init();
+        this.resolveMaps = Collections.<MapEntry> emptyList();
+        this.mapMaps = Collections.<MapEntry> emptyList();
+        this.vanityTargets = Collections.<String> emptySet();
+
+        doInit();
 
         // build a filter which matches if any of the nodeProps (JCR
         // properties modified) is listed in any of the eventProps (event
         // properties listing modified JCR properties)
         // this allows to only get events interesting for updating the
         // internal structure
-        final String[] nodeProps = { "sling:vanityPath", "sling:vanityOrder", "sling:redirect" };
-        final String[] eventProps = { "resourceAddedAttributes", "resourceChangedAttributes",
-            "resourceRemovedAttributes" };
+        final String[] nodeProps = {
+            "sling:vanityPath", "sling:vanityOrder", JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS,
+            JcrResourceResolver.PROP_REDIRECT_EXTERNAL, JcrResourceResolver.PROP_REDIRECT_INTERNAL,
+            JcrResourceResolver.PROP_REDIRECT_EXTERNAL_STATUS
+        };
+        final String[] eventProps = {
+            "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes"
+        };
         StringBuilder filter = new StringBuilder();
         filter.append("(|");
         for (String eventProp : eventProps) {
@@ -134,20 +148,56 @@ public class MapEntries implements EventHandler {
         props.put(Constants.SERVICE_DESCRIPTION, "Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
+
+        Thread updateThread = new Thread(new Runnable() {
+            public void run() {
+                MapEntries.this.init();
+            }
+        }, "MapEntries Update");
+        updateThread.start();
     }
 
-    private void init() {
-        synchronized (this) {
-            // no initialization if the session has already been reset
+    /**
+     * Signals the init method that a the doInit method should be
+     * called.
+     */
+    private void triggerInit() {
+        // only release if there is not one in the queue already
+        if (initTrigger.availablePermits() < 1) {
+            initTrigger.release();
+        }
+    }
+
+    /**
+     * Runs as the method of the update thread. Waits for the triggerInit
+     * method to trigger a call to doInit. Terminates when the resolver
+     * has been null-ed after having been triggered.
+     */
+    void init() {
+        while (MapEntries.this.resolver != null) {
+            try {
+                MapEntries.this.initTrigger.acquire();
+                MapEntries.this.doInit();
+            } catch (InterruptedException ie) {
+                // just continue acquisition
+            }
+        }
+
+    }
+
+    /**
+     * Actual initializer. Guards itself agains concurrent use by
+     * using a ReentrantLock. Does nothing if the resource resolver
+     * has already been null-ed.
+     */
+    private void doInit() {
+
+        this.initializing.lock();
+        try {
+            final ResourceResolver resolver = this.resolver;
             if (resolver == null) {
                 return;
             }
-
-            // set the flag
-            initializing = true;
-        }
-
-        try {
 
             List<MapEntry> newResolveMaps = new ArrayList<MapEntry>();
             SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
@@ -171,45 +221,72 @@ public class MapEntries implements EventHandler {
 
             sendChangeEvent();
 
+        } catch (Exception e) {
+
+            log.warn("doInit: Unexpected problem during initialization", e);
+
         } finally {
 
-            // reset the flag and notify listeners
-            synchronized (this) {
-                initializing = false;
-                notifyAll();
-            }
+            this.initializing.unlock();
+
         }
     }
 
+    /**
+     * Cleans up this class.
+     */
     public void dispose() {
-        final ResourceResolver oldResolver;
+        if ( this.registration != null ) {
+            this.registration.unregister();
+            this.registration = null;
+        }
+
+        /*
+         * Cooperation with doInit: The same lock as used by doInit
+         * is acquired thus preventing doInit from running and waiting
+         * for a concurrent doInit to terminate.
+         * Once the lock has been acquired, the resource resolver is
+         * null-ed (thus causing the init to terminate when triggered
+         * the right after and prevent the doInit method from doing any
+         * thing).
+         */
 
         // wait at most 10 seconds for a notifcation during initialization
-        synchronized (this) {
-            if (initializing) {
-                try {
-                    wait(10L * 1000L);
-                } catch (InterruptedException ie) {
-                    // ignore
-                }
+        boolean initLocked;
+        try {
+            initLocked = this.initializing.tryLock(10, TimeUnit.SECONDS);
+        } catch (InterruptedException ie) {
+            initLocked = false;
+        }
+
+        try {
+            if (!initLocked) {
+                log.warn("dispose: Could not acquire initialization lock within 10 seconds; ongoing intialization may fail");
             }
 
             // immediately set the resolver field to null to indicate
             // that we have been disposed (this also signals to the
             // event handler to stop working
-            oldResolver = resolver;
-            resolver = null;
-        }
-        if ( this.registration != null ) {
-            this.registration.unregister();
-        }
+            final ResourceResolver oldResolver = this.resolver;
+            this.resolver = null;
 
-        if (oldResolver != null) {
-            oldResolver.close();
+            // trigger initialization to terminate init thread
+            triggerInit();
+
+            if (oldResolver != null) {
+                oldResolver.close();
+            } else {
+                log.warn("dispose: ResourceResolver has already been cleared before; duplicate call to dispose ?");
+            }
+        } finally {
+            if (initLocked) {
+                this.initializing.unlock();
+            }
         }
 
         // clear the rest of the fields
-        factory = null;
+        this.factory = null;
+        this.eventAdminTracker = null;
     }
 
     public List<MapEntry> getResolveMaps() {
@@ -237,22 +314,21 @@ public class MapEntries implements EventHandler {
             final Object p = event.getProperty(SlingConstants.PROPERTY_PATH);
             if (p instanceof String) {
                 final String path = (String) p;
-                for (String target : this.vanityTargets) {
-                    if (target.startsWith(path)) {
-                        doInit = true;
-                        break;
+                doInit = path.startsWith(this.mapRoot);
+                if (!doInit) {
+                    for (String target : this.vanityTargets) {
+                        if (target.startsWith(path)) {
+                            doInit = true;
+                            break;
+                        }
                     }
                 }
             }
         }
 
+        // trigger an update
         if (doInit) {
-            final Thread t = new Thread() {
-                public void run() {
-                    init();
-                }
-            };
-            t.start();
+            triggerInit();
         }
     }
 
@@ -263,10 +339,12 @@ public class MapEntries implements EventHandler {
      */
     private void sendChangeEvent() {
         final EventAdmin ea = (EventAdmin) this.eventAdminTracker.getService();
-        if ( ea != null ) {
-            // we hard code the topic here and don't use SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED
+        if (ea != null) {
+            // we hard code the topic here and don't use
+            // SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED
             // to avoid requiring the latest API version for this bundle to work
-            final Event event = new Event("org/apache/sling/api/resource/ResourceResolverMapping/CHANGED", (Dictionary<?,?>)null);
+            final Event event = new Event("org/apache/sling/api/resource/ResourceResolverMapping/CHANGED",
+                (Dictionary<?, ?>) null);
             ea.postEvent(event);
         }
     }
@@ -362,7 +440,7 @@ public class MapEntries implements EventHandler {
                     // whether the target is attained by a 302/FOUND or by an
                     // internal redirect is defined by the sling:redirect property
                     int status = row.get("sling:redirect", false)
-                            ? row.get("sling:redirectStatus", HttpServletResponse.SC_FOUND)
+                            ? row.get(JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
                             : -1;
 
                     // 1. entry with exact match
