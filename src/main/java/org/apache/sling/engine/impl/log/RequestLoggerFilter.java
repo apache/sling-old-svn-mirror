@@ -19,6 +19,7 @@
 package org.apache.sling.engine.impl.log;
 
 import java.io.IOException;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -36,20 +37,22 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.osgi.framework.Constants;
 import org.slf4j.LoggerFactory;
 
 @Component(immediate = true, policy = ConfigurationPolicy.IGNORE)
-@Properties({
-    @Property(name = "service.description", value = "Request Logger Filter"),
-    @Property(name = "service.vendor", value = "The Apache Software Foundation")
-})
 @Service(value = Filter.class)
 @Reference(
         name = "RequestLoggerService",
         referenceInterface = RequestLoggerService.class,
         cardinality = ReferenceCardinality.MANDATORY_MULTIPLE,
         policy = ReferencePolicy.DYNAMIC)
-@Property(name = "pattern", value = "/.*")
+@Properties({
+    @Property(name = "pattern", value = "/.*"),
+    @Property(name = Constants.SERVICE_RANKING, intValue = 0x8000),
+    @Property(name = "service.description", value = "Request Logger Filter"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation")
+})
 public final class RequestLoggerFilter implements Filter {
 
     private static final RequestLoggerService[] NONE = new RequestLoggerService[0];
