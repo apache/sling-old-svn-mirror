@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -45,9 +46,11 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -70,11 +73,11 @@ public class MapEntries implements EventHandler {
 
     private final String mapRoot;
 
-    private final String mapRootPrefix;
-
     private List<MapEntry> resolveMaps;
 
     private Collection<MapEntry> mapMaps;
+
+    private Collection<String> vanityTargets;
 
     private boolean initializing = false;
 
@@ -83,13 +86,13 @@ public class MapEntries implements EventHandler {
     private final ServiceTracker eventAdminTracker;
 
     private MapEntries() {
-        factory = null;
-        resolver = null;
-        mapRoot = DEFAULT_MAP_ROOT;
-        mapRootPrefix = mapRoot + "/";
+        this.factory = null;
+        this.resolver = null;
+        this.mapRoot = DEFAULT_MAP_ROOT;
 
-        resolveMaps = Collections.<MapEntry> emptyList();
-        mapMaps = Collections.<MapEntry> emptyList();
+        this.resolveMaps = Collections.<MapEntry> emptyList();
+        this.mapMaps = Collections.<MapEntry> emptyList();
+        this.vanityTargets = Collections.<String> emptySet();
         this.registration = null;
         this.eventAdminTracker = null;
     }
@@ -101,14 +104,35 @@ public class MapEntries implements EventHandler {
         this.resolver = factory.getAdministrativeResourceResolver(null);
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
-        this.mapRootPrefix = this.mapRoot + "/";
         this.eventAdminTracker = eventAdminTracker;
 
         init();
+
+        // build a filter which matches if any of the nodeProps (JCR
+        // properties modified) is listed in any of the eventProps (event
+        // properties listing modified JCR properties)
+        // this allows to only get events interesting for updating the
+        // internal structure
+        final String[] nodeProps = { "sling:vanityPath", "sling:vanityOrder", "sling:redirect" };
+        final String[] eventProps = { "resourceAddedAttributes", "resourceChangedAttributes",
+            "resourceRemovedAttributes" };
+        StringBuilder filter = new StringBuilder();
+        filter.append("(|");
+        for (String eventProp : eventProps) {
+            filter.append("(|");
+            for (String nodeProp : nodeProps) {
+                filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
+            }
+            filter.append(")");
+        }
+        filter.append("(" + EventConstants.EVENT_TOPIC + "=" + SlingConstants.TOPIC_RESOURCE_REMOVED + ")");
+        filter.append(")");
+
         final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put("event.topics","org/apache/sling/api/resource/*");
-        props.put("service.description","Map Entries Observation");
-        props.put("service.vendor","The Apache Software Foundation");
+        props.put(EventConstants.EVENT_TOPIC, "org/apache/sling/api/resource/*");
+        props.put(EventConstants.EVENT_FILTER, filter.toString());
+        props.put(Constants.SERVICE_DESCRIPTION, "Map Entries Observation");
+        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
     }
 
@@ -132,7 +156,7 @@ public class MapEntries implements EventHandler {
             loadResolverMap(resolver, newResolveMaps, newMapMaps);
 
             // load the configuration into the resolver map
-            loadVanityPaths(resolver, newResolveMaps);
+            Collection<String> vanityTargets = loadVanityPaths(resolver, newResolveMaps);
             loadConfiguration(factory, newResolveMaps);
 
             // load the configuration into the mapper map
@@ -141,8 +165,9 @@ public class MapEntries implements EventHandler {
             // sort List
             Collections.sort(newResolveMaps);
 
-            this.resolveMaps = newResolveMaps;
-            this.mapMaps = new TreeSet<MapEntry>(newMapMaps.values());
+            this.vanityTargets = Collections.unmodifiableCollection(vanityTargets);
+            this.resolveMaps = Collections.unmodifiableList(newResolveMaps);
+            this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
 
             sendChangeEvent();
 
@@ -197,20 +222,31 @@ public class MapEntries implements EventHandler {
 
     // ---------- EventListener interface
 
+    /**
+     * Handles the change to any of the node properties relevant for vanity URL
+     * mappings. The
+     * {@link #MapEntries(JcrResourceResolverFactoryImpl, BundleContext, ServiceTracker)}
+     * constructor makes sure the event listener is registered to only get
+     * appropriate events.
+     */
     public void handleEvent(final Event event) {
-        boolean handleEvent = false;
-        final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-        if ( this.resolver != null && path != null ) {
-            handleEvent = mapRoot.equals(path) || path.startsWith(mapRootPrefix);
-            if ( !handleEvent && !event.getTopic().equals(SlingConstants.TOPIC_RESOURCE_REMOVED) ) {
-                final Resource rsrc = this.resolver.getResource(path);
-                final ValueMap props = ResourceUtil.getValueMap(rsrc);
-                handleEvent = props.containsKey("sling:vanityPath")
-                              || props.containsKey("sling:vanityOrder")
-                              || props.containsKey("sling:redirect");
+        // check whether a remove event has an influence on vanity paths
+        boolean doInit = true;
+        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic())) {
+            doInit = false;
+            final Object p = event.getProperty(SlingConstants.PROPERTY_PATH);
+            if (p instanceof String) {
+                final String path = (String) p;
+                for (String target : this.vanityTargets) {
+                    if (target.startsWith(path)) {
+                        doInit = true;
+                        break;
+                    }
+                }
             }
         }
-        if (handleEvent) {
+
+        if (doInit) {
             final Thread t = new Thread() {
                 public void run() {
                     init();
@@ -295,10 +331,11 @@ public class MapEntries implements EventHandler {
         }
     }
 
-    private void loadVanityPaths(final ResourceResolver resolver,
+    private Collection<String> loadVanityPaths(final ResourceResolver resolver,
             List<MapEntry> entries) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
+        final HashSet<String> targetPaths = new HashSet<String>();
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = resolver.findResources(
             queryString, "sql");
@@ -335,9 +372,13 @@ public class MapEntries implements EventHandler {
                     // 2. entry with match supporting selectors and extension
                     entries.add(new MapEntry(url + "(\\..*)", status, false,
                         redirect + "$1"));
+
+                    // 3. keep the path to return
+                    targetPaths.add(redirect);
                 }
             }
         }
+        return targetPaths;
     }
 
     private String getVanityPath(final String pVanityPath) {
