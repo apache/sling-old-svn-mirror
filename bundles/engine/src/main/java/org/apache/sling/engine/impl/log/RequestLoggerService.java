@@ -19,19 +19,18 @@
 package org.apache.sling.engine.impl.log;
 
 import java.io.IOException;
-import java.util.Dictionary;
+import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.engine.RequestLog;
-import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>RequestLoggerService</code> is a factory component which gets
@@ -83,11 +82,12 @@ public class RequestLoggerService {
     public RequestLoggerService() {
     }
 
-    RequestLoggerService(BundleContext bundleContext, Dictionary<String, Object> configuration) {
+    RequestLoggerService(BundleContext bundleContext, Map<String, Object> configuration) {
         this.setup(bundleContext, configuration);
     }
 
-    void setup(BundleContext bundleContext, Dictionary<String, Object> configuration) {
+    @Activate
+    void setup(BundleContext bundleContext, Map<String, Object> configuration) {
         // whether to log on request entry or request exit
         Object onEntryObject = configuration.get(PARAM_ON_ENTRY);
         this.onEntry = (onEntryObject instanceof Boolean)
@@ -111,6 +111,7 @@ public class RequestLoggerService {
         }
     }
 
+    @Deactivate
     void shutdown() {
         if (this.log != null) {
             this.log.close();
@@ -120,7 +121,7 @@ public class RequestLoggerService {
         this.logFormat = null;
     }
 
-    void log(SlingHttpServletRequest request, SlingHttpServletResponseImpl response) {
+    void log(RequestLoggerRequest request, RequestLoggerResponse response) {
         if (this.log != null && this.logFormat != null) {
             this.log.write(this.logFormat.format(request, response));
         }
@@ -128,17 +129,6 @@ public class RequestLoggerService {
 
     boolean isOnEntry() {
         return this.onEntry;
-    }
-
-    // ---------- SCR integration ----------------------------------------------
-
-    @SuppressWarnings("unchecked")
-    protected void activate(ComponentContext context) {
-        this.setup(context.getBundleContext(), context.getProperties());
-    }
-
-    protected void deactivate(ComponentContext context) {
-        this.shutdown();
     }
 
     private RequestLog getLog(BundleContext bundleContext, String output,

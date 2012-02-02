@@ -83,6 +83,12 @@ public class RequestData {
     public static final int DEFAULT_MAX_CALL_COUNTER = 1000;
 
     /**
+     * The name of the request attribute providing the resource addressed by the
+     * request URL.
+     */
+    public static final String REQUEST_RESOURCE_PATH_ATTR = "$$sling.request.resource$$";
+
+    /**
      * The maximum inclusion depth (default
      * {@link #DEFAULT_MAX_INCLUSION_COUNTER}). This value is compared to the
      * number of entries in the {@link #contentDataStack} when the
@@ -192,6 +198,9 @@ public class RequestData {
         requestProgressTracker.startTimer("ResourceResolution");
         final SlingHttpServletRequest request = getSlingRequest();
         Resource resource = resourceResolver.resolve(request, request.getPathInfo());
+        if (request.getAttribute(REQUEST_RESOURCE_PATH_ATTR) == null) {
+            request.setAttribute(REQUEST_RESOURCE_PATH_ATTR, resource.getPath());
+        }
         requestProgressTracker.logTimer("ResourceResolution",
             "URI={0} resolves to Resource={1}",
             getServletRequest().getRequestURI(), resource);

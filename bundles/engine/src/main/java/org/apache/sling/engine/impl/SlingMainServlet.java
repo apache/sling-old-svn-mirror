@@ -56,7 +56,6 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
-import org.apache.sling.engine.impl.log.RequestLogger;
 import org.apache.sling.engine.impl.parameters.ParameterSupport;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
@@ -82,7 +81,6 @@ import org.slf4j.LoggerFactory;
 })
 @References( {
     @Reference(name = "ErrorHandler", referenceInterface = ErrorHandler.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setErrorHandler", unbind = "unsetErrorHandler"),
-    @Reference(name = "RequestLogger", referenceInterface = RequestLogger.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setRequestLogger", unbind = "unsetRequestLogger"),
     @Reference(name = "ServletResolver", referenceInterface = ServletResolver.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setServletResolver", unbind = "unsetServletResolver"),
     @Reference(name = "MimeTypeService", referenceInterface = MimeTypeService.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setMimeTypeService", unbind = "unsetMimeTypeService"),
     @Reference(name = "AuthenticationSupport", referenceInterface = AuthenticationSupport.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, bind = "setAuthenticationSupport", unbind = "unsetAuthenticationSupport") })
@@ -520,14 +518,6 @@ public class SlingMainServlet extends GenericServlet {
 
     public void unsetServletResolver(final ServletResolver servletResolver) {
         requestProcessor.unsetServletResolver(servletResolver);
-    }
-
-    public void setRequestLogger(final RequestLogger requestLogger) {
-        requestProcessor.setRequestLogger(requestLogger);
-    }
-
-    public void unsetRequestLogger(final RequestLogger requestLogger) {
-        requestProcessor.unsetRequestLogger(requestLogger);
     }
 
     public void setMimeTypeService(final MimeTypeService mimeTypeService) {
