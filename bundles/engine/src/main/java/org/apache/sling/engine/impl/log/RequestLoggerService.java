@@ -18,6 +18,7 @@
  */
 package org.apache.sling.engine.impl.log;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -137,7 +138,17 @@ public class RequestLoggerService {
             case OUTPUT_TYPE_FILE:
                 // file logging
                 try {
-                    return new FileRequestLog(output);
+                    // ensure the path is absolute
+                    File file = new File(output);
+                    if (!file.isAbsolute()) {
+                        final String home = bundleContext.getProperty("sling.home");
+                        if (home != null) {
+                            file = new File(home, output);
+                        }
+                        file = file.getAbsoluteFile();
+                    }
+
+                    return new FileRequestLog(file);
                 } catch (IOException ioe) {
                     // TODO: log
                 }

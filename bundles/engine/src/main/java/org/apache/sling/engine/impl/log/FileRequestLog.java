@@ -59,16 +59,8 @@ import org.apache.sling.engine.RequestLog;
  */
 class FileRequestLog implements RequestLog {
 
-    // The file representing the root directory for relative log file paths
-    private static File relPathRoot;
-
     // The map of shared open files (actually PrintWriter instances)
     private static Map<String, PrintWriter> logFiles = new HashMap<String, PrintWriter>();
-
-    // Initialize class with the root directory for relative log file paths
-    static void init(String relPathRoot) {
-        FileRequestLog.relPathRoot = new File(relPathRoot).getAbsoluteFile();
-    }
 
     // Dispose class by closing all open PrintWeiter instances
     static void dispose() {
@@ -85,24 +77,13 @@ class FileRequestLog implements RequestLog {
     // The PrintWriter used by this instance to write the messages
     private PrintWriter output;
 
-    FileRequestLog(String fileName) throws IOException {
-        // ensure the path is absolute
-        File file = new File(fileName);
-        if (!file.isAbsolute()) {
-            file = new File(relPathRoot, fileName);
-        }
-
-        // get back the raw file name
-        fileName = file.getAbsolutePath();
-
+    FileRequestLog(File logFile) throws IOException {
         synchronized (logFiles) {
+            final String fileName = logFile.getAbsolutePath();
             this.output = logFiles.get(fileName);
             if (this.output == null) {
-
-                // ensure location of the log file
-                file.getParentFile().mkdirs();
-
-                FileWriter fw = new FileWriter(file, true);
+                logFile.getParentFile().mkdirs();
+                FileWriter fw = new FileWriter(logFile, true);
                 this.output = new PrintWriter(fw);
                 logFiles.put(fileName, this.output);
             }
