@@ -28,17 +28,14 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.osgi.framework.BundleContext;
 
 /**
  * The <code>RequestLogger</code> is a request level filter, which
@@ -100,36 +97,6 @@ public final class RequestLoggerFilter implements Filter {
     }
 
     // ---------- SCR Integration ----------------------------------------------
-
-    /**
-     * Activates this component by setting up the special request entry and exit
-     * request loggers and the access logger as configured in the context
-     * properties. In addition the <code>FileRequestLog</code> class is
-     * initialized with the value of the <code>sling.home</code> context
-     * property to resolve relative log file names.
-     */
-    @Activate
-    @SuppressWarnings("unused")
-    private void activate(BundleContext bundleContext) {
-
-        // initialize the FileRequestLog with sling.home as the root for
-        // relative log file paths
-        FileRequestLog.init(bundleContext.getProperty("sling.home"));
-
-    }
-
-    /**
-     * Deactivates this component by unbinding and shutting down all loggers
-     * setup during activation and finally dispose off the
-     * <code>FileRequestLog</code> class to make sure all shared writers are
-     * closed.
-     */
-    @Deactivate
-    @SuppressWarnings("unused")
-    private void deactivate() {
-        // hack to ensure all log files are closed
-        FileRequestLog.dispose();
-    }
 
     /**
      * Binds a <code>RequestLoggerService</code> to be used during request
