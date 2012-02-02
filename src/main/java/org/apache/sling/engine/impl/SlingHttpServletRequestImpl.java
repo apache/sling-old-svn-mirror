@@ -53,9 +53,6 @@ import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.useradmin.Authorization;
 
-/**
- * The <code>SlingHttpServletRequestImpl</code> TODO
- */
 public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper implements
         SlingHttpServletRequest {
 
