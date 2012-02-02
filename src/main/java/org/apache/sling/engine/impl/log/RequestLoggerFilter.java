@@ -36,15 +36,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
+import org.slf4j.LoggerFactory;
 
-/**
- * The <code>RequestLogger</code> is a request level filter, which
- * provides customizable logging or requests handled by Sling. This filter is
- * inserted as the first filter in the request level filter chain and therefore
- * is the first filter called when processing a request and the last filter
- * acting just before the request handling terminates.
- *
- */
 @Component(immediate = true, policy = ConfigurationPolicy.IGNORE)
 @Properties({
     @Property(name = "service.description", value = "Request Logger Filter"),
@@ -61,18 +54,8 @@ public final class RequestLoggerFilter implements Filter {
 
     private static final RequestLoggerService[] NONE = new RequestLoggerService[0];
 
-    /**
-     * The list of {@link RequestLoggerService} called when the request enters
-     * processing. The order of the services in this list determined by the
-     * registration order.
-     */
     private RequestLoggerService[] requestEntry = NONE;
 
-    /**
-     * The list of {@link RequestLoggerService} called when the request is about
-     * to exit processing. The order of the services in this list determined by
-     * the registration order.
-     */
     private RequestLoggerService[] requestExit = NONE;
 
     public void init(FilterConfig filterConfig) {
@@ -94,20 +77,13 @@ public final class RequestLoggerFilter implements Filter {
     }
 
     public void destroy() {
+        FileRequestLog.dispose();
     }
 
     // ---------- SCR Integration ----------------------------------------------
 
-    /**
-     * Binds a <code>RequestLoggerService</code> to be used during request
-     * filter.
-     *
-     * @param requestLoggerService The <code>RequestLoggerService</code> to
-     *            use.
-     */
     @SuppressWarnings("unused")
-    private void bindRequestLoggerService(
-            RequestLoggerService requestLoggerService) {
+    private void bindRequestLoggerService(RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
             this.requestEntry = this.addService(this.requestEntry, requestLoggerService);
         } else {
@@ -115,16 +91,8 @@ public final class RequestLoggerFilter implements Filter {
         }
     }
 
-    /**
-     * Binds a <code>RequestLoggerService</code> to be used during request
-     * filter.
-     *
-     * @param requestLoggerService The <code>RequestLoggerService</code> to
-     *            use.
-     */
     @SuppressWarnings("unused")
-    private void unbindRequestLoggerService(
-            RequestLoggerService requestLoggerService) {
+    private void unbindRequestLoggerService(RequestLoggerService requestLoggerService) {
         if (requestLoggerService.isOnEntry()) {
             this.requestEntry = this.removeService(this.requestEntry, requestLoggerService);
         } else {
@@ -132,21 +100,11 @@ public final class RequestLoggerFilter implements Filter {
         }
     }
 
-    /**
-     * Creates a new list of request logger services from the existing list
-     * appending the new logger. This method does not check, whether the logger
-     * has already been added or not and so may add the the logger multiple
-     * times. It is the responsibility of the caller to make sure to not add
-     * services multiple times.
-     *
-     * @param list The list to add the new service to
-     * @param requestLoggerService The service to append to the list
-     * @param A new list with the added service at the end.
-     */
-    private RequestLoggerService[] addService(RequestLoggerService[] list,
-            RequestLoggerService requestLoggerService) {
-        if (list == NONE) {
-            return new RequestLoggerService[] { requestLoggerService };
+    private RequestLoggerService[] addService(RequestLoggerService[] list, RequestLoggerService requestLoggerService) {
+        if (list.length == 0) {
+            return new RequestLoggerService[] {
+                requestLoggerService
+            };
         }
 
         // add the service to the list, must not be in the list yet due to
@@ -158,21 +116,7 @@ public final class RequestLoggerFilter implements Filter {
         return newList;
     }
 
-    /**
-     * Creates a new list of request logger services from the existing list by
-     * removing the named logger. The logger is searched for by referential
-     * equality (comparing the object references) and not calling the
-     * <code>equals</code> method. If the last element is being removed from
-     * the list, <code>NONE</code> is returned instead of an empty list.
-     *
-     * @param list The list from which the service is to be removed.
-     * @param requestLoggerService The service to remove.
-     * @return The list without the service. This may be the same list if the
-     *         service is not in the list or may be <code>NONE</code> if the
-     *         last service has just been removed from the list.
-     */
-    private RequestLoggerService[] removeService(RequestLoggerService[] list,
-            RequestLoggerService requestLoggerService) {
+    private RequestLoggerService[] removeService(RequestLoggerService[] list, RequestLoggerService requestLoggerService) {
 
         RequestLoggerService[] newList = NONE;
         for (int i = 0; i < list.length; i++) {
@@ -186,8 +130,7 @@ public final class RequestLoggerFilter implements Filter {
 
                 // if not the last element, shift rest to the left
                 if (i < list.length - 1) {
-                    System.arraycopy(list, i + 1, newList, 0, newList.length
-                        - i);
+                    System.arraycopy(list, i + 1, newList, 0, newList.length - i);
                 }
             }
         }
@@ -198,8 +141,12 @@ public final class RequestLoggerFilter implements Filter {
 
     private void log(RequestLoggerService[] services, final RequestLoggerRequest request,
             final RequestLoggerResponse response) {
-        for (int i = 0; i < services.length; i++) {
-            services[i].log(request, response);
+        for (RequestLoggerService service : services) {
+            try {
+                service.log(request, response);
+            } catch (Exception e) {
+                LoggerFactory.getLogger(getClass()).debug("log: RequestLoggerService failed logging", e);
+            }
         }
     }
 }

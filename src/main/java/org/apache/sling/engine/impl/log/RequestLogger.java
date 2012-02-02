@@ -23,7 +23,9 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
@@ -31,44 +33,38 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * The <code>RequestLogger</code> is a request level filter, which
- * provides customizable logging or requests handled by Sling. This filter is
- * inserted as the first filter in the request level filter chain and therefore
- * is the first filter called when processing a request and the last filter
- * acting just before the request handling terminates.
- *
+ * The <code>RequestLogger</code> just registers {@link RequestLoggerService}
+ * instance on behalf of the provided configuration.
  */
-@Component(metatype=true,label="%request.log.name",description="%request.log.description")
+@Component(metatype = true, label = "%request.log.name", description = "%request.log.description")
 @Properties({
-    @Property(name="service.description",value="Request Logger"),
-    @Property(name="service.vendor",value="The Apache Software Foundation")
+    @Property(name = "service.description", value = "Request Logger"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation")
 })
 public class RequestLogger {
 
-    @Property(value="logs/request.log")
+    @Property(value = "logs/request.log")
     public static final String PROP_REQUEST_LOG_OUTPUT = "request.log.output";
 
-    @Property(intValue=0,options={
-            @PropertyOption(name = "0", value = "Logger Name"),
-            @PropertyOption(name = "1", value = "File Name"),
-            @PropertyOption(name = "2", value = "RequestLog Service")
+    @Property(intValue = 0, options = {
+        @PropertyOption(name = "0", value = "Logger Name"), @PropertyOption(name = "1", value = "File Name"),
+        @PropertyOption(name = "2", value = "RequestLog Service")
     })
     public static final String PROP_REQUEST_LOG_OUTPUT_TYPE = "request.log.outputtype";
 
-    @Property(boolValue=true)
+    @Property(boolValue = true)
     public static final String PROP_REQUEST_LOG_ENABLED = "request.log.enabled";
 
-    @Property(value="logs/access.log")
+    @Property(value = "logs/access.log")
     public static final String PROP_ACCESS_LOG_OUTPUT = "access.log.output";
 
-    @Property(intValue=0,options={
-            @PropertyOption(name = "0", value = "Logger Name"),
-            @PropertyOption(name = "1", value = "File Name"),
-            @PropertyOption(name = "2", value = "RequestLog Service")
+    @Property(intValue = 0, options = {
+        @PropertyOption(name = "0", value = "Logger Name"), @PropertyOption(name = "1", value = "File Name"),
+        @PropertyOption(name = "2", value = "RequestLog Service")
     })
     public static final String PROP_ACCESS_LOG_OUTPUT_TYPE = "access.log.outputtype";
 
-    @Property(boolValue=true)
+    @Property(boolValue = true)
     public static final String PROP_ACCESS_LOG_ENABLED = "access.log.enabled";
 
     /**
@@ -91,27 +87,6 @@ public class RequestLogger {
     private static final String ACCESS_LOG_FORMAT = "%a %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"";
 
     /**
-     * A special request logger service, which writes the request log message at
-     * request start time. This logger logs a message with the format
-     * {@link #REQUEST_LOG_ENTRY_FORMAT}.
-     */
-    private RequestLoggerService requestLogEntry;
-
-    /**
-     * A special request logger service, which writes the request log message at
-     * request termination time. This logger logs a message with the format
-     * {@link #REQUEST_LOG_EXIT_FORMAT}.
-     */
-    private RequestLoggerService requestLogExit;
-
-    /**
-     * A special request logger service, which writes the access log message at
-     * request termination time. This logger logs a message with the format
-     * {@link #ACCESS_LOG_FORMAT NCSA extended/combined log format}.
-     */
-    private RequestLoggerService accessLog;
-
-    /**
      * RequestLoggerService instances created on behalf of the static
      * configuration.
      */
@@ -119,16 +94,7 @@ public class RequestLogger {
 
     // ---------- SCR Integration ----------------------------------------------
 
-    /**
-     * Activates this component by setting up the special request entry and exit
-     * request loggers and the access logger as configured in the context
-     * properties. In addition the <code>FileRequestLog</code> class is
-     * initialized with the value of the <code>sling.home</code> context
-     * property to resolve relative log file names.
-     *
-     * @param osgiContext The OSGi Component Context providing the configuration
-     *            data and access into the system.
-     */
+    @Activate
     protected void activate(BundleContext bundleContext, Map<String, Object> props) {
 
         // prepare the request loggers if a name is configured and the
@@ -154,15 +120,7 @@ public class RequestLogger {
         }
     }
 
-    /**
-     * Deactivates this component by unbinding and shutting down all loggers
-     * setup during activation and finally dispose off the
-     * <code>FileRequestLog</code> class to make sure all shared writers are
-     * closed.
-     *
-     * @param osgiContext The OSGi Component Context providing the configuration
-     *            data and access into the system.
-     */
+    @Deactivate
     protected void deactivate() {
         for (Entry<ServiceRegistration, RequestLoggerService> entry : services.entrySet()) {
             entry.getKey().unregister();
@@ -171,28 +129,6 @@ public class RequestLogger {
         services.clear();
     }
 
-    /**
-     * Create a {@link RequestLoggerService} instance from the given
-     * configuration data. This method creates a <code>Properties</code>
-     * object from the data which may be handled by the
-     * {@link RequestLoggerService#RequestLoggerService(BundleContext, Dictionary)}
-     * constructor to set itself up.
-     *
-     * @param bundleContext The <code>BundleContext</code> used to setup a
-     *            <code>ServiceTracker</code> should the output be a
-     *            <code>RequestLog</code> service.
-     * @param onEntry Whether the logger is to be called on request entry (true)
-     *            or not (false).
-     * @param format The log format string. This is expected to be a String.
-     * @param output The name of the output, which may be an SLF4J logger, a
-     *            relative or absolute file name or the name of a
-     *            <code>RequestLog</code> service. This is expected to be a
-     *            String.
-     * @param outputType The type of output, 0 for SLF4J logger, 1 for file name
-     *            and 2 for a service name. This is expected to be an Integer.
-     * @return The functional and prepared <code>RequestLoggerService</code>
-     *         instance.
-     */
     private static void createRequestLoggerService(Map<ServiceRegistration, RequestLoggerService> services,
             BundleContext bundleContext, boolean onEntry, Object format, Object output, Object outputType) {
         final Hashtable<String, Object> config = new Hashtable<String, Object>();

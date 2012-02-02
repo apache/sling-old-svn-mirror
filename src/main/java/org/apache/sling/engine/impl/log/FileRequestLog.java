@@ -35,15 +35,9 @@ import org.apache.sling.engine.RequestLog;
  * internal map of log files is kept and access to the <code>PrintWriter</code>s
  * to write to the file is synchronized.
  * <p>
- * This class has a defined lifecycle to ensure correct operation: Before using
- * the class to instantiate it, the {@link #init(String)} method should be
- * called mainly to set the root directory for relative log file paths. It is
- * not recommended to call the {@link #init(String)} method multiple times. When
- * the class is not used any more the {@link #dispose()} method should be called
- * to clean up, namely to close all open files. This lifecycle behaviour is
- * forced by the {@link RequestLogger} component, which calls the
- * {@link #init(String)} method on filter component activation and calls the
- * {@link #dispose()} metod on filter component deactivation.
+ * This class has a defined lifecycle to ensure correct operation: To ensure no
+ * log files are kept open, the {@link RequestLoggerFilter} object calls
+ * {@link #dispose()} when it is being deactivated.
  * <p>
  * Note: Currently, each log file is kept open from the moment the log file is
  * first moment until the {@link #dispose()} method is called. Future

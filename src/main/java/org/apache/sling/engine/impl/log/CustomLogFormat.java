@@ -32,23 +32,32 @@ import java.util.Locale;
 import javax.servlet.http.Cookie;
 
 import org.apache.sling.engine.impl.request.RequestData;
-import org.osgi.service.http.HttpContext;
 
 /**
  * The <code>CustomLogFormat</code> class implements the support for log format
  * strings similar to the Apache httpd CustomLog configuration.
+ * 
+ * @see <a
+ *      href="http://sling.apache.org/site/client-request-logging.html">Client
+ *      Request Logging</a> for documentation of supported formats.
  */
 class CustomLogFormat {
 
+    /*
+     * NOTE: Documentation at
+     * https://cwiki.apache.org/confluence/display/SLINGxSITE
+     * /Client+Request+Logging should be kept in sync with this class !
+     */
+
     /**
-     * The parsed list of log format parts whose <code>print</code> method
-     * is called when building the log message line.
+     * The parsed list of log format parts whose <code>print</code> method is
+     * called when building the log message line.
      */
     Parameter[] logParameters;
 
     /**
      * Creates a new instance from of this class parsing the log format pattern.
-     *
+     * 
      * @param pattern The pattern to be parsed.
      */
     CustomLogFormat(String pattern) {
@@ -60,14 +69,13 @@ class CustomLogFormat {
 
     /**
      * Creates a log message from the given <code>request</code> and
-     * <code>response</code> objects according to the log format from which
-     * this instance has been created.
-     *
-     * @param request The {@link org.apache.sling.component.ComponentResponse}
-     *            used to extract values for the log message.
-     * @param response The {@link SlingHttpServletResponseImpl} used to extract values for the
-     *            log message.
-     *
+     * <code>response</code> objects according to the log format from which this
+     * instance has been created.
+     * 
+     * @param request The {@link RequestLoggerRequest} used to extract values
+     *            for the log message.
+     * @param response The {@link RequestLoggerResponse} used to extract values
+     *            for the log message.
      * @return The formatted log message or <code>null</code> if this log
      *         formatter has not been initialized with a valid log format
      *         pattern.
@@ -75,7 +83,7 @@ class CustomLogFormat {
     String format(RequestLoggerRequest request, RequestLoggerResponse response) {
         if (this.logParameters != null) {
             StringBuilder buf = new StringBuilder();
-            for (int i=0; i < this.logParameters.length; i++) {
+            for (int i = 0; i < this.logParameters.length; i++) {
                 this.logParameters[i].print(buf, request, response);
             }
             return buf.toString();
@@ -88,27 +96,27 @@ class CustomLogFormat {
      * Returns a string representation of this log format instance. The returned
      * String is actually rebuilt from the parsed format string and may be used
      * to create another instance of this class with the same format string.
-     *
+     * 
      * @return String representation of this instance.
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
-        for (int i=0; this.logParameters != null && i < this.logParameters.length; i++) {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; this.logParameters != null && i < this.logParameters.length; i++) {
             buf.append(this.logParameters[i]);
         }
         return buf.toString();
     }
 
-    //---------- Parsing the format pattern -----------------------------------
+    // ---------- Parsing the format pattern -----------------------------------
 
     private Parameter[] parse(String pattern) {
 
         List<Parameter> parameterList = new ArrayList<Parameter>();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         CharacterIterator sr = new StringCharacterIterator(pattern);
 
-        for (int c=sr.first(); c != CharacterIterator.DONE; c=sr.next()) {
+        for (int c = sr.first(); c != CharacterIterator.DONE; c = sr.next()) {
             if (c == '%') {
                 int c1 = sr.next();
                 if (c1 != '%') {
@@ -161,7 +169,7 @@ class CustomLogFormat {
         // read name
         String name;
         if (c == '{') {
-            StringBuffer nameBuf = new StringBuffer();
+            StringBuilder nameBuf = new StringBuilder();
             for (c = sr.next(); c != CharacterIterator.DONE && c != '}'; c = sr.next()) {
                 nameBuf.append((char) c);
             }
@@ -185,7 +193,7 @@ class CustomLogFormat {
 
             case 'b':
             case 'B':
-                param = new ByteCountParameter((char) c);
+                param = new ByteCountParameter();
                 break;
 
             case 'C':
@@ -298,11 +306,11 @@ class CustomLogFormat {
     }
 
     private int[] parseStatusCodes(CharacterIterator sr, int c) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append((char) c);
 
         List<Integer> numbers = new ArrayList<Integer>();
-        for (c=sr.next(); c != CharacterIterator.DONE; c=sr.next()) {
+        for (c = sr.next(); c != CharacterIterator.DONE; c = sr.next()) {
             if (c == ',') {
                 int num = 0;
                 try {
@@ -341,13 +349,13 @@ class CustomLogFormat {
         }
 
         int[] statusCodes = new int[numbers.size()];
-        for (int i=0; i < numbers.size(); i++) {
+        for (int i = 0; i < numbers.size(); i++) {
             statusCodes[i] = (numbers.get(i)).intValue();
         }
         return statusCodes;
     }
 
-    //---------- Parameter support --------------------------------------------
+    // ---------- Parameter support --------------------------------------------
 
     static interface Parameter {
         void print(StringBuilder dest, RequestLoggerRequest request, RequestLoggerResponse response);
@@ -355,13 +363,15 @@ class CustomLogFormat {
 
     static class PlainTextParameter implements Parameter {
         private String value;
+
         PlainTextParameter(String value) {
             this.value = value;
         }
-        public void print(StringBuilder dest, RequestLoggerRequest request,
-                RequestLoggerResponse response) {
+
+        public void print(StringBuilder dest, RequestLoggerRequest request, RequestLoggerResponse response) {
             dest.append(this.value);
         }
+
         public String toString() {
             return this.value;
         }
@@ -369,9 +379,13 @@ class CustomLogFormat {
 
     abstract static class BaseParameter implements Parameter {
         private int[] statusLimits;
+
         private boolean required;
+
         private char parName;
+
         private final String parParam;
+
         private final boolean isRequest;
 
         protected BaseParameter(String parParam, boolean isRequest) {
@@ -392,6 +406,7 @@ class CustomLogFormat {
         }
 
         protected abstract String getValue(RequestLoggerRequest request);
+
         protected abstract String getValue(RequestLoggerResponse response);
 
         public final void print(StringBuilder dest, RequestLoggerRequest request, RequestLoggerResponse response) {
@@ -406,7 +421,7 @@ class CustomLogFormat {
                 return true;
             }
 
-            for (int i=0; i < this.statusLimits.length; i++) {
+            for (int i = 0; i < this.statusLimits.length; i++) {
                 if (status == this.statusLimits[i]) {
                     return this.required;
                 }
@@ -424,14 +439,14 @@ class CustomLogFormat {
         }
 
         public String toString() {
-            StringBuffer result = new StringBuffer("%");
+            StringBuilder result = new StringBuilder("%");
 
             if (this.statusLimits != null) {
                 if (!this.required) {
                     result.append('!');
                 }
 
-                for (int i=0; i < this.statusLimits.length; i++) {
+                for (int i = 0; i < this.statusLimits.length; i++) {
                     if (i > 0) {
                         result.append(',');
                     }
@@ -446,7 +461,8 @@ class CustomLogFormat {
 
             return result.toString();
         }
-        //--------- helper ----------------------------------------------------
+
+        // --------- helper ----------------------------------------------------
 
         private static boolean isPrint(char c) {
             return c >= 0x20 && c < 0x7f && c != '\\' && c != '"';
@@ -459,7 +475,7 @@ class CustomLogFormat {
             }
 
             // find the first non-printable
-            int i=0;
+            int i = 0;
             while (i < value.length() && isPrint(value.charAt(i))) {
                 i++;
             }
@@ -471,7 +487,7 @@ class CustomLogFormat {
 
             // otherwise copy the printable first part in a string buffer
             // and start encoding
-            StringBuffer buf = new StringBuffer(value.substring(0, i));
+            StringBuilder buf = new StringBuilder(value.substring(0, i));
             while (i < value.length()) {
                 char c = value.charAt(i);
                 if (isPrint(c)) {
@@ -486,17 +502,17 @@ class CustomLogFormat {
                     buf.append("\\f");
                 } else if (c == '\b') { // BSP
                     buf.append("\\b");
-                } else if (c == '"') {  // "
+                } else if (c == '"') { // "
                     buf.append("\\\"");
                 } else if (c == '\\') { // \
                     buf.append("\\\\");
-                } else {                // encode
+                } else { // encode
                     buf.append("\\u");
                     if (c < 0x10) {
-                        buf.append('0');   // leading zero
+                        buf.append('0'); // leading zero
                     }
                     if (c < 0x100) {
-                        buf.append('0');  // leading zero
+                        buf.append('0'); // leading zero
                     }
                     if (c < 0x1000) {
                         buf.append('0'); // leading zero
@@ -570,7 +586,7 @@ class CustomLogFormat {
     }
 
     static class ByteCountParameter extends BaseParameter {
-        public ByteCountParameter(char c) {
+        public ByteCountParameter() {
             super(null, false);
         }
 
@@ -591,8 +607,7 @@ class CustomLogFormat {
     static class TimeParameter extends BaseParameter {
 
         /** date format - see access logging in service() */
-        private static final SimpleDateFormat accessLogFmt = new SimpleDateFormat(
-            "dd/MMM/yyyy:HH:mm:ss ", Locale.US);
+        private static final SimpleDateFormat accessLogFmt = new SimpleDateFormat("dd/MMM/yyyy:HH:mm:ss ", Locale.US);
 
         /** time format for GMT offset - see access logging in service() */
         private static final DecimalFormat dfmt = new DecimalFormat("+0000;-0000");
@@ -615,7 +630,7 @@ class CustomLogFormat {
         public TimeParameter(String parParam) {
             super(parParam, false);
 
-            this.requestStart = parParam== null || !parParam.equals("end");
+            this.requestStart = parParam == null || !parParam.equals("end");
         }
 
         protected String getValue(RequestLoggerRequest request) {
@@ -627,18 +642,18 @@ class CustomLogFormat {
             return timeFormatted(time);
         }
 
-        // ---------- internal -----------------------------------------------------
+        // ---------- internal
+        // -----------------------------------------------------
 
         static String timeFormatted(long time) {
             if (time / 1000 != lastTimeFormattedSeconds) {
                 lastTimeFormattedSeconds = time / 1000;
                 Date date = new Date(time);
-                StringBuffer buf = new StringBuffer(accessLogFmt.format(date));
+                StringBuilder buf = new StringBuilder(accessLogFmt.format(date));
                 if (time / 3600000 != lastZoneOffsetHour) {
                     lastZoneOffsetHour = time / 3600000;
                     calendar.setTime(date);
-                    int tzOffset = calendar.get(Calendar.ZONE_OFFSET)
-                        + calendar.get(Calendar.DST_OFFSET);
+                    int tzOffset = calendar.get(Calendar.ZONE_OFFSET) + calendar.get(Calendar.DST_OFFSET);
                     tzOffset /= (60 * 1000);
                     tzOffset = ((tzOffset / 60) * 100) + (tzOffset % 60);
 
@@ -653,6 +668,7 @@ class CustomLogFormat {
 
     static class DurationParameter extends BaseParameter {
         private final boolean seconds;
+
         public DurationParameter(boolean seconds) {
             super(null, false);
             this.seconds = seconds;
@@ -768,8 +784,7 @@ class CustomLogFormat {
             String query = request.getQueryString();
             query = (query == null || query.length() == 0) ? "" : "?" + query;
 
-            return request.getMethod() + " " + request.getRequestURI() + query
-                + " " + request.getProtocol();
+            return request.getMethod() + " " + request.getRequestURI() + query + " " + request.getProtocol();
         }
 
         protected String getValue(RequestLoggerResponse response) {
@@ -840,12 +855,8 @@ class CustomLogFormat {
         }
 
         protected String getValue(RequestLoggerRequest request) {
-            final Object user = request.getAttribute(HttpContext.REMOTE_USER);
-            if (user instanceof String) {
-                return (String) user;
-            }
-
-            return request.getRemoteUser();
+            final String user = request.getRemoteUser();
+            return (user == null) ? null : escape(user);
         }
 
         protected String getValue(RequestLoggerResponse response) {
@@ -859,12 +870,8 @@ class CustomLogFormat {
         }
 
         protected String getValue(RequestLoggerRequest request) {
-            final Object authType = request.getAttribute(HttpContext.AUTHENTICATION_TYPE);
-            if (authType instanceof String) {
-                return (String) authType;
-            }
-
-            return request.getAuthType();
+            final String authType = request.getAuthType();
+            return (authType == null) ? null : escape(authType);
         }
 
         protected String getValue(RequestLoggerResponse response) {
@@ -888,22 +895,15 @@ class CustomLogFormat {
 
     static class CookieParameter extends BaseParameter {
         private String cookieName;
+
         CookieParameter(String cookieName, boolean isRequest) {
             super(cookieName, isRequest);
             this.cookieName = cookieName;
         }
 
         protected String getValue(RequestLoggerRequest request) {
-            final Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (int i = 0; i < cookies.length; i++) {
-                    if (cookies[i].getName().equals(cookieName)) {
-                        return escape(cookies[i].toString());
-                    }
-                }
-            }
-
-            return null;
+            Cookie cookie = request.getCookie(this.cookieName);
+            return (cookie == null) ? null : escape(cookie.toString());
         }
 
         protected String getValue(RequestLoggerResponse response) {
@@ -915,6 +915,7 @@ class CustomLogFormat {
 
     static class HeaderParameter extends BaseParameter {
         private String headerName;
+
         HeaderParameter(String headerName, boolean isRequest) {
             super(headerName, isRequest);
             this.headerName = headerName;

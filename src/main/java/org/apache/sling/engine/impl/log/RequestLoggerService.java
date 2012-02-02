@@ -36,33 +36,33 @@ import org.osgi.framework.BundleContext;
 /**
  * The <code>RequestLoggerService</code> is a factory component which gets
  * configuration to register loggers for the {@link RequestLogger}.
- *
  */
-@Component(metatype=true,label="%request.log.service.name",
-        description="%request.log.service.description", configurationFactory=true,
-        policy=ConfigurationPolicy.REQUIRE)
+@Component(
+        metatype = true,
+        label = "%request.log.service.name",
+        description = "%request.log.service.description",
+        configurationFactory = true,
+        policy = ConfigurationPolicy.REQUIRE)
 @Properties({
-    @Property(name="service.description",value="Factory for configuration based request/access loggers"),
-    @Property(name="service.vendor",value="The Apache Software Foundation")
+    @Property(name = "service.description", value = "Factory for configuration based request/access loggers"),
+    @Property(name = "service.vendor", value = "The Apache Software Foundation")
 })
-@Service(value=RequestLoggerService.class)
-
+@Service(value = RequestLoggerService.class)
 public class RequestLoggerService {
 
     @Property
     public static final String PARAM_FORMAT = "request.log.service.format";
 
-    @Property(value="request.log")
+    @Property(value = "request.log")
     public static final String PARAM_OUTPUT = "request.log.service.output";
 
-    @Property(intValue=0,options={
-            @PropertyOption(name = "0", value = "Logger Name"),
-            @PropertyOption(name = "1", value = "File Name"),
-            @PropertyOption(name = "2", value = "RequestLog Service")
+    @Property(intValue = 0, options = {
+        @PropertyOption(name = "0", value = "Logger Name"), @PropertyOption(name = "1", value = "File Name"),
+        @PropertyOption(name = "2", value = "RequestLog Service")
     })
     public static final String PARAM_OUTPUT_TYPE = "request.log.service.outputtype";
 
-    @Property(boolValue=false)
+    @Property(boolValue = false)
     public static final String PARAM_ON_ENTRY = "request.log.service.onentry";
 
     private static final int OUTPUT_TYPE_LOGGER = 0;
@@ -91,9 +91,7 @@ public class RequestLoggerService {
     void setup(BundleContext bundleContext, Map<String, Object> configuration) {
         // whether to log on request entry or request exit
         Object onEntryObject = configuration.get(PARAM_ON_ENTRY);
-        this.onEntry = (onEntryObject instanceof Boolean)
-                ? ((Boolean) onEntryObject).booleanValue()
-                : false;
+        this.onEntry = (onEntryObject instanceof Boolean) ? ((Boolean) onEntryObject).booleanValue() : false;
 
         // shared or private CustomLogFormat
         Object format = configuration.get(PARAM_FORMAT);
@@ -132,8 +130,7 @@ public class RequestLoggerService {
         return this.onEntry;
     }
 
-    private RequestLog getLog(BundleContext bundleContext, String output,
-            int outputType) {
+    private RequestLog getLog(BundleContext bundleContext, String output, int outputType) {
         switch (outputType) {
             case OUTPUT_TYPE_FILE:
                 // file logging
