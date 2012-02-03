@@ -22,6 +22,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -69,6 +70,26 @@ public class InternalResource extends InstallableResource {
                                     && resource.getDigest() != null
                                     && resource.getDigest().length() > 0) ?
                               (String)dict.get(InstallableResource.RESOURCE_URI_HINT) : null;
+        // check if resourceUri is accessible
+        boolean useResourceUri = resourceUri != null;
+        if ( resourceUri != null ) {
+            InputStream resourceUriIS = null;
+            try {
+                final URI uri = new URI(resourceUri);
+                resourceUriIS = uri.toURL().openStream();
+                // everything fine
+            } catch (final Exception use) {
+                useResourceUri = false;
+            } finally {
+                if ( resourceUriIS != null ) {
+                    try {
+                        resourceUriIS.close();
+                    } catch (final IOException ignore) {
+                        // ignore
+                    }
+                }
+            }
+        }
 
         if ( is != null &&
              (InstallableResource.TYPE_PROPERTIES.equals(type) ||
@@ -89,7 +110,7 @@ public class InternalResource extends InstallableResource {
             digest = FileDataStore.computeDigest(dict);
         } else {
             type = (type != null ? type : InstallableResource.TYPE_FILE);
-            if ( resourceUri != null ) {
+            if ( resourceUri != null && useResourceUri ) {
                 digest = resource.getDigest();
             } else {
                 final String url = scheme + ':' + resource.getId();
@@ -114,7 +135,7 @@ public class InternalResource extends InstallableResource {
                 digest,
                 resource.getPriority(),
                 dataFile,
-                resourceUri);
+                useResourceUri ? resourceUri : null);
     }
 
     /** The unique resource url. */
