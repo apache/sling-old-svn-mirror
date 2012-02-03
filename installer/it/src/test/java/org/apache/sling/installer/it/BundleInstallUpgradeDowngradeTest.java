@@ -161,6 +161,8 @@ public class BundleInstallUpgradeDowngradeTest extends OsgiInstallerTestBase {
                     new BundleEvent(symbolicName, "1.1", org.osgi.framework.BundleEvent.UNINSTALLED));
             assertNull("Test bundle must be gone", findBundle(symbolicName));
         }
+        // let's sleep a little bit to avoid sync problems with the file data store.
+        this.sleep(300);
         {
             final Object listener = this.startObservingBundleEvents();
             installer.updateResources(URL_SCHEME, getInstallableResource(
