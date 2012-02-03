@@ -172,7 +172,7 @@ public class Loader extends BaseImportLoader {
                     if (isRetry) {
                         // log success of retry
                         log.info(
-                            "Retrytring to load initial content for bundle {} succeeded.",
+                            "Retrying to load initial content for bundle {} succeeded.",
                             bundle.getSymbolicName());
                     }
 
