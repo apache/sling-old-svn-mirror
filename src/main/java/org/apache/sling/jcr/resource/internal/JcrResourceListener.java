@@ -186,24 +186,20 @@ public class JcrResourceListener implements EventListener {
                     final int lastSlash = eventPath.lastIndexOf('/');
                     final String nodePath = eventPath.substring(0, lastSlash);
                     final String propName = eventPath.substring(lastSlash + 1);
-                    if ( !addedEvents.containsKey(nodePath) ) {
-                        this.updateChangedEvent(changedEvents, nodePath, event, propName);
-                    }
+                    this.updateChangedEvent(changedEvents, nodePath, event, propName);
+
                 } else if ( event.getType() == Event.NODE_ADDED ) {
                     // check if this is a remove/add operation
                     if ( removedEvents.remove(eventPath) != null ) {
                         this.updateChangedEvent(changedEvents, eventPath, event, null);
                     } else {
-                        changedEvents.remove(eventPath);
                         addedEvents.put(eventPath, event);
                     }
 
                 } else if ( event.getType() == Event.NODE_REMOVED) {
                     // remove is the strongest operation, therefore remove all removed
-                    // paths from changed and added
+                    // paths from added
                     addedEvents.remove(eventPath);
-                    changedEvents.remove(eventPath);
-
                     removedEvents.put(eventPath, event);
                 }
             } catch (final RepositoryException e) {
@@ -213,12 +209,14 @@ public class JcrResourceListener implements EventListener {
 
         for (final Entry<String, Event> e : removedEvents.entrySet()) {
             // Launch an OSGi event
-            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_REMOVED, null);
+            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_REMOVED,
+                changedEvents.remove(e.getKey()));
         }
 
         for (final Entry<String, Event> e : addedEvents.entrySet()) {
             // Launch an OSGi event.
-            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED, null);
+            sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED,
+                changedEvents.remove(e.getKey()));
         }
 
         // Send the changed events.
