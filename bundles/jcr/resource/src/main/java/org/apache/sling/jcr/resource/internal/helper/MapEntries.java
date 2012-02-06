@@ -65,6 +65,8 @@ public class MapEntries implements EventHandler {
 
     public static final String DEFAULT_MAP_ROOT = "/etc/map";
 
+    private static final String JCR_SYSTEM_PREFIX = "/jcr:system/";
+
     static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
 
     /** default log */
@@ -174,10 +176,10 @@ public class MapEntries implements EventHandler {
      * has been null-ed after having been triggered.
      */
     void init() {
-        while (MapEntries.this.resolver != null) {
+        while (this.resolver != null) {
             try {
-                MapEntries.this.initTrigger.acquire();
-                MapEntries.this.doInit();
+                this.initTrigger.acquire();
+                this.doInit();
             } catch (InterruptedException ie) {
                 // just continue acquisition
             }
@@ -307,21 +309,30 @@ public class MapEntries implements EventHandler {
      * appropriate events.
      */
     public void handleEvent(final Event event) {
+
+        // check for path (used for some tests below
+        final Object p = event.getProperty(SlingConstants.PROPERTY_PATH);
+        final String path;
+        if (p instanceof String) {
+            path = (String) p;
+        } else {
+            // not a string path or null, ignore this event
+            return;
+        }
+
+        // don't care for system area
+        if (path.startsWith(JCR_SYSTEM_PREFIX)) {
+            return;
+        }
+
         // check whether a remove event has an influence on vanity paths
         boolean doInit = true;
-        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic())) {
+        if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) && !path.startsWith(this.mapRoot)) {
             doInit = false;
-            final Object p = event.getProperty(SlingConstants.PROPERTY_PATH);
-            if (p instanceof String) {
-                final String path = (String) p;
-                doInit = path.startsWith(this.mapRoot);
-                if (!doInit) {
-                    for (String target : this.vanityTargets) {
-                        if (target.startsWith(path)) {
-                            doInit = true;
-                            break;
-                        }
-                    }
+            for (String target : this.vanityTargets) {
+                if (target.startsWith(path)) {
+                    doInit = true;
+                    break;
                 }
             }
         }
@@ -419,8 +430,17 @@ public class MapEntries implements EventHandler {
             queryString, "sql");
         while (i.hasNext()) {
             Resource resource = i.next();
+
+            // ignore system tree
+            if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
+                log.debug("loadVanityPaths: Ignoring {}", resource);
+                continue;
+            }
+
+            // require properties
             ValueMap row = resource.adaptTo(ValueMap.class);
             if (row == null) {
+                log.debug("loadVanityPaths: Ignoring {} without properties", resource);
                 continue;
             }
 
