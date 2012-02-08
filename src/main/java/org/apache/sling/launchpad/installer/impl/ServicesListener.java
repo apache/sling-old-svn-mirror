@@ -35,8 +35,7 @@ import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>ServicesListener</code> listens for the required services
- * and starts/stops the scanners based on the availability of the
- * services.
+ * and starts the installation support if all services are available.
  */
 public class ServicesListener {
 
@@ -52,44 +51,45 @@ public class ServicesListener {
     /** The listener for the startup handler. */
     private final Listener startupListener;
 
+    /** The registration of the launchpad listener. */
     private ServiceRegistration launchpadListenerReg;
 
+    /** Boolean marker to not reprocess things. */
     private volatile boolean installed = false;
 
+    /**
+     * Start listeners
+     */
     public ServicesListener(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
         this.installerListener = new Listener(OsgiInstaller.class.getName());
         this.providerListener = new Listener(LaunchpadContentProvider.class.getName());
         this.startupListener = new Listener(StartupHandler.class.getName());
+        this.startupListener.start();
         this.installerListener.start();
         this.providerListener.start();
-        this.startupListener.start();
     }
 
+    /**
+     * Notify of service changes from the listeners.
+     * If all services are available, register listener and pass resources
+     * to the OSGi installer.
+     */
     public synchronized void notifyChange() {
         // check if all services are available
         final OsgiInstaller installer = (OsgiInstaller)this.installerListener.getService();
         final LaunchpadContentProvider lcp = (LaunchpadContentProvider)this.providerListener.getService();
-
-        if ( installer != null && lcp != null ) {
-            if ( !installed ) {
-                installed = true;
-                LaunchpadConfigInstaller.install(installer, lcp);
-            }
-        }
         final StartupHandler handler = (StartupHandler)this.startupListener.getService();
-        if ( handler != null ) {
-            if ( launchpadListenerReg == null ) {
+
+        if ( installer != null && lcp != null && handler != null ) {
+            if ( !this.installed ) {
+                this.installed = true;
                 final LaunchpadListener launchpadListener = new LaunchpadListener(handler);
                 final Dictionary<String, Object> props = new Hashtable<String, Object>();
                 props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Launchpad Startup Listener");
                 props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-                launchpadListenerReg = this.bundleContext.registerService(InstallationListener.class.getName(), launchpadListener, props);
-            }
-        } else {
-            if ( launchpadListenerReg != null ) {
-                launchpadListenerReg.unregister();
-                launchpadListenerReg = null;
+                this.launchpadListenerReg = this.bundleContext.registerService(InstallationListener.class.getName(), launchpadListener, props);
+                LaunchpadConfigInstaller.install(installer, lcp);
             }
         }
     }
@@ -101,21 +101,38 @@ public class ServicesListener {
         this.installerListener.deactivate();
         this.providerListener.deactivate();
         this.startupListener.deactivate();
+        if ( this.launchpadListenerReg != null ) {
+            this.launchpadListenerReg.unregister();
+            this.launchpadListenerReg = null;
+        }
     }
 
+    /**
+     * Helper class listening for service events for a defined service.
+     */
     protected final class Listener implements ServiceListener {
 
+        /** The name of the service. */
         private final String serviceName;
 
-        private ServiceReference reference;
-        private Object service;
+        /** The service reference. */
+        private volatile ServiceReference reference;
 
+        /** The service. */
+        private volatile Object service;
+
+        /**
+         * Constructor
+         */
         public Listener(final String serviceName) {
             this.serviceName = serviceName;
         }
 
+        /**
+         * Start the listener.
+         * First register a service listener and then check for the service.
+         */
         public void start() {
-            this.retainService();
             try {
                 bundleContext.addServiceListener(this, "("
                         + Constants.OBJECTCLASS + "=" + serviceName + ")");
@@ -123,15 +140,26 @@ public class ServicesListener {
                 // this should really never happen
                 throw new RuntimeException("Unexpected exception occured.", ise);
             }
+            this.retainService();
         }
 
+        /**
+         * Unregister the listener.
+         */
         public void deactivate() {
             bundleContext.removeServiceListener(this);
         }
 
+        /**
+         * Return the service (if available)
+         */
         public synchronized Object getService() {
             return this.service;
         }
+
+        /**
+         * Try to get the service and notify the change.
+         */
         private synchronized void retainService() {
             if ( this.reference == null ) {
                 this.reference = bundleContext.getServiceReference(this.serviceName);
@@ -146,6 +174,9 @@ public class ServicesListener {
             }
         }
 
+        /**
+         * Try to release the service and notify the change.
+         */
         private synchronized void releaseService() {
             if ( this.reference != null ) {
                 this.service = null;
@@ -159,9 +190,9 @@ public class ServicesListener {
          * @see org.osgi.framework.ServiceListener#serviceChanged(org.osgi.framework.ServiceEvent)
          */
         public void serviceChanged(ServiceEvent event) {
-            if (event.getType() == ServiceEvent.REGISTERED && this.service == null ) {
+            if (event.getType() == ServiceEvent.REGISTERED) {
                 this.retainService();
-            } else if ( event.getType() == ServiceEvent.UNREGISTERING && this.service != null ) {
+            } else if ( event.getType() == ServiceEvent.UNREGISTERING ) {
                 this.releaseService();
             }
         }
