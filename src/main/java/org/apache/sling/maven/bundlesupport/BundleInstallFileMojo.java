@@ -74,7 +74,13 @@ public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
     private String packaging = "jar";
 
     /**
-     * A string of the form groupId:artifactId:version[:packaging].
+     * The classifier of the artifact to install
+     * @parameter expression="${sling.classifier}"
+     */
+    private String classifier;
+
+    /**
+     * A string of the form groupId:artifactId:version[:packaging[:classifier]].
      * @parameter expression="${sling.artifact}"
      */
     private String artifact;
@@ -128,7 +134,7 @@ public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
      * @readonly
      */
     private ArtifactRepository localRepository;
-    
+
     @Override
     protected String getBundleFileName() throws MojoExecutionException {
         String fileName = bundleFileName;
@@ -139,7 +145,7 @@ public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
                 throw new MojoExecutionException("Must provide either sling.file or sling.artifact parameters");
             }
         }
-        
+
         return fileName;
     }
 
@@ -150,17 +156,19 @@ public class BundleInstallFileMojo extends AbstractBundleInstallMojo {
         }
         if (artifactId == null) {
             String[] tokens = StringUtils.split(artifact, ":");
-            if (tokens.length != 3 && tokens.length != 4) {
+            if (tokens.length != 3 && tokens.length != 4 && tokens.length != 5) {
                 throw new MojoExecutionException("Invalid artifact, you must specify "
-                        + "groupId:artifactId:version[:packaging] " + artifact);
+                        + "groupId:artifactId:version[:packaging[:classifier]] " + artifact);
             }
             groupId = tokens[0];
             artifactId = tokens[1];
             version = tokens[2];
-            if (tokens.length == 4)
+            if (tokens.length >= 4)
                 packaging = tokens[3];
+            if (tokens.length == 5)
+                classifier = tokens[4];
         }
-        Artifact packageArtifact = artifactFactory.createBuildArtifact(groupId, artifactId, version, packaging);
+        Artifact packageArtifact = artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, packaging, classifier);
 
         if (pomRemoteRepositories == null) {
             pomRemoteRepositories = new ArrayList();
