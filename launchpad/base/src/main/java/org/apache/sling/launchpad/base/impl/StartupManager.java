@@ -46,6 +46,9 @@ public class StartupManager {
     /** The old data file. */
     private static final String OLD_DATA_FILE = "bundle0" + File.separatorChar + "bootstrapinstaller.ser";
 
+    /** Name of the mode override property. */
+    private static final String OVERRIDE_RPOP = "org.apache.sling.launchpad.startupmode";
+
     /**
      * The {@link Logger} use for logging messages during installation and
      * startup.
@@ -67,7 +70,14 @@ public class StartupManager {
         this.logger = logger;
         this.startupDir = DirectoryUtil.getStartupDir(properties);
         this.confDir = DirectoryUtil.getConfigDir(properties);
-        this.mode = detectMode(properties.get(Constants.FRAMEWORK_STORAGE));
+        // check for override property
+        final String overrideMode = System.getProperty(OVERRIDE_RPOP);
+        if ( overrideMode != null ) {
+            this.mode = StartupMode.valueOf(overrideMode.toUpperCase());
+        } else {
+            this.mode = detectMode(properties.get(Constants.FRAMEWORK_STORAGE));
+        }
+
         this.logger.log(Logger.LOG_INFO, "Starting in mode " + this.mode);
 
         this.targetStartLevel = Long.valueOf(properties.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL));
