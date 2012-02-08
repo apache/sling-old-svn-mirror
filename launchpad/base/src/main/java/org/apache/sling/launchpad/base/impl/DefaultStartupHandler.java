@@ -198,7 +198,7 @@ public class DefaultStartupHandler
      * @see org.apache.sling.launchpad.api.StartupHandler#waitWithStartup(boolean)
      */
     public void waitWithStartup(final boolean flag) {
-        logger.log(Logger.LOG_INFO, "Wait with startup " + flag);
+        logger.log(Logger.LOG_DEBUG, "Wait with startup " + flag);
         if ( flag ) {
             this.startupShouldWait.incrementAndGet();
         } else {
