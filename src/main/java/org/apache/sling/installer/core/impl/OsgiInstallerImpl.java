@@ -39,7 +39,6 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
-import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -120,7 +119,7 @@ public class OsgiInstallerImpl
         // Initialize file util
         new FileDataStore(ctx);
         final File f = FileDataStore.SHARED.getDataFile("RegisteredResourceList.ser");
-        this.listener = new InstallListener(ctx);
+        this.listener = new InstallListener(ctx, logger);
         this.persistentList = new PersistentResourceList(f, listener);
     }
 
@@ -173,31 +172,14 @@ public class OsgiInstallerImpl
         this.logger.info("Apache Sling OSGi Installer Service started.");
     }
 
-    private static final InstallationEvent START_EVENT = new InstallationEvent() {
-
-        public TYPE getType() { return TYPE.STARTED; }
-
-        public Object getSource() { return null; }
-    };
-
-    private static final InstallationEvent SUSPENDED_EVENT = new InstallationEvent() {
-
-        public TYPE getType() { return TYPE.SUSPENDED; }
-
-        public Object getSource() { return null; }
-    };
-
     @Override
     public void run() {
         this.backgroundThreadIsRunning = true;
         try {
             this.init();
-            if ( this.active ) {
-                this.logger.debug("Starting installer");
-                this.listener.onEvent(START_EVENT);
-            }
 
             while (this.active) {
+                this.listener.start();
 
                 // merge potential new resources
                 this.mergeNewlyRegisteredResources();
@@ -219,12 +201,12 @@ public class OsgiInstallerImpl
                             // No tasks to execute - wait until new resources are
                             // registered
                             logger.debug("No tasks to process, going idle");
-                            listener.onEvent(SUSPENDED_EVENT);
+                            this.listener.suspend();
                             try {
                                 this.resourcesLock.wait();
                             } catch (final InterruptedException ignore) {}
                             if ( active ) {
-                                listener.onEvent(START_EVENT);
+                                this.listener.start();
                                 this.logger.debug("Running new installer cycle");
                             }
                         }
@@ -327,10 +309,12 @@ public class OsgiInstallerImpl
     public void updateResources(final String scheme,
                                 final InstallableResource[] resources,
                                 final String[] ids) {
+        synchronized ( this.resourcesLock ) {
+            this.listener.start();
+        }
         try {
             final List<InternalResource> updatedResources = this.createResources(scheme, resources);
 
-            boolean doProcess = false;
             synchronized ( this.resourcesLock ) {
                 if ( updatedResources != null && updatedResources.size() > 0 ) {
                     this.newResources.addAll(updatedResources);
@@ -346,7 +330,6 @@ public class OsgiInstallerImpl
                             urlIter.remove();
                         }
                     }
-                    doProcess = true;
                 }
                 if ( ids != null && ids.length > 0 ) {
                     final Set<String> removedUrls = new HashSet<String>();
@@ -367,12 +350,9 @@ public class OsgiInstallerImpl
                             rsrcIter.remove();
                         }
                     }
-                    doProcess = true;
                 }
             }
-            if ( doProcess ) {
-                this.wakeUp();
-            }
+            this.wakeUp();
         } finally {
             // we simply close all input streams now
             this.closeInputStreams(resources);
@@ -382,6 +362,9 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[])
      */
     public void registerResources(final String scheme, final InstallableResource[] resources) {
+        synchronized ( this.resourcesLock ) {
+            this.listener.start();
+        }
         try {
             List<InternalResource> registeredResources = this.createResources(scheme, resources);
             if ( registeredResources == null ) {
