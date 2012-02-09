@@ -32,6 +32,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.launchpad.base.shared.Launcher;
@@ -151,6 +152,25 @@ public class SlingServlet extends GenericServlet implements Notifiable {
         Servlet delegatee = sling;
         if (delegatee != null) {
 
+            // check for problematic application servers like WebSphere
+            // where path info and servlet path is set wrong SLING-2410
+            final HttpServletRequest request = (HttpServletRequest) req;
+            if ( request.getPathInfo() == null && request.getServletPath() != null
+                    && request.getServletPath().endsWith(".jsp") ) {
+                req = new HttpServletRequestWrapper(request) {
+
+                    @Override
+                    public String getPathInfo() {
+                        return request.getServletPath();
+                    }
+
+                    @Override
+                    public String getServletPath() {
+                        return "";
+                    }
+
+                };
+            }
             delegatee.service(req, res);
 
         } else if (startFailureCounter > MAX_START_FAILURES) {
