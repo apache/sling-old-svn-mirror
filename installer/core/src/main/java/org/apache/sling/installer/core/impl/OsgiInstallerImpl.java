@@ -217,6 +217,7 @@ public class OsgiInstallerImpl
                 }
 
             }
+            this.listener.suspend();
         } finally {
             this.backgroundThreadIsRunning = false;
         }
