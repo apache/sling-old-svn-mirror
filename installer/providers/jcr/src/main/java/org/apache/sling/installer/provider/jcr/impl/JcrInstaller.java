@@ -552,24 +552,54 @@ public class JcrInstaller implements EventListener, UpdateHandler {
         }
         final int pos = url.indexOf(':');
         final String path = url.substring(pos + 1);
-        // remove
-        logger.debug("Removal of {}", path);
-        Session session = null;
-        try {
-            session = this.repository.loginAdministrative(null);
-            if ( session.itemExists(path) ) {
-                session.getItem(path).remove();
-                session.save();
-            }
-        } catch (final RepositoryException re) {
-            logger.error("Unable to remove resource from " + path, re);
+
+        // check path (SLING-2407)
+        // 0. Check protocol
+        if ( !url.startsWith(URL_SCHEME) ) {
+            logger.debug("Not removing unmanaged artifact from repository: {}", url);
             return null;
-        } finally {
-            if ( session != null ) {
-                session.logout();
+        }
+        // 1. Is this a system configuration then don't delete
+        final String[] rootPaths = this.folderNameFilter.getRootPaths();
+        final String systemConfigRootPath = rootPaths[rootPaths.length - 1];
+        if ( path.startsWith(systemConfigRootPath) ) {
+            logger.debug("Not removing system artifact from repository at {}", path);
+            return null;
+        }
+        // 2. Is this configuration provisioned by us
+        boolean found = false;
+        int lastSlash = path.lastIndexOf('/');
+        while (!found && lastSlash > 1) {
+            final String prefix = path.substring(0, lastSlash);
+            if ( this.folderNameFilter.getPriority(prefix) != -1 ) {
+                found = true;
+            } else {
+                lastSlash = prefix.lastIndexOf('/');
             }
         }
-        return new UpdateResult(url);
+        if ( found ) {
+            // remove
+            logger.debug("Removing artifact at {}", path);
+            Session session = null;
+            try {
+                session = this.repository.loginAdministrative(null);
+                if ( session.itemExists(path) ) {
+                    session.getItem(path).remove();
+                    session.save();
+                }
+            } catch (final RepositoryException re) {
+                logger.error("Unable to remove resource from " + path, re);
+                return null;
+            } finally {
+                if ( session != null ) {
+                    session.logout();
+                }
+            }
+            return new UpdateResult(url);
+        }
+        // not provisioned by us
+        logger.debug("Not removing unmanaged artifact from repository at {}", path);
+        return null;
     }
 
     /**
