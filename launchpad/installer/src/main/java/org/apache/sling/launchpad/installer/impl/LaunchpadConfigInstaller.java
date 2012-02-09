@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -32,6 +34,10 @@ import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * This class scans the launchpad resources folder and provides the artifacts
+ * to the OSGi installer.
+ */
 public class LaunchpadConfigInstaller {
 
     /**
@@ -48,8 +54,12 @@ public class LaunchpadConfigInstaller {
      */
     private static final String ROOT_INSTALL_PATH = "resources/install";
 
+    /** Artifact priority. */
     private static final Integer PRIORITY = new Integer(50);
 
+    /**
+     * Check the path for installable artifacts.
+     */
     private static boolean checkPath(final LaunchpadContentProvider resourceProvider,
             final Collection<InstallableResource> installables,
             final String rootPath,
@@ -66,7 +76,6 @@ public class LaunchpadConfigInstaller {
                     path = path.substring(0, path.length() - 1);
                 }
                 if ( !checkPath(resourceProvider, installables, path, resourceType) ) {
-                    logger.info("Launchpad {} will be installed: {}", resourceType, path);
                     final URL url = resourceProvider.getResource(path);
                     Dictionary<String, Object> dict = null;
                     if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
@@ -94,6 +103,9 @@ public class LaunchpadConfigInstaller {
         return count > 0;
     }
 
+    /**
+     * Install artifacts
+     */
     public static void install(final OsgiInstaller installer,
             final LaunchpadContentProvider resourceProvider) {
         final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
@@ -109,7 +121,46 @@ public class LaunchpadConfigInstaller {
         checkPath(resourceProvider, installables, ROOT_INSTALL_PATH, InstallableResource.TYPE_FILE);
 
         final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
+        // sort by url to have lower start levels first
+        Arrays.sort(toInstall, new ResourceComparator());
+        for(final InstallableResource rsrc : toInstall ) {
+            logger.info("Launchpad {} will be installed: {}", rsrc.getType(), rsrc.getId());
+        }
         installer.registerResources("launchpad", (toInstall));
         logger.info("{} resources registered with OsgiInstaller", toInstall.length);
+    }
+
+    /**
+     * Resource comparator
+     */
+    private static final class ResourceComparator implements Comparator<InstallableResource> {
+
+        private Integer getStartLevel(final InstallableResource ir) {
+            try {
+                final Integer level = Integer.valueOf((String)ir.getDictionary().get(InstallableResource.INSTALLATION_HINT));
+                if ( level == 0 ) {
+                    return 100;
+                }
+                return level;
+            } catch ( final NumberFormatException ignore) {
+                return 1000;
+            }
+        }
+
+        /**
+         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         */
+        public int compare(final InstallableResource o1,
+                           final InstallableResource o2) {
+            int result = o2.getType().compareTo(o1.getType());
+            if ( result == 0 ) {
+                if ( o1.getType() == InstallableResource.TYPE_PROPERTIES ) {
+                    result = o1.getId().compareTo(o2.getId());
+                } else {
+                    result = getStartLevel(o1).compareTo(getStartLevel(o2));
+                }
+            }
+            return result;
+        }
     }
 }
