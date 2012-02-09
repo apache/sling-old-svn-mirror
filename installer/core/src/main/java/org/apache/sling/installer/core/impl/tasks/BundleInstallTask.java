@@ -18,7 +18,6 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
-import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
@@ -41,36 +40,14 @@ public class BundleInstallTask extends AbstractBundleTask {
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
-        int startLevel = 0;
-        final Object providedLevel;
-
-        if (this.getResource().getDictionary() != null) {
-            if ( this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL) != null ) {
-                providedLevel = this.getResource().getDictionary().get(InstallableResource.BUNDLE_START_LEVEL);
-            } else {
-                providedLevel = this.getResource().getDictionary().get(InstallableResource.INSTALLATION_HINT);
-            }
-        } else {
-            providedLevel = null;
-        }
-        if ( providedLevel != null ) {
-            if ( providedLevel instanceof Number ) {
-                startLevel = ((Number)providedLevel).intValue();
-            } else {
-                try {
-                    startLevel = Integer.valueOf(providedLevel.toString());
-                } catch (final NumberFormatException nfe) {
-                    // ignore this
-                }
-            }
-        }
-        // get the start level service (if possible) so we can set the initial start level
-        final StartLevel startLevelService = this.getStartLevel();
+        final int startLevel = this.getBundleStartLevel();
         try {
             final Bundle b = this.getBundleContext().installBundle(getResource().getURL(), getResource().getInputStream());
             ctx.log("Installed bundle {} from resource {}", b, getResource());
             // optionally set the start level
             if ( startLevel > 0 ) {
+                // get the start level service (if possible) so we can set the initial start level
+                final StartLevel startLevelService = this.getStartLevel();
                 if (startLevelService != null) {
                     startLevelService.setBundleStartLevel(b, startLevel);
                 } else {
@@ -90,6 +67,6 @@ public class BundleInstallTask extends AbstractBundleTask {
 
     @Override
     public String getSortKey() {
-        return BUNDLE_INSTALL_ORDER + getResource().getURL();
+        return BUNDLE_INSTALL_ORDER + getSortableStartLevel() + "-" + getResource().getURL();
     }
 }

@@ -120,7 +120,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
 
     @Override
     public String getSortKey() {
-        return BUNDLE_UPDATE_ORDER + getResource().getEntityId();
+        return BUNDLE_UPDATE_ORDER + getSortableStartLevel() + "-" + getResource().getEntityId();
     }
 
     private boolean isSystemBundleFragment(final Bundle installedBundle) {
