@@ -31,34 +31,34 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
     private volatile long n;
 
     // shortest request
-    private volatile long min;
+    private volatile long durationMsecMin;
 
     // longest request
-    private volatile long max;
+    private volatile long durationMsecMax;
 
     // sum of request durations
-    private volatile double sumX;
+    private volatile double durationMsecSumX;
 
     // sum of squared request durations
-    private volatile double sumX2;
+    private volatile double durationMsecSumX2;
 
     RequestProcessorMBeanImpl() throws NotCompliantMBeanException {
         super(RequestProcessorMBean.class);
         resetStatistics();
     }
 
-    synchronized void addRequestDuration(final long value) {
+    synchronized void addRequestData(final long duration) {
         this.n++;
 
-        if (value < this.min) {
-            this.min = value;
+        if (duration < this.durationMsecMin) {
+            this.durationMsecMin = duration;
         }
-        if (value > this.max) {
-            this.max = value;
+        if (duration > this.durationMsecMax) {
+            this.durationMsecMax = duration;
         }
 
-        this.sumX += value;
-        this.sumX2 += (value * value);
+        this.durationMsecSumX += duration;
+        this.durationMsecSumX2 += (duration * duration);
     }
 
     public long getRequestsCount() {
@@ -66,11 +66,11 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
     }
 
     public long getMinRequestDurationMsec() {
-        return this.min;
+        return this.durationMsecMin;
     }
 
     public long getMaxRequestDurationMsec() {
-        return this.max;
+        return this.durationMsecMax;
     }
 
     public synchronized double getStandardDeviationDurationMsec() {
@@ -78,7 +78,7 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
             // algorithm taken from
             // http://de.wikipedia.org/wiki/Standardabweichung section
             // "Berechnung für auflaufende Messwerte"
-            return Math.sqrt((this.sumX2 - this.sumX * this.sumX / this.n) / (this.n - 1));
+            return Math.sqrt((this.durationMsecSumX2 - this.durationMsecSumX * this.durationMsecSumX / this.n) / (this.n - 1));
         }
 
         // single data point has no deviation
@@ -86,12 +86,16 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
     }
 
     public synchronized double getMeanRequestDurationMsec() {
-        return this.sumX / this.n;
+        if (this.n > 1) {
+            return this.durationMsecSumX / this.n;
+        } else {
+            return 0;
+        }
     }
 
     public synchronized void resetStatistics() {
-        this.min = Long.MAX_VALUE;
-        this.max = 0;
+        this.durationMsecMin = Long.MAX_VALUE;
+        this.durationMsecMax = 0;
         this.n = 0;
     }
 
