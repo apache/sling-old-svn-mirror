@@ -225,7 +225,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         } finally {
             long elapsed = System.currentTimeMillis() - startTimestamp;
             if (mbean != null) {
-                mbean.addRequestDuration(elapsed);
+                mbean.addRequestData(elapsed);
             }
         }
     }

@@ -39,6 +39,12 @@ public class RequestProcessorMBeanImplTest extends TestCase {
         final SummaryStatistics mathStats = new SummaryStatistics();
         final RequestProcessorMBeanImpl bean = new RequestProcessorMBeanImpl();
 
+        assertEquals(0l, bean.getRequestsCount());
+        assertEquals(Long.MAX_VALUE, bean.getMinRequestDurationMsec());
+        assertEquals(0l, bean.getMaxRequestDurationMsec());
+        assertEquals(0.0, bean.getMeanRequestDurationMsec());
+        assertEquals(0.0, bean.getStandardDeviationDurationMsec());
+
         final Random random = new Random(System.currentTimeMillis() / 17);
         final int num = 10000;
         final int min = 85;
@@ -46,7 +52,7 @@ public class RequestProcessorMBeanImplTest extends TestCase {
         for (int i = 0; i < num; i++) {
             final long value = min + random.nextInt(max - min);
             mathStats.addValue(value);
-            bean.addRequestDuration(value);
+            bean.addRequestData(value);
         }
 
         TestCase.assertEquals("Number of points must be the same", mathStats.getN(), bean.getRequestsCount());
