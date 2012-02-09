@@ -903,7 +903,9 @@ public class OsgiInstallerImpl
                     if ( tr.getState() != ResourceState.IGNORED ) {
                         final UpdateHandler handler = this.findHandler(tr.getScheme());
                         if ( handler == null ) {
+                            // set to ignored
                             logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
+                            ((RegisteredResourceImpl)tr).setState(ResourceState.IGNORED);
                         } else {
                             // we don't need to check the result, we just check if a result is returned
                             if ( handler.handleRemoval(resourceType, resourceId, tr.getURL()) != null ) {
@@ -911,18 +913,18 @@ public class OsgiInstallerImpl
                                 ((RegisteredResourceImpl)tr).setState(ResourceState.UNINSTALL);
                                 erl.setFinishState(ResourceState.UNINSTALLED);
                                 erl.compact();
-                                this.persistentList.save();
-                                this.scheduleRetry();
                             } else {
+                                // set to ignored
                                 logger.debug("No handler found to handle remove of resource with scheme {}", tr.getScheme());
+                                ((RegisteredResourceImpl)tr).setState(ResourceState.IGNORED);
                             }
                         }
                     } else {
                         // if it has been ignored before, we activate it now again!
                         ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
-                        this.persistentList.save();
-                        this.scheduleRetry();
                     }
+                    this.persistentList.save();
+                    this.scheduleRetry();
                 }
             }
         }
