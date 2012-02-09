@@ -108,7 +108,7 @@ public class InstallListener implements InstallationListener {
     /**
      * Send suspended event.
      */
-    public void suspend() {
+    public synchronized void suspend() {
         if ( this.started ) {
             this.started = false;
             this.onEvent(SUSPENDED_EVENT);
