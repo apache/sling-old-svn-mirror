@@ -137,6 +137,9 @@ public class DefaultStartupHandler
             this.expectedBundlesCount = 10;
         }
 
+        this.bundleContext.registerService(StartupHandler.class.getName(), this, null);
+        logger.log(Logger.LOG_INFO, "Started startup handler with target start level="
+               + String.valueOf(this.targetStartLevel) + ", and expected bundle count=" + String.valueOf(this.expectedBundlesCount));
         final Thread t = new Thread(this);
         t.start();
     }
@@ -159,9 +162,6 @@ public class DefaultStartupHandler
      * @see java.lang.Runnable#run()
      */
     public void run() {
-        this.bundleContext.registerService(StartupHandler.class.getName(), this, null);
-        logger.log(Logger.LOG_INFO, "Started startup handler with target start level="
-               + String.valueOf(this.targetStartLevel) + ", and expected bundle count=" + String.valueOf(this.expectedBundlesCount));
         while ( !this.finished.get() ) {
             Boolean doInc = null;
             try {
