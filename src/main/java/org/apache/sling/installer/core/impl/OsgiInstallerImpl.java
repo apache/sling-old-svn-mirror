@@ -900,7 +900,14 @@ public class OsgiInstallerImpl
                 key = resourceType + ':' + resourceId;
                 final TaskResource tr = erl.getFirstResource();
                 if ( tr != null ) {
-                    if ( tr.getState() != ResourceState.IGNORED ) {
+                    if ( tr.getState() == ResourceState.IGNORED ) {
+                        // if it has been ignored before, we activate it now again!
+                        ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                        this.persistentList.save();
+                        this.scheduleRetry();
+                    } else if ( tr.getState() == ResourceState.UNINSTALLED ) {
+                        // it has already been removed - nothing do to
+                    } else {
                         final UpdateHandler handler = this.findHandler(tr.getScheme());
                         if ( handler == null ) {
                             // set to ignored
@@ -919,12 +926,9 @@ public class OsgiInstallerImpl
                                 ((RegisteredResourceImpl)tr).setState(ResourceState.IGNORED);
                             }
                         }
-                    } else {
-                        // if it has been ignored before, we activate it now again!
-                        ((RegisteredResourceImpl)tr).setState(ResourceState.INSTALL);
+                        this.persistentList.save();
+                        this.scheduleRetry();
                     }
-                    this.persistentList.save();
-                    this.scheduleRetry();
                 }
             }
         }
