@@ -86,7 +86,7 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
     }
 
     public synchronized double getMeanRequestDurationMsec() {
-        if (this.n > 1) {
+        if (this.n > 0) {
             return this.durationMsecSumX / this.n;
         } else {
             return 0;
