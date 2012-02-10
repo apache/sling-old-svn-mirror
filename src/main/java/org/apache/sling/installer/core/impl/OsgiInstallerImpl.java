@@ -227,6 +227,7 @@ public class OsgiInstallerImpl
      * Wake up the run cycle.
      */
     private void wakeUp() {
+        this.listener.start();
         synchronized (this.resourcesLock) {
             this.resourcesLock.notify();
         }
@@ -310,9 +311,7 @@ public class OsgiInstallerImpl
     public void updateResources(final String scheme,
                                 final InstallableResource[] resources,
                                 final String[] ids) {
-        synchronized ( this.resourcesLock ) {
-            this.listener.start();
-        }
+        this.listener.start();
         try {
             final List<InternalResource> updatedResources = this.createResources(scheme, resources);
 
@@ -363,9 +362,7 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[])
      */
     public void registerResources(final String scheme, final InstallableResource[] resources) {
-        synchronized ( this.resourcesLock ) {
-            this.listener.start();
-        }
+        this.listener.start();
         try {
             List<InternalResource> registeredResources = this.createResources(scheme, resources);
             if ( registeredResources == null ) {
@@ -723,6 +720,7 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.tasks.RetryHandler#scheduleRetry()
      */
     public void scheduleRetry() {
+        this.listener.start();
         synchronized ( this.resourcesLock ) {
             this.retryDuringTaskExecution = true;
         }
