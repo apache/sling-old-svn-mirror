@@ -232,7 +232,7 @@ public class Sling {
             startupManager.markInstalled();
 
             if (restart) {
-                stop(tmpFramework);
+                restart(tmpFramework);
                 tmpFramework = createFramework(notifiable, logger, props);
                 init(tmpFramework);
             }
@@ -366,10 +366,13 @@ public class Sling {
         this.startup(framework.getBundleContext());
     }
 
-    private void stop(final Framework framework) throws BundleException {
+    private void restart(final Framework framework) throws BundleException {
         if ((framework.getState() & (Bundle.STARTING|Bundle.ACTIVE|Bundle.STOPPING)) != 0) {
-            framework.stop();
-
+            if ( framework instanceof SlingFelix ) {
+                ((SlingFelix)framework).restart();
+            } else {
+                framework.stop();
+            }
             try {
                 framework.waitForStop(REINIT_TIMEOUT);
             } catch (InterruptedException ie) {
