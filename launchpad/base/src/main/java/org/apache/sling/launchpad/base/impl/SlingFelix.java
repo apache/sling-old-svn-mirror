@@ -63,6 +63,10 @@ public class SlingFelix extends Felix {
         super.stop();
     }
 
+    public void restart() throws BundleException {
+        super.stop();
+    }
+
     @Override
     public void stop() throws BundleException {
         startNotifier(false, null);
