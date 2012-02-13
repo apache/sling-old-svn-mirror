@@ -70,7 +70,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
         EventListener {
 
     private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
-    
+
     @Property(value = "")
     private static final String PROP_USER = "user";
 
@@ -123,9 +123,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * {@link #getRootResourceBundle()}.
      */
     private ResourceBundle rootResourceBundle;
-    
+
     private BundleContext bundleContext;
-    
+
     private List<ServiceRegistration> bundleServiceRegistrations;
 
     private boolean preloadBundles;
@@ -219,7 +219,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
             t.start();
         }
     }
-    
+
     protected void deactivate() {
         clearCache();
     }
@@ -280,13 +280,14 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                     new Object[] { baseName, locale
                             });
             } else {
+                Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
+                if (key.baseName != null) {
+                    serviceProps.put("baseName", key.baseName);
+                }
+                serviceProps.put("locale", key.locale.toString());
+                ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(),
+                    resourceBundle, serviceProps);
                 synchronized (this) {
-                    Dictionary<Object, Object> serviceProps = new Hashtable<Object, Object>();
-                    if (key.baseName != null) {
-                        serviceProps.put("baseName", key.baseName);
-                    }
-                    serviceProps.put("locale", key.locale.toString());
-                    ServiceRegistration serviceReg = bundleContext.registerService(ResourceBundle.class.getName(), resourceBundle, serviceProps);
                     bundleServiceRegistrations.add(serviceReg);
                 }
             }
@@ -428,17 +429,21 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
         return resourceResolver;
     }
-    
+
     private void clearCache() {
         resourceBundleCache.clear();
+
+        ServiceRegistration[] serviceRegs;
         synchronized (this) {
-            for (ServiceRegistration serviceReg : bundleServiceRegistrations) {
-                serviceReg.unregister();
-            }
+            serviceRegs = bundleServiceRegistrations.toArray(new ServiceRegistration[bundleServiceRegistrations.size()]);
             bundleServiceRegistrations.clear();
         }
+
+        for (ServiceRegistration serviceReg : serviceRegs) {
+            serviceReg.unregister();
+        }
     }
-    
+
     private void preloadBundles() {
         if (preloadBundles) {
             @SuppressWarnings("deprecation")
@@ -457,7 +462,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                     if (usedKeys.add(key)) {
                         getResourceBundle(baseName, locale);
                     }
-                }   
+                }
             }
         }
     }
