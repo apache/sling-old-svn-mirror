@@ -25,6 +25,10 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -54,16 +58,17 @@ import org.slf4j.LoggerFactory;
  * status is sent where the target is the relative URL from the current resource
  * to the target resource. Selectors, extension, suffix and query string are
  * also appended to the redirect URL.
- *
- * @scr.component immediate="true"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="service.description" value="Request Redirect Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.resourceTypes" value="sling:redirect"  private="true"
- * @scr.property name="sling.servlet.methods" value="GET" private="true"
- * @scr.property name="sling.servlet.prefix" value="-1" type="Integer"
- *               private="true"
  */
+@SuppressWarnings("serial")
+@Component(immediate=true, metatype=true)
+@Service(Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Request Redirect Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.resourceTypes", value="sling:redirect", propertyPrivate=true),
+    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true),
+    @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true)   
+})
 public class RedirectServlet extends SlingSafeMethodsServlet {
 
     /** The name of the target property */
@@ -77,11 +82,11 @@ public class RedirectServlet extends SlingSafeMethodsServlet {
 
     private Servlet jsonRendererServlet;
 
-    /** @scr.property valueRef="DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS" type="Integer" */
-    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
-
     /** Default value for the maximum amount of results that should be returned by the jsonResourceWriter */
     public static final int DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS = 200;
+
+    @Property(intValue=DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS)
+    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
 
     private int jsonMaximumResults;
 

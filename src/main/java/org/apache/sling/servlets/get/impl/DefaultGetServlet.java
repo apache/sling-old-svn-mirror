@@ -26,6 +26,10 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -44,23 +48,20 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A SlingSafeMethodsServlet that renders the current Resource as simple HTML
- *
- * @scr.component name="org.apache.sling.servlets.get.DefaultGetServlet"
- *                immediate="true" label="%servlet.get.name"
- *                description="%servlet.get.description"
- * @scr.service interface="javax.servlet.Servlet"
- *
- * @scr.property name="service.description" value="Default GET Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
- * Use this as a default servlet for Sling
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default" private="true"
- * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
- *
- * Generic handler for all get requests
- * @scr.property name="sling.servlet.methods" value="GET" private="true"
  */
+@Component(immediate=true, metatype=true, name="org.apache.sling.servlets.get.DefaultGetServlet", label="%servlet.get.name", description="%servlet.get.description")
+@Service(Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Default GET Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    
+    // Use this as a default servlet for Sling
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default", propertyPrivate=true),
+    @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true),
+    
+    // Generic handler for all get requests
+    @Property(name="sling.servlet.methods", value="GET", propertyPrivate=true)
+})
 public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = -5815904221043005085L;
@@ -71,40 +72,40 @@ public class DefaultGetServlet extends SlingSafeMethodsServlet {
 
     private Servlet streamerServlet;
 
-    /** @scr.property */
+    @Property
     private static final String ALIAS_PROPERTY = "aliases";
-
-    /** @scr.property valueRef="DEFAULT_INDEX_PROPERTY" type="Boolean" */
-    private static final String INDEX_PROPERTY = "index";
 
     private static final boolean DEFAULT_INDEX_PROPERTY = false;
 
-    /** @scr.property valueRef="DEFAULT_INDEX_FILES_PROPERTY" */
-    private static final String INDEX_FILES_PROPERTY = "index.files";
+    @Property(boolValue=DEFAULT_INDEX_PROPERTY)
+    private static final String INDEX_PROPERTY = "index";
 
     private static final String[] DEFAULT_INDEX_FILES_PROPERTY = { "index",
         "index.html" };
 
+    @Property(value={ "index", "index.html" })
+    private static final String INDEX_FILES_PROPERTY = "index.files";
+
     /** Default value for renderer selection (value is "true"). */
     private static final boolean DEFAULT_RENDERER_PROPERTY = true;
 
-    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
     private static final String HTML_RENDERER_PROPERTY = "enable.html";
 
-    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
     private static final String TXT_RENDERER_PROPERTY = "enable.txt";
 
-    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
     private static final String JSON_RENDERER_PROPERTY = "enable.json";
 
-    /** @scr.property valueRef="DEFAULT_RENDERER_PROPERTY" type="Boolean" */
+    @Property(boolValue=DEFAULT_RENDERER_PROPERTY)
     private static final String XML_RENDERER_PROPERTY = "enable.xml";
-    
-    /** @scr.property valueRef="DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS" type="Integer" */
-    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
     
     /** Default value for the maximum amount of results that should be returned by the jsonResourceWriter */
     public static final int DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS = 200;
+    
+    @Property(intValue=DEFAULT_JSON_RENDERER_MAXIMUM_RESULTS)
+    public static final String JSON_RENDERER_MAXIMUM_RESULTS_PROPERTY = "json.maximumresults";
     
     private int jsonMaximumResults;
     
