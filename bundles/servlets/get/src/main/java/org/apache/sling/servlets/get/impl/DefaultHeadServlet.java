@@ -23,9 +23,15 @@ import java.io.PrintWriter;
 import java.io.Writer;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -41,18 +47,16 @@ import org.slf4j.LoggerFactory;
  * output which does not really write to the client and the forwards to the same
  * requested URL (resource actually) acting as if the request was placed with a
  * <i>GET</i> method.
- *
- * @scr.component immediate="true" metatype="no" policy="ignore"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="service.description" value="Default HEAD Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *               Use this as a default servlet for Sling
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" Generic
- *               handler for all get requests
- * @scr.property name="sling.servlet.methods" value="HEAD"
  */
+@Component(immediate=true, policy=ConfigurationPolicy.IGNORE)
+@Service(Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Default HEAD Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.prefix", intValue=-1),
+    @Property(name="sling.servlet.methods", value="HEAD")    
+})
 public class DefaultHeadServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 7416222678552027044L;

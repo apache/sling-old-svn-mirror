@@ -24,8 +24,13 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
@@ -35,13 +40,15 @@ import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>SlingInfoServlet</code> TODO
- *
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.component immediate="true" metatype="no"
- * @scr.property name="service.description" value="Sling Info Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.paths" value="/system/sling/info"
  */
+@SuppressWarnings("serial")
+@Component(immediate=true)
+@Service(Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Sling Info Servlet"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.paths", value="/system/sling/info")
+})
 public class SlingInfoServlet extends SlingSafeMethodsServlet {
     
     /**
