@@ -52,6 +52,9 @@ public interface ResourceDecorator {
      * @param resource The resource to decorate
      * @param request The current request.
      * @return The decorated resource, the original resource or null.
+     * 
+     * @deprecated since 2.3.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
+    @Deprecated
     Resource decorate(Resource resource, HttpServletRequest request);
 }
