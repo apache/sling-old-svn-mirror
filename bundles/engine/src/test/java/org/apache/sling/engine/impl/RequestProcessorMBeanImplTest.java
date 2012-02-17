@@ -18,15 +18,28 @@
  */
 package org.apache.sling.engine.impl;
 
+import static org.junit.Assert.*;
+
 import java.util.Random;
 
 import javax.management.NotCompliantMBeanException;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.math.stat.descriptive.SummaryStatistics;
+import org.apache.sling.engine.impl.request.RequestData;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JMock;
+import org.jmock.integration.junit4.JUnit4Mockery;
+import org.jmock.lib.legacy.ClassImposteriser;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-public class RequestProcessorMBeanImplTest extends TestCase {
+@RunWith(JMock.class)
+public class RequestProcessorMBeanImplTest {
+    
+    private Mockery context = new JUnit4Mockery() {{
+        setImposteriser(ClassImposteriser.INSTANCE);
+    }};
 
     /**
      * Asserts that the simple standard deviation algorithm used by the
@@ -35,38 +48,82 @@ public class RequestProcessorMBeanImplTest extends TestCase {
      *
      * @throws NotCompliantMBeanException not expected
      */
+    @Test
     public void test_statistics() throws NotCompliantMBeanException {
-        final SummaryStatistics mathStats = new SummaryStatistics();
+        final SummaryStatistics durationStats = new SummaryStatistics();
+        final SummaryStatistics servletCallCountStats = new SummaryStatistics();
+        final SummaryStatistics peakRecursionDepthStats = new SummaryStatistics();
         final RequestProcessorMBeanImpl bean = new RequestProcessorMBeanImpl();
 
         assertEquals(0l, bean.getRequestsCount());
         assertEquals(Long.MAX_VALUE, bean.getMinRequestDurationMsec());
         assertEquals(0l, bean.getMaxRequestDurationMsec());
-        assertEquals(0.0, bean.getMeanRequestDurationMsec());
-        assertEquals(0.0, bean.getStandardDeviationDurationMsec());
+        assertEquals(0.0, bean.getMeanRequestDurationMsec(), 0);
+        assertEquals(0.0, bean.getStandardDeviationDurationMsec(), 0);
+
+        assertEquals(Integer.MAX_VALUE, bean.getMinServletCallCount());
+        assertEquals(0l, bean.getMaxServletCallCount());
+        assertEquals(0.0, bean.getMeanServletCallCount(), 0);
+        assertEquals(0.0, bean.getStandardDeviationServletCallCount(), 0);
+
+        assertEquals(Integer.MAX_VALUE, bean.getMinPeakRecursionDepth());
+        assertEquals(0l, bean.getMaxPeakRecursionDepth());
+        assertEquals(0.0, bean.getMeanPeakRecursionDepth(), 0);
+        assertEquals(0.0, bean.getStandardDeviationPeakRecursionDepth(), 0);
 
         final Random random = new Random(System.currentTimeMillis() / 17);
         final int num = 10000;
         final int min = 85;
         final int max = 250;
         for (int i = 0; i < num; i++) {
-            final long value = min + random.nextInt(max - min);
-            mathStats.addValue(value);
-            bean.addRequestData(value);
+            final long durationValue = min + random.nextInt(max - min);
+            final int callCountValue = min + random.nextInt(max - min);
+            final int peakRecursionDepthValue = min + random.nextInt(max - min);
+            durationStats.addValue(durationValue);
+            servletCallCountStats.addValue(callCountValue);
+            peakRecursionDepthStats.addValue(peakRecursionDepthValue);
+            
+            final RequestData requestData = context.mock(RequestData.class, "requestData" + i);
+            context.checking(new Expectations() {{
+                one(requestData).getElapsedTimeMsec();
+                will(returnValue(durationValue));
+                
+                one(requestData).getServletCallCount();
+                will(returnValue(callCountValue));
+                
+                one(requestData).getPeakRecusionDepth();
+                will(returnValue(peakRecursionDepthValue));
+            }});
+            
+            
+            bean.addRequestData(requestData);
         }
 
-        TestCase.assertEquals("Number of points must be the same", mathStats.getN(), bean.getRequestsCount());
-        TestCase.assertEquals("Min must be equal", (long) mathStats.getMin(), bean.getMinRequestDurationMsec());
-        TestCase.assertEquals("Max must be equal", (long) mathStats.getMax(), bean.getMaxRequestDurationMsec());
-        assertAlmostEqual("Mean", mathStats.getMean(), bean.getMeanRequestDurationMsec(), num);
-        assertAlmostEqual("Standard Deviation", mathStats.getStandardDeviation(),
+        assertEquals("Number of points must be the same", durationStats.getN(), bean.getRequestsCount());
+        
+        assertEquals("Min Duration must be equal", (long) durationStats.getMin(), bean.getMinRequestDurationMsec());
+        assertEquals("Max Duration must be equal", (long) durationStats.getMax(), bean.getMaxRequestDurationMsec());
+        assertAlmostEqual("Mean Duration", durationStats.getMean(), bean.getMeanRequestDurationMsec(), num);
+        assertAlmostEqual("Standard Deviation Duration", durationStats.getStandardDeviation(),
             bean.getStandardDeviationDurationMsec(), num);
+        
+        assertEquals("Min Servlet Call Count must be equal", (long) servletCallCountStats.getMin(), bean.getMinServletCallCount());
+        assertEquals("Max Servlet Call Count must be equal", (long) servletCallCountStats.getMax(), bean.getMaxServletCallCount());
+        assertAlmostEqual("Mean Servlet Call Count", servletCallCountStats.getMean(), bean.getMeanServletCallCount(), num);
+        assertAlmostEqual("Standard Deviation Servlet Call Count", servletCallCountStats.getStandardDeviation(),
+            bean.getStandardDeviationServletCallCount(), num);
+        
+        assertEquals("Min Peak Recursion Depth must be equal", (long) peakRecursionDepthStats.getMin(), bean.getMinPeakRecursionDepth());
+        assertEquals("Max Peak Recursion Depth must be equal", (long) peakRecursionDepthStats.getMax(), bean.getMaxPeakRecursionDepth());
+        assertAlmostEqual("Mean Peak Recursion Depth", peakRecursionDepthStats.getMean(), bean.getMeanPeakRecursionDepth(), num);
+        assertAlmostEqual("Standard Deviation Peak Recursion Depth", peakRecursionDepthStats.getStandardDeviation(),
+            bean.getStandardDeviationPeakRecursionDepth(), num);
     }
 
     private void assertAlmostEqual(final String message, final double v1, final double v2, int samples) {
         final double centi = v1 / samples;
         if (v2 < (v1 - centi) || v2 > (v1 + centi)) {
-            TestCase.fail(message + " (expected: " + v2 + " in (" + (v1 - centi) + "," + (v1 + centi) + "))");
+            fail(message + " (expected: " + v2 + " in (" + (v1 - centi) + "," + (v1 + centi) + "))");
         }
     }
 }

@@ -19,6 +19,7 @@ package org.apache.sling.engine.impl;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
+import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.jmx.RequestProcessorMBean;
 
 /**
@@ -42,13 +43,33 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
     // sum of squared request durations
     private volatile double durationMsecSumX2;
 
+    private volatile int servletCallCountMin;
+
+    private volatile int servletCallCountMax;
+
+    private volatile double servletCallCountSumX;
+
+    private volatile double servletCallCountSumX2;
+
+    private volatile int peakRecursionDepthMin;
+
+    private volatile int peakRecursionDepthMax;
+
+    private volatile double peakRecursionDepthSumX;
+
+    private volatile double peakRecursionDepthSumX2;
+
     RequestProcessorMBeanImpl() throws NotCompliantMBeanException {
         super(RequestProcessorMBean.class);
         resetStatistics();
     }
 
-    synchronized void addRequestData(final long duration) {
+    synchronized void addRequestData(final RequestData data) {
         this.n++;
+        
+        final long duration = data.getElapsedTimeMsec();
+        final int servletCallCount = data.getServletCallCount();
+        final int peakRecursionDepth = data.getPeakRecusionDepth();
 
         if (duration < this.durationMsecMin) {
             this.durationMsecMin = duration;
@@ -59,6 +80,24 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
 
         this.durationMsecSumX += duration;
         this.durationMsecSumX2 += (duration * duration);
+        
+        if (servletCallCount < this.servletCallCountMin) {
+            this.servletCallCountMin = servletCallCount;
+        }
+        if (servletCallCount > this.servletCallCountMax) {
+            this.servletCallCountMax = servletCallCount;
+        }
+        this.servletCallCountSumX += servletCallCount;
+        this.servletCallCountSumX2 += (servletCallCount * servletCallCount);
+        
+        if (peakRecursionDepth < this.peakRecursionDepthMin) {
+            this.peakRecursionDepthMin = peakRecursionDepth;
+        }
+        if (peakRecursionDepth > this.peakRecursionDepthMax) {
+            this.peakRecursionDepthMax = peakRecursionDepth;
+        }
+        this.peakRecursionDepthSumX += peakRecursionDepth;
+        this.peakRecursionDepthSumX2 += (peakRecursionDepth * peakRecursionDepth);
     }
 
     public long getRequestsCount() {
@@ -96,7 +135,63 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
     public synchronized void resetStatistics() {
         this.durationMsecMin = Long.MAX_VALUE;
         this.durationMsecMax = 0;
+        this.servletCallCountMin = Integer.MAX_VALUE;
+        this.servletCallCountMax = 0;
+        this.peakRecursionDepthMin = Integer.MAX_VALUE;
+        this.peakRecursionDepthMax = 0;
+        
         this.n = 0;
+        
+    }
+
+    public int getMaxPeakRecursionDepth() {
+        return peakRecursionDepthMax;
+    }
+
+    public int getMinPeakRecursionDepth() {
+        return peakRecursionDepthMin;
+    }
+
+    public double getMeanPeakRecursionDepth() {
+        if (this.n > 0) {
+            return this.peakRecursionDepthSumX / this.n;
+        } else {
+            return 0;
+        }
+    }
+
+    public double getStandardDeviationPeakRecursionDepth() {
+        if (this.n > 1) {
+            return Math.sqrt((this.peakRecursionDepthSumX2 - this.peakRecursionDepthSumX * this.peakRecursionDepthSumX / this.n) / (this.n - 1));
+        }
+
+        // single data point has no deviation
+        return 0;
+    }
+
+    public int getMaxServletCallCount() {
+        return this.servletCallCountMax;
+    }
+
+    public int getMinServletCallCount() {
+        return this.servletCallCountMin;
+    }
+
+    public double getMeanServletCallCount() {
+        if (this.n > 0) {
+            return this.servletCallCountSumX / this.n;
+        } else {
+            return 0;
+        }
+    }
+
+    public double getStandardDeviationServletCallCount() {
+        if (this.n > 1) {
+            return Math.sqrt((this.servletCallCountSumX2 - this.servletCallCountSumX * this.servletCallCountSumX / this.n) / (this.n - 1));
+        }
+
+        // single data point has no deviation
+        return 0;
     }
 
 }

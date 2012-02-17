@@ -126,8 +126,6 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
         // record the request for the web console display
         RequestHistoryConsolePlugin.recordRequest(request);
 
-        long startTimestamp = System.currentTimeMillis();
-
         try {
             final ServletResolver sr = this.servletResolver;
 
@@ -223,9 +221,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             handleError(t, request, response);
 
         } finally {
-            long elapsed = System.currentTimeMillis() - startTimestamp;
             if (mbean != null) {
-                mbean.addRequestData(elapsed);
+                mbean.addRequestData(requestData);
             }
         }
     }

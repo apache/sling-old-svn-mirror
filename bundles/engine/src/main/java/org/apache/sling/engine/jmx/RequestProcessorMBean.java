@@ -63,6 +63,74 @@ public interface RequestProcessorMBean {
     double getStandardDeviationDurationMsec();
 
     /**
+     * Returns the maximum peak recursive execution depth since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    int getMaxPeakRecursionDepth();
+
+
+    /**
+     * Returns the minimal peak recursive execution depth since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    int getMinPeakRecursionDepth();
+
+
+    /**
+     * Returns the mean peak recursive execution depth since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    double getMeanPeakRecursionDepth();
+
+
+    /**
+     * Returns the standard deviation of peak recursive execution depth since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    double getStandardDeviationPeakRecursionDepth();
+    
+    /**
+     * Returns the maximum servlet call count since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    int getMaxServletCallCount();
+
+    
+    /**
+     * Returns the minimum servlet call count since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    int getMinServletCallCount();
+    
+    /**
+     * Returns the mean servlet call count since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    double getMeanServletCallCount();
+
+    /**
+     * Returns the standard deviation servlet call counts since last
+     * resetting the statistics.
+     *
+     * @see #resetStatistics()
+     */
+    double getStandardDeviationServletCallCount();
+
+    /**
      * Resets all statistics values and restarts from zero.
      */
     void resetStatistics();
