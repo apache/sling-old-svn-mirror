@@ -108,6 +108,8 @@ public class RequestData {
 
     /** The SlingMainServlet used for request dispatching and other stuff */
     private final SlingRequestProcessorImpl slingRequestProcessor;
+    
+    private final long startTimestamp;
 
     /** The original servlet Servlet Request Object */
     private HttpServletRequest servletRequest;
@@ -150,6 +152,11 @@ public class RequestData {
      */
     private int recursionDepth;
 
+    /**
+     * The peak value for the recursion depth.
+     */
+    private int peakRecusionDepth;
+
     public static void setMaxCallCounter(int maxCallCounter) {
         RequestData.maxCallCounter = maxCallCounter;
     }
@@ -172,7 +179,8 @@ public class RequestData {
 
     public RequestData(SlingRequestProcessorImpl slingRequestProcessor,
             HttpServletRequest request, HttpServletResponse response) {
-
+        this.startTimestamp = System.currentTimeMillis();
+        
         this.slingRequestProcessor = slingRequestProcessor;
 
         this.servletRequest = request;
@@ -519,6 +527,9 @@ public class RequestData {
             throw new RecursionTooDeepException(requestPathInfo.getResourcePath());
         }
         this.recursionDepth++;
+        if (this.recursionDepth > this.peakRecusionDepth) {
+            this.peakRecusionDepth = this.recursionDepth;
+        }
         currentContentData = new ContentData(resource, requestPathInfo);
         return currentContentData;
     }
@@ -538,6 +549,18 @@ public class RequestData {
 
     public RequestProgressTracker getRequestProgressTracker() {
         return requestProgressTracker;
+    }
+    
+    public int getPeakRecusionDepth() {
+        return peakRecusionDepth;
+    }
+    
+    public int getServletCallCount() {
+        return servletCallCounter;
+    }
+    
+    public long getElapsedTimeMsec() {
+        return System.currentTimeMillis() - startTimestamp;
     }
 
     /**
