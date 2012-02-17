@@ -46,7 +46,7 @@ public class ResourceIteratorDecorator implements Iterator<Resource> {
     }
 
     public Resource next() {
-        return this.tracker.decorate(this.iterator.next(), workspaceName, null);
+        return this.tracker.decorate(this.iterator.next(), workspaceName);
     }
 
     public void remove() {
