@@ -399,7 +399,7 @@ public class JcrResourceResolver
                     if (index != -1) {
                         res.getResourceMetadata().setResolutionPathInfo(absPath.substring(index));
                     }
-                    return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName, request);
+                    return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName);
                 }
 
             }
@@ -441,8 +441,7 @@ public class JcrResourceResolver
                     LOGGER.debug("resolve: Returning external redirect");
                     return this.factory.getResourceDecoratorTracker().decorate(
                             new RedirectResource(this, absPath, mappedPath[0],
-                                   mapEntry.getStatus()), workspaceName,
-                             request);
+                                   mapEntry.getStatus()), workspaceName);
                 }
             }
 
@@ -535,7 +534,7 @@ public class JcrResourceResolver
             LOGGER.debug("resolve: Path {} resolves to Resource {}", absPath, res);
         }
 
-        return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName, request);
+        return this.factory.getResourceDecoratorTracker().decorate(res, workspaceName);
     }
 
     /**
@@ -829,7 +828,7 @@ public class JcrResourceResolver
                     workspacePrefix = getSession().getWorkspace().getName();
                 }
 
-                result = this.factory.getResourceDecoratorTracker().decorate(result, workspacePrefix, null);
+                result = this.factory.getResourceDecoratorTracker().decorate(result, workspacePrefix);
                 return result;
             }
             return null;
