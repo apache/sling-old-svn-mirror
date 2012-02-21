@@ -57,6 +57,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -85,9 +86,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     private static ThreadLocal<ResourceResolver> requestResourceResolver = new ThreadLocal<ResourceResolver>();
 
     /** The set of protected keys. */
-    private static final Set<String> PROTECTED_KEYS = 
+    private static final Set<String> PROTECTED_KEYS =
         new HashSet<String>(Arrays.asList(REQUEST, RESPONSE, READER, SLING, RESOURCE, OUT, LOG));
-    
+
     /** The resource pointing to the script. */
     private final Resource scriptResource;
 
@@ -436,20 +437,22 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             props.setRequest((SlingHttpServletRequest) req);
             props.setResponse((SlingHttpServletResponse) res);
 
-            // try to set content type
-            final String contentType = request.getResponseContentType();
-            if (contentType != null) {
-                res.setContentType(contentType);
+            // try to set content type (unless included)
+            if (request.getAttribute(SlingConstants.ATTR_INCLUDE_SERVLET_PATH) == null) {
+                final String contentType = request.getResponseContentType();
+                if (contentType != null) {
+                    res.setContentType(contentType);
 
-                // only set the character encoding for text/ content types
-                // see SLING-679
-                if (contentType.startsWith("text/")) {
-                    res.setCharacterEncoding("UTF-8");
+                    // only set the character encoding for text/ content types
+                    // see SLING-679
+                    if (contentType.startsWith("text/")) {
+                        res.setCharacterEncoding("UTF-8");
+                    }
+                } else {
+                    LOGGER.debug("service: No response content type defined for request {}.", request.getRequestURI());
                 }
             } else {
-                LOGGER.debug(
-                    "service:No response content type defined for request {}.",
-                    request.getRequestURI());
+                LOGGER.debug("service: Included request, not setting content type and encoding");
             }
 
             // evaluate the script now using the ScriptEngine
@@ -682,7 +685,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         if (!bindingsValuesProviders.isEmpty()) {
             Set<String> protectedKeys = new HashSet<String>();
             protectedKeys.addAll(PROTECTED_KEYS);
-            
+
             ProtectedBindings protectedBindings = new ProtectedBindings(bindings, protectedKeys);
             for (BindingsValuesProvider provider : bindingsValuesProviders) {
                 provider.addBindings(protectedBindings);
