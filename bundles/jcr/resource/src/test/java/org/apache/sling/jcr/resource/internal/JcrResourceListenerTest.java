@@ -21,7 +21,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -49,6 +48,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
     public void testDefaultWorkspace() throws Exception {
         List<Event> events = generateEvents(null);
 
+        assertTrue("Received: " + events, events.size() >= 3);
         Event event = events.get(0);
         assertEquals(SlingConstants.TOPIC_RESOURCE_ADDED, event.getTopic());
         assertEquals(createdPath, event.getProperty(SlingConstants.PROPERTY_PATH));
@@ -69,7 +69,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
     public void testInWs2() throws Exception {
         List<Event> events = generateEvents("ws2");
 
-        assertEquals(3, events.size());
+        assertTrue("Received: " + events, events.size() >= 3);
         Event event = events.get(0);
         assertEquals(SlingConstants.TOPIC_RESOURCE_ADDED, event.getTopic());
         assertEquals("ws2:" + createdPath, event.getProperty(SlingConstants.PROPERTY_PATH));
@@ -118,8 +118,11 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
 
     }
 
+    int counter = 0;
+
     private String createTestPath() {
-        return "/test" + System.currentTimeMillis() + new Random().nextInt();
+        counter++;
+        return "/test" + System.currentTimeMillis() + counter;
     }
 
     private List<Event> generateEvents(String workspaceName) throws Exception {
@@ -130,7 +133,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         addNodeToModify(session);
         addNodeToDelete(session);
 
-        JcrResourceResolverFactoryImpl factory = new JcrResourceResolverFactoryImpl();
+        final JcrResourceResolverFactoryImpl factory = new JcrResourceResolverFactoryImpl();
         PrivateAccessor.setField(factory, "repository", getRepository());
         PrivateAccessor.setField(factory, "useMultiWorkspaces", Boolean.TRUE);
 
@@ -161,14 +164,14 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         deleted.remove();
         session.save();
 
-        listener.dispose();
-
         Session newSession = getRepository().loginAdministrative(workspaceName);
         EventHelper helper = new EventHelper(newSession);
         helper.waitForEvents(5000);
         helper.dispose();
         newSession.logout();
         session.logout();
+
+        listener.dispose();
 
         return events;
     }
