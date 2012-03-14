@@ -348,7 +348,7 @@ public class JcrResourceResolver
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#resolve(javax.servlet.http.HttpServletRequest, java.lang.String)
      */
-    public Resource resolve(HttpServletRequest request, String absPath) {
+    public Resource resolve(final HttpServletRequest request, String absPath) {
         checkClosed();
 
         String workspaceName = null;
@@ -423,7 +423,10 @@ public class JcrResourceResolver
         for (int i = 0; i < 100; i++) {
 
             String[] mappedPath = null;
-            for (MapEntry mapEntry : this.factory.getMapEntries().getResolveMaps()) {
+
+            final Iterator<MapEntry> mapEntriesIterator = this.factory.getMapEntries().getResolveMapsIterator(requestPath);
+            while ( mapEntriesIterator.hasNext() ) {
+                final MapEntry mapEntry = mapEntriesIterator.next();
                 mappedPath = mapEntry.replace(requestPath);
                 if (mappedPath != null) {
                     if ( LOGGER.isDebugEnabled() ) {
@@ -464,7 +467,7 @@ public class JcrResourceResolver
             // otherwise the mapped path is an URI and we have to try to
             // resolve that URI now, using the URI's path as the real path
             try {
-                URI uri = new URI(mappedPath[0], false);
+                final URI uri = new URI(mappedPath[0], false);
                 requestPath = getMapPath(uri.getScheme(), uri.getHost(),
                     uri.getPort(), uri.getPath());
                 realPathList = new String[] { uri.getPath() };
@@ -472,7 +475,7 @@ public class JcrResourceResolver
                 LOGGER.debug(
                     "resolve: Mapped path is an URL, using new request path {}",
                     requestPath);
-            } catch (URIException use) {
+            } catch (final URIException use) {
                 // TODO: log and fail
                 throw new ResourceNotFoundException(absPath);
             }
@@ -541,7 +544,7 @@ public class JcrResourceResolver
      * calls map(HttpServletRequest, String) as map(null, resourcePath)
      * @see org.apache.sling.api.resource.ResourceResolver#map(java.lang.String)
      */
-    public String map(String resourcePath) {
+    public String map(final String resourcePath) {
         checkClosed();
         return map(null, resourcePath);
     }

@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -61,7 +63,10 @@ import org.slf4j.LoggerFactory;
 
 public class MapEntries implements EventHandler {
 
-    public static MapEntries EMPTY = new MapEntries();
+    public static final MapEntries EMPTY = new MapEntries();
+
+    /** Key for the global list. */
+    private static final String GLOBAL_LIST_KEY = "*";
 
     public static final String DEFAULT_MAP_ROOT = "/etc/map";
 
@@ -78,7 +83,7 @@ public class MapEntries implements EventHandler {
 
     private final String mapRoot;
 
-    private List<MapEntry> resolveMaps;
+    private Map<String, List<MapEntry>> resolveMapsMap;
 
     private Collection<MapEntry> mapMaps;
 
@@ -97,7 +102,7 @@ public class MapEntries implements EventHandler {
         this.resolver = null;
         this.mapRoot = DEFAULT_MAP_ROOT;
 
-        this.resolveMaps = Collections.<MapEntry> emptyList();
+        this.resolveMapsMap = Collections.emptyMap();
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
         this.registration = null;
@@ -113,7 +118,7 @@ public class MapEntries implements EventHandler {
         this.mapRoot = factory.getMapRoot();
         this.eventAdminTracker = eventAdminTracker;
 
-        this.resolveMaps = Collections.<MapEntry> emptyList();
+        this.resolveMapsMap = Collections.emptyMap();
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
 
@@ -151,11 +156,12 @@ public class MapEntries implements EventHandler {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
 
-        Thread updateThread = new Thread(new Runnable() {
+        final Thread updateThread = new Thread(new Runnable() {
             public void run() {
                 MapEntries.this.init();
             }
         }, "MapEntries Update");
+        updateThread.setDaemon(true);
         updateThread.start();
     }
 
@@ -180,7 +186,7 @@ public class MapEntries implements EventHandler {
             try {
                 this.initTrigger.acquire();
                 this.doInit();
-            } catch (InterruptedException ie) {
+            } catch (final InterruptedException ie) {
                 // just continue acquisition
             }
         }
@@ -197,33 +203,36 @@ public class MapEntries implements EventHandler {
         this.initializing.lock();
         try {
             final ResourceResolver resolver = this.resolver;
-            if (resolver == null) {
+            final JcrResourceResolverFactoryImpl factory = this.factory;
+            if (resolver == null || factory == null) {
                 return;
             }
 
-            List<MapEntry> newResolveMaps = new ArrayList<MapEntry>();
-            SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
+            final Map<String, List<MapEntry>> newResolveMapsMap = new HashMap<String, List<MapEntry>>();
+            final List<MapEntry> globalResolveMap = new ArrayList<MapEntry>();
+            final SortedMap<String, MapEntry> newMapMaps = new TreeMap<String, MapEntry>();
 
             // load the /etc/map entries into the maps
-            loadResolverMap(resolver, newResolveMaps, newMapMaps);
+            loadResolverMap(resolver, globalResolveMap, newMapMaps);
 
             // load the configuration into the resolver map
-            Collection<String> vanityTargets = loadVanityPaths(resolver, newResolveMaps);
-            loadConfiguration(factory, newResolveMaps);
+            final Collection<String> vanityTargets = this.loadVanityPaths(resolver, newResolveMapsMap);
+            loadConfiguration(factory, globalResolveMap);
 
             // load the configuration into the mapper map
             loadMapConfiguration(factory, newMapMaps);
 
-            // sort List
-            Collections.sort(newResolveMaps);
+            // sort global list and add to map
+            Collections.sort(globalResolveMap);
+            newResolveMapsMap.put(GLOBAL_LIST_KEY, globalResolveMap);
 
             this.vanityTargets = Collections.unmodifiableCollection(vanityTargets);
-            this.resolveMaps = Collections.unmodifiableList(newResolveMaps);
+            this.resolveMapsMap = Collections.unmodifiableMap(newResolveMapsMap);
             this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
 
             sendChangeEvent();
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
 
             log.warn("doInit: Unexpected problem during initialization", e);
 
@@ -257,7 +266,7 @@ public class MapEntries implements EventHandler {
         boolean initLocked;
         try {
             initLocked = this.initializing.tryLock(10, TimeUnit.SECONDS);
-        } catch (InterruptedException ie) {
+        } catch (final InterruptedException ie) {
             initLocked = false;
         }
 
@@ -291,8 +300,33 @@ public class MapEntries implements EventHandler {
         this.eventAdminTracker = null;
     }
 
+    /**
+     * This is for the web console plugin
+     */
     public List<MapEntry> getResolveMaps() {
-        return resolveMaps;
+        final List<MapEntry> entries = new ArrayList<MapEntry>();
+        for(final List<MapEntry> list : this.resolveMapsMap.values()) {
+            entries.addAll(list);
+        }
+        Collections.sort(entries);
+        return entries;
+    }
+
+    /**
+     * Calculate the resolve maps.
+     * As the entries have to be sorted by pattern length,
+     * we have to create a new list containing all
+     * relevant entries.
+     */
+    public Iterator<MapEntry> getResolveMapsIterator(final String requestPath) {
+        String key = null;
+        final int firstIndex = requestPath.indexOf('/');
+        final int secondIndex = requestPath.indexOf('/', firstIndex + 1);
+        if ( secondIndex != -1 ) {
+            key = requestPath.substring(secondIndex);
+        }
+
+        return new MapEntryIterator(key, resolveMapsMap);
     }
 
     public Collection<MapEntry> getMapMaps() {
@@ -361,17 +395,17 @@ public class MapEntries implements EventHandler {
     }
 
     private void loadResolverMap(final ResourceResolver resolver,
-            Collection<MapEntry> resolveEntries,
+            List<MapEntry> entries,
             Map<String, MapEntry> mapEntries) {
         // the standard map configuration
         Resource res = resolver.getResource(mapRoot);
         if (res != null) {
-            gather(resolver, resolveEntries, mapEntries, res, "");
+            gather(resolver, entries, mapEntries, res, "");
         }
     }
 
     private void gather(final ResourceResolver resolver,
-            Collection<MapEntry> resolveEntries,
+            List<MapEntry> entries,
             Map<String, MapEntry> mapEntries, Resource parent, String parentPath) {
         // scheme list
         Iterator<Resource> children = ResourceUtil.listChildren(parent);
@@ -397,14 +431,14 @@ public class MapEntries implements EventHandler {
                     childParent = childParent.concat("/");
                 }
 
-                gather(resolver, resolveEntries, mapEntries, child, childParent);
+                gather(resolver, entries, mapEntries, child, childParent);
             }
 
             // add resolution entries for this node
-            MapEntry childResolveEntry = MapEntry.createResolveEntry(childPath,
+            final MapEntry childResolveEntry = MapEntry.createResolveEntry(childPath,
                 child, trailingSlash);
             if (childResolveEntry != null) {
-                resolveEntries.add(childResolveEntry);
+                entries.add(childResolveEntry);
             }
 
             // add map entries for this node
@@ -420,16 +454,35 @@ public class MapEntries implements EventHandler {
         }
     }
 
+    /**
+     * Add an entry to the resolve map.
+     */
+    private void addEntry(final Map<String, List<MapEntry>> entryMap,
+            final String key, final MapEntry entry) {
+        List<MapEntry> entries = entryMap.get(key);
+        if ( entries == null ) {
+            entries = new ArrayList<MapEntry>();
+            entryMap.put(key, entries);
+        }
+        entries.add(entry);
+        // and finally sort list
+        Collections.sort(entries);
+    }
+
+    /**
+     * Load vanity paths
+     * Search for all nodes inheriting the sling:VanityPath mixin
+     */
     private Collection<String> loadVanityPaths(final ResourceResolver resolver,
-            List<MapEntry> entries) {
+            final Map<String, List<MapEntry>> entryMap) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
-        final HashSet<String> targetPaths = new HashSet<String>();
+        final Set<String> targetPaths = new HashSet<String>();
         final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
-        final Iterator<Resource> i = resolver.findResources(
-            queryString, "sql");
+        final Iterator<Resource> i = resolver.findResources(queryString, "sql");
+
         while (i.hasNext()) {
-            Resource resource = i.next();
+            final Resource resource = i.next();
 
             // ignore system tree
             if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
@@ -438,38 +491,43 @@ public class MapEntries implements EventHandler {
             }
 
             // require properties
-            ValueMap row = resource.adaptTo(ValueMap.class);
-            if (row == null) {
+            final ValueMap props = resource.adaptTo(ValueMap.class);
+            if (props == null) {
                 log.debug("loadVanityPaths: Ignoring {} without properties", resource);
                 continue;
             }
 
             // url is ignoring scheme and host.port and the path is
             // what is stored in the sling:vanityPath property
-            String[] pVanityPaths = row.get("sling:vanityPath", new String[0]);
-            for (String pVanityPath : pVanityPaths) {
-                final String url = getVanityPath(pVanityPath);
-                if ( url != null ) {
+            final String[] pVanityPaths = props.get("sling:vanityPath", new String[0]);
+            for (final String pVanityPath : pVanityPaths) {
+                final String[] result = this.getVanityPathDefinition(pVanityPath);
+                if ( result != null ) {
+                    final String url = result[0] + result[1];
+
                     // redirect target is the node providing the sling:vanityPath
                     // property (or its parent if the node is called jcr:content)
-                    String redirect = resource.getPath();
-                    if (ResourceUtil.getName(redirect).equals("jcr:content")) {
-                        redirect = ResourceUtil.getParent(redirect);
+                    final String redirect;
+                    if (resource.getName().equals("jcr:content")) {
+                        redirect = resource.getParent().getPath();
+                    } else {
+                        redirect = resource.getPath();
                     }
 
                     // whether the target is attained by a 302/FOUND or by an
                     // internal redirect is defined by the sling:redirect property
-                    int status = row.get("sling:redirect", false)
-                            ? row.get(JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
+                    final int status = props.get("sling:redirect", false)
+                            ? props.get(JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
                             : -1;
 
+                    final String checkPath = result[1];
                     // 1. entry with exact match
-                    entries.add(new MapEntry(url + "$", status, false, redirect
-                        + ".html"));
+                    this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect
+                            + ".html"));
 
                     // 2. entry with match supporting selectors and extension
-                    entries.add(new MapEntry(url + "(\\..*)", status, false,
-                        redirect + "$1"));
+                    this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false,
+                            redirect + "$1"));
 
                     // 3. keep the path to return
                     targetPaths.add(redirect);
@@ -479,61 +537,70 @@ public class MapEntries implements EventHandler {
         return targetPaths;
     }
 
-    private String getVanityPath(final String pVanityPath) {
-        String result = null;
+    /**
+     * Create the vanity path definition. String array containing:
+     * {protocol}/{host}[.port]
+     * {absolute path}
+     */
+    private String[] getVanityPathDefinition(final String pVanityPath) {
+        String[] result = null;
         if ( pVanityPath != null ) {
-            String path = pVanityPath.trim();
-            if ( path.length() > 0 ) {
+            final String info = pVanityPath.trim();
+            if ( info.length() > 0 ) {
+                String prefix = null;
+                String path = null;
                 // check for url
-                if ( path.indexOf(":/") > - 1 ) {
+                if ( info.indexOf(":/") > - 1 ) {
                     try {
-                        final URL u = new URL(path);
-                        path = u.getProtocol() + '/' + u.getHost() + '.' + u.getPort() + u.getPath();
-                    } catch (MalformedURLException e) {
+                        final URL u = new URL(info);
+                        prefix = u.getProtocol() + '/' + u.getHost() + '.' + u.getPort();
+                        path = u.getPath();
+                    } catch (final MalformedURLException e) {
                         log.warn("Ignoring malformed vanity path {}", pVanityPath);
-                        path = null;
                     }
                 } else {
-                    if ( !path.startsWith("/") ) {
-                        path = "/" + path;
+                    prefix = "^" + ANY_SCHEME_HOST;
+                    if ( !info.startsWith("/") ) {
+                        path = "/" + info;
+                    } else {
+                        path = info;
                     }
-                    path = "^" + ANY_SCHEME_HOST + path;
                 }
 
                 // remove extension
-                if ( path != null ) {
+                if ( prefix != null ) {
                     final int lastSlash = path.lastIndexOf('/');
                     final int firstDot = path.indexOf('.', lastSlash + 1);
                     if ( firstDot != -1 ) {
                         path = path.substring(0, firstDot);
                         log.warn("Removing extension from vanity path {}", pVanityPath);
                     }
-                    result = path;
+                    result = new String[] {prefix, path};
                 }
             }
         }
         return result;
     }
 
-    private void loadConfiguration(JcrResourceResolverFactoryImpl factory,
-            List<MapEntry> entries) {
+    private void loadConfiguration(final JcrResourceResolverFactoryImpl factory,
+            final List<MapEntry> entries) {
         // virtual uris
-        Map<?, ?> virtuals = factory.getVirtualURLMap();
+        final Map<?, ?> virtuals = factory.getVirtualURLMap();
         if (virtuals != null) {
-            for (Entry<?, ?> virtualEntry : virtuals.entrySet()) {
-                String extPath = (String) virtualEntry.getKey();
-                String intPath = (String) virtualEntry.getValue();
+            for (final Entry<?, ?> virtualEntry : virtuals.entrySet()) {
+                final String extPath = (String) virtualEntry.getKey();
+                final String intPath = (String) virtualEntry.getValue();
                 if (!extPath.equals(intPath)) {
                     // this regular expression must match the whole URL !!
-                    String url = "^" + ANY_SCHEME_HOST + extPath + "$";
-                    String redirect = intPath;
+                    final String url = "^" + ANY_SCHEME_HOST + extPath + "$";
+                    final String redirect = intPath;
                     entries.add(new MapEntry(url, -1, false, redirect));
                 }
             }
         }
 
         // URL Mappings
-        Mapping[] mappings = factory.getMappings();
+        final Mapping[] mappings = factory.getMappings();
         if (mappings != null) {
             Map<String, List<String>> map = new HashMap<String, List<String>>();
             for (Mapping mapping : mappings) {
@@ -550,9 +617,10 @@ public class MapEntries implements EventHandler {
                     }
                 }
             }
-            for (Entry<String, List<String>> entry : map.entrySet()) {
+
+            for (final Entry<String, List<String>> entry : map.entrySet()) {
                 entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(),
-                    -1, false, entry.getValue().toArray(new String[0])));
+                        -1, false, entry.getValue().toArray(new String[0])));
             }
         }
     }
@@ -605,4 +673,103 @@ public class MapEntries implements EventHandler {
         }
         entries.put(path, entry);
     }
+
+    private static final class MapEntryIterator implements Iterator<MapEntry> {
+
+        private final Map<String, List<MapEntry>> resolveMapsMap;
+
+        private String key;
+
+        private MapEntry next;
+
+        private Iterator<MapEntry> globalListIterator;
+        private MapEntry nextGlobal;
+
+        private Iterator<MapEntry> specialIterator;
+        private MapEntry nextSpecial;
+
+        public MapEntryIterator(final String startKey, final Map<String, List<MapEntry>> resolveMapsMap) {
+            this.key = startKey;
+            this.resolveMapsMap = resolveMapsMap;
+            this.globalListIterator = this.resolveMapsMap.get(GLOBAL_LIST_KEY).iterator();
+            this.seek();
+        }
+
+
+        /**
+         * @see java.util.Iterator#hasNext()
+         */
+        public boolean hasNext() {
+            return this.next != null;
+        }
+
+        /**
+         * @see java.util.Iterator#next()
+         */
+        public MapEntry next() {
+            if ( this.next == null ) {
+                throw new NoSuchElementException();
+            }
+            final MapEntry result = this.next;
+            this.seek();
+            return result;
+        }
+
+        /**
+         * @see java.util.Iterator#remove()
+         */
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        private void seek() {
+            if ( this.nextGlobal == null && this.globalListIterator.hasNext() ) {
+                this.nextGlobal = this.globalListIterator.next();
+            }
+            if ( this.nextSpecial == null ) {
+                if ( specialIterator != null && !specialIterator.hasNext() ) {
+                    specialIterator = null;
+                }
+                while ( specialIterator == null && key != null ) {
+                    // remove selectors and extension
+                    final int lastSlashPos = key.lastIndexOf('/');
+                    final int lastDotPos = key.indexOf('.', lastSlashPos);
+                    if ( lastDotPos != -1 ) {
+                        key = key.substring(0, lastDotPos);
+                    }
+                    final List<MapEntry> special = this.resolveMapsMap.get(key);
+                    if ( special != null ) {
+                        specialIterator = special.iterator();
+                    }
+                    // recurse to the parent
+                    if ( key.length() > 1 ) {
+                        final int lastSlash = key.lastIndexOf("/");
+                        if ( lastSlash == 0 ) {
+                            key = null;
+                        } else {
+                            key = key.substring(0, lastSlash);
+                        }
+                    } else {
+                        key = null;
+                    }
+                }
+                if ( this.specialIterator != null && this.specialIterator.hasNext() ) {
+                    this.nextSpecial = this.specialIterator.next();
+                }
+            }
+            if ( this.nextSpecial == null ) {
+                this.next = this.nextGlobal;
+                this.nextGlobal = null;
+            } else if ( this.nextGlobal == null ) {
+                this.next = this.nextSpecial;
+                this.nextSpecial = null;
+            } else if ( this.nextGlobal.getPattern().length() >= this.nextSpecial.getPattern().length() ) {
+                this.next = this.nextGlobal;
+                this.nextGlobal = null;
+            } else {
+                this.next = this.nextSpecial;
+                this.nextSpecial = null;
+            }
+        }
+    };
 }
