@@ -42,6 +42,15 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/classloader</url>
     </scm>
 
+    <properties>
+        <bundle.build.name>
+            ${basedir}/target
+        </bundle.build.name>
+        <bundle.file.name>
+            ${bundle.build.name}/${project.build.finalName}.jar
+        </bundle.file.name>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -66,8 +75,44 @@
                     </instructions>
                 </configuration>
             </plugin>
-        </plugins>
+       </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>java6</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <build>
+                <plugins>
+                  <!-- integration tests run with pax-exam -->
+                    <plugin>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.12</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <systemProperties>
+                                <property>
+                                    <name>project.bundle.file</name>
+                                    <value>${bundle.file.name}</value>
+                                </property>
+                            </systemProperties>
+                            <includes>
+                                <include>**/*IT.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <reporting>
         <plugins>
             <plugin>
@@ -90,11 +135,7 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-
+      <!-- Unit Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -106,6 +147,67 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
+        </dependency>
+      <!-- Integration Testing with Pax Exam -->
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-forked</artifactId>
+            <version>2.4.0.RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>2.4.0.RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>2.4.0.RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-aether</artifactId>
+            <version>1.4.0.RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-wrap</artifactId>
+            <version>1.4.0.RC1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-atinject_1.0_spec</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.base</groupId>
+            <artifactId>ops4j-base-lang</artifactId>
+            <version>1.2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.base</groupId>
+            <artifactId>ops4j-base-net</artifactId>
+            <version>1.2.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.tinybundles</groupId>
+            <artifactId>tinybundles</artifactId>
+            <version>1.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>4.0.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
