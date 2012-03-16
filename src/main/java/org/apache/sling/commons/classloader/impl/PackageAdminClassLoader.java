@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 
@@ -61,6 +62,38 @@ class PackageAdminClassLoader extends ClassLoader {
     }
 
     /**
+     * Returns <code>true</code> if the <code>bundle</code> is to be considered
+     * active from the perspective of declarative services.
+     * <p>
+     * As of R4.1 a bundle may have lazy activation policy which means a bundle
+     * remains in the STARTING state until a class is loaded from that bundle
+     * (unless that class is declared to not cause the bundle to start).
+     *
+     * @param bundle The bundle check
+     * @return <code>true</code> if <code>bundle</code> is not <code>null</code>
+     *          and the bundle is either active or has lazy activation policy
+     *          and is in the starting state.
+     */
+    private boolean isBundleActive( final Bundle bundle ) {
+        if ( bundle != null ) {
+            if ( bundle.getState() == Bundle.ACTIVE ) {
+                return true;
+            }
+
+            if ( bundle.getState() == Bundle.STARTING ) {
+                // according to the spec the activationPolicy header is only
+                // set to request a bundle to be lazily activated. So in this
+                // simple check we just verify the header is set to assume
+                // the bundle is considered a lazily activated bundle
+                return bundle.getHeaders().get( Constants.BUNDLE_ACTIVATIONPOLICY ) != null;
+            }
+        }
+
+        // fall back: bundle is not considered active
+        return false;
+    }
+
+    /**
      * Find the bundle for a given package.
      * @param pckName The package name.
      * @return The bundle or <code>null</code>
@@ -70,11 +103,6 @@ class PackageAdminClassLoader extends ClassLoader {
         Bundle bundle = null;
         if (exportedPackage != null && !exportedPackage.isRemovalPending() ) {
             bundle = exportedPackage.getExportingBundle();
-            if ( bundle != null ) {
-                if ( bundle.getState() != Bundle.ACTIVE ) {
-                    bundle = null;
-                }
-            }
         }
         return bundle;
     }
@@ -105,11 +133,11 @@ class PackageAdminClassLoader extends ClassLoader {
      * @see java.lang.ClassLoader#getResources(java.lang.String)
      */
     @SuppressWarnings("unchecked")
-    public Enumeration<URL> getResources(String name) throws IOException {
+    public Enumeration<URL> getResources(final String name) throws IOException {
         Enumeration<URL> e = super.getResources(name);
         if ( e == null || !e.hasMoreElements() ) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( bundle != null ) {
+            if ( this.isBundleActive(bundle) ) {
                 e = bundle.getResources(name);
                 if ( e != null && e.hasMoreElements() ) {
                     this.factory.addUsedBundle(bundle);
@@ -122,7 +150,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#findResource(java.lang.String)
      */
-    public URL findResource(String name) {
+    public URL findResource(final String name) {
         final URL cachedURL = urlCache.get(name);
         if ( cachedURL != null ) {
             return cachedURL;
@@ -130,7 +158,7 @@ class PackageAdminClassLoader extends ClassLoader {
         URL url = super.findResource(name);
         if ( url == null ) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( bundle != null ) {
+            if ( this.isBundleActive(bundle) ) {
                 url = bundle.getResource(name);
                 if ( url != null ) {
                     this.factory.addUsedBundle(bundle);
@@ -144,7 +172,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#findClass(java.lang.String)
      */
-    public Class<?> findClass(String name) throws ClassNotFoundException {
+    public Class<?> findClass(final String name) throws ClassNotFoundException {
         final Class<?> cachedClass = this.classCache.get(name);
         if ( cachedClass != null ) {
             return cachedClass;
@@ -154,7 +182,7 @@ class PackageAdminClassLoader extends ClassLoader {
             clazz = super.findClass(name);
         } catch (ClassNotFoundException cnfe) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
-            if ( bundle != null ) {
+            if ( this.isBundleActive(bundle) ) {
                 clazz = bundle.loadClass(name);
                 this.factory.addUsedBundle(bundle);
             }
@@ -169,7 +197,7 @@ class PackageAdminClassLoader extends ClassLoader {
     /**
      * @see java.lang.ClassLoader#loadClass(java.lang.String, boolean)
      */
-    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    protected Class<?> loadClass(final String name, final boolean resolve) throws ClassNotFoundException {
         final Class<?> cachedClass = this.classCache.get(name);
         if ( cachedClass != null ) {
             return cachedClass;
@@ -180,18 +208,18 @@ class PackageAdminClassLoader extends ClassLoader {
         Class<?> clazz = null;
         try {
             clazz = super.loadClass(name, resolve);
-        } catch (ClassNotFoundException cnfe) {
+        } catch (final ClassNotFoundException cnfe) {
             final String pckName = getPackageFromClassName(name);
             final Bundle bundle = this.findBundleForPackage(pckName);
-            if ( bundle != null ) {
+            if ( this.isBundleActive(bundle) ) {
                 try {
                     clazz = bundle.loadClass(name);
-                } catch (ClassNotFoundException inner) {
+                    this.factory.addUsedBundle(bundle);
+                } catch (final ClassNotFoundException inner) {
                     negativeClassCache.add(name);
                     this.factory.addUnresolvedPackage(pckName);
                     throw inner;
                 }
-                this.factory.addUsedBundle(bundle);
             }
         }
         if ( clazz == null ) {
