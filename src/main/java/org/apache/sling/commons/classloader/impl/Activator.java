@@ -94,7 +94,7 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
-    public void stop(BundleContext context) {
+    public void stop(final BundleContext context) {
         context.removeBundleListener(this);
         this.unregisterManagerFactory();
         if ( this.packageAdminTracker != null ) {
@@ -107,12 +107,14 @@ public class Activator implements SynchronousBundleListener, BundleActivator {
     /**
      * @see org.osgi.framework.BundleListener#bundleChanged(org.osgi.framework.BundleEvent)
      */
-    public void bundleChanged(BundleEvent event) {
+    public void bundleChanged(final BundleEvent event) {
         synchronized ( this ) {
+            final boolean lazyBundle = event.getBundle().getHeaders().get( Constants.BUNDLE_ACTIVATIONPOLICY ) != null;
+
             final boolean reload;
-            if ( event.getType() == BundleEvent.RESOLVED ) {
-                reload = this.service.isBundleUsed(event.getBundle().getBundleId())
-                    || this.service.hasUnresolvedPackages(event.getBundle());
+            if ( ( event.getType() == BundleEvent.STARTED && !lazyBundle)
+                 || (event.getType() == BundleEvent.STARTING && lazyBundle) ) {
+                reload = this.service.hasUnresolvedPackages(event.getBundle());
             } else if ( event.getType() == BundleEvent.UNRESOLVED ) {
                 reload = this.service.isBundleUsed(event.getBundle().getBundleId());
             } else {
