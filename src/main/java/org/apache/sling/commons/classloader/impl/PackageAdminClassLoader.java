@@ -103,6 +103,9 @@ class PackageAdminClassLoader extends ClassLoader {
         Bundle bundle = null;
         if (exportedPackage != null && !exportedPackage.isRemovalPending() ) {
             bundle = exportedPackage.getExportingBundle();
+            if ( !this.isBundleActive(bundle) ) {
+                bundle = null;
+            }
         }
         return bundle;
     }
@@ -137,7 +140,7 @@ class PackageAdminClassLoader extends ClassLoader {
         Enumeration<URL> e = super.getResources(name);
         if ( e == null || !e.hasMoreElements() ) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( this.isBundleActive(bundle) ) {
+            if ( bundle != null ) {
                 e = bundle.getResources(name);
                 if ( e != null && e.hasMoreElements() ) {
                     this.factory.addUsedBundle(bundle);
@@ -158,7 +161,7 @@ class PackageAdminClassLoader extends ClassLoader {
         URL url = super.findResource(name);
         if ( url == null ) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
-            if ( this.isBundleActive(bundle) ) {
+            if ( bundle != null ) {
                 url = bundle.getResource(name);
                 if ( url != null ) {
                     this.factory.addUsedBundle(bundle);
@@ -182,7 +185,7 @@ class PackageAdminClassLoader extends ClassLoader {
             clazz = super.findClass(name);
         } catch (ClassNotFoundException cnfe) {
             final Bundle bundle = this.findBundleForPackage(getPackageFromClassName(name));
-            if ( this.isBundleActive(bundle) ) {
+            if ( bundle != null ) {
                 clazz = bundle.loadClass(name);
                 this.factory.addUsedBundle(bundle);
             }
@@ -211,7 +214,7 @@ class PackageAdminClassLoader extends ClassLoader {
         } catch (final ClassNotFoundException cnfe) {
             final String pckName = getPackageFromClassName(name);
             final Bundle bundle = this.findBundleForPackage(pckName);
-            if ( this.isBundleActive(bundle) ) {
+            if ( bundle != null ) {
                 try {
                     clazz = bundle.loadClass(name);
                     this.factory.addUsedBundle(bundle);
