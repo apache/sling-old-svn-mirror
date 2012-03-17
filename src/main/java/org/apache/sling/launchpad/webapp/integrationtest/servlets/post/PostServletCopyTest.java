@@ -442,4 +442,140 @@ public class PostServletCopyTest extends HttpTestBase {
         // clean up
         testClient.delete(testRoot);
     }
+    
+    
+    /**
+     * Test for SLING-2415 Ability to move all child nodes, without the parent node
+     * Using :applyTo value of "*"
+     */
+    public void testCopyAllChildren() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/cpmultwc/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src2", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src3", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src4", props);
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, "*"));
+        // we expect success
+        assertPostStatus(testRoot + "/test", HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_OK);
+
+        testClient.delete(testRoot);
+    }
+    
+    /**
+     * Test for SLING-2415 Ability to move all child nodes, without the parent node
+     * Using :applyTo value of "/*"
+     */
+    public void testCopyAllChildrenByPath() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/cpmultwc/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src2", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src3", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src4", props);
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, "/*"));
+        // we expect success
+        assertPostStatus(testRoot + "/test", HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_OK);
+
+        testClient.delete(testRoot);
+    }
+    
+    /**
+     * Test for SLING-2415 Ability to copy all child nodes of a subnode, without the parent node
+     * Using :applyTo value of "subnode_path/*"
+     */
+    public void testCopyAllChildrenOfSubNode() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/cpmultwc/"
+            + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath,
+            null);
+
+        // create multiple source nodes
+        Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src2", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src3", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/test/src4", props);
+
+        // create destination parent
+        testClient.createNode(HTTP_BASE_URL + testPath + "/dest", props);
+
+        // copy the src? nodes
+        List<NameValuePair> nvPairs = new ArrayList<NameValuePair>();
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_OPERATION,
+            SlingPostConstants.OPERATION_COPY));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_DEST, testPath
+            + "/dest/"));
+        nvPairs.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, "test/*"));
+        // we expect success
+        assertPostStatus(testRoot, HttpServletResponse.SC_OK, nvPairs,
+            "Expecting Copy Success");
+
+        // assert existence of the src?/text properties
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src1/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src2/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src3/text",
+            HttpServletResponse.SC_OK);
+        assertHttpStatus(HTTP_BASE_URL + testPath + "/dest/src4/text",
+            HttpServletResponse.SC_OK);
+
+        testClient.delete(testRoot);
+    }
 }
