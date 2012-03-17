@@ -110,4 +110,86 @@ public class PostServletDeleteTest extends HttpTestBase {
         assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "C must be deleted (2)");
         assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "D must be deleted (2)");
     }
+
+    /**
+     * Test for SLING-2415 Ability to delete child nodes, without deleting the parent node
+     * Using :applyTo value of "*"
+     */
+    public void testDeleteAllChildren() throws IOException {
+        final String urlA = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlB = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlC = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
+
+        // initially all nodes must be found
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_OK, "A must initially exist");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_OK, "B must initially exist");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must initially exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must initially exist");
+
+        // delete and check
+        final List <NameValuePair> params = new LinkedList<NameValuePair> ();
+        params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, "*"));
+        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "B must be deleted");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "C must be deleted");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "D must be deleted");
+    }
+    /**
+     * Test for SLING-2415 Ability to delete child nodes, without deleting the parent node
+     * Using :applyTo value of "/*"
+     */
+    public void testDeleteAllChildrenByPath() throws IOException {
+        final String urlA = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlB = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlC = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
+
+        // initially all nodes must be found
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_OK, "A must initially exist");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_OK, "B must initially exist");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must initially exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must initially exist");
+
+        // delete and check
+        final List <NameValuePair> params = new LinkedList<NameValuePair> ();
+        params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, "/*"));
+        assertPostStatus(postUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "B must be deleted");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "C must be deleted");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "D must be deleted");
+    }
+    /**
+     * Test for SLING-2415 Ability to delete child nodes of a subnode, without deleting the parent node
+     * Using :applyTo value of "subnode_path/*"
+     */
+    public void testDeleteAllChildrenOfSubNode() throws IOException {
+        final String urlA = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlB = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlC = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        final String urlD = testClient.createNode(postUrl + "/specific-location/for-delete", null);
+
+        // initially all nodes must be found
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_OK, "A must initially exist");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_OK, "B must initially exist");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_OK, "C must initially exist");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_OK, "D must initially exist");
+
+        String testBaseUrl = HTTP_BASE_URL + TEST_BASE_PATH;
+        String subPath = postUrl.substring(testBaseUrl.length() + 1);
+        // delete and check
+        final List <NameValuePair> params = new LinkedList<NameValuePair> ();
+        params.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_DELETE));
+        params.add(new NameValuePair(SlingPostConstants.RP_APPLY_TO, String.format("%s/*", subPath)));
+        assertPostStatus(testBaseUrl,HttpServletResponse.SC_OK,params,"Delete must return expected status");
+        assertHttpStatus(urlA + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "A must be deleted");
+        assertHttpStatus(urlB + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "B must be deleted");
+        assertHttpStatus(urlC + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "C must be deleted");
+        assertHttpStatus(urlD + DEFAULT_EXT, HttpServletResponse.SC_NOT_FOUND, "D must be deleted");
+    }
+
 }
