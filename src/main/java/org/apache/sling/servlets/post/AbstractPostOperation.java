@@ -478,6 +478,8 @@ public abstract class AbstractPostOperation implements PostOperation {
 
         private Resource nextResource;
 
+        private Iterator<Resource> resourceIterator = null;
+        
         ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
             this.resolver = request.getResourceResolver();
             this.baseResource = request.getResource();
@@ -507,13 +509,48 @@ public abstract class AbstractPostOperation implements PostOperation {
         }
 
         private Resource seek() {
+        	if (resourceIterator != null) {
+        		if (resourceIterator.hasNext()) {
+            		//return the next resource in the iterator
+        			Resource res = resourceIterator.next();
+        			return res;
+        		} else {
+        			resourceIterator = null;
+        		}
+        	}
             while (pathIndex < paths.length) {
                 String path = paths[pathIndex];
                 pathIndex++;
 
-                Resource res = resolver.getResource(baseResource, path);
-                if (res != null) {
-                    return res;
+                //SLING-2415 - support wildcard as the last segment of the applyTo path
+                if (path.endsWith("*")) {
+                	if (path.length() == 1) {
+                		resourceIterator = baseResource.listChildren();
+                	} else if (path.endsWith("/*")) {
+                    	path = path.substring(0, path.length() - 2);
+                    	if (path.length() == 0) {
+                    		resourceIterator = baseResource.listChildren();
+                    	} else {
+                        	Resource res = resolver.getResource(baseResource, path);
+                            if (res != null) {
+                            	resourceIterator = res.listChildren();
+                            }
+                    	}
+                    } 
+                	if (resourceIterator != null) {
+                		//return the first resource in the iterator
+                		if (resourceIterator.hasNext()) {
+                			Resource res = resourceIterator.next();
+                			return res;
+                		} else {
+                			resourceIterator = null;
+                		}
+                	}
+                } else {
+                    Resource res = resolver.getResource(baseResource, path);
+                    if (res != null) {
+                        return res;
+                    }
                 }
             }
 
