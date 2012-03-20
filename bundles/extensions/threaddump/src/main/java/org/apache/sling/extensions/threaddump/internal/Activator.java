@@ -33,8 +33,10 @@ import org.slf4j.LoggerFactory;
 
 public class Activator implements BundleActivator, UncaughtExceptionHandler {
 
+    private static final String LOG_NAME = "org.apache.sling.extensions.threaddump.internal.UncaughtExceptionHandler";
+
     /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(LOG_NAME);
 
     private UncaughtExceptionHandler oldHandler;
 
