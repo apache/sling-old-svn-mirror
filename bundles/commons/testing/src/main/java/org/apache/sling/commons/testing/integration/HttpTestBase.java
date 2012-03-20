@@ -136,12 +136,19 @@ public class HttpTestBase extends TestCase {
         // setup HTTP client, with authentication (using default Jackrabbit credentials)
         httpClient = new HttpClient();
         httpClient.getParams().setAuthenticationPreemptive(true);
-        Credentials defaultcreds = new UsernamePasswordCredentials("admin", "admin");
+        Credentials defaultcreds = getDefaultCredentials();
         httpClient.getState().setCredentials(new AuthScope(url.getHost(), url.getPort(), AuthScope.ANY_REALM), defaultcreds);
 
         testClient = new SlingIntegrationTestClient(httpClient);
 
         waitForSlingStartup();
+    }
+
+    /**
+     * Generate default credentials used for HTTP requests.
+     */
+    protected Credentials getDefaultCredentials() {
+        return new UsernamePasswordCredentials("admin", "admin");
     }
 
     @Override
