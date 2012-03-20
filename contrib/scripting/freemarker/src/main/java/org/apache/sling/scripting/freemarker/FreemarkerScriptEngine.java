@@ -24,12 +24,11 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.jcr.Node;
 
+import freemarker.log.Logger;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.freemarker.wrapper.NodeModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -39,7 +38,7 @@ import freemarker.template.Template;
  * to render a Resource in HTML.
  */
 public class FreemarkerScriptEngine extends AbstractSlingScriptEngine {
-    private static final Logger log = LoggerFactory.getLogger(FreemarkerScriptEngine.class);
+    private static final Logger log = Logger.getLogger(FreemarkerScriptEngine.class.getName());
 
     private final Configuration configuration;
 
