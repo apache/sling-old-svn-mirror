@@ -17,11 +17,15 @@
 package org.apache.sling.scripting.jsp;
 
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
@@ -31,6 +35,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>SlingTldLocationsCache</code> TODO
@@ -42,7 +47,12 @@ public class SlingTldLocationsCache
 
     private final Map<String, TldLocationEntry> tldLocations = new HashMap<String, TldLocationEntry>();
 
+    private ServiceRegistration serviceRegistration;
+
+    private final BundleContext bundleContext;
+
     public SlingTldLocationsCache(final BundleContext context) {
+        this.bundleContext = context;
         context.addBundleListener(this);
         final Bundle[] bundles = context.getBundles();
         for (int i = 0; i < bundles.length; i++) {
@@ -50,9 +60,21 @@ public class SlingTldLocationsCache
                 addBundle(bundles[i]);
             }
         }
+        
+        Properties tldConfigPrinterProperties = new Properties();
+        tldConfigPrinterProperties.setProperty("felix.webconsole.label", "jsptaglibs");
+        tldConfigPrinterProperties.setProperty("felix.webconsole.title", "JSP Taglibs");
+        tldConfigPrinterProperties.setProperty("felix.webconsole.configprinter.modes", "always");
+        this.serviceRegistration = context.registerService(Object.class.getName(),
+            this, tldConfigPrinterProperties);
+
     }
 
     public void deactivate(final BundleContext context) {
+        if (this.serviceRegistration != null) {
+            this.serviceRegistration.unregister();
+            this.serviceRegistration = null;
+        }
         context.removeBundleListener(this);
     }
 
@@ -160,6 +182,27 @@ public class SlingTldLocationsCache
 
         return null;
     }
+
+    public void printConfiguration(final PrintWriter pw) {
+        pw.println("Currently available JSP Taglibs:");
+        final SortedMap<String, String> taglibs = new TreeMap<String, String>();
+        
+        for (final Map.Entry<String, TldLocationEntry> entry : tldLocations.entrySet()) {
+            final long bundleId = entry.getValue().getBundleId();
+            final Bundle bundle = bundleContext.getBundle(bundleId);
+            if (bundle != null) {
+                taglibs.put(entry.getKey(), String.format("%s (%s)", bundle.getSymbolicName(), bundleId));
+            } else {
+                // really shouldn't happen
+                taglibs.put(entry.getKey(), String.format("INVALID BUNDLE ID: %s", bundleId));
+            }
+        }
+        
+        for (final Map.Entry<String, String> entry : taglibs.entrySet()) {
+            pw.printf("  %s - %s\n", entry.getKey(), entry.getValue());
+        }
+    }
+
 
     private static final class TldLocationEntry {
         private final long bundleId;
