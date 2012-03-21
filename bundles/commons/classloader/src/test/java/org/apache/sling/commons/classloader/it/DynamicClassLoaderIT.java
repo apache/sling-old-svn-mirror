@@ -16,9 +16,7 @@
  */
 package org.apache.sling.commons.classloader.it;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.ops4j.pax.exam.Constants.*;
 import static org.ops4j.pax.exam.CoreOptions.*;
 
@@ -39,9 +37,6 @@ import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.exam.junit.ProbeBuilder;
 import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
-import org.ops4j.pax.exam.options.CompositeOption;
-import org.ops4j.pax.exam.options.DefaultCompositeOption;
-import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -112,64 +107,14 @@ public class DynamicClassLoaderIT {
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.14"),
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn", "1.3.5")
              ),
-             customJunitBundles()
-
+             // below is instead of normal Pax Exam junitBundles() to deal
+             // with build server issue
+             new DirectURLJUnitBundlesOption(), 
+             systemProperty("pax.exam.invoker").value("junit"),  
+             bundle("link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link")
         );
     }
-    
-    private static CompositeOption customJunitBundles() {
-        return new DefaultCompositeOption(new JUnitBundlesOption(), 
-            systemProperty( "pax.exam.invoker" ).value( "junit" ),  
-            bundle( "link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link" ));
-    }
-    
-    public static class JUnitBundlesOption
-        extends AbstractDelegateProvisionOption<JUnitBundlesOption> {
-    
-        /**
-         * Constructor.
-         */
-        public JUnitBundlesOption(){
-            super(
-                bundle("http://repository.springsource.com/ivy/bundles/external/org.junit/com.springsource.org.junit/4.9.0/com.springsource.org.junit-4.9.0.jar")
-            );
-            noUpdate();
-            startLevel( START_LEVEL_SYSTEM_BUNDLES );
-        }
-    
-        /**
-         * Sets the junit version.
-         *
-         * @param version junit version.
-         *
-         * @return itself, for fluent api usage
-         */
-        public JUnitBundlesOption version( final String version ) {
-            ( (MavenArtifactProvisionOption) getDelegate() ).version( version );
-            return this;
-        }
-    
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder();
-            sb.append( "JUnitBundlesOption" );
-            sb.append( "{url=" ).append( getURL() );
-            sb.append( '}' );
-            return sb.toString();
-        }
-    
-        /**
-         * {@inheritDoc}
-         */
-        protected JUnitBundlesOption itself() {
-            return this;
-        }
-    
-    }
-
+        
     @Test
     public void testPackageAdminClassLoader() throws Exception {
         // check class loader
@@ -216,5 +161,41 @@ public class DynamicClassLoaderIT {
         } catch (final ClassNotFoundException expected) {
             fail("Class should be available");
         }
+    }
+
+    /**
+     * Clone of Pax Exam's JunitBundlesOption which uses a direct
+     * URL to the SpringSource JUnit bundle to avoid some weird
+     * repository issues on the Apache build server.
+     */
+    private static class DirectURLJUnitBundlesOption
+        extends AbstractDelegateProvisionOption<DirectURLJUnitBundlesOption> {
+    
+        /**
+         * Constructor.
+         */
+        public DirectURLJUnitBundlesOption(){
+            super(
+                bundle("http://repository.springsource.com/ivy/bundles/external/org.junit/com.springsource.org.junit/4.9.0/com.springsource.org.junit-4.9.0.jar")
+            );
+            noUpdate();
+            startLevel(START_LEVEL_SYSTEM_BUNDLES);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return String.format("DirectURLJUnitBundlesOption{url=%s}", getURL());
+        }
+    
+        /**
+         * {@inheritDoc}
+         */
+        protected DirectURLJUnitBundlesOption itself() {
+            return this;
+        }
+    
     }
 }
