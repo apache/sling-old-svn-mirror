@@ -19,10 +19,8 @@ package org.apache.sling.commons.classloader.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.Constants.*;
+import static org.ops4j.pax.exam.CoreOptions.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +38,10 @@ import org.ops4j.pax.exam.TestProbeBuilder;
 import org.ops4j.pax.exam.junit.Configuration;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.exam.junit.ProbeBuilder;
+import org.ops4j.pax.exam.options.AbstractDelegateProvisionOption;
+import org.ops4j.pax.exam.options.CompositeOption;
+import org.ops4j.pax.exam.options.DefaultCompositeOption;
+import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -110,9 +112,62 @@ public class DynamicClassLoaderIT {
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.14"),
                 mavenBundle("org.ops4j.pax.url", "pax-url-mvn", "1.3.5")
              ),
-             junitBundles()
+             customJunitBundles()
 
         );
+    }
+    
+    private static CompositeOption customJunitBundles() {
+        return new DefaultCompositeOption(new JUnitBundlesOption(), 
+            systemProperty( "pax.exam.invoker" ).value( "junit" ),  
+            bundle( "link:classpath:META-INF/links/org.ops4j.pax.exam.invoker.junit.link" ));
+    }
+    
+    public static class JUnitBundlesOption
+        extends AbstractDelegateProvisionOption<JUnitBundlesOption> {
+    
+        /**
+         * Constructor.
+         */
+        public JUnitBundlesOption(){
+            super(
+                bundle("mvn:http://repository.springsource.com/maven/bundles/external!org.junit/com.springsource.org.junit/4.9.0")
+            );
+            noUpdate();
+            startLevel( START_LEVEL_SYSTEM_BUNDLES );
+        }
+    
+        /**
+         * Sets the junit version.
+         *
+         * @param version junit version.
+         *
+         * @return itself, for fluent api usage
+         */
+        public JUnitBundlesOption version( final String version ) {
+            ( (MavenArtifactProvisionOption) getDelegate() ).version( version );
+            return this;
+        }
+    
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append( "JUnitBundlesOption" );
+            sb.append( "{url=" ).append( getURL() );
+            sb.append( '}' );
+            return sb.toString();
+        }
+    
+        /**
+         * {@inheritDoc}
+         */
+        protected JUnitBundlesOption itself() {
+            return this;
+        }
+    
     }
 
     @Test
