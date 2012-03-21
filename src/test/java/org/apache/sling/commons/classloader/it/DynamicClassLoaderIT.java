@@ -131,7 +131,7 @@ public class DynamicClassLoaderIT {
          */
         public JUnitBundlesOption(){
             super(
-                bundle("mvn:http://repository.springsource.com/maven/bundles/external!org.junit/com.springsource.org.junit/4.9.0")
+                bundle("http://repository.springsource.com/ivy/bundles/external/org.junit/com.springsource.org.junit/4.9.0/com.springsource.org.junit-4.9.0.jar")
             );
             noUpdate();
             startLevel( START_LEVEL_SYSTEM_BUNDLES );
