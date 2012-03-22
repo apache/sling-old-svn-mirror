@@ -25,9 +25,6 @@ import java.util.Hashtable;
 
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.installer.api.OsgiInstaller;
-import org.apache.sling.installer.provider.jcr.impl.JcrInstaller;
-import org.apache.sling.installer.provider.jcr.impl.RescanTimer;
-import org.apache.sling.installer.provider.jcr.impl.WatchedFolder;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
@@ -77,6 +74,8 @@ class MiscUtil {
                 allowing(cc).getBundleContext();
                 will(returnValue(bc));
                 allowing(bc).getProperty(with(any(String.class)));
+                will(returnValue(null));
+                allowing(bc).registerService(with(any(String.class)), with(any(Object.class)), with(any(Dictionary.class)));
                 will(returnValue(null));
             }});
             COMPONENT_CONTEXT = cc;
