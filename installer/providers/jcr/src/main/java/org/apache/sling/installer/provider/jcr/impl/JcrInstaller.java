@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -45,13 +46,17 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ConfigurationException;
+import org.osgi.service.cm.ManagedService;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -71,10 +76,13 @@ import org.slf4j.LoggerFactory;
     @Property(name="service.ranking", intValue=100)
 })
 @Service(value=UpdateHandler.class)
-public class JcrInstaller implements EventListener, UpdateHandler {
+public class JcrInstaller implements EventListener, UpdateHandler, ManagedService {
 
 	public static final long RUN_LOOP_DELAY_MSEC = 500L;
 	public static final String URL_SCHEME = "jcrinstall";
+
+	/** PID before refactoring. */
+	private static final String OLD_PID = "org.apache.sling.jcr.install.impl.JcrInstaller";
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -154,7 +162,14 @@ public class JcrInstaller implements EventListener, UpdateHandler {
     /** The root folders that we watch */
     private String [] roots;
 
+    /** The component context. */
     private ComponentContext componentContext;
+
+    /** Service reg for managed service. */
+    private ServiceRegistration managedServiceRef;
+
+    /** Configuration from managed service (old pid) */
+    private Dictionary<?, ?> oldConfiguration;
 
     private static final String DEFAULT_NEW_CONFIG_PATH = "sling/config";
     @Property(value=DEFAULT_NEW_CONFIG_PATH)
@@ -263,16 +278,24 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             throw new IllegalStateException("Expected backgroundThread to be null in activate()");
         }
         this.componentContext = context;
-        logger.info("Activating Apache Sling JCR Installer");
+        this.start();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(Constants.SERVICE_PID, OLD_PID);
+        this.managedServiceRef = this.componentContext.getBundleContext().registerService(ManagedService.class.getName(),
+                this,
+                props);
+    }
 
-        this.writeBack = OsgiUtil.toBoolean(context.getProperties().get(PROP_ENABLE_WRITEBACK), DEFAULT_ENABLE_WRITEBACK);
+    private void start() {
+        logger.info("Activating Apache Sling JCR Installer");
+        this.writeBack = PropertiesUtil.toBoolean(getPropertyValue(PROP_ENABLE_WRITEBACK), DEFAULT_ENABLE_WRITEBACK);
 
     	// Setup converters
     	converters.add(new FileNodeConverter());
     	converters.add(new ConfigNodeConverter());
 
     	// Configurable max depth, system property (via bundle context) overrides default value
-    	final Object obj = getPropertyValue(context, PROP_INSTALL_FOLDER_MAX_DEPTH);
+    	final Object obj = getPropertyValue(PROP_INSTALL_FOLDER_MAX_DEPTH);
     	if (obj != null) {
     		// depending on where it's coming from, obj might be a string or integer
     		maxWatchedFolderDepth = Integer.valueOf(String.valueOf(obj)).intValue();
@@ -283,7 +306,7 @@ public class JcrInstaller implements EventListener, UpdateHandler {
     	}
 
     	// Configurable folder regexp, system property overrides default value
-    	String folderNameRegexp = (String)getPropertyValue(context, FOLDER_NAME_REGEXP_PROPERTY);
+    	String folderNameRegexp = (String)getPropertyValue(FOLDER_NAME_REGEXP_PROPERTY);
     	if(folderNameRegexp != null) {
     		folderNameRegexp = folderNameRegexp.trim();
             logger.debug("Using configured ({}) folder name regexp '{}'", FOLDER_NAME_REGEXP_PROPERTY, folderNameRegexp);
@@ -293,12 +316,12 @@ public class JcrInstaller implements EventListener, UpdateHandler {
     	}
 
     	// Setup folder filtering and watching
-        folderNameFilter = new FolderNameFilter(OsgiUtil.toStringArray(context.getProperties().get(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH),
+        folderNameFilter = new FolderNameFilter(PropertiesUtil.toStringArray(getPropertyValue(PROP_SEARCH_PATH), DEFAULT_SEARCH_PATH),
                 folderNameRegexp, settings.getRunModes());
         roots = folderNameFilter.getRootPaths();
 
         // setup default path for new configurations
-        this.newConfigPath = OsgiUtil.toString(context.getProperties().get(PROP_NEW_CONFIG_PATH), DEFAULT_NEW_CONFIG_PATH);
+        this.newConfigPath = PropertiesUtil.toString(getPropertyValue(PROP_NEW_CONFIG_PATH), DEFAULT_NEW_CONFIG_PATH);
         final boolean postSlash = newConfigPath.endsWith("/");
         if ( !postSlash ) {
             this.newConfigPath = newConfigPath.concat("/");
@@ -316,6 +339,15 @@ public class JcrInstaller implements EventListener, UpdateHandler {
      * Deactivate this component
      */
     protected void deactivate(final ComponentContext context) {
+        if ( this.managedServiceRef != null ) {
+            this.managedServiceRef.unregister();
+            this.managedServiceRef = null;
+        }
+        this.stop();
+        this.componentContext = null;
+    }
+
+    private void stop() {
     	logger.info("Deactivating Apache Sling JCR Installer");
 
     	final long timeout = 30000L;
@@ -347,14 +379,43 @@ public class JcrInstaller implements EventListener, UpdateHandler {
             session = null;
         }
         listeners.clear();
-        this.componentContext = null;
     }
 
-    /** Get a property value from the component context or bundle context */
-    protected Object getPropertyValue(ComponentContext ctx, String name) {
-        Object result = ctx.getBundleContext().getProperty(name);
-        if(result == null) {
-            result = ctx.getProperties().get(name);
+
+    /**
+     * @see org.osgi.service.cm.ManagedService#updated(java.util.Dictionary)
+     */
+    public void updated(@SuppressWarnings("rawtypes") Dictionary properties)
+    throws ConfigurationException {
+        final boolean restart;
+        if ( this.oldConfiguration == null ) {
+            restart = properties != null;
+        } else {
+            restart = true;
+        }
+        this.oldConfiguration = properties;
+        if ( restart ) {
+            try {
+                this.stop();
+                this.start();
+            } catch (final Exception e) {
+                logger.error("Error restarting", e);
+            }
+        }
+    }
+
+    /** Get a property value from the old config, component context or bundle context */
+    protected Object getPropertyValue(final String name) {
+        final Dictionary<?, ?> oldConfig = this.oldConfiguration;
+        Object result = null;
+        if ( oldConfig != null ) {
+            result = oldConfig.get(name);
+        }
+        if ( result == null ) {
+            result = this.componentContext.getBundleContext().getProperty(name);
+            if (result == null) {
+                result = this.componentContext.getProperties().get(name);
+            }
         }
         return result;
     }
