@@ -410,6 +410,11 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         Object result = null;
         if ( oldConfig != null ) {
             result = oldConfig.get(name);
+            if ( result != null ) {
+                logger.warn("Using configuration value from obsolete configuration with PID {} for property {}." +
+                            " Please merge this configuration into the configuration with the PID {}.",
+                            new Object[] {OLD_PID, name, this.componentContext.getProperties().get(Constants.SERVICE_PID)});
+            }
         }
         if ( result == null ) {
             result = this.componentContext.getBundleContext().getProperty(name);
