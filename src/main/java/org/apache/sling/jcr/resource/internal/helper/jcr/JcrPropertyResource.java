@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Iterator;
 
@@ -39,8 +40,8 @@ import org.slf4j.LoggerFactory;
 
 @Adaptable(adaptableClass = Resource.class, adapters = {
         @Adapter(value = { Item.class, Property.class, Value.class, String.class, Boolean.class, Long.class,
-                Double.class, Calendar.class, InputStream.class, Value[].class, String[].class,
-                Boolean[].class, Long[].class, Double[].class }),
+                Double.class, BigDecimal.class, Calendar.class, InputStream.class, Value[].class, String[].class,
+                Boolean[].class, Long[].class, Double[].class, BigDecimal[].class }),
         @Adapter(value = Node.class, condition = "If the resource is a JcrPropertyResource and the property is a reference or weak reference property.") })
 public class JcrPropertyResource extends JcrItemResource {
 
@@ -103,6 +104,9 @@ public class JcrPropertyResource extends JcrItemResource {
             } else if (type == Double.class) {
                 return (AdapterType) new Double(getProperty().getDouble());
 
+            } else if (type == BigDecimal.class) {
+                return (AdapterType) getProperty().getDecimal();
+
             } else if (type == Calendar.class) {
                 return (AdapterType) getProperty().getDate();
 
@@ -160,6 +164,17 @@ public class JcrPropertyResource extends JcrItemResource {
                     return (AdapterType)result;
                 }
                 return (AdapterType)new Double[] {getProperty().getDouble()};
+
+            } else if (type == BigDecimal[].class) {
+                if ( getProperty().getDefinition().isMultiple() ) {
+                    final Value[] values = getProperty().getValues();
+                    final BigDecimal[] result = new BigDecimal[values.length];
+                    for(int i=0; i<values.length; i++) {
+                        result[i] = values[i].getDecimal();
+                    }
+                    return (AdapterType)result;
+                }
+                return (AdapterType)new BigDecimal[] {getProperty().getDecimal()};
 
             } else if (type == Calendar[].class) {
                 if ( getProperty().getDefinition().isMultiple() ) {
