@@ -241,7 +241,7 @@ public class AuthenticationInfoTest {
         info.put(CREDENTIALS,
                 new SimpleCredentials("user", new char[2]));
 
-        test_put_fail(info, AuthenticationInfo.AUTH_TYPE, null);
+        test_put_success(info, AuthenticationInfo.AUTH_TYPE, null);
         test_put_fail(info, ResourceResolverFactory.USER, null);
         test_put_fail(info, ResourceResolverFactory.PASSWORD, null);
 
