@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -424,6 +425,9 @@ public class JcrPropertyMap
 
         } else if (Double.class == type) {
             return (T) Double.valueOf(jcrValue.getDouble());
+
+        } else if (BigDecimal.class == type) {
+            return (T) jcrValue.getDecimal();
 
         } else if (Boolean.class == type) {
             return (T) Boolean.valueOf(jcrValue.getBoolean());

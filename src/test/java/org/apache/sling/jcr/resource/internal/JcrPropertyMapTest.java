@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resource.internal;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
@@ -72,6 +73,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         testValue(rootNode, 5L);
         testValue(rootNode, 1.4D);
         testValue(rootNode, true);
+        testValue(rootNode, BigDecimal.TEN);
     }
 
     public void testTypeByClass() throws Exception {
@@ -89,6 +91,8 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         testValue(rootNode, cal, Calendar.class);
         testValue(rootNode, cal, Date.class);
         testValue(rootNode, cal, Long.class);
+
+        testValue(rootNode, BigDecimal.TEN, BigDecimal.class);
     }
 
     public void testTypeByDefaultValue() throws Exception {
@@ -111,6 +115,8 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         testValue(rootNode, cal, refCal);
         testValue(rootNode, cal, refDate);
         testValue(rootNode, cal, refTime);
+
+        testValue(rootNode, BigDecimal.TEN, BigDecimal.ONE);
     }
 
     public void testDefaultValue() throws Exception {
@@ -132,6 +138,8 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         testDefaultValue(rootNode, refCal);
         testDefaultValue(rootNode, refDate);
         testDefaultValue(rootNode, refTime);
+
+        testDefaultValue(rootNode, BigDecimal.TEN);
     }
 
     public void testProperty() throws Exception {
@@ -248,6 +256,8 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
             jcrValue = fac.createValue(((Double) value).doubleValue());
         } else if (value instanceof Long) {
             jcrValue = fac.createValue(((Long) value).longValue());
+        } else if (value instanceof BigDecimal) {
+            jcrValue = fac.createValue((BigDecimal) value);
         } else {
             fail("Cannot create JCR value from " + value);
             return null;
