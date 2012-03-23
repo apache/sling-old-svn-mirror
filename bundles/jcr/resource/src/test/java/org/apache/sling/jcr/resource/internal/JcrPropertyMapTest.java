@@ -86,6 +86,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         testValue(rootNode, 1.0d, Float.class);
         testValue(rootNode, 1.0d, Double.class);
+        testValue(rootNode, 1.0d, BigDecimal.class);
 
         Calendar cal = Calendar.getInstance();
         testValue(rootNode, cal, Calendar.class);
@@ -105,6 +106,11 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         testValue(rootNode, 1.0d, 10.0f);
         testValue(rootNode, 1.0d, 10.0d);
+        testValue(rootNode, 1.0d, new BigDecimal("1.0"));
+
+        testValue(rootNode, BigDecimal.TEN, 10.0f);
+        testValue(rootNode, BigDecimal.TEN, 10.0d);
+        testValue(rootNode, BigDecimal.TEN, BigDecimal.TEN);
 
         long refTime = 1000l;
         Date refDate = new Date(refTime);
@@ -129,6 +135,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         testDefaultValue(rootNode, 10.0f);
         testDefaultValue(rootNode, 10.0d);
+        testDefaultValue(rootNode, new BigDecimal("50.50"));
 
         long refTime = 1000l;
         Date refDate = new Date(refTime);
@@ -146,7 +153,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         ValueMap map = createProperty(rootNode, "Sample Value For Prop");
         Property prop = rootNode.getProperty(PROP_NAME);
 
-        // explicite type
+        // explicit type
         Property result = map.get(PROP_NAME, Property.class);
         assertTrue(prop.isSame(result));
 
@@ -205,6 +212,9 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
         } else if (value instanceof Double && result instanceof Number) {
             assertEquals(((Number) value).doubleValue(), ((Number) result).doubleValue());
+
+        } else if (value instanceof BigDecimal && result instanceof Number) {
+            assertEquals(((BigDecimal) value).doubleValue(), ((Number) result).doubleValue());
 
         } else if (value instanceof Calendar) {
             long resultTime;
