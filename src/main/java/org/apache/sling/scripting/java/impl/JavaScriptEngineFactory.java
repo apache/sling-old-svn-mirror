@@ -31,6 +31,11 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -52,16 +57,17 @@ import org.osgi.service.event.EventHandler;
 /**
  * The Java engine
  *
- * @scr.component label="%javahandler.name" description="%javahandler.description"
- * @scr.property name="service.description" value="Java Servlet Script Handler"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="javax.script.ScriptEngineFactory"
- *
- * @scr.property nameRef="PROPERTY_COMPILER_SOURCE_V_M" valueRef="DEFAULT_VM_VERSION"
- * @scr.property nameRef="PROPERTY_COMPILER_TARGET_V_M" valueRef="DEFAULT_VM_VERSION"
- * @scr.property nameRef="PROPERTY_CLASSDEBUGINFO" value="true" type="Boolean"
- * @scr.property nameRef="PROPERTY_ENCODING" value="UTF-8"
  */
+@Component(metatype=true, label="%javahandler.name", description="%javahandler.description")
+@Service(value=javax.script.ScriptEngineFactory.class)
+@Properties({
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="service.description", value="Java Servlet Script Handler"),
+    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_SOURCE_V_M, value=JavaScriptEngineFactory.DEFAULT_VM_VERSION),
+    @Property(name=JavaScriptEngineFactory.PROPERTY_COMPILER_TARGET_V_M, value=JavaScriptEngineFactory.DEFAULT_VM_VERSION),
+    @Property(name=JavaScriptEngineFactory.PROPERTY_CLASSDEBUGINFO, boolValue=true),
+    @Property(name=JavaScriptEngineFactory.PROPERTY_ENCODING, value="UTF-8")
+})
 public class JavaScriptEngineFactory
     extends AbstractScriptEngineFactory
     implements EventHandler {
@@ -77,12 +83,10 @@ public class JavaScriptEngineFactory
     /** Default source and target VM version (value is "1.5"). */
     public static final String DEFAULT_VM_VERSION = "1.5";
 
-    /**
-     * @scr.reference
-     */
+    @Reference
     private JavaCompiler javaCompiler;
 
-    /** @scr.reference */
+    @Reference
     private ServletContext slingServletContext;
 
     private SlingIOProvider ioProvider;
