@@ -113,4 +113,11 @@ public class CompilerJava5Test extends TestCase
     public boolean rename(String oldPath, String newPath) {
         return false;
     }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
+     */
+    public ClassLoader getClassLoader() {
+        return null;
+    }
 }
