@@ -55,6 +55,8 @@ public class JcrResourceUtil {
     /** Converts a JCR Value to a corresponding Java Object */
     public static Object toJavaObject(Value value) throws RepositoryException {
         switch (value.getType()) {
+            case PropertyType.DECIMAL:
+                return value.getDecimal();
             case PropertyType.BINARY:
                 return new LazyInputStream(value);
             case PropertyType.BOOLEAN:
