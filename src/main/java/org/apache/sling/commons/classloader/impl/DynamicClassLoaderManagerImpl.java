@@ -16,41 +16,36 @@
  */
 package org.apache.sling.commons.classloader.impl;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.classloader.DynamicClassLoaderProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the default implementation of the dynamic class loader
  * manager.
  */
 public class DynamicClassLoaderManagerImpl
-    extends ServiceTracker
     implements DynamicClassLoaderManager {
 
-    /** The package admin class loader. */
-    private final PackageAdminClassLoader pckAdminCL;
+    /** Logger. */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    /** The class loaders */
+    private final ClassLoader[] loaders;
 
     /** The dynamic class loader. */
     private final ClassLoaderFacade facade;
 
-    /** The cached chain of class loaders. */
-    private ClassLoader[] cache;
-
-    /** The cached chain of dynamic class loader providers. */
-    private DynamicClassLoaderProvider[] providerCache;
-
     /** Is this still active? */
     private volatile boolean active = true;
 
-    /** Tracking count */
-    private volatile int trackingCount = -1;
+    private final ServiceTracker deprecatedProviderTracker;
 
     /**
      * Create a new service instance
@@ -62,69 +57,39 @@ public class DynamicClassLoaderManagerImpl
             final PackageAdmin pckAdmin,
             final ClassLoader parent,
             final DynamicClassLoaderManagerFactory factory) {
-        super(ctx, DynamicClassLoaderProvider.class.getName(), null);
-        this.pckAdminCL = new PackageAdminClassLoader(pckAdmin, parent, factory);
-        this.cache = new ClassLoader[] {this.pckAdminCL};
-        this.providerCache = new DynamicClassLoaderProvider[0];
-        this.open();
-        this.facade = new ClassLoaderFacade(this);
-    }
+        this.deprecatedProviderTracker = new ServiceTracker(ctx, DynamicClassLoaderProvider.class.getName(),
+                new ServiceTrackerCustomizer() {
 
-    private synchronized void updateCache() {
-        if ( this.trackingCount < this.getTrackingCount() ) {
-            final ServiceReference[] refs = this.getServiceReferences();
-            final ClassLoader[] loaders;
-            final DynamicClassLoaderProvider[] providers;
-            if ( refs == null || refs.length == 0 ) {
-                loaders = new ClassLoader[] {this.pckAdminCL};
-                providers = new DynamicClassLoaderProvider[0];
-            } else {
-                loaders = new ClassLoader[1 + refs.length];
-                providers = new DynamicClassLoaderProvider[refs.length];
-                Arrays.sort(refs, ServiceReferenceComparator.INSTANCE);
-                int index = 0;
-                for(final ServiceReference ref : refs) {
-                    final DynamicClassLoaderProvider provider = (DynamicClassLoaderProvider)this.getService(ref);
-                    if ( provider != null ) {
-                        loaders[index] = provider.getClassLoader(this.pckAdminCL);
-                        providers[index] = provider;
+                    public void removedService(final ServiceReference serviceRef,
+                            final Object paramObject) {
+                        ctx.ungetService(serviceRef);
                     }
-                    index++;
-                }
-                loaders[index] = this.pckAdminCL;
-            }
-            // release old class loaders
-            this.releaseProviders();
 
-            // and now use new array
-            this.cache = loaders;
-            this.providerCache = providers;
-            this.trackingCount = this.getTrackingCount();
-        }
-    }
+                    public void modifiedService(final ServiceReference serviceRef,
+                            final Object paramObject) {
+                        // nothing to do
+                    }
 
-    /**
-     * Free used class loader providers
-     */
-    private void releaseProviders() {
-        if ( this.providerCache != null ) {
-            for(int i=0; i<this.providerCache.length; i++) {
-                if ( this.cache[i] != null ) {
-                    this.providerCache[i].release(this.cache[i]);
-                }
-            }
-        }
+                    public Object addingService(final ServiceReference serviceRef) {
+                        final Object obj = ctx.getService(serviceRef);
+                        if ( obj != null ) {
+                            logger.warn("Dynamic class loader does not support deprecated dynamic class loader providers: {} : {}",
+                                serviceRef, obj);
+                        }
+                        return obj;
+                    }
+                });
+        this.deprecatedProviderTracker.open();
+        this.loaders = new ClassLoader[] {new PackageAdminClassLoader(pckAdmin, parent, factory)};
+        this.facade = new ClassLoaderFacade(this);
     }
 
     /**
      * Deactivate this service.
      */
     public void deactivate() {
-        this.releaseProviders();
+        this.deprecatedProviderTracker.close();
         this.active = false;
-        this.close();
-        this.providerCache = null;
-        this.cache = null;
     }
 
     /**
@@ -142,26 +107,10 @@ public class DynamicClassLoaderManagerImpl
     }
 
     /**
-     * This list contains the current list of class loaders. The first class loader
-     * is always the package admin class loader, therefore this list is never null
-     * and has always a size greater than zero.
-     * @return The list of class loaders.
+     * Return the dynamic class loaders to use
+     * Currently this is just the package admin class loader.
      */
     public ClassLoader[] getDynamicClassLoaders() {
-        if ( this.trackingCount < this.getTrackingCount() ) {
-            updateCache();
-        }
-        return this.cache;
-    }
-
-    /**
-     * Comparator for service references.
-     */
-    protected static final class ServiceReferenceComparator implements Comparator<ServiceReference> {
-        public static ServiceReferenceComparator INSTANCE = new ServiceReferenceComparator();
-
-        public int compare(ServiceReference o1, ServiceReference o2) {
-            return o1.compareTo(o2);
-        }
+        return this.loaders;
     }
 }

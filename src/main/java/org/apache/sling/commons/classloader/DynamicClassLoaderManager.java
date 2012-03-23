@@ -26,9 +26,7 @@ package org.apache.sling.commons.classloader;
  * classes.
  *
  * The default implementation uses the package admin
- * service to load classes and resources. The search
- * path can be extended by providing
- * {@link DynamicClassLoaderProvider}s.
+ * service to load classes and resources.
  *
  * Keep in mind, that the class loader might get invalid.
  * This happens for example, if the class loader loaded
@@ -37,7 +35,7 @@ package org.apache.sling.commons.classloader;
  *
  * In these cases, the dynamic class loader manager service
  * is unregistered and reregistered again, so you should
- * reget your classloader and invalidate loaded objects
+ * discard your classloader and invalidate loaded objects
  * whenever this happens.
  */
 public interface DynamicClassLoaderManager {
