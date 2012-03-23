@@ -46,7 +46,6 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -93,13 +92,7 @@ public class JspScriptEngineFactory
     private ServletContext slingServletContext;
 
     @Reference
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    @Reference
     private ClassLoaderWriter classLoaderWriter;
-
-    /** The class loader for the jsps. */
-    private ClassLoader jspClassLoader;
 
     /** The io provider for reading and writing. */
     private SlingIOProvider ioProvider;
@@ -284,7 +277,7 @@ public class JspScriptEngineFactory
         // set the current class loader as the thread context loader for
         // the setup of the JspRuntimeContext
         final ClassLoader old = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(jspClassLoader);
+        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
 
         try {
             this.jspFactoryHandler = JspRuntimeContext.initFactoryHandler();
@@ -296,14 +289,11 @@ public class JspScriptEngineFactory
 
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
-                componentContext, jspClassLoader, tldLocationsCache);
+                componentContext, tldLocationsCache);
 
             // Initialize the JSP Runtime Context
             this.jspRuntimeContext = new JspRuntimeContext(slingServletContext,
-                    options);
-
-                // by default access the repository
-            this.jspRuntimeContext.setIOProvider(ioProvider);
+                    options, ioProvider);
 
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
@@ -392,44 +382,6 @@ public class JspScriptEngineFactory
         }
     }
 
-    /**
-     * Bind the class load provider.
-     *
-     * @param repositoryClassLoaderProvider the new provider
-     */
-    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
-        if ( this.jspClassLoader != null ) {
-            this.ungetClassLoader();
-        }
-        this.getClassLoader(rclp);
-    }
-
-    /**
-     * Unbind the class loader provider.
-     * @param repositoryClassLoaderProvider the old provider
-     */
-    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
-        if ( this.dynamicClassLoaderManager == rclp ) {
-            this.ungetClassLoader();
-        }
-    }
-
-    /**
-     * Get the class loader
-     */
-    private void getClassLoader(final DynamicClassLoaderManager rclp) {
-        this.dynamicClassLoaderManager = rclp;
-        this.jspClassLoader = rclp.getDynamicClassLoader();
-    }
-
-    /**
-     * Unget the class loader
-     */
-    private void ungetClassLoader() {
-        this.jspClassLoader = null;
-        this.dynamicClassLoaderManager = null;
-    }
-
     // ---------- Internal -----------------------------------------------------
 
     private class JspScriptEngine extends AbstractSlingScriptEngine {
@@ -447,11 +399,11 @@ public class JspScriptEngineFactory
                 // set the current class loader as the thread context loader for
                 // the compilation and execution of the JSP script
                 ClassLoader old = Thread.currentThread().getContextClassLoader();
-                Thread.currentThread().setContextClassLoader(jspClassLoader);
+                Thread.currentThread().setContextClassLoader(classLoaderWriter.getClassLoader());
 
                 try {
                     callJsp(props, scriptHelper, context);
-                } catch (SlingServletException e) {
+                } catch (final SlingServletException e) {
                     // ServletExceptions use getRootCause() instead of getCause(),
                     // so we have to extract the actual root cause and pass it as
                     // cause in our new ScriptException
@@ -472,7 +424,7 @@ public class JspScriptEngineFactory
                 } catch (final SlingPageException sje) {
                 	callErrorPageJsp(props, scriptHelper, context, sje.getErrorPage());
 
-                } catch (Exception e) {
+                } catch (final Exception e) {
 
                     throw new BetterScriptException(e.getMessage(), e);
 

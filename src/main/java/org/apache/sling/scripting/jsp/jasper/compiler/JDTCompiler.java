@@ -76,7 +76,7 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
         final String targetClassName =
             ((packageName.length() != 0) ? (packageName + ".") : "")
                     + ctxt.getServletClassName();
-        final ClassLoader classLoader = ctxt.getJspLoader();
+        final ClassLoader classLoader = ctxt.getClassLoader();
         String[] fileNames = new String[] {sourceFile};
         String[] classNames = new String[] {targetClassName};
         final ArrayList problemList = new ArrayList();

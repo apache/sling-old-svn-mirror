@@ -96,24 +96,6 @@ public interface Options {
     public String getScratchDir();
 
     /**
-     * What classpath should I use while compiling the servlets
-     * generated from JSP files?
-     */
-    public String getClassPath();
-
-    /**
-     * The classloader to use when compiling servlets generated from JSP files
-     * and to load the servlets.
-     * <p>
-     * If this method returns <code>null</code> the
-     * {@link org.apache.sling.scripting.jsp.jasper.servlet.JasperLoader} class is used.
-     *
-     * @return The <code>ClassLoader</code> to use for compilation and JSP
-     *      loading or <code>null</code> to use the <code>JasperLoader</code>.
-     */
-    public ClassLoader getJspClassLoader();
-
-    /**
      * Compiler to use.
      */
     public String getCompiler();

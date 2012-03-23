@@ -149,7 +149,15 @@ class SlingIOProvider implements IOProvider {
         return true;
     }
 
+    /**
+     * @see org.apache.sling.scripting.jsp.jasper.IOProvider#getClassLoader()
+     */
+    public ClassLoader getClassLoader() {
+        return this.classLoaderWriter.getClassLoader();
+    }
+
     // ---------- Helper Methods for JspServletContext -------------------------
+
 
     /* package */URL getURL(String path) throws MalformedURLException {
         try {

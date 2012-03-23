@@ -139,42 +139,12 @@ public class JspCompilationContext {
         }
     }
 
-    /* ==================== Methods to override ==================== */
-
-    /** ---------- Class path and loader ---------- */
-
-    /**
-     * The classpath that is passed off to the Java compiler.
-    public String getClassPath() {
-        if( classPath != null )
-            return classPath;
-        return rctxt.getClassPath();
-    }
-     */
-
-    /**
-     * The classpath that is passed off to the Java compiler.
-    public void setClassPath(String classPath) {
-        this.classPath = classPath;
-    }
-     */
-
     /**
      * What class loader to use for loading classes while compiling
      * this JSP?
      */
     public ClassLoader getClassLoader() {
-        return getJspLoader();
-    }
-
-    /**
-    public void setClassLoader(ClassLoader loader) {
-        this.loader = loader;
-    }
-     */
-
-    public ClassLoader getJspLoader() {
-        return options.getJspClassLoader();
+        return getRuntimeContext().getIOProvider().getClassLoader();
     }
 
     /** ---------- Input/Output  ---------- */
@@ -628,15 +598,13 @@ public class JspCompilationContext {
         throws JasperException, FileNotFoundException
     {
         try {
-            getJspLoader();
-
             String name;
             if (isTagFile()) {
                 name = tagInfo.getTagClassName();
             } else {
                 name = getServletPackageName() + "." + getServletClassName();
             }
-            servletClass = getJspLoader().loadClass(name);
+            servletClass = getClassLoader().loadClass(name);
         } catch (ClassNotFoundException cex) {
             throw new JasperException(Localizer.getMessage("jsp.error.unable.load"),
                                       cex);

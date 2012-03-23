@@ -96,7 +96,7 @@ public class JspServlet extends HttpServlet {
             // Use the default Options implementation
             options = new EmbeddedServletOptions(config, context);
         }
-        rctxt = new JspRuntimeContext(context, options);
+        rctxt = new JspRuntimeContext(context, options, null);
 
         if (log.isDebugEnabled()) {
             log.debug(Localizer.getMessage("jsp.message.scratch.dir.is",

@@ -15,10 +15,7 @@
  */
 package org.apache.sling.scripting.jsp.jasper;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,35 +26,6 @@ import java.io.OutputStream;
  * up in case of problems.
  */
 public interface IOProvider {
-
-    /**
-     * The default output provider, which is based on the OS filesystem
-     */
-    public static final IOProvider DEFAULT = new IOProvider() {
-        public OutputStream getOutputStream(String fileName) throws IOException {
-            File file = new File(fileName);
-            file.getParentFile().mkdirs(); // ensure parent path exists
-            return new FileOutputStream(fileName);
-        }
-        public InputStream getInputStream(String fileName)
-                throws FileNotFoundException, IOException {
-            return new FileInputStream(fileName);
-        }
-        public boolean delete(String fileName) {
-            return new File(fileName).delete();
-        }
-        public boolean rename(String oldFileName, String newFileName) {
-            return new File(oldFileName).renameTo(new File(newFileName));
-        }
-        public boolean mkdirs(String path) {
-            File dirFile = new File(path);
-            return dirFile.isDirectory() || dirFile.mkdirs();
-        }
-        public long lastModified(String path) {
-            File checkFile = new File(path);
-            return (checkFile.exists()) ? checkFile.lastModified() : -1L;
-        }
-    };
 
     /**
      * @param fileName The absolute path name of the destination into which to
@@ -133,4 +101,9 @@ public interface IOProvider {
      *      since the epoch or -1 if no resource exists at the given location.
      */
     long lastModified(String fileName);
+
+    /**
+     * Return the class loader to use
+     */
+    ClassLoader getClassLoader();
 }

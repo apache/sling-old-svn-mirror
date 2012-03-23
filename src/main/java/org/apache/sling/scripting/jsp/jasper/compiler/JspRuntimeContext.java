@@ -80,7 +80,7 @@ public final class JspRuntimeContext {
     private int jspReloadCount;
 
     /** The {@link IOProvider} used to get access to output */
-    private IOProvider ioProvider = IOProvider.DEFAULT;
+    private final IOProvider ioProvider;
 
     /** This is a delegate forwarding either to our own factory
      * or the original one.
@@ -210,10 +210,11 @@ public final class JspRuntimeContext {
      *
      * @param context ServletContext for web application
      */
-    public JspRuntimeContext(ServletContext context, Options options) {
+    public JspRuntimeContext(ServletContext context, Options options, final IOProvider ioProvider) {
 
         this.context = context;
         this.options = options;
+        this.ioProvider = ioProvider;
 
         // Get the parent class loader
         parentClassLoader = Thread.currentThread().getContextClassLoader();
@@ -451,19 +452,6 @@ public final class JspRuntimeContext {
         return ioProvider;
     }
 
-    /**
-     * Sets the {@link IOProvider} to use in this context.
-     *
-     * @param ioProvider The {@link IOProvider} to use in this context.
-     *      If this is <code>null</code> the {@link IOProvider#DEFAULT default}
-     *      provider is set.
-     */
-    public void setIOProvider(IOProvider ioProvider) {
-        this.ioProvider = (ioProvider == null)
-                ? IOProvider.DEFAULT
-                : ioProvider;
-    }
-
     // -------------------------------------------------------- Private Methods
 
 
@@ -490,12 +478,9 @@ public final class JspRuntimeContext {
             }
         }
 
-	cpath.append(options.getScratchDir() + sep);
+	    cpath.append(options.getScratchDir() + sep);
 
         String cp = (String) context.getAttribute(Constants.SERVLET_CLASSPATH);
-        if (cp == null || cp.equals("")) {
-            cp = options.getClassPath();
-        }
 
         classpath = cpath.toString() + cp;
 
