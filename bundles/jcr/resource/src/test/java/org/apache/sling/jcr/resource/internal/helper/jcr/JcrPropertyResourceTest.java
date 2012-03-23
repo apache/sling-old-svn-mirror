@@ -21,6 +21,7 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import static org.junit.Assert.assertEquals;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -53,6 +54,7 @@ public class JcrPropertyResourceTest {
             put("string with ümlaut", PropertyType.STRING);
             put(true, PropertyType.BOOLEAN);
             put(1000L, PropertyType.LONG);
+            put(BigDecimal.TEN, PropertyType.DECIMAL);
         }};
 
         final ResourceResolver resolver = this.context.mock(ResourceResolver.class);
