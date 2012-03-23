@@ -24,7 +24,12 @@ package org.apache.sling.commons.classloader;
  * class loading mechanism. For instance a JCR class loader
  * provider could provide some class loader loading classes
  * from a content repository etc.
+ *
+ * @deprecated The dynamic class loader provider is not supported
+ *             anymore and any service implementing this is not
+ *             considered for dynamic class loading anymore!
  */
+@Deprecated
 public interface DynamicClassLoaderProvider {
 
     /**
