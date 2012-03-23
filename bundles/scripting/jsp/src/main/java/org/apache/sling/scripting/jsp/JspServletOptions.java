@@ -109,11 +109,6 @@ public class JspServletOptions implements Options {
     private String ieClassId = "clsid:8AD9C840-044E-11D1-B3E9-00805F499D93";
 
     /**
-     * What classpath should I use while compiling generated servlets?
-     */
-    private String classpath;
-
-    /**
      * Compiler target VM.
      */
     private String compilerTargetVM = DEFAULT_VM_VERSION;
@@ -142,11 +137,6 @@ public class JspServletOptions implements Options {
      * Java platform encoding to generate the JSP page servlet.
      */
     private String javaEncoding = "UTF8";
-
-    /**
-     * The class loader to use to compile and load JSP files
-     */
-    private ClassLoader jspClassLoader;
 
     /**
      * Is generation of X-Powered-By response header enabled/disabled?
@@ -237,21 +227,6 @@ public class JspServletOptions implements Options {
     }
 
     /**
-     * What classpath should I use while compiling the servlets generated from
-     * JSP files?
-     */
-    public String getClassPath() {
-        return this.classpath;
-    }
-
-    /**
-     * Return <code>null</code> to force use of the <code>JasperLoader</code>.
-     */
-    public ClassLoader getJspClassLoader() {
-        return this.jspClassLoader;
-    }
-
-    /**
      * Is generation of X-Powered-By response header enabled/disabled?
      */
     public boolean isXpoweredBy() {
@@ -330,9 +305,7 @@ public class JspServletOptions implements Options {
      */
     public JspServletOptions(ServletContext servletContext,
             IOProvider ioProvider, ComponentContext componentContext,
-            ClassLoader jspClassLoader, TldLocationsCache tldLocationsCache) {
-
-        this.jspClassLoader = jspClassLoader;
+            TldLocationsCache tldLocationsCache) {
 
         // JVM version numbers default to 1.5
         this.compilerSourceVM = DEFAULT_VM_VERSION;
@@ -502,11 +475,6 @@ public class JspServletOptions implements Options {
         String ieClassId = getProperty("ieClassId");
         if (ieClassId != null) {
             this.ieClassId = ieClassId;
-        }
-
-        String classpath = getProperty("classpath");
-        if (classpath != null) {
-            this.classpath = classpath;
         }
 
         String compilerTargetVM = getProperty("compilerTargetVM");

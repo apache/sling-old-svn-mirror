@@ -16,11 +16,13 @@
  */
 package org.apache.sling.jcr.classloader.internal;
 
-import javax.jcr.AccessDeniedException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -67,7 +69,7 @@ public class Util {
      * returned. Otherwise if the resulting property is a <code>REFERENCE</code>
      * property, the node referred to is retrieved and this method is called
      * recursively with the node. Otherwise, the resulting property is returned.
-     * 
+     *
      * @param item The <code>Item</code> to resolve to a <code>Property</code>.
      * @return The resolved <code>Property</code> or <code>null</code> if
      *         the resolved property is a multi-valued property or the
@@ -93,7 +95,7 @@ public class Util {
 
             // if the node has a jcr:data property, use that property
             if (node.hasProperty("jcr:data")) {
-                
+
                 prop = node.getProperty("jcr:data");
 
             } else {
@@ -135,32 +137,28 @@ public class Util {
     }
 
     /**
-     * Returns the last modification time of the property, which is the long
-     * value of the <code>jcr:lastModified</code> property of the parent node
-     * of <code>prop</code>. If the parent node does not have a
-     * <code>jcr:lastModified</code> property the current system time is
-     * returned.
-     * 
-     * @param prop The property for which to return the last modification time.
-     * @return The last modification time of the resource or the current time if
-     *         the parent node of the property does not have a
-     *         <code>jcr:lastModified</code> property.
-     * @throws ItemNotFoundException If the parent node of the property cannot
-     *             be retrieved.
-     * @throws AccessDeniedException If (read) access to the parent node is
-     *             denied.
-     * @throws RepositoryException If any other error occurrs accessing the
-     *             repository to retrieve the last modification time.
+     * Returns the resource as an array of bytes
      */
-    public static long getLastModificationTime(Property prop)
-            throws ItemNotFoundException, PathNotFoundException,
-            AccessDeniedException, RepositoryException {
+    public static byte[] getBytes(final Node node) throws IOException, RepositoryException {
+        InputStream in = null;
 
-        Node parent = prop.getParent();
-        if (parent.hasProperty("jcr:lastModified")) {
-            return parent.getProperty("jcr:lastModified").getLong();
+        try {
+            in = getProperty(node).getStream();
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            final byte[] buffer = new byte[2048];
+            int l = 0;
+            while ( (l = in.read(buffer)) > -1 ) {
+                baos.write(buffer, 0, l);
+            }
+            return baos.toByteArray();
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (final IOException ignore) {
+                    // ignore
+                }
+            }
         }
-
-        return System.currentTimeMillis();
     }
 }

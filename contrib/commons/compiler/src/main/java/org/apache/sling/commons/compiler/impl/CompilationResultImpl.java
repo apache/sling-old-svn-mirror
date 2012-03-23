@@ -19,6 +19,7 @@ package org.apache.sling.commons.compiler.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilerMessage;
 
@@ -35,25 +36,25 @@ public class CompilationResultImpl implements CompilationResult {
 
     private final boolean compilationRequired;
 
-    private final ClassLoader classLoader;
+    private final ClassLoaderWriter classLoaderWriter;
 
     public CompilationResultImpl(final String errorMessage) {
         this.ignoreWarnings = true;
-        this.classLoader = null;
+        this.classLoaderWriter = null;
         this.compilationRequired = false;
         this.onError(errorMessage, "<General>", 0, 0);
     }
 
-    public CompilationResultImpl(final ClassLoader classLoader) {
+    public CompilationResultImpl(final ClassLoaderWriter writer) {
         this.ignoreWarnings = true;
-        this.classLoader = classLoader;
+        this.classLoaderWriter = writer;
         this.compilationRequired = false;
     }
 
     public CompilationResultImpl(final boolean ignoreWarnings,
-                                 final ClassLoader classLoader) {
+                                 final ClassLoaderWriter writer) {
         this.ignoreWarnings = ignoreWarnings;
-        this.classLoader = classLoader;
+        this.classLoaderWriter = writer;
         this.compilationRequired = true;
     }
 
@@ -79,7 +80,7 @@ public class CompilationResultImpl implements CompilationResult {
         if ( errors != null ) {
             throw new ClassNotFoundException(className);
         }
-        return this.classLoader.loadClass(className);
+        return this.classLoaderWriter.getClassLoader().loadClass(className);
     }
 
     /**

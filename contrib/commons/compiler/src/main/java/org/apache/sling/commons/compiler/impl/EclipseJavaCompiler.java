@@ -29,10 +29,8 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.JavaCompiler;
@@ -65,13 +63,8 @@ public class EclipseJavaCompiler implements JavaCompiler {
     /** Logger instance */
     private final Logger logger = LoggerFactory.getLogger(EclipseJavaCompiler.class);
 
-    @Reference(policy=ReferencePolicy.DYNAMIC)
+    @Reference
     private ClassLoaderWriter classLoaderWriter;
-
-    @Reference(policy=ReferencePolicy.DYNAMIC)
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
-
-    private ClassLoader classLoader;
 
     /** the static problem factory */
     private IProblemFactory problemFactory = new DefaultProblemFactory(Locale.getDefault());
@@ -80,52 +73,15 @@ public class EclipseJavaCompiler implements JavaCompiler {
     private final IErrorHandlingPolicy policy = DefaultErrorHandlingPolicies.proceedWithAllProblems();
 
     /**
-     * Bind the class load provider.
-     * @param repositoryClassLoaderProvider the new provider
-     */
-    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
-        if ( this.classLoader != null ) {
-            this.ungetClassLoader();
-        }
-        this.getClassLoader(rclp);
-    }
-
-    /**
-     * Unbind the class loader provider.
-     * @param repositoryClassLoaderProvider the old provider
-     */
-    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
-        if ( this.dynamicClassLoaderManager == rclp ) {
-            this.ungetClassLoader();
-        }
-    }
-
-    /**
-     * Get the commons dynamic class loader
-     */
-    private void getClassLoader(final DynamicClassLoaderManager rclp) {
-        this.dynamicClassLoaderManager = rclp;
-        this.classLoader = rclp.getDynamicClassLoader();
-    }
-
-    /**
-     * Unget the commons dynamic class loader
-     */
-    private void ungetClassLoader() {
-        this.classLoader = null;
-        this.dynamicClassLoaderManager = null;
-    }
-
-    /**
      * Get the classloader for the compilation.
      */
-    private ClassLoader getClassLoader(final Options options) {
+    private ClassLoader getClassLoader(final Options options, final ClassLoaderWriter classLoaderWriter) {
         final ClassLoader loader;
         if ( options.get(Options.KEY_CLASS_LOADER) != null ) {
             loader = (ClassLoader)options.get(Options.KEY_CLASS_LOADER);
         } else if ( options.get(Options.KEY_ADDITIONAL_CLASS_LOADER) != null ) {
             final ClassLoader additionalClassLoader = (ClassLoader)options.get(Options.KEY_ADDITIONAL_CLASS_LOADER);
-            loader = new ClassLoader(this.classLoader) {
+            loader = new ClassLoader(classLoaderWriter.getClassLoader()) {
                 protected Class<?> findClass(String name)
                 throws ClassNotFoundException {
                     return additionalClassLoader.loadClass(name);
@@ -136,7 +92,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
                 }
             };
         } else {
-            loader = this.classLoader;
+            loader = classLoaderWriter.getClassLoader();
         }
         return loader;
     }
@@ -197,13 +153,13 @@ public class EclipseJavaCompiler implements JavaCompiler {
         final Options options = (compileOptions != null ? compileOptions : EMPTY_OPTIONS);
 
         // get classloader and classloader writer
-        final ClassLoader loader = this.getClassLoader(options);
-        if ( loader == null ) {
-            return new CompilationResultImpl("Class loader for compilation is not available.");
-        }
         final ClassLoaderWriter writer = this.getClassLoaderWriter(options);
         if ( writer == null ) {
             return new CompilationResultImpl("Class loader writer for compilation is not available.");
+        }
+        final ClassLoader loader = this.getClassLoader(options, writer);
+        if ( loader == null ) {
+            return new CompilationResultImpl("Class loader for compilation is not available.");
         }
 
         // check sources for compilation
@@ -218,7 +174,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
         }
         if ( !needsCompilation ) {
             logger.debug("All source files are recent - no compilation required.");
-            return new CompilationResultImpl(loader);
+            return new CompilationResultImpl(writer);
         }
 
         // delete old class files
@@ -248,7 +204,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
         logger.debug("Compiling with settings {}.", settings);
 
         // create the result
-        final CompilationResultImpl result = new CompilationResultImpl(isIgnoreWarnings(options), loader);
+        final CompilationResultImpl result = new CompilationResultImpl(isIgnoreWarnings(options), writer);
         // create the context
         final CompileContext context = new CompileContext(units, result, writer, loader);
 

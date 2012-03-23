@@ -24,7 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Dictionary;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -33,11 +33,18 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.commons.classloader.DynamicClassLoaderProvider;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,116 +52,141 @@ import org.slf4j.LoggerFactory;
  * The <code>DynamicClassLoaderProviderImpl</code> provides
  * a class loader which loads classes from configured paths
  * in the repository.
- * In addition it implements {@link ClassLoaderWriter} and
- * supports writing class files to the repository.
- *
- * @scr.component label="%loader.name"
- *      description="%loader.description"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description"
- *      value="Provides Repository ClassLoaders"
- * @scr.service interface="DynamicClassLoaderProvider"
- * @scr.service interface="ClassLoaderWriter"
+ * It implements the {@link ClassLoaderWriter} interface
+ * for clients to use for writing and reading such
+ * classes and resources.
  */
-public class DynamicClassLoaderProviderImpl
-        implements DynamicClassLoaderProvider, ClassLoaderWriter {
+@Component(metatype=true, label="%loader.name", description="%loader.description",
+           name="org.apache.sling.jcr.classloader.internal.DynamicClassLoaderProviderImpl")
+@Service(value=ClassLoaderWriter.class)
+@Properties({
+    @org.apache.felix.scr.annotations.Property(name="service.vendor", value="The Apache Software Foundation"),
+    @org.apache.felix.scr.annotations.Property(name="service.description", value="Repository based classloader writer")
+})
+public class ClassLoaderWriterImpl
+    implements ClassLoaderWriter {
 
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(DynamicClassLoaderProviderImpl.class);
+    /** Logger */
+    private final Logger logger = LoggerFactory.getLogger(ClassLoaderWriterImpl.class);
 
-    /**
-     * @scr.property valueRefs0="CLASS_PATH_DEFAULT"
-     */
-    public static final String CLASS_PATH_PROP = "classpath";
+    private static final String CLASS_PATH_DEFAULT = "/var/classes";
 
-    public static final String CLASS_PATH_DEFAULT = "/var/classes";
+    @org.apache.felix.scr.annotations.Property(value=CLASS_PATH_DEFAULT)
+    private static final String CLASS_PATH_PROP = "classpath";
+
 
     /** Node type for packages/folders. */
     private static final String NT_FOLDER = "nt:folder";
 
-    /**
-     * @scr.property valueRef="OWNER_DEFAULT"
-     */
-    public static final String OWNER_PROP = "owner";
-
     /** Default class loader owner. */
-    public static final String OWNER_DEFAULT = "admin";
+    private static final String OWNER_DEFAULT = "admin";
+
+    @org.apache.felix.scr.annotations.Property(value=OWNER_DEFAULT)
+    private static final String OWNER_PROP = "owner";
 
     /** The owner of the class loader / jcr user. */
     private String classLoaderOwner;
 
-
-    /** JSP Class Loader class path will be injected to the class loader. */
-    private static final String[] CLASS_PATH_EMPTY = { };
-
-    /**
-     * @scr.reference
-     */
+    @Reference
     private SlingRepository repository;
 
-    /** The configured class paths. */
-    private String[] classPath;
+    /** The configured class path. */
+    private String classPath;
 
-    /** @scr.reference policy="dynamic" */
+    @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private MimeTypeService mimeTypeService;
 
-    /** The read session. */
-    private Session readSession;
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+    /** Cached repository class loader. */
+    private volatile RepositoryClassLoader repositoryClassLoader;
 
     /**
-     * Return a new session (for writing).
+     * Activate this component.
+     * @param props The configuration properties
      */
-    Session getSession() throws RepositoryException {
+    @Activate
+    protected void activate(final Map<String, Object> properties) {
+        Object prop = properties.get(CLASS_PATH_PROP);
+        if ( prop instanceof String[] && ((String[])prop).length > 0 ) {
+            this.classPath = ((String[])prop)[0];
+        } else {
+            this.classPath = CLASS_PATH_DEFAULT;
+        }
+        if ( this.classPath.endsWith("/") ) {
+            this.classPath = this.classPath.substring(0, this.classPath.length() - 1);
+        }
+
+        prop = properties.get(OWNER_PROP);
+        this.classLoaderOwner = (prop instanceof String)? (String) prop : OWNER_DEFAULT;
+    }
+
+    /**
+     * Deactivate this component.
+     */
+    @Deactivate
+    protected void deactivate() {
+        if ( this.repositoryClassLoader != null ) {
+            this.repositoryClassLoader.destroy();
+            this.repositoryClassLoader = null;
+        }
+    }
+
+    /**
+     * Return a new session.
+     */
+    private Session getSession() throws RepositoryException {
         // get an administrative session for potentiall impersonation
         final Session admin = this.repository.loginAdministrative(null);
 
         // do use the admin session, if the admin's user id is the same as owner
-        if (admin.getUserID().equals(this.getOwnerId())) {
+        if (admin.getUserID().equals(this.classLoaderOwner)) {
             return admin;
         }
 
         // else impersonate as the owner and logout the admin session again
         try {
-            return admin.impersonate(new SimpleCredentials(this.getOwnerId(), new char[0]));
+            return admin.impersonate(new SimpleCredentials(this.classLoaderOwner, new char[0]));
         } finally {
             admin.logout();
         }
     }
 
-    /**
-     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader(ClassLoader)
-     */
-    public ClassLoader getClassLoader(final ClassLoader parent) {
-        return new RepositoryClassLoaderFacade(this, parent, this.getClassPaths());
-    }
-
-    /**
-     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#release(java.lang.ClassLoader)
-     */
-    public void release(ClassLoader classLoader) {
-        if ( classLoader instanceof RepositoryClassLoaderFacade ) {
-            ((RepositoryClassLoaderFacade)classLoader).destroy();
+    private synchronized ClassLoader getOrCreateClassLoader() {
+        if ( this.repositoryClassLoader == null || !this.repositoryClassLoader.isLive() ) {
+            if ( this.repositoryClassLoader != null ) {
+                this.repositoryClassLoader.destroy();
+            }
+            try {
+                this.repositoryClassLoader = new RepositoryClassLoader(
+                        this.getSession(),
+                        this.classPath,
+                        this.dynamicClassLoaderManager.getDynamicClassLoader());
+            } catch ( final RepositoryException re) {
+                throw new RuntimeException("Unable to instantiate repository class loader.", re);
+            }
         }
+        return this.repositoryClassLoader;
     }
-    //---------- SCR Integration ----------------------------------------------
-
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
      */
-    public boolean delete(String name) {
-        name = cleanPath(name);
+    public boolean delete(final String name) {
+        final String path = cleanPath(name);
         Session session = null;
         try {
             session = getSession();
-            if (session.itemExists(name)) {
-                Item fileItem = session.getItem(name);
+            if (session.itemExists(path)) {
+                Item fileItem = session.getItem(path);
                 fileItem.remove();
                 session.save();
+                this.repositoryClassLoader.handleEvent(path);
                 return true;
             }
-        } catch (RepositoryException re) {
-            log.error("Cannot remove " + name, re);
+        } catch (final RepositoryException re) {
+            logger.error("Cannot remove " + path, re);
         } finally {
             if ( session != null ) {
                 session.logout();
@@ -168,7 +200,7 @@ public class DynamicClassLoaderProviderImpl
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
      */
-    public OutputStream getOutputStream(String name) {
+    public OutputStream getOutputStream(final String name) {
         final String path = cleanPath(name);
         return new RepositoryOutputStream(this, path);
     }
@@ -176,18 +208,20 @@ public class DynamicClassLoaderProviderImpl
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
      */
-    public boolean rename(String oldName, String newName) {
+    public boolean rename(final String oldName, final String newName) {
         Session session = null;
         try {
-            oldName = cleanPath(oldName);
-            newName = cleanPath(newName);
+            final String oldPath = cleanPath(oldName);
+            final String newPath = cleanPath(newName);
 
             session = this.getSession();
-            session.move(oldName, newName);
+            session.move(oldPath, newPath);
             session.save();
+            this.repositoryClassLoader.handleEvent(oldName);
+            this.repositoryClassLoader.handleEvent(newName);
             return true;
-        } catch (RepositoryException re) {
-            log.error("Cannot rename " + oldName + " to " + newName, re);
+        } catch (final RepositoryException re) {
+            logger.error("Cannot rename " + oldName + " to " + newName, re);
         } finally {
             if ( session != null ) {
                 session.logout();
@@ -207,7 +241,7 @@ public class DynamicClassLoaderProviderImpl
      * we avoid this situation - however this method is written
      * in a failsafe manner anyway.
      */
-    private synchronized boolean mkdirs(final Session session, String path) {
+    private synchronized boolean mkdirs(final Session session, final String path) {
         try {
             // quick test
             if (session.itemExists(path) && session.getItem(path).isNode()) {
@@ -216,7 +250,7 @@ public class DynamicClassLoaderProviderImpl
 
             // check path walking it down
             Node current = session.getRootNode();
-            String[] names = path.split("/");
+            final String[] names = path.split("/");
             for (int i = 0; i < names.length; i++) {
                 if (names[i] == null || names[i].length() == 0) {
                     continue;
@@ -249,12 +283,12 @@ public class DynamicClassLoaderProviderImpl
 
             return true;
 
-        } catch (RepositoryException re) {
-            log.error("Cannot create folder path:" + path, re);
+        } catch (final RepositoryException re) {
+            logger.error("Cannot create folder path:" + path, re);
             // discard changes
             try {
                 session.refresh(false);
-            } catch (RepositoryException e) {
+            } catch (final RepositoryException e) {
                 // we simply ignore this
             }
         }
@@ -277,19 +311,16 @@ public class DynamicClassLoaderProviderImpl
             path = path.substring(0, path.length() - 1);
         }
 
-        if ( this.classPath == null || this.classPath.length == 0 ) {
-            return path;
-        }
-        return this.classPath[0] + path;
+        return this.classPath + path;
     }
 
     private static class RepositoryOutputStream extends ByteArrayOutputStream {
 
-        private final DynamicClassLoaderProviderImpl repositoryOutputProvider;
+        private final ClassLoaderWriterImpl repositoryOutputProvider;
 
         private final String fileName;
 
-        RepositoryOutputStream(DynamicClassLoaderProviderImpl repositoryOutputProvider,
+        RepositoryOutputStream(ClassLoaderWriterImpl repositoryOutputProvider,
                 String fileName) {
             this.repositoryOutputProvider = repositoryOutputProvider;
             this.fileName = fileName;
@@ -372,7 +403,8 @@ public class DynamicClassLoaderProviderImpl
                 contentNode.setProperty("jcr:mimeType", mimeType);
 
                 session.save();
-            } catch (RepositoryException re) {
+                this.repositoryOutputProvider.repositoryClassLoader.handleEvent(fileName);
+            } catch (final RepositoryException re) {
                 throw (IOException)new IOException("Cannot write file " + fileName + ", reason: " + re.toString()).initCause(re);
             } finally {
                 if ( session != null ) {
@@ -385,37 +417,45 @@ public class DynamicClassLoaderProviderImpl
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getInputStream(java.lang.String)
      */
-    public InputStream getInputStream(String fileName)
+    public InputStream getInputStream(final String name)
     throws IOException {
-        final String path = cleanPath(fileName) + "/jcr:content/jcr:data";
+        final String path = cleanPath(name) + "/jcr:content/jcr:data";
         Session session = null;
         try {
-            session = this.getReadSession();
+            session = this.getSession();
             if ( session.itemExists(path) ) {
                 final Property prop = (Property)session.getItem(path);
                 return prop.getStream();
             }
-            throw new FileNotFoundException("Unable to find " + fileName);
-        } catch (RepositoryException re) {
+            throw new FileNotFoundException("Unable to find " + name);
+        } catch (final RepositoryException re) {
             throw (IOException) new IOException(
-                        "Failed to get InputStream for " + fileName).initCause(re);
+                        "Failed to get InputStream for " + name).initCause(re);
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
         }
     }
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
      */
-    public long getLastModified(String fileName) {
-        final String path = cleanPath(fileName) + "/jcr:content/jcr:lastModified";
+    public long getLastModified(final String name) {
+        final String path = cleanPath(name) + "/jcr:content/jcr:lastModified";
         Session session = null;
         try {
-            session = this.getReadSession();
+            session = this.getSession();
             if ( session.itemExists(path) ) {
                 final Property prop = (Property)session.getItem(path);
                 return prop.getLong();
             }
-        } catch (RepositoryException se) {
-            log.error("Cannot get last modification time for " + fileName, se);
+        } catch (final RepositoryException se) {
+            logger.error("Cannot get last modification time for " + name, se);
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
         }
 
         // fallback to "non-existant" in case of problems
@@ -423,62 +463,9 @@ public class DynamicClassLoaderProviderImpl
     }
 
     /**
-     * Activate this component.
-     * @param componentContext The component context.
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
      */
-    protected void activate(final ComponentContext componentContext) {
-        @SuppressWarnings("unchecked")
-        Dictionary properties = componentContext.getProperties();
-
-        Object prop = properties.get(CLASS_PATH_PROP);
-        this.classPath = (prop instanceof String[]) ? (String[]) prop : CLASS_PATH_EMPTY;
-
-        prop = properties.get(OWNER_PROP);
-        this.classLoaderOwner = (prop instanceof String)? (String) prop : OWNER_DEFAULT;
-    }
-
-    /**
-     * Deactivate this component
-     * @param componentContext The component context.
-     */
-    protected void deactivate(final ComponentContext componentContext) {
-        if ( this.readSession != null ) {
-            this.readSession.logout();
-            this.readSession = null;
-        }
-    }
-
-    /**
-     * Return the owner id
-     */
-    protected String getOwnerId() {
-        return this.classLoaderOwner;
-    }
-
-    /**
-     * Return the configured class paths
-     */
-    protected String[] getClassPaths() {
-        return this.classPath;
-    }
-
-    /**
-     * Return the read session.
-     */
-    public synchronized Session getReadSession() throws RepositoryException {
-        // check current session
-        if (this.readSession != null) {
-            if (this.readSession.isLive()) {
-                return this.readSession;
-            }
-
-            // current session is not live anymore, drop
-            this.readSession.logout();
-            this.readSession = null;
-        }
-
-        // no session currently, acquire and return
-        this.readSession = this.getSession();
-        return this.readSession;
+    public ClassLoader getClassLoader() {
+        return this.getOrCreateClassLoader();
     }
 }
