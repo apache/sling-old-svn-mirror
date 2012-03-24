@@ -315,15 +315,15 @@ public final class RepositoryClassLoader
             if ( session.itemExists(path) ) {
                 final Node node = (Node)session.getItem(path);
                 logger.debug("Found resource at {}", path);
-                synchronized ( this.usedResources ) {
-                    this.usedResources.add(path);
-                }
                 res = node;
             } else {
                 logger.debug("No classpath entry contains {}", path);
             }
         } catch (final RepositoryException re) {
             logger.debug("Error while trying to get node at " + path, re);
+        }
+        synchronized ( this.usedResources ) {
+            this.usedResources.add(path);
         }
         return res;
     }
