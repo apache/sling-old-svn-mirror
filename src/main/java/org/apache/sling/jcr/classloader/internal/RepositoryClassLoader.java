@@ -32,10 +32,6 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.observation.EventListener;
-import javax.jcr.observation.ObservationManager;
 
 import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.jcr.classloader.internal.net.URLFactory;
@@ -53,7 +49,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class RepositoryClassLoader
     extends SecureClassLoader
-    implements EventListener, DynamicClassLoader {
+    implements DynamicClassLoader {
 
     /** Logger */
     private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
@@ -120,9 +116,6 @@ public final class RepositoryClassLoader
         this.session = session;
         this.repositoryPath = classPath;
 
-        // register with observation service and path pattern list
-        registerListener();
-
         logger.debug("RepositoryClassLoader: {} ready", this);
     }
 
@@ -144,9 +137,6 @@ public final class RepositoryClassLoader
 
         // set destroyal guard
         destroyed = true;
-
-        // remove ourselves as listeners from other places
-        unregisterListener();
 
         // close session
         if ( session != null ) {
@@ -385,37 +375,6 @@ public final class RepositoryClassLoader
         return !this.isDirty();
     }
 
-    //---------- EventListener interface -------------------------------
-
-    /**
-     * Handles a repository item modifcation events checking whether a class
-     * needs to be expired. As a side effect, this method sets the class loader
-     * dirty if a loaded class has been modified in the repository.
-     *
-     * @param events The iterator of repository events to be handled.
-     */
-    public void onEvent(final EventIterator events) {
-        while (events.hasNext()) {
-            final Event event = events.nextEvent();
-            String path;
-            try {
-                path = event.getPath();
-            } catch (RepositoryException re) {
-                logger.warn("onEvent: Cannot get path of event, ignoring", re);
-                continue;
-            }
-
-            if ( event.getType() == Event.PROPERTY_ADDED || event.getType() == Event.PROPERTY_CHANGED || event.getType() == Event.PROPERTY_REMOVED ) {
-                final int lastSlash = path.lastIndexOf('/');
-                path = path.substring(0, lastSlash);
-            }
-            if ( path.endsWith("/jcr:content") ) {
-                path = path.substring(0, path.length() - 12);
-            }
-            this.handleEvent(path);
-        }
-    }
-
     /**
      * Handle a modification event.
      */
@@ -446,50 +405,5 @@ public final class RepositoryClassLoader
             buf.append(isDirty());
         }
         return buf.toString();
-    }
-
-    //---------- internal ------------------------------------------------------
-
-    /**
-     * Registers this class loader with the observation service to get
-     * information on page updates in the class path and to the path
-     * pattern list to get class path updates.
-     *
-     * @throws NullPointerException if this class loader has already been
-     *      destroyed.
-     */
-    private final void registerListener() {
-        logger.debug("registerListener: Registering to the observation service");
-
-        try {
-            final ObservationManager om = session.getWorkspace().getObservationManager();
-            om.addEventListener(this,
-                    Event.NODE_ADDED | Event.NODE_REMOVED | Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED,
-                    repositoryPath, true, null, null, false);
-        } catch (final RepositoryException re) {
-            logger.error("registerModificationListener: Cannot register " +
-                this + " with observation manager", re);
-        }
-    }
-
-    /**
-     * Removes this instances registrations from the observation service and
-     * the path pattern list.
-     *
-     * @throws NullPointerException if this class loader has already been
-     *      destroyed.
-     */
-    private final void unregisterListener() {
-        logger.debug("unregisterListener: Deregistering from the observation service");
-        // check session first!
-        if ( session.isLive() ) {
-            try {
-                final ObservationManager om = session.getWorkspace().getObservationManager();
-                om.removeEventListener(this);
-            } catch (RepositoryException re) {
-                logger.error("unregisterListener: Cannot unregister " +
-                    this + " from observation manager", re);
-            }
-        }
     }
 }
