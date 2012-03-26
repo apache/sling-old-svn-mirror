@@ -34,7 +34,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.commons.classloader.DynamicClassLoader;
-import org.apache.sling.jcr.classloader.internal.net.URLFactory;
+import org.apache.sling.jcr.classloader.internal.net.JCRURLHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,11 +81,6 @@ public final class RepositoryClassLoader
      * called (<code>true</code>) or not (<code>false</code>)
      */
     private boolean destroyed = false;
-
-    /**
-     * Session to serve urls.
-     */
-    private Session urlHandlerSession;
 
     /**
      * Creates a <code>RepositoryClassLoader</code> for a given
@@ -139,11 +134,6 @@ public final class RepositoryClassLoader
 
         // set destroyal guard
         destroyed = true;
-
-        if ( this.urlHandlerSession != null ) {
-            this.urlHandlerSession.logout();
-            this.urlHandlerSession = null;
-        }
 
         this.writer = null;
         this.repositoryPath = null;
@@ -202,28 +192,13 @@ public final class RepositoryClassLoader
         try {
             if ( findClassLoaderResource(path) != null ) {
                 logger.debug("findResource: Getting resource from {}", path);
-                return URLFactory.createURL(this.getUrlHandlerSession(), path);
+                return JCRURLHandler.createURL(this.writer, path);
             }
         } catch (final Exception e) {
             logger.warn("findResource: Cannot getURL for " + name, e);
         }
 
         return null;
-    }
-
-    private synchronized Session getUrlHandlerSession() {
-        if ( this.urlHandlerSession != null && !this.urlHandlerSession.isLive() ) {
-            this.urlHandlerSession.logout();
-            this.urlHandlerSession = null;
-        }
-        if ( this.urlHandlerSession == null ) {
-            try {
-                this.urlHandlerSession = this.writer.getSession();
-            } catch ( final RepositoryException re ) {
-                logger.warn("Unable to create new session.", re);
-            }
-        }
-        return this.urlHandlerSession;
     }
 
     /**
@@ -324,7 +299,7 @@ public final class RepositoryClassLoader
         Session session = null;
         byte[] res = null;
         try {
-            session = this.writer.getSession();
+            session = this.writer.createSession();
             if ( session.itemExists(path) ) {
                 final Node node = (Node)session.getItem(path);
                 logger.debug("Found resource at {}", path);

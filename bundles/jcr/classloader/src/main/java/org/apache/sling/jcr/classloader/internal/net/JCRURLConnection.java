@@ -16,6 +16,7 @@
  */
 package org.apache.sling.jcr.classloader.internal.net;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -26,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
@@ -62,17 +62,6 @@ import org.slf4j.LoggerFactory;
  * <li>If neither of the above methods resolve to a property, the
  *      {@link #connect()} fails and access to the content is not possible.
  * </ul>
- * <p>
- * After having connected the property is available through the
- * {@link #getProperty()} method. Other methods exist to retrieve repository
- * related information defined when creating the URL: {@link #getSession()} to
- * retrieve the session of the URL, {@link #getPath()} to retrieve the path
- * with which the URL was created and {@link #getItem()} to retrieve the item
- * with which the URL was created. The results of calling {@link #getProperty()}
- * and {@link #getItem()} will be the same if the URL directly addressed the
- * property. If the URL addressed the node whose primary item chain ultimately
- * resolved to the property, the {@link #getItem()} will return the node and
- * {@link #getProperty()} will return the resolved property.
  * <p>
  * A note on the <code>InputStream</code> available from
  * {@link #getInputStream()}: Unlike other implementations - for example
@@ -119,39 +108,39 @@ public class JCRURLConnection extends URLConnection {
      * The name of the header containing the content size (value is
      * "content-length").
      */
-    protected static final String CONTENT_LENGTH = "content-length";
+    private static final String CONTENT_LENGTH = "content-length";
 
     /**
      * The name of the header containing the MIME type of the content (value is
      * "content-type").
      */
-    protected static final String CONTENT_TYPE = "content-type";
+    private static final String CONTENT_TYPE = "content-type";
 
     /**
      * The name of the header containing the content encoding (value is
      * "content-encoding").
      */
-    protected static final String CONTENT_ENCODING = "content-encoding";
+    private static final String CONTENT_ENCODING = "content-encoding";
 
     /**
      * The name of the header containing the last modification time stamp of
      * the content (value is "last-modified").
      */
-    protected static final String LAST_MODIFIED = "last-modified";
+    private static final String LAST_MODIFIED = "last-modified";
 
     /**
      * The default content type name for binary properties accessed by this
      * connection (value is "application/octet-stream").
      * @see #connect()
      */
-    protected static final String APPLICATION_OCTET = "application/octet-stream";
+    private static final String APPLICATION_OCTET = "application/octet-stream";
 
     /**
      * The default content type name for non-binary properties accessed by this
      * connection (value is "text/plain").
      * @see #connect()
      */
-    protected static final String TEXT_PLAIN = "text/plain";
+    private static final String TEXT_PLAIN = "text/plain";
 
     /**
      * The handler associated with the URL of this connection. This handler
@@ -161,31 +150,13 @@ public class JCRURLConnection extends URLConnection {
     private final JCRURLHandler handler;
 
     /**
-     * The {@link FileParts} encapsulating the repository name, workspace name,
-     * item path and optional archive entry path contained in the file part
-     * of the URL. This field is set on-demand by the {@link #getFileParts()}
-     * method.
-     *
-     * @see #getFileParts()
-     */
-    private FileParts fileParts;
-
-    /**
-     * The <code>Item</code> addressed by the path of this connection's URL.
-     * This field is set on-demand by the {@link #getItem()} method.
-     *
-     * @see #getItem()
-     */
-    private Item item;
-
-    /**
      * The <code>Property</code> associated with the URLConnection. The field
      * is only set after the connection has been successfully opened.
      *
      * @see #getProperty()
      * @see #connect()
      */
-    private Property property;
+    private byte[] contents;
 
     /**
      * The (guessed) content type of the data. Currently the content type is
@@ -244,18 +215,9 @@ public class JCRURLConnection extends URLConnection {
      * @param url The URL to base the connection on.
      * @param handler The URL handler supporting the given URL.
      */
-    JCRURLConnection(URL url, JCRURLHandler handler) {
+    JCRURLConnection(final URL url, final JCRURLHandler handler) {
         super(url);
         this.handler = handler;
-    }
-
-    /**
-     * Returns the current session of URL.
-     * <p>
-     * Calling this method does not require this connection being connected.
-     */
-    public Session getSession() {
-        return handler.getSession();
     }
 
     /**
@@ -264,32 +226,8 @@ public class JCRURLConnection extends URLConnection {
      * <p>
      * Calling this method does not require this connection being connected.
      */
-    public String getPath() {
-        return getFileParts().getPath();
-    }
-
-    /**
-     * Returns the repository item underlying the URL of this connection
-     * retrieved through the path set on the URL.
-     * <p>
-     * Calling this method does not require this connection being connected.
-     *
-     * @throws IOException If the item has to be retrieved from the repository
-     *      <code>Session</code> of this connection and an error occurrs. The
-     *      cause of the exception will refer to the exception thrown from the
-     *      repository. If the path addresses a non-existing item, the cause
-     *      will be a <code>PathNotFoundException</code>.
-     */
-    public Item getItem() throws IOException {
-        if (item == null) {
-            try {
-                item = getSession().getItem(getPath());
-            } catch (RepositoryException re) {
-                throw failure("getItem", re.toString(), re);
-            }
-        }
-
-        return item;
+    private String getPath() {
+        return this.handler.getPath();
     }
 
     /**
@@ -304,18 +242,17 @@ public class JCRURLConnection extends URLConnection {
      *
      * @see #connect()
      */
-    public Property getProperty() throws IOException {
+    private byte[] getContents() throws IOException {
         // connect to set the property value
         connect();
 
-        return property;
+        return this.contents;
     }
 
     //---------- URLConnection overwrites -------------------------------------
 
     /**
-     * Connects to the URL setting the header fields and preparing for the
-     * {@link #getProperty()} and {@link #getInputStream()} methods.
+     * Connects to the URL setting the header fields and getting the contents.
      * <p>
      * The following algorithm is applied:
      * <ol>
@@ -353,22 +290,25 @@ public class JCRURLConnection extends URLConnection {
      *      exception.
      */
     public synchronized void connect() throws IOException {
-        // todo: The ContentBus URL must also contain version information on
         if (!connected) {
 
             // Get hold of the data
+            Session session = null;
             try {
+                session = this.handler.getClassLoaderWriter().createSession();
+                final Node node = (Node)session.getItem(this.getPath());
                 // resolve the URLs item to a property
-                Property property = Util.getProperty(getItem());
+                final Property property = Util.getProperty(node);
                 if (property == null) {
                     throw failure("connect",
                         "Multivalue property not supported", null);
                 }
 
+                final byte[] contents = Util.getBytes(node);
+
                 // values to set later
                 String contentType;
                 String contentEncoding = null; // no defined content encoding
-                int contentLength = (int) property.getLength();
                 long lastModified;
 
                 Node parent = property.getParent();
@@ -381,7 +321,7 @@ public class JCRURLConnection extends URLConnection {
                 if (parent.hasProperty("jcr:mimeType")) {
                     contentType = parent.getProperty("jcr:mimeType").getString();
                 } else {
-                    contentType = guessContentTypeFromName(getItem().getName());
+                    contentType = guessContentTypeFromName(node.getName());
                     if (contentType == null) {
                         contentType = (property.getType() == PropertyType.BINARY)
                                 ? APPLICATION_OCTET
@@ -399,17 +339,21 @@ public class JCRURLConnection extends URLConnection {
                         new Integer(contentLength) });
 
                 // set the fields
-                setProperty(property);
-                setContentType(contentType);
-                setContentEncoding(contentEncoding);
-                setContentLength(contentLength);
-                setLastModified(lastModified);
+                this.contents = contents;
+                this.contentType = contentType;
+                this.contentEncoding = contentEncoding;
+                this.contentLength = contents.length;
+                this.lastModified = lastModified;
 
                 // mark connection open
                 connected = true;
 
-            } catch (RepositoryException re) {
+            } catch (final RepositoryException re) {
                 throw failure("connect", re.toString(), re);
+            } finally {
+                if ( session != null ) {
+                    session.logout();
+                }
             }
         }
     }
@@ -434,11 +378,7 @@ public class JCRURLConnection extends URLConnection {
      * @see #connect()
      */
     public InputStream getInputStream() throws IOException {
-        try {
-            return getProperty().getStream();
-        } catch (RepositoryException re) {
-            throw failure("getInputStream", re.toString(), re);
-        }
+        return new ByteArrayInputStream(this.getContents());
     }
 
     /**
@@ -680,62 +620,6 @@ public class JCRURLConnection extends URLConnection {
         return -1;
     }
 
-    //---------- implementation helpers ----------------------------------------
-
-    /**
-     * Returns the URL handler of the URL of this connection.
-     */
-    protected JCRURLHandler getHandler() {
-        return handler;
-    }
-
-    /**
-     * Returns the {@link FileParts} object which contains the decomposed file
-     * part of this connection's URL.
-     */
-    FileParts getFileParts() {
-        if (fileParts == null) {
-            fileParts = new FileParts(getURL().getFile());
-        }
-
-        return fileParts;
-    }
-
-    /**
-     * @param contentEncoding The contentEncoding to set.
-     */
-    protected void setContentEncoding(String contentEncoding) {
-        this.contentEncoding = contentEncoding;
-    }
-
-    /**
-     * @param contentLength The contentLength to set.
-     */
-    protected void setContentLength(int contentLength) {
-        this.contentLength = contentLength;
-    }
-
-    /**
-     * @param contentType The contentType to set.
-     */
-    protected void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    /**
-     * @param lastModified The lastModified to set.
-     */
-    protected void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
-    }
-
-    /**
-     * @param property The property to set.
-     */
-    protected void setProperty(Property property) {
-        this.property = property;
-    }
-
     //---------- internal -----------------------------------------------------
 
     /**
@@ -751,7 +635,7 @@ public class JCRURLConnection extends URLConnection {
      *
      * @return The IOException the caller may throw.
      */
-    protected IOException failure(String method, String message, Throwable cause) {
+    private IOException failure(String method, String message, Throwable cause) {
         log.info(method + ": URL: " + url.toExternalForm() + ", Reason: "
             + message);
 
