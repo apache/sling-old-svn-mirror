@@ -195,7 +195,8 @@ public final class RepositoryClassLoader
 
         logger.debug("findResource: Try to find resource {}", name);
 
-        final Node res = findClassLoaderResource(name);
+        final String path = this.repositoryPath + '/' + name;
+        final Node res = findClassLoaderResource(path);
         if (res != null) {
             logger.debug("findResource: Getting resource from {}",
                 res);
@@ -263,7 +264,8 @@ public final class RepositoryClassLoader
         logger.debug("findClassPrivileged: Try to find path {class {}",
             name);
 
-        final Node res = this.findClassLoaderResource(name);
+        final String path = this.repositoryPath + '/' + name.replace('.', '/') + (".class");
+        final Node res = this.findClassLoaderResource(path);
         if (res != null) {
 
              // try defining the class, error aborts
@@ -308,8 +310,7 @@ public final class RepositoryClassLoader
      * @throws NullPointerException If this class loader has already been
      *      destroyed.
      */
-    private Node findClassLoaderResource(final String name) {
-        final String path = this.repositoryPath + '/' + name.replace('.', '/') + (".class");
+    private Node findClassLoaderResource(final String path) {
         Node res = null;
         try {
             if ( session.itemExists(path) ) {
