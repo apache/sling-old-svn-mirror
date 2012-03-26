@@ -69,13 +69,12 @@ public final class RepositoryClassLoader
     private String repositoryPath;
 
     /**
-     * The <code>Session</code> grants access to the Repository to access the
-     * resources.
+     * The <code>ClassLoaderWriterImpl</code> grants access to the repository
      * <p>
      * This field is not final such that it may be cleared when the class loader
      * is destroyed.
      */
-    private Session session;
+    private ClassLoaderWriterImpl writer;
 
     /**
      * Flag indicating whether the {@link #destroy()} method has already been
@@ -84,36 +83,39 @@ public final class RepositoryClassLoader
     private boolean destroyed = false;
 
     /**
-     * Creates a <code>DynamicRepositoryClassLoader</code> from a list of item
-     * path strings containing globbing pattens for the paths defining the
-     * class path.
+     * Session to serve urls.
+     */
+    private Session urlHandlerSession;
+
+    /**
+     * Creates a <code>RepositoryClassLoader</code> for a given
+     * repository path.
      *
-     * @param session The <code>Session</code> to use to access the class items.
-     * @param classPath The list of path strings making up the (initial) class
-     *      path of this class loader. The strings may contain globbing
-     *      characters which will be resolved to build the actual class path.
+     * @param classPath The path making up the class path of this class
+     *                  loder
+     * @param writer The class loader write to get a jcr session.
      * @param parent The parent <code>ClassLoader</code>, which may be
      *      <code>null</code>.
      *
      * @throws NullPointerException if either the session or the classPath
      *      is <code>null</code>.
      */
-    public RepositoryClassLoader(final Session session,
-                                 final String classPath,
+    public RepositoryClassLoader(final String classPath,
+                                 final ClassLoaderWriterImpl writer,
                                  final ClassLoader parent) {
         // initialize the super class with an empty class path
         super(parent);
 
-        // check session and handles
-        if (session == null) {
-            throw new NullPointerException("session");
+        // check writer and classPath
+        if (writer == null) {
+            throw new NullPointerException("writer");
         }
         if (classPath == null) {
             throw new NullPointerException("classPath");
         }
 
         // set fields
-        this.session = session;
+        this.writer = writer;
         this.repositoryPath = classPath;
 
         logger.debug("RepositoryClassLoader: {} ready", this);
@@ -138,12 +140,13 @@ public final class RepositoryClassLoader
         // set destroyal guard
         destroyed = true;
 
-        // close session
-        if ( session != null ) {
-            session.logout();
-            session = null;
+        if ( this.urlHandlerSession != null ) {
+            this.urlHandlerSession.logout();
+            this.urlHandlerSession = null;
         }
-        repositoryPath = null;
+
+        this.writer = null;
+        this.repositoryPath = null;
         synchronized ( this.usedResources ) {
             this.usedResources.clear();
         }
@@ -196,18 +199,31 @@ public final class RepositoryClassLoader
         logger.debug("findResource: Try to find resource {}", name);
 
         final String path = this.repositoryPath + '/' + name;
-        final Node res = findClassLoaderResource(path);
-        if (res != null) {
-            logger.debug("findResource: Getting resource from {}",
-                res);
-            try {
-                return URLFactory.createURL(session, res.getPath());
-            } catch (Exception e) {
-                logger.warn("findResource: Cannot getURL for " + name, e);
+        try {
+            if ( findClassLoaderResource(path) != null ) {
+                logger.debug("findResource: Getting resource from {}", path);
+                return URLFactory.createURL(this.getUrlHandlerSession(), path);
             }
+        } catch (final Exception e) {
+            logger.warn("findResource: Cannot getURL for " + name, e);
         }
 
         return null;
+    }
+
+    private synchronized Session getUrlHandlerSession() {
+        if ( this.urlHandlerSession != null && !this.urlHandlerSession.isLive() ) {
+            this.urlHandlerSession.logout();
+            this.urlHandlerSession = null;
+        }
+        if ( this.urlHandlerSession == null ) {
+            try {
+                this.urlHandlerSession = this.writer.getSession();
+            } catch ( final RepositoryException re ) {
+                logger.warn("Unable to create new session.", re);
+            }
+        }
+        return this.urlHandlerSession;
     }
 
     /**
@@ -265,63 +281,63 @@ public final class RepositoryClassLoader
             name);
 
         final String path = this.repositoryPath + '/' + name.replace('.', '/') + (".class");
-        final Node res = this.findClassLoaderResource(path);
-        if (res != null) {
 
-             // try defining the class, error aborts
-             try {
+         // try defining the class, error aborts
+         try {
+             final byte[] data = this.findClassLoaderResource(path);
+             if (data != null) {
+
                  logger.debug(
-                    "findClassPrivileged: Loading class from {}", res);
+                "findClassPrivileged: Loading class from {}", data);
 
-                 final Class<?> c = defineClass(name, res);
+                 final Class<?> c = defineClass(name, data);
                  if (c == null) {
                      logger.warn("defineClass returned null for class {}", name);
                      throw new ClassNotFoundException(name);
                  }
                  return c;
-
-             } catch (final IOException ioe) {
-                 logger.debug("defineClass failed", ioe);
-                 throw new ClassNotFoundException(name, ioe);
-             } catch (final Throwable t) {
-                 logger.debug("defineClass failed", t);
-                 throw new ClassNotFoundException(name, t);
              }
+
+         } catch (final IOException ioe) {
+             logger.debug("defineClass failed", ioe);
+             throw new ClassNotFoundException(name, ioe);
+         } catch (final Throwable t) {
+             logger.debug("defineClass failed", t);
+             throw new ClassNotFoundException(name, t);
          }
 
         throw new ClassNotFoundException(name);
      }
 
     /**
-     * Returns a {@link ClassLoaderResource} for the given <code>name</code> or
-     * <code>null</code> if not existing. If the resource has already been
-     * loaded earlier, the cached instance is returned. If the resource has
-     * not been found in an earlier call to this method, <code>null</code> is
-     * returned. Otherwise the resource is looked up in the class path. If
-     * found, the resource is cached and returned. If not found, the
-     * {@link #NOT_FOUND_RESOURCE} is cached for the name and <code>null</code>
-     * is returned.
+     * Returns the contents for the given <code>path</code> or
+     * <code>null</code> if not existing.
      *
-     * @param name The name of the resource to return.
+     * @param path The repository path of the resource to return.
      *
-     * @return The named <code>ClassLoaderResource</code> if found or
-     *      <code>null</code> if not found.
+     * @return The contents if found or <code>null</code> if not found.
      *
      * @throws NullPointerException If this class loader has already been
      *      destroyed.
      */
-    private Node findClassLoaderResource(final String path) {
-        Node res = null;
+    private byte[] findClassLoaderResource(final String path) throws IOException {
+        Session session = null;
+        byte[] res = null;
         try {
+            session = this.writer.getSession();
             if ( session.itemExists(path) ) {
                 final Node node = (Node)session.getItem(path);
                 logger.debug("Found resource at {}", path);
-                res = node;
+                res = Util.getBytes(node);
             } else {
                 logger.debug("No classpath entry contains {}", path);
             }
         } catch (final RepositoryException re) {
             logger.debug("Error while trying to get node at " + path, re);
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
         }
         synchronized ( this.usedResources ) {
             this.usedResources.add(path);
@@ -330,10 +346,10 @@ public final class RepositoryClassLoader
     }
 
     /**
-     * Defines a class getting the bytes for the class from the resource
+     * Defines a class using the bytes
      *
      * @param name The fully qualified class name
-     * @param res The resource to obtain the class bytes from
+     * @param contents The class in bytes
      *
      * @throws RepositoryException If a problem occurrs getting at the data.
      * @throws IOException If a problem occurrs reading the class bytes from
@@ -341,39 +357,19 @@ public final class RepositoryClassLoader
      * @throws ClassFormatError If the class bytes read from the resource are
      *      not a valid class.
      */
-    private Class<?> defineClass(final String name, final Node res)
-    throws IOException, RepositoryException {
-        logger.debug("defineClass({}, {})", name, res);
+    private Class<?> defineClass(final String name, final byte[] contents) {
+        logger.debug("defineClass({}, {})", name, contents.length);
 
-        final byte[] data = Util.getBytes(res);
-        final Class<?> clazz = defineClass(name, data, 0, data.length);
+        final Class<?> clazz = defineClass(name, contents, 0, contents.length);
 
         return clazz;
-    }
-
-    /**
-     * Returns whether the class loader is dirty. This can be the case if any
-     * of the loaded class has been expired through the observation.
-     * <p>
-     * This method may also return <code>true</code> if the <code>Session</code>
-     * associated with this class loader is not valid anymore.
-     * <p>
-     * Finally the method always returns <code>true</code> if the class loader
-     * has already been destroyed.
-     * <p>
-     *
-     * @return <code>true</code> if the class loader is dirty and needs
-     *      recreation.
-     */
-    public boolean isDirty() {
-        return destroyed || dirty || !session.isLive();
     }
 
     /**
      * @see org.apache.sling.commons.classloader.DynamicClassLoader#isLive()
      */
     public boolean isLive() {
-        return !this.isDirty();
+        return !destroyed && !dirty && this.writer != null && this.writer.isActivate();
     }
 
     /**
@@ -400,10 +396,8 @@ public final class RepositoryClassLoader
         } else {
             buf.append(": parent: { ");
             buf.append(getParent());
-            buf.append(" }, user: ");
-            buf.append(session.getUserID());
-            buf.append(", dirty: ");
-            buf.append(isDirty());
+            buf.append(" }, live: ");
+            buf.append(isLive());
         }
         return buf.toString();
     }

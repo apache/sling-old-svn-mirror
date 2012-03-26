@@ -136,7 +136,7 @@ public class ClassLoaderWriterImpl
     /**
      * Return a new session.
      */
-    private Session getSession() throws RepositoryException {
+    public Session getSession() throws RepositoryException {
         // get an administrative session for potentiall impersonation
         final Session admin = this.repository.loginAdministrative(null);
 
@@ -153,19 +153,22 @@ public class ClassLoaderWriterImpl
         }
     }
 
+    /**
+     * Is this still active?
+     */
+    public boolean isActivate() {
+        return this.repository != null;
+    }
+
     private synchronized ClassLoader getOrCreateClassLoader() {
         if ( this.repositoryClassLoader == null || !this.repositoryClassLoader.isLive() ) {
             if ( this.repositoryClassLoader != null ) {
                 this.repositoryClassLoader.destroy();
             }
-            try {
-                this.repositoryClassLoader = new RepositoryClassLoader(
-                        this.getSession(),
-                        this.classPath,
-                        this.dynamicClassLoaderManager.getDynamicClassLoader());
-            } catch ( final RepositoryException re) {
-                throw new RuntimeException("Unable to instantiate repository class loader.", re);
-            }
+            this.repositoryClassLoader = new RepositoryClassLoader(
+                    this.classPath,
+                    this,
+                    this.dynamicClassLoaderManager.getDynamicClassLoader());
         }
         return this.repositoryClassLoader;
     }
