@@ -136,7 +136,7 @@ public class ClassLoaderWriterImpl
     /**
      * Return a new session.
      */
-    public Session getSession() throws RepositoryException {
+    public Session createSession() throws RepositoryException {
         // get an administrative session for potentiall impersonation
         final Session admin = this.repository.loginAdministrative(null);
 
@@ -180,7 +180,7 @@ public class ClassLoaderWriterImpl
         final String path = cleanPath(name);
         Session session = null;
         try {
-            session = getSession();
+            session = createSession();
             if (session.itemExists(path)) {
                 Item fileItem = session.getItem(path);
                 fileItem.remove();
@@ -217,7 +217,7 @@ public class ClassLoaderWriterImpl
             final String oldPath = cleanPath(oldName);
             final String newPath = cleanPath(newName);
 
-            session = this.getSession();
+            session = this.createSession();
             session.move(oldPath, newPath);
             session.save();
             this.repositoryClassLoader.handleEvent(oldName);
@@ -338,7 +338,7 @@ public class ClassLoaderWriterImpl
             Session session = null;
             try {
                 // get an own session for writing
-                session = repositoryOutputProvider.getSession();
+                session = repositoryOutputProvider.createSession();
                 final int lastPos = fileName.lastIndexOf('/');
                 final String path = (lastPos == -1 ? null : fileName.substring(0, lastPos));
                 final String name = (lastPos == -1 ? fileName : fileName.substring(lastPos + 1));
@@ -425,7 +425,7 @@ public class ClassLoaderWriterImpl
         final String path = cleanPath(name) + "/jcr:content/jcr:data";
         Session session = null;
         try {
-            session = this.getSession();
+            session = this.createSession();
             if ( session.itemExists(path) ) {
                 final Property prop = (Property)session.getItem(path);
                 return prop.getStream();
@@ -448,7 +448,7 @@ public class ClassLoaderWriterImpl
         final String path = cleanPath(name) + "/jcr:content/jcr:lastModified";
         Session session = null;
         try {
-            session = this.getSession();
+            session = this.createSession();
             if ( session.itemExists(path) ) {
                 final Property prop = (Property)session.getItem(path);
                 return prop.getLong();
