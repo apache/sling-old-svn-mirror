@@ -46,6 +46,7 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
@@ -93,6 +94,11 @@ public class JspScriptEngineFactory
 
     @Reference
     private ClassLoaderWriter classLoaderWriter;
+
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+    private ClassLoader dynamicClassLoader;
 
     /** The io provider for reading and writing. */
     private SlingIOProvider ioProvider;
@@ -277,7 +283,7 @@ public class JspScriptEngineFactory
         // set the current class loader as the thread context loader for
         // the setup of the JspRuntimeContext
         final ClassLoader old = Thread.currentThread().getContextClassLoader();
-        Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+        Thread.currentThread().setContextClassLoader(this.dynamicClassLoader);
 
         try {
             this.jspFactoryHandler = JspRuntimeContext.initFactoryHandler();
@@ -382,6 +388,44 @@ public class JspScriptEngineFactory
         }
     }
 
+    /**
+     * Bind the class load provider.
+     *
+     * @param repositoryClassLoaderProvider the new provider
+     */
+    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoader != null ) {
+            this.ungetClassLoader();
+        }
+        this.getClassLoader(rclp);
+    }
+
+    /**
+     * Unbind the class loader provider.
+     * @param repositoryClassLoaderProvider the old provider
+     */
+    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoaderManager == rclp ) {
+            this.ungetClassLoader();
+        }
+    }
+
+    /**
+     * Get the class loader
+     */
+    private void getClassLoader(final DynamicClassLoaderManager rclp) {
+        this.dynamicClassLoaderManager = rclp;
+        this.dynamicClassLoader = rclp.getDynamicClassLoader();
+    }
+
+    /**
+     * Unget the class loader
+     */
+    private void ungetClassLoader() {
+        this.dynamicClassLoader = null;
+        this.dynamicClassLoaderManager = null;
+    }
+
     // ---------- Internal -----------------------------------------------------
 
     private class JspScriptEngine extends AbstractSlingScriptEngine {
@@ -399,7 +443,7 @@ public class JspScriptEngineFactory
                 // set the current class loader as the thread context loader for
                 // the compilation and execution of the JSP script
                 ClassLoader old = Thread.currentThread().getContextClassLoader();
-                Thread.currentThread().setContextClassLoader(classLoaderWriter.getClassLoader());
+                Thread.currentThread().setContextClassLoader(dynamicClassLoader);
 
                 try {
                     callJsp(props, scriptHelper, context);
