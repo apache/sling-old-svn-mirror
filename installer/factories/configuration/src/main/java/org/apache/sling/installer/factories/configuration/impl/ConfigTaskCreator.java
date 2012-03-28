@@ -112,9 +112,8 @@ public class ConfigTaskCreator
                             }
                         }
                         if ( persist ) {
-                            Map<String, Object> attrs = null;
+                            final Map<String, Object> attrs = new HashMap<String, Object>();
                             if ( config.getBundleLocation() != null ) {
-                                attrs = new HashMap<String, Object>();
                                 attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
                             }
                             attrs.put(Constants.SERVICE_PID, event.getPid());
