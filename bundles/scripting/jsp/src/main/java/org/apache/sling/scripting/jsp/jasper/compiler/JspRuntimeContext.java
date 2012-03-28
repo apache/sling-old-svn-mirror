@@ -20,7 +20,6 @@ package org.apache.sling.scripting.jsp.jasper.compiler;
 import java.io.File;
 import java.io.FilePermission;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Policy;
@@ -215,7 +214,7 @@ public final class JspRuntimeContext {
         this.context = context;
         this.options = options;
         this.ioProvider = ioProvider;
-
+/*
         // Get the parent class loader
         parentClassLoader = Thread.currentThread().getContextClassLoader();
         if (parentClassLoader == null) {
@@ -233,7 +232,7 @@ public final class JspRuntimeContext {
         }
 
         initClassPath();
-
+*/
     	if (context instanceof org.apache.sling.scripting.jsp.jasper.servlet.JspCServletContext) {
     	    return;
     	}
@@ -250,10 +249,10 @@ public final class JspRuntimeContext {
      */
     private ServletContext context;
     private Options options;
-    private ClassLoader parentClassLoader;
+//    private ClassLoader parentClassLoader;
     private PermissionCollection permissionCollection;
     private CodeSource codeSource;
-    private String classpath;
+ //   private String classpath;
 
     /**
      * Maps JSP pages to their JspServletWrapper's
@@ -388,10 +387,10 @@ public final class JspRuntimeContext {
      * Get the parent URLClassLoader.
      *
      * @return URLClassLoader parent
-     */
     public ClassLoader getParentClassLoader() {
         return parentClassLoader;
     }
+     */
 
     /**
      * Get the SecurityManager PermissionCollection for this
@@ -440,10 +439,10 @@ public final class JspRuntimeContext {
 
     /**
      * The classpath that is passed off to the Java compiler.
-     */
     public String getClassPath() {
         return classpath;
     }
+     */
 
     /**
      * Returns the current {@link IOProvider} of this context.
@@ -457,7 +456,6 @@ public final class JspRuntimeContext {
 
     /**
      * Method used to initialize classpath for compiles.
-     */
     private void initClassPath() {
 
         StringBuffer cpath = new StringBuffer();
@@ -488,6 +486,7 @@ public final class JspRuntimeContext {
             log.debug("Compilation classpath initialized: " + getClassPath());
         }
     }
+     */
 
     /**
      * Method used to initialize SecurityManager data.
@@ -542,7 +541,7 @@ public final class JspRuntimeContext {
                 // Allow the JSP to access org.apache.sling.scripting.jsp.jasper.runtime.HttpJspBase
                 permissionCollection.add( new RuntimePermission(
                     "accessClassInPackage.org.apache.jasper.runtime") );
-
+/*
                 if (parentClassLoader instanceof URLClassLoader) {
                     URL [] urls = ((URLClassLoader) parentClassLoader).getURLs();
                     String jarUrl = null;
@@ -571,6 +570,7 @@ public final class JspRuntimeContext {
                         permissionCollection.add(
                                 new FilePermission(jndiUrl,"read") );
                 }
+                */
             } catch(Exception e) {
                 context.log("Security Init for context failed",e);
             }
