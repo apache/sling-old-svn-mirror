@@ -28,6 +28,7 @@ import org.apache.felix.scr.annotations.Service;
     @Property(name="service.description", value="Selector Test Servlet"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
     @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.methods", value={"GET","POST"}),
     @Property(name="sling.servlet.selectors", value={"TEST_SEL_1","TEST_SEL_2"}),
     @Property(name="sling.servlet.extensions", value="txt")
 })
