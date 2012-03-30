@@ -358,6 +358,7 @@ public class OsgiInstallerImpl
             this.closeInputStreams(resources);
         }
     }
+
     /**
      * @see org.apache.sling.installer.api.OsgiInstaller#registerResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[])
      */
@@ -776,7 +777,9 @@ public class OsgiInstallerImpl
                                             null);
                                     final RegisteredResource rr = this.persistentList.addOrUpdate(internalResource);
                                     final TransformationResult transRes = new TransformationResult();
-                                    transRes.setId(entityId);
+                                    // use the old entity id
+                                    final int pos = erl.getResourceId().indexOf(':');
+                                    transRes.setId(erl.getResourceId().substring(pos + 1));
                                     transRes.setResourceType(resourceType);
                                     if ( attributes != null ) {
                                         transRes.setAttributes(attributes);
