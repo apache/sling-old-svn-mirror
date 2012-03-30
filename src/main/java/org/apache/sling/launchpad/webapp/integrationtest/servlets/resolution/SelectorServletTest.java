@@ -16,6 +16,8 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.resolution;
 
+import org.apache.commons.httpclient.methods.PostMethod;
+
 /** Test the SelectorServlet */
 public class SelectorServletTest extends ResolutionTestBase {
   
@@ -34,5 +36,13 @@ public class SelectorServletTest extends ResolutionTestBase {
   public void testSelectorOther() throws Exception {
     assertNotTestServlet(
         getContent(testNodeNORT.nodeUrl + ".TEST_SEL_3.txt", CONTENT_TYPE_PLAIN));
+  }
+  
+  public void testPostWithSelector() throws Exception {
+      final PostMethod post = new PostMethod(testNodeRT.nodeUrl + ".TEST_SEL_2.txt");
+      final int status = httpClient.executeMethod(post);
+      assertEquals("POST to testNodeRT should return 200", 200, status);
+      final String content = post.getResponseBodyAsString();
+      assertServlet(content, SEL_SERVLET_SUFFIX);
   }
 }
