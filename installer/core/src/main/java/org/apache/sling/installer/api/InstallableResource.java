@@ -105,6 +105,9 @@ public class InstallableResource {
      * It is only evaluated if the resource type is either unknown (null) or
      * {@link #TYPE_FILE} and a digest for the resource is delivered.
      * The value of this property is a string.
+     * This property might also be set for an {@link UpdateHandler} in order
+     * to give a hint for the (file) name the resource or dictionary should
+     * have.
      * @since 3.2.2
      */
     public static final String RESOURCE_URI_HINT = "resource.uri.hint";
