@@ -467,7 +467,9 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         }
     }
 
-    /** Add WatchedFolder to our list if it doesn't exist yet */
+    /**
+     * Add WatchedFolder to our list if it doesn't exist yet.
+     */
     private void addWatchedFolder(final WatchedFolder toAdd)
     throws RepositoryException {
         WatchedFolder existing = null;
@@ -511,7 +513,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 toRemove.add(wf);
             }
         }
-        for(WatchedFolder wf : toRemove) {
+        for(final WatchedFolder wf : toRemove) {
             logger.info("Deleting {}, path does not exist anymore", wf);
             watchedFolders.remove(wf);
         }
@@ -519,7 +521,10 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         return result;
     }
 
-    public void onEvent(EventIterator it) {
+    /**
+     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
+     */
+    public void onEvent(final EventIterator it) {
         // Got a DELETE or ADD on root - schedule folders rescan if one
         // of our root folders is impacted
         try {
@@ -539,7 +544,9 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         }
     }
 
-    /** Run periodic scans of our watched folders, and watch for folders creations/deletions */
+    /**
+     * Run periodic scans of our watched folders, and watch for folders creations/deletions.
+     */
     public void runOneCycle() {
         logger.debug("Running watch cycle.");
 
@@ -595,6 +602,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
         } catch (final Exception e) {
             logger.warn("Exception in runOneCycle()", e);
         }
+
         try {
             Thread.sleep(RUN_LOOP_DELAY_MSEC);
         } catch (final InterruptedException ignore) {
@@ -731,7 +739,22 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 // update
                 final int pos = url.indexOf(':');
                 final String oldPath = url.substring(pos + 1);
-                final String nodePath = getPathWithHighestPrio(url.startsWith(URL_SCHEME + ':') ? oldPath : this.newConfigPath + id + ".config");
+
+                // calculate the new node path
+                final String nodePath;
+                if ( url.startsWith(URL_SCHEME + ':') ) {
+                    nodePath = getPathWithHighestPrio(oldPath);
+                } else {
+                    final int lastSlash = url.lastIndexOf('/');
+                    final int lastPos = url.lastIndexOf('.');
+                    final String name;
+                    if ( lastSlash == -1 || lastPos < lastSlash ) {
+                        name = id;
+                    } else {
+                        name = url.substring(lastSlash + 1, lastPos);
+                    }
+                    nodePath = getPathWithHighestPrio(this.newConfigPath + name + ".config");
+                }
                 // ensure extension 'config'
                 if ( !nodePath.endsWith(".config") ) {
                     if ( session.itemExists(nodePath) ) {
@@ -741,11 +764,18 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 } else {
                     path = nodePath;
                 }
+
                 resourceIsMoved = nodePath.equals(oldPath);
                 logger.debug("Update of {} at {}", resourceType, path);
             } else {
                 // add
-                path = this.newConfigPath + id + ".config";
+                final String name;
+                if ( attributes != null && attributes.get(InstallableResource.RESOURCE_URI_HINT) != null ) {
+                    name = (String)attributes.get(InstallableResource.RESOURCE_URI_HINT);
+                } else {
+                    name = id;
+                }
+                path = this.newConfigPath + name + ".config";
                 logger.debug("Add of {} at {}", resourceType, path);
             }
 
