@@ -91,7 +91,16 @@ public class ConfigTaskCreator
     @SuppressWarnings("unchecked")
     public void configurationEvent(final ConfigurationEvent event) {
         synchronized ( ConfigTaskCreator.getLock() ) {
-            final String id = (event.getFactoryPid() == null ? "" : event.getFactoryPid() + ".") + event.getPid();
+            final String id;
+            final String pid;
+            if (event.getFactoryPid() == null ) {
+                id = event.getPid();
+                pid = id;
+            } else {
+                pid = (event.getPid().startsWith(event.getFactoryPid() + '.') ?
+                        event.getPid().substring(event.getFactoryPid().length() + 1) : event.getPid());
+                id = event.getFactoryPid() + '.' + event.getPid();
+            }
             if ( event.getType() == ConfigurationEvent.CM_DELETED ) {
                 this.changeListener.resourceRemoved(InstallableResource.TYPE_CONFIG, id);
             } else {
@@ -113,10 +122,15 @@ public class ConfigTaskCreator
                         }
                         if ( persist ) {
                             final Map<String, Object> attrs = new HashMap<String, Object>();
+                            attrs.put(Constants.SERVICE_PID, event.getPid());
+                            if ( event.getFactoryPid() == null ) {
+                                attrs.put(InstallableResource.RESOURCE_URI_HINT, pid);
+                            } else {
+                                attrs.put(InstallableResource.RESOURCE_URI_HINT, event.getFactoryPid() + '-' + pid);
+                            }
                             if ( config.getBundleLocation() != null ) {
                                 attrs.put(InstallableResource.INSTALLATION_HINT, config.getBundleLocation());
                             }
-                            attrs.put(Constants.SERVICE_PID, event.getPid());
                             // Factory?
                             if (event.getFactoryPid() != null) {
                                 attrs.put(ConfigurationAdmin.SERVICE_FACTORYPID, event.getFactoryPid());
