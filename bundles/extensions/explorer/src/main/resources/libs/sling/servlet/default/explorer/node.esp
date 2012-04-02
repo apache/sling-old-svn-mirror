@@ -143,7 +143,7 @@
     </div>
     <div>
       <%
-        sling.include( path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':', '_') + '.') ) + "html" ); 
+        sling.include( path + ".explorer.edit."+ (resourceType == null ? '' : (resourceType.replace(':', '_').replace('/', '_') + '.') ) + "html" ); 
       %>
     </div>
 <script type="text/javascript">
