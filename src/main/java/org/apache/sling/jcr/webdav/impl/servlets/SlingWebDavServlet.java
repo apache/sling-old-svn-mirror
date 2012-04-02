@@ -18,10 +18,13 @@
  */
 package org.apache.sling.jcr.webdav.impl.servlets;
 
+import java.io.IOException;
+
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -35,7 +38,10 @@ import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.server.io.CopyMoveHandler;
 import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.server.io.PropertyHandler;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.WebdavResponse;
 import org.apache.jackrabbit.webdav.simple.SimpleWebdavServlet;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -266,5 +272,17 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
 
     public void unbindCopyMoveHandler(final ServiceReference copyMoveHandlerReference) {
         this.copyMoveManager.unbindCopyMoveHandler(copyMoveHandlerReference);
+    }
+    
+    /** Overridden as the base class uses sendError that we don't want (SLING-2443) */
+    @Override
+    protected void sendUnauthorized(WebdavRequest request, WebdavResponse response, DavException error) throws IOException {
+        response.setHeader("WWW-Authenticate", getAuthenticateHeaderValue());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        if (error != null) {
+            response.getWriter().write(error.getStatusPhrase());
+            response.getWriter().write("\n");
+        } 
+        response.getWriter().flush();
     }
 }
