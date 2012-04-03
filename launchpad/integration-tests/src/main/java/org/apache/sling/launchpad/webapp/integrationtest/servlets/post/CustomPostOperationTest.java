@@ -16,18 +16,21 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /** Test the custom PostOperation provided by the test-services module */
 public class CustomPostOperationTest extends HttpTestBase {
     private TestNode testNode;
+    private AtomicInteger counter = new AtomicInteger();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         
-        final String testPath = "/" + getClass().getSimpleName() + System.currentTimeMillis();
+        final String testPath = "/" + getClass().getSimpleName() + counter.incrementAndGet() + "_" + System.currentTimeMillis();
         testNode = new TestNode(HTTP_BASE_URL + testPath, null);
     }
     
