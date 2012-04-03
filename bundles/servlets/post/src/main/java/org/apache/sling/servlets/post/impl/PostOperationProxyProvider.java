@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.IdentityHashMap;
 import java.util.Map;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -39,6 +40,8 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>PostOperationProxyProvider</code> listens for legacy
@@ -48,6 +51,8 @@ import org.osgi.framework.ServiceRegistration;
 @Component(specVersion = "1.1", metatype = false)
 public class PostOperationProxyProvider implements ServiceListener {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     /**
      * The service listener filter to listen for SlingPostOperation services
      */
@@ -160,6 +165,7 @@ public class PostOperationProxyProvider implements ServiceListener {
         final ServiceRegistration reg = bundleContext.registerService(
             PostOperation.SERVICE_NAME, proxy, props);
 
+        log.debug("Registering {}", proxy);
         synchronized (this.proxies) {
             this.proxies.put(serviceReference, reg);
         }
@@ -177,6 +183,7 @@ public class PostOperationProxyProvider implements ServiceListener {
         }
 
         if (proxyRegistration != null) {
+            log.debug("Updating {}", proxyRegistration);
             proxyRegistration.setProperties(copyServiceProperties(serviceReference));
         }
     }
@@ -193,6 +200,7 @@ public class PostOperationProxyProvider implements ServiceListener {
         }
 
         if (proxyRegistration != null) {
+            log.debug("Unregistering {}", proxyRegistration);
             this.bundleContext.ungetService(serviceReference);
             proxyRegistration.unregister();
         }
@@ -211,7 +219,7 @@ public class PostOperationProxyProvider implements ServiceListener {
             props.put(key, serviceReference.getProperty(key));
         }
         props.put(PostOperation.PROP_OPERATION_NAME,
-            serviceReference.getProperty(SlingPostOperation.SERVICE_NAME));
+            serviceReference.getProperty(SlingPostOperation.PROP_OPERATION_NAME));
         props.put(Constants.SERVICE_DESCRIPTION, "Proxy for "
             + serviceReference);
         return props;
@@ -228,6 +236,10 @@ public class PostOperationProxyProvider implements ServiceListener {
 
         PostOperationProxy(final SlingPostOperation delegatee) {
             this.delegatee = delegatee;
+        }
+        
+        public String toString() {
+            return getClass().getSimpleName() + " for " + delegatee.getClass().getName();
         }
 
         public void run(SlingHttpServletRequest request, PostResponse response,
