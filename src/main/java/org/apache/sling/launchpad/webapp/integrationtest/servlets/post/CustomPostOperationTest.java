@@ -23,11 +23,6 @@ import org.apache.sling.commons.testing.integration.HttpTestBase;
 public class CustomPostOperationTest extends HttpTestBase {
     private TestNode testNode;
 
-    final String POST_OPERATION_NAME = "test:example";
-    
-    /** Our example operation adds a property with this name to the node that it processes */
-    public static final String MARKER = "org.apache.sling.launchpad.testservices.post.SlingPostOperationExample";
-    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -35,15 +30,23 @@ public class CustomPostOperationTest extends HttpTestBase {
         final String testPath = "/" + getClass().getSimpleName() + System.currentTimeMillis();
         testNode = new TestNode(HTTP_BASE_URL + testPath, null);
     }
-
-    public void testCustomPostOperation() throws Exception {
+    
+    private void assertCustomPostOperation(String operationName, String markerPropertyName) throws Exception {
         final String jsonPath = testNode.nodeUrl + ".tidy.json";
-        assertFalse("Expecting no marker before POST", getContent(jsonPath, CONTENT_TYPE_JSON).contains(MARKER));
+        assertFalse("Expecting no marker before POST", getContent(jsonPath, CONTENT_TYPE_JSON).contains(markerPropertyName));
         
         final PostMethod post = new PostMethod(testNode.nodeUrl);
-        post.addParameter(":operation", POST_OPERATION_NAME);
+        post.addParameter(":operation", operationName);
 
         assertEquals("Expecting 200 status on POST", 200, httpClient.executeMethod(post));
-        assertTrue("Expecting marker to be present after POST", getContent(jsonPath, CONTENT_TYPE_JSON).contains(MARKER));
+        assertTrue("Expecting marker to be present after POST", getContent(jsonPath, CONTENT_TYPE_JSON).contains(markerPropertyName));
+    }
+
+    public void testCustomPostOperation() throws Exception {
+        assertCustomPostOperation("test:SlingPostOperationExample", "org.apache.sling.launchpad.testservices.post.SlingPostOperationExample");
+    }
+    
+    public void testOldStyleCustomPostOperation() throws Exception {
+        assertCustomPostOperation("test:OldStylePostOperationExample", "org.apache.sling.launchpad.testservices.post.OldStylePostOperationExample");
     }
 }
