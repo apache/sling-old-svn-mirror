@@ -20,27 +20,31 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.servlets.post.PostOperation;
-import org.apache.sling.servlets.post.PostResponse;
+import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.SlingPostOperation;
 import org.apache.sling.servlets.post.SlingPostProcessor;
 
-/** Example PostOperation used in integration tests */
+/** Example using the now deprecated SlingPostOperation */
 @Component(immediate=true)
 @Service
-@Property(name=PostOperation.PROP_OPERATION_NAME, value="test:SlingPostOperationExample")
-public class SlingPostOperationExample implements PostOperation {
-    public void run(SlingHttpServletRequest request, PostResponse response, SlingPostProcessor[] processors) {
+@Properties({
+    @Property(name=SlingPostOperation.PROP_OPERATION_NAME, value="test:OldStylePostOperationExample")
+})
+public class OldStylePostOperationExample implements SlingPostOperation {
+
+    public void run(SlingHttpServletRequest request, HtmlResponse response, SlingPostProcessor[] processors) {
         final Resource r = request.getResource();
         final Node n = r.adaptTo(Node.class);
         try {
             response.setPath(r.getPath());
             response.setTitle("Content modified by " + getClass().getSimpleName());
-            n.setProperty(getClass().getName(), "Operation was applied to " + n.getPath());
+            n.setProperty(getClass().getName(), "Old-style operation was applied to " + n.getPath());
             n.getSession().save();
         } catch(RepositoryException re) {
             throw new SlingException(getClass().getSimpleName() + " failed", re);
