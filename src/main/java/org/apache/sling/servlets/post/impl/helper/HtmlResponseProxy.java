@@ -40,9 +40,14 @@ import org.apache.sling.servlets.post.PostResponse;
 public class HtmlResponseProxy extends HtmlResponse {
 
     private final PostResponse postResponse;
+    private boolean createRequest;
 
     public HtmlResponseProxy(final PostResponse postResponse) {
+        if(postResponse == null) {
+            throw new IllegalArgumentException("Null PostResponse, cannot build HtmlResponseProxy");
+        }
         this.postResponse = postResponse;
+        postResponse.setCreateRequest(createRequest);
     }
 
     public PostResponse getPostResponse() {
@@ -129,7 +134,12 @@ public class HtmlResponseProxy extends HtmlResponse {
     }
 
     public void setCreateRequest(boolean isCreateRequest) {
-        postResponse.setCreateRequest(isCreateRequest);
+        createRequest = isCreateRequest;
+        if(postResponse != null) {
+            // ugly...needed because of SLING-2453, this is called
+            // by the base class's constructor before postResponse is set
+            postResponse.setCreateRequest(isCreateRequest);
+        }
     }
 
     public void setError(Throwable error) {
