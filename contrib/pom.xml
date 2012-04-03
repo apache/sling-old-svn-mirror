@@ -98,10 +98,6 @@
           <module>scripting/jst</module>
           <module>scripting/python</module>
           <module>scripting/ruby</module>
-          <module>scripting/scala/script</module>
-          <module>scripting/scala/config</module>
-          <module>scripting/scala/samples/hello-world</module>
-          <module>scripting/scala/samples/forum</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
           <module>launchpad/smx-kernel</module>
@@ -117,6 +113,18 @@
             </activation>
             <modules>
                 <module>launchpad/testing</module> 
+            </modules>
+        </profile>
+        <profile>
+            <id>java6</id>
+            <activation>
+                <jdk>1.6</jdk>
+            </activation>
+            <modules>
+                <module>scripting/scala/script</module>
+                <module>scripting/scala/config</module>
+                <module>scripting/scala/samples/hello-world</module>
+                <module>scripting/scala/samples/forum</module>
             </modules>
         </profile>
     </profiles>
