@@ -1304,18 +1304,18 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         assertNotNull(res.adaptTo(Node.class));
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
-        
+
         path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + alias + "/" + alias + ".print.html");
         res = resResolver.resolve(request, path);
         assertEquals("GET request resolution does not go up the path",
                 Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
-        
+
         Node child = rootNode.addNode("child", "nt:unstructured");
         child.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
         session.save();
-        
-        res = resResolver.resolve(request, path);   
+
+        res = resResolver.resolve(request, path);
         assertEquals(child.getPath(), res.getPath());
     }
 
@@ -1739,20 +1739,20 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mapped = resResolver.map(child.getPath() + selExt);
         assertEquals(path, mapped);
     }
-    
+
     public void testMapResourceAlias() throws Exception {
     	// define an alias for the rootPath
         String alias = "testAlias";
         rootNode.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
         session.save();
-    	
+
     	String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                + "/" + alias); 
+                + "/" + alias);
         String mapped = resResolver.map(rootNode.getPath());
         assertEquals(path, mapped);
         Node child = rootNode.addNode("child");
         session.save();
-        
+
         path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + alias+"/child");
         mapped = resResolver.map(child.getPath());
@@ -1765,26 +1765,26 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
         content.setProperty(JcrResourceResolver.PROP_ALIAS, alias);
         session.save();
-        
+
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                + "/" + alias); 
+                + "/" + alias);
         String mapped = resResolver.map(rootNode.getPath());
         assertEquals(path, mapped);
-        
+
         path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
-                + "/" + alias+"/_jcr_content"); 
+                + "/" + alias+"/_jcr_content");
         mapped = resResolver.map(content.getPath());
         assertEquals(path, mapped);
-        
+
         Node child = content.addNode("child");
         session.save();
-        
+
         path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + alias+"/_jcr_content/child");
         mapped = resResolver.map(child.getPath());
         assertEquals(path, mapped);
     }
-    
+
     public void test_resolve() throws Exception {
 
         Node child = rootNode.addNode("child");
@@ -1936,6 +1936,88 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertNotNull(resNode);
 
         assertEquals(child.getPath(), resNode.getPath());
+    }
+
+    /**
+     * Test the order property of the vanity paths
+     */
+    public void test_resolve_with_sling_vanity_path_order() throws Exception {
+        final String vanityPath = "/ordering";
+
+        // create two nodes - child2 with a higher order
+        Node child1 = rootNode.addNode("child1");
+        child1.addMixin("sling:VanityPath");
+        child1.setProperty("sling:vanityPath", vanityPath);
+        child1.setProperty("sling:vanityOrder", 100);
+        Node child2 = rootNode.addNode("child2");
+        child2.addMixin("sling:VanityPath");
+        child2.setProperty("sling:vanityPath", vanityPath);
+        child2.setProperty("sling:vanityOrder", 200);
+        session.save();
+
+        // we should wait a little bit for the observation to be processed
+        try { Thread.sleep(2000); } catch (final InterruptedException ignore) {}
+
+        // we should get child2 now
+        Resource rsrc = resResolver.resolve(vanityPath);
+        assertNotNull(rsrc);
+        assertFalse("Resource should exist", ResourceUtil.isNonExistingResource(rsrc));
+        assertEquals("Path does not match", child2.getPath(), rsrc.getPath());
+
+        // remove 2
+        child2.remove();
+        session.save();
+
+        // we should wait a little bit for the observation to be processed
+        try { Thread.sleep(2000); } catch (final InterruptedException ignore) {}
+
+        // we should get child 1 now
+        rsrc = resResolver.resolve(vanityPath);
+        assertNotNull(rsrc);
+        assertFalse("Resource should exist", ResourceUtil.isNonExistingResource(rsrc));
+        assertEquals("Path does not match", child1.getPath(), rsrc.getPath());
+
+        // readding child2
+        child2 = rootNode.addNode("child2");
+        child2.addMixin("sling:VanityPath");
+        child2.setProperty("sling:vanityPath", vanityPath);
+        child2.setProperty("sling:vanityOrder", 200);
+        session.save();
+
+        // we should wait a little bit for the observation to be processed
+        try { Thread.sleep(2000); } catch (final InterruptedException ignore) {}
+
+        // we should get child2 now
+        rsrc = resResolver.resolve(vanityPath);
+        assertNotNull(rsrc);
+        assertFalse("Resource should exist", ResourceUtil.isNonExistingResource(rsrc));
+        assertEquals("Path does not match", child2.getPath(), rsrc.getPath());
+
+        // change order of child 1 to make it higher than child 2
+        child1.setProperty("sling:vanityOrder", 300);
+        session.save();
+
+        // we should wait a little bit for the observation to be processed
+        try { Thread.sleep(2000); } catch (final InterruptedException ignore) {}
+
+        // we should get child 1 now
+        rsrc = resResolver.resolve(vanityPath);
+        assertNotNull(rsrc);
+        assertFalse("Resource should exist", ResourceUtil.isNonExistingResource(rsrc));
+        assertEquals("Path does not match", child1.getPath(), rsrc.getPath());
+
+        // change order of child 1 to make it lower than child 2
+        child1.setProperty("sling:vanityOrder", 50);
+        session.save();
+
+        // we should wait a little bit for the observation to be processed
+        try { Thread.sleep(2000); } catch (final InterruptedException ignore) {}
+
+        // we should get child 2 now
+        rsrc = resResolver.resolve(vanityPath);
+        assertNotNull(rsrc);
+        assertFalse("Resource should exist", ResourceUtil.isNonExistingResource(rsrc));
+        assertEquals("Path does not match", child2.getPath(), rsrc.getPath());
     }
 
     public void test_resolve_with_sling_alias() throws Exception {
