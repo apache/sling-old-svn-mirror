@@ -33,6 +33,7 @@ import javax.jcr.ValueFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
@@ -166,21 +167,21 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         result = map.get(PROP_NAME_NIL, defaultValue);
         assertSame(defaultValue, result);
     }
-    
+
     public void testInputStream() throws Exception {
         InputStream instream = new ByteArrayInputStream("this too shall pass".getBytes());
-        
+
         ValueFactory valueFactory = rootNode.getSession().getValueFactory();
 
         rootNode.setProperty("bin", valueFactory.createBinary(instream));
         rootNode.getSession().save();
-        
+
         ValueMap map = new JcrPropertyMap(rootNode);
         instream = map.get("bin", InputStream.class);
         assertNotNull(instream);
         String read = IOUtils.toString(instream);
         assertEquals("Stream read successfully", "this too shall pass", read);
-        
+
         instream = map.get("bin", InputStream.class);
         assertNotNull(instream);
         read = IOUtils.toString(instream);
@@ -281,18 +282,48 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
 
     private static final String TEST_PATH = "a<a";
 
+    private static final String VALUE = "value";
+    private static final String VALUE1 = "value";
+    private static final String VALUE2 = "value";
+    private static final String PROP1 = "-prop";
+    private static final String PROP2 = "1prop";
+
     public void testNames() throws Exception {
-        this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), "value");
+        this.rootNode.setProperty(Text.escapeIllegalJcrChars(TEST_PATH), VALUE);
+        this.rootNode.setProperty(PROP1, VALUE1);
+        this.rootNode.setProperty(PROP2, VALUE2);
         final ValueMap vm = this.createPropertyMap(this.rootNode);
-        assertEquals("value", vm.get(TEST_PATH));
+        assertEquals(VALUE, vm.get(TEST_PATH));
+        assertEquals(VALUE1, vm.get(PROP1));
+        assertEquals(VALUE2, vm.get(PROP2));
     }
 
     public void testIerators() throws Exception {
-        this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), "value");
+        this.rootNode.setProperty(Text.escapeIllegalJcrChars(TEST_PATH), VALUE);
+        this.rootNode.setProperty(PROP1, VALUE1);
+        this.rootNode.setProperty(PROP2, VALUE2);
         final ValueMap vm = this.createPropertyMap(this.rootNode);
         assertTrue(vm.containsKey(TEST_PATH));
         search(vm.keySet().iterator(), TEST_PATH);
-        search(vm.values().iterator(), "value");
+        search(vm.keySet().iterator(), PROP1);
+        search(vm.keySet().iterator(), PROP2);
+        search(vm.values().iterator(), VALUE);
+        search(vm.values().iterator(), VALUE1);
+        search(vm.values().iterator(), VALUE2);
+    }
+
+    public void testNamesOld() throws Exception {
+        this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), VALUE);
+        final ValueMap vm = this.createPropertyMap(this.rootNode);
+        assertEquals(VALUE, vm.get(TEST_PATH));
+    }
+
+    public void testIeratorsOld() throws Exception {
+        this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), VALUE);
+        final ValueMap vm = this.createPropertyMap(this.rootNode);
+        assertTrue(vm.containsKey(TEST_PATH));
+        search(vm.keySet().iterator(), TEST_PATH);
+        search(vm.values().iterator(), VALUE);
     }
 
     public void testDotSlash() throws Exception {
