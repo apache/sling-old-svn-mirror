@@ -47,8 +47,6 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Maps;
-
 /**
  * An implementation of the value map based on a JCR node.
  * @see JcrModifiablePropertyMap
@@ -210,7 +208,7 @@ public class JcrPropertyMap
         if (cache.size() == valueCache.size()) {
             sourceMap = valueCache;
         } else {
-            sourceMap = Maps.transformEntries(cache, entryTransformer);
+            sourceMap = transformEntries(cache);
         }
         return Collections.unmodifiableSet(sourceMap.entrySet());
     }
@@ -232,7 +230,7 @@ public class JcrPropertyMap
         if (cache.size() == valueCache.size()) {
             sourceMap = valueCache;
         } else {
-            sourceMap = Maps.transformEntries(cache, entryTransformer);
+            sourceMap = transformEntries(cache);
         }
         return Collections.unmodifiableCollection(sourceMap.values());
     }
@@ -484,13 +482,15 @@ public class JcrPropertyMap
         }
         return type;
     }
-
-    private static Maps.EntryTransformer<String, JcrPropertyMapCacheEntry, Object> entryTransformer = new Maps.EntryTransformer<String, JcrPropertyMapCacheEntry, Object>() {
-
-        public Object transformEntry(String key, JcrPropertyMapCacheEntry value) {
-            return value.getDefaultValueOrNull();
-        }
-    };
+    
+	private Map<String, Object> transformEntries( Map<String, JcrPropertyMapCacheEntry> map) {
+		
+		Map<String, Object> transformedEntries = new LinkedHashMap<String, Object>(map.size());
+		for ( Map.Entry<String, JcrPropertyMapCacheEntry> entry : map.entrySet() )
+			transformedEntries.put(entry.getKey(), entry.getValue().getDefaultValueOrNull());
+		
+		return transformedEntries;
+	}
 
     /**
      * This is an extended version of the object input stream which uses the
