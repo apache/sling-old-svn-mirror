@@ -42,6 +42,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 import org.slf4j.Logger;
@@ -122,10 +123,7 @@ public class JcrPropertyMap
             return (T) get(key);
         }
 
-        JcrPropertyMapCacheEntry entry = cache.get(key);
-        if (entry == null) {
-            entry = read(key);
-        }
+        final JcrPropertyMapCacheEntry entry = this.read(key);
         if ( entry == null ) {
             return null;
         }
@@ -161,10 +159,7 @@ public class JcrPropertyMap
      */
     public Object get(final Object aKey) {
         final String key = checkKey(aKey.toString());
-        JcrPropertyMapCacheEntry entry = cache.get(key);
-        if (entry == null) {
-            entry = read(key);
-        }
+        final JcrPropertyMapCacheEntry entry = this.read(key);
         final Object value = (entry == null ? null : entry.getDefaultValueOrNull());
         return value;
     }
@@ -172,14 +167,14 @@ public class JcrPropertyMap
     /**
      * @see java.util.Map#containsKey(java.lang.Object)
      */
-    public boolean containsKey(Object key) {
+    public boolean containsKey(final Object key) {
         return get(key) != null;
     }
 
     /**
      * @see java.util.Map#containsValue(java.lang.Object)
      */
-    public boolean containsValue(Object value) {
+    public boolean containsValue(final Object value) {
         readFully();
         return valueCache.containsValue(value);
     }
@@ -245,62 +240,138 @@ public class JcrPropertyMap
     public String getPath() {
         try {
             return node.getPath();
-        } catch (RepositoryException e) {
+        } catch (final RepositoryException e) {
             throw new IllegalStateException(e);
         }
     }
 
     // ---------- Helpers to access the node's property ------------------------
 
-    JcrPropertyMapCacheEntry read(final String key) {
-
-        // if the node has been completely read, we need not check
-        // again if the key does not point to a sub node
-        if (fullyRead && key.indexOf('/') == -1 ) {
-            // except if the key contains
-            return null;
-        }
-
-        final String name = ISO9075.encodePath(key);
+    /**
+     * Put a single property into the cache
+     * @param prop
+     * @return
+     * @throws IllegalArgumentException if a repository exception occurs
+     */
+    private JcrPropertyMapCacheEntry cacheProperty(final Property prop) {
         try {
-            if (node.hasProperty(name)) {
-                final Property prop = node.getProperty(name);
-                final JcrPropertyMapCacheEntry entry = new JcrPropertyMapCacheEntry(prop);
+            // calculate the key
+            final String name = prop.getName();
+            String key = null;
+            if ( name.indexOf("_x") != -1 ) {
+                // for compatiblity with older versions we use the (wrong)
+                // ISO9075 path encoding
+                key = ISO9075.decode(name);
+                if ( key.equals(name) ) {
+                    key = null;
+                }
+            }
+            if ( key == null ) {
+                key = Text.unescapeIllegalJcrChars(name);
+            }
+            JcrPropertyMapCacheEntry entry = cache.get(key);
+            if ( entry == null ) {
+                entry = new JcrPropertyMapCacheEntry(prop);
                 cache.put(key, entry);
-                Object defaultValue = entry.getDefaultValue();
+
+                final Object defaultValue = entry.getDefaultValue();
                 if (defaultValue != null) {
                     valueCache.put(key, entry.getDefaultValue());
                 }
-                return entry;
             }
-        } catch (RepositoryException re) {
-            // TODO: log !!
+            return entry;
+        } catch (final RepositoryException re) {
+            throw new IllegalArgumentException(re);
+        }
+    }
+
+    /**
+     * Read a single property.
+     * @throws IllegalArgumentException if a repository exception occurs
+     */
+    JcrPropertyMapCacheEntry read(final String name) {
+        // if the name is a path, we should handle this differently
+        if ( name.indexOf('/') != -1 ) {
+            // first a compatibility check with the old (wrong) ISO9075
+            // encoding
+            final String path = ISO9075.encodePath(name);
+            try {
+                if ( node.hasProperty(path) ) {
+                    return new JcrPropertyMapCacheEntry(node.getProperty(path));
+                }
+            } catch (final RepositoryException re) {
+                throw new IllegalArgumentException(re);
+            }
+            // now we do a proper segment by segment encoding
+            final StringBuilder sb = new StringBuilder();
+            int pos = 0;
+            int lastPos = -1;
+            while ( pos < name.length() ) {
+                if ( name.charAt(pos) == '/' ) {
+                    if ( lastPos + 1 < pos ) {
+                        sb.append(Text.escapeIllegalJcrChars(name.substring(lastPos + 1, pos)));
+                    }
+                    sb.append('/');
+                    lastPos = pos;
+                }
+                pos++;
+            }
+            if ( lastPos + 1 < pos ) {
+                sb.append(Text.escapeIllegalJcrChars(name.substring(lastPos + 1)));
+            }
+            final String newPath = sb.toString();
+            try {
+                if ( node.hasProperty(newPath) ) {
+                    return new JcrPropertyMapCacheEntry(node.getProperty(newPath));
+                }
+            } catch (final RepositoryException re) {
+                throw new IllegalArgumentException(re);
+            }
+
+            return null;
         }
 
-        // property not found or some error accessing it
+        // if the node has been completely read we can directly return
+        if ( fullyRead ) {
+            return cache.get(name);
+        }
+
+        final String key = Text.escapeIllegalJcrChars(name);
+        try {
+            if (node.hasProperty(key)) {
+                final Property prop = node.getProperty(key);
+                return cacheProperty(prop);
+            }
+            // for compatiblity with older versions we use the (wrong) ISO9075 path
+            // encoding
+            final String oldKey = ISO9075.encodePath(name);
+            if (node.hasProperty(oldKey)) {
+                final Property prop = node.getProperty(oldKey);
+                return cacheProperty(prop);
+            }
+        } catch (final RepositoryException re) {
+            throw new IllegalArgumentException(re);
+        }
+
+        // property not found
         return null;
     }
 
+    /**
+     * Read all properties.
+     * @throws IllegalArgumentException if a repository exception occurs
+     */
     void readFully() {
         if (!fullyRead) {
             try {
-                PropertyIterator pi = node.getProperties();
+                final PropertyIterator pi = node.getProperties();
                 while (pi.hasNext()) {
-                    Property prop = pi.nextProperty();
-                    final String name = prop.getName();
-                    final String key = ISO9075.decode(name);
-                    if (!cache.containsKey(key)) {
-                        final JcrPropertyMapCacheEntry entry = new JcrPropertyMapCacheEntry(prop);
-                        cache.put(key, entry);
-                        Object defaultValue = entry.getDefaultValue();
-                        if (defaultValue != null) {
-                            valueCache.put(key, entry.getDefaultValue());
-                        }
-                    }
+                    final Property prop = pi.nextProperty();
+                    this.cacheProperty(prop);
                 }
                 fullyRead = true;
-            } catch (RepositoryException re) {
-                // TODO: log !!
+            } catch (final RepositoryException re) {
+                throw new IllegalArgumentException(re);
             }
         }
     }
@@ -482,13 +553,13 @@ public class JcrPropertyMap
         }
         return type;
     }
-    
+
 	private Map<String, Object> transformEntries( Map<String, JcrPropertyMapCacheEntry> map) {
-		
+
 		Map<String, Object> transformedEntries = new LinkedHashMap<String, Object>(map.size());
 		for ( Map.Entry<String, JcrPropertyMapCacheEntry> entry : map.entrySet() )
 			transformedEntries.put(entry.getKey(), entry.getValue().getDefaultValueOrNull());
-		
+
 		return transformedEntries;
 	}
 

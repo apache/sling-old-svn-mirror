@@ -28,7 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
@@ -92,7 +92,7 @@ public final class JcrModifiablePropertyMap
         final Object oldValue = this.get(key);
         try {
             this.cache.put(key, new JcrPropertyMapCacheEntry(value, getNode().getSession()));
-        } catch (RepositoryException re) {
+        } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be put into node: " + value, re);
         }
         this.valueCache.put(key, value);
@@ -129,7 +129,7 @@ public final class JcrModifiablePropertyMap
         if ( this.changedProperties == null ) {
             this.changedProperties = new HashSet<String>();
         }
-        this.changedProperties.add(key.toString());
+        this.changedProperties.add(key);
         return oldValue;
     }
 
@@ -185,10 +185,9 @@ public final class JcrModifiablePropertyMap
         try {
             final Node node = getNode();
             // check for mixin types
-            final String mixinTypesKey = ISO9075.decode(MIXIN_TYPES);
-            if ( this.changedProperties.contains(mixinTypesKey) ) {
-                if ( cache.containsKey(mixinTypesKey) ) {
-                    final JcrPropertyMapCacheEntry entry = cache.get(mixinTypesKey);
+            if ( this.changedProperties.contains(MIXIN_TYPES) ) {
+                if ( cache.containsKey(MIXIN_TYPES) ) {
+                    final JcrPropertyMapCacheEntry entry = cache.get(MIXIN_TYPES);
                     handleMixinTypes(node, entry.values);
                 } else {
                     // remove all mixin types!
@@ -197,7 +196,7 @@ public final class JcrModifiablePropertyMap
             }
 
             for(final String key : this.changedProperties) {
-                final String name = ISO9075.encodePath(key);
+                final String name = Text.escapeIllegalJcrChars(key);
                 if ( !MIXIN_TYPES.equals(name) ) {
                     if ( cache.containsKey(key) ) {
                         final JcrPropertyMapCacheEntry entry = cache.get(key);
@@ -212,7 +211,7 @@ public final class JcrModifiablePropertyMap
                 }
             }
             node.getSession().save();
-        } catch (RepositoryException re) {
+        } catch (final RepositoryException re) {
             throw new PersistenceException("Unable to persist changes.", re);
         }
         this.reset();
