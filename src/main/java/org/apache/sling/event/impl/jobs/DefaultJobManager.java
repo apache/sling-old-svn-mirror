@@ -189,14 +189,23 @@ public class DefaultJobManager
             // check application ids
             final String[] enabledIds = PropertiesUtil.toStringArray(props.get(PROP_ENABLED_APP_IDS));
             if ( enabledIds != null && enabledIds.length > 0 ) {
+                // the array might only contain empty values (e.g. when edited through the web console)
+                boolean hasValue = false;
                 boolean doEnable = false;
                 for(int i=0; i<enabledIds.length; i++) {
-                    if ( Environment.APPLICATION_ID.equals(enabledIds[i]) ) {
-                        doEnable = true;
-                        break;
+                    if ( enabledIds[i] != null && enabledIds[i].trim().length() > 0 ) {
+                        hasValue = true;
+                        if ( Environment.APPLICATION_ID.equals(enabledIds[i].trim()) ) {
+                            doEnable = true;
+                            break;
+                        }
                     }
                 }
-                this.enabled = doEnable;
+                if ( hasValue ) {
+                    this.enabled = doEnable;
+                } else {
+                    this.enabled = true;
+                }
             } else {
                 this.enabled = true;
             }
