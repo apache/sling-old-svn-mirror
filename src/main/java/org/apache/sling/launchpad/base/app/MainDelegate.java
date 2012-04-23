@@ -322,7 +322,7 @@ public class MainDelegate implements Launcher {
 
     // emit an informational message to standard out
     static void info(String message, Throwable t) {
-        log(System.out, "*INFO*", message, t);
+        log(System.out, "*INFO *", message, t);
     }
 
     // emit an error message to standard err
