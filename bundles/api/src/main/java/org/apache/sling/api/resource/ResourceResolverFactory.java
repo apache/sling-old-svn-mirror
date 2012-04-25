@@ -100,6 +100,12 @@ public interface ResourceResolverFactory {
      * {@link #USER_IMPERSONATION} attribute the <code>ResourceResolver</code>
      * returned will only have administrative privileges if the user identified
      * by the property has administrative privileges.
+     * <p>
+     * <b><i>NOTE: This method is intended for use by infrastructure bundles to
+     * access the repository and provide general services. This method MUST not
+     * be used to handle client requests of whatever kinds. To handle client
+     * requests a regular authenticated resource resolver retrieved
+     * through {@link #getResourceResolver(Map)} must be used.</i></b>
      *
      * @param authenticationInfo A map of further credential information which
      *            may be used by the implementation to parametrize how the
