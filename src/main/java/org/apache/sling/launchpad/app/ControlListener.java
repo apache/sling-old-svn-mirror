@@ -28,12 +28,10 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
 import java.net.ConnectException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.UnknownHostException;
 
 /**
  * The <code>ControlListener</code> class is a helper class for the {@link Main}
@@ -71,6 +69,9 @@ class ControlListener implements Runnable {
 
     // the response sent by the server if the command executed successfully
     private static final String RESPONSE_OK = "OK";
+
+    // The default interface to listen on
+    private static final String DEFAULT_LISTEN_INTERFACE = "127.0.0.1";
 
     // The default port to listen on and to connect to - we select it randomly
     private static final int DEFAULT_LISTEN_PORT = 0;
@@ -170,16 +171,20 @@ class ControlListener implements Runnable {
 
                     if (COMMAND_STOP.equals(command)) {
                         slingMain.doStop();
+                        Main.info(s.getRemoteSocketAddress() + "<" + RESPONSE_OK, null);
                         writeLine(s, RESPONSE_OK);
 
                         Main.info("Apache Sling shut down, exiting Java VM", null);
                         System.exit(0);
 
                     } else if (COMMAND_STATUS.equals(command)) {
+                        Main.info(s.getRemoteSocketAddress() + "<" + RESPONSE_OK, null);
                         writeLine(s, RESPONSE_OK);
 
                     } else {
-                        writeLine(s, "ERR:" + command);
+                        final String msg = "ERR:" + command;
+                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
+                        writeLine(s, msg);
 
                     }
                 } finally {
@@ -207,25 +212,28 @@ class ControlListener implements Runnable {
                 listenSpec = this.readPortFromConfigFile();
             }
             if ( listenSpec == null ) {
-                listenSpec = InetAddress.getLocalHost().getHostName() + ':' + String.valueOf(DEFAULT_LISTEN_PORT);
+                listenSpec = DEFAULT_LISTEN_INTERFACE + ":" + DEFAULT_LISTEN_PORT;
             }
             final int colon = listenSpec.indexOf(':');
+            final InetSocketAddress addr;
             if (colon < 0) {
-                return new InetSocketAddress(InetAddress.getLocalHost(),
-                    Integer.parseInt(listenSpec));
+                addr = new InetSocketAddress(DEFAULT_LISTEN_INTERFACE, Integer.parseInt(listenSpec));
+            } else {
+                addr = new InetSocketAddress(listenSpec.substring(0, colon),
+                    Integer.parseInt(listenSpec.substring(colon + 1)));
             }
-            return new InetSocketAddress(listenSpec.substring(0, colon),
-                Integer.parseInt(listenSpec.substring(colon + 1)));
+            if (!addr.isUnresolved()) {
+                return addr;
+            }
+            Main.error("Unknown host in '" + listenSpec, null);
         } catch (final NumberFormatException nfe) {
             Main.error("Cannot parse port number from '" + listenSpec + "'",
                 null);
-        } catch (final UnknownHostException uhe) {
-            Main.error("Unknown host in '" + listenSpec + "': "
-                + uhe.getMessage(), null);
         }
 
         return null;
     }
+
 
     /**
      * Sends the given command to the server indicated by the configured
