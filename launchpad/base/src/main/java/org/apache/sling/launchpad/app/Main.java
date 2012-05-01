@@ -120,7 +120,10 @@ public class Main {
         }
 
         // finally start Sling
-        main.doStart();
+        if (!main.doStart()) {
+            error("Failed to start Sling; terminating", null);
+            main.terminateVM(1);
+        }
     }
 
     /**
@@ -335,7 +338,9 @@ public class Main {
                 }
             };
         } catch (IllegalArgumentException iae) {
-            startupFailure(iae.getMessage(), null);
+            error(
+                "Cannot launch: Launchpad folder cannot be used: "
+                    + iae.getMessage(), null);
             return false;
         }
         this.loader = loaderTmp;
@@ -389,7 +394,8 @@ public class Main {
             try {
                 loader.installLauncherJar(launcherJar);
             } catch (IOException ioe) {
-                startupFailure("Failed installing " + launcherJar, ioe);
+                error("Cannot launch: Cannot install " + launcherJar
+                    + " for use", ioe);
                 return false;
             }
         } else {
@@ -400,7 +406,7 @@ public class Main {
         try {
             object = loader.loadLauncher(SharedConstants.DEFAULT_SLING_MAIN);
         } catch (IllegalArgumentException iae) {
-            startupFailure("Failed loading Sling class "
+            error("Cannot launch: Failed loading Sling class "
                 + SharedConstants.DEFAULT_SLING_MAIN, iae);
             return false;
         }
@@ -422,7 +428,12 @@ public class Main {
                 return true;
             }
 
-            error("There was a problem launching Apache Sling", null);
+            error("Cannot launch: Launcher.start() returned false", null);
+
+        } else {
+
+            error("Cannot launch: Class " + SharedConstants.DEFAULT_SLING_MAIN + " is not a Launcher class", null);
+
         }
 
         return false;
@@ -534,11 +545,6 @@ public class Main {
         commandLineArgs.put(SharedConstants.SLING_LAUNCHPAD,
             launchpadHome.getAbsolutePath());
         return launchpadHome;
-    }
-
-    private void startupFailure(String message, Throwable cause) {
-        error("Launcher JAR access failure: " + message, cause);
-        error("Shutting Down", null);
     }
 
     // ---------- logging
@@ -836,20 +842,28 @@ public class Main {
             if (updateFile == null) {
 
                 Main.info("Restarting Framework and Apache Sling", null);
-                Main.this.startSling(null);
+                if (!Main.this.startSling(null)) {
+                    Main.error("Failed to restart Sling; terminating", null);
+                    Main.this.terminateVM(1);
+                }
 
             } else {
 
                 Main.info(
                     "Restarting Framework with update from " + updateFile, null);
+                boolean started = false;
                 try {
-                    Main.this.startSling(updateFile.toURI().toURL());
+                    started = Main.this.startSling(updateFile.toURI().toURL());
                 } catch (MalformedURLException mue) {
                     Main.error("Cannot get URL for file " + updateFile, mue);
                 } finally {
                     updateFile.delete();
                 }
 
+                if (!started) {
+                    Main.error("Failed to restart Sling; terminating", null);
+                    Main.this.terminateVM(1);
+                }
             }
         }
     }
