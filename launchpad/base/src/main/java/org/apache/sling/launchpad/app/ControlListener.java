@@ -31,7 +31,7 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
+import java.util.Random;
 
 /**
  * The <code>ControlListener</code> class is a helper class for the {@link Main}
@@ -79,10 +79,10 @@ class ControlListener implements Runnable {
     // The reference to the Main class to shutdown on request
     private final Main slingMain;
 
-    // The socket address used for control communication
-    private final SocketAddress socketAddress;
+    private final String listenSpec;
 
-    private final boolean writePortConfig;
+    private String secretKey;
+    private InetSocketAddress socketAddress;
 
     /**
      * Creates an instance of this control support class.
@@ -98,39 +98,38 @@ class ControlListener implements Runnable {
      *            commands. Otherwise this argument may be <code>null</code>.
      * @param listenSpec The specification for the host and port for the socket
      *            connection. See above for the format of this parameter.
-     * @param selectNewPort Parameter specifying if a new port should be selected
-     *                      or if no port is specified a stored port should be
-     *                      used.
      */
-    ControlListener(final Main slingMain,
-                    final String listenSpec,
-                    final boolean selectNewPort) {
+    ControlListener(final Main slingMain, final String listenSpec) {
         this.slingMain = slingMain;
-        this.socketAddress = this.getSocketAddress(listenSpec, selectNewPort);
-        this.writePortConfig = selectNewPort;
+        this.listenSpec = listenSpec; // socketAddress = this.getSocketAddress(listenSpec, selectNewPort);
     }
 
     /**
      * Implements the server side of the control connection starting a thread
      * listening on the host and port configured on setup of this instance.
      */
-    void listen() {
-        if (socketAddress != null) {
-            final Thread listener = new Thread(this);
-            listener.setDaemon(true);
-            listener.setName("Apache Sling Control Listener@" + socketAddress);
-            listener.start();
-        } else {
-            Main.info("No socket address to listen to", null);
+    boolean listen() {
+        final File configFile = getConfigFile();
+        if (configFile.canRead() && statusServer() == 0) {
+            // server already running, fail
+            Main.error("Sling already active in " + this.slingMain.getSlingHome(), null);
+            return false;
         }
+        configFile.delete();
+
+        final Thread listener = new Thread(this);
+        listener.setDaemon(true);
+        listener.setName("Apache Sling Control Listener (inactive)");
+        listener.start();
+        return true;
     }
 
     /**
      * Implements the client side of the control connection sending the command
      * to shutdown Sling.
      */
-    void shutdownServer() {
-        sendCommand(COMMAND_STOP);
+    int shutdownServer() {
+        return sendCommand(COMMAND_STOP);
     }
 
     /**
@@ -148,34 +147,71 @@ class ControlListener implements Runnable {
      * upon them.
      */
     public void run() {
+        this.configure(false);
+
         ServerSocket server = null;
         try {
             server = new ServerSocket();
-            server.bind(socketAddress);
-            if ( this.writePortConfig ) {
-                this.writePortToConfigFile(server);
-            }
-            Main.info("Apache Sling Control Server started at " + server.getInetAddress() + ":" + server.getLocalPort(), null);
+            server.bind(this.socketAddress);
+            writePortToConfigFile(getConfigFile(),
+                new InetSocketAddress(server.getInetAddress(), server.getLocalPort()), this.secretKey);
+            Thread.currentThread().setName(
+                "Apache Sling Control Listener@" + server.getInetAddress() + ":" + server.getLocalPort());
+            Main.info("Apache Sling Control Listener started", null);
         } catch (final IOException ioe) {
-            Main.error("Failed to start Sling Control Server", ioe);
+            Main.error("Failed to start Apache Sling Control Listener", ioe);
             return;
         }
+
+        long delay = 0;
 
         try {
             while (true) {
 
                 final Socket s = server.accept();
+
+                // delay processing after unsuccessfull attempts
+                if (delay > 0) {
+                    Main.info(s.getRemoteSocketAddress() + ": Delay: " + (delay / 1000), null);
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException e) {
+                    }
+                }
+
                 try {
-                    final String command = readLine(s);
+                    final String commandLine = readLine(s);
+                    if (commandLine == null) {
+                        final String msg = "ERR: missing command";
+                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
+                        writeLine(s, msg);
+                        continue;
+                    }
+
+                    final int blank = commandLine.indexOf(' ');
+                    if (blank < 0) {
+                        final String msg = "ERR: missing key";
+                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
+                        writeLine(s, msg);
+                        continue;
+                    }
+
+                    if (!secretKey.equals(commandLine.substring(0, blank))) {
+                        final String msg = "ERR: wrong key";
+                        Main.info(s.getRemoteSocketAddress() + "<" + msg, null);
+                        writeLine(s, msg);
+                        delay = (delay > 0) ? delay * 2 : 1000L;
+                        continue;
+                    }
+
+                    final String command = commandLine.substring(blank + 1);
                     Main.info(s.getRemoteSocketAddress() + ">" + command, null);
 
                     if (COMMAND_STOP.equals(command)) {
                         slingMain.doStop();
                         Main.info(s.getRemoteSocketAddress() + "<" + RESPONSE_OK, null);
                         writeLine(s, RESPONSE_OK);
-
-                        Main.info("Apache Sling shut down, exiting Java VM", null);
-                        System.exit(0);
+                        break;
 
                     } else if (COMMAND_STATUS.equals(command)) {
                         Main.info(s.getRemoteSocketAddress() + "<" + RESPONSE_OK, null);
@@ -202,37 +238,18 @@ class ControlListener implements Runnable {
             } catch (final IOException ignore) {
             }
         }
+
+        getConfigFile().delete();
+
+        // everything has stopped and when this thread terminates,
+        // the VM should stop. If there are still some non-daemon threads
+        // active, this will not happen, so we force this here ...
+        Main.info("Apache Sling terminated, exiting Java VM", null);
+        slingMain.terminateVM(0);
     }
 
     // ---------- socket support
 
-    private SocketAddress getSocketAddress(String listenSpec, final boolean selectNewPort) {
-        try {
-            if ( listenSpec == null && !selectNewPort ) {
-                listenSpec = this.readPortFromConfigFile();
-            }
-            if ( listenSpec == null ) {
-                listenSpec = DEFAULT_LISTEN_INTERFACE + ":" + DEFAULT_LISTEN_PORT;
-            }
-            final int colon = listenSpec.indexOf(':');
-            final InetSocketAddress addr;
-            if (colon < 0) {
-                addr = new InetSocketAddress(DEFAULT_LISTEN_INTERFACE, Integer.parseInt(listenSpec));
-            } else {
-                addr = new InetSocketAddress(listenSpec.substring(0, colon),
-                    Integer.parseInt(listenSpec.substring(colon + 1)));
-            }
-            if (!addr.isUnresolved()) {
-                return addr;
-            }
-            Main.error("Unknown host in '" + listenSpec, null);
-        } catch (final NumberFormatException nfe) {
-            Main.error("Cannot parse port number from '" + listenSpec + "'",
-                null);
-        }
-
-        return null;
-    }
 
 
     /**
@@ -244,22 +261,25 @@ class ControlListener implements Runnable {
      * @return A code indicating success of sending the command.
      */
     private int sendCommand(final String command) {
-        if (socketAddress != null) {
+        if (configure(true)) {
+            if (this.secretKey == null) {
+                Main.info("Missing secret key to protect sending '" + command + "' to " + this.socketAddress, null);
+                return 4; // LSB code for unknown status
+            }
+
             Socket socket = null;
             try {
                 socket = new Socket();
-                socket.connect(socketAddress);
-                writeLine(socket, command);
+                socket.connect(this.socketAddress);
+                writeLine(socket, this.secretKey + " " + command);
                 final String result = readLine(socket);
-                Main.info("Sent '" + command + "' to " + socketAddress + ": "
-                    + result, null);
+                Main.info("Sent '" + command + "' to " + this.socketAddress + ": " + result, null);
                 return 0; // LSB code for everything's fine
             } catch (final ConnectException ce) {
-                Main.info("No Apache Sling running at " + socketAddress, null);
+                Main.info("No Apache Sling running at " + this.socketAddress, null);
                 return 3; // LSB code for programm not running
             } catch (final IOException ioe) {
-                Main.error("Failed sending '" + command + "' to "
-                    + socketAddress, ioe);
+                Main.error("Failed sending '" + command + "' to " + this.socketAddress, ioe);
                 return 1; // LSB code for programm dead
             } finally {
                 if (socket != null) {
@@ -289,6 +309,53 @@ class ControlListener implements Runnable {
     }
 
     /**
+     * Read the port from the config file
+     * @return The port or null
+     */
+    private boolean configure(final boolean fromConfigFile) {
+        boolean result = false;
+        if (fromConfigFile) {
+            final File configFile = this.getConfigFile();
+            if (configFile.canRead()) {
+                FileReader fr = null;
+                try {
+                    fr = new FileReader(configFile);
+                    final LineNumberReader lnr = new LineNumberReader(fr);
+                    this.socketAddress = getSocketAddress(lnr.readLine());
+                    this.secretKey = lnr.readLine();
+                    result = true;
+                } catch (final IOException ignore) {
+                    // ignore
+                } finally {
+                    if (fr != null) {
+                        try {
+                            fr.close();
+                        } catch (final IOException ignore) {
+                        }
+                    }
+                }
+            }
+        } else {
+            this.socketAddress = getSocketAddress(this.listenSpec);
+            this.secretKey = generateKey();
+            result = true;
+        }
+
+        return result;
+    }
+
+    private static String generateKey() {
+        String keys = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789";
+        int len = keys.length();
+        Random r = new Random(System.currentTimeMillis() + 33 * System.nanoTime());
+        char[] c = new char[32];
+        for (int i = 0; i < c.length; i++) {
+            c[i] = keys.charAt(r.nextInt(len));
+        }
+        return new String(c);
+    }
+
+    /**
      * Return the control port file
      */
     private File getConfigFile() {
@@ -296,47 +363,60 @@ class ControlListener implements Runnable {
         return new File(configDir, "controlport");
     }
 
-    /**
-     * Read the port from the config file
-     * @return The port or null
-     */
-    private String readPortFromConfigFile() {
-        final File configFile = this.getConfigFile();
-        if ( configFile.canRead() ) {
-            FileReader fr = null;
-            try {
-                fr = new FileReader(configFile);
-                final LineNumberReader lnr = new LineNumberReader(fr);
-                return lnr.readLine();
-            } catch (final IOException ignore) {
-                // ignore
-            } finally {
-                if ( fr != null ) {
-                    try { fr.close(); } catch ( final IOException ignore ) {}
+    private static InetSocketAddress getSocketAddress(String listenSpec) {
+        try {
+
+            final String address;
+            final int port;
+            if (listenSpec == null) {
+                address = DEFAULT_LISTEN_INTERFACE;
+                port = DEFAULT_LISTEN_PORT;
+            } else {
+                final int colon = listenSpec.indexOf(':');
+                if (colon < 0) {
+                    address = DEFAULT_LISTEN_INTERFACE;
+                    port = Integer.parseInt(listenSpec);
+                } else {
+                    address = listenSpec.substring(0, colon);
+                    port = Integer.parseInt(listenSpec.substring(colon + 1));
                 }
             }
 
+            final InetSocketAddress addr = new InetSocketAddress(address, port);
+            if (!addr.isUnresolved()) {
+                return addr;
+            }
+
+            Main.error("Unknown host in '" + listenSpec, null);
+        } catch (final NumberFormatException nfe) {
+            Main.error("Cannot parse port number from '" + listenSpec + "'",
+                null);
         }
+
         return null;
     }
 
-    private void writePortToConfigFile(final ServerSocket socket) {
-        final File configFile = this.getConfigFile();
+    private static void writePortToConfigFile(final File configFile, final InetSocketAddress socketAddress,
+            final String secretKey) {
         configFile.getParentFile().mkdirs();
         FileWriter fw = null;
         try {
             fw = new FileWriter(configFile);
-            fw.write(socket.getInetAddress().getHostName());
+            fw.write(socketAddress.getAddress().getHostAddress());
             fw.write(':');
-            fw.write(String.valueOf(socket.getLocalPort()));
+            fw.write(String.valueOf(socketAddress.getPort()));
+            fw.write('\n');
+            fw.write(secretKey);
             fw.write('\n');
         } catch (final IOException ignore) {
             // ignore
         } finally {
-            if ( fw != null ) {
-                try { fw.close(); } catch ( final IOException ignore ) {}
+            if (fw != null) {
+                try {
+                    fw.close();
+                } catch (final IOException ignore) {
+                }
             }
         }
-
     }
 }
