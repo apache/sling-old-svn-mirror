@@ -116,7 +116,7 @@ public class Main {
         // check for control commands
         int rc = main.doControlAction();
         if (rc >= 0) {
-            System.exit(rc);
+            main.terminateVM(rc);
         }
 
         // finally start Sling
@@ -242,29 +242,47 @@ public class Main {
      *         continue as intended, maybe starting the Sling Application. This
      *         code is returned if the start action (or no action at all) is
      *         supplied. Otherwise the VM should terminate with the returned
-     *         code as its exit code. For the stop action, this will be zero. For
-     *         the status action, this will be a LSB compliant code for daemon
-     *         status check: 0 (application running), 1 (Programm Dead), 3
-     *         (Programm Not Running), 4 (Unknown Problem).
+     *         code as its exit code. For the stop action, this will be zero.
+     *         For the status action, this will be a LSB compliant code for
+     *         daemon status check: 0 (application running), 1 (Programm Dead),
+     *         3 (Programm Not Running), 4 (Unknown Problem).
+     * @see <a
+     *      href="http://refspecs.linuxbase.org/LSB_3.1.0/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">Init Script Actions</a>
+     *      for a definition of the LSB status codes
      */
     protected int doControlAction() {
         final ControlAction action = getControlAction();
         if (action != null) {
             final ControlListener sl = new ControlListener(this,
-                commandLineArgs.remove(PROP_CONTROL_SOCKET), action == ControlAction.START);
+                commandLineArgs.remove(PROP_CONTROL_SOCKET));
             switch (action) {
                 case START:
-                    sl.listen();
+                    if (!sl.listen()) {
+                        // assume service already running
+                        return 0;
+                    }
                     break;
                 case STATUS:
                     return sl.statusServer();
                 case STOP:
-                    sl.shutdownServer();
-                    return 0;
+                    return sl.shutdownServer();
             }
         }
 
         return -1;
+    }
+
+    /**
+     * Terminates the VM which was started by calling the
+     * {@link #main(String[])} method of this class using the
+     * <code>status</code> value as the application exit status code.
+     * <p>
+     * This method does not return.
+     *
+     * @param status The application status exit code.
+     */
+    void terminateVM(final int status) {
+        System.exit(status);
     }
 
     private ControlAction getControlAction() {
@@ -434,7 +452,7 @@ public class Main {
      * Define the sling.home parameter implementing the algorithme defined on
      * the wiki page to find the setting according to this algorithm:
      * <ol>
-     * <li>Command line option <code>-c</code></li>
+     * <li>Configuration property <code>sling.home</code></li>
      * <li>System property <code>sling.home</code></li>
      * <li>Environment variable <code>SLING_HOME</code></li>
      * <li>Default value <code>sling</code></li>
@@ -629,7 +647,7 @@ public class Main {
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Apache Sling (uses -j)");
             System.out.println("    status        check whether Apache Sling is running (uses -j)");
-            System.out.println("    -j adr        host and port to use for control connection in the format '[host:]port' (default localhost:63000)");
+            System.out.println("    -j adr        host and port to use for control connection in the format '[host:]port' (default 127.0.0.1:0)");
             System.out.println("    -l loglevel   the initial loglevel (0..4, FATAL, ERROR, WARN, INFO, DEBUG)");
             System.out.println("    -f logfile    the log file, \"-\" for stdout (default logs/error.log)");
             System.out.println("    -c slinghome  the sling context directory (default sling)");
