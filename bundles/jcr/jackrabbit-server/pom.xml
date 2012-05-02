@@ -132,7 +132,6 @@
                             org.apache.tika.*,
 
                             <!-- Jackrabbit internals -->
-                            org.apache.jackrabbit.rmi.*,
                             org.apache.jackrabbit.util,
                             org.apache.jackrabbit.value,
                             org.apache.jackrabbit.commons.*,
@@ -219,13 +218,6 @@
             <version>2.2.9</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-jcr-rmi</artifactId>
-            <version>2.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-
 
         <!-- OSGi Libraries -->
         <dependency>
