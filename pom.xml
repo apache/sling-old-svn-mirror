@@ -138,6 +138,7 @@
         <module>bundles/jcr/jackrabbit-accessmanager</module>
         <module>bundles/jcr/ocm</module>
         <module>bundles/jcr/resource</module>
+        <module>bundles/jcr/registration</module>
         <module>bundles/jcr/webdav</module>
         <module>bundles/jcr/davex</module>
         <module>bundles/jcr/webconsole</module>
