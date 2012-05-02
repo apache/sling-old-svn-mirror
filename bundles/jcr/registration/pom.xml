@@ -51,23 +51,23 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-Category>
                             sling,jcr
                         </Bundle-Category>
-                        <Private-Package>
-                            org.apache.sling.jcr.registrar.impl.*
-                        </Private-Package>
-                        <Export-Package>
-                            org.apache.sling.jcr.registrar
-                        </Export-Package>
+                        <Import-Package>
+                            javax.transaction.xa;resolution:=optional,
+                            *
+                        </Import-Package>
                         <DynamicImport-Package>
                             *
                         </DynamicImport-Package>
                         <Embed-Dependency>
-                            jackrabbit-core;inline:=org/apache/jackrabbit/core/jndi/provider/*.class
+                            jackrabbit-core;inline=org/apache/jackrabbit/core/jndi/provider/*.class,
+                            jackrabbit-jcr-rmi;inline=org/apache/jackrabbit/rmi/iterator/**|org/apache/jackrabbit/rmi/observation/**|org/apache/jackrabbit/rmi/remote/**|org/apache/jackrabbit/rmi/server/**|org/apache/jackrabbit/rmi/value/**|org/apache/jackrabbit/rmi/server/**
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -79,11 +79,19 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+            <version>2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
         </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.50.0</version>
+            <scope>provided</scope>
+        </dependency>
+        
         <!-- OSGi Libraries -->
         <dependency>
             <groupId>org.osgi</groupId>
@@ -99,6 +107,12 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-core</artifactId>
             <version>2.2.9</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-jcr-rmi</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
