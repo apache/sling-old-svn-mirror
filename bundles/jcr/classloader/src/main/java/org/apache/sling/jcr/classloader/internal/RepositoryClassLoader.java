@@ -262,8 +262,7 @@ public final class RepositoryClassLoader
              final byte[] data = this.findClassLoaderResource(path);
              if (data != null) {
 
-                 logger.debug(
-                "findClassPrivileged: Loading class from {}", data);
+                 logger.debug("findClassPrivileged: Loading class from {} bytes", data.length);
 
                  final Class<?> c = defineClass(name, data);
                  if (c == null) {
