@@ -150,6 +150,7 @@ class SlingHttpContext implements HttpContext {
         }
 
         log.error("handleSecurity: AuthenticationSupport service missing. Cannot authenticate request.");
+        log.error("handleSecurity: Possible reason is missing Repository service. Check AuthenticationSupport dependencies.");
 
         // send 503/SERVICE UNAVAILABLE, flush to ensure delivery
         response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE,
