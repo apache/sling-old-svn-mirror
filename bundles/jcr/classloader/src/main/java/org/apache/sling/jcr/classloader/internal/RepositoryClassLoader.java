@@ -182,7 +182,7 @@ public final class RepositoryClassLoader
      */
     public URL findResource(final String name) {
         if (destroyed) {
-            logger.warn("Destroyed class loader cannot find a resource");
+            logger.warn("Destroyed class loader cannot find a resource: {}", name);
             return null;
         }
 
@@ -213,7 +213,7 @@ public final class RepositoryClassLoader
      */
     public Enumeration<URL> findResources(final String name) {
         if (destroyed) {
-            logger.warn("Destroyed class loader cannot find resources");
+            logger.warn("Destroyed class loader cannot find resources: {}", name);
             return new Enumeration<URL>() {
                 public boolean hasMoreElements() {
                     return false;
@@ -352,7 +352,7 @@ public final class RepositoryClassLoader
     public void handleEvent(final String path) {
         synchronized ( this.usedResources ) {
             if ( this.usedResources.contains(path) ) {
-                logger.debug("handleEvent: Item {} has been modified - marking class loader as dirty {}", this);
+                logger.debug("handleEvent: Item {} has been modified - marking class loader as dirty {}", path, this);
                 this.dirty = true;
             }
         }
