@@ -182,7 +182,7 @@ public final class RepositoryClassLoader
      */
     public URL findResource(final String name) {
         if (destroyed) {
-            logger.warn("Destroyed class loader cannot find a resource: {}", name);
+            logger.warn("Destroyed class loader cannot find a resource: " + name, new IllegalStateException());
             return null;
         }
 
@@ -213,7 +213,7 @@ public final class RepositoryClassLoader
      */
     public Enumeration<URL> findResources(final String name) {
         if (destroyed) {
-            logger.warn("Destroyed class loader cannot find resources: {}", name);
+            logger.warn("Destroyed class loader cannot find a resources: " + name, new IllegalStateException());
             return new Enumeration<URL>() {
                 public boolean hasMoreElements() {
                     return false;
