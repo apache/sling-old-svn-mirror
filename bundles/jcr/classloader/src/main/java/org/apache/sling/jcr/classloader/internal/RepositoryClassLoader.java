@@ -24,7 +24,6 @@ import java.security.SecureClassLoader;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -190,7 +189,7 @@ public final class RepositoryClassLoader
 
         final String path = this.repositoryPath + '/' + name;
         try {
-            if ( findClassLoaderResource(path) != null ) {
+            if ( findClassLoaderResource(path) ) {
                 logger.debug("findResource: Getting resource from {}", path);
                 return JCRURLHandler.createURL(this.writer, path);
             }
@@ -227,7 +226,7 @@ public final class RepositoryClassLoader
         logger.debug("findResources: Try to find resources for {}", name);
 
         final URL url = this.findResource(name);
-        final List<URL> list = new LinkedList<URL>();
+        final List<URL> list = Collections.singletonList(url);
         if (url != null) {
             list.add(url);
         }
@@ -259,7 +258,7 @@ public final class RepositoryClassLoader
 
          // try defining the class, error aborts
          try {
-             final byte[] data = this.findClassLoaderResource(path);
+             final byte[] data = this.findClassLoaderClass(path);
              if (data != null) {
 
                  logger.debug("findClassPrivileged: Loading class from {} bytes", data.length);
@@ -294,7 +293,40 @@ public final class RepositoryClassLoader
      * @throws NullPointerException If this class loader has already been
      *      destroyed.
      */
-    private byte[] findClassLoaderResource(final String path) throws IOException {
+    private boolean findClassLoaderResource(final String path) throws IOException {
+        Session session = null;
+        boolean res = false;
+        try {
+            session = this.writer.createSession();
+            if ( session.itemExists(path) ) {
+                logger.debug("Found resource at {}", path);
+                res = true;
+            } else {
+                logger.debug("No classpath entry contains {}", path);
+            }
+        } catch (final RepositoryException re) {
+            logger.debug("Error while trying to get node at " + path, re);
+        } finally {
+            if ( session != null ) {
+                session.logout();
+            }
+        }
+
+        return res;
+    }
+
+    /**
+     * Returns the contents for the given <code>path</code> or
+     * <code>null</code> if not existing.
+     *
+     * @param path The repository path of the resource to return.
+     *
+     * @return The contents if found or <code>null</code> if not found.
+     *
+     * @throws NullPointerException If this class loader has already been
+     *      destroyed.
+     */
+    private byte[] findClassLoaderClass(final String path) throws IOException {
         Session session = null;
         byte[] res = null;
         try {
