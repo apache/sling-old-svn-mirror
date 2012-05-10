@@ -33,12 +33,10 @@ public final class IsolatedClassLoader
 
     private final IOProvider ioProvider;
 
-    public IsolatedClassLoader(final ClassLoader parent,
-            final IOProvider ioProvider) {
-        super(parent);
+    public IsolatedClassLoader(final IOProvider ioProvider) {
+        super(ioProvider.getClassLoader());
         this.ioProvider = ioProvider;
     }
-
 
     //---------- Class loader overwrites -------------------------------------
 

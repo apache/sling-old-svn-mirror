@@ -66,17 +66,7 @@ import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 public final class JspRuntimeContext {
 
     // Logger
-    private Log log = LogFactory.getLog(JspRuntimeContext.class);
-
-    /**
-     * Prefixes, in which repository paths and script paths can differ.
-     */
-    private static final String[] PATH_PREFIXES = {"", "/WEB-INF/tags"};
-
-    /*
-     * Counts how many times the webapp's JSPs have been reloaded.
-     */
-    private int jspReloadCount;
+    private final Log log = LogFactory.getLog(JspRuntimeContext.class);
 
     /** The {@link IOProvider} used to get access to output */
     private final IOProvider ioProvider;
@@ -214,28 +204,6 @@ public final class JspRuntimeContext {
         this.context = context;
         this.options = options;
         this.ioProvider = ioProvider;
-/*
-        // Get the parent class loader
-        parentClassLoader = Thread.currentThread().getContextClassLoader();
-        if (parentClassLoader == null) {
-            parentClassLoader = this.getClass().getClassLoader();
-        }
-
-        if (log.isDebugEnabled()) {
-            if (parentClassLoader != null) {
-                log.debug(Localizer.getMessage("jsp.message.parent_class_loader_is",
-					       parentClassLoader.toString()));
-            } else {
-                log.debug(Localizer.getMessage("jsp.message.parent_class_loader_is",
-					       "<none>"));
-            }
-        }
-
-        initClassPath();
-*/
-    	if (context instanceof org.apache.sling.scripting.jsp.jasper.servlet.JspCServletContext) {
-    	    return;
-    	}
 
         if (Constants.IS_SECURITY_ENABLED) {
             initSecurity();
@@ -249,20 +217,17 @@ public final class JspRuntimeContext {
      */
     private ServletContext context;
     private Options options;
-//    private ClassLoader parentClassLoader;
     private PermissionCollection permissionCollection;
-    private CodeSource codeSource;
- //   private String classpath;
 
     /**
      * Maps JSP pages to their JspServletWrapper's
      */
-    private Map<String, JspServletWrapper> jsps = new ConcurrentHashMap<String, JspServletWrapper>();
+    private final Map<String, JspServletWrapper> jsps = new ConcurrentHashMap<String, JspServletWrapper>();
 
     /**
      * Maps dependencies to the using jsp.
      */
-    private Map<String, Set<String>> depToJsp = new HashMap<String, Set<String>>();
+    private final Map<String, Set<String>> depToJsp = new HashMap<String, Set<String>>();
 
     // ------------------------------------------------------ Public Methods
 
@@ -283,56 +248,48 @@ public final class JspRuntimeContext {
         }
     }
 
-    private void invalidate(final JspServletWrapper jsw) {
-        log.debug("Invalidating script " + jsw.getJspUri());
-        jsw.clearLastModificationTest();
-    }
+    /**
+     * Handle jsp modifications
+     */
+    public boolean handleModification(final String scriptName) {
+        JspServletWrapper wrapper = jsps.remove(scriptName);
 
-    public void handleModification(final String repositoryPath) {
-        final String scriptName = getScriptPath(repositoryPath);
-        synchronized ( this ) {
-            // first check if jsps contains this
-            JspServletWrapper wrapper = jsps.get(scriptName);
-            if ( wrapper != null ) {
-                invalidate(wrapper);
-            }
-            if (wrapperIsValid(wrapper)) {
-                synchronized ( depToJsp ) {
-                    final Set<String> deps = depToJsp.get(scriptName);
-                    if ( deps != null ) {
-                        for(final String jspName : deps) {
-                            wrapper = jsps.get(jspName);
-                            if ( wrapper != null ) {
-                                invalidate(wrapper);
-                            }
-                        }
-                    }
-                }
+        // first check if jsps contains this
+        boolean removed = this.invalidate(wrapper);
+
+        final Set<String> deps;
+        synchronized ( depToJsp ) {
+            deps = depToJsp.remove(scriptName);
+        }
+        if ( deps != null ) {
+            for(final String dep : deps) {
+                wrapper = jsps.remove(dep);
+                removed |= this.invalidate(wrapper);
             }
         }
-    }
-
-    private String getScriptPath(String repositoryPath) {
-        for (final String prefix : PATH_PREFIXES) {
-            final String path = prefix + repositoryPath;
-            if (depToJsp.containsKey(path)) {
-                return path;
-            }
-        }
-        return repositoryPath;
-    }
-
-    private boolean wrapperIsValid(JspServletWrapper wrapper) {
-        return wrapper == null || wrapper.getLastModificationTest() == -1;
+        return removed;
     }
 
     /**
-     * Add a new JspServletWrapper.
+     * Invalidate a wrapper and destroy it.
+     */
+    private boolean invalidate(final JspServletWrapper wrapper) {
+        if ( wrapper != null ) {
+            log.debug("Invalidating jsp " + wrapper.getJspUri());
+            this.ioProvider.delete(wrapper.getJspUri());
+            wrapper.destroy(true);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Add a new wrapper
      *
      * @param jspUri JSP URI
      * @param jsw Servlet wrapper for JSP
      */
-    public void addWrapper(String jspUri, JspServletWrapper jsw) {
+    public void addWrapper(final String jspUri, final JspServletWrapper jsw) {
         jsps.put(jspUri, jsw);
         addJspDependencies(jsw);
     }
@@ -343,15 +300,8 @@ public final class JspRuntimeContext {
      * @param jspUri JSP URI
      * @return JspServletWrapper for JSP
      */
-    public JspServletWrapper getWrapper(String jspUri) {
+    public JspServletWrapper getWrapper(final String jspUri) {
         return jsps.get(jspUri);
-    }
-
-    public JspServletWrapper getAWrapper() {
-        if ( jsps.size() > 0 ) {
-            return jsps.values().iterator().next();
-        }
-        return null;
     }
 
     /**
@@ -364,85 +314,18 @@ public final class JspRuntimeContext {
     }
 
     /**
-     * Returns the number of JSPs for which JspServletWrappers exist, i.e.,
-     * the number of JSPs that have been loaded into the webapp.
-     *
-     * @return The number of JSPs that have been loaded into the webapp
-     */
-    public int getJspCount() {
-        return jsps.size();
-    }
-
-    /**
-     * Get the SecurityManager Policy CodeSource for this web
-     * applicaiton context.
-     *
-     * @return CodeSource for JSP
-     */
-    public CodeSource getCodeSource() {
-        return codeSource;
-    }
-
-    /**
-     * Get the parent URLClassLoader.
-     *
-     * @return URLClassLoader parent
-    public ClassLoader getParentClassLoader() {
-        return parentClassLoader;
-    }
-     */
-
-    /**
-     * Get the SecurityManager PermissionCollection for this
-     * web application context.
-     *
-     * @return PermissionCollection permissions
-     */
-    public PermissionCollection getPermissionCollection() {
-        return permissionCollection;
-    }
-
-    /**
      * Process a "destroy" event for this web application context.
      */
     public void destroy() {
         Iterator<JspServletWrapper> servlets = jsps.values().iterator();
         while (servlets.hasNext()) {
-            servlets.next().destroy();
+            servlets.next().destroy(false);
+        }
+        jsps.clear();
+        synchronized ( depToJsp ) {
+            depToJsp.clear();
         }
     }
-
-    /**
-     * Increments the JSP reload counter.
-     */
-    public synchronized void incrementJspReloadCount() {
-        jspReloadCount++;
-    }
-
-    /**
-     * Resets the JSP reload counter.
-     *
-     * @param count Value to which to reset the JSP reload counter
-     */
-    public synchronized void setJspReloadCount(int count) {
-        this.jspReloadCount = count;
-    }
-
-    /**
-     * Gets the current value of the JSP reload counter.
-     *
-     * @return The current value of the JSP reload counter
-     */
-    public int getJspReloadCount() {
-        return jspReloadCount;
-    }
-
-    /**
-     * The classpath that is passed off to the Java compiler.
-    public String getClassPath() {
-        return classpath;
-    }
-     */
 
     /**
      * Returns the current {@link IOProvider} of this context.
@@ -452,41 +335,6 @@ public final class JspRuntimeContext {
     }
 
     // -------------------------------------------------------- Private Methods
-
-
-    /**
-     * Method used to initialize classpath for compiles.
-    private void initClassPath() {
-
-        StringBuffer cpath = new StringBuffer();
-        String sep = System.getProperty("path.separator");
-
-        if (parentClassLoader instanceof URLClassLoader) {
-            URL[] urls = ((URLClassLoader) parentClassLoader).getURLs();
-
-            for (int i = 0; i < urls.length; i++) {
-                // Tomcat 4 can use URL's other than file URL's,
-                // a protocol other than file: will generate a
-                // bad file system path, so only add file:
-                // protocol URL's to the classpath.
-
-                if (urls[i].getProtocol().equals("file")) {
-                    cpath.append(urls[i].getFile() + sep);
-                }
-            }
-        }
-
-	    cpath.append(options.getScratchDir() + sep);
-
-        String cp = (String) context.getAttribute(Constants.SERVLET_CLASSPATH);
-
-        classpath = cpath.toString() + cp;
-
-        if(log.isDebugEnabled()) {
-            log.debug("Compilation classpath initialized: " + getClassPath());
-        }
-    }
-     */
 
     /**
      * Method used to initialize SecurityManager data.
@@ -511,7 +359,7 @@ public final class JspRuntimeContext {
                 }
                 File contextDir = new File(codeBase);
                 URL url = contextDir.getCanonicalFile().toURL();
-                codeSource = new CodeSource(url,(Certificate[])null);
+                final CodeSource codeSource = new CodeSource(url,(Certificate[])null);
                 permissionCollection = policy.getPermissions(codeSource);
 
                 // Create a file read permission for web app context directory
@@ -541,37 +389,7 @@ public final class JspRuntimeContext {
                 // Allow the JSP to access org.apache.sling.scripting.jsp.jasper.runtime.HttpJspBase
                 permissionCollection.add( new RuntimePermission(
                     "accessClassInPackage.org.apache.jasper.runtime") );
-/*
-                if (parentClassLoader instanceof URLClassLoader) {
-                    URL [] urls = ((URLClassLoader) parentClassLoader).getURLs();
-                    String jarUrl = null;
-                    String jndiUrl = null;
-                    for (int i=0; i<urls.length; i++) {
-                        if (jndiUrl == null
-                                && urls[i].toString().startsWith("jndi:") ) {
-                            jndiUrl = urls[i].toString() + "-";
-                        }
-                        if (jarUrl == null
-                                && urls[i].toString().startsWith("jar:jndi:")
-                                ) {
-                            jarUrl = urls[i].toString();
-                            jarUrl = jarUrl.substring(0,jarUrl.length() - 2);
-                            jarUrl = jarUrl.substring(0,
-                                     jarUrl.lastIndexOf('/')) + "/-";
-                        }
-                    }
-                    if (jarUrl != null) {
-                        permissionCollection.add(
-                                new FilePermission(jarUrl,"read"));
-                        permissionCollection.add(
-                                new FilePermission(jarUrl.substring(4),"read"));
-                    }
-                    if (jndiUrl != null)
-                        permissionCollection.add(
-                                new FilePermission(jndiUrl,"read") );
-                }
-                */
-            } catch(Exception e) {
+            } catch (final Exception e) {
                 context.log("Security Init for context failed",e);
             }
         }

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.sling.scripting.jsp.jasper;
 
 import java.io.File;
@@ -32,6 +31,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.jsp.tagext.TagInfo;
 
 import org.apache.sling.scripting.jsp.jasper.compiler.Compiler;
+import org.apache.sling.scripting.jsp.jasper.compiler.JDTCompiler;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspUtil;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
@@ -54,42 +54,32 @@ import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
  */
 public class JspCompilationContext {
 
-    protected org.apache.juli.logging.Log log =
-        org.apache.juli.logging.LogFactory.getLog(JspCompilationContext.class);
+    private Map<String, URL> tagFileJarUrls;
 
-    protected Map<String, URL> tagFileJarUrls;
-    protected boolean isPackagedTagFile;
+    private String className;
+    private String jspUri;
+    private boolean isErrPage;
+    private String basePackageName;
+    private String derivedPackageName;
+    private String servletJavaFileName;
+    private String javaPath;
+    private String classFileName;
+    private String contentType;
+    private ServletWriter writer;
+    private Options options;
+    private JspServletWrapper jsw;
+    private Compiler jspCompiler;
 
-    protected String className;
-    protected String jspUri;
-    protected boolean isErrPage;
-    protected String basePackageName;
-    protected String derivedPackageName;
-    protected String servletJavaFileName;
-    protected String javaPath;
-    protected String classFileName;
-    protected String contentType;
-    protected ServletWriter writer;
-    protected Options options;
-    protected JspServletWrapper jsw;
-    protected Compiler jspCompiler;
-    protected String classPath;
+    private String baseURI;
+    private String outputDir;
+    private ServletContext context;
 
-    protected String baseURI;
-    protected String outputDir;
-    protected ServletContext context;
+    private JspRuntimeContext rctxt;
 
-    protected JspRuntimeContext rctxt;
-
-    protected int removed = 0;
-
-    protected URL baseUrl;
-    protected Class<?> servletClass;
-
-    protected boolean isTagFile;
-    protected boolean protoTypeMode;
-    protected TagInfo tagInfo;
-    protected URL tagFileJarUrl;
+    private boolean isTagFile;
+    private boolean protoTypeMode;
+    private TagInfo tagInfo;
+    private URL tagFileJarUrl;
 
     // jspURI _must_ be relative to the context
     public JspCompilationContext(String jspUri,
@@ -134,9 +124,6 @@ public class JspCompilationContext {
         this.isTagFile = true;
         this.tagInfo = tagInfo;
         this.tagFileJarUrl = tagFileJarUrl;
-        if (tagFileJarUrl != null) {
-            isPackagedTagFile = true;
-        }
     }
 
     /**
@@ -195,9 +182,9 @@ public class JspCompilationContext {
      * plus the directory derived from the package name.
      */
     public String getOutputDir() {
-	if (outputDir == null) {
-	    createOutputDir();
-	}
+    	if (outputDir == null) {
+	        createOutputDir();
+	    }
 
         return outputDir;
     }
@@ -207,55 +194,21 @@ public class JspCompilationContext {
      * is not done yet. Right now we're just hardcoding the actual
      * compilers that are created.
      */
-    public Compiler createCompiler() throws JasperException {
+    private Compiler createCompiler() {
         if (jspCompiler != null ) {
             return jspCompiler;
         }
-        jspCompiler = null;
-        if (options.getCompilerClassName() != null) {
-            jspCompiler = createCompiler(options.getCompilerClassName());
-        } else {
-            if (options.getCompiler() == null) {
-                jspCompiler = createCompiler("org.apache.sling.scripting.jsp.jasper.compiler.JDTCompiler");
-                if (jspCompiler == null) {
-                    jspCompiler = createCompiler("org.apache.sling.scripting.jsp.jasper.compiler.AntCompiler");
-                }
-            } else {
-                jspCompiler = createCompiler("org.apache.sling.scripting.jsp.jasper.compiler.AntCompiler");
-                if (jspCompiler == null) {
-                    jspCompiler = createCompiler("org.apache.sling.scripting.jsp.jasper.compiler.JDTCompiler");
-                }
-            }
-        }
-        if (jspCompiler == null) {
-            throw new IllegalStateException(Localizer.getMessage("jsp.error.compiler"));
-        }
-        jspCompiler.init(this, jsw);
+        jspCompiler = new JDTCompiler();
+        jspCompiler.init(this);
         return jspCompiler;
-    }
-
-    protected Compiler createCompiler(String className) {
-        Compiler compiler = null;
-        try {
-            compiler = (Compiler) this.getClass().getClassLoader().loadClass(className).newInstance();
-        } catch (InstantiationException e) {
-            log.warn(Localizer.getMessage("jsp.error.compiler"), e);
-        } catch (IllegalAccessException e) {
-            log.warn(Localizer.getMessage("jsp.error.compiler"), e);
-        } catch (NoClassDefFoundError e) {
-            if (log.isDebugEnabled()) {
-                log.debug(Localizer.getMessage("jsp.error.compiler"), e);
-            }
-        } catch (ClassNotFoundException e) {
-            if (log.isDebugEnabled()) {
-                log.debug(Localizer.getMessage("jsp.error.compiler"), e);
-            }
-        }
-        return compiler;
     }
 
     public Compiler getCompiler() {
         return jspCompiler;
+    }
+
+    public void reset() {
+        this.jspCompiler = null;
     }
 
     /** ---------- Access resources in the webapp ---------- */
@@ -543,60 +496,37 @@ public class JspCompilationContext {
         return getOptions().getKeepGenerated();
     }
 
-    // ==================== Removal ====================
-
-    public void incrementRemoved() {
-        if (removed == 0 && rctxt != null) {
-            rctxt.removeWrapper(jspUri);
-        }
-        removed++;
-    }
-
-    public boolean isRemoved() {
-        if (removed > 1 ) {
-            return true;
-        }
-        return false;
-    }
-
     // ==================== Compile and reload ====================
 
-    public void compile() throws JasperException, IOException, FileNotFoundException {
-        createCompiler();
-        if (isPackagedTagFile || jspCompiler.isOutDated()) {
-            try {
-                jspCompiler.removeGeneratedFiles();
-                jspCompiler.compile();
-                jsw.setReload(true);
-                jsw.setCompilationException(null);
-                this.getRuntimeContext().addJspDependencies(jsw);
-            } catch (JasperException ex) {
-                // Cache compilation exception
-                jsw.setCompilationException(ex);
-                throw ex;
-            } catch (IOException ioe) {
-                JasperException je = new JasperException(
+    public JasperException compile() {
+        final Compiler c = createCompiler();
+        try {
+            c.removeGeneratedFiles();
+            c.compile();
+            this.getRuntimeContext().addJspDependencies(jsw);
+        } catch (final JasperException ex) {
+            return ex;
+        } catch (final IOException ioe) {
+            final JasperException je = new JasperException(
+                    Localizer.getMessage("jsp.error.unable.compile"),
+                    ioe);
+            return je;
+        } catch (final Exception ex) {
+            JasperException je = new JasperException(
                         Localizer.getMessage("jsp.error.unable.compile"),
-                        ioe);
-                // Cache compilation exception
-                jsw.setCompilationException(je);
-                throw ioe;
-            } catch (Exception ex) {
-                JasperException je = new JasperException(
-                            Localizer.getMessage("jsp.error.unable.compile"),
-                            ex);
-                // Cache compilation exception
-                jsw.setCompilationException(je);
-                throw je;
-            }
+                        ex);
+            return je;
+        } finally {
+           c.clean();
         }
+
+        return null;
     }
 
     // ==================== Manipulating the class ====================
 
     public Class<?> load()
-        throws JasperException, FileNotFoundException
-    {
+    throws JasperException {
         try {
             String name;
             if (isTagFile()) {
@@ -604,7 +534,8 @@ public class JspCompilationContext {
             } else {
                 name = getServletPackageName() + "." + getServletClassName();
             }
-            servletClass = getClassLoader().loadClass(name);
+            final Class<?> servletClass = getClassLoader().loadClass(name);
+            return servletClass;
         } catch (ClassNotFoundException cex) {
             throw new JasperException(Localizer.getMessage("jsp.error.unable.load"),
                                       cex);
@@ -612,57 +543,40 @@ public class JspCompilationContext {
             throw new JasperException(Localizer.getMessage("jsp.error.unable.compile"),
                                       ex);
         }
-        removed = 0;
-        return servletClass;
     }
 
     // ==================== protected methods ====================
 
-    static Object outputDirLock = new Object();
-
     public void checkOutputDir() {
-        if (outputDir != null) {
-            if (!(new File(outputDir)).exists()) {
-                makeOutputDir();
-            }
-        } else {
-            createOutputDir();
-        }
+        getOutputDir();
     }
 
-    protected boolean makeOutputDir() {
-        synchronized(outputDirLock) {
-            return getRuntimeContext().getIOProvider().mkdirs(outputDir);
-        }
+    private boolean makeOutputDir() {
+        return getRuntimeContext().getIOProvider().mkdirs(outputDir);
     }
 
-    protected void createOutputDir() {
+    private void createOutputDir() {
         String path = null;
         if (isTagFile()) {
-	    String tagName = tagInfo.getTagClassName();
+	        String tagName = tagInfo.getTagClassName();
             path = tagName.replace('.', '/');
-	    path = path.substring(0, path.lastIndexOf('/'));
+	        path = path.substring(0, path.lastIndexOf('/'));
         } else {
             path = getServletPackageName().replace('.', '/');
-	}
+	    }
 
-            // Append servlet or tag handler path to scratch dir
-            try {
-                baseUrl = new File(options.getScratchDir()).toURI().toURL();
-                outputDir = options.getScratchDir() + File.separator + path + File.separator;
-                if (!makeOutputDir()) {
-                    throw new IllegalStateException(Localizer.getMessage("jsp.error.outputfolder"));
-                }
-            } catch (MalformedURLException e) {
-                throw new IllegalStateException(Localizer.getMessage("jsp.error.outputfolder"), e);
-            }
+        // Append servlet or tag handler path to scratch dir
+        outputDir = options.getScratchDir() + File.separator + path + File.separator;
+        if (!makeOutputDir()) {
+            throw new IllegalStateException(Localizer.getMessage("jsp.error.outputfolder"));
+        }
     }
 
-    protected static final boolean isPathSeparator(char c) {
+    private static final boolean isPathSeparator(char c) {
        return (c == '/' || c == '\\');
     }
 
-    protected static final String canonicalURI(String s) {
+    private static final String canonicalURI(String s) {
        if (s == null) return null;
        StringBuffer result = new StringBuffer();
        final int len = s.length();
