@@ -94,37 +94,67 @@ public class AdapterManagerTest {
      * Helper method to create a mock service reference
      */
     protected ServiceReference createServiceReference() {
-        final Bundle bundle = this.createBundle("bundle");
-        final ServiceReference ref = this.context.mock(ServiceReference.class, "serviceReference");
-        this.context.checking(new Expectations() {{
-            allowing(ref).getProperty(Constants.SERVICE_ID);
-            will(returnValue(1L));
-            allowing(ref).getProperty(AdapterFactory.ADAPTABLE_CLASSES);
-            will(returnValue(new String[]{ TestSlingAdaptable.class.getName() }));
-            allowing(ref).getProperty(AdapterFactory.ADAPTER_CLASSES);
-            will(returnValue(ITestAdapter.class.getName()));
-            allowing(ref).getBundle();
-            will(returnValue(bundle));
-        }});
+        final ServiceReference ref = new ServiceReferenceImpl(1, new String[]{ TestSlingAdaptable.class.getName() }, ITestAdapter.class.getName());
         return ref;
     }
 
+    private static final class ServiceReferenceImpl implements ServiceReference {
+
+        private int ranking;
+        private String[] adapters;
+        private String classes;
+
+        public ServiceReferenceImpl(final int order, final String[] adapters, final String classes) {
+            this.ranking = order;
+            this.adapters = adapters;
+            this.classes = classes;
+        }
+
+        public boolean isAssignableTo(Bundle bundle, String className) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public Bundle[] getUsingBundles() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public String[] getPropertyKeys() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public Object getProperty(String key) {
+            if ( key.equals(Constants.SERVICE_RANKING) ) {
+                return ranking;
+            }
+            if ( key.equals(AdapterFactory.ADAPTABLE_CLASSES) ) {
+                return adapters;
+            }
+            if ( key.equals(AdapterFactory.ADAPTER_CLASSES) ) {
+                return classes;
+            }
+
+            return null;
+        }
+
+        public Bundle getBundle() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public int compareTo(Object reference) {
+            Integer ranking1 = (Integer)getProperty(Constants.SERVICE_RANKING);
+            Integer ranking2 = (Integer)((ServiceReference)reference).getProperty(Constants.SERVICE_RANKING);
+            return ranking1.compareTo(ranking2);
+        }
+    };
     /**
      * Helper method to create a mock service reference
      */
     protected ServiceReference createServiceReference2() {
-        final Bundle bundle = this.createBundle("bundle2");
-        final ServiceReference ref = this.context.mock(ServiceReference.class, "serviceReference2");
-        this.context.checking(new Expectations() {{
-            allowing(ref).getProperty(Constants.SERVICE_ID);
-            will(returnValue(2L));
-            allowing(ref).getProperty(AdapterFactory.ADAPTABLE_CLASSES);
-            will(returnValue(new String[]{ TestSlingAdaptable2.class.getName() }));
-            allowing(ref).getProperty(AdapterFactory.ADAPTER_CLASSES);
-            will(returnValue(TestAdapter.class.getName()));
-            allowing(ref).getBundle();
-            will(returnValue(bundle));
-        }});
+        final ServiceReference ref = new ServiceReferenceImpl(2, new String[]{ TestSlingAdaptable2.class.getName() }, TestAdapter.class.getName());
         return ref;
     }
 
@@ -179,7 +209,7 @@ public class AdapterManagerTest {
         AdapterFactoryDescriptorMap afdm = f.get(TestSlingAdaptable.class.getName());
         assertNotNull(afdm);
 
-        AdapterFactoryDescriptor afd = afdm.get(new AdapterFactoryDescriptorKey(ref));
+        AdapterFactoryDescriptor afd = afdm.get(ref);
         assertNotNull(afd);
         assertNotNull(afd.getFactory());
         assertNotNull(afd.getAdapters());

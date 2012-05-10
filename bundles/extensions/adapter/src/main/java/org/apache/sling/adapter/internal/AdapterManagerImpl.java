@@ -40,7 +40,7 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.adapter.AdapterManager;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Adapter Manager"),
     @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
-    
+
 })
 @Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
     cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
@@ -211,16 +211,14 @@ public class AdapterManagerImpl implements AdapterManager {
      */
     private void registerAdapterFactory(ComponentContext context,
             ServiceReference reference) {
-        final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
-        final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
+        final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
             || adapters.length == 0) {
             return;
         }
 
-        final AdapterFactoryDescriptorKey factoryKey = new AdapterFactoryDescriptorKey(
-            reference);
         final AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(context,
             reference, adapters);
 
@@ -231,7 +229,7 @@ public class AdapterManagerImpl implements AdapterManager {
                     adfMap = new AdapterFactoryDescriptorMap();
                     factories.put(adaptable, adfMap);
                 }
-                adfMap.put(factoryKey, factoryDesc);
+                adfMap.put(reference, factoryDesc);
             }
         }
 
@@ -257,23 +255,20 @@ public class AdapterManagerImpl implements AdapterManager {
         synchronized ( this.boundAdapterFactories ) {
             boundAdapterFactories.remove(reference);
         }
-        final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
-        final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
+        final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
             || adapters.length == 0) {
             return;
         }
 
-        AdapterFactoryDescriptorKey factoryKey = new AdapterFactoryDescriptorKey(
-            reference);
-
         boolean factoriesModified = false;
         synchronized (factories) {
             for (String adaptable : adaptables) {
                 AdapterFactoryDescriptorMap adfMap = factories.get(adaptable);
                 if (adfMap != null) {
-                    factoriesModified |= (adfMap.remove(factoryKey) != null);
+                    factoriesModified |= (adfMap.remove(reference) != null);
                     if (adfMap.isEmpty()) {
                         factories.remove(adaptable);
                     }

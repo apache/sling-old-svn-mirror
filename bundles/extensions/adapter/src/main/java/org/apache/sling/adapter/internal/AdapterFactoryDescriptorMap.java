@@ -20,10 +20,12 @@ package org.apache.sling.adapter.internal;
 
 import java.util.TreeMap;
 
+import org.osgi.framework.ServiceReference;
+
 /**
  * The <code>AdapterFactoryDescriptorMap</code> is a sorted map of
  * {@link AdapterFactoryDescriptor} instances indexed (and ordered) by their
- * {@link AdapterFactoryDescriptorKey}. This map is used to organize the
+ * {@link ServiceReference}. This map is used to organize the
  * registered {@link org.apache.sling.api.adapter.AdapterFactory} services for
  * a given adaptable type.
  * <p>
@@ -34,8 +36,8 @@ import java.util.TreeMap;
  * removed the eventual second instance may actually be used instead.
  */
 public class AdapterFactoryDescriptorMap extends
-        TreeMap<AdapterFactoryDescriptorKey, AdapterFactoryDescriptor> {
+        TreeMap<ServiceReference, AdapterFactoryDescriptor> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
 }
