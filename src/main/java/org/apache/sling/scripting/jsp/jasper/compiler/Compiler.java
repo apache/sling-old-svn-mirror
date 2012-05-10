@@ -22,15 +22,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.Options;
-import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
+import org.apache.sling.scripting.jsp.jasper.compiler.Node.CustomTag;
 
 /**
  * Main JSP compiler class. This class uses Ant for compiling.
@@ -55,8 +51,6 @@ public abstract class Compiler {
 
     protected PageInfo pageInfo;
 
-    protected JspServletWrapper jsw;
-
     protected TagFileProcessor tfp;
 
     protected Options options;
@@ -65,8 +59,7 @@ public abstract class Compiler {
 
     // ------------------------------------------------------------ Constructor
 
-    public void init(JspCompilationContext ctxt, JspServletWrapper jsw) {
-        this.jsw = jsw;
+    public void init(final JspCompilationContext ctxt) {
         this.ctxt = ctxt;
         this.options = ctxt.getOptions();
     }
@@ -340,100 +333,6 @@ public abstract class Compiler {
     }
 
     /**
-     * This is a protected method intended to be overridden by subclasses of
-     * Compiler. This is used by the compile method to do all the compilation.
-     */
-    public boolean isOutDated() {
-        return isOutDated(true);
-    }
-
-    /**
-     * Determine if a compilation is necessary by checking the time stamp of the
-     * JSP page with that of the corresponding .class or .java file. If the page
-     * has dependencies, the check is also extended to its dependeants, and so
-     * on. This method can by overidden by a subclasses of Compiler.
-     *
-     * @param checkClass
-     *            If true, check against .class file, if false, check against
-     *            .java file.
-     */
-    public boolean isOutDated(final boolean checkClass) {
-        final long lastModifiedTest = jsw.getLastModificationTest();
-        if ( lastModifiedTest > 0 ) {
-            return false;
-        } else if ( lastModifiedTest < 0 ) {
-            return true;
-        }
-        final String jsp = ctxt.getJspFile();
-
-        long jspRealLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(jsp);
-
-        long targetLastModified = 0;
-        String targetFile;
-
-        if (checkClass) {
-            targetFile = ctxt.getClassFileName();
-        } else {
-            targetFile = ctxt.getServletJavaFileName();
-        }
-
-        targetLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(targetFile);
-        if (targetLastModified < 0) {
-            return true;
-        }
-
-        if (checkClass && jsw != null) {
-            jsw.setServletClassLastModifiedTime(targetLastModified);
-        }
-        if (targetLastModified < jspRealLastModified) {
-            if (log.isDebugEnabled()) {
-                log.debug("Compiler: outdated: " + targetFile + " "
-                        + targetLastModified);
-            }
-            return true;
-        }
-
-        // determine if source dependent files (e.g. includes using include
-        // directives) have been changed.
-        if (jsw == null) {
-            return false;
-        }
-
-        List<String> depends = jsw.getDependants();
-        if (depends == null) {
-            return false;
-        }
-
-        final Iterator<String> it = depends.iterator();
-        while (it.hasNext()) {
-            final String include = it.next();
-            // ignore tag libs, we are reloaded if a taglib changes anyway
-            if ( include.startsWith("tld:") ) {
-                continue;
-            }
-            try {
-                final URL includeUrl = ctxt.getResource(include);
-                if (includeUrl == null) {
-                    return true;
-                }
-
-                URLConnection includeUconn = includeUrl.openConnection();
-                long includeLastModified = includeUconn.getLastModified();
-                includeUconn.getInputStream().close();
-
-                if (includeLastModified > targetLastModified) {
-                    return true;
-                }
-            } catch (Exception e) {
-                return true;
-            }
-        }
-
-        return false;
-
-    }
-
-    /**
      * Gets the error dispatcher.
      */
     public ErrorDispatcher getErrorDispatcher() {
@@ -490,6 +389,25 @@ public abstract class Compiler {
             }
         } catch (Exception e) {
             // Remove as much as possible, ignore possible exceptions
+        }
+    }
+
+    public void clean() {
+        if ( this.pageNodes != null ) {
+            try {
+                pageNodes.visit(new CleanVisitor());
+            } catch ( final JasperException ignore) {
+                // ignore
+            }
+        }
+
+    }
+
+    private static final class CleanVisitor extends Node.Visitor {
+
+        public void visit(final CustomTag n) throws JasperException {
+            n.clean();
+            visitBody(n);
         }
     }
 }

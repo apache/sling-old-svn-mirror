@@ -49,11 +49,11 @@ import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
-import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
+import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -181,7 +181,7 @@ public class JspScriptEngineFactory
         io.setRequestResourceResolver(resolver);
 		jspFactoryHandler.incUsage();
 		try {
-			final JspServletWrapperAdapter errorJsp = getJspWrapperAdapter(scriptName);
+			final JspServletWrapper errorJsp = getJspWrapper(scriptName, slingBindings);
 			errorJsp.service(slingBindings);
 
             // The error page could be inside an include.
@@ -225,10 +225,11 @@ public class JspScriptEngineFactory
         io.setRequestResourceResolver(resolver);
         jspFactoryHandler.incUsage();
         try {
-            final JspServletWrapperAdapter jsp = getJspWrapperAdapter(scriptHelper);
-            // create a SlingBindings object
             final SlingBindings slingBindings = new SlingBindings();
             slingBindings.putAll(bindings);
+
+            final JspServletWrapper jsp = getJspWrapper(scriptHelper, slingBindings);
+            // create a SlingBindings object
             jsp.service(slingBindings);
         } finally {
             jspFactoryHandler.decUsage();
@@ -236,42 +237,40 @@ public class JspScriptEngineFactory
         }
     }
 
-    private JspServletWrapperAdapter getJspWrapperAdapter(final String scriptName)
+    private JspServletWrapper getJspWrapper(final String scriptName, final SlingBindings bindings)
     throws SlingException {
-        final JspRuntimeContext rctxt = jspRuntimeContext;
+        JspRuntimeContext rctxt = this.getJspRuntimeContext();
 
-    	JspServletWrapperAdapter wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
+    	JspServletWrapper wrapper = rctxt.getWrapper(scriptName);
         if (wrapper != null) {
-            return wrapper;
+            if ( wrapper.isValid() ) {
+                return wrapper;
+            }
+            rctxt.removeWrapper(wrapper.getJspUri());
+            this.renewJspRuntimeContext();
+            rctxt = this.getJspRuntimeContext();
+            wrapper = null;
         }
 
         synchronized (rctxt) {
-            wrapper = (JspServletWrapperAdapter) rctxt.getWrapper(scriptName);
+            wrapper = rctxt.getWrapper(scriptName);
             if (wrapper != null) {
                 return wrapper;
             }
 
-            try {
+            wrapper = new JspServletWrapper(servletConfig, options,
+                scriptName, false, rctxt);
+            rctxt.addWrapper(scriptName, wrapper);
 
-                wrapper = new JspServletWrapperAdapter(servletConfig, options,
-                    scriptName, false, rctxt);
-                rctxt.addWrapper(scriptName, wrapper);
-
-                return wrapper;
-            } catch (JasperException je) {
-                if (je.getCause() != null) {
-                    throw new SlingException(je.getMessage(), je.getCause());
-                }
-                throw new SlingException("Cannot create JSP: " + scriptName, je);
-            }
+            return wrapper;
         }
     }
 
-    private JspServletWrapperAdapter getJspWrapperAdapter(final SlingScriptHelper scriptHelper)
+    private JspServletWrapper getJspWrapper(final SlingScriptHelper scriptHelper, final SlingBindings bindings)
     throws SlingException {
         final SlingScript script = scriptHelper.getScript();
         final String scriptName = script.getScriptResource().getPath();
-        return getJspWrapperAdapter(scriptName);
+        return getJspWrapper(scriptName, bindings);
     }
 
     // ---------- SCR integration ----------------------------------------------
@@ -296,10 +295,6 @@ public class JspScriptEngineFactory
             // return options which use the jspClassLoader
             options = new JspServletOptions(slingServletContext, ioProvider,
                 componentContext, tldLocationsCache);
-
-            // Initialize the JSP Runtime Context
-            this.jspRuntimeContext = new JspRuntimeContext(slingServletContext,
-                    options, ioProvider);
 
             jspServletContext = new JspServletContext(ioProvider,
                 slingServletContext, tldLocationsCache);
@@ -340,13 +335,7 @@ public class JspScriptEngineFactory
             this.eventHandlerRegistration = null;
         }
         if (jspRuntimeContext != null) {
-            try {
-                jspRuntimeContext.destroy();
-            } catch (NullPointerException npe) {
-                // SLING-530, might be thrown on system shutdown in a servlet
-                // container when using the Equinox servlet container bridge
-                logger.debug("deactivate: ServletContext might already be unavailable", npe);
-            }
+            this.destroyJspRuntimeContext(this.jspRuntimeContext);
             jspRuntimeContext = null;
         }
 
@@ -484,6 +473,31 @@ public class JspScriptEngineFactory
         }
     }
 
+    private void destroyJspRuntimeContext(final JspRuntimeContext jrc) {
+        if (jrc != null) {
+            try {
+                jrc.destroy();
+            } catch (NullPointerException npe) {
+                // SLING-530, might be thrown on system shutdown in a servlet
+                // container when using the Equinox servlet container bridge
+                logger.debug("deactivate: ServletContext might already be unavailable", npe);
+            }
+        }
+    }
+
+    private JspRuntimeContext getJspRuntimeContext() {
+        if ( this.jspRuntimeContext == null ) {
+            synchronized ( this ) {
+                if ( this.jspRuntimeContext == null ) {
+                    // Initialize the JSP Runtime Context
+                    this.jspRuntimeContext = new JspRuntimeContext(slingServletContext,
+                            options, ioProvider);
+                }
+            }
+        }
+        return this.jspRuntimeContext;
+    }
+
     /**
      * Fixes {@link ScriptException} that overwrites the
      * {@link ScriptException#getMessage()} method to display its own
@@ -500,7 +514,7 @@ public class JspScriptEngineFactory
 
         private static final long serialVersionUID = -6490165487977283019L;
 
-        public BetterScriptException(String message, Exception cause) {
+        public BetterScriptException(final String message, final Exception cause) {
             super(message);
             this.initCause(cause);
         }
@@ -510,10 +524,27 @@ public class JspScriptEngineFactory
     /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
      */
-    public void handleEvent(Event event) {
+    public void handleEvent(final Event event) {
         final String path = (String)event.getProperty(SlingConstants.PROPERTY_PATH);
         if ( path != null ) {
-            this.jspRuntimeContext.handleModification(path);
+            final JspRuntimeContext rctxt = this.jspRuntimeContext;
+            if ( rctxt != null && rctxt.handleModification(path) ) {
+                renewJspRuntimeContext();
+            }
         }
+    }
+
+    private void renewJspRuntimeContext() {
+        final JspRuntimeContext jrc;
+        synchronized ( this ) {
+            jrc = this.jspRuntimeContext;
+            this.jspRuntimeContext = null;
+        }
+        final Thread t = new Thread() {
+            public void run() {
+                destroyJspRuntimeContext(jrc);
+            }
+        };
+        t.start();
     }
 }
