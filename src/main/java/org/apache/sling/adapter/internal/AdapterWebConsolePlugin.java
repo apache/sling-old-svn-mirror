@@ -47,7 +47,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -94,9 +94,9 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     }
 
     private void addServiceMetadata(ServiceReference reference, Object service) {
-        final String[] adapters = OsgiUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
-        final String condition = OsgiUtil.toString(reference.getProperty(ADAPTER_CONDITION), null);
-        final String[] adaptables = OsgiUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
+        final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
+        final String condition = PropertiesUtil.toString(reference.getProperty(ADAPTER_CONDITION), null);
+        final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final List<AdaptableDescription> descriptions = new ArrayList<AdaptableDescription>(adaptables.length);
         for (final String adaptable : adaptables) {
             descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition));
