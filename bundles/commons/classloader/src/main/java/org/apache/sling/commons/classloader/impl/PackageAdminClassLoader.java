@@ -142,9 +142,6 @@ class PackageAdminClassLoader extends ClassLoader {
             final Bundle bundle = this.findBundleForPackage(getPackageFromResource(name));
             if ( bundle != null ) {
                 e = bundle.getResources(name);
-                if ( e != null && e.hasMoreElements() ) {
-                    this.factory.addUsedBundle(bundle);
-                }
             }
         }
         return e;
@@ -164,7 +161,6 @@ class PackageAdminClassLoader extends ClassLoader {
             if ( bundle != null ) {
                 url = bundle.getResource(name);
                 if ( url != null ) {
-                    this.factory.addUsedBundle(bundle);
                     urlCache.put(name, url);
                 }
             }
