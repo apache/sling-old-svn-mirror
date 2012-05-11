@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.security.Principal;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import javax.servlet.http.HttpSession;
 
 import junitx.util.PrivateAccessor;
 
+import org.apache.felix.framework.FilterImpl;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.NonExistingResource;
@@ -62,6 +64,7 @@ import org.apache.sling.jcr.resource.internal.helper.Mapping;
 import org.apache.sling.jcr.resource.internal.helper.RedirectResource;
 import org.apache.sling.jcr.resource.internal.helper.starresource.StarResource;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
@@ -176,12 +179,23 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         final EventAdmin mockEA = new EventAdmin() {
 
+            private final Filter filter;
+
+            {
+                Method createFilter = MapEntries.class.getDeclaredMethod("createFilter");
+                createFilter.setAccessible(true);
+                final String filterString = (String) createFilter.invoke(null);
+                this.filter = new FilterImpl(filterString);
+            }
+
             public void postEvent(Event event) {
-                mapEntries.handleEvent(event);
+                if (event.matches(this.filter)) {
+                    mapEntries.handleEvent(event);
+                }
             }
 
             public void sendEvent(Event event) {
-                mapEntries.handleEvent(event);
+                postEvent(event);
             }
         };
         final ServiceTracker tracker = mock(ServiceTracker.class);
@@ -745,6 +759,46 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         res = resResolver.resolve(request, "/playground/en.html");
         assertNotNull(res);
         assertEquals("/content/playground/en.html", res.getPath());
+
+        res = resResolver.resolve(request, "/libs/nt/folder.html");
+        assertNotNull(res);
+        assertEquals("/libs/nt/folder.html", res.getPath());
+    }
+
+    public void testResolveResourceInternalRedirectPathUpdate() throws Exception {
+        HttpServletRequest request = new ResourceResolverTestRequest("https", null, -1, rootPath);
+        Node localhost443 = mapRoot.getNode("map/https/localhost.443");
+        Node toContent = localhost443.addNode("_playground_designground_", "sling:Mapping");
+        toContent.setProperty(JcrResourceResolver.PROP_REG_EXP, "(playground|designground)");
+        toContent.setProperty(JcrResourceResolver.PROP_REDIRECT_INTERNAL, "/content/$1");
+        session.save();
+
+        Thread.sleep(1000L);
+
+        Resource res = resResolver.resolve(request, "/playground.html");
+        assertNotNull(res);
+        assertEquals("/content/playground.html", res.getPath());
+
+        res = resResolver.resolve(request, "/playground/en.html");
+        assertNotNull(res);
+        assertEquals("/content/playground/en.html", res.getPath());
+
+        res = resResolver.resolve(request, "/libs/nt/folder.html");
+        assertNotNull(res);
+        assertEquals("/libs/nt/folder.html", res.getPath());
+
+        // update the match
+        toContent.setProperty(JcrResourceResolver.PROP_REG_EXP, "(homeground|foreignground)");
+        session.save();
+        Thread.sleep(1000L);
+
+        res = resResolver.resolve(request, "/homeground.html");
+        assertNotNull(res);
+        assertEquals("/content/homeground.html", res.getPath());
+
+        res = resResolver.resolve(request, "/foreignground/en.html");
+        assertNotNull(res);
+        assertEquals("/content/foreignground/en.html", res.getPath());
 
         res = resResolver.resolve(request, "/libs/nt/folder.html");
         assertNotNull(res);
