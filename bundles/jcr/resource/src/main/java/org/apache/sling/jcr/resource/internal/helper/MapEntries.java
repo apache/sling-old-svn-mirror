@@ -124,34 +124,9 @@ public class MapEntries implements EventHandler {
 
         doInit();
 
-        // build a filter which matches if any of the nodeProps (JCR
-        // properties modified) is listed in any of the eventProps (event
-        // properties listing modified JCR properties)
-        // this allows to only get events interesting for updating the
-        // internal structure
-        final String[] nodeProps = {
-            "sling:vanityPath", "sling:vanityOrder", JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS,
-            JcrResourceResolver.PROP_REDIRECT_EXTERNAL, JcrResourceResolver.PROP_REDIRECT_INTERNAL,
-            JcrResourceResolver.PROP_REDIRECT_EXTERNAL_STATUS
-        };
-        final String[] eventProps = {
-            "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes"
-        };
-        StringBuilder filter = new StringBuilder();
-        filter.append("(|");
-        for (String eventProp : eventProps) {
-            filter.append("(|");
-            for (String nodeProp : nodeProps) {
-                filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
-            }
-            filter.append(")");
-        }
-        filter.append("(" + EventConstants.EVENT_TOPIC + "=" + SlingConstants.TOPIC_RESOURCE_REMOVED + ")");
-        filter.append(")");
-
         final Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(EventConstants.EVENT_TOPIC, "org/apache/sling/api/resource/*");
-        props.put(EventConstants.EVENT_FILTER, filter.toString());
+        props.put(EventConstants.EVENT_FILTER, createFilter());
         props.put(Constants.SERVICE_DESCRIPTION, "Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
@@ -672,6 +647,36 @@ public class MapEntries implements EventHandler {
                 false, newRedir);
         }
         entries.put(path, entry);
+    }
+
+    /**
+     * Returns a filter which matches if any of the nodeProps (JCR properties
+     * modified) is listed in any of the eventProps (event properties listing
+     * modified JCR properties) this allows to only get events interesting for
+     * updating the internal structure
+     */
+    private static String createFilter() {
+        final String[] nodeProps = {
+            "sling:vanityPath", "sling:vanityOrder", JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS,
+            JcrResourceResolver.PROP_REDIRECT_EXTERNAL, JcrResourceResolver.PROP_REDIRECT_INTERNAL,
+            JcrResourceResolver.PROP_REDIRECT_EXTERNAL_STATUS, JcrResourceResolver.PROP_REG_EXP
+        };
+        final String[] eventProps = {
+            "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes"
+        };
+        StringBuilder filter = new StringBuilder();
+        filter.append("(|");
+        for (String eventProp : eventProps) {
+            filter.append("(|");
+            for (String nodeProp : nodeProps) {
+                filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
+            }
+            filter.append(")");
+        }
+        filter.append("(" + EventConstants.EVENT_TOPIC + "=" + SlingConstants.TOPIC_RESOURCE_REMOVED + ")");
+        filter.append(")");
+
+        return filter.toString();
     }
 
     private static final class MapEntryIterator implements Iterator<MapEntry> {
