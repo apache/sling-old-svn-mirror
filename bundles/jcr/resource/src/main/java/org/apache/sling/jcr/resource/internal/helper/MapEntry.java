@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>MapEntry</code> class represents a mapping entry in the mapping
@@ -155,6 +156,18 @@ public class MapEntry implements Comparable<MapEntry> {
                 JcrResourceResolver.PROP_REDIRECT_EXTERNAL, String.class);
             if (redirect != null) {
                 // ignoring external redirects for mapping
+                LoggerFactory.getLogger(MapEntry.class).info(
+                    "createMapEntry: Configuration has external redirect to {}; not creating mapping for configuration in {}",
+                    redirect, resource.getPath());
+                return null;
+            }
+
+            // ignore potential regular expression url
+            if (isRegExp(url)) {
+                LoggerFactory.getLogger(MapEntry.class).info(
+                    "createMapEntry: URL {} contains a regular expression; not creating mapping for configuration in {}",
+                    url, resource.getPath());
+
                 return null;
             }
 
@@ -294,5 +307,25 @@ public class MapEntry implements Comparable<MapEntry> {
             buf.append(", status:").append(getStatus());
         }
         return buf.toString();
+    }
+
+    //---------- helper
+
+    /**
+     * Returns <code>true</code> if the string contains unescaped regular
+     * expression special characters '+', '*', '?', '|', '(', '), '[', and ']'
+     * @param string
+     * @return
+     */
+    private static boolean isRegExp(final String string) {
+        for (int i=0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (c == '\\') {
+                i++; // just skip
+            } else if ("+*?|()[]".indexOf(c) >= 0) {
+                return true; // assume an unescaped pattern character
+            }
+        }
+        return false;
     }
 }
