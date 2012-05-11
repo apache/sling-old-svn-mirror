@@ -160,11 +160,14 @@ public class RequestHistoryConsolePlugin {
             if (requests != null) {
                 synchronized (requests) {
                     for (RequestInfo info : requests.values()) {
+                        final String key = ResponseUtil.escapeXml(info.getKey());
                         final boolean isCurrent = info.getKey().equals(
                             currentRequestIndex);
                         final StringBuilder sb = new StringBuilder();
-                        sb.append("<a href='" + LABEL + "?index="
-                            + ResponseUtil.escapeXml(info.getKey()) + "'>");
+                        sb.append("<span style='white-space: pre; text-align:right; font-size:80%'>");
+                        sb.append(String.format("%1$#8s", key));
+                        sb.append("</span> ");
+                        sb.append("<a href='" + LABEL + "?index=" + key + "'>");
                         if (isCurrent) {
                             sb.append("<b>");
                         }
