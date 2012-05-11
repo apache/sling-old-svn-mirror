@@ -582,6 +582,11 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
                     LOGGER.debug("Servlet {} found using absolute resource type {}", RequestUtil.getServletName(servlet),
                                     type);
                 }
+            } else {
+                request.getRequestProgressTracker().log(
+                        "Will not look for a servlet at {0} as it is not in the list of allowed paths",
+                        type
+                        );
             }
         }
         if ( servlet == null ) {
