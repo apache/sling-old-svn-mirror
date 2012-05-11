@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper;
 
+import java.lang.reflect.Method;
 import java.net.URI;
 
 import junit.framework.TestCase;
@@ -133,6 +134,14 @@ public class MapEntryTest extends TestCase {
 
     }
 
+    public void test_isRegExp() {
+        TestCase.assertFalse(isRegExp("http/www.example.com.8080/bla"));
+        TestCase.assertTrue(isRegExp("http/.+\\.www.example.com.8080/bla"));
+        TestCase.assertTrue(isRegExp("http/(.+)\\.www.example.com.8080/bla"));
+        TestCase.assertTrue(isRegExp("http/(.+)\\.www.example.com.8080/bla"));
+        TestCase.assertTrue(isRegExp("http/[^.]+.www.example.com.8080/bla"));
+    }
+
     private void assertEqualUri(String expected, String uriPath) {
         URI uri = MapEntry.toURI(uriPath);
         assertNotNull("Failed converting " + uriPath, uri);
@@ -143,5 +152,16 @@ public class MapEntryTest extends TestCase {
         String fixed = MapEntry.fixUriPath(uriPath);
         assertNotNull(fixed);
         assertEquals(expected, fixed);
+    }
+
+    private boolean isRegExp(final String string) {
+        try {
+            Method m = MapEntry.class.getDeclaredMethod("isRegExp", String.class);
+            m.setAccessible(true);
+            return (Boolean) m.invoke(null, string);
+        } catch (Exception e) {
+            fail(e.toString());
+            return false; // quiesc compiler
+        }
     }
 }
