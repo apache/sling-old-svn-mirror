@@ -181,7 +181,22 @@ public class ConfigTaskCreator
         final String configPid;
         int n = pid.indexOf('-');
         if (n > 0) {
-            configPid = pid.substring(n + 1);
+            // quick check if this is an existing configuration
+            final String fString = pid.substring(0, n);
+            final String cString = pid.substring(n + 1);
+            boolean useExtendedPid = false;
+            try {
+                if ( ConfigUtil.getConfiguration(this.configAdmin, fString, fString + '.' + cString, false) != null ) {
+                    useExtendedPid = true;
+                }
+            } catch ( final Exception ignore) {
+                // ignore this
+            }
+            if ( useExtendedPid ) {
+                configPid = fString + '.' + cString;
+            } else {
+                configPid = pid.substring(n + 1);
+            }
             factoryPid = pid.substring(0, n);
         } else {
             factoryPid = null;
