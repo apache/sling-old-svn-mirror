@@ -80,7 +80,12 @@ abstract class AbstractConfigTask extends InstallTask {
         if ( this.aliasPid == null || this.factoryPid == null ) {
             return null;
         }
-        return factoryPid + "." + this.aliasPid;
+        final String alias = factoryPid + "." + this.aliasPid;
+        final int pos = this.getResource().getEntityId().indexOf(':');
+        if ( this.getResource().getEntityId().substring(pos + 1).equals(alias) ) {
+            return null;
+        }
+        return alias;
     }
 
     protected Dictionary<String, Object> getDictionary() {
