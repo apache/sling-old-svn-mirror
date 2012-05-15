@@ -29,6 +29,7 @@ import org.junit.Test;
 
 public class FolderNameFilterTest {
     public static final String DEFAULT_REGEXP =  ".*/install$";
+    public static final String CONFIG_REGEXP =  ".*/config$";
     public static final String [] ROOTS = JcrInstaller.DEFAULT_SEARCH_PATH;
 
     @Test
@@ -125,6 +126,18 @@ public class FolderNameFilterTest {
     	assertEquals("Matches three runmodes (A)", new Integer(203), (Integer)f.getPriority("/apps/install.dev.staging.prod"));
     	assertEquals("Matches three runmodes (B)", new Integer(203), (Integer)f.getPriority("/apps/install.dev.prod.staging"));
     	assertEquals("Matches three runmodes (C)", new Integer(103), (Integer)f.getPriority("/libs/install.dev.prod.staging"));
+    }
+
+    @Test
+    public void testAuthorPriorities() {
+        final Set<String> m = new HashSet<String>();
+        m.add("author");
+        m.add("mycompany");
+        m.add("dev");
+        final FolderNameFilter f = new FolderNameFilter(ROOTS, CONFIG_REGEXP, m);
+        assertEquals("", new Integer(201), (Integer)f.getPriority("/apps/somewhere/runmodes/config.author"));
+        assertEquals("", new Integer(202), (Integer)f.getPriority("/apps/somewhere/runmodes/config.author.dev"));
+        assertEquals("", new Integer(203), (Integer)f.getPriority("/apps/somewhere/runmodes/config.author.dev.mycompany"));
     }
 
     @Test
