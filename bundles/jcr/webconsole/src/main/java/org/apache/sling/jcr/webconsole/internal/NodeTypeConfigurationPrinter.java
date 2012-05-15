@@ -68,8 +68,9 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
      */
     public void printConfiguration(PrintWriter pw, String mode) {
         if (slingRepository != null) {
+            Session session = null;
             try {
-                Session session = slingRepository.loginAdministrative(null);
+                session = slingRepository.loginAdministrative(null);
                 NodeTypeManager ntm = session.getWorkspace().getNodeTypeManager();
                 NodeTypeIterator it = ntm.getAllNodeTypes();
                 while (it.hasNext()) {
@@ -158,9 +159,13 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
             } catch (RepositoryException e) {
                 pw.println("Unable to output namespace mappings.");
                 e.printStackTrace(pw);
+            } finally {
+                if (session != null) {
+                    session.logout();
+                }
             }
         } else {
-            pw.println("SlingRepsoitory is not available.");
+            pw.println("SlingRepository is not available.");
         }
     }
 

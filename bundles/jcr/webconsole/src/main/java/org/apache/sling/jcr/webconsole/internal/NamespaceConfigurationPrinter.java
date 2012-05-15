@@ -67,8 +67,9 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
      */
     public void printConfiguration(PrintWriter pw) {
         if (slingRepository != null) {
+            Session session = null;
             try {
-                Session session = slingRepository.loginAdministrative(null);
+                session = slingRepository.loginAdministrative(null);
                 NamespaceRegistry reg = session.getWorkspace().getNamespaceRegistry();
                 List<String> globalPrefixes = Arrays.asList(reg.getPrefixes());
                 for (String prefix : session.getNamespacePrefixes()) {
@@ -85,6 +86,10 @@ public class NamespaceConfigurationPrinter implements ConfigurationPrinter {
             } catch (RepositoryException e) {
                 pw.println("Unable to output namespace mappings.");
                 e.printStackTrace(pw);
+            } finally {
+                if (session != null) {
+                    session.logout();
+                }
             }
         } else {
             pw.println("SlingRepository is not available.");
