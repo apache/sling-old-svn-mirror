@@ -17,6 +17,10 @@
 package org.apache.sling.jcr.webconsole.internal;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Comparator;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -73,9 +77,9 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
                 session = slingRepository.loginAdministrative(null);
                 NodeTypeManager ntm = session.getWorkspace().getNodeTypeManager();
                 NodeTypeIterator it = ntm.getAllNodeTypes();
-                while (it.hasNext()) {
-                    NodeType nt = it.nextNodeType();
+                List<NodeType> sortedTypes = sortTypes(it);
 
+                for (NodeType nt : sortedTypes) {
                     pw.printf("[%s]", nt.getName());
 
                     printSuperTypes(pw, nt);
@@ -177,6 +181,20 @@ public class NodeTypeConfigurationPrinter implements ModeAwareConfigurationPrint
     public void printConfiguration(PrintWriter pw) {
         printConfiguration(pw, ConfigurationPrinter.MODE_TXT);
 
+    }
+
+    private List<NodeType> sortTypes(NodeTypeIterator it) {
+        List<NodeType> types = new ArrayList<NodeType>();
+        while (it.hasNext()) {
+            NodeType nt = it.nextNodeType();
+            types.add(nt);
+        }
+        Collections.sort(types, new Comparator<NodeType>(){
+            public int compare(NodeType o1, NodeType o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        return types;
     }
 
     private void linebreak(PrintWriter pw, String mode) {
