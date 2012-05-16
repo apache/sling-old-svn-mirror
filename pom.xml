@@ -279,6 +279,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.4</version>
                     <configuration>
                         <source>1.5</source>
                         <target>1.5</target>
