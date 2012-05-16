@@ -516,6 +516,25 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                 <pluginExecution>
                                     <pluginExecutionFilter>
                                         <groupId>
+                                            org.apache.sling
+                                        </groupId>
+                                        <artifactId>
+                                            maven-sling-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [2.1.0,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>generate-adapter-metadata</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
                                             org.apache.maven.plugins
                                         </groupId>
                                         <artifactId>
