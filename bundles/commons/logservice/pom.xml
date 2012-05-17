@@ -64,7 +64,7 @@
                             org.apache.sling.commons.logservice.*,
                         </Private-Package>
                         <Import-Package>
-                            org.osgi.service.log;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            org.osgi.service.log;provide:=true,
                             *
                         </Import-Package>
                     </instructions>
