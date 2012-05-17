@@ -60,7 +60,7 @@
                     <instructions>
                         <Import-Package>
                             javax.jcr;resolution:=optional,
-                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            org.apache.sling.api.resource;provide:=true,
                             *
                         </Import-Package>
                         <Private-Package>
