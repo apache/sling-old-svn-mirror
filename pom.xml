@@ -64,7 +64,7 @@
                             org.osgi.util.tracker
                         </Private-Package>
                         <Import-Package>
-                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            org.apache.sling.api.resource;provide:=true,
                             *
                         </Import-Package>
                     </instructions>
