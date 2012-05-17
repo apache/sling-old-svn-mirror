@@ -82,7 +82,7 @@
                             javax.script.*;
                             javax.annotation;resolution:=optional,
                             org.apache.sling.scripting.api.*;resolution:=optional,
-                            org.apache.sling.api.resource;version="[$(version;==;$(@)),$(version;=+;$(@)))",
+                            org.apache.sling.api.resource;provide:=true,
                             org.apache.sling.commons.osgi;version="$(@)",
                             *
                         </Import-Package>
