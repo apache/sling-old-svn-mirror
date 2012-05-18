@@ -393,7 +393,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                         <execute />
+                                         <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -412,7 +412,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <execute />
+                                         <ignore />
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
@@ -432,7 +432,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                                     </goals>
                                 </pluginExecutionFilter>
                                 <action>
-                                    <execute />
+                                     <ignore />
                                 </action>
                             </pluginExecution>
                                 <pluginExecution>
