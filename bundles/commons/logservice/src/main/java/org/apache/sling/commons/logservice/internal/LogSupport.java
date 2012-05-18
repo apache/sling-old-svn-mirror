@@ -26,13 +26,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.BundleListener;
 import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>LogReaderServiceFactory</code> TODO
  */
-public class LogSupport implements BundleListener, ServiceListener,
+public class LogSupport implements SynchronousBundleListener, ServiceListener,
         FrameworkListener {
 
     /**
@@ -228,14 +228,26 @@ public class LogSupport implements BundleListener, ServiceListener,
             case BundleEvent.INSTALLED:
                 message = "BundleEvent INSTALLED";
                 break;
+            case BundleEvent.RESOLVED:
+                message = "BundleEvent RESOLVED";
+                break;
+            case BundleEvent.STARTING:
+                message = "BundleEvent STARTING";
+                break;
             case BundleEvent.STARTED:
                 message = "BundleEvent STARTED";
+                break;
+            case BundleEvent.STOPPING:
+                message = "BundleEvent STOPPING";
                 break;
             case BundleEvent.STOPPED:
                 // this is special, as we have to fix the listener list for
                 // stopped bundles
                 removeLogListeners(event.getBundle());
                 message = "BundleEvent STOPPED";
+                break;
+            case BundleEvent.UNRESOLVED:
+                message = "BundleEvent UNRESOLVED";
                 break;
             case BundleEvent.UPDATED:
                 message = "BundleEvent UPDATED";
@@ -244,12 +256,6 @@ public class LogSupport implements BundleListener, ServiceListener,
                 // remove any cached logger for the uninstalled bundle
                 ungetLogger(event.getBundle());
                 message = "BundleEvent UNINSTALLED";
-                break;
-            case BundleEvent.RESOLVED:
-                message = "BundleEvent RESOLVED";
-                break;
-            case BundleEvent.UNRESOLVED:
-                message = "BundleEvent UNRESOLVED";
                 break;
             default:
                 message = "BundleEvent " + event.getType();
