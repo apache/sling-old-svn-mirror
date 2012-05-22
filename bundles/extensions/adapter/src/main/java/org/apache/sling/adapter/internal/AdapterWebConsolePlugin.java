@@ -65,11 +65,11 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(Servlet.class)
 @Properties({ @Property(name = Constants.SERVICE_DESCRIPTION, value = "Adapter Web Console Plugin"),
-        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-        @Property(name = "felix.webconsole.label", value = "adapters"),
-        @Property(name = "felix.webconsole.title", value = "Sling Adapters"),
-        @Property(name = "felix.webconsole.css", value = "/adapters/res/ui/adapters.css"),
-        @Property(name = "felix.webconsole.configprinter.modes", value = "always") })
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = "felix.webconsole.label", value = "adapters"),
+    @Property(name = "felix.webconsole.title", value = "Sling Adapters"),
+    @Property(name = "felix.webconsole.css", value = "/adapters/res/ui/adapters.css"),
+    @Property(name = "felix.webconsole.configprinter.modes", value = "always") })
 @SuppressWarnings("serial")
 public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrackerCustomizer, BundleListener {
 
@@ -77,7 +77,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     private static final String ADAPTER_CONDITION = "adapter.condition";
 
-    private Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
+    private final Logger logger = LoggerFactory.getLogger(AdapterWebConsolePlugin.class);
 
     private List<AdaptableDescription> allAdaptables;
     private Map<Object, List<AdaptableDescription>> adapterServices;
@@ -87,13 +87,13 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
     private BundleContext bundleContext;
 
-    public Object addingService(ServiceReference reference) {
-        Object service = this.bundleContext.getService(reference);
+    public Object addingService(final ServiceReference reference) {
+        final Object service = this.bundleContext.getService(reference);
         addServiceMetadata(reference, service);
         return service;
     }
 
-    private void addServiceMetadata(ServiceReference reference, Object service) {
+    private void addServiceMetadata(final ServiceReference reference, final Object service) {
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
         final String condition = PropertiesUtil.toString(reference.getProperty(ADAPTER_CONDITION), null);
         final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
@@ -101,11 +101,13 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         for (final String adaptable : adaptables) {
             descriptions.add(new AdaptableDescription(reference.getBundle(), adaptable, adapters, condition));
         }
-        adapterServices.put(service, descriptions);
-        update();
+        synchronized (this) {
+            adapterServices.put(service, descriptions);
+            update();
+        }
     }
 
-    public void bundleChanged(BundleEvent event) {
+    public void bundleChanged(final BundleEvent event) {
         if (event.getType() == BundleEvent.STOPPED) {
             removeBundle(event.getBundle());
         } else if (event.getType() == BundleEvent.STARTED) {
@@ -113,32 +115,35 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         }
     }
 
-    public void modifiedService(ServiceReference reference, Object service) {
+    public void modifiedService(final ServiceReference reference, final Object service) {
         addServiceMetadata(reference, service);
     }
 
-    public void removedService(ServiceReference reference, Object service) {
-        adapterServices.remove(service);
+    public void removedService(final ServiceReference reference, final Object service) {
+        synchronized (this) {
+            adapterServices.remove(service);
+            update();
+        }
     }
 
     @SuppressWarnings("unchecked")
-    private void addBundle(Bundle bundle) {
-        List<AdaptableDescription> descs = new ArrayList<AdaptableDescription>();
+    private void addBundle(final Bundle bundle) {
+        final List<AdaptableDescription> descs = new ArrayList<AdaptableDescription>();
         try {
-            Enumeration<URL> files = bundle.getResources("SLING-INF/adapters.json");
+            final Enumeration<URL> files = bundle.getResources("SLING-INF/adapters.json");
             if (files != null) {
                 while (files.hasMoreElements()) {
-                    InputStream stream = files.nextElement().openStream();
-                    String contents = IOUtils.toString(stream);
+                    final InputStream stream = files.nextElement().openStream();
+                    final String contents = IOUtils.toString(stream);
                     IOUtils.closeQuietly(stream);
-                    JSONObject obj = new JSONObject(contents);
-                    for (Iterator<String> adaptableNames = obj.keys(); adaptableNames.hasNext();) {
-                        String adaptableName = adaptableNames.next();
-                        JSONObject adaptable = obj.getJSONObject(adaptableName);
-                        for (Iterator<String> conditions = adaptable.keys(); conditions.hasNext();) {
-                            String condition = conditions.next();
+                    final JSONObject obj = new JSONObject(contents);
+                    for (final Iterator<String> adaptableNames = obj.keys(); adaptableNames.hasNext();) {
+                        final String adaptableName = adaptableNames.next();
+                        final JSONObject adaptable = obj.getJSONObject(adaptableName);
+                        for (final Iterator<String> conditions = adaptable.keys(); conditions.hasNext();) {
+                            final String condition = conditions.next();
                             String[] adapters;
-                            Object value = adaptable.get(condition);
+                            final Object value = adaptable.get(condition);
                             if (value instanceof JSONArray) {
                                 adapters = toStringArray((JSONArray) value);
                             } else {
@@ -150,28 +155,32 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
                 }
             }
             if (!descs.isEmpty()) {
-                adapterBundles.put(bundle, descs);
-                update();
+                synchronized ( this ) {
+                    adapterBundles.put(bundle, descs);
+                    update();
+                }
             }
-        } catch (IOException e) {
+        } catch (final IOException e) {
             logger.error("Unable to load adapter descriptors for bundle " + bundle, e);
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             logger.error("Unable to load adapter descriptors for bundle " + bundle, e);
         }
 
     }
 
-    private String[] toStringArray(JSONArray value) throws JSONException {
-        List<String> result = new ArrayList<String>(value.length());
+    private String[] toStringArray(final JSONArray value) throws JSONException {
+        final List<String> result = new ArrayList<String>(value.length());
         for (int i = 0; i < value.length(); i++) {
             result.add(value.getString(i));
         }
         return result.toArray(new String[value.length()]);
     }
 
-    private void removeBundle(Bundle bundle) {
-        adapterBundles.remove(bundle);
-        update();
+    private void removeBundle(final Bundle bundle) {
+        synchronized ( this ) {
+            adapterBundles.remove(bundle);
+            update();
+        }
     }
 
     private void update() {
@@ -186,23 +195,23 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         allAdaptables = newList;
     }
 
-    protected void activate(ComponentContext ctx) throws InvalidSyntaxException {
+    protected void activate(final ComponentContext ctx) throws InvalidSyntaxException {
         this.bundleContext = ctx.getBundleContext();
         this.adapterServices = new HashMap<Object, List<AdaptableDescription>>();
         this.adapterBundles = new HashMap<Bundle, List<AdaptableDescription>>();
-        for (Bundle bundle : this.bundleContext.getBundles()) {
+        for (final Bundle bundle : this.bundleContext.getBundles()) {
             if (bundle.getState() == Bundle.ACTIVE) {
                 addBundle(bundle);
             }
         }
 
         this.bundleContext.addBundleListener(this);
-        Filter filter = this.bundleContext.createFilter("(&(adaptables=*)(adapters=*))");
+        final Filter filter = this.bundleContext.createFilter("(&(adaptables=*)(adapters=*))");
         this.adapterTracker = new ServiceTracker(this.bundleContext, filter, this);
         this.adapterTracker.open();
     }
 
-    protected void deactivate(ComponentContext ctx) {
+    protected void deactivate(final ComponentContext ctx) {
         this.bundleContext.removeBundleListener(this);
         this.adapterTracker.close();
         this.adapterServices = null;
@@ -210,7 +219,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp) throws ServletException, IOException {
         if (req.getPathInfo().endsWith("/data.json")) {
             getJson(resp);
         } else {
@@ -237,12 +246,12 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
 
             }
             resp.getWriter().println(obj.toString(INDENT));
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             throw new ServletException("Unable to produce JSON", e);
         }
     }
 
-    private void getHtml(HttpServletResponse resp) throws IOException {
+    private void getHtml(final HttpServletResponse resp) throws IOException {
         final PrintWriter writer = resp.getWriter();
         writer.println("<p class=\"statline ui-state-highlight\">${Introduction}</p>");
         writer.println("<p>${intro}</p>");
@@ -265,7 +274,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
                 writer.printf("<td>%s</td>", desc.condition);
             }
             writer.printf("<td><a href=\"${pluginRoot}/../bundles/%s\">%s (%s)</a></td>", desc.bundle.getBundleId(),
-                    desc.bundle.getSymbolicName(), desc.bundle.getBundleId());
+                            desc.bundle.getSymbolicName(), desc.bundle.getBundleId());
             writer.println("</tr>");
 
             if (rowClass.equals("odd")) {
@@ -298,7 +307,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
      * Method to retreive static resources from this bundle.
      */
     @SuppressWarnings("unused")
-    private URL getResource(String path) {
+    private URL getResource(final String path) {
         if (path.startsWith("/adapters/res/ui/")) {
             return this.getClass().getResource(path.substring(9));
         }
@@ -312,7 +321,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         private final Bundle bundle;
 
         public AdaptableDescription(final Bundle bundle, final String adaptable, final String[] adapters,
-                final String condition) {
+                        final String condition) {
             this.adaptable = adaptable;
             this.adapters = adapters;
             this.condition = condition;
@@ -322,13 +331,13 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         @Override
         public String toString() {
             return "AdapterDescription [adaptable=" + this.adaptable + ", adapters=" + Arrays.toString(this.adapters)
-                    + ", condition=" + this.condition + ", bundle=" + this.bundle + "]";
+                            + ", condition=" + this.condition + ", bundle=" + this.bundle + "]";
         }
 
-        public int compareTo(AdaptableDescription o) {
+        public int compareTo(final AdaptableDescription o) {
             return new CompareToBuilder().append(this.adaptable, o.adaptable).append(this.condition, o.condition)
-                    .append(this.adapters.length, o.adapters.length)
-                    .append(this.bundle.getBundleId(), o.bundle.getBundleId()).toComparison();
+                            .append(this.adapters.length, o.adapters.length)
+                            .append(this.bundle.getBundleId(), o.bundle.getBundleId()).toComparison();
         }
 
     }
