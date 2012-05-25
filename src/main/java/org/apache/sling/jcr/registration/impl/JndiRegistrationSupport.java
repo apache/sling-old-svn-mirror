@@ -29,6 +29,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.sling.jcr.registration.AbstractRegistrationSupport;
 import org.osgi.service.log.LogService;
@@ -49,7 +50,9 @@ import org.osgi.service.log.LogService;
         metatype = true,
         label = "%jndi.name",
         description = "%jndi.description",
-        name = "org.apache.sling.jcr.jackrabbit.server.JndiRegistrationSupport")
+        name = "org.apache.sling.jcr.jackrabbit.server.JndiRegistrationSupport",
+        policy = ConfigurationPolicy.REQUIRE
+        )
 @org.apache.felix.scr.annotations.Properties({
     @Property(
             name = "java.naming.factory.initial",

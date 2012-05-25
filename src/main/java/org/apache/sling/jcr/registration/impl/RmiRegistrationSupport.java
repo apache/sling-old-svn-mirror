@@ -28,6 +28,7 @@ import java.rmi.server.UnicastRemoteObject;
 import javax.jcr.Repository;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
@@ -47,7 +48,8 @@ import org.osgi.service.log.LogService;
         metatype = true,
         label = "%rmi.name",
         description = "%rmi.description",
-        name = "org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport")
+        name = "org.apache.sling.jcr.jackrabbit.server.RmiRegistrationSupport",
+        policy = ConfigurationPolicy.REQUIRE)
 @org.apache.felix.scr.annotations.Properties({
     @Property(name = "service.vendor", value = "The Apache Software Foundation", propertyPrivate = true),
     @Property(name = "service.description", value = "RMI based Repository Registration", propertyPrivate = true)
