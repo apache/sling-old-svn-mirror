@@ -35,7 +35,7 @@ import org.junit.runner.notification.RunListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** HTML renderer for JUnit servlet */
+/** JSON renderer for JUnit servlet */
 @Component(immediate=false)
 @Service
 public class JsonRenderer extends RunListener implements Renderer {
