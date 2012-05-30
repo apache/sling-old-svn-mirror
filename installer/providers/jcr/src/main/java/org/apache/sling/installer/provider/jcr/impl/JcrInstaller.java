@@ -171,7 +171,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     /** Configuration from managed service (old pid) */
     private Dictionary<?, ?> oldConfiguration;
 
-    private static final String DEFAULT_NEW_CONFIG_PATH = "sling/config";
+    private static final String DEFAULT_NEW_CONFIG_PATH = "sling/install";
     @Property(value=DEFAULT_NEW_CONFIG_PATH)
     private static final String PROP_NEW_CONFIG_PATH = "sling.jcrinstall.new.config.path";
 
