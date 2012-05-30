@@ -86,7 +86,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.engine</artifactId>
-            <version>2.2.7-SNAPSHOT</version>
+            <version>2.2.6</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -170,7 +170,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.core</artifactId>
-            <version>2.0.23-SNAPSHOT</version>
+            <version>2.0.22</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -233,7 +233,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.factory.configuration</artifactId>
-            <version>1.0.9-SNAPSHOT</version>
+            <version>1.0.8</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -243,7 +243,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.provider.jcr</artifactId>
-            <version>3.1.4</version>
+            <version>3.1.5-SNAPSHOT</version>
         </bundle>
     </startLevel>
     <startLevel level="1">
