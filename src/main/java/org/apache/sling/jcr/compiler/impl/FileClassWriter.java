@@ -84,4 +84,12 @@ class FileClassWriter implements ClassLoaderWriter {
         // we don't need to implement this one
         return false;
     }
+
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
+     */
+    public ClassLoader getClassLoader() {
+        // we don't need to implement this one
+        return null;
+    }
 }
