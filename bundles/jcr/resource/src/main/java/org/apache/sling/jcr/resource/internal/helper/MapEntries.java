@@ -97,18 +97,20 @@ public class MapEntries implements EventHandler {
 
     private final ReentrantLock initializing = new ReentrantLock();
 
+    @SuppressWarnings("unchecked")
     private MapEntries() {
         this.factory = null;
         this.resolver = null;
         this.mapRoot = DEFAULT_MAP_ROOT;
 
-        this.resolveMapsMap = Collections.emptyMap();
+        this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
         this.registration = null;
         this.eventAdminTracker = null;
     }
 
+    @SuppressWarnings("unchecked")
     public MapEntries(final JcrResourceResolverFactoryImpl factory,
                       final BundleContext bundleContext,
                       final ServiceTracker eventAdminTracker)
@@ -118,7 +120,7 @@ public class MapEntries implements EventHandler {
         this.mapRoot = factory.getMapRoot();
         this.eventAdminTracker = eventAdminTracker;
 
-        this.resolveMapsMap = Collections.emptyMap();
+        this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
 
