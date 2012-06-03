@@ -119,7 +119,7 @@ public class SortingServiceTracker<T>
      */
     public List<ServiceReference> getSortedServiceReferences() {
         List<ServiceReference> result = this.sortedReferences;
-        if ( this.sortedReferences == null || this.lastRefCount < this.getTrackingCount() ) {
+        if ( result == null || this.lastRefCount < this.getTrackingCount() ) {
             this.lastRefCount = this.getTrackingCount();
             final ServiceReference[] references = this.getServiceReferences();
             if ( references == null || references.length == 0 ) {
