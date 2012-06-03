@@ -92,24 +92,26 @@ public class SortingServiceTracker<T>
      * Return a sorted list of the services.
      */
     public List<T> getSortedServices() {
-        if ( this.sortedServiceCache == null || this.lastCount < this.getTrackingCount() ) {
+        List<T> result = this.sortedServiceCache;
+        if ( result == null || this.lastCount < this.getTrackingCount() ) {
             this.lastCount = this.getTrackingCount();
             final ServiceReference[] references = this.getServiceReferences();
             if ( references == null || references.length == 0 ) {
-                this.sortedServiceCache = Collections.emptyList();
+                result = Collections.emptyList();
             } else {
                 Arrays.sort(references);
-                this.sortedServiceCache = new ArrayList<T>();
+                result = new ArrayList<T>();
                 for(int i=0;i<references.length;i++) {
                     @SuppressWarnings("unchecked")
                     final T service = (T)this.getService(references[references.length - 1 - i]);
                     if ( service != null ) {
-                        this.sortedServiceCache.add(service);
+                        result.add(service);
                     }
                 }
             }
+            this.sortedServiceCache = result;
         }
-        return this.sortedServiceCache;
+        return result;
     }
 
     /**
