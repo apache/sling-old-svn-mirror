@@ -118,19 +118,21 @@ public class SortingServiceTracker<T>
      * Return a sorted list of the services references.
      */
     public List<ServiceReference> getSortedServiceReferences() {
+        List<ServiceReference> result = this.sortedReferences;
         if ( this.sortedReferences == null || this.lastRefCount < this.getTrackingCount() ) {
             this.lastRefCount = this.getTrackingCount();
             final ServiceReference[] references = this.getServiceReferences();
             if ( references == null || references.length == 0 ) {
-                this.sortedReferences = Collections.emptyList();
+                result = Collections.emptyList();
             } else {
                 Arrays.sort(references);
-                this.sortedReferences = new ArrayList<ServiceReference>();
+                result = new ArrayList<ServiceReference>();
                 for(int i=0;i<references.length;i++) {
-                    this.sortedReferences.add(references[references.length - 1 - i]);
+                    result.add(references[references.length - 1 - i]);
                 }
             }
+            this.sortedReferences = result;
         }
-        return this.sortedReferences;
+        return result;
     }
 }
