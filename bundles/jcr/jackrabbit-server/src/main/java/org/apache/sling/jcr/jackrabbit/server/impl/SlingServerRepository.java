@@ -31,6 +31,8 @@ import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
+import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -39,6 +41,7 @@ import org.apache.sling.jcr.jackrabbit.server.impl.security.AdministrativeCreden
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AnonCredentials;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
 
 /**
@@ -53,7 +56,7 @@ import org.osgi.service.log.LogService;
  *      value="Factory for embedded Jackrabbit Repository Instances"
  */
 public class SlingServerRepository extends AbstractSlingRepository
-        implements Repository, SlingRepository {
+        implements Repository, SlingRepository, RepositoryManager {
 
     /**
      * The name of the configuration property defining the URL to the
@@ -205,7 +208,47 @@ public class SlingServerRepository extends AbstractSlingRepository
     }
 
 
+    //---------- Repository Manager Interface Methods -------------------------
 
+    /**
+     * @throws UnsupportedOperationException This method is not supported
+     *      in this context.
+     */
+    public void stop() {
+        throw new UnsupportedOperationException("Not allowed to manually stop the repository");
+    }
+
+    public DataStoreGarbageCollector createDataStoreGarbageCollector() throws RepositoryException {
+        RepositoryImpl repository = (RepositoryImpl) getRepository();
+        if (repository != null) {
+            return repository.createDataStoreGarbageCollector();
+        }
+
+        throw new RepositoryException("Repository couldn't be acquired");
+    }
+
+    /**
+     * Overrides the registerService method of <code>AbstractSlingRepository</code>, in order to register
+     * <code>org.apache.jackrabbit.api.management.RepositoryManager</code> Service using the
+     * component properties as service registration properties.
+     *
+     * @return The OSGi <code>ServiceRegistration</code> object representing
+     *         the registered service.
+     *
+     * @see org.apache.sling.jcr.base.AbstractSlingRepository#registerService()
+     */
+    @Override
+    protected ServiceRegistration registerService() {
+
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> props = getComponentContext().getProperties();
+
+        String[] interfaces = new String[] {
+            SlingRepository.class.getName(), Repository.class.getName(), RepositoryManager.class.getName()
+        };
+
+        return getComponentContext().getBundleContext().registerService(interfaces, this, props);
+    }
 
     //---------- Helper -------------------------------------------------------
 
