@@ -94,9 +94,10 @@ public class InternalResource extends InstallableResource {
         if ( is != null &&
              (InstallableResource.TYPE_PROPERTIES.equals(type) ||
               ((type == null || InstallableResource.TYPE_FILE.equals(type)) && isConfigExtension(resource.getId())))) {
-            dict = readDictionary(is, getExtension(resource.getId()));
-            if ( dict == null ) {
-                throw new IOException("Unable to read dictionary from input stream: " + resource.getId());
+            try {
+                dict = readDictionary(is, getExtension(resource.getId()));
+            } catch (final IOException ioe) {
+                throw (IOException)new IOException("Unable to read dictionary from input stream: " + resource.getId()).initCause(ioe);
             }
             is = null;
         }
@@ -214,11 +215,11 @@ public class InternalResource extends InstallableResource {
      * - *.config files are handled by the Apache Felix ConfigAdmin file reader
      * @param is
      * @param extension
-     * @return
      * @throws IOException
      */
     private static Dictionary<String, Object> readDictionary(
-            final InputStream is, final String extension) {
+            final InputStream is, final String extension)
+    throws IOException {
         final Hashtable<String, Object> ht = new Hashtable<String, Object>();
         final InputStream in = new BufferedInputStream(is);
         try {
@@ -246,8 +247,6 @@ public class InternalResource extends InstallableResource {
                     ht.put(key, config.get(key));
                 }
             }
-        } catch ( IOException ignore ) {
-            return null;
         } finally {
             try { in.close(); } catch (IOException ignore) {}
         }
