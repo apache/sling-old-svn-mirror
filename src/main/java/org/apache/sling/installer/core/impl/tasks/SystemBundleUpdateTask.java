@@ -36,6 +36,8 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "99-";
 
+    private static final String SYSTEM_BUNDLE_UPDATE_ORDER = BUNDLE_UPDATE_ORDER + "systembundle(0)";
+
     private final BundleTaskCreator creator;
 
     public SystemBundleUpdateTask(final TaskResourceGroup r,
@@ -59,7 +61,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
                 @Override
                 public String getSortKey() {
-                    return BUNDLE_UPDATE_ORDER + getResource().getURL();
+                    return SYSTEM_BUNDLE_UPDATE_ORDER;
                 }
 
                 @Override
@@ -118,6 +120,9 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
     @Override
     public String getSortKey() {
+        if ( getResource() == null ) {
+            return SYSTEM_BUNDLE_UPDATE_ORDER;
+        }
         return BUNDLE_UPDATE_ORDER + getResource().getURL();
     }
 }
