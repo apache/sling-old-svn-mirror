@@ -82,8 +82,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
      * effectively use this instance the user Id with optional password and/or
      * the credentials should be set.
      *
-     * @param authType The authentication type.  Can be <code>null</code> to
-     *                 indicate anonymous access.
+     * @param authType The authentication type, must not be <code>null</code>.
      */
     public AuthenticationInfo(final String authType) {
         this(authType, null, null);
@@ -133,7 +132,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
 
     /**
      * Returns the authentication type stored as the {@link #AUTH_TYPE} property
-     * in this map.
+     * in this map. This value is expected to never be <code>null</code>.
      * <p>
      * If authentication is taking place through one of the standard ways, such
      * as Basic or Digest, the return value is one of the predefined constants
@@ -210,7 +209,7 @@ public class AuthenticationInfo extends HashMap<String, Object> {
     @Override
     public Object put(final String key, final Object value) {
 
-        if (AUTH_TYPE.equals(key) && !(value == null || value instanceof String)) {
+        if (AUTH_TYPE.equals(key) && !(value instanceof String)) {
             throw new IllegalArgumentException(AUTH_TYPE
                 + " property must be a String");
         }
