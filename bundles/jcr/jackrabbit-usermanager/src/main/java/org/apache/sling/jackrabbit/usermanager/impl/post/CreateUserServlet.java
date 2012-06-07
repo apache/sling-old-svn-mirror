@@ -41,6 +41,7 @@ import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourc
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.servlets.post.Modification;
+import org.apache.sling.servlets.post.ModificationType;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 import org.osgi.service.component.ComponentContext;
@@ -207,10 +208,23 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
                             request.getRequestParameterMap(), 
                             changes);
         
-        String userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
-                + user.getID();
-        response.setPath(userPath);
-        response.setLocation(externalizePath(request, userPath));
+        String userPath = null;
+        if (user == null) {
+            if (changes.size() > 0) {
+                Modification modification = changes.get(0);
+                if (modification.getType() == ModificationType.CREATE) {
+                    userPath = modification.getSource();
+                }
+            }
+        } else {
+            userPath = AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PREFIX
+                    + user.getID();
+        }
+        
+        if (userPath != null) {
+            response.setPath(userPath);
+            response.setLocation(externalizePath(request, userPath));
+        }
         response.setParentLocation(externalizePath(request,
             AuthorizableResourceProvider.SYSTEM_USER_MANAGER_USER_PATH));
     }
