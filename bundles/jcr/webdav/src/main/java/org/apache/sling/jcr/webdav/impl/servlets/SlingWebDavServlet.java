@@ -61,17 +61,10 @@ import org.osgi.service.http.NamespaceException;
  * The <code>SlingWebDavServlet</code> implements the WebDAV protocol as a
  * default servlet for Sling handling all WebDAV methods.
  *
- * @scr.component name="org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet"
- *                label="%dav.name" description="%dav.description"
- *                immediate="true"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="service.description" value="Sling WebDAV Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default" private="true"
- * @scr.property name="sling.servlet.methods" value="*" private="true"
  */
-@Component(name = "org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet", label = "%dav.name", description = "%dav.description", immediate = true)
+@Component(name = "org.apache.sling.jcr.webdav.impl.servlets.SimpleWebDavServlet",
+           label = "%dav.name", description = "%dav.description",
+           metatype = true, immediate = true)
 @Service(Servlet.class)
 @Properties({
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Sling WebDAV Servlet"),
@@ -273,7 +266,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     public void unbindCopyMoveHandler(final ServiceReference copyMoveHandlerReference) {
         this.copyMoveManager.unbindCopyMoveHandler(copyMoveHandlerReference);
     }
-    
+
     /** Overridden as the base class uses sendError that we don't want (SLING-2443) */
     @Override
     protected void sendUnauthorized(WebdavRequest request, WebdavResponse response, DavException error) throws IOException {
@@ -282,7 +275,7 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
         if (error != null) {
             response.getWriter().write(error.getStatusPhrase());
             response.getWriter().write("\n");
-        } 
+        }
         response.getWriter().flush();
     }
 }
