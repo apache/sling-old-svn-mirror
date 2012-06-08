@@ -155,6 +155,7 @@
         <module>bundles/scripting/javascript</module>
         <module>bundles/scripting/jsp</module>
         <module>bundles/scripting/jsp-taglib</module>
+        <module>bundles/scripting/jsp-jstl</module>
         
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
