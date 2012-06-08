@@ -33,9 +33,17 @@ public final class IsolatedClassLoader
 
     private final IOProvider ioProvider;
 
-    public IsolatedClassLoader(final IOProvider ioProvider) {
+    private final String className;
+
+    private final InputStream classInputStream;
+
+    public IsolatedClassLoader(final IOProvider ioProvider,
+                    final String className,
+                    final InputStream is) {
         super(ioProvider.getClassLoader());
         this.ioProvider = ioProvider;
+        this.classInputStream = is;
+        this.className = className;
     }
 
     //---------- Class loader overwrites -------------------------------------
@@ -52,7 +60,8 @@ public final class IsolatedClassLoader
      * @return    the resulting <code>Class</code> object
      * @exception ClassNotFoundException if the class could not be found
      */
-    public final Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+    public final Class<?> loadClass(final String name, final boolean resolve)
+    throws ClassNotFoundException {
         // First check if it's already loaded
         Class<?> clazz = findLoadedClass(name);
 
@@ -120,8 +129,18 @@ public final class IsolatedClassLoader
         final String path = ":/" + name.replace('.', '/') + ".class";
         InputStream is = null;
         try {
-            is = this.ioProvider.getInputStream(path);
-            final Class<?> c = defineClass(name, is);
+            final Class<?> c;
+            if ( name.equals( this.className ) ) {
+                c = defineClass(name, this.classInputStream);
+            } else {
+                is = this.ioProvider.getInputStream(path);
+                if ( is == null ) {
+                    c = null;
+                } else {
+                    c = defineClass(name, is);
+                }
+            }
+
             if (c == null) {
                 throw new ClassNotFoundException(name);
             }
@@ -130,6 +149,10 @@ public final class IsolatedClassLoader
             throw cnfe;
         } catch (final Throwable t) {
             throw new ClassNotFoundException(name, t);
+        } finally {
+            if ( is != null ) {
+                try { is.close(); } catch (final IOException ignore) {}
+            }
         }
      }
 

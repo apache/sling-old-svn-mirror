@@ -541,7 +541,7 @@ class TagFileProcessor {
                 wrapper = new JspServletWrapper(ctxt.getServletContext(), ctxt
                         .getOptions(), tagFilePath, tagInfo, ctxt
                         .getRuntimeContext(), ctxt.getTagFileJarUrl(tagFilePath));
-                rctxt.addWrapper(tagFilePath, wrapper);
+                wrapper = rctxt.addWrapper(tagFilePath, wrapper);
 
                 // Use same classloader and classpath for compiling tag files
                 //wrapper.getJspEngineContext().setClassLoader(ctxt.getClassLoader());

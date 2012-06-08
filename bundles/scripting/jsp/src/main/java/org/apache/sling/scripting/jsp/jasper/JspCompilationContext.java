@@ -503,7 +503,6 @@ public class JspCompilationContext {
         try {
             c.removeGeneratedFiles();
             c.compile();
-            this.getRuntimeContext().addJspDependencies(jsw);
         } catch (final JasperException ex) {
             return ex;
         } catch (final IOException ioe) {
