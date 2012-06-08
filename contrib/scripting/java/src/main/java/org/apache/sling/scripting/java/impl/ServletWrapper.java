@@ -64,9 +64,6 @@ public class ServletWrapper {
 
     private final SlingScriptHelper scriptHelper;
 
-    /** Flag for handling modifications. */
-    private volatile long lastModificationTest = 0L;
-
     /**
      * The compiled and instantiated servlet. This field may be null in which case a new servlet
      * instance is created per request.
@@ -116,21 +113,6 @@ public class ServletWrapper {
                 available = 0;
             }
 
-            // check for compilation
-            if (this.lastModificationTest <= 0 ) {
-                synchronized (this) {
-                    if (this.lastModificationTest <= 0 ) {
-                        this.compile();
-                    } else if (compileException != null) {
-                        // Throw cached compilation exception
-                        throw compileException;
-                    }
-                }
-            } else if (compileException != null) {
-                // Throw cached compilation exception
-                throw compileException;
-            }
-
             final Servlet servlet = this.getServlet();
 
             // invoke the servlet
@@ -169,21 +151,13 @@ public class ServletWrapper {
     }
 
     /**
-     * Handle the modification.
-     */
-    public void handleModification() {
-        logger.debug("Received modification event for {}", this.sourcePath);
-        this.lastModificationTest = -1;
-    }
-
-    /**
      * Check if the used classloader is still valid
      */
     private boolean checkReload() {
         if ( theServlet != null && theServlet.getClass().getClassLoader() instanceof DynamicClassLoader ) {
             return !((DynamicClassLoader)theServlet.getClass().getClassLoader()).isLive();
         }
-        return false;
+        return theServlet == null;
     }
 
     /**
@@ -192,6 +166,9 @@ public class ServletWrapper {
      */
     public Servlet getServlet()
     throws Exception {
+        if ( this.compileException != null ) {
+            throw this.compileException;
+        }
         // check if the used class loader is still alive
         if (this.checkReload()) {
             synchronized (this) {
@@ -265,7 +242,7 @@ public class ServletWrapper {
         // clear exception
         this.compileException = null;
         try {
-            final CompilerOptions opts = (this.lastModificationTest == -1 ? this.ioProvider.getForceCompileOptions() : this.ioProvider.getOptions());
+            final CompilerOptions opts = this.ioProvider.getForceCompileOptions();
             final CompilationUnit unit = new CompilationUnit(this.sourcePath, className, ioProvider);
             final CompilationResult result = this.ioProvider.getCompiler().compile(new org.apache.sling.commons.compiler.CompilationUnit[] {unit},
                     opts);
@@ -287,8 +264,6 @@ public class ServletWrapper {
             // store exception for futher access attempts
             this.compileException = ex;
             throw ex;
-        } finally {
-            this.lastModificationTest = System.currentTimeMillis();
         }
     }
 

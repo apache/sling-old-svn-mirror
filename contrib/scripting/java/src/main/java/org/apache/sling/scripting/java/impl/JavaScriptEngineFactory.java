@@ -234,20 +234,13 @@ public class JavaScriptEngineFactory
             return wrapper;
         }
 
-        synchronized (this) {
-            wrapper = this.ioProvider.getServletCache().getWrapper(scriptName);
-            if (wrapper != null) {
-                return wrapper;
-            }
+        wrapper = new ServletWrapper(servletConfig,
+                                     ioProvider,
+                                     scriptName,
+                                     scriptHelper);
+        wrapper = this.ioProvider.getServletCache().addWrapper(scriptName, wrapper);
 
-            wrapper = new ServletWrapper(servletConfig,
-                                         ioProvider,
-                                         scriptName,
-                                         scriptHelper);
-            this.ioProvider.getServletCache().addWrapper(scriptName, wrapper);
-
-            return wrapper;
-        }
+        return wrapper;
     }
 
     /**
@@ -262,14 +255,7 @@ public class JavaScriptEngineFactory
     }
 
     private void handleModification(final String scriptName, final boolean remove) {
-        if ( remove ) {
-            this.ioProvider.getServletCache().removeWrapper(scriptName);
-        } else {
-            final ServletWrapper wrapper = this.ioProvider.getServletCache().getWrapper(scriptName);
-            if ( wrapper != null ) {
-                wrapper.handleModification();
-            }
-        }
+        this.ioProvider.getServletCache().removeWrapper(scriptName);
     }
 
     private static class JavaScriptEngine extends AbstractSlingScriptEngine {
