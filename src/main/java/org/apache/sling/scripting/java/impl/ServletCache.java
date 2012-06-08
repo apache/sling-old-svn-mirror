@@ -18,7 +18,6 @@
 package org.apache.sling.scripting.java.impl;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -29,7 +28,7 @@ public final class ServletCache {
     /**
      * Maps servlet source urls to servlet wrappers.
      */
-    private Map<String, ServletWrapper> servlets = new ConcurrentHashMap<String, ServletWrapper>();
+    private ConcurrentHashMap<String, ServletWrapper> servlets = new ConcurrentHashMap<String, ServletWrapper>();
 
     /**
      * Add a new ServletWrapper.
@@ -37,8 +36,12 @@ public final class ServletCache {
      * @param servletUri Servlet URI
      * @param sw Servlet wrapper
      */
-    public void addWrapper(String servletUri, ServletWrapper sw) {
-        servlets.put(servletUri, sw);
+    public ServletWrapper addWrapper(final String servletUri, final ServletWrapper sw) {
+        ServletWrapper previous = servlets.putIfAbsent(servletUri, sw);
+        if ( previous != null ) {
+            return previous;
+        }
+        return sw;
     }
 
     /**
@@ -47,7 +50,7 @@ public final class ServletCache {
      * @param servletUri Servlet URI
      * @return ServletWrapper
      */
-    public ServletWrapper getWrapper(String servletUri) {
+    public ServletWrapper getWrapper(final String servletUri) {
         return servlets.get(servletUri);
     }
 
@@ -56,7 +59,7 @@ public final class ServletCache {
      *
      * @param servletUri Servlet URI
      */
-    public void removeWrapper(String servletUri) {
+    public void removeWrapper(final String servletUri) {
         final ServletWrapper wrapper = servlets.remove(servletUri);
         if ( wrapper != null ) {
             wrapper.destroy();
