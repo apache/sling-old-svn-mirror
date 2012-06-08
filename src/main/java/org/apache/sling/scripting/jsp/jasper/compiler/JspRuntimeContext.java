@@ -222,7 +222,7 @@ public final class JspRuntimeContext {
     /**
      * Maps JSP pages to their JspServletWrapper's
      */
-    private final Map<String, JspServletWrapper> jsps = new ConcurrentHashMap<String, JspServletWrapper>();
+    private final ConcurrentHashMap<String, JspServletWrapper> jsps = new ConcurrentHashMap<String, JspServletWrapper>();
 
     /**
      * Maps dependencies to the using jsp.
@@ -231,8 +231,7 @@ public final class JspRuntimeContext {
 
     // ------------------------------------------------------ Public Methods
 
-    public void addJspDependencies(final JspServletWrapper jsw) {
-        final List<String> deps = jsw.getDependants();
+    public void addJspDependencies(final JspServletWrapper jsw, List<String> deps) {
         if ( deps != null ) {
             final String jspUri = jsw.getJspUri();
             synchronized ( depToJsp ) {
@@ -289,9 +288,13 @@ public final class JspRuntimeContext {
      * @param jspUri JSP URI
      * @param jsw Servlet wrapper for JSP
      */
-    public void addWrapper(final String jspUri, final JspServletWrapper jsw) {
-        jsps.put(jspUri, jsw);
-        addJspDependencies(jsw);
+    public JspServletWrapper addWrapper(final String jspUri, final JspServletWrapper jsw) {
+        final JspServletWrapper previous = jsps.putIfAbsent(jspUri, jsw);
+        if ( previous == null ) {
+            addJspDependencies(jsw, jsw.getDependants());
+            return jsw;
+        }
+        return previous;
     }
 
     /**

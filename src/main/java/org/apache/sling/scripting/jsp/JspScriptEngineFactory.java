@@ -249,21 +249,13 @@ public class JspScriptEngineFactory
             rctxt.removeWrapper(wrapper.getJspUri());
             this.renewJspRuntimeContext();
             rctxt = this.getJspRuntimeContext();
-            wrapper = null;
         }
 
-        synchronized (rctxt) {
-            wrapper = rctxt.getWrapper(scriptName);
-            if (wrapper != null) {
-                return wrapper;
-            }
-
-            wrapper = new JspServletWrapper(servletConfig, options,
+        wrapper = new JspServletWrapper(servletConfig, options,
                 scriptName, false, rctxt);
-            rctxt.addWrapper(scriptName, wrapper);
+        wrapper = rctxt.addWrapper(scriptName, wrapper);
 
-            return wrapper;
-        }
+        return wrapper;
     }
 
     private JspServletWrapper getJspWrapper(final SlingScriptHelper scriptHelper, final SlingBindings bindings)

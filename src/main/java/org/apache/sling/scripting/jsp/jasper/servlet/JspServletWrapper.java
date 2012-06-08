@@ -18,8 +18,9 @@
 package org.apache.sling.scripting.jsp.jasper.servlet;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.net.URLConnection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -85,7 +86,6 @@ public class JspServletWrapper {
     private final Options options;
     private final boolean isTagFile;
     private volatile JasperException compileException;
-    private volatile long lastModificationTest = -1L;
     private volatile int tripCount;
 
     private volatile List<String> dependents;
@@ -139,6 +139,7 @@ public class JspServletWrapper {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     private Servlet loadServlet()
     throws ServletException, IOException {
         Servlet servlet = null;
@@ -149,6 +150,11 @@ public class JspServletWrapper {
             if (annotationProcessor != null) {
                annotationProcessor.processAnnotations(servlet);
                annotationProcessor.postConstruct(servlet);
+            }
+            // update dependents
+            if (servlet != null && servlet instanceof JspSourceDependent) {
+                this.dependents = (List<String>) ((JspSourceDependent) servlet).getDependants();
+                this.ctxt.getRuntimeContext().addJspDependencies(this, this.dependents);
             }
         } catch (IllegalAccessException e) {
             throw new JasperException(e);
@@ -167,21 +173,9 @@ public class JspServletWrapper {
      * Compile (if needed) and load a tag file
      */
     public Class<?> loadTagFile() throws JasperException {
-        if (this.lastModificationTest <= 0) {
-            synchronized (this) {
-                if (this.lastModificationTest <= 0 ) {
-                    this.compileException = ctxt.compile();
-                    this.lastModificationTest = System.currentTimeMillis();
-                    if ( compileException != null ) {
-                        throw compileException;
-                    }
-                } else if ( compileException != null ) {
-                    // Throw cached compilation exception
-                    throw compileException;
-                }
-            }
-        } else {
-            if (compileException != null) {
+        synchronized (this) {
+            this.compileException = ctxt.compile();
+            if ( compileException != null ) {
                 throw compileException;
             }
         }
@@ -211,20 +205,41 @@ public class JspServletWrapper {
     public List<String> getDependants() {
         if ( this.dependents == null ) {
             try {
-                Object target;
+                Object target = null;
                 if (isTagFile) {
                     target = ctxt.load().newInstance();
                 } else {
                     // we load the servlet with a separate class loader
                     final String name = this.ctxt.getServletPackageName() + "." + this.ctxt.getServletClassName();
-                    final ClassLoader cl = new IsolatedClassLoader(this.ctxt.getRuntimeContext().getIOProvider());
-                    target = cl.loadClass(name).newInstance();
+                    // first check if the class is available
+                    final String path = ":/" + name.replace('.', '/') + ".class";
+                    InputStream is = null;
+                    try {
+                        is = this.ctxt.getRuntimeContext().getIOProvider().getInputStream(path);
+                        if ( is != null ) {
+                            // class file is available, try to load it
+                            final ClassLoader cl = new IsolatedClassLoader(this.ctxt.getRuntimeContext().getIOProvider(),
+                                            name, is);
+                            target = cl.loadClass(name).newInstance();
+                        }
+                    } catch ( final IOException ignore ) {
+                        // excepted
+                    } finally {
+                        if ( is != null ) {
+                            try { is.close(); } catch ( final IOException ioe ) {}
+                        }
+                    }
+
                 }
                 if (target != null && target instanceof JspSourceDependent) {
                     this.dependents = (List<String>) ((JspSourceDependent) target).getDependants();
                 }
             } catch (final Throwable ex) {
                 // ignore
+            }
+            // use empty list, until servlet is compiled and loaded
+            if ( this.dependents == null ) {
+                this.dependents = Collections.emptyList();
             }
         }
         return this.dependents;
@@ -279,20 +294,13 @@ public class JspServletWrapper {
             if ( include.startsWith("tld:") ) {
                 continue;
             }
-            try {
-                final URL includeUrl = ctxt.getResource(include);
-                if (includeUrl == null) {
-                    return true;
-                }
+            final long includeLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(include);
 
-                URLConnection includeUconn = includeUrl.openConnection();
-                long includeLastModified = includeUconn.getLastModified();
-                includeUconn.getInputStream().close();
-
-                if (includeLastModified > targetLastModified) {
-                    return true;
+            if (includeLastModified > targetLastModified) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Compiler: outdated: " + targetFile + " because of dependency " + include + " : "
+                            + targetLastModified + " - " + includeLastModified);
                 }
-            } catch (Exception e) {
                 return true;
             }
         }
