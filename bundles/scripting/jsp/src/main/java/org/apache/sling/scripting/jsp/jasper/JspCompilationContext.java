@@ -36,7 +36,6 @@ import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspUtil;
 import org.apache.sling.scripting.jsp.jasper.compiler.Localizer;
 import org.apache.sling.scripting.jsp.jasper.compiler.ServletWriter;
-import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 
 /**
  * A place holder for various things that are used through out the JSP
@@ -67,7 +66,6 @@ public class JspCompilationContext {
     private String contentType;
     private ServletWriter writer;
     private Options options;
-    private JspServletWrapper jsw;
     private Compiler jspCompiler;
 
     private String baseURI;
@@ -86,13 +84,11 @@ public class JspCompilationContext {
                                  boolean isErrPage,
                                  Options options,
                                  ServletContext context,
-                                 JspServletWrapper jsw,
                                  JspRuntimeContext rctxt) {
 
         this.jspUri = canonicalURI(jspUri);
         this.isErrPage = isErrPage;
         this.options = options;
-        this.jsw = jsw;
         this.context = context;
 
         this.baseURI = jspUri.substring(0, jspUri.lastIndexOf('/') + 1);
@@ -117,10 +113,9 @@ public class JspCompilationContext {
                                  TagInfo tagInfo,
                                  Options options,
                                  ServletContext context,
-                                 JspServletWrapper jsw,
                                  JspRuntimeContext rctxt,
                                  URL tagFileJarUrl) {
-        this(tagfile, false, options, context, jsw, rctxt);
+        this(tagfile, false, options, context, rctxt);
         this.isTagFile = true;
         this.tagInfo = tagInfo;
         this.tagFileJarUrl = tagFileJarUrl;
