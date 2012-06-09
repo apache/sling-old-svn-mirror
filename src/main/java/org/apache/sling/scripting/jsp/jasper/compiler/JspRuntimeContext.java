@@ -251,6 +251,10 @@ public final class JspRuntimeContext {
      * Handle jsp modifications
      */
     public boolean handleModification(final String scriptName) {
+        if ( log.isDebugEnabled() ) {
+            log.debug("Handling modification " + scriptName);
+        }
+
         JspServletWrapper wrapper = jsps.remove(scriptName);
 
         // first check if jsps contains this
@@ -274,8 +278,9 @@ public final class JspRuntimeContext {
      */
     private boolean invalidate(final JspServletWrapper wrapper) {
         if ( wrapper != null ) {
-            log.debug("Invalidating jsp " + wrapper.getJspUri());
-            this.ioProvider.delete(wrapper.getJspUri());
+            if ( log.isDebugEnabled() ) {
+                log.debug("Invalidating jsp " + wrapper.getJspUri());
+            }
             wrapper.destroy(true);
             return true;
         }

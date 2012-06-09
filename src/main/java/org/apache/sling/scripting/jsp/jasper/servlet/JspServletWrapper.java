@@ -19,7 +19,12 @@ package org.apache.sling.scripting.jsp.jasper.servlet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -44,7 +49,6 @@ import org.apache.sling.api.scripting.ScriptEvaluationException;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.scripting.jsp.SlingPageException;
-import org.apache.sling.scripting.jsp.jasper.IsolatedClassLoader;
 import org.apache.sling.scripting.jsp.jasper.JasperException;
 import org.apache.sling.scripting.jsp.jasper.JspCompilationContext;
 import org.apache.sling.scripting.jsp.jasper.Options;
@@ -78,13 +82,16 @@ public class JspServletWrapper {
     // Logger
     private final Log log = LogFactory.getLog(JspServletWrapper.class);
 
-    private Servlet theServlet;
-    private final String jspUri;
-    private final JspCompilationContext ctxt;
-    private long available = 0L;
     private final ServletConfig config;
     private final Options options;
     private final boolean isTagFile;
+    private final String jspUri;
+    private final JspCompilationContext ctxt;
+
+    private volatile Servlet theServlet;
+    private volatile Class<?> tagFileClass;
+
+    private volatile long available = 0L;
     private volatile JasperException compileException;
     private volatile int tripCount;
 
@@ -105,6 +112,9 @@ public class JspServletWrapper {
         this.ctxt = new JspCompilationContext(jspUri, isErrorPage, options,
 					 config.getServletContext(),
 					 this, rctxt);
+        if ( log.isDebugEnabled() ) {
+            log.debug("Creating new wrapper for servlet " + jspUri);
+        }
     }
 
     /**
@@ -124,6 +134,9 @@ public class JspServletWrapper {
         this.ctxt = new JspCompilationContext(jspUri, tagInfo, options,
 					 servletContext, this, rctxt,
 					 tagFileJarUrl);
+        if ( log.isDebugEnabled() ) {
+            log.debug("Creating new wrapper for tagfile " + jspUri);
+        }
     }
 
     public JspCompilationContext getJspEngineContext() {
@@ -145,6 +158,9 @@ public class JspServletWrapper {
         Servlet servlet = null;
 
         try {
+            if ( log.isDebugEnabled() ) {
+                log.debug("Loading servlet " + jspUri);
+            }
             servlet = (Servlet) ctxt.load().newInstance();
             AnnotationProcessor annotationProcessor = (AnnotationProcessor) config.getServletContext().getAttribute(AnnotationProcessor.class.getName());
             if (annotationProcessor != null) {
@@ -152,15 +168,22 @@ public class JspServletWrapper {
                annotationProcessor.postConstruct(servlet);
             }
             // update dependents
+            final List<String> oldDeps = this.dependents;
             if (servlet != null && servlet instanceof JspSourceDependent) {
                 this.dependents = (List<String>) ((JspSourceDependent) servlet).getDependants();
+                if ( this.dependents == null ) {
+                    this.dependents = Collections.EMPTY_LIST;
+                }
                 this.ctxt.getRuntimeContext().addJspDependencies(this, this.dependents);
             }
-        } catch (IllegalAccessException e) {
+            if ( !equals(oldDeps, this.dependents) ) {
+                this.persistDependencies();
+            }
+        } catch (final IllegalAccessException e) {
             throw new JasperException(e);
-        } catch (InstantiationException e) {
+        } catch (final InstantiationException e) {
             throw new JasperException(e);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new JasperException(e);
         }
 
@@ -170,17 +193,99 @@ public class JspServletWrapper {
     }
 
     /**
-     * Compile (if needed) and load a tag file
+     * Get the name of the dependencies file.
      */
-    public Class<?> loadTagFile() throws JasperException {
-        synchronized (this) {
-            this.compileException = ctxt.compile();
-            if ( compileException != null ) {
-                throw compileException;
-            }
+    public String getDependencyFilePath() {
+        final String name;
+        if (isTagFile) {
+            name = this.ctxt.getTagInfo().getTagClassName();
+        } else {
+            name = this.ctxt.getServletPackageName() + "." + this.ctxt.getServletClassName();
         }
 
-        return ctxt.load();
+        final String path = ":/" + name.replace('.', '/') + ".deps";
+        return path;
+    }
+
+    /**
+     * Persist dependencies
+     */
+    private void persistDependencies() {
+        final String path = this.getDependencyFilePath();
+        if ( log.isDebugEnabled() ) {
+            log.debug("Writing dependencies for " + jspUri);
+        }
+        if ( this.dependents != null && this.dependents.size() > 0 ) {
+            OutputStream os = null;
+            try {
+                os = this.ctxt.getRuntimeContext().getIOProvider().getOutputStream(path);
+                final OutputStreamWriter writer = new OutputStreamWriter(os, "UTF-8");
+                for(final String dep : this.dependents) {
+                    writer.write(dep);
+                    writer.write("\n");
+                }
+                writer.flush();
+            } catch ( final IOException ioe) {
+                log.warn("Unable to write dependenies file " + path + " : " + ioe.getMessage(), ioe);
+            } finally {
+                if ( os != null ) {
+                    try {
+                        os.close();
+                    } catch (final IOException ioe) {
+                        // ignore
+                    }
+                }
+            }
+        } else {
+            this.ctxt.getRuntimeContext().getIOProvider().delete(path);
+        }
+    }
+
+    /**
+     * Compile (if needed) and load a tag file
+     */
+    @SuppressWarnings("unchecked")
+    public Class<?> loadTagFile() throws JasperException {
+        if ( compileException != null ) {
+            throw compileException;
+        }
+
+        if ( this.tagFileClass == null ) {
+            synchronized (this) {
+                if ( this.tagFileClass == null ) {
+                    if ( log.isDebugEnabled() ) {
+                        log.debug("Compiling tagfile " + jspUri);
+                    }
+                    this.compileException = ctxt.compile();
+                    if ( compileException != null ) {
+                        throw compileException;
+                    }
+                    if ( log.isDebugEnabled() ) {
+                        log.debug("Loading tagfile " + jspUri);
+                    }
+                    this.tagFileClass = this.ctxt.load();
+                    try {
+                        final Object tag = this.tagFileClass.newInstance();
+                        // update dependents
+                        final List<String> oldDeps = this.dependents;
+                        if (tag != null && tag instanceof JspSourceDependent) {
+                            this.dependents = (List<String>) ((JspSourceDependent) tag).getDependants();
+                            this.ctxt.getRuntimeContext().addJspDependencies(this, this.dependents);
+                            if ( this.dependents == null ) {
+                                this.dependents = Collections.EMPTY_LIST;
+                            }
+                        }
+                        if ( !equals(oldDeps, this.dependents) ) {
+                            this.persistDependencies();
+                        }
+                        this.persistDependencies();
+                    } catch (final Throwable t) {
+                        // ignore
+                    }
+                }
+            }
+        }
+        return this.tagFileClass;
     }
 
     /**
@@ -201,42 +306,33 @@ public class JspServletWrapper {
     /**
      * Get a list of files that the current page has source dependency on.
      */
-    @SuppressWarnings("unchecked")
     public List<String> getDependants() {
         if ( this.dependents == null ) {
+            // we load the deps file
+            final String path = this.getDependencyFilePath();
+            InputStream is = null;
             try {
-                Object target = null;
-                if (isTagFile) {
-                    target = ctxt.load().newInstance();
-                } else {
-                    // we load the servlet with a separate class loader
-                    final String name = this.ctxt.getServletPackageName() + "." + this.ctxt.getServletClassName();
-                    // first check if the class is available
-                    final String path = ":/" + name.replace('.', '/') + ".class";
-                    InputStream is = null;
-                    try {
-                        is = this.ctxt.getRuntimeContext().getIOProvider().getInputStream(path);
-                        if ( is != null ) {
-                            // class file is available, try to load it
-                            final ClassLoader cl = new IsolatedClassLoader(this.ctxt.getRuntimeContext().getIOProvider(),
-                                            name, is);
-                            target = cl.loadClass(name).newInstance();
-                        }
-                    } catch ( final IOException ignore ) {
-                        // excepted
-                    } finally {
-                        if ( is != null ) {
-                            try { is.close(); } catch ( final IOException ioe ) {}
-                        }
+                is = this.ctxt.getRuntimeContext().getIOProvider().getInputStream(path);
+                if ( is != null ) {
+                    if ( log.isDebugEnabled() ) {
+                        log.debug("Loading dependencies for " + jspUri);
                     }
-
+                    this.dependents = new ArrayList<String>();
+                    final InputStreamReader reader = new InputStreamReader(is, "UTF-8");
+                    final LineNumberReader lnr = new LineNumberReader(reader);
+                    String line;
+                    while ( (line = lnr.readLine()) != null ) {
+                        this.dependents.add(line.trim());
+                    }
                 }
-                if (target != null && target instanceof JspSourceDependent) {
-                    this.dependents = (List<String>) ((JspSourceDependent) target).getDependants();
+            } catch ( final IOException ignore ) {
+                // excepted
+            } finally {
+                if ( is != null ) {
+                    try { is.close(); } catch ( final IOException ioe ) {}
                 }
-            } catch (final Throwable ex) {
-                // ignore
             }
+
             // use empty list, until servlet is compiled and loaded
             if ( this.dependents == null ) {
                 this.dependents = Collections.emptyList();
@@ -320,7 +416,9 @@ public class JspServletWrapper {
     throws IOException, ServletException {
         if ( isOutDated() ) {
             // Compile...
-            log.debug("Compiling " + this.jspUri);
+            if ( log.isDebugEnabled() ) {
+                log.debug("Compiling servlet " + this.jspUri);
+            }
             this.compileException = ctxt.compile();
             if ( compileException != null ) {
                 throw compileException;
@@ -328,7 +426,6 @@ public class JspServletWrapper {
         }
 
         // (Re)load servlet class file
-        log.debug("Loading " + this.jspUri);
         this.theServlet = this.loadServlet();
     }
 
@@ -429,26 +526,59 @@ public class JspServletWrapper {
         }
     }
 
-    public void destroy(boolean deleteGeneratedFiles) {
-        if (theServlet != null) {
+    /**
+     * Destroy this wrapper
+     * @param deleteGeneratedFiles Should generated files be deleted as well?
+     */
+    public void destroy(final boolean deleteGeneratedFiles) {
+        if ( this.isTagFile ) {
+            if ( log.isDebugEnabled() ) {
+                log.debug("Destroying tagfile " + jspUri);
+            }
+            this.tagFileClass = null;
             if ( deleteGeneratedFiles ) {
-                final org.apache.sling.scripting.jsp.jasper.compiler.Compiler c = this.ctxt.getCompiler();
-                if ( c != null ) {
-                    c.removeGeneratedFiles();
+                if ( log.isDebugEnabled() ) {
+                    log.debug("Deleting generated files for tagfile " + jspUri);
                 }
+                this.ctxt.getRuntimeContext().getIOProvider().delete(this.getDependencyFilePath());
             }
-            theServlet.destroy();
-            AnnotationProcessor annotationProcessor = (AnnotationProcessor) config.getServletContext().getAttribute(AnnotationProcessor.class.getName());
-            if (annotationProcessor != null) {
-                try {
-                    annotationProcessor.preDestroy(theServlet);
-                } catch (Exception e) {
-                    // Log any exception, since it can't be passed along
-                    log.error(Localizer.getMessage("jsp.error.file.not.found",
-                           e.getMessage()), e);
+        } else {
+            if ( log.isDebugEnabled() ) {
+                log.debug("Destroying servlet " + jspUri);
+            }
+            if (theServlet != null) {
+                if ( deleteGeneratedFiles ) {
+                    if ( log.isDebugEnabled() ) {
+                        log.debug("Deleting generated files for servlet " + jspUri);
+                    }
+                    final String name;
+                    if (isTagFile) {
+                        name = this.ctxt.getTagInfo().getTagClassName();
+                    } else {
+                        name = this.ctxt.getServletPackageName() + "." + this.ctxt.getServletClassName();
+                    }
+
+                    final String path = ":/" + name.replace('.', '/') + ".class";
+                    this.ctxt.getRuntimeContext().getIOProvider().delete(path);
+                    this.ctxt.getRuntimeContext().getIOProvider().delete(this.getDependencyFilePath());
+                    final org.apache.sling.scripting.jsp.jasper.compiler.Compiler c = this.ctxt.getCompiler();
+                    if ( c != null ) {
+                        c.removeGeneratedFiles();
+                    }
                 }
+                theServlet.destroy();
+                AnnotationProcessor annotationProcessor = (AnnotationProcessor) config.getServletContext().getAttribute(AnnotationProcessor.class.getName());
+                if (annotationProcessor != null) {
+                    try {
+                        annotationProcessor.preDestroy(theServlet);
+                    } catch (Exception e) {
+                        // Log any exception, since it can't be passed along
+                        log.error(Localizer.getMessage("jsp.error.file.not.found",
+                               e.getMessage()), e);
+                    }
+                }
+                theServlet = null;
             }
-            theServlet = null;
         }
     }
 
@@ -545,7 +675,7 @@ public class JspServletWrapper {
             return new SlingException(Localizer.getMessage
                     ("jsp.exception", detail.getJspFileName(),
                             "" + jspLineNumber), realException);
-        } catch (Exception je) {
+        } catch (final Exception je) {
             // If anything goes wrong, just revert to the original behaviour
             if (realException instanceof ServletException) {
                 return (ServletException)realException;
@@ -554,4 +684,26 @@ public class JspServletWrapper {
         }
     }
 
+    /**
+     * Compare the dependencies.
+     */
+    private boolean equals(final List<String> oldDeps, final List<String> newDeps) {
+        if ( oldDeps == null ) {
+            if ( newDeps == null || newDeps.size() == 0 ) {
+                return true;
+            }
+            return false;
+        }
+        if ( oldDeps.size() != newDeps.size() ) {
+            return false;
+        }
+        final Iterator<String> i1 = oldDeps.iterator();
+        final Iterator<String> i2 = newDeps.iterator();
+        while ( i1.hasNext() ) {
+            if ( !i1.next().equals(i2.next()) ) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

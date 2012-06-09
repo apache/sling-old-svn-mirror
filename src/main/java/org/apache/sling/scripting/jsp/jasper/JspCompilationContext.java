@@ -207,10 +207,6 @@ public class JspCompilationContext {
         return jspCompiler;
     }
 
-    public void reset() {
-        this.jspCompiler = null;
-    }
-
     /** ---------- Access resources in the webapp ---------- */
 
     /**
