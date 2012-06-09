@@ -111,7 +111,7 @@ public class JspServletWrapper {
         this.jspUri = jspUri;
         this.ctxt = new JspCompilationContext(jspUri, isErrorPage, options,
 					 config.getServletContext(),
-					 this, rctxt);
+					 rctxt);
         if ( log.isDebugEnabled() ) {
             log.debug("Creating new wrapper for servlet " + jspUri);
         }
@@ -132,7 +132,7 @@ public class JspServletWrapper {
         this.options = options;
         this.jspUri = tagFilePath;
         this.ctxt = new JspCompilationContext(jspUri, tagInfo, options,
-					 servletContext, this, rctxt,
+					 servletContext, rctxt,
 					 tagFileJarUrl);
         if ( log.isDebugEnabled() ) {
             log.debug("Creating new wrapper for tagfile " + jspUri);
