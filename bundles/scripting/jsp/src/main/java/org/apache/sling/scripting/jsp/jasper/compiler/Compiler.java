@@ -354,17 +354,7 @@ public abstract class Compiler {
      * Remove generated files
      */
     public void removeGeneratedFiles() {
-        try {
-            String classFileName = ctxt.getClassFileName();
-            if (classFileName != null) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Deleting " + classFileName);
-                }
-                ctxt.delete(classFileName);
-            }
-        } catch (Exception e) {
-            // Remove as much as possible, ignore possible exceptions
-        }
+        this.removeGeneratedClassFiles();
         try {
             String javaFileName = ctxt.getServletJavaFileName();
             if (javaFileName != null) {

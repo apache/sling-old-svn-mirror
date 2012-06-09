@@ -151,7 +151,7 @@ public class JspScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getParameter(String)
      */
-    public Object getParameter(String name) {
+    public Object getParameter(final String name) {
         if ("THREADING".equals(name)) {
             return "STATELESS";
         }
@@ -415,7 +415,7 @@ public class JspScriptEngineFactory
             super(JspScriptEngineFactory.this);
         }
 
-        public Object eval(Reader script, ScriptContext context)
+        public Object eval(final Reader script, final ScriptContext context)
                 throws ScriptException {
             Bindings props = context.getBindings(ScriptContext.ENGINE_SCOPE);
             SlingScriptHelper scriptHelper = (SlingScriptHelper) props.get(SLING);
@@ -469,7 +469,7 @@ public class JspScriptEngineFactory
         if (jrc != null) {
             try {
                 jrc.destroy();
-            } catch (NullPointerException npe) {
+            } catch (final NullPointerException npe) {
                 // SLING-530, might be thrown on system shutdown in a servlet
                 // container when using the Equinox servlet container bridge
                 logger.debug("deactivate: ServletContext might already be unavailable", npe);
@@ -526,6 +526,10 @@ public class JspScriptEngineFactory
         }
     }
 
+    /**
+     * Renew the jsp runtime context.
+     * A new context is created, the old context is destroyed in the background
+     */
     private void renewJspRuntimeContext() {
         final JspRuntimeContext jrc;
         synchronized ( this ) {
