@@ -18,6 +18,7 @@
  */
 package org.apache.sling.scripting.core.impl;
 
+import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
 import static org.apache.sling.api.scripting.SlingBindings.LOG;
 import static org.apache.sling.api.scripting.SlingBindings.OUT;
 import static org.apache.sling.api.scripting.SlingBindings.READER;
@@ -25,7 +26,6 @@ import static org.apache.sling.api.scripting.SlingBindings.REQUEST;
 import static org.apache.sling.api.scripting.SlingBindings.RESOURCE;
 import static org.apache.sling.api.scripting.SlingBindings.RESPONSE;
 import static org.apache.sling.api.scripting.SlingBindings.SLING;
-import static org.apache.sling.api.scripting.SlingBindings.FLUSH;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -182,6 +182,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         Bindings bindings = null;
         Reader reader = null;
         boolean disposeScriptHelper = !props.containsKey(SLING);
+        ResourceResolver oldResolver = null;
         try {
             bindings = verifySlingBindings(props);
 
@@ -343,6 +344,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
 
             // set the current resource resolver if a request is available from the bindings
             if ( props.getRequest() != null ) {
+                oldResolver = requestResourceResolver.get();
                 requestResourceResolver.set(props.getRequest().getResourceResolver());
             }
 
@@ -387,7 +389,9 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
                 cause);
 
         } finally {
-            requestResourceResolver.remove();
+            if ( props.getRequest() != null ) {
+                requestResourceResolver.set(oldResolver);
+            }
 
             // close the script reader (SLING-380)
             if (reader != null) {
