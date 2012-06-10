@@ -231,7 +231,7 @@ public final class JspRuntimeContext {
 
     // ------------------------------------------------------ Public Methods
 
-    public void addJspDependencies(final JspServletWrapper jsw, List<String> deps) {
+    public void addJspDependencies(final JspServletWrapper jsw, final List<String> deps) {
         if ( deps != null ) {
             final String jspUri = jsw.getJspUri();
             synchronized ( depToJsp ) {

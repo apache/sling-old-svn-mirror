@@ -54,12 +54,20 @@ class SlingIOProvider implements IOProvider {
         this.classLoaderWriter = classLoaderWriter;
     }
 
-    void setRequestResourceResolver(ResourceResolver resolver) {
+    /**
+     * Set the thread context resource resolver.
+     */
+    ResourceResolver setRequestResourceResolver(final ResourceResolver resolver) {
+        final ResourceResolver old = requestResourceResolver.get();
         requestResourceResolver.set(resolver);
+        return old;
     }
 
-    void resetRequestResourceResolver() {
-        requestResourceResolver.remove();
+    /**
+     * Reset the thread context resource resolver.
+     */
+    void resetRequestResourceResolver(final ResourceResolver resolver) {
+        requestResourceResolver.set(resolver);
     }
 
     // ---------- IOProvider interface -----------------------------------------
@@ -69,29 +77,27 @@ class SlingIOProvider implements IOProvider {
      * ResourceProvider and retrieved from the Resource if the StreamProvider
      * interface is implemented.
      */
-    public InputStream getInputStream(String fileName)
+    public InputStream getInputStream(final String path)
             throws FileNotFoundException, IOException {
-        if ( fileName.startsWith(":") ) {
-            return this.classLoaderWriter.getInputStream(fileName.substring(1));
+        if ( path.startsWith(":") ) {
+            return this.classLoaderWriter.getInputStream(path.substring(1));
         }
-        try {
-
-            Resource resource = getResourceInternal(fileName);
-            if (resource == null) {
-                throw new FileNotFoundException("Cannot find " + fileName);
+        ResourceResolver resolver = requestResourceResolver.get();
+        if (resolver != null) {
+            try {
+                final Resource resource = resolver.getResource(cleanPath(path, true));
+                if (resource != null) {
+                    final InputStream stream = resource.adaptTo(InputStream.class);
+                    if (stream != null) {
+                        return stream;
+                    }
+                }
+            } catch (final SlingException se) {
+                throw (IOException) new IOException(
+                    "Failed to get InputStream for " + path).initCause(se);
             }
-
-            InputStream stream = resource.adaptTo(InputStream.class);
-            if (stream == null) {
-                throw new FileNotFoundException("Cannot find " + fileName);
-            }
-
-            return stream;
-
-        } catch (SlingException se) {
-            throw (IOException) new IOException(
-                "Failed to get InputStream for " + fileName).initCause(se);
         }
+        throw new FileNotFoundException("Cannot find " + path);
     }
 
     /**
@@ -100,22 +106,23 @@ class SlingIOProvider implements IOProvider {
      * resource does not exist or an error occurrs finding the resource, -1 is
      * returned.
      */
-    public long lastModified(String fileName) {
-        if ( fileName.startsWith(":") ) {
-            return this.classLoaderWriter.getLastModified(fileName.substring(1));
+    public long lastModified(final String path) {
+        if ( path.startsWith(":") ) {
+            return this.classLoaderWriter.getLastModified(path.substring(1));
         }
-        try {
-            Resource resource = getResourceInternal(fileName);
-            if (resource != null) {
-                ResourceMetadata meta = resource.getResourceMetadata();
-                long modTime = meta.getModificationTime();
-                return (modTime > 0) ? modTime : 0;
+        ResourceResolver resolver = requestResourceResolver.get();
+        if (resolver != null) {
+            try {
+                final Resource resource = resolver.getResource(cleanPath(path, true));
+                if (resource != null) {
+                    ResourceMetadata meta = resource.getResourceMetadata();
+                    long modTime = meta.getModificationTime();
+                    return (modTime > 0) ? modTime : 0;
+                }
+            } catch (final SlingException se) {
+                log.error("Cannot get last modification time for " + path, se);
             }
-
-        } catch (SlingException se) {
-            log.error("Cannot get last modification time for " + fileName, se);
         }
-
         // fallback to "non-existant" in case of problems
         return -1;
     }
@@ -123,28 +130,28 @@ class SlingIOProvider implements IOProvider {
     /**
      * Removes the named item from the repository.
      */
-    public boolean delete(String fileName) {
-        return this.classLoaderWriter.delete(fileName.substring(1));
+    public boolean delete(final String path) {
+        return this.classLoaderWriter.delete(path.substring(1));
     }
 
     /**
      * Returns an output stream to write to the repository.
      */
-    public OutputStream getOutputStream(String fileName) {
-        return this.classLoaderWriter.getOutputStream(fileName.substring(1));
+    public OutputStream getOutputStream(final String path) {
+        return this.classLoaderWriter.getOutputStream(path.substring(1));
     }
 
     /**
      * Renames a node in the repository.
      */
-    public boolean rename(String oldFileName, String newFileName) {
+    public boolean rename(final String oldFileName, final String newFileName) {
         return this.classLoaderWriter.rename(oldFileName.substring(1), newFileName.substring(1));
     }
 
     /**
      * Creates a folder hierarchy in the repository.
      */
-    public boolean mkdirs(String path) {
+    public boolean mkdirs(final String path) {
         // we just do nothing
         return true;
     }
@@ -159,18 +166,22 @@ class SlingIOProvider implements IOProvider {
     // ---------- Helper Methods for JspServletContext -------------------------
 
 
-    /* package */URL getURL(String path) throws MalformedURLException {
-        try {
-            Resource resource = getResourceInternal(path);
-            return (resource != null) ? resource.adaptTo(URL.class) : null;
-        } catch (SlingException se) {
-            throw (MalformedURLException) new MalformedURLException(
-                "Cannot get URL for " + path).initCause(se);
+    URL getURL(final String path) throws MalformedURLException {
+        ResourceResolver resolver = requestResourceResolver.get();
+        if (resolver != null) {
+            try {
+                final Resource resource = resolver.getResource(cleanPath(path, true));
+                return (resource != null) ? resource.adaptTo(URL.class) : null;
+            } catch (final SlingException se) {
+                throw (MalformedURLException) new MalformedURLException(
+                    "Cannot get URL for " + path).initCause(se);
+            }
         }
+        return null;
     }
 
-    /* package */Set<String> getResourcePaths(String path) {
-        Set<String> paths = new HashSet<String>();
+    Set<String> getResourcePaths(final String path) {
+        final Set<String> paths = new HashSet<String>();
 
         ResourceResolver resolver = requestResourceResolver.get();
         if (resolver != null) {
@@ -190,7 +201,7 @@ class SlingIOProvider implements IOProvider {
                         }
                     }
                 }
-            } catch (SlingException se) {
+            } catch (final SlingException se) {
                 log.warn("getResourcePaths: Cannot list children of " + path,
                     se);
             }
@@ -199,18 +210,9 @@ class SlingIOProvider implements IOProvider {
         return paths.isEmpty() ? null : paths;
     }
 
-    private Resource getResourceInternal(String path) throws SlingException {
-        ResourceResolver resolver = requestResourceResolver.get();
-        if (resolver != null) {
-            return resolver.getResource(cleanPath(path, true));
-        }
-
-        return null;
-    }
-
     // ---------- internal -----------------------------------------------------
 
-    private String cleanPath(String path, boolean removeWebInfTags) {
+    private String cleanPath(String path, final boolean removeWebInfTags) {
         // replace backslash by slash
         path = path.replace('\\', '/');
 
