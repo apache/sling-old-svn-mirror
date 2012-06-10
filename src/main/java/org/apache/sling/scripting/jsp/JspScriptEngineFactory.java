@@ -165,6 +165,7 @@ public class JspScriptEngineFactory
      * @param scriptHelper
      * @param context
      */
+    @SuppressWarnings("unchecked")
     private void callErrorPageJsp(final Bindings bindings,
                                   final SlingScriptHelper scriptHelper,
                                   final ScriptContext context,
@@ -178,7 +179,7 @@ public class JspScriptEngineFactory
             resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
         }
         final SlingIOProvider io = this.ioProvider;
-        io.setRequestResourceResolver(resolver);
+        final ResourceResolver oldResolver = io.setRequestResourceResolver(resolver);
 		jspFactoryHandler.incUsage();
 		try {
 			final JspServletWrapper errorJsp = getJspWrapper(scriptName, slingBindings);
@@ -203,7 +204,7 @@ public class JspScriptEngineFactory
             request.removeAttribute("javax.servlet.jsp.jspException");
 		} finally {
 			jspFactoryHandler.decUsage();
-			io.resetRequestResourceResolver();
+			io.resetRequestResourceResolver(oldResolver);
 		}
      }
 
@@ -212,6 +213,7 @@ public class JspScriptEngineFactory
      * @throws SlingServletException
      * @throws SlingIOException
      */
+    @SuppressWarnings("unchecked")
     private void callJsp(final Bindings bindings,
                          final SlingScriptHelper scriptHelper,
                          final ScriptContext context) {
@@ -222,7 +224,7 @@ public class JspScriptEngineFactory
             resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
         }
         final SlingIOProvider io = this.ioProvider;
-        io.setRequestResourceResolver(resolver);
+        final ResourceResolver oldResolver = io.setRequestResourceResolver(resolver);
         jspFactoryHandler.incUsage();
         try {
             final SlingBindings slingBindings = new SlingBindings();
@@ -233,7 +235,7 @@ public class JspScriptEngineFactory
             jsp.service(slingBindings);
         } finally {
             jspFactoryHandler.decUsage();
-            io.resetRequestResourceResolver();
+            io.resetRequestResourceResolver(oldResolver);
         }
     }
 

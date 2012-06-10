@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.sling.scripting.jsp.jasper.servlet;
 
 import java.io.IOException;
@@ -278,7 +277,6 @@ public class JspServletWrapper {
                         if ( !equals(oldDeps, this.dependents) ) {
                             this.persistDependencies();
                         }
-                        this.persistDependencies();
                     } catch (final Throwable t) {
                         // ignore
                     }
@@ -308,34 +306,39 @@ public class JspServletWrapper {
      */
     public List<String> getDependants() {
         if ( this.dependents == null ) {
-            // we load the deps file
-            final String path = this.getDependencyFilePath();
-            InputStream is = null;
-            try {
-                is = this.ctxt.getRuntimeContext().getIOProvider().getInputStream(path);
-                if ( is != null ) {
-                    if ( log.isDebugEnabled() ) {
-                        log.debug("Loading dependencies for " + jspUri);
+            synchronized ( this ) {
+                if ( this.dependents == null ) {
+                    // we load the deps file
+                    final String path = this.getDependencyFilePath();
+                    InputStream is = null;
+                    try {
+                        is = this.ctxt.getRuntimeContext().getIOProvider().getInputStream(path);
+                        if ( is != null ) {
+                            if ( log.isDebugEnabled() ) {
+                                log.debug("Loading dependencies for " + jspUri);
+                            }
+                            final List<String> deps = new ArrayList<String>();
+                            final InputStreamReader reader = new InputStreamReader(is, "UTF-8");
+                            final LineNumberReader lnr = new LineNumberReader(reader);
+                            String line;
+                            while ( (line = lnr.readLine()) != null ) {
+                                deps.add(line.trim());
+                            }
+                            this.dependents = deps;
+                        }
+                    } catch ( final IOException ignore ) {
+                        // excepted
+                    } finally {
+                        if ( is != null ) {
+                            try { is.close(); } catch ( final IOException ioe ) {}
+                        }
                     }
-                    this.dependents = new ArrayList<String>();
-                    final InputStreamReader reader = new InputStreamReader(is, "UTF-8");
-                    final LineNumberReader lnr = new LineNumberReader(reader);
-                    String line;
-                    while ( (line = lnr.readLine()) != null ) {
-                        this.dependents.add(line.trim());
-                    }
-                }
-            } catch ( final IOException ignore ) {
-                // excepted
-            } finally {
-                if ( is != null ) {
-                    try { is.close(); } catch ( final IOException ioe ) {}
-                }
-            }
 
-            // use empty list, until servlet is compiled and loaded
-            if ( this.dependents == null ) {
-                this.dependents = Collections.emptyList();
+                    // use empty list, until servlet is compiled and loaded
+                    if ( this.dependents == null ) {
+                        this.dependents = Collections.emptyList();
+                    }
+                }
             }
         }
         return this.dependents;
@@ -357,19 +360,20 @@ public class JspServletWrapper {
         return jspUri;
     }
 
+    /**
+     * Check if the compiled class is still current
+     */
     private boolean isOutDated() {
-        final String jsp = ctxt.getJspFile();
-
-        long jspRealLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(jsp);
-
-        long targetLastModified = 0;
+        // check if class file exists
         final String targetFile = ctxt.getClassFileName();
-
-        targetLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(targetFile);
+        final long targetLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(targetFile);
         if (targetLastModified < 0) {
             return true;
         }
 
+        // compare jsp time stamp with class file time stamp
+        final String jsp = ctxt.getJspFile();
+        final long jspRealLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(jsp);
         if (targetLastModified < jspRealLastModified) {
             if (log.isDebugEnabled()) {
                 log.debug("Compiler: outdated: " + targetFile + " "
@@ -378,26 +382,25 @@ public class JspServletWrapper {
             return true;
         }
 
+        // check includes
         final List<String> depends = this.getDependants();
-        if (depends == null) {
-            return false;
-        }
-
-        final Iterator<String> it = depends.iterator();
-        while (it.hasNext()) {
-            final String include = it.next();
-            // ignore tag libs, we are reloaded if a taglib changes anyway
-            if ( include.startsWith("tld:") ) {
-                continue;
-            }
-            final long includeLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(include);
-
-            if (includeLastModified > targetLastModified) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Compiler: outdated: " + targetFile + " because of dependency " + include + " : "
-                            + targetLastModified + " - " + includeLastModified);
+        if (depends != null) {
+            final Iterator<String> it = depends.iterator();
+            while (it.hasNext()) {
+                final String include = it.next();
+                // ignore tag libs, we are reloaded if a taglib changes anyway
+                if ( include.startsWith("tld:") ) {
+                    continue;
                 }
-                return true;
+                final long includeLastModified = ctxt.getRuntimeContext().getIOProvider().lastModified(include);
+
+                if (includeLastModified > targetLastModified) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Compiler: outdated: " + targetFile + " because of dependency " + include + " : "
+                                + targetLastModified + " - " + includeLastModified);
+                    }
+                    return true;
+                }
             }
         }
 
