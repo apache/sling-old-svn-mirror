@@ -1,0 +1,199 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!--
+
+      Licensed to the Apache Software Foundation (ASF) under one
+      or more contributor license agreements.  See the NOTICE file
+      distributed with this work for additional information
+      regarding copyright ownership.  The ASF licenses this file
+      to you under the Apache License, Version 2.0 (the
+      "License"); you may not use this file except in compliance
+      with the License.  You may obtain a copy of the License at
+     
+        http://www.apache.org/licenses/LICENSE-2.0
+     
+      Unless required by applicable law or agreed to in writing,
+      software distributed under the License is distributed on an
+      "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+      KIND, either express or implied.  See the License for the
+      specific language governing permissions and limitations
+      under the License.
+
+-->
+<html xml:lang="en" lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<title>Login</title>
+
+    <link rel="stylesheet" type="text/css" href="${contextPath}/sling.css"/>
+<style type="text/css">
+body {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    color: black;
+    background-color: white;
+}
+
+.border {
+    border: 1px solid gray;
+    padding: 10px;
+}
+
+#loginform {
+    padding: 0px;
+    margin: 0px;
+}
+
+.openid_background {
+    background-image: url('http://wiki.openid.net/f/openid-16x16.gif');
+    background-repeat: no-repeat;
+    background-position: center left;
+    padding-left: 18px;
+}
+
+#openid_identifier {
+    width: 378px;
+}
+
+#err {
+    color: red;
+}
+.custom-header {
+    font-size: 1.25em;
+    padding-left: 10px;
+    padding-bottom: 5px;
+}
+</style>
+
+<script>
+
+      function init() {
+        var selectedAuthType = ${selectedAuthType};
+        if (!selectedAuthType || selectedAuthType == "form") {
+          useForm();
+        } else if (selectedAuthType == "openid") {
+          useOpenId();
+        }
+      }
+      
+      function selectProvider( /* Button */ provider, /* String */ url ) {
+        provider.form.openid_identifier.value = url;
+        return true;
+      }
+
+      function useOpenId() {
+	    document.getElementById("openIdForm").style.display = "block";
+	    document.getElementById("formForm").style.display = "none";
+        return false;
+      }
+
+      function useForm() {
+          document.getElementById("openIdForm").style.display = "none";
+          document.getElementById("formForm").style.display = "block";
+          return false;
+      }
+   </script>
+
+</head>
+
+<body onload="init();">
+
+    <div class="title">
+        <div class="logo">
+            <a href="http://sling.apache.org">
+                <img border="0" src="${contextPath}/sling-logo.png"/>
+            </a>
+        </div>
+    </div>
+    
+    <div class="menu">
+    </div>          
+
+<div class="main">
+  <div class="border">
+    <h3 id="custom-header">Sign In:</h3>
+
+    <p>
+    If you don't have an account, please <a href="${contextPath}/signup.html">sign up</a>.
+    </p>
+    
+    <div id="err">
+        <p>${j_reason}</p>
+    </div>
+        
+    <div id="formForm" style="display: none;">
+      <form id="formForm" method="post"
+        action="${requestContextPath}/j_security_check"
+        enctype="multipart/form-data" accept-charset="UTF-8">
+      
+        <input type="hidden" name="_charset_" value="UTF-8" />
+        <input type="hidden" name="resource" value="${resource}" />
+        <input type="hidden" name="selectedAuthType" value="form" />
+        
+        <table>
+          <tr>
+            <td><label for="j_username"><u>U</u>sername:</label></td>
+            <td><input id="j_username" name="j_username" type="text"
+              accesskey="u"/></td>
+          </tr>
+          <tr>
+            <td><label for="j_password"><u>P</u>assword:</label></td>
+            <td><input id="j_password" name="j_password" type="password"
+              accesskey="p"/></td>
+          </tr>
+        </table>
+          
+        <p class="buttongroup">
+          <a href="#" onclick="alert('Sorry this is not implemented yet');">Forgot your password?</a>
+        </p>
+        
+        <p class="buttongroup">
+          <button id="login" accesskey="l" class="form-button" type="submit"><u>L</u>ogin</button>
+          <a href="#" onclick="useOpenId();">or sign in with OpenID</a>
+        </p>
+      
+      </form>
+    </div>
+    
+    
+    <!-- OpenID form -->
+    
+    <div id="openIdForm" style="display: none;">
+      <form id="openIdForm" method="post"
+        action="${requestContextPath}/j_security_check"
+        enctype="multipart/form-data" accept-charset="UTF-8">
+      
+        <input type="hidden" name="_charset_" value="UTF-8" />
+        <input type="hidden" name="resource" value="${resource}" />
+        <input type="hidden" name="selectedAuthType" value="openid" />
+    
+        <table>
+          <tr>
+            <td>Provider:</td>
+            <td>
+                <button id="google" accesskey="g" class="form-button"
+                  onclick="return selectProvider(this, 'https://www.google.com/accounts/o8/id');"><u>G</u>oogle</button>
+                <button id="yahoo" accesskey="y" class="form-button"
+                  onclick="return selectProvider(this, 'https://me.yahoo.com/');"><u>Y</u>ahoo</button>
+                <button id="myopenid" accesskey="m" class="form-button"
+                  onclick="return selectProvider(this, 'https://www.myopenid.com/');"><u>M</u>yOpenID</button>
+              </td>
+          </tr>
+          <tr>
+            <td><label for="openid_identifier">OpenID:</label></td>
+            <td><input id="openid_identifier" name="openid_identifier" class="openid_background"
+              accesskey="i" onchange="changeField(this);" /></td>
+          </tr>
+        </table>
+
+        <p class="buttongroup">
+          <button id="login" accesskey="l" class="form-button" type="submit"><u>L</u>ogin</button>
+          <a href="#" onclick="useForm();">or go back to the normal login</a>
+        </p>
+        
+      </form>
+    </div>
+  </div>  
+</div>
+</body>
+</html>
+
