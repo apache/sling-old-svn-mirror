@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper.starresource;
-
-import java.util.Map;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
@@ -28,10 +26,10 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
-import org.apache.sling.api.resource.ValueMap;
 
-/** Used to provide the equivalent of an empty Node for GET requests
- *  to *.something (SLING-344)
+/**
+ * Used to provide the equivalent of an empty Node for GET requests to
+ * *.something (SLING-344)
  */
 @Adaptable(adaptableClass = Resource.class, adapters = @Adapter(value = { String.class }))
 public class StarResource extends SyntheticResource {
@@ -50,35 +48,39 @@ public class StarResource extends SyntheticResource {
         }
     }
 
-    /** True if a StarResource should be used for the given request, if
-     *  a real Resource was not found */
+    /**
+     * True if a StarResource should be used for the given request, if a real
+     * Resource was not found
+     */
     public static boolean appliesTo(String path) {
         return path.contains(SLASH_STAR) || path.endsWith(SLASH_STAR);
     }
 
     /**
      * Returns true if the path of the resource ends with the
-     * {@link #SLASH_STAR} and therefore should be considered a star
-     * resource.
+     * {@link #SLASH_STAR} and therefore should be considered a star resource.
      */
     public static boolean isStarResource(Resource res) {
         return res.getPath().endsWith(SLASH_STAR);
     }
 
     public StarResource(ResourceResolver resourceResolver, String path) {
-        super(resourceResolver, getResourceMetadata(path), DEFAULT_RESOURCE_TYPE);
+        super(resourceResolver, getResourceMetadata(path),
+                DEFAULT_RESOURCE_TYPE);
         resourceSuperType = UNSET_RESOURCE_SUPER_TYPE;
     }
 
     /**
-     * Calls {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)} method
-     * to dynamically resolve the resource super type of this star resource.
+     * Calls {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
+     * method to dynamically resolve the resource super type of this star
+     * resource.
      */
     public String getResourceSuperType() {
-        // Yes, this isn't how you're supposed to compare Strings, but this is intentional.
+        // Yes, this isn't how you're supposed to compare Strings, but this is
+        // intentional.
         if (resourceSuperType == UNSET_RESOURCE_SUPER_TYPE) {
-            resourceSuperType = ResourceUtil.getResourceSuperType(this.getResourceResolver(),
-                    this.getResourceType());
+            resourceSuperType = ResourceUtil.getResourceSuperType(
+                    this.getResourceResolver(), this.getResourceType());
         }
         return resourceSuperType;
     }
@@ -86,21 +88,22 @@ public class StarResource extends SyntheticResource {
     @Override
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
-        if ( type == String.class ) {
-            return (Type)"";
+        if (type == String.class) {
+            return (Type) "";
         }
         return super.adaptTo(type);
     }
 
     /** Get our ResourceMetadata for given path */
     static ResourceMetadata getResourceMetadata(String path) {
-    	ResourceMetadata result = new ResourceMetadata();
+        ResourceMetadata result = new ResourceMetadata();
 
-    	// The path is up to /*, what follows is pathInfo
+        // The path is up to /*, what follows is pathInfo
         final int index = path.indexOf(SLASH_STAR);
-        if(index >= 0) {
+        if (index >= 0) {
             result.setResolutionPath(path.substring(0, index) + SLASH_STAR);
-            result.setResolutionPathInfo(path.substring(index + SLASH_STAR.length()));
+            result.setResolutionPathInfo(path.substring(index
+                    + SLASH_STAR.length()));
         } else {
             result.setResolutionPath(path);
         }

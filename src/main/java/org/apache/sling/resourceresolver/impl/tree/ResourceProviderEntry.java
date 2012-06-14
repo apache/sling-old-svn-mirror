@@ -16,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.resourceresolver.impl.tree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +31,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,16 +39,9 @@ import org.slf4j.LoggerFactory;
  * The <code>ResourceProviderEntry</code> class represents a node in the tree of
  * resource providers spanned by the root paths of the provider resources.
  * <p>
- * This class is comparable to itself to help keep the child entries list sorted
- * by their prefix.
+ * This class is comparable to itself to help keep the child entries list sorted by their prefix.
  */
-public class ResourceProviderEntry implements
-        Comparable<ResourceProviderEntry> {
-
-    /**
-     *
-     */
-    private static final long serialVersionUID = 7420631325909144862L;
+public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> {
 
     private static Logger LOGGER = LoggerFactory.getLogger(ResourceProviderEntry.class);
 
@@ -64,7 +57,7 @@ public class ResourceProviderEntry implements
 
     // the resource provider kept in this entry supporting resources at and
     // below the path of this entry.
-    private WrappedResourceProvider[] providers = new WrappedResourceProvider[0];
+    private ProviderHandler[] providers = new ProviderHandler[0];
 
     private long ttime = 0L;
 
@@ -74,7 +67,7 @@ public class ResourceProviderEntry implements
 
     private long nreal = 0L;
 
-    private FastTreeMap storageMap = new FastTreeMap();
+    private final FastTreeMap storageMap = new FastTreeMap();
 
     private Collection<ResourceProviderEntry> storageMapValues = new ArrayList<ResourceProviderEntry>();
 
@@ -88,7 +81,7 @@ public class ResourceProviderEntry implements
      * @param providerList
      *            The resource provider to encapsulate by this entry.
      */
-    public ResourceProviderEntry(String path, ResourceProvider[] providerList) {
+    public ResourceProviderEntry(final String path, final ProviderHandler[] providerList) {
         if (path.endsWith("/")) {
             this.path = path.substring(0, path.length() - 1);
             this.prefix = path;
@@ -96,15 +89,11 @@ public class ResourceProviderEntry implements
             this.path = path;
             this.prefix = path + "/";
         }
-        if ( providerList != null ) {
-          providers = new WrappedResourceProvider[providerList.length];
-          for ( int i = 0; i < providerList.length; i++ ) {
-            if ( providerList[i] instanceof WrappedResourceProvider ) {
-              providers[i] = (WrappedResourceProvider) providerList[i];
-            } else {
-              providers[i] = new WrappedResourceProvider(providerList[i], null);
+        if (providerList != null) {
+            providers = new ProviderHandler[providerList.length];
+            for (int i = 0; i < providerList.length; i++) {
+                providers[i] = providerList[i];
             }
-          }
         }
 
         // this will consume slightly more memory but ensures read is fast.
@@ -112,14 +101,14 @@ public class ResourceProviderEntry implements
 
     }
 
-    String getPath() {
+    public String getPath() {
         return path;
     }
 
     /**
-     * Returns the resource provider contained in this entry
+     * Returns the resource providers contained in this entry
      */
-    public ResourceProvider[] getResourceProviders() {
+    public ProviderHandler[] getResourceProviders() {
         return providers;
     }
 
@@ -135,8 +124,8 @@ public class ResourceProviderEntry implements
      * @throws org.apache.sling.api.SlingException
      *             if an error occurrs trying to access an existing resource.
      */
-    public Resource getResource(ResourceResolver resourceResolver, String path) {
-        return getInternalResource(resourceResolver, path);
+    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
+        return getInternalResource(ctx, resourceResolver, path);
     }
 
     /**
@@ -146,38 +135,36 @@ public class ResourceProviderEntry implements
      *         subtree below this entry. Otherwise <code>false</code> is
      *         returned.
      */
-    public boolean addResourceProvider(String prefix, ResourceProvider provider, Comparable<?> comparable) {
-        synchronized (this) {
-            String[] elements = split(prefix, '/');
-            List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
-            entryPath.add(this); // add this the start so if the list is empty we have a position to add to
-            populateProviderPath(entryPath, elements);
-            for (int i = entryPath.size() - 1; i < elements.length; i++) {
-                String stubPrefix = elements[i];
-                ResourceProviderEntry rpe2 = new ResourceProviderEntry(
-                        stubPrefix, new ResourceProvider[0]);
-                entryPath.get(i).put(elements[i], rpe2);
-                entryPath.add(rpe2);
-            }
-            return entryPath.get(elements.length).addInternalProvider(new WrappedResourceProvider(provider, comparable));
-
+    public synchronized boolean addResourceProvider(final String prefix, final ProviderHandler provider) {
+        final String[] elements = split(prefix, '/');
+        final List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
+        entryPath.add(this); // add this the start so if the list is empty
+        // we have a position to add to
+        populateProviderPath(entryPath, elements);
+        for (int i = entryPath.size() - 1; i < elements.length; i++) {
+            final String stubPrefix = elements[i];
+            final ResourceProviderEntry rpe2 = new ResourceProviderEntry(stubPrefix, new ProviderHandler[0]);
+            entryPath.get(i).put(stubPrefix, rpe2);
+            entryPath.add(rpe2);
         }
+        return entryPath.get(elements.length).addInternalProvider(provider);
     }
 
-
-    //------------------ Map methods, here so that we can delegate 2 maps together
+    // ------------------ Map methods, here so that we can delegate 2 maps
+    // together
     @SuppressWarnings("unchecked")
-    public void put(String key, ResourceProviderEntry value) {
-        storageMap.put(key,value);
-        // get a thread safe copy, the ArrayList constructor does a toArray which is thread safe.
+    public void put(final String key, final ResourceProviderEntry value) {
+        storageMap.put(key, value);
+        // get a thread safe copy, the ArrayList constructor does a toArray
+        // which is thread safe.
         storageMapValues = new ArrayList<ResourceProviderEntry>(storageMap.values());
     }
 
-    public boolean containsKey(String key) {
+    public boolean containsKey(final String key) {
         return storageMap.containsKey(key);
     }
 
-    public ResourceProviderEntry get(String key) {
+    public ResourceProviderEntry get(final String key) {
         return (ResourceProviderEntry) storageMap.get(key);
     }
 
@@ -185,23 +172,20 @@ public class ResourceProviderEntry implements
         return storageMapValues;
     }
 
-    public boolean removeResourceProvider(String prefix,
-            ResourceProvider resourceProvider, Comparable<?> comparable) {
-        synchronized (this) {
-            String[] elements = split(prefix, '/');
-            List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
-            populateProviderPath(entryPath, elements);
-            if (entryPath.size() > 0 && entryPath.size() == elements.length) {
-                // the last element is a perfect match;
-                return entryPath.get(entryPath.size()-1).removeInternalProvider(new WrappedResourceProvider(resourceProvider, comparable));
-            }
-            return false;
+    public synchronized boolean removeResourceProvider(final String prefix, final ProviderHandler resourceProvider) {
+        final String[] elements = split(prefix, '/');
+        final List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
+        populateProviderPath(entryPath, elements);
+        if (entryPath.size() > 0 && entryPath.size() == elements.length) {
+            // the last element is a perfect match;
+            return entryPath.get(entryPath.size() - 1).removeInternalProvider(resourceProvider);
         }
+        return false;
     }
 
     // ---------- Comparable<ResourceProviderEntry> interface ------------------
 
-    public int compareTo(ResourceProviderEntry o) {
+    public int compareTo(final ResourceProviderEntry o) {
         return prefix.compareTo(o.prefix);
     }
 
@@ -210,69 +194,46 @@ public class ResourceProviderEntry implements
     /**
      * Adds a list of providers to this entry.
      *
-     * @param provider
+     * No sync required as this is called by a sync method!
      */
-    private boolean addInternalProvider(WrappedResourceProvider provider) {
-        synchronized (providers) {
-            int before = providers.length;
-            Set<WrappedResourceProvider> set = new HashSet<WrappedResourceProvider>();
-            if (providers != null) {
-                set.addAll(Arrays.asList(providers));
-            }
-            LOGGER.debug("Adding provider {} at {} ",provider,path);
-            set.add(provider);
-            providers = conditionalSort(set);
-            return providers.length > before;
+    private boolean addInternalProvider(final ProviderHandler provider) {
+        final int before = providers.length;
+        final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
+        if (providers != null) {
+            set.addAll(Arrays.asList(providers));
         }
-
+        LOGGER.debug("Adding provider {} at {} ", provider, path);
+        set.add(provider);
+        providers = conditionalSort(set);
+        return providers.length > before;
     }
 
     /**
-     * @param provider
-     * @return
+     * Remove a provider from the list of entries.
+     *
+     * No sync required as this is called by a sync method!
      */
-    private boolean removeInternalProvider(WrappedResourceProvider provider) {
-        synchronized (providers) {
-            int before = providers.length;
-            Set<WrappedResourceProvider> set = new HashSet<WrappedResourceProvider>();
-            if (providers != null) {
-                set.addAll(Arrays.asList(providers));
-            }
-            set.remove(provider);
-            providers = conditionalSort(set);
-            return providers.length < before;
+    private boolean removeInternalProvider(final ProviderHandler provider) {
+        final int before = providers.length;
+        final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
+        if (providers != null) {
+            set.addAll(Arrays.asList(providers));
         }
+        set.remove(provider);
+        providers = conditionalSort(set);
+        return providers.length < before;
     }
 
     /**
-     * @param set
-     * @return
+     * Return a sorted array of handlers.
      */
-    private WrappedResourceProvider[] conditionalSort(Set<WrappedResourceProvider> set) {
+    private ProviderHandler[] conditionalSort(final Set<ProviderHandler> set) {
 
-        List<WrappedResourceProvider> providerList = new ArrayList<WrappedResourceProvider>(
-                set);
+        final List<ProviderHandler> providerList = new ArrayList<ProviderHandler>(set);
 
-        Collections.sort(providerList, new Comparator<WrappedResourceProvider>() {
+        Collections.sort(providerList);
 
-            @SuppressWarnings("unchecked")
-            public int compare(WrappedResourceProvider o1, WrappedResourceProvider o2) {
-                Comparable c1 = o1.getComparable();
-                Comparable c2 = o2.getComparable();
-                if ( c1 == null && c2 == null ) {
-                  return 0;
-                }
-                if ( c1 == null ) {
-                  return -1;
-                }
-                if ( c2 == null ) {
-                  return 1;
-                }
-                return c1.compareTo(c2);
-            }
-        });
-
-        return set.toArray(new WrappedResourceProvider[set.size()]);
+        return providerList.toArray(new ProviderHandler[providerList.size()]);
     }
 
     /**
@@ -282,11 +243,10 @@ public class ResourceProviderEntry implements
      * @param fullPath
      *            the full path
      */
-    private void populateProviderPath(
-        List<ResourceProviderEntry> providerEntryPath, String[] elements) {
+    private void populateProviderPath(final List<ResourceProviderEntry> providerEntryPath, final String[] elements) {
         ResourceProviderEntry base = this;
         if (elements != null) {
-            for (String element : elements) {
+            for (final String element : elements) {
                 if (element != null) {
                     if (base.containsKey(element)) {
                         base = base.get(element);
@@ -299,7 +259,6 @@ public class ResourceProviderEntry implements
         }
     }
 
-
     /**
      * Resolve a resource from a path into a Resource
      *
@@ -309,41 +268,36 @@ public class ResourceProviderEntry implements
      *            the Full path
      * @return null if no resource was found, a resource if one was found.
      */
-    private Resource getInternalResource(ResourceResolver resourceResolver,
-            String fullPath) {
-        long start = System.currentTimeMillis();
+    private Resource getInternalResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String fullPath) {
+        final long start = System.currentTimeMillis();
         try {
 
-            if (fullPath == null || fullPath.length() == 0
-                    || fullPath.charAt(0) != '/') {
+            if (fullPath == null || fullPath.length() == 0 || fullPath.charAt(0) != '/') {
                 nmiss++;
-                LOGGER.debug("Not absolute {} :{}",fullPath,(System.currentTimeMillis() - start));
+                LOGGER.debug("Not absolute {} :{}", fullPath, (System.currentTimeMillis() - start));
                 return null; // fullpath must be absolute
             }
-            String[] elements = split(fullPath, '/');
+            final String[] elements = split(fullPath, '/');
 
-            List<ResourceProviderEntry> list = new ArrayList<ResourceProviderEntry>();
+            final List<ResourceProviderEntry> list = new ArrayList<ResourceProviderEntry>();
             populateProviderPath(list, elements);
             // the path is in reverse order end first
 
-            for(int i = list.size()-1; i >= 0; i--) {
-                ResourceProvider[] rps = list.get(i).getResourceProviders();
-                for (ResourceProvider rp : rps) {
+            for (int i = list.size() - 1; i >= 0; i--) {
+                final ProviderHandler[] rps = list.get(i).getResourceProviders();
+                for (final ProviderHandler rp : rps) {
 
-                    Resource resource = rp.getResource(resourceResolver,
-                            fullPath);
+                    final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
                     if (resource != null) {
                         nreal++;
-                        LOGGER.debug("Resolved Full {} using {} from {} ",new Object[]{
-                                fullPath, rp, Arrays.toString(rps)});
+                        LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
                         return resource;
                     }
                 }
             }
 
             // resolve against this one
-            final Resource resource = getResourceFromProviders(
-                resourceResolver, fullPath);
+            final Resource resource = getResourceFromProviders(ctx, resourceResolver, fullPath);
             if (resource != null) {
                 return resource;
             }
@@ -352,34 +306,29 @@ public class ResourceProviderEntry implements
             // resource Provider: libs/sling/servlet/default/GET.servlet
             // list will match libs, sling, servlet, default
             // and there will be no resource provider at the end
-            if (list.size() > 0 && list.size() == elements.length ) {
-                if ( list.get(list.size()-1).getResourceProviders().length == 0 ) {
+            if (list.size() > 0 && list.size() == elements.length) {
+                if (list.get(list.size() - 1).getResourceProviders().length == 0) {
                     nsynthetic++;
                     LOGGER.debug("Resolved Synthetic {}", fullPath);
-                    return new SyntheticResource(resourceResolver,
-                            fullPath,
-                            ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
+                    return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
                 }
             }
-
-
 
             LOGGER.debug("Resource null {} ", fullPath);
             nmiss++;
             return null;
-        } catch (Exception ex) {
-            LOGGER.debug("Failed! ",ex);
+        } catch (final Exception ex) {
+            LOGGER.debug("Failed! ", ex);
             return null;
         } finally {
             ttime += System.currentTimeMillis() - start;
         }
     }
 
-    Resource getResourceFromProviders(final ResourceResolver resourceResolver,
-            final String fullPath) {
-        ResourceProvider[] rps = getResourceProviders();
-        for (ResourceProvider rp : rps) {
-            Resource resource = rp.getResource(resourceResolver, fullPath);
+    public Resource getResourceFromProviders(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String fullPath) {
+        final ProviderHandler[] rps = getResourceProviders();
+        for (final ProviderHandler rp : rps) {
+            final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
             if (resource != null) {
                 nreal++;
                 LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
@@ -394,12 +343,12 @@ public class ResourceProviderEntry implements
      * @param sep
      * @return an array of the strings between the separator
      */
-    static String[] split(String st, char sep) {
+    public static String[] split(final String st, final char sep) {
 
         if (st == null) {
             return new String[0];
         }
-        char[] pn = st.toCharArray();
+        final char[] pn = st.toCharArray();
         if (pn.length == 0) {
             return new String[0];
         }
@@ -418,7 +367,7 @@ public class ResourceProviderEntry implements
                 n++;
             }
         }
-        String[] e = new String[n];
+        final String[] e = new String[n];
         int s = start;
         int j = 0;
         for (int i = start; i < end; i++) {
@@ -434,18 +383,17 @@ public class ResourceProviderEntry implements
     }
 
     public String getResolutionStats() {
-        long tot = nreal + nsynthetic + nmiss;
+        final long tot = nreal + nsynthetic + nmiss;
         if (tot == 0) {
             return null;
         }
-        float n = tot;
-        float t = ttime;
-        float persec = 1000 * n / t;
-        float avgtime = t / n;
+        final float n = tot;
+        final float t = ttime;
+        final float persec = 1000 * n / t;
+        final float avgtime = t / n;
 
-        String stat = "Resolved: Real(" + nreal + ") Synthetic(" + nsynthetic
-                + ") Missing(" + nmiss + ") Total(" + tot + ") at " + persec
-                + " ops/sec avg " + avgtime + " ms";
+        final String stat = "Resolved: Real(" + nreal + ") Synthetic(" + nsynthetic + ") Missing(" + nmiss + ") Total(" + tot + ") at "
+                        + persec + " ops/sec avg " + avgtime + " ms";
         ttime = nmiss = nsynthetic = nreal = 0L;
         return stat;
     }
@@ -458,7 +406,8 @@ public class ResourceProviderEntry implements
     @Override
     public String toString() {
         return this.path;
-        //"{path:\"" + this.path + "\", providers:"+Arrays.toString(getResourceProviders())+", map:" + storageMap.toString() + "}";
+        // "{path:\"" + this.path +
+        // "\", providers:"+Arrays.toString(getResourceProviders())+", map:" +
+        // storageMap.toString() + "}";
     }
-
 }

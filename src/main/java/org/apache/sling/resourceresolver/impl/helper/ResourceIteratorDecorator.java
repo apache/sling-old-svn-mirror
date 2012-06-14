@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.Iterator;
 
@@ -29,26 +29,31 @@ public class ResourceIteratorDecorator implements Iterator<Resource> {
 
     private final ResourceDecoratorTracker tracker;
 
-    private final String workspaceName;
-
     private final Iterator<Resource> iterator;
 
     public ResourceIteratorDecorator(final ResourceDecoratorTracker tracker,
-            final String workspaceName,
             final Iterator<Resource> iterator) {
         this.tracker = tracker;
         this.iterator = iterator;
-        this.workspaceName = workspaceName;
     }
 
+    /**
+     * @see java.util.Iterator#hasNext()
+     */
     public boolean hasNext() {
         return this.iterator.hasNext();
     }
 
+    /**
+     * @see java.util.Iterator#next()
+     */
     public Resource next() {
-        return this.tracker.decorate(this.iterator.next(), workspaceName);
+        return this.tracker.decorate(this.iterator.next());
     }
 
+    /**
+     * @see java.util.Iterator#remove()
+     */
     public void remove() {
         this.iterator.remove();
     }

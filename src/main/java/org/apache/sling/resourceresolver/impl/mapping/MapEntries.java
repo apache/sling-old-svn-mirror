@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.resourceresolver.impl.mapping;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -48,8 +48,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolver;
-import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
+import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
+import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -57,13 +57,20 @@ import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MapEntries implements EventHandler {
 
     public static final MapEntries EMPTY = new MapEntries();
+
+    private static final String PROP_REG_EXP = "sling:match";
+
+    public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
+
+    public static final String PROP_REDIRECT_EXTERNAL_STATUS = "sling:status";
+
+    public static final String PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS = "sling:redirectStatus";
 
     /** Key for the global list. */
     private static final String GLOBAL_LIST_KEY = "*";
@@ -77,7 +84,7 @@ public class MapEntries implements EventHandler {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private JcrResourceResolverFactoryImpl factory;
+    private ResourceResolverFactoryImpl factory;
 
     private volatile ResourceResolver resolver;
 
@@ -91,7 +98,7 @@ public class MapEntries implements EventHandler {
 
     private ServiceRegistration registration;
 
-    private ServiceTracker eventAdminTracker;
+    private EventAdmin eventAdmin;
 
     private final Semaphore initTrigger = new Semaphore(0);
 
@@ -107,18 +114,16 @@ public class MapEntries implements EventHandler {
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
         this.registration = null;
-        this.eventAdminTracker = null;
+        this.eventAdmin = null;
     }
 
     @SuppressWarnings("unchecked")
-    public MapEntries(final JcrResourceResolverFactoryImpl factory,
-                      final BundleContext bundleContext,
-                      final ServiceTracker eventAdminTracker)
-    throws LoginException {
+    public MapEntries(final ResourceResolverFactoryImpl factory, final BundleContext bundleContext, final EventAdmin eventAdmin)
+                    throws LoginException {
         this.resolver = factory.getAdministrativeResourceResolver(null);
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
-        this.eventAdminTracker = eventAdminTracker;
+        this.eventAdmin = eventAdmin;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
@@ -143,8 +148,7 @@ public class MapEntries implements EventHandler {
     }
 
     /**
-     * Signals the init method that a the doInit method should be
-     * called.
+     * Signals the init method that a the doInit method should be called.
      */
     private void triggerInit() {
         // only release if there is not one in the queue already
@@ -154,9 +158,9 @@ public class MapEntries implements EventHandler {
     }
 
     /**
-     * Runs as the method of the update thread. Waits for the triggerInit
-     * method to trigger a call to doInit. Terminates when the resolver
-     * has been null-ed after having been triggered.
+     * Runs as the method of the update thread. Waits for the triggerInit method
+     * to trigger a call to doInit. Terminates when the resolver has been
+     * null-ed after having been triggered.
      */
     void init() {
         while (this.resolver != null) {
@@ -171,16 +175,16 @@ public class MapEntries implements EventHandler {
     }
 
     /**
-     * Actual initializer. Guards itself agains concurrent use by
-     * using a ReentrantLock. Does nothing if the resource resolver
-     * has already been null-ed.
+     * Actual initializer. Guards itself agains concurrent use by using a
+     * ReentrantLock. Does nothing if the resource resolver has already been
+     * null-ed.
      */
     private void doInit() {
 
         this.initializing.lock();
         try {
             final ResourceResolver resolver = this.resolver;
-            final JcrResourceResolverFactoryImpl factory = this.factory;
+            final ResourceResolverFactoryImpl factory = this.factory;
             if (resolver == null || factory == null) {
                 return;
             }
@@ -224,19 +228,18 @@ public class MapEntries implements EventHandler {
      * Cleans up this class.
      */
     public void dispose() {
-        if ( this.registration != null ) {
+        if (this.registration != null) {
             this.registration.unregister();
             this.registration = null;
         }
 
         /*
-         * Cooperation with doInit: The same lock as used by doInit
-         * is acquired thus preventing doInit from running and waiting
-         * for a concurrent doInit to terminate.
-         * Once the lock has been acquired, the resource resolver is
-         * null-ed (thus causing the init to terminate when triggered
-         * the right after and prevent the doInit method from doing any
-         * thing).
+         * Cooperation with doInit: The same lock as used by doInit is acquired
+         * thus preventing doInit from running and waiting for a concurrent
+         * doInit to terminate. Once the lock has been acquired, the resource
+         * resolver is null-ed (thus causing the init to terminate when
+         * triggered the right after and prevent the doInit method from doing
+         * any thing).
          */
 
         // wait at most 10 seconds for a notifcation during initialization
@@ -274,7 +277,7 @@ public class MapEntries implements EventHandler {
 
         // clear the rest of the fields
         this.factory = null;
-        this.eventAdminTracker = null;
+        this.eventAdmin = null;
     }
 
     /**
@@ -282,7 +285,7 @@ public class MapEntries implements EventHandler {
      */
     public List<MapEntry> getResolveMaps() {
         final List<MapEntry> entries = new ArrayList<MapEntry>();
-        for(final List<MapEntry> list : this.resolveMapsMap.values()) {
+        for (final List<MapEntry> list : this.resolveMapsMap.values()) {
             entries.addAll(list);
         }
         Collections.sort(entries);
@@ -290,16 +293,14 @@ public class MapEntries implements EventHandler {
     }
 
     /**
-     * Calculate the resolve maps.
-     * As the entries have to be sorted by pattern length,
-     * we have to create a new list containing all
-     * relevant entries.
+     * Calculate the resolve maps. As the entries have to be sorted by pattern
+     * length, we have to create a new list containing all relevant entries.
      */
     public Iterator<MapEntry> getResolveMapsIterator(final String requestPath) {
         String key = null;
         final int firstIndex = requestPath.indexOf('/');
         final int secondIndex = requestPath.indexOf('/', firstIndex + 1);
-        if ( secondIndex != -1 ) {
+        if (secondIndex != -1) {
             key = requestPath.substring(secondIndex);
         }
 
@@ -314,8 +315,7 @@ public class MapEntries implements EventHandler {
 
     /**
      * Handles the change to any of the node properties relevant for vanity URL
-     * mappings. The
-     * {@link #MapEntries(JcrResourceResolverFactoryImpl, BundleContext, ServiceTracker)}
+     * mappings. The {@link #MapEntries(ResourceResolverFactoryImpl, BundleContext, EventAdmin)}
      * constructor makes sure the event listener is registered to only get
      * appropriate events.
      */
@@ -340,7 +340,7 @@ public class MapEntries implements EventHandler {
         boolean doInit = true;
         if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) && !path.startsWith(this.mapRoot)) {
             doInit = false;
-            for (String target : this.vanityTargets) {
+            for (final String target : this.vanityTargets) {
                 if (target.startsWith(path)) {
                     doInit = true;
                     break;
@@ -360,46 +360,43 @@ public class MapEntries implements EventHandler {
      * Send an OSGi event
      */
     private void sendChangeEvent() {
-        final EventAdmin ea = (EventAdmin) this.eventAdminTracker.getService();
-        if (ea != null) {
+        if (this.eventAdmin != null) {
             // we hard code the topic here and don't use
             // SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED
             // to avoid requiring the latest API version for this bundle to work
             final Event event = new Event("org/apache/sling/api/resource/ResourceResolverMapping/CHANGED",
-                (Dictionary<?, ?>) null);
-            ea.postEvent(event);
+                            (Dictionary<?, ?>) null);
+            this.eventAdmin.postEvent(event);
         }
     }
 
-    private void loadResolverMap(final ResourceResolver resolver,
-            List<MapEntry> entries,
-            Map<String, MapEntry> mapEntries) {
+    private void loadResolverMap(final ResourceResolver resolver, final List<MapEntry> entries, final Map<String, MapEntry> mapEntries) {
         // the standard map configuration
-        Resource res = resolver.getResource(mapRoot);
+        final Resource res = resolver.getResource(mapRoot);
         if (res != null) {
             gather(resolver, entries, mapEntries, res, "");
         }
     }
 
-    private void gather(final ResourceResolver resolver,
-            List<MapEntry> entries,
-            Map<String, MapEntry> mapEntries, Resource parent, String parentPath) {
+    private void gather(final ResourceResolver resolver, final List<MapEntry> entries, final Map<String, MapEntry> mapEntries,
+                    final Resource parent, final String parentPath) {
         // scheme list
-        Iterator<Resource> children = ResourceUtil.listChildren(parent);
+        final Iterator<Resource> children = parent.listChildren();
         while (children.hasNext()) {
             final Resource child = children.next();
             final ValueMap vm = ResourceUtil.getValueMap(child);
 
-            String name = vm.get(JcrResourceResolver.PROP_REG_EXP, String.class);
+            String name = vm.get(PROP_REG_EXP, String.class);
             boolean trailingSlash = false;
             if (name == null) {
-                name = ResourceUtil.getName(child).concat("/");
+                name = child.getName().concat("/");
                 trailingSlash = true;
             }
 
-            String childPath = parentPath.concat(name);
+            final String childPath = parentPath.concat(name);
 
-            // gather the children of this entry (only if child is not end hooked)
+            // gather the children of this entry (only if child is not end
+            // hooked)
             if (!childPath.endsWith("$")) {
 
                 // add trailing slash to child path to append the child
@@ -412,19 +409,16 @@ public class MapEntries implements EventHandler {
             }
 
             // add resolution entries for this node
-            final MapEntry childResolveEntry = MapEntry.createResolveEntry(childPath,
-                child, trailingSlash);
+            final MapEntry childResolveEntry = MapEntry.createResolveEntry(childPath, child, trailingSlash);
             if (childResolveEntry != null) {
                 entries.add(childResolveEntry);
             }
 
             // add map entries for this node
-            List<MapEntry> childMapEntries = MapEntry.createMapEntry(childPath,
-                child, trailingSlash);
+            final List<MapEntry> childMapEntries = MapEntry.createMapEntry(childPath, child, trailingSlash);
             if (childMapEntries != null) {
-                for (MapEntry mapEntry : childMapEntries) {
-                    addMapEntry(mapEntries, mapEntry.getPattern(),
-                        mapEntry.getRedirect()[0], mapEntry.getStatus());
+                for (final MapEntry mapEntry : childMapEntries) {
+                    addMapEntry(mapEntries, mapEntry.getPattern(), mapEntry.getRedirect()[0], mapEntry.getStatus());
                 }
             }
 
@@ -434,10 +428,9 @@ public class MapEntries implements EventHandler {
     /**
      * Add an entry to the resolve map.
      */
-    private void addEntry(final Map<String, List<MapEntry>> entryMap,
-            final String key, final MapEntry entry) {
+    private void addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
         List<MapEntry> entries = entryMap.get(key);
-        if ( entries == null ) {
+        if (entries == null) {
             entries = new ArrayList<MapEntry>();
             entryMap.put(key, entries);
         }
@@ -447,11 +440,10 @@ public class MapEntries implements EventHandler {
     }
 
     /**
-     * Load vanity paths
-     * Search for all nodes inheriting the sling:VanityPath mixin
+     * Load vanity paths Search for all nodes inheriting the sling:VanityPath
+     * mixin
      */
-    private Collection<String> loadVanityPaths(final ResourceResolver resolver,
-            final Map<String, List<MapEntry>> entryMap) {
+    private Collection<String> loadVanityPaths(final ResourceResolver resolver, final Map<String, List<MapEntry>> entryMap) {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Set<String> targetPaths = new HashSet<String>();
@@ -479,11 +471,13 @@ public class MapEntries implements EventHandler {
             final String[] pVanityPaths = props.get("sling:vanityPath", new String[0]);
             for (final String pVanityPath : pVanityPaths) {
                 final String[] result = this.getVanityPathDefinition(pVanityPath);
-                if ( result != null ) {
+                if (result != null) {
                     final String url = result[0] + result[1];
 
-                    // redirect target is the node providing the sling:vanityPath
-                    // property (or its parent if the node is called jcr:content)
+                    // redirect target is the node providing the
+                    // sling:vanityPath
+                    // property (or its parent if the node is called
+                    // jcr:content)
                     final String redirect;
                     if (resource.getName().equals("jcr:content")) {
                         redirect = resource.getParent().getPath();
@@ -492,22 +486,21 @@ public class MapEntries implements EventHandler {
                     }
 
                     // whether the target is attained by a 302/FOUND or by an
-                    // internal redirect is defined by the sling:redirect property
-                    final int status = props.get("sling:redirect", false)
-                            ? props.get(JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
-                            : -1;
+                    // internal redirect is defined by the sling:redirect
+                    // property
+                    final int status = props.get("sling:redirect", false) ? props.get(
+                                    PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
+                                    : -1;
 
-                    final String checkPath = result[1];
-                    // 1. entry with exact match
-                    this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect
-                            + ".html"));
+                                    final String checkPath = result[1];
+                                    // 1. entry with exact match
+                                    this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect + ".html"));
 
-                    // 2. entry with match supporting selectors and extension
-                    this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false,
-                            redirect + "$1"));
+                                    // 2. entry with match supporting selectors and extension
+                                    this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false, redirect + "$1"));
 
-                    // 3. keep the path to return
-                    targetPaths.add(redirect);
+                                    // 3. keep the path to return
+                                    targetPaths.add(redirect);
                 }
             }
         }
@@ -516,18 +509,17 @@ public class MapEntries implements EventHandler {
 
     /**
      * Create the vanity path definition. String array containing:
-     * {protocol}/{host}[.port]
-     * {absolute path}
+     * {protocol}/{host}[.port] {absolute path}
      */
     private String[] getVanityPathDefinition(final String pVanityPath) {
         String[] result = null;
-        if ( pVanityPath != null ) {
+        if (pVanityPath != null) {
             final String info = pVanityPath.trim();
-            if ( info.length() > 0 ) {
+            if (info.length() > 0) {
                 String prefix = null;
                 String path = null;
                 // check for url
-                if ( info.indexOf(":/") > - 1 ) {
+                if (info.indexOf(":/") > -1) {
                     try {
                         final URL u = new URL(info);
                         prefix = u.getProtocol() + '/' + u.getHost() + '.' + u.getPort();
@@ -537,7 +529,7 @@ public class MapEntries implements EventHandler {
                     }
                 } else {
                     prefix = "^" + ANY_SCHEME_HOST;
-                    if ( !info.startsWith("/") ) {
+                    if (!info.startsWith("/")) {
                         path = "/" + info;
                     } else {
                         path = info;
@@ -545,22 +537,21 @@ public class MapEntries implements EventHandler {
                 }
 
                 // remove extension
-                if ( prefix != null ) {
+                if (prefix != null) {
                     final int lastSlash = path.lastIndexOf('/');
                     final int firstDot = path.indexOf('.', lastSlash + 1);
-                    if ( firstDot != -1 ) {
+                    if (firstDot != -1) {
                         path = path.substring(0, firstDot);
                         log.warn("Removing extension from vanity path {}", pVanityPath);
                     }
-                    result = new String[] {prefix, path};
+                    result = new String[] { prefix, path };
                 }
             }
         }
         return result;
     }
 
-    private void loadConfiguration(final JcrResourceResolverFactoryImpl factory,
-            final List<MapEntry> entries) {
+    private void loadConfiguration(final ResourceResolverFactoryImpl factory, final List<MapEntry> entries) {
         // virtual uris
         final Map<?, ?> virtuals = factory.getVirtualURLMap();
         if (virtuals != null) {
@@ -579,11 +570,11 @@ public class MapEntries implements EventHandler {
         // URL Mappings
         final Mapping[] mappings = factory.getMappings();
         if (mappings != null) {
-            Map<String, List<String>> map = new HashMap<String, List<String>>();
-            for (Mapping mapping : mappings) {
+            final Map<String, List<String>> map = new HashMap<String, List<String>>();
+            for (final Mapping mapping : mappings) {
                 if (mapping.mapsInbound()) {
-                    String url = mapping.getTo();
-                    String alias = mapping.getFrom();
+                    final String url = mapping.getTo();
+                    final String alias = mapping.getFrom();
                     if (url.length() > 0) {
                         List<String> aliasList = map.get(url);
                         if (aliasList == null) {
@@ -596,22 +587,20 @@ public class MapEntries implements EventHandler {
             }
 
             for (final Entry<String, List<String>> entry : map.entrySet()) {
-                entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(),
-                        -1, false, entry.getValue().toArray(new String[0])));
+                entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(), -1, false, entry.getValue().toArray(new String[0])));
             }
         }
     }
 
-    private void loadMapConfiguration(JcrResourceResolverFactoryImpl factory,
-            Map<String, MapEntry> entries) {
+    private void loadMapConfiguration(final ResourceResolverFactoryImpl factory, final Map<String, MapEntry> entries) {
         // URL Mappings
-        Mapping[] mappings = factory.getMappings();
+        final Mapping[] mappings = factory.getMappings();
         if (mappings != null) {
             for (int i = mappings.length - 1; i >= 0; i--) {
-                Mapping mapping = mappings[i];
+                final Mapping mapping = mappings[i];
                 if (mapping.mapsOutbound()) {
-                    String url = mapping.getTo();
-                    String alias = mapping.getFrom();
+                    final String url = mapping.getTo();
+                    final String alias = mapping.getFrom();
                     if (!url.equals(alias)) {
                         addMapEntry(entries, alias, url, -1);
                     }
@@ -620,33 +609,31 @@ public class MapEntries implements EventHandler {
         }
 
         // virtual uris
-        Map<?, ?> virtuals = factory.getVirtualURLMap();
+        final Map<?, ?> virtuals = factory.getVirtualURLMap();
         if (virtuals != null) {
-            for (Entry<?, ?> virtualEntry : virtuals.entrySet()) {
-                String extPath = (String) virtualEntry.getKey();
-                String intPath = (String) virtualEntry.getValue();
+            for (final Entry<?, ?> virtualEntry : virtuals.entrySet()) {
+                final String extPath = (String) virtualEntry.getKey();
+                final String intPath = (String) virtualEntry.getValue();
                 if (!extPath.equals(intPath)) {
                     // this regular expression must match the whole URL !!
-                    String path = "^" + intPath + "$";
-                    String url = extPath;
+                    final String path = "^" + intPath + "$";
+                    final String url = extPath;
                     addMapEntry(entries, path, url, -1);
                 }
             }
         }
     }
 
-    private void addMapEntry(Map<String, MapEntry> entries, String path,
-            String url, int status) {
+    private void addMapEntry(final Map<String, MapEntry> entries, final String path, final String url, final int status) {
         MapEntry entry = entries.get(path);
         if (entry == null) {
             entry = new MapEntry(path, status, false, url);
         } else {
-            String[] redir = entry.getRedirect();
-            String[] newRedir = new String[redir.length + 1];
+            final String[] redir = entry.getRedirect();
+            final String[] newRedir = new String[redir.length + 1];
             System.arraycopy(redir, 0, newRedir, 0, redir.length);
             newRedir[redir.length] = url;
-            entry = new MapEntry(entry.getPattern(), entry.getStatus(),
-                false, newRedir);
+            entry = new MapEntry(entry.getPattern(), entry.getStatus(), false, newRedir);
         }
         entries.put(path, entry);
     }
@@ -658,19 +645,16 @@ public class MapEntries implements EventHandler {
      * updating the internal structure
      */
     private static String createFilter() {
-        final String[] nodeProps = {
-            "sling:vanityPath", "sling:vanityOrder", JcrResourceResolver.PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS,
-            JcrResourceResolver.PROP_REDIRECT_EXTERNAL, JcrResourceResolver.PROP_REDIRECT_INTERNAL,
-            JcrResourceResolver.PROP_REDIRECT_EXTERNAL_STATUS, JcrResourceResolver.PROP_REG_EXP
-        };
-        final String[] eventProps = {
-            "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes"
-        };
-        StringBuilder filter = new StringBuilder();
+        final String[] nodeProps = { "sling:vanityPath", "sling:vanityOrder",
+                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, PROP_REDIRECT_EXTERNAL,
+                        ResourceResolverImpl.PROP_REDIRECT_INTERNAL, PROP_REDIRECT_EXTERNAL_STATUS,
+                        PROP_REG_EXP };
+        final String[] eventProps = { "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes" };
+        final StringBuilder filter = new StringBuilder();
         filter.append("(|");
-        for (String eventProp : eventProps) {
+        for (final String eventProp : eventProps) {
             filter.append("(|");
-            for (String nodeProp : nodeProps) {
+            for (final String nodeProp : nodeProps) {
                 filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
             }
             filter.append(")");
@@ -689,7 +673,7 @@ public class MapEntries implements EventHandler {
 
         private MapEntry next;
 
-        private Iterator<MapEntry> globalListIterator;
+        private final Iterator<MapEntry> globalListIterator;
         private MapEntry nextGlobal;
 
         private Iterator<MapEntry> specialIterator;
@@ -702,7 +686,6 @@ public class MapEntries implements EventHandler {
             this.seek();
         }
 
-
         /**
          * @see java.util.Iterator#hasNext()
          */
@@ -714,7 +697,7 @@ public class MapEntries implements EventHandler {
          * @see java.util.Iterator#next()
          */
         public MapEntry next() {
-            if ( this.next == null ) {
+            if (this.next == null) {
                 throw new NoSuchElementException();
             }
             final MapEntry result = this.next;
@@ -730,28 +713,28 @@ public class MapEntries implements EventHandler {
         }
 
         private void seek() {
-            if ( this.nextGlobal == null && this.globalListIterator.hasNext() ) {
+            if (this.nextGlobal == null && this.globalListIterator.hasNext()) {
                 this.nextGlobal = this.globalListIterator.next();
             }
-            if ( this.nextSpecial == null ) {
-                if ( specialIterator != null && !specialIterator.hasNext() ) {
+            if (this.nextSpecial == null) {
+                if (specialIterator != null && !specialIterator.hasNext()) {
                     specialIterator = null;
                 }
-                while ( specialIterator == null && key != null ) {
+                while (specialIterator == null && key != null) {
                     // remove selectors and extension
                     final int lastSlashPos = key.lastIndexOf('/');
                     final int lastDotPos = key.indexOf('.', lastSlashPos);
-                    if ( lastDotPos != -1 ) {
+                    if (lastDotPos != -1) {
                         key = key.substring(0, lastDotPos);
                     }
                     final List<MapEntry> special = this.resolveMapsMap.get(key);
-                    if ( special != null ) {
+                    if (special != null) {
                         specialIterator = special.iterator();
                     }
                     // recurse to the parent
-                    if ( key.length() > 1 ) {
+                    if (key.length() > 1) {
                         final int lastSlash = key.lastIndexOf("/");
-                        if ( lastSlash == 0 ) {
+                        if (lastSlash == 0) {
                             key = null;
                         } else {
                             key = key.substring(0, lastSlash);
@@ -760,17 +743,17 @@ public class MapEntries implements EventHandler {
                         key = null;
                     }
                 }
-                if ( this.specialIterator != null && this.specialIterator.hasNext() ) {
+                if (this.specialIterator != null && this.specialIterator.hasNext()) {
                     this.nextSpecial = this.specialIterator.next();
                 }
             }
-            if ( this.nextSpecial == null ) {
+            if (this.nextSpecial == null) {
                 this.next = this.nextGlobal;
                 this.nextGlobal = null;
-            } else if ( this.nextGlobal == null ) {
+            } else if (this.nextGlobal == null) {
                 this.next = this.nextSpecial;
                 this.nextSpecial = null;
-            } else if ( this.nextGlobal.getPattern().length() >= this.nextSpecial.getPattern().length() ) {
+            } else if (this.nextGlobal.getPattern().length() >= this.nextSpecial.getPattern().length()) {
                 this.next = this.nextGlobal;
                 this.nextGlobal = null;
             } else {
