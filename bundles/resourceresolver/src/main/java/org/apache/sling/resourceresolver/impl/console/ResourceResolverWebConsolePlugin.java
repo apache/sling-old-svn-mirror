@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal;
+package org.apache.sling.resourceresolver.impl.console;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,25 +28,24 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
-import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.request.ResponseUtil;
-import org.apache.sling.jcr.resource.internal.helper.MapEntries;
-import org.apache.sling.jcr.resource.internal.helper.MapEntry;
-import org.apache.sling.jcr.resource.internal.helper.URI;
-import org.apache.sling.jcr.resource.internal.helper.URIException;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
+import org.apache.sling.resourceresolver.impl.helper.URI;
+import org.apache.sling.resourceresolver.impl.helper.URIException;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
-public class JcrResourceResolverWebConsolePlugin extends
-        HttpServlet {
+public class ResourceResolverWebConsolePlugin extends HttpServlet {
 
     private static final long serialVersionUID = 0;
 
@@ -57,29 +56,28 @@ public class JcrResourceResolverWebConsolePlugin extends
     private static final String PAR_MSG = "msg";
     private static final String PAR_TEST = "test";
 
-    private final transient JcrResourceResolverFactoryImpl resolverFactory;
+    private final transient ResourceResolverFactoryImpl resolverFactory;
 
     private transient ServiceRegistration service;
 
-    JcrResourceResolverWebConsolePlugin(BundleContext context,
-            JcrResourceResolverFactoryImpl resolverFactory) {
+    public ResourceResolverWebConsolePlugin(BundleContext context,
+            ResourceResolverFactoryImpl resolverFactory) {
         this.resolverFactory = resolverFactory;
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_DESCRIPTION,
-            "JCRResourceResolver Web Console Plugin");
+                "Resource Resolver Web Console Plugin");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", "jcrresolver");
         props.put("felix.webconsole.title", "Sling Resource Resolver");
         props.put("felix.webconsole.configprinter.modes", "always");
 
-        service = context.registerService(new String[] {
-                "javax.servlet.Servlet" },
-            this, props);
+        service = context.registerService(
+                new String[] { "javax.servlet.Servlet" }, this, props);
     }
 
-    void dispose() {
+    public void dispose() {
         if (service != null) {
             service.unregister();
             service = null;
@@ -87,11 +85,12 @@ public class JcrResourceResolverWebConsolePlugin extends
     }
 
     @Override
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
-    throws ServletException, IOException {
+    protected void doGet(final HttpServletRequest request,
+            final HttpServletResponse response) throws ServletException,
+            IOException {
         final String msg = request.getParameter(PAR_MSG);
         final String test;
-        if ( msg != null ) {
+        if (msg != null) {
             test = request.getParameter(PAR_TEST);
         } else {
             test = null;
@@ -113,7 +112,8 @@ public class JcrResourceResolverWebConsolePlugin extends
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>Namespace Mangling</td>");
         pw.print("<td class='content' colspan='2'>");
-        pw.print(resolverFactory.isMangleNamespacePrefixes() ? "Enabled" : "Disabled");
+        pw.print(resolverFactory.isMangleNamespacePrefixes() ? "Enabled"
+                : "Disabled");
         pw.print("</td>");
         pw.println("</tr>");
         pw.println("<tr class='content'>");
@@ -126,29 +126,29 @@ public class JcrResourceResolverWebConsolePlugin extends
         separatorHtml(pw);
 
         titleHtml(
-            pw,
-            "Configuration Test",
-            "To test the configuration, enter an URL or a resource path into " +
-            "the field and click 'Resolve' to resolve the URL or click 'Map' " +
-            "to map the resource path. To simulate a map call that takes the " +
-            "current request into account, provide a full URL whose " +
-            "scheme/host/port prefix will then be used as the request " +
-            "information. The path passed to map will always be the path part " +
-            "of the URL.");
+                pw,
+                "Configuration Test",
+                "To test the configuration, enter an URL or a resource path into "
+                        + "the field and click 'Resolve' to resolve the URL or click 'Map' "
+                        + "to map the resource path. To simulate a map call that takes the "
+                        + "current request into account, provide a full URL whose "
+                        + "scheme/host/port prefix will then be used as the request "
+                        + "information. The path passed to map will always be the path part "
+                        + "of the URL.");
 
         pw.println("<tr class='content'>");
         pw.println("<td class='content'>Test</td>");
         pw.print("<td class='content' colspan='2'>");
         pw.print("<form method='post'>");
         pw.print("<input type='text' name='" + ATTR_TEST + "' value='");
-        if ( test != null ) {
+        if (test != null) {
             pw.print(ResponseUtil.escapeXml(test));
         }
         pw.println("' class='input' size='50'>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
-            + "' value='Resolve' class='submit'>");
+                + "' value='Resolve' class='submit'>");
         pw.println("&nbsp;&nbsp;<input type='submit' name='" + ATTR_SUBMIT
-            + "' value='Map' class='submit'>");
+                + "' value='Map' class='submit'>");
         pw.print("</form>");
         pw.print("</td>");
         pw.println("</tr>");
@@ -165,18 +165,18 @@ public class JcrResourceResolverWebConsolePlugin extends
         separatorHtml(pw);
 
         dumpMapHtml(
-            pw,
-            "Resolver Map Entries",
-            "Lists the entries used by the ResourceResolver.resolve methods to map URLs to Resources",
-            mapEntries.getResolveMaps());
+                pw,
+                "Resolver Map Entries",
+                "Lists the entries used by the ResourceResolver.resolve methods to map URLs to Resources",
+                mapEntries.getResolveMaps());
 
         separatorHtml(pw);
 
         dumpMapHtml(
-            pw,
-            "Mapping Map Entries",
-            "Lists the entries used by the ResourceResolver.map methods to map Resource Paths to URLs",
-            mapEntries.getMapMaps());
+                pw,
+                "Mapping Map Entries",
+                "Lists the entries used by the ResourceResolver.map methods to map Resource Paths to URLs",
+                mapEntries.getMapMaps());
 
         pw.println("</table>");
 
@@ -190,15 +190,14 @@ public class JcrResourceResolverWebConsolePlugin extends
         String msg = null;
         if (test != null && test.length() > 0) {
 
-            Session session = null;
+            ResourceResolver resolver = null;
             try {
                 // prepare the request for the resource resolver
                 HttpServletRequest helper = new ResolverRequest(request, test);
 
-                // get the resource resolver with an administrative session
-                session = resolverFactory.getRepository().loginAdministrative(
-                    null);
-                ResourceResolver resolver = resolverFactory.getResourceResolver(session);
+                // get an administrative resource resolver
+                resolver = resolverFactory
+                        .getAdministrativeResourceResolver(null);
 
                 // map or resolve as instructed
                 Object result;
@@ -221,20 +220,22 @@ public class JcrResourceResolverWebConsolePlugin extends
                 msg = "Test Failure: " + t;
 
             } finally {
-                if (session != null) {
-                    session.logout();
+                if (resolver != null) {
+                    resolver.close();
                 }
             }
 
         }
 
         // finally redirect
-        final String path = request.getContextPath() + request.getServletPath() + request.getPathInfo();
+        final String path = request.getContextPath() + request.getServletPath()
+                + request.getPathInfo();
         final String redirectTo;
-        if ( msg == null ) {
+        if (msg == null) {
             redirectTo = path;
         } else {
-            redirectTo = path + '?' + PAR_MSG + '=' + encodeParam(msg) + '&' + PAR_TEST + '=' + encodeParam(test);
+            redirectTo = path + '?' + PAR_MSG + '=' + encodeParam(msg) + '&'
+                    + PAR_TEST + '=' + encodeParam(test);
         }
         response.sendRedirect(redirectTo);
     }
@@ -253,17 +254,11 @@ public class JcrResourceResolverWebConsolePlugin extends
     public void printConfiguration(PrintWriter pw) {
         final MapEntries mapEntries = resolverFactory.getMapEntries();
 
-        dumpMapText(
-            pw,
-            "Resolver Map Entries",
-            mapEntries.getResolveMaps());
+        dumpMapText(pw, "Resolver Map Entries", mapEntries.getResolveMaps());
 
-         separatorText(pw);
+        separatorText(pw);
 
-        dumpMapText(
-            pw,
-            "Mapping Map Entries",
-            mapEntries.getMapMaps());
+        dumpMapText(pw, "Mapping Map Entries", mapEntries.getMapMaps());
     }
 
     // ---------- internal
@@ -282,7 +277,7 @@ public class JcrResourceResolverWebConsolePlugin extends
         for (MapEntry entry : list) {
             pw.println("<tr class='content'>");
             pw.println("<td class='content' style='vertical-align: top'>"
-                + entry.getPattern() + "</td>");
+                    + entry.getPattern() + "</td>");
 
             pw.print("<td class='content' style='vertical-align: top'>");
             String[] repls = entry.getRedirect();
@@ -305,13 +300,13 @@ public class JcrResourceResolverWebConsolePlugin extends
     private void titleHtml(PrintWriter pw, String title, String description) {
         pw.println("<tr class='content'>");
         pw.println("<th colspan='3'class='content container'>" + title
-            + "</th>");
+                + "</th>");
         pw.println("</tr>");
 
         if (description != null) {
             pw.println("<tr class='content'>");
             pw.println("<td colspan='3'class='content'>" + description
-                + "</th>");
+                    + "</th>");
             pw.println("</tr>");
         }
     }
@@ -332,8 +327,7 @@ public class JcrResourceResolverWebConsolePlugin extends
 
         for (MapEntry entry : list) {
             final List<String> redir = Arrays.asList(entry.getRedirect());
-            final String status = entry.isInternal()
-                    ? "internal"
+            final String status = entry.isInternal() ? "internal"
                     : "external: " + entry.getStatus();
             pw.printf(format, entry.getPattern(), redir, status);
         }

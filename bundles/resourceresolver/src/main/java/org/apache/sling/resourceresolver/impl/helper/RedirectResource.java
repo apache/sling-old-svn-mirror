@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,7 +45,7 @@ public final class RedirectResource extends SyntheticResource {
             final String target, final int status) {
         super(resolver, path, RT_SLING_REDIRECT);
 
-        HashMap<String, Object> props = new HashMap<String, Object>();
+        final Map<String, Object> props = new HashMap<String, Object>();
         props.put(PROP_SLING_TARGET, target);
         props.put(PROP_SLING_STATUS, status);
         this.values = Collections.unmodifiableMap(props);
@@ -55,7 +55,7 @@ public final class RedirectResource extends SyntheticResource {
      * @see org.apache.sling.api.adapter.Adaptable#adaptTo(java.lang.Class)
      */
     @SuppressWarnings("unchecked")
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+    public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if (type == ValueMap.class) {
             return (AdapterType) new ValueMapDecorator(values);
         } else if (type == Map.class) {

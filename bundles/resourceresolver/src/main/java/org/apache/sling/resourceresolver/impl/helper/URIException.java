@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import org.apache.sling.api.SlingException;
 

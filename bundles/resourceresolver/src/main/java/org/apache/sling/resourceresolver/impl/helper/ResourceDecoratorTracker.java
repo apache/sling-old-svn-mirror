@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,15 +24,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.ServiceUtil;
 
 /**
- * Helper class to track the resource decorators and keep
- * them sorted by their service ranking.
+ * Helper class to track the resource decorators and keep them sorted by their
+ * service ranking.
  */
 public class ResourceDecoratorTracker {
 
@@ -55,38 +53,44 @@ public class ResourceDecoratorTracker {
         }
     }
 
-    /** Decorate a resource.  */
-    public Resource decorate(final Resource resource, String workspaceName) {
+    /**
+     * Decorate a resource.
+     */
+    public Resource decorate(final Resource resource) {
         Resource result = resource;
         final ResourceDecorator[] decorators = this.resourceDecoratorsArray;
-        for(final ResourceDecorator decorator : decorators) {
+        for (final ResourceDecorator decorator : decorators) {
             final Resource original = result;
             result = decorator.decorate(original);
-            if ( result == null ) {
+            if (result == null) {
                 result = original;
             }
         }
-        if (workspaceName != null) {
-            result = new WorkspaceDecoratedResource(result, workspaceName);
-        }
+
         return result;
     }
 
-    public ResourceDecorator[] getResourceDecorators() {
-        return this.resourceDecoratorsArray;
-    }
-
-    protected void bindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
+    /**
+     * Bind a resouce decorator.
+     */
+    public void bindResourceDecorator(final ResourceDecorator decorator,
+            final Map<String, Object> props) {
         synchronized (this.resourceDecorators) {
-            this.resourceDecorators.add(new ResourceDecoratorEntry(decorator, OsgiUtil.getComparableForServiceRanking(props)));
+            this.resourceDecorators.add(new ResourceDecoratorEntry(decorator,
+                    ServiceUtil.getComparableForServiceRanking(props)));
             Collections.sort(this.resourceDecorators);
             updateResourceDecoratorsArray();
         }
     }
 
-    protected void unbindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
+    /**
+     * Unbind a resouce decorator.
+     */
+    public void unbindResourceDecorator(final ResourceDecorator decorator,
+            final Map<String, Object> props) {
         synchronized (this.resourceDecorators) {
-            final Iterator<ResourceDecoratorEntry> i = this.resourceDecorators.iterator();
+            final Iterator<ResourceDecoratorEntry> i = this.resourceDecorators
+                    .iterator();
             while (i.hasNext()) {
                 final ResourceDecoratorEntry current = i.next();
                 if (current.decorator == decorator) {
@@ -99,15 +103,16 @@ public class ResourceDecoratorTracker {
     }
 
     /**
-     * Updates the ResourceDecorators array, this method is not thread safe and should only be
-     * called from a synchronized block.
+     * Updates the ResourceDecorators array, this method is not thread safe and
+     * should only be called from a synchronized block.
      */
-    protected void updateResourceDecoratorsArray() {
+    private void updateResourceDecoratorsArray() {
         final ResourceDecorator[] decorators;
         if (this.resourceDecorators.size() > 0) {
             decorators = new ResourceDecorator[this.resourceDecorators.size()];
             int index = 0;
-            final Iterator<ResourceDecoratorEntry> i = this.resourceDecorators.iterator();
+            final Iterator<ResourceDecoratorEntry> i = this.resourceDecorators
+                    .iterator();
             while (i.hasNext()) {
                 decorators[index] = i.next().decorator;
                 index++;
@@ -121,7 +126,8 @@ public class ResourceDecoratorTracker {
     /**
      * Internal class to keep track of the resource decorators.
      */
-    private static final class ResourceDecoratorEntry implements Comparable<ResourceDecoratorEntry> {
+    private static final class ResourceDecoratorEntry implements
+            Comparable<ResourceDecoratorEntry> {
 
         final Comparable<Object> comparable;
 
@@ -133,7 +139,7 @@ public class ResourceDecoratorTracker {
             this.decorator = d;
         }
 
-        public int compareTo(ResourceDecoratorEntry o) {
+        public int compareTo(final ResourceDecoratorEntry o) {
             return comparable.compareTo(o.comparable);
         }
     }

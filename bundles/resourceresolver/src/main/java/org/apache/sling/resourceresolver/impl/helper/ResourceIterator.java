@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.jcr.resource.internal.helper;
+package org.apache.sling.resourceresolver.impl.helper;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -31,6 +31,9 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.resourceresolver.impl.tree.ProviderHandler;
+import org.apache.sling.resourceresolver.impl.tree.ResourceProviderEntry;
+import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +62,13 @@ public class ResourceIterator implements Iterator<Resource> {
      * tree to collect entries which might provide children for the
      * {@link #parentResource}.
      */
-    private final ResourceProviderEntry rootProviderEntry;
+    private final RootResourceProviderEntry rootProviderEntry;
 
     /**
      * <code>ResourceProvider</code> objects registered as nodes above the
      * {@link #parentResource} up to the root of the resource tree
      */
-    private final Iterator<ResourceProvider> providers;
+    private final Iterator<ProviderHandler> providers;
 
     /**
      * The child {@link ResourceProviderEntry} registered at the node of the
@@ -95,27 +98,31 @@ public class ResourceIterator implements Iterator<Resource> {
      * returned. Any delayed entry whose path matches the path of a
      * non-synthetic resource will not returned.
      */
-    private Map<String, Resource> delayed;
+    private final Map<String, Resource> delayed;
 
     /**
      * Set of paths of resources already returned. This is used to prevent
      * duplicate return of resources.
      */
-    private Set<String> visited;
+    private final Set<String> visited;
 
     /**
      * The absolute path prefix of the {@link #parentResource} resource with a
      * trailing slash to build the absolute path of child resources.
      */
-    private String iteratorPath;
+    private final String iteratorPath;
 
     /**
      * Iterator on the map of {@link #delayed} synthetic resources
      */
     private Iterator<Resource> delayedIter;
 
-    public ResourceIterator(final Resource parentResource,
-            final ResourceProviderEntry rootProviderEntry) {
+    private final ResourceResolverContext resourceResolverContext;
+
+    public ResourceIterator(final ResourceResolverContext ctx,
+                    final Resource parentResource,
+                    final RootResourceProviderEntry rootProviderEntry) {
+        this.resourceResolverContext = ctx;
         this.parentResource = parentResource;
         this.rootProviderEntry = rootProviderEntry;
 
@@ -129,12 +136,12 @@ public class ResourceIterator implements Iterator<Resource> {
         // gather the providers in linked set, such that we keep
         // the order of addition and make sure we only get one entry
         // for each resource provider
-        Set<ResourceProvider> providersSet = new LinkedHashSet<ResourceProvider>();
-        ResourceProviderEntry atPath = getResourceProviders(path, providersSet);
+        final Set<ProviderHandler> providersSet = new LinkedHashSet<ProviderHandler>();
+        final ResourceProviderEntry atPath = getResourceProviders(path, providersSet);
 
         if (log.isDebugEnabled()) {
-            log.debug(" Provider Set for path {} {} ", path,
-                Arrays.toString(providersSet.toArray(new ResourceProvider[0])));
+            log.debug(" Provider Set for path {} {} ", path, Arrays
+                            .toString(providersSet.toArray(new ProviderHandler[providersSet.size()])));
         }
         this.iteratorPath = path;
         providers = providersSet.iterator();
@@ -153,7 +160,7 @@ public class ResourceIterator implements Iterator<Resource> {
             throw new NoSuchElementException();
         }
 
-        Resource result = nextResource;
+        final Resource result = nextResource;
         nextResource = seek();
         log.debug("  Child resource [{}] [{}] ", iteratorPath, result.getPath());
         return result;
@@ -166,15 +173,15 @@ public class ResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (delayedIter == null) {
             while ((resources == null || !resources.hasNext())
-                && providers.hasNext()) {
-                ResourceProvider provider = providers.next();
-                resources = provider.listChildren(parentResource);
+                            && providers.hasNext()) {
+                final ProviderHandler provider = providers.next();
+                resources = provider.listChildren(this.resourceResolverContext, parentResource);
                 log.debug("     Checking Provider {} ", provider);
             }
 
             if (resources != null && resources.hasNext()) {
-                Resource res = resources.next();
-                String resPath = res.getPath();
+                final Resource res = resources.next();
+                final String resPath = res.getPath();
 
                 if (visited.contains(resPath)) {
 
@@ -207,14 +214,18 @@ public class ResourceIterator implements Iterator<Resource> {
                     final ResourceProviderEntry rpw = baseEntryValues.next();
                     final String resPath = iteratorPath + rpw.getPath();
                     if (!visited.contains(resPath)) {
-                        final ResourceResolver rr = parentResource.getResourceResolver();
-                        final Resource res = rpw.getResourceFromProviders(rr,
-                            resPath);
+                        final ResourceResolver rr = parentResource
+                                        .getResourceResolver();
+                        final Resource res = rpw.getResourceFromProviders(this.resourceResolverContext, rr,
+                                        resPath);
                         if (res == null) {
                             if (!delayed.containsKey(resPath)) {
-                                delayed.put(resPath, new SyntheticResource(rr,
-                                    resPath,
-                                    ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
+                                delayed.put(
+                                                resPath,
+                                                new SyntheticResource(
+                                                                rr,
+                                                                resPath,
+                                                                ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
                             }
                         } else {
                             // return the real resource immediately, add
@@ -223,7 +234,7 @@ public class ResourceIterator implements Iterator<Resource> {
                             delayed.remove(resPath);
                             visited.add(resPath);
                             log.debug("   B  resource {} {}", resPath,
-                                res.getClass());
+                                            res.getClass());
                             return res;
                         }
                     }
@@ -242,7 +253,7 @@ public class ResourceIterator implements Iterator<Resource> {
 
         // we exhausted all resource providers with their concrete
         // resources. now lets do the delayed (synthetic) resources
-        Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
+        final Resource res = delayedIter.hasNext() ? delayedIter.next() : null;
         if (res != null) {
             log.debug("   D  resource {} {}", res.getPath(), res.getClass());
         }
@@ -253,26 +264,28 @@ public class ResourceIterator implements Iterator<Resource> {
      * Returns all resource providers which provider resources whose prefix is
      * the given path.
      *
-     * @param path The prefix path to match the resource provider roots against
-     * @param providers The set of already found resource providers to which any
+     * @param path
+     *            The prefix path to match the resource provider roots against
+     * @param providers
+     *            The set of already found resource providers to which any
      *            additional resource providers are added.
      * @return The ResourceProviderEntry at the node identified with the path or
      *         <code>null</code> if there is no entry at the given location
      */
-    private ResourceProviderEntry getResourceProviders(String path,
-            Set<ResourceProvider> providers) {
+    private ResourceProviderEntry getResourceProviders(final String path,
+                    final Set<ProviderHandler> providers) {
 
         // collect providers along the ancestor path segements
-        String[] elements = ResourceProviderEntry.split(path, '/');
+        final String[] elements = ResourceProviderEntry.split(path, '/');
         ResourceProviderEntry base = rootProviderEntry;
-        for (String element : elements) {
+        for (final String element : elements) {
             if (base.containsKey(element)) {
                 base = base.get(element);
                 if (log.isDebugEnabled()) {
                     log.debug("Loading from {}  {} ", element,
-                        base.getResourceProviders().length);
+                                    base.getResourceProviders().length);
                 }
-                for (ResourceProvider rp : base.getResourceProviders()) {
+                for (final ProviderHandler rp : base.getResourceProviders()) {
                     log.debug("Adding {} for {} ", rp, path);
                     providers.add(rp);
                 }
@@ -284,7 +297,7 @@ public class ResourceIterator implements Iterator<Resource> {
         }
 
         // add in providers at this node in the tree, ie the root provider
-        for (ResourceProvider rp : rootProviderEntry.getResourceProviders()) {
+        for (final ProviderHandler rp : rootProviderEntry.getResourceProviders()) {
             log.debug("Loading All at {} ", path);
             providers.add(rp);
         }
