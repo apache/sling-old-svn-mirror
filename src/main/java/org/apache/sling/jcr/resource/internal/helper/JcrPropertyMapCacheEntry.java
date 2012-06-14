@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -53,7 +53,7 @@ public class JcrPropertyMapCacheEntry {
                 oos.writeObject(obj);
                 oos.close();
                 final ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-                value = session.getValueFactory().createValue(bais);
+                value = session.getValueFactory().createValue(session.getValueFactory().createBinary(bais));
             } catch (IOException ioe) {
                 // we ignore this here and return null
             }
@@ -123,6 +123,6 @@ public class JcrPropertyMapCacheEntry {
     private boolean isDefaultValueCacheable() throws RepositoryException {
         return property.getType() != PropertyType.BINARY;
     }
-    
-    
+
+
 }

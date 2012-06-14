@@ -18,10 +18,12 @@ package org.apache.sling.jcr.resource.internal;
 
 import javax.jcr.RepositoryException;
 
+import junitx.util.PrivateAccessor;
+
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * This class is used to ensure that events are handled during the test.
@@ -32,10 +34,15 @@ import org.osgi.util.tracker.ServiceTracker;
  */
 public class SynchronousJcrResourceListener extends JcrResourceListener implements SynchronousEventListener {
 
-    public SynchronousJcrResourceListener(String workspaceName,
-            ResourceResolverFactory factory, String startPath, String mountPrefix, ServiceTracker eventAdminTracker)
-            throws LoginException, RepositoryException {
-        super(workspaceName, factory, startPath, mountPrefix, eventAdminTracker);
+    public SynchronousJcrResourceListener(
+            ResourceResolverFactory factory, EventAdmin eventAdmin)
+            throws LoginException, RepositoryException, NoSuchFieldException {
+        PrivateAccessor.setField(this, "resourceResolverFactory", factory);
+        PrivateAccessor.setField(this, "eventAdmin", eventAdmin);
+        this.activate();
     }
 
+    public void dispose() {
+        this.deactivate();
+    }
 }

@@ -52,9 +52,9 @@ public class JcrPropertyResource extends JcrItemResource {
 
     private final String resourceType;
 
-    public JcrPropertyResource(ResourceResolver resourceResolver,
-                               String path,
-                               Property property)
+    public JcrPropertyResource(final ResourceResolver resourceResolver,
+                               final String path,
+                               final Property property)
     throws RepositoryException {
         super(resourceResolver, path);
         this.property = property;
@@ -68,8 +68,8 @@ public class JcrPropertyResource extends JcrItemResource {
         this.setContentLength(property);
     }
 
-    public JcrPropertyResource(ResourceResolver resourceResolver,
-                               Property property)
+    public JcrPropertyResource(final ResourceResolver resourceResolver,
+                               final Property property)
     throws RepositoryException {
         this(resourceResolver, property.getPath(), property);
     }
@@ -221,7 +221,7 @@ public class JcrPropertyResource extends JcrItemResource {
         Property prop = getProperty();
 
         try {
-            return prop.getStream();
+            return prop.getBinary().getStream();
         } catch (RepositoryException re) {
             LOGGER.error("getInputStream: Problem accessing the property "
                 + getPath() + " stream", re);

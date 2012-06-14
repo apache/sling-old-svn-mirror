@@ -206,7 +206,7 @@ public class JcrNodeResource extends JcrItemResource {
                 }
 
                 if (data != null) {
-                    return data.getStream();
+                    return data.getBinary().getStream();
                 }
 
             } catch (RepositoryException re) {

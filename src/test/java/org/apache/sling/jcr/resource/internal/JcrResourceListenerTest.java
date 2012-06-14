@@ -16,24 +16,27 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
-import junitx.util.PrivateAccessor;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Test of JcrResourceListener.
@@ -63,40 +66,6 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         assertEquals(SlingConstants.TOPIC_RESOURCE_REMOVED, event.getTopic());
         assertEquals(pathToDelete, event.getProperty(SlingConstants.PROPERTY_PATH));
         assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
-
-    }
-
-    public void testInWs2() throws Exception {
-        List<Event> events = generateEvents("ws2");
-
-        assertTrue("Received: " + events, events.size() >= 3);
-        Event event = events.get(0);
-        assertEquals(SlingConstants.TOPIC_RESOURCE_ADDED, event.getTopic());
-        assertEquals("ws2:" + createdPath, event.getProperty(SlingConstants.PROPERTY_PATH));
-        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
-
-        event = events.get(1);
-        assertEquals(SlingConstants.TOPIC_RESOURCE_CHANGED, event.getTopic());
-        assertEquals("ws2:" + pathToModify, event.getProperty(SlingConstants.PROPERTY_PATH));
-        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
-
-        event = events.get(2);
-        assertEquals(SlingConstants.TOPIC_RESOURCE_REMOVED, event.getTopic());
-        assertEquals("ws2:" + pathToDelete, event.getProperty(SlingConstants.PROPERTY_PATH));
-        assertNotNull(event.getProperty(SlingConstants.PROPERTY_USERID));
-
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        try {
-            getSession().getWorkspace().createWorkspace("ws2");
-        } catch (Exception e) {
-            if (!e.getMessage().equals("workspace 'ws2' already exists.")) {
-                throw e;
-            }
-        }
 
     }
 
@@ -133,9 +102,117 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         addNodeToModify(session);
         addNodeToDelete(session);
 
-        final JcrResourceResolverFactoryImpl factory = new JcrResourceResolverFactoryImpl();
-        PrivateAccessor.setField(factory, "repository", getRepository());
-        PrivateAccessor.setField(factory, "useMultiWorkspaces", Boolean.TRUE);
+        final ResourceResolver resolver = new ResourceResolver() {
+
+            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+                return (AdapterType)session;
+            }
+
+            public Resource resolve(HttpServletRequest request, String absPath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource resolve(String absPath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource resolve(HttpServletRequest request) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String map(String resourcePath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String map(HttpServletRequest request, String resourcePath) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Resource getResource(String path) {
+                // TODO Auto-generated method stub
+                try {
+                    return new JcrNodeResource(this, session.getNode(path), null);
+                } catch (PathNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                } catch (RepositoryException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            public Resource getResource(Resource base, String path) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public String[] getSearchPath() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Iterator<Resource> listChildren(Resource parent) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Iterator<Resource> findResources(String query, String language) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Iterator<Map<String, Object>> queryResources(String query, String language) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public ResourceResolver clone(Map<String, Object> authenticationInfo) throws LoginException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public boolean isLive() {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            public void close() {
+                // TODO Auto-generated method stub
+
+            }
+
+            public String getUserID() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Iterator<String> getAttributeNames() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public Object getAttribute(String name) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+        };
+        final ResourceResolverFactory factory = new ResourceResolverFactory() {
+
+            public ResourceResolver getResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
+                return null;
+            }
+
+            public ResourceResolver getAdministrativeResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
+                return resolver;
+            }
+        };
 
         final EventAdmin mockEA = new EventAdmin() {
 
@@ -147,11 +224,8 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
                 events.add(event);
             }
         };
-        final ServiceTracker tracker = mock(ServiceTracker.class);
-        when(tracker.getService()).thenReturn(mockEA);
 
-        JcrResourceListener listener = new SynchronousJcrResourceListener(workspaceName, factory, "/",
-                "/", tracker);
+        SynchronousJcrResourceListener listener = new SynchronousJcrResourceListener(factory, mockEA);
 
         createdPath = createTestPath();
         createNode(session, createdPath);

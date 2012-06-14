@@ -34,17 +34,21 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.osgi.framework.Constants;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,28 +57,34 @@ import org.slf4j.LoggerFactory;
  * events and creates resource events which are sent through the
  * OSGi event admin.
  */
+@Component(immediate = true)
+@Properties({
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JcrResourceListener"),
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
+
+})
 public class JcrResourceListener implements EventListener {
 
     /** Logger */
     private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
 
-    /** The workspace for observation. */
-    private final String workspaceName;
+    @Reference
+    private EventAdmin eventAdmin;
+
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
+
+    /** The admin resource resolver. */
+    private ResourceResolver resourceResolver;
 
     /** The session for observation. */
-    private final Session session;
+    private Session session;
 
     /** Everything below this path is observed. */
-    private final String startPath;
+    private String startPath;
 
     /** The repository is mounted under this path. */
-    private final String mountPrefix;
-
-    /** The resource resolver. */
-    private final ResourceResolver resolver;
-
-    /** The event admin tracker. */
-    private final ServiceTracker eventAdminTracker;
+    private String mountPrefix;
 
     /** Is the Jackrabbit event class available? */
     private final boolean hasJackrabbitEventClass;
@@ -85,7 +95,7 @@ public class JcrResourceListener implements EventListener {
      * waiting for actual dispatching to the OSGi Event Admin in
      * {@link #processOsgiEventQueue()}
      */
-    private final LinkedBlockingQueue<Dictionary<String, Object>> osgiEventQueue;
+    private LinkedBlockingQueue<Dictionary<String, Object>> osgiEventQueue;
 
     /**
      * Marker event for {@link #processOsgiEventQueue()} to be signaled to
@@ -93,44 +103,7 @@ public class JcrResourceListener implements EventListener {
      */
     private final Dictionary<String, Object> TERMINATE_PROCESSING = new Hashtable<String, Object>(1);
 
-    /**
-     * Constructor.
-     * @param workspaceName The workspace name to observe
-     * @param factory    The resource resolver factory.
-     * @param startPath  The observation root path
-     * @param mountPrefix The mount path in the repository
-     * @param eventAdminTracker The service tracker for the event admin.
-     * @throws RepositoryException
-     */
-    public JcrResourceListener(final String workspaceName,
-                               final ResourceResolverFactory factory,
-                               final String startPath,
-                               final String mountPrefix,
-                               final ServiceTracker eventAdminTracker)
-    throws LoginException, RepositoryException {
-        this.workspaceName = workspaceName;
-        final Map<String,Object> authInfo = new HashMap<String,Object>();
-        if (workspaceName != null) {
-            authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE,
-                workspaceName);
-        }
-        this.resolver = factory.getAdministrativeResourceResolver(authInfo);
-        this.session = resolver.adaptTo(Session.class);
-        this.startPath = startPath;
-        this.eventAdminTracker = eventAdminTracker;
-        this.mountPrefix = (mountPrefix.equals("/") ? null : mountPrefix);
-
-        this.osgiEventQueue = new LinkedBlockingQueue<Dictionary<String,Object>>();
-        Thread oeqt = new Thread(new Runnable() {
-            public void run() {
-                processOsgiEventQueue();
-            }
-        }, "JCR Resource Event Queue Processor");
-        oeqt.start();
-
-        this.session.getWorkspace().getObservationManager().addEventListener(this,
-            Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
-            this.startPath, true, null, null, false);
+    public JcrResourceListener() {
         boolean foundClass = false;
         try {
             this.getClass().getClassLoader().loadClass(JackrabbitEvent.class.getName());
@@ -141,18 +114,48 @@ public class JcrResourceListener implements EventListener {
         this.hasJackrabbitEventClass = foundClass;
     }
 
+    @Activate
+    protected void activate() throws RepositoryException, LoginException {
+        this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+        try {
+            this.session = this.resourceResolver.adaptTo(Session.class);
+            this.startPath = "/";
+            this.mountPrefix = null;
+
+            this.osgiEventQueue = new LinkedBlockingQueue<Dictionary<String,Object>>();
+            Thread oeqt = new Thread(new Runnable() {
+                public void run() {
+                    processOsgiEventQueue();
+                }
+            }, "JCR Resource Event Queue Processor");
+            oeqt.start();
+
+            this.session.getWorkspace().getObservationManager().addEventListener(this,
+                Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
+                this.startPath, true, null, null, false);
+        } catch (final RepositoryException re) {
+            this.resourceResolver.close();
+            this.resourceResolver = null;
+            throw re;
+        }
+    }
+
     /**
      * Dispose this listener.
      */
-    public void dispose() {
-
+    @Deactivate
+    protected void deactivate() {
         // unregister from observations
-        try {
-            this.session.getWorkspace().getObservationManager().removeEventListener(this);
-        } catch (RepositoryException e) {
-            logger.warn("Unable to remove session listener: " + this, e);
+        if ( this.session != null ) {
+            try {
+                this.session.getWorkspace().getObservationManager().removeEventListener(this);
+            } catch (RepositoryException e) {
+                logger.warn("Unable to remove session listener: " + this, e);
+            }
         }
-        this.resolver.close();
+        if ( this.resourceResolver != null ) {
+            this.resourceResolver.close();
+        }
 
         // drop any remaining OSGi Events not processed yet
         this.osgiEventQueue.clear();
@@ -164,7 +167,7 @@ public class JcrResourceListener implements EventListener {
      */
     public void onEvent(EventIterator events) {
         // if the event admin is currently not available, we just skip this
-        final EventAdmin localEA = (EventAdmin) this.eventAdminTracker.getService();
+        final EventAdmin localEA = this.eventAdmin;
         if ( localEA == null ) {
             return;
         }
@@ -293,10 +296,8 @@ public class JcrResourceListener implements EventListener {
      * @param event The JCR observation event.
      * @param topic The topic that should be used for the OSGi event.
      */
-    private void sendOsgiEvent(String path, final Event event, final String topic,
+    private void sendOsgiEvent(final String path, final Event event, final String topic,
             final ChangedAttributes changedAttributes) {
-
-        path = createWorkspacePath(path);
 
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
@@ -335,52 +336,60 @@ public class JcrResourceListener implements EventListener {
             }
 
             try {
-                final EventAdmin localEa = (EventAdmin) this.eventAdminTracker.getService();
+                final EventAdmin localEa = this.eventAdmin;
                 if (localEa != null) {
                     final String topic = (String) event.remove(EventConstants.EVENT_TOPIC);
+                    boolean sendEvent = true;
                     if (!SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
                         final String path = (String) event.get(SlingConstants.PROPERTY_PATH);
-                        Resource resource = this.resolver.getResource(path);
+                        Resource resource = this.resourceResolver.getResource(path);
                         if (resource != null) {
-                            // check for nt:file nodes
-                            if (path.endsWith("/jcr:content")) {
-                                final Node node = resource.adaptTo(Node.class);
-                                if (node != null) {
+                            // check if this is a JCR backed resource, otherwise it is not visible!
+                            final Node node = resource.adaptTo(Node.class);
+                            if (node != null) {
+                                // check for nt:file nodes
+                                if (path.endsWith("/jcr:content")) {
                                     try {
                                         if (node.getParent().isNodeType("nt:file")) {
-                                            @SuppressWarnings("deprecation")
-                                            final Resource parentResource = ResourceUtil.getParent(resource);
+                                            final Resource parentResource = resource.getParent();
                                             if (parentResource != null) {
                                                 resource = parentResource;
                                                 event.put(SlingConstants.PROPERTY_PATH, resource.getPath());
                                             }
                                         }
-                                    } catch (RepositoryException re) {
+                                    } catch (final RepositoryException re) {
                                         // ignore this
                                     }
                                 }
+
+                                final String resourceType = resource.getResourceType();
+                                if (resourceType != null) {
+                                    event.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+                                }
+                                final String resourceSuperType = resource.getResourceSuperType();
+                                if (resourceSuperType != null) {
+                                    event.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                                }
+                            } else {
+                                // this is not a jcr backed resource
+                                sendEvent = false;
                             }
 
-                            final String resourceType = resource.getResourceType();
-                            if (resourceType != null) {
-                                event.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
-                            }
-                            final String resourceSuperType = resource.getResourceSuperType();
-                            if (resourceSuperType != null) {
-                                event.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
-                            }
                         } else {
                             // take a quite silent note of not being able to
                             // resolve the resource
                             logger.debug(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
                                 path);
+                            sendEvent = false;
                         }
                     }
 
-                    localEa.sendEvent(new org.osgi.service.event.Event(topic, event));
+                    if ( sendEvent ) {
+                        localEa.sendEvent(new org.osgi.service.event.Event(topic, event));
+                    }
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.warn("processOsgiEventQueue: Unexpected problem processing event " + event, e);
             }
         }
@@ -394,12 +403,5 @@ public class JcrResourceListener implements EventListener {
             return jEvent.isExternal();
         }
         return false;
-    }
-
-    private String createWorkspacePath(final String path) {
-        if (workspaceName == null) {
-            return path;
-        }
-        return workspaceName + ":" + path;
     }
 }

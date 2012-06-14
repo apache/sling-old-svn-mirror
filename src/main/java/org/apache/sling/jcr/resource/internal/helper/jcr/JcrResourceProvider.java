@@ -18,20 +18,36 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AttributableResourceProvider;
+import org.apache.sling.api.resource.DynamicResourceProvider;
+import org.apache.sling.api.resource.QueriableResourceProvider;
+import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceWrapper;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,37 +57,57 @@ import org.slf4j.LoggerFactory;
  * for each <code>JcrResourceResolver</code> instance and is bound to the JCR
  * session for a single request.
  */
-public class JcrResourceProvider implements ResourceProvider {
+public class JcrResourceProvider
+    extends SlingAdaptable
+    implements ResourceProvider,
+               DynamicResourceProvider,
+               AttributableResourceProvider,
+               QueriableResourceProvider {
 
-    /** default log */
+    /** column name for node path */
+    private static final String QUERY_COLUMN_PATH = "jcr:path";
+
+    /** column name for score value */
+    private static final String QUERY_COLUMN_SCORE = "jcr:score";
+
+    @SuppressWarnings("deprecation")
+    private static final String DEFAULT_QUERY_LANGUAGE = Query.XPATH;
+
+    /** Default logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /** Flag for closing. */
+    private boolean closed = false;
 
     private final Session session;
     private final ClassLoader dynamicClassLoader;
-    private final boolean useMultiWorkspaces;
+    private final boolean closeSession;
 
     public JcrResourceProvider(final Session session,
                                final ClassLoader dynamicClassLoader,
-                               boolean useMultiWorkspaces) {
+                               final boolean closeSession) {
         this.session = session;
         this.dynamicClassLoader = dynamicClassLoader;
-        this.useMultiWorkspaces = useMultiWorkspaces;
+        this.closeSession = closeSession;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
 
-    public String[] getRoots() {
-        return new String[] { "/" };
-    }
-
+    /**
+     * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, javax.servlet.http.HttpServletRequest, java.lang.String)
+     */
+    @SuppressWarnings("javadoc")
     public Resource getResource(ResourceResolver resourceResolver,
             HttpServletRequest request, String path) throws SlingException {
         return getResource(resourceResolver, path);
     }
 
+    /**
+     * @see org.apache.sling.api.resource.ResourceProvider#getResource(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
+     */
     public Resource getResource(ResourceResolver resourceResolver, String path)
-            throws SlingException {
-
+    throws SlingException {
+        this.checkClosed();
         try {
             return createResource(resourceResolver, path);
         } catch (RepositoryException re) {
@@ -81,7 +117,11 @@ public class JcrResourceProvider implements ResourceProvider {
 
     }
 
-    public Iterator<Resource> listChildren(Resource parent) {
+    /**
+     * @see org.apache.sling.api.resource.ResourceProvider#listChildren(org.apache.sling.api.resource.Resource)
+     */
+    public Iterator<Resource> listChildren(final Resource parent) {
+        this.checkClosed();
 
         JcrItemResource parentItemResource;
 
@@ -89,10 +129,6 @@ public class JcrResourceProvider implements ResourceProvider {
         if (parent instanceof JcrItemResource) {
 
             parentItemResource = (JcrItemResource) parent;
-
-        } else if (parent instanceof ResourceWrapper) {
-
-            return listChildren(((ResourceWrapper) parent).getResource());
 
         } else {
 
@@ -113,10 +149,6 @@ public class JcrResourceProvider implements ResourceProvider {
                 : null;
     }
 
-    public Session getSession() {
-        return session;
-    }
-
     // ---------- implementation helper ----------------------------------------
 
     /**
@@ -130,24 +162,10 @@ public class JcrResourceProvider implements ResourceProvider {
      * @throws RepositoryException If an error occurrs accessingor checking the
      *             item in the repository.
      */
-    private JcrItemResource createResource(ResourceResolver resourceResolver,
-            String path) throws RepositoryException {
-        if (useMultiWorkspaces) {
-            final int wsSepPos = path.indexOf(":/");
-            if (wsSepPos != -1) {
-                final String workspaceName = path.substring(0, wsSepPos);
-                final String expectedWorkspaceName = getSession().getWorkspace().getName();
-                if (workspaceName.equals(expectedWorkspaceName)) {
-                    path = path.substring(wsSepPos + 1);
-                } else {
-                    throw new RepositoryException("Unexpected workspace name. Expected " +
-                            expectedWorkspaceName + ". Actual " + workspaceName);
-                }
-            }
-        }
-
+    private JcrItemResource createResource(final ResourceResolver resourceResolver,
+            final String path) throws RepositoryException {
         if (itemExists(path)) {
-            Item item = getSession().getItem(path);
+            Item item = session.getItem(path);
             if (item.isNode()) {
                 log.debug(
                     "createResource: Found JCR Node Resource at path '{}'",
@@ -176,15 +194,183 @@ public class JcrResourceProvider implements ResourceProvider {
      *         session has read access. If the item does not exist,
      *         <code>false</code> is returned ignoring access control.
      */
-    public boolean itemExists(String path) {
+    private boolean itemExists(final String path) {
 
         try {
-            return getSession().itemExists(path);
+            return session.itemExists(path);
         } catch (RepositoryException re) {
             log.debug("itemExists: Error checking for existence of {}: {}",
                 path, re.toString());
             return false;
         }
+    }
 
+    /**
+     * @see org.apache.sling.api.resource.DynamicResourceProvider#isLive()
+     */
+    public boolean isLive() {
+        return !closed && session.isLive();
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.DynamicResourceProvider#close()
+     */
+    public void close() {
+        if ( this.closeSession && !closed) {
+            session.logout();
+        }
+        this.closed = true;
+    }
+
+    /**
+     * Check if the resource resolver is already closed.
+     *
+     * @throws IllegalStateException If the resolver is already closed
+     */
+    private void checkClosed() {
+        if ( this.closed ) {
+            throw new IllegalStateException("Resource resolver is already closed.");
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.QueriableResourceProvider#findResources(ResourceResolver, java.lang.String, java.lang.String)
+     */
+    public Iterator<Resource> findResources(final ResourceResolver resolver,
+                    final String query, final String language) {
+        checkClosed();
+
+        try {
+            final QueryResult res = JcrResourceUtil.query(session, query, language);
+            return new JcrNodeResourceIterator(resolver, res.getNodes(), this.dynamicClassLoader);
+        } catch (final javax.jcr.query.InvalidQueryException iqe) {
+            throw new QuerySyntaxException(iqe.getMessage(), query, language, iqe);
+        } catch (final RepositoryException re) {
+            throw new SlingException(re.getMessage(), re);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.QueriableResourceProvider#queryResources(java.lang.String, java.lang.String)
+     */
+    public Iterator<Map<String, Object>> queryResources(final String query, final String language) {
+        checkClosed();
+
+        final String queryLanguage = isSupportedQueryLanguage(language) ? language : DEFAULT_QUERY_LANGUAGE;
+
+        try {
+            QueryResult result = JcrResourceUtil.query(session, query,
+                queryLanguage);
+            final String[] colNames = result.getColumnNames();
+            final RowIterator rows = result.getRows();
+            return new Iterator<Map<String, Object>>() {
+                public boolean hasNext() {
+                    return rows.hasNext();
+                };
+
+                public Map<String, Object> next() {
+                    Map<String, Object> row = new HashMap<String, Object>();
+                    try {
+                        Row jcrRow = rows.nextRow();
+                        boolean didPath = false;
+                        boolean didScore = false;
+                        Value[] values = jcrRow.getValues();
+                        for (int i = 0; i < values.length; i++) {
+                            Value v = values[i];
+                            if (v != null) {
+                                String colName = colNames[i];
+                                row.put(colName,
+                                    JcrResourceUtil.toJavaObject(values[i]));
+                                if (colName.equals(QUERY_COLUMN_PATH)) {
+                                    didPath = true;
+                                }
+                                if (colName.equals(QUERY_COLUMN_SCORE)) {
+                                    didScore = true;
+                                }
+                            }
+                        }
+                        if (!didPath) {
+                            row.put(QUERY_COLUMN_PATH, jcrRow.getPath());
+                        }
+                        if (!didScore) {
+                            row.put(QUERY_COLUMN_SCORE, jcrRow.getScore());
+                        }
+
+                    } catch (RepositoryException re) {
+                        log.error(
+                            "queryResources$next: Problem accessing row values",
+                            re);
+                    }
+                    return row;
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException("remove");
+                }
+            };
+        } catch (final javax.jcr.query.InvalidQueryException iqe) {
+            throw new QuerySyntaxException(iqe.getMessage(), query, language,
+                iqe);
+        } catch (final RepositoryException re) {
+            throw new SlingException(re.getMessage(), re);
+        }
+    }
+
+    private boolean isSupportedQueryLanguage(final String language) {
+        try {
+            String[] supportedLanguages = session.getWorkspace().
+                getQueryManager().getSupportedQueryLanguages();
+            for (String lang : supportedLanguages) {
+                if (lang.equals(language)) {
+                    return true;
+                }
+            }
+        } catch (final RepositoryException e) {
+            log.error("Unable to discover supported query languages", e);
+        }
+        return false;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.AttributableResourceProvider#getAttributeNames()
+     */
+    public Collection<String> getAttributeNames() {
+        this.checkClosed();
+
+        final Set<String> names = new HashSet<String>();
+        final String[] sessionNames = session.getAttributeNames();
+        for(final String name : sessionNames) {
+            if ( JcrResourceProviderFactory.isAttributeVisible(name) ) {
+                names.add(name);
+            }
+        }
+        return names;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.AttributableResourceProvider#getAttribute(java.lang.String)
+     */
+    public Object getAttribute(final String name) {
+        this.checkClosed();
+
+        if ( JcrResourceProviderFactory.isAttributeVisible(name) ) {
+            if ( ResourceResolverFactory.USER.equals(name) ) {
+                return this.session.getUserID();
+            }
+            return session.getAttribute(name);
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.api.adapter.SlingAdaptable#adaptTo(java.lang.Class)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type == Session.class) {
+            return (AdapterType) session;
+        }
+        return super.adaptTo(type);
     }
 }

@@ -517,7 +517,7 @@ public class JcrPropertyMap
                 && jcrValue.getType() == PropertyType.BINARY) {
             ObjectInputStream ois = null;
             try {
-                ois = new ObjectInputStream(jcrValue.getStream(), this.dynamicClassLoader);
+                ois = new ObjectInputStream(jcrValue.getBinary().getStream(), this.dynamicClassLoader);
                 final Object obj = ois.readObject();
                 if ( type.isInstance(obj) ) {
                     return (T)obj;
