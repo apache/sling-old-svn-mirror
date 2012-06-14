@@ -102,6 +102,9 @@
         <!-- The Sling API -->
         <module>bundles/api</module>
 
+        <!-- Resource Resolver -->
+        <module>bundles/resourceresolver</module>
+
         <!-- extension fragment bundles -->
         <module>bundles/extensions/framework-extension-transaction</module>
         <module>bundles/extensions/framework-extension-xml</module>
