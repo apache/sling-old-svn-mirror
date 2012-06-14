@@ -132,9 +132,9 @@ public class ResourceUtil {
         if (path == null || "/".equals(path)) {
             return null;
         }
-        
+
         String workspaceName = null;
-        
+
         final int wsSepPos = path.indexOf(":/");
         if (wsSepPos != -1) {
             workspaceName = path.substring(0, wsSepPos);
@@ -150,17 +150,15 @@ public class ResourceUtil {
             // parent is root
             if (workspaceName != null) {
                 return workspaceName + ":/";
-            } else {
-                return "/";
             }
+            return "/";
         }
 
         String parentPath = path.substring(0, lastSlash);
         if (workspaceName != null) {
             return workspaceName + ":" + parentPath;
-        } else {
-            return parentPath;
         }
+        return parentPath;
     }
 
     /**
@@ -170,6 +168,7 @@ public class ResourceUtil {
      * @return The parent resource or null if the rsrc is the root.
      * @deprecated since 2.1.0, use {@link Resource#getParent()} instead
      */
+    @Deprecated
     public static Resource getParent(Resource rsrc) {
         final String parentPath = ResourceUtil.getParent(rsrc.getPath());
         if (parentPath == null) {
@@ -184,6 +183,7 @@ public class ResourceUtil {
      * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
      * @deprecated since 2.1.0, use {@link Resource#getName()} instead
      */
+    @Deprecated
     public static String getName(Resource rsrc) {
         /*
          * Same as AbstractResource.getName() implementation to prevent problems
@@ -306,6 +306,7 @@ public class ResourceUtil {
      * @see ResourceResolver#listChildren(Resource)
      * @deprecated since 2.1.0, use {@link Resource#listChildren()} instead
      */
+    @Deprecated
     public static Iterator<Resource> listChildren(Resource parent) {
         /*
          * Same as AbstractResource.listChildren() implementation to prevent

@@ -102,7 +102,9 @@ public interface ResourceResolver extends Adaptable {
      * should be used to resolve the resource.
      *
      * @since 2.1
+     * @deprecated
      */
+    @Deprecated
     String REQUEST_ATTR_WORKSPACE_INFO = ResourceResolver.class.getName()
         + "/use.workspace";
 
@@ -127,8 +129,7 @@ public interface ResourceResolver extends Adaptable {
      * The difference between this method and the {@link #resolve(String)}
      * method is, that this method may take request properties like the scheme,
      * the host header or request parameters into account to resolve the
-     * resource. If the {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set,
-     * the given workspace is used to resolve the resource.
+     * resource.
      *
      * @param request The http servlet request object providing more hints at
      *            how to resolve the <code>absPath</code>. This parameter may be
@@ -186,9 +187,7 @@ public interface ResourceResolver extends Adaptable {
      * anymore. Implementations are expected to implement this method calling
      * the {@link #resolve(HttpServletRequest, String)} where the
      * <code>absPath</code> argument is the result of calling the
-     * <code>getPathInfo()</code> on the <code>request</code> object. If the
-     * {@link #REQUEST_ATTR_WORKSPACE_INFO} attribute is set, the given
-     * workspace is used to resolve the resource.
+     * <code>getPathInfo()</code> on the <code>request</code> object.
      *
      * @param request The http servlet request object used to resolve the
      *            resource for. This must not be <code>null</code>.
