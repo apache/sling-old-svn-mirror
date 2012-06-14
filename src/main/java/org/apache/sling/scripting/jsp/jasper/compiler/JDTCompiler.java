@@ -76,7 +76,6 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
         final String targetClassName =
             ((packageName.length() != 0) ? (packageName + ".") : "")
                     + ctxt.getServletClassName();
-        final ClassLoader classLoader = ctxt.getClassLoader();
         String[] fileNames = new String[] {sourceFile};
         String[] classNames = new String[] {targetClassName};
         final ArrayList problemList = new ArrayList();
@@ -188,7 +187,7 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
                         }
                         String resourceName =
                             className.replace('.', '/') + ".class";
-                        is = classLoader.getResourceAsStream(resourceName);
+                        is = ctxt.getClassLoader().getResourceAsStream(resourceName);
                         if (is != null) {
                             byte[] classBytes;
                             byte[] buf = new byte[8192];
@@ -229,7 +228,7 @@ public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.
                     }
                     String resourceName = result.replace('.', '/') + ".class";
                     InputStream is =
-                        classLoader.getResourceAsStream(resourceName);
+                        ctxt.getClassLoader().getResourceAsStream(resourceName);
                     return is == null;
                 }
 
