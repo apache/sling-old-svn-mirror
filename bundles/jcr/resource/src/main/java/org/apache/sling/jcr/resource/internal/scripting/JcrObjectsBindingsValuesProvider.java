@@ -34,11 +34,9 @@ import org.osgi.framework.Constants;
 @Component
 @Service
 @Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling CurrentNode BindingsValuesProvider"),
-    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation")
-})
+        @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling CurrentNode BindingsValuesProvider"),
+        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class JcrObjectsBindingsValuesProvider implements BindingsValuesProvider {
-
 
     private static final String PROP_CURRENT_NODE = "currentNode";
     private static final String PROP_CURRENT_SESSION = "currentSession";
@@ -46,16 +44,17 @@ public class JcrObjectsBindingsValuesProvider implements BindingsValuesProvider 
     /**
      * {@inheritDoc}
      */
-    public void addBindings(Bindings bindings) {
-        Resource resource = (Resource) bindings.get("resource");
+    public void addBindings(final Bindings bindings) {
+        final Resource resource = (Resource) bindings.get("resource");
         if (resource != null) {
-            Node node = resource.adaptTo(Node.class);
+            final Node node = resource.adaptTo(Node.class);
             if (node != null) {
                 bindings.put(PROP_CURRENT_NODE, node);
             }
-            if ( bindings.get(PROP_CURRENT_SESSION) == null ) {
-                final Session session = resource.getResourceResolver().adaptTo(Session.class);
-                if ( session != null ) {
+            if (bindings.get(PROP_CURRENT_SESSION) == null) {
+                final Session session = resource.getResourceResolver().adaptTo(
+                        Session.class);
+                if (session != null) {
                     bindings.put(PROP_CURRENT_SESSION, session);
                 }
             }

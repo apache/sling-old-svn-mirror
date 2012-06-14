@@ -103,7 +103,7 @@ public class LazyInputStream extends InputStream {
     private InputStream getStream() throws IOException {
         if (delegatee == null) {
             try {
-                delegatee = value.getStream();
+                delegatee = value.getBinary().getStream();
             } catch (RepositoryException re) {
                 throw (IOException) new IOException(re.getMessage()).initCause(re);
             }

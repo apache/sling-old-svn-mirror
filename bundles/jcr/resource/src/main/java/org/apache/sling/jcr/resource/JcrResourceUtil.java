@@ -119,7 +119,7 @@ public class JcrResourceUtil {
         if(value instanceof Calendar) {
             val = fac.createValue((Calendar)value);
         } else if (value instanceof InputStream) {
-            val = fac.createValue((InputStream)value);
+            val = fac.createValue(fac.createBinary((InputStream)value));
         } else if (value instanceof Node) {
             val = fac.createValue((Node)value);
         } else if (value instanceof Long) {

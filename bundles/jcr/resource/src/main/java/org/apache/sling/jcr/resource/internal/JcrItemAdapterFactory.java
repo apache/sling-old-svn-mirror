@@ -83,9 +83,8 @@ class JcrItemAdapterFactory implements AdapterFactory {
                 logger.error("Unable to adapt JCR Item to a Resource", e);
             }
             return null;
-        } else {
-            return getAdapter(adaptable, Resource.class).adaptTo(type);
         }
+        return getAdapter(adaptable, Resource.class).adaptTo(type);
     }
 
 }
