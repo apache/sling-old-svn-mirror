@@ -196,7 +196,7 @@ public final class JcrModifiablePropertyMap
             }
 
             for(final String key : this.changedProperties) {
-                final String name = Text.escapeIllegalJcrChars(key);
+                final String name = escapeKeyName(key);
                 if ( !MIXIN_TYPES.equals(name) ) {
                     if ( cache.containsKey(key) ) {
                         final JcrPropertyMapCacheEntry entry = cache.get(key);

@@ -336,8 +336,8 @@ public class JcrPropertyMap
             return cache.get(name);
         }
 
-        final String key = Text.escapeIllegalJcrChars(name);
         try {
+            final String key = escapeKeyName(name);
             if (node.hasProperty(key)) {
                 final Property prop = node.getProperty(key);
                 return cacheProperty(prop);
@@ -355,6 +355,30 @@ public class JcrPropertyMap
 
         // property not found
         return null;
+    }
+
+    /**
+     * Handles key name escaping by taking into consideration if it contains a
+     * registered prefix
+     *
+     * @param key
+     * @return escaped key name
+     */
+    protected String escapeKeyName(final String key) throws RepositoryException {
+        final int indexOfPrefix = key.indexOf(':');
+        if (indexOfPrefix != -1 && key.length() > indexOfPrefix + 1) {
+            final String prefix = key.substring(0, indexOfPrefix);
+            for (final String existingPrefix : getNode().getSession()
+                    .getNamespacePrefixes()) {
+                if (existingPrefix.equals(prefix)) {
+                    return prefix
+                            + ":"
+                            + Text.escapeIllegalJcrChars(key
+                                    .substring(indexOfPrefix + 1));
+                }
+            }
+        }
+        return Text.escapeIllegalJcrChars(key);
     }
 
     /**
