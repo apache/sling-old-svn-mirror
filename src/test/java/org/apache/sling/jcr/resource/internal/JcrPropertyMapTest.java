@@ -69,6 +69,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testJCRType() throws Exception {
+        this.rootNode.getSession().refresh(false);
         testValue(rootNode, "A String");
         testValue(rootNode, Calendar.getInstance());
         testValue(rootNode, 5L);
@@ -78,6 +79,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testTypeByClass() throws Exception {
+        this.rootNode.getSession().refresh(false);
         testValue(rootNode, "A String Value", String.class);
 
         testValue(rootNode, 1l, Byte.class);
@@ -98,6 +100,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testTypeByDefaultValue() throws Exception {
+        this.rootNode.getSession().refresh(false);
         testValue(rootNode, "A String Value", "default");
 
         testValue(rootNode, 1l, (byte) 10);
@@ -127,6 +130,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testDefaultValue() throws Exception {
+        this.rootNode.getSession().refresh(false);
         testDefaultValue(rootNode, "default");
 
         testDefaultValue(rootNode, (byte) 10);
@@ -151,6 +155,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testProperty() throws Exception {
+        this.rootNode.getSession().refresh(false);
         ValueMap map = createProperty(rootNode, "Sample Value For Prop");
         Property prop = rootNode.getProperty(PROP_NAME);
 
@@ -169,6 +174,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testInputStream() throws Exception {
+        this.rootNode.getSession().refresh(false);
         InputStream instream = new ByteArrayInputStream("this too shall pass".getBytes());
 
         ValueFactory valueFactory = rootNode.getSession().getValueFactory();
@@ -285,20 +291,26 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     private static final String VALUE = "value";
     private static final String VALUE1 = "value";
     private static final String VALUE2 = "value";
+    private static final String VALUE3 = "my title";
     private static final String PROP1 = "-prop";
     private static final String PROP2 = "1prop";
+    private static final String PROP3 = "jcr:title";
 
     public void testNames() throws Exception {
+        this.rootNode.getSession().refresh(false);
         this.rootNode.setProperty(Text.escapeIllegalJcrChars(TEST_PATH), VALUE);
         this.rootNode.setProperty(PROP1, VALUE1);
         this.rootNode.setProperty(PROP2, VALUE2);
+        this.rootNode.setProperty(PROP3, VALUE3);
         final ValueMap vm = this.createPropertyMap(this.rootNode);
         assertEquals(VALUE, vm.get(TEST_PATH));
         assertEquals(VALUE1, vm.get(PROP1));
         assertEquals(VALUE2, vm.get(PROP2));
+        assertEquals(VALUE3, vm.get(PROP3));
     }
 
     public void testIerators() throws Exception {
+        this.rootNode.getSession().refresh(false);
         this.rootNode.setProperty(Text.escapeIllegalJcrChars(TEST_PATH), VALUE);
         this.rootNode.setProperty(PROP1, VALUE1);
         this.rootNode.setProperty(PROP2, VALUE2);
@@ -313,12 +325,14 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testNamesOld() throws Exception {
+        this.rootNode.getSession().refresh(false);
         this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), VALUE);
         final ValueMap vm = this.createPropertyMap(this.rootNode);
         assertEquals(VALUE, vm.get(TEST_PATH));
     }
 
     public void testIeratorsOld() throws Exception {
+        this.rootNode.getSession().refresh(false);
         this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), VALUE);
         final ValueMap vm = this.createPropertyMap(this.rootNode);
         assertTrue(vm.containsKey(TEST_PATH));
@@ -327,6 +341,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     }
 
     public void testDotSlash() throws Exception {
+        this.rootNode.getSession().refresh(false);
         final String prop = "myProp";
         final String value = "value";
         this.rootNode.setProperty(prop, value);

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,6 +30,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
@@ -77,7 +77,8 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
     }
 
     public void testPut()
-    throws IOException {
+    throws Exception {
+        this.rootNode.getSession().refresh(false);
         final PersistableValueMap pvm = new JcrModifiablePropertyMap(this.rootNode);
         assertContains(pvm, initialSet());
         assertNull(pvm.get("something"));
@@ -99,7 +100,8 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
     }
 
     public void testReset()
-    throws IOException {
+    throws Exception {
+        this.rootNode.getSession().refresh(false);
         final PersistableValueMap pvm = new JcrModifiablePropertyMap(this.rootNode);
         assertContains(pvm, initialSet());
         assertNull(pvm.get("something"));
@@ -121,7 +123,8 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
     }
 
     public void testSerializable()
-    throws IOException {
+    throws Exception {
+        this.rootNode.getSession().refresh(false);
         final PersistableValueMap pvm = new JcrModifiablePropertyMap(this.rootNode);
         assertContains(pvm, initialSet());
         assertNull(pvm.get("something"));
@@ -147,7 +150,8 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
 
     }
 
-    public void testExceptions() {
+    public void testExceptions() throws Exception {
+        this.rootNode.getSession().refresh(false);
         final PersistableValueMap pvm = new JcrModifiablePropertyMap(this.rootNode);
         try {
             pvm.put(null, "something");
@@ -172,6 +176,7 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
     }
 
     public void testMixins() throws Exception {
+        this.rootNode.getSession().refresh(false);
         final Node testNode = this.rootNode.addNode("testMixins" + System.currentTimeMillis());
         testNode.getSession().save();
         final PersistableValueMap pvm = new JcrModifiablePropertyMap(testNode);
@@ -195,6 +200,73 @@ public class JcrModifiablePropertyMapTest extends JcrPropertyMapTest {
 
         final Set<String> newNodeTypes = getMixinNodeTypes(testNode);
         assertEquals(newNodeTypes.size(), exNodeTypes.size() + 1);
+    }
+
+    private static final String TEST_PATH = "a<a";
+
+    private static final String VALUE = "value";
+    private static final String VALUE1 = "value";
+    private static final String VALUE2 = "value";
+    private static final String VALUE3 = "my title";
+    private static final String PROP1 = "-prop";
+    private static final String PROP2 = "1prop";
+    private static final String PROP3 = "jcr:title";
+
+    public void testNamesReverse() throws Exception {
+        this.rootNode.getSession().refresh(false);
+
+        final Node testNode = this.rootNode.addNode("nameTest" + System.currentTimeMillis());
+        testNode.getSession().save();
+        final PersistableValueMap pvm = new JcrModifiablePropertyMap(testNode);
+        pvm.put(TEST_PATH, VALUE);
+        pvm.put(PROP1, VALUE1);
+        pvm.put(PROP2, VALUE2);
+        pvm.put(PROP3, VALUE3);
+        pvm.save();
+
+        // read with property map
+        final ValueMap vm = this.createPropertyMap(testNode);
+        assertEquals(VALUE, vm.get(TEST_PATH));
+        assertEquals(VALUE1, vm.get(PROP1));
+        assertEquals(VALUE2, vm.get(PROP2));
+        assertEquals(VALUE3, vm.get(PROP3));
+
+        // read properties
+        assertEquals(VALUE, testNode.getProperty(TEST_PATH).getString());
+        assertEquals(VALUE1, testNode.getProperty(PROP1).getString());
+        assertEquals(VALUE2, testNode.getProperty(PROP2).getString());
+        assertEquals(VALUE3, testNode.getProperty(PROP3).getString());
+    }
+
+    /**
+     * Checks property names encoding, see SLING-2502.
+     */
+    public void testNamesUpdate() throws Exception {
+        this.rootNode.getSession().refresh(false);
+
+        final Node testNode = this.rootNode.addNode("nameUpdateTest"
+                + System.currentTimeMillis());
+        testNode.setProperty(PROP3, VALUE);
+        testNode.getSession().save();
+
+        final PersistableValueMap pvm = new JcrModifiablePropertyMap(testNode);
+        pvm.put(PROP3, VALUE3);
+        pvm.put("jcr:a:b", VALUE3);
+        pvm.put("jcr:", VALUE3);
+        pvm.save();
+
+        // read with property map
+        final ValueMap vm = this.createPropertyMap(testNode);
+        assertEquals(VALUE3, vm.get(PROP3));
+        assertEquals(VALUE3, vm.get("jcr:a:b"));
+        assertEquals(VALUE3, vm.get("jcr:"));
+
+        // read properties
+        assertEquals(VALUE3, testNode.getProperty(PROP3).getString());
+        assertEquals(VALUE3, testNode.getProperty("jcr:"+Text.escapeIllegalJcrChars("a:b")).getString());
+        assertEquals(VALUE3, testNode.getProperty(Text.escapeIllegalJcrChars("jcr:")).getString());
+        assertFalse(testNode.hasProperty(Text.escapeIllegalJcrChars(PROP3)));
+        assertFalse(testNode.hasProperty(Text.escapeIllegalJcrChars("jcr:a:b")));
     }
 
     protected JcrPropertyMap createPropertyMap(final Node node) {
