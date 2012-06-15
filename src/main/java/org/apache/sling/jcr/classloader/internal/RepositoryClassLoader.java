@@ -60,12 +60,12 @@ public final class RepositoryClassLoader
      * Flag indicating whether there are loaded classes which have later been
      * expired (e.g. invalidated or modified)
      */
-    private boolean dirty = false;
+    private volatile boolean dirty = false;
 
     /**
      * The path to use as a classpath.
      */
-    private String repositoryPath;
+    private final String repositoryPath;
 
     /**
      * The <code>ClassLoaderWriterImpl</code> grants access to the repository
@@ -73,13 +73,13 @@ public final class RepositoryClassLoader
      * This field is not final such that it may be cleared when the class loader
      * is destroyed.
      */
-    private ClassLoaderWriterImpl writer;
+    private final ClassLoaderWriterImpl writer;
 
     /**
      * Flag indicating whether the {@link #destroy()} method has already been
      * called (<code>true</code>) or not (<code>false</code>)
      */
-    private boolean destroyed = false;
+    private volatile boolean destroyed = false;
 
     /**
      * Creates a <code>RepositoryClassLoader</code> for a given
@@ -134,8 +134,6 @@ public final class RepositoryClassLoader
         // set destroyal guard
         destroyed = true;
 
-        this.writer = null;
-        this.repositoryPath = null;
         synchronized ( this.usedResources ) {
             this.usedResources.clear();
         }
@@ -151,7 +149,7 @@ public final class RepositoryClassLoader
      *      if this class loader has already been destroyed.
      */
     protected Class<?> findClass(final String name) throws ClassNotFoundException {
-        if (destroyed) {
+        if (!this.writer.isActivate()) {
             throw new ClassNotFoundException(name + " (Classloader destroyed)");
         }
 
@@ -180,7 +178,7 @@ public final class RepositoryClassLoader
      *      already been destroyed.
      */
     public URL findResource(final String name) {
-        if (destroyed) {
+        if (!this.writer.isActivate()) {
             logger.warn("Destroyed class loader cannot find a resource: " + name, new IllegalStateException());
             return null;
         }
@@ -211,7 +209,7 @@ public final class RepositoryClassLoader
      *      or if this class loader has already been destroyed.
      */
     public Enumeration<URL> findResources(final String name) {
-        if (destroyed) {
+        if (!this.writer.isActivate()) {
             logger.warn("Destroyed class loader cannot find a resources: " + name, new IllegalStateException());
             return new Enumeration<URL>() {
                 public boolean hasMoreElements() {
@@ -345,8 +343,10 @@ public final class RepositoryClassLoader
                 session.logout();
             }
         }
-        synchronized ( this.usedResources ) {
-            this.usedResources.add(path);
+        if ( !this.dirty ) {
+            synchronized ( this.usedResources ) {
+                this.usedResources.add(path);
+            }
         }
         return res;
     }
@@ -375,7 +375,7 @@ public final class RepositoryClassLoader
      * @see org.apache.sling.commons.classloader.DynamicClassLoader#isLive()
      */
     public boolean isLive() {
-        return !destroyed && !dirty && this.writer != null && this.writer.isActivate();
+        return !destroyed && !dirty && this.writer.isActivate();
     }
 
     /**
