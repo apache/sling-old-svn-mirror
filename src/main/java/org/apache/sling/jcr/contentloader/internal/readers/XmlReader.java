@@ -53,6 +53,8 @@ import org.apache.sling.jcr.contentloader.internal.ContentCreator;
 import org.apache.sling.jcr.contentloader.internal.ContentReader;
 import org.apache.sling.jcr.contentloader.internal.ImportProvider;
 import org.kxml2.io.KXmlParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -103,6 +105,8 @@ public class XmlReader implements ContentReader {
      */
 
     /** default log */
+    private static final Logger logger = LoggerFactory.getLogger(XmlReader.class);
+
     private static final String ELEM_NODE = "node";
 
     private static final String ELEM_PRIMARY_NODE_TYPE = "primaryNodeType";
@@ -242,23 +246,27 @@ public class XmlReader implements ContentReader {
                     currentNode = NodeDescription.create(currentNode, creator);
                     currentNode = NodeDescription.SHARED;
                 } else if (ELEM_FILE_NAME.equals(currentElement) && ELEM_FILE_NAMESPACE.equals(this.xmlParser.getNamespace())) {
-                    int attributeCount = this.xmlParser.getAttributeCount();
-                    if (attributeCount < 2 || attributeCount > 3) {
-                        throw new IOException("File element must have these attributes: url, mimeType and lastModified: " + xmlLocation);
+                    if (xmlLocation != null) {
+                        int attributeCount = this.xmlParser.getAttributeCount();
+                        if (attributeCount < 2 || attributeCount > 3) {
+                            throw new IOException("File element must have these attributes: url, mimeType and lastModified: " + xmlLocation);
+                        }
+                        try {
+                            AttributeMap attributes = AttributeMap.getInstance();
+                            attributes.setValues(xmlParser);
+                            FileDescription.SHARED.setBaseLocation(xmlLocation);
+                            FileDescription.SHARED.setValues(attributes);
+                            attributes.clear();
+                        } catch (ParseException e) {
+                            IOException ioe = new IOException("Error parsing file description: " + xmlLocation);
+                            ioe.initCause(e);
+                            throw ioe;
+                        }
+                        FileDescription.SHARED.create(creator);
+                        FileDescription.SHARED.clear();
+                    } else {
+                        logger.warn("file element encountered when xml location isn't known. skipping.");
                     }
-                    try {
-                        AttributeMap attributes = AttributeMap.getInstance();
-                        attributes.setValues(xmlParser);
-                        FileDescription.SHARED.setBaseLocation(xmlLocation);
-                        FileDescription.SHARED.setValues(attributes);
-                        attributes.clear();
-                    } catch (ParseException e) {
-                        IOException ioe = new IOException("Error parsing file description: " + xmlLocation);
-                        ioe.initCause(e);
-                        throw ioe;
-                    }
-                    FileDescription.SHARED.create(creator);
-                    FileDescription.SHARED.clear();
                 }
 
             } else if (eventType == XmlPullParser.END_TAG) {
