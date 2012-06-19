@@ -30,6 +30,11 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
@@ -43,14 +48,13 @@ import org.slf4j.LoggerFactory;
  * <ul>
  * <li>Import content into the content repository.
  * </ul>
- *
- * @scr.component immediate="false" label="%content.import.service.name"
- *                description="%content.import.service.description"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description"
- *               value="Apache Sling JCR Content Import Service"
- * @scr.service interface="org.apache.sling.jcr.contentloader.ContentImporter"
  */
+@Component(metatype=true, immediate=false, label="%content.import.service.name", description="%content.import.service.description")
+@Properties({
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="service.description", value="Apache Sling JCR Content Import Service")
+})
+@Service(ContentImporter.class)
 public class DefaultContentImporter extends BaseImportLoader implements JcrContentHelper, ContentImporter {
 
     /** default log */
@@ -59,9 +63,8 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
     /**
      * The MimeTypeService used by the initial content initialContentLoader to
      * resolve MIME types for files to be installed.
-     *
-     * @scr.reference
      */
+    @Reference
     private MimeTypeService mimeTypeService;
 
     /* (non-Javadoc)

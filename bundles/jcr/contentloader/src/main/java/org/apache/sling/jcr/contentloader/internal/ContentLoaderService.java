@@ -32,6 +32,10 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.engine.SlingSettingsService;
 import org.apache.sling.jcr.api.SlingRepository;
@@ -50,11 +54,12 @@ import org.slf4j.LoggerFactory;
  * <li>Fires OSGi EventAdmin events on behalf of internal helper objects
  * </ul>
  *
- * @scr.component metatype="no"
- * @scr.property name="service.description" value="Sling
- *               Content Loader Implementation"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
+@Component(metatype=false)
+@Properties({
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="service.description", value="Apache Sling Content Loader Implementation")
+})
 public class ContentLoaderService implements SynchronousBundleListener, JcrContentHelper {
 
     public static final String PROPERTY_CONTENT_LOADED = "content-loaded";
@@ -71,17 +76,15 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
 
     /**
      * The JCR Repository we access to resolve resources
-     *
-     * @scr.reference
      */
+    @Reference
     private SlingRepository repository;
 
     /**
      * The MimeTypeService used by the initial content initialContentLoader to
      * resolve MIME types for files to be installed.
-     *
-     * @scr.reference
      */
+    @Reference
     private MimeTypeService mimeTypeService;
 
     /**
@@ -100,8 +103,8 @@ public class ContentLoaderService implements SynchronousBundleListener, JcrConte
      */
     private final Set<String> updatedBundles = new HashSet<String>();
 
-    /** @scr.reference
-     *  Sling settings service. */
+    /** Sling settings service. */
+    @Reference
     protected SlingSettingsService settingsService;
 
     // ---------- BundleListener -----------------------------------------------
