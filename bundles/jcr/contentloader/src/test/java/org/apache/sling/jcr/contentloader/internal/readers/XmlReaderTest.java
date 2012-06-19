@@ -20,6 +20,7 @@ package org.apache.sling.jcr.contentloader.internal.readers;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -69,6 +70,17 @@ public class XmlReaderTest extends TestCase {
         assertEquals("lastModified mismatch", XmlReader.FileDescription.DATE_FORMAT.parse("1977-06-01T07:00:00+0100"), new Date(file.lastModified));
         assertEquals("Could not read file", "This is a test file.", file.content);
 
+    }
+    
+    public void testCreateFileWithNullLocation() throws Exception {
+        File input = new File("src/test/resources/reader/filesample.xml");
+        final FileInputStream ins = new FileInputStream(input);
+        try {
+            reader.parse(ins, creator);
+            assertEquals("Created files when we shouldn't have", 0, creator.filesCreated.size());
+        } finally {
+            ins.close();
+        }
     }
 
     public void testUseOSLastModified() throws RepositoryException, IOException {
