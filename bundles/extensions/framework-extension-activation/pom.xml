@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.fragment.activation</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling System Bundle Extension: Activation API</name>
@@ -41,9 +41,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.fragment.activation-1.0.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.fragment.activation-1.0.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.fragment.activation-1.0.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/framework-extension-activation</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/framework-extension-activation</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/framework-extension-activation</url>
     </scm>
 
     <properties>
