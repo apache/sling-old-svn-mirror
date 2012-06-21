@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>13-SNAPSHOT</version>
+        <version>12</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -39,6 +39,12 @@
         modify this bundle to also export those package from the
         platform or install respective API bundles.
     </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/framework-extension-activation</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/framework-extension-activation</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/framework-extension-activation</url>
+    </scm>
 
     <properties>
         <fragment.activation.version>0.0.0.fragment_activation</fragment.activation.version>
