@@ -97,6 +97,11 @@ public class CopyOperation extends AbstractCopyMoveOperation {
     static Item copy(Node src, Node dstParent, String name)
             throws RepositoryException {
 
+        if(isAncestorOrSameNode(src, dstParent)) {
+            throw new RepositoryException(
+                    "Cannot copy ancestor " + src.getPath() + " to descendant " + dstParent.getPath());
+        }
+        
         // ensure destination name
         if (name == null) {
             name = src.getName();
@@ -126,6 +131,19 @@ public class CopyOperation extends AbstractCopyMoveOperation {
             }
         }
         return dst;
+    }
+    
+    /** @return true if src is an ancestor node of dest, or if
+     *  both are the same node */
+    static boolean isAncestorOrSameNode(Node src, Node dest) throws RepositoryException {
+        if(src.getPath().equals("/")) {
+            return true;
+        } else if(src.getPath().equals(dest.getPath())) {
+            return true;
+        } else if(dest.getPath().startsWith(src.getPath() + "/")) {
+            return true;
+        }
+        return false;
     }
 
     /**
