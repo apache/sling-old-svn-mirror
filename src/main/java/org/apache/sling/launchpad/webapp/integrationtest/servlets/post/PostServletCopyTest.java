@@ -578,4 +578,43 @@ public class PostServletCopyTest extends HttpTestBase {
 
         testClient.delete(testRoot);
     }
+    
+    /** Copying siblings should work */
+    public void testCopySibling() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/csp/" + System.currentTimeMillis();
+        final Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello csp");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/a/1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/a/12", props);
+
+        props.clear();
+        props.put(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY);
+        props.put(SlingPostConstants.RP_DEST, testPath + "/a/12/13");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/a/1", props);
+
+        // assert content at old and new locations
+        for(String path : new String[] { "/a/1", "/a/12", "/a/12/13" }) {
+            final String content = getContent(HTTP_BASE_URL + testPath + path + ".json", CONTENT_TYPE_JSON);
+            assertJavascript("Hello csp", content, "out.println(data.text)", "at path " + path);
+        }
+    }
+    
+    /** Copying an ancestor to a descendant should fail */
+    public void testCopyAncestor() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/tcanc/" + System.currentTimeMillis();
+        final String testRoot = testClient.createNode(HTTP_BASE_URL + testPath, null);
+        final String parentPath = testPath + "/a/b";
+        final String childPath = parentPath + "/child";
+        
+        final String parentUrl = testClient.createNode(HTTP_BASE_URL + parentPath, null);
+        assertFalse("child node must not exist before copy", 
+                getContent(parentUrl + ".2.json", CONTENT_TYPE_JSON).contains("child"));
+        
+        final List<NameValuePair> opt = new ArrayList<NameValuePair>();
+        opt.add(new NameValuePair(SlingPostConstants.RP_OPERATION, SlingPostConstants.OPERATION_COPY));
+        opt.add(new NameValuePair(SlingPostConstants.RP_DEST, childPath));
+        
+        final int expectedStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        assertPostStatus(testRoot, expectedStatus, opt, "Expecting status " + expectedStatus);
+    }
 }
