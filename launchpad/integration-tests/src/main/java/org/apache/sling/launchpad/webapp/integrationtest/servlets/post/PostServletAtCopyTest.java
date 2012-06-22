@@ -17,9 +17,14 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /** Test item copy support by @CopyFrom suffix (SLING-455) */
@@ -195,5 +200,35 @@ public class PostServletAtCopyTest extends HttpTestBase {
         String content = getContent(HTTP_BASE_URL + testPath + "/some/not/existing/structure.json", CONTENT_TYPE_JSON);
         assertJavascript("Hello", content, "out.println(data.text)");
     }
-
+    
+    /** Copying siblings should work */
+    public void testCopySibling() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/AT_sibling/" + System.currentTimeMillis();
+        final Map<String, String> props = new HashMap<String, String>();
+        props.put("text", "Hello ATcsp");
+        testClient.createNode(HTTP_BASE_URL + testPath + "/a/1", props);
+        testClient.createNode(HTTP_BASE_URL + testPath + "/a/12", props);
+    
+        final List<NameValuePair> opt = new ArrayList<NameValuePair>();
+        opt.add(new NameValuePair(testPath + "/a/12/13@CopyFrom", testPath + "/a/1"));
+        
+        final int expectedStatus = HttpServletResponse.SC_OK;
+        assertPostStatus(HTTP_BASE_URL + testPath, expectedStatus, opt, "Expecting status " + expectedStatus);
+        
+        // assert content at old and new locations
+        for(String path : new String[] { "/a/1", "/a/12", "/a/12/13" }) {
+            final String content = getContent(HTTP_BASE_URL + testPath + path + ".json", CONTENT_TYPE_JSON);
+            assertJavascript("Hello ATcsp", content, "out.println(data.text)", "at path " + path);
+        }
+    }
+    
+    public void testCopyAncestor() throws IOException {
+        final String testPath = TEST_BASE_PATH + "/AT_tcanc/" + System.currentTimeMillis();
+        
+        final List<NameValuePair> opt = new ArrayList<NameValuePair>();
+        opt.add(new NameValuePair(testPath + "./@CopyFrom", "../"));
+        
+        final int expectedStatus = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+        assertPostStatus(HTTP_BASE_URL + testPath, expectedStatus, opt, "Expecting status " + expectedStatus);
+    }
  }
