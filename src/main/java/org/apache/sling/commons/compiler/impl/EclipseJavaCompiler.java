@@ -453,7 +453,7 @@ public class EclipseJavaCompiler implements JavaCompiler {
          * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
          */
         public char[] getFileName() {
-            return (this.packageName + '.' + this.mainTypeName + ".java").toCharArray();
+            return (this.packageName.replace('.', '/') + '/' + this.mainTypeName + ".java").toCharArray();
         }
     }
 }
