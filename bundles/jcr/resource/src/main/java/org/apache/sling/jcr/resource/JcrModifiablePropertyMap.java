@@ -28,7 +28,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
