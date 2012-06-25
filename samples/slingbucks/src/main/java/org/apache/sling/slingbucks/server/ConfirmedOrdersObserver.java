@@ -35,7 +35,9 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -43,8 +45,20 @@ import org.slf4j.LoggerFactory;
 
 /** Move confirmed orders under CONFIRMED_ORDERS_PATH, 
  *  by observing changes under ORDERS_PATH
+ *  
+ *  To execute our run() method periodically to check
+ *  if orders are ready to move, we use the Sling scheduler
+ *  service with the whiteboard pattern: registering this
+ *  class as a Runnable service and adding a property to
+ *  define the running schedule is sufficient to execute
+ *  the run() method regularly.
  */
 @Component
+@Service(value=Runnable.class)
+@Properties({
+    @org.apache.felix.scr.annotations.Property(name="scheduler.period", longValue=1),
+    @org.apache.felix.scr.annotations.Property(name="scheduler.concurrent", boolValue=false)
+})
 public class ConfirmedOrdersObserver implements EventListener, Runnable {
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -56,15 +70,9 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
     
     private Set<String> changedPropertyPaths = new HashSet<String>();
     private static final long WAIT_AFTER_LAST_CHANGE_MSEC = 5000;
-    private boolean running;
     
     protected void activate(ComponentContext context)  throws Exception {
         session = repository.loginAdministrative(null);
-        running = true;
-        
-        final Thread t = new Thread(this, getClass().getName());
-        t.setDaemon(true);
-        t.start();
         
         // Listen for changes to our orders
         if (repository.getDescriptor(Repository.OPTION_OBSERVATION_SUPPORTED).equals("true")) {
@@ -80,7 +88,6 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
     }
 
     protected void deactivate(ComponentContext componentContext) throws RepositoryException {
-        running = false;
         if(observationManager != null) {
             observationManager.removeEventListener(this);
         }
@@ -92,7 +99,8 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
 
     public void onEvent(EventIterator it) {
         while (it.hasNext()) {
-            // Accumulate the changed paths and store time of the last change event
+            // Just accumulate the changed paths - we'll do the actual work in 
+            // a separate non-event method, as this should return quickly.
             try {
                 final String path = it.nextEvent().getPath();
                 if(path.endsWith(SlingbucksConstants.CONFIRMED_ORDER_PROPERTY_NAME)) {
@@ -107,7 +115,8 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
         }
     }
 
-    private void runOneCycle() throws Exception {
+    /** Meant to be called often (every second maybe) by the Sling scheduler */
+    public void run() {
         if(changedPropertyPaths.isEmpty()) {
             return;
         }
@@ -143,6 +152,8 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
                     }
                 }
             }
+        } catch(Exception e){
+            log.error("Exception in run()", e);
         } finally {
             // Re-add any paths that we didn't process
             synchronized (changedPropertyPaths) {
@@ -150,22 +161,5 @@ public class ConfirmedOrdersObserver implements EventListener, Runnable {
                 changedPropertyPaths.addAll(toRetry);
             }
         }
-    }
-
-    public void run() {
-        log.info("Background thread {} starting", Thread.currentThread().getName());
-        while(running) {
-            try {
-                runOneCycle();
-            } catch(Exception e) {
-                log.warn(e.getClass().getName() + " in background thread", e);
-            }
-            
-            try {
-                Thread.sleep(1000L);
-            } catch(InterruptedException ignore) {
-            }
-        } 
-        log.info("Background thread {} done", Thread.currentThread().getName());
     }
 }
