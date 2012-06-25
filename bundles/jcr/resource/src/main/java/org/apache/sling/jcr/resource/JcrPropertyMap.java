@@ -290,6 +290,10 @@ public class JcrPropertyMap
      * @throws IllegalArgumentException if a repository exception occurs
      */
     JcrPropertyMapCacheEntry read(final String name) {
+        // check for empty key
+        if ( name.length() == 0 ) {
+            return null;
+        }
         // if the name is a path, we should handle this differently
         if ( name.indexOf('/') != -1 ) {
             // first a compatibility check with the old (wrong) ISO9075

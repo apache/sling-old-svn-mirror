@@ -324,6 +324,12 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         search(vm.values().iterator(), VALUE2);
     }
 
+    public void testContainsKeyEmpty() {
+        final JcrPropertyMap map = createPropertyMap(rootNode);
+        assertFalse(map.containsKey(""));
+        assertNull(map.get(""));
+    }
+
     public void testNamesOld() throws Exception {
         this.rootNode.getSession().refresh(false);
         this.rootNode.setProperty(ISO9075.encodePath(TEST_PATH), VALUE);
