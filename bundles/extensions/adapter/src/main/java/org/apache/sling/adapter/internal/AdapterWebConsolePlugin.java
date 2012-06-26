@@ -44,6 +44,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -206,7 +207,7 @@ public class AdapterWebConsolePlugin extends HttpServlet implements ServiceTrack
         }
 
         this.bundleContext.addBundleListener(this);
-        final Filter filter = this.bundleContext.createFilter("(&(adaptables=*)(adapters=*))");
+        final Filter filter = this.bundleContext.createFilter("(&(adaptables=*)(adapters=*)(" + Constants.OBJECTCLASS + "=" + AdapterFactory.SERVICE_NAME + "))");
         this.adapterTracker = new ServiceTracker(this.bundleContext, filter, this);
         this.adapterTracker.open();
     }
