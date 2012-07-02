@@ -61,7 +61,6 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
 
     public static final String MIME_TYPES = "/META-INF/mime.types";
 
-    /** @scr.property cardinality="-2147483647" type="String" */
     @Property(unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_MIME_TYPES = "mime.types";
 
