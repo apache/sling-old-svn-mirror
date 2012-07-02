@@ -24,6 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -40,19 +44,18 @@ import org.slf4j.LoggerFactory;
 /**
  * A SlingSafeMethodsServlet that renders the search results as JSON data
  *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- *
- * @scr.property name="service.description" value="Default Query Servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
  * Use this as the default query servlet for json get requests for Sling
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- * @scr.property name="sling.servlet.extensions" value="json"
- * @scr.property name="sling.servlet.selectors" value="query"
- * @scr.property name="sling.servlet.prefix" value="-1" type="Integer" private="true"
  */
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Default Query Servlet"),
+    @Property(name="service.vendor",value="The Apache Software Foundation"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.extensions", value="json"),
+    @Property(name="sling.servlet.selectors", value="query"),
+    @Property(name="sling.servlet.prefix", intValue=-1, propertyPrivate=true)
+})
 public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
     private static final long serialVersionUID = 1L;
@@ -81,13 +84,13 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
     private static final String REP_EXCERPT = "rep:excerpt()";
 
     public static final String TIDY = "tidy";
-    
+
     private final JsonResourceWriter itemWriter;
 
     public JsonQueryServlet() {
         itemWriter = new JsonResourceWriter(null);
     }
-    
+
     /** True if our request wants the "tidy" pretty-printed format */
     protected boolean isTidy(SlingHttpServletRequest req) {
         for(String selector : req.getRequestPathInfo().getSelectors()) {
@@ -114,7 +117,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
     protected String getQueryType(SlingHttpServletRequest req) {
         return req.getParameter(QUERY_TYPE);
     }
-    
+
 
     /**
      * Retrieve the query statement from the request.
@@ -161,7 +164,7 @@ public class JsonQueryServlet extends SlingSafeMethodsServlet {
 
             final JSONWriter w = new JSONWriter(resp.getWriter());
             w.setTidy(isTidy(req));
-            
+
             w.array();
 
             long count = -1;
