@@ -56,7 +56,6 @@ import org.slf4j.LoggerFactory;
  */
 public class PluggableDefaultAccessManager extends DefaultAccessManager {
 
-    /** @scr.reference */
     private AccessManagerPlugin accessManagerPlugin;
     private NamePathResolver namePathResolver;
     private static final Logger log = LoggerFactory.getLogger(PluggableDefaultAccessManager.class);
@@ -137,7 +136,7 @@ public class PluggableDefaultAccessManager extends DefaultAccessManager {
 
     public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
         if (this.sanityCheck()) {
-        	String resolvedPath = null; 
+        	String resolvedPath = null;
         	if (itemPath != null) {
         		resolvedPath = namePathResolver.getJCRPath(itemPath);
         	} else if (itemId != null) {

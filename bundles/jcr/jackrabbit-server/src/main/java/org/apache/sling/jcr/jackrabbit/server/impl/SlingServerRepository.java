@@ -31,6 +31,10 @@ import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.core.RepositoryImpl;
@@ -47,14 +51,14 @@ import org.osgi.service.log.LogService;
 /**
  * The <code>SlingServerRepository</code> TODO
  *
- * @scr.component label="%repository.name" description="%repository.description"
- *          name="org.apache.sling.jcr.jackrabbit.server.SlingServerRepository"
- *          configurationFactory="true" policy="require"
- *
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description"
- *      value="Factory for embedded Jackrabbit Repository Instances"
  */
+@Component(label="%repository.name", description="%repository.description", metatype=true,
+    name="org.apache.sling.jcr.jackrabbit.server.SlingServerRepository", configurationFactory=true,
+    policy=ConfigurationPolicy.REQUIRE)
+@Properties({
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="service.description", value="Factory for embedded Jackrabbit Repository Instances")
+})
 public class SlingServerRepository extends AbstractSlingRepository
         implements Repository, SlingRepository, RepositoryManager {
 
@@ -68,8 +72,8 @@ public class SlingServerRepository extends AbstractSlingRepository
      * <p>
      * This parameter is mandatory for this activator to start the repository.
      *
-     * @scr.property value=""
      */
+    @Property(value="")
     public static final String REPOSITORY_CONFIG_URL = "config";
 
     /**
@@ -79,13 +83,11 @@ public class SlingServerRepository extends AbstractSlingRepository
      * <p>
      * This parameter is mandatory for this activator to start the repository.
      *
-     * @scr.property value=""
      */
+    @Property(value="")
     public static final String REPOSITORY_HOME_DIR = "home";
 
-    /**
-     * @scr.property value=""
-     */
+    @Property(value="")
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
     //---------- Repository Management ----------------------------------------
