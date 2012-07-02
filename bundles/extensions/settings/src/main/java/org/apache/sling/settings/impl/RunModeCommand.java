@@ -58,7 +58,6 @@ public class RunModeCommand implements Command {
 
     private static final String CMD_NAME = "runmodes";
 
-    /** @scr.reference */
     private Set<String> modes;
 
     public RunModeCommand(final Set<String> modes) {
