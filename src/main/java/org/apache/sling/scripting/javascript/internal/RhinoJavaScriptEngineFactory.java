@@ -24,6 +24,11 @@ import java.util.Set;
 
 import javax.script.ScriptEngine;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.javascript.RhinoHostObjectProvider;
@@ -54,13 +59,12 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>RhinoJavaScriptEngineFactory</code> TODO
  *
- * @scr.component metatype="no"
- * @scr.service interface="javax.script.ScriptEngineFactory"
- * @scr.reference name="HostObjectProvider"
- *                interface="org.apache.sling.scripting.javascript.RhinoHostObjectProvider"
- *                cardinality="0..n" policy="dynamic"
- *                bind="addHostObjectProvider" unbind="removeHostObjectProvider"
  */
+@Component
+@Service(value=javax.script.ScriptEngineFactory.class)
+@Reference(name="HostObjectProvider", referenceInterface=RhinoHostObjectProvider.class,
+           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC,
+           bind="addHostObjectProvider", unbind="removeHostObjectProvider")
 public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
         implements ScopeProvider {
 
@@ -85,7 +89,7 @@ public class RhinoJavaScriptEngineFactory extends AbstractScriptEngineFactory
 
     private final Set<RhinoHostObjectProvider> hostObjectProvider = new HashSet<RhinoHostObjectProvider>();
 
-    /** @scr.reference */
+    @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
     public ScriptEngine getScriptEngine() {
