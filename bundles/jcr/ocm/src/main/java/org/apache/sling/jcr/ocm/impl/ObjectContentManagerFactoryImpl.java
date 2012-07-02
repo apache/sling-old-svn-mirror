@@ -37,6 +37,13 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.ocm.manager.ObjectContentManager;
 import org.apache.jackrabbit.ocm.manager.atomictypeconverter.AtomicTypeConverterProvider;
 import org.apache.jackrabbit.ocm.manager.cache.ObjectCache;
@@ -65,18 +72,19 @@ import org.xmlpull.v1.XmlPullParserException;
 /**
  * The <code>ObjectContentManagerFactory</code> TODO
  *
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.jcr.ocm.ObjectContentManagerFactory"
- * @scr.property name="service.description"
- *               value="Sling Object Content Manager Factory"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
  */
+@Component
+@Service(value=ObjectContentManagerFactory.class)
+@Properties({
+    @Property(name="service.description", value="Sling Object Content Manager Factory"),
+    @Property(name="service.vendor", value="The Apache Software Foundation")
+})
 public class ObjectContentManagerFactoryImpl implements ObjectContentManagerFactory, SynchronousBundleListener {
 
     /** default log */
     private static final Logger log = LoggerFactory.getLogger(ObjectContentManagerFactoryImpl.class);
 
-    /** scr.reference cardinality="0..1" policy="dynamic" */
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private EventAdmin eventAdmin;
 
     /**
