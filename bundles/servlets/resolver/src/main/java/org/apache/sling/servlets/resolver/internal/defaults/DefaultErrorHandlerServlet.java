@@ -27,6 +27,10 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
@@ -37,14 +41,15 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>DefaultErrorHandlerServlet</code> TODO
  *
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="javax.servlet.Servlet"
- *
  * This is the default error handler servlet registered at the end of the
  * global search path
- * @scr.property name="sling.servlet.paths" value="sling/servlet/errorhandler/default"
- * @scr.property name="sling.servlet.prefix" value="-1"
  */
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="sling.servlet.paths", value="sling/servlet/errorhandler/default"),
+    @Property(name="sling.servlet.prefix", value="-1")
+})
 @SuppressWarnings("serial")
 public class DefaultErrorHandlerServlet extends GenericServlet {
 

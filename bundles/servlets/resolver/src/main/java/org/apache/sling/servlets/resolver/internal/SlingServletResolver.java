@@ -44,6 +44,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -86,62 +94,22 @@ import org.slf4j.LoggerFactory;
  *
  * The resolver uses an own session to find the scripts.
  *
- * @scr.component name="org.apache.sling.servlets.resolver.SlingServletResolver"
- *                label="%servletresolver.name"
- *                description="%servletresolver.description"
- * @scr.property name="service.description" value="Sling Servlet Resolver and
- *               Error Handler"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.service interface="ServletResolver"
- * @scr.service interface="SlingScriptResolver"
- * @scr.service interface="ErrorHandler"
- * @scr.reference name="Servlet" interface="javax.servlet.Servlet"
- *                cardinality="0..n" policy="dynamic"
- * @scr.property name="event.topics"
- *               values.1="org/apache/sling/api/resource/Resource/*"
- *               values.2="org/apache/sling/api/resource/ResourceProvider/*"
- *               values.3="javax/script/ScriptEngineFactory/*"
- *               values.4="org/apache/sling/api/adapter/AdapterFactory/*"
- *               private="true"
  */
+@Component(name="org.apache.sling.servlets.resolver.SlingServletResolver", metatype=true,
+           label="%servletresolver.name", description="%servletresolver.description")
+@Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class})
+@Properties({
+    @Property(name="service.description", value="Sling Servlet Resolver and Error Handler"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="event.topics", propertyPrivate=true,
+         value={"org/apache/sling/api/resource/Resource/*",
+                    "org/apache/sling/api/resource/ResourceProvider/*",
+                    "javax/script/ScriptEngineFactory/*",
+                    "org/apache/sling/api/adapter/AdapterFactory/*"})
+})
+@Reference(name="Servlet", referenceInterface=javax.servlet.Servlet.class,
+           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
 public class SlingServletResolver implements ServletResolver, SlingScriptResolver, ErrorHandler, EventHandler {
-
-    /** Servlet resolver logger */
-    public static final Logger LOGGER = LoggerFactory.getLogger(SlingServletResolver.class);
-
-    /**
-     * @scr.property valueRef="DEFAULT_SERVLET_ROOT"
-     */
-    public static final String PROP_SERVLET_ROOT = "servletresolver.servletRoot";
-
-    /**
-     * @scr.property
-     */
-    public static final String PROP_SCRIPT_USER = "servletresolver.scriptUser";
-
-    /**
-     * @scr.property valueRef="DEFAULT_CACHE_SIZE"
-     */
-    public static final String PROP_CACHE_SIZE = "servletresolver.cacheSize";
-
-    /**
-     * @scr.property
-     */
-    public static final String PROP_DEFAULT_SCRIPT_WORKSPACE = "servletresolver.defaultScriptWorkspace";
-
-    /**
-     * @scr.property valueRef="DEFAULT_USE_REQUEST_WORKSPACE"
-     */
-    public static final String PROP_USE_REQUEST_WORKSPACE = "servletresolver.useRequestWorkspace";
-
-    private static final boolean DEFAULT_USE_REQUEST_WORKSPACE = false;
-
-    /**
-     * @scr.property valueRef="DEFAULT_USE_DEFAULT_WORKSPACE"
-     */
-    public static final String PROP_USE_DEFAULT_WORKSPACE = "servletresolver.useDefaultWorkspace";
-
-    private static final boolean DEFAULT_USE_DEFAULT_WORKSPACE = false;
 
     /**
      * The default servlet root is the first search path (which is usally /apps)
@@ -149,28 +117,50 @@ public class SlingServletResolver implements ServletResolver, SlingScriptResolve
     public static final String DEFAULT_SERVLET_ROOT = "0";
 
     /** The default cache size for the script resolution. */
-    public static final Integer DEFAULT_CACHE_SIZE = 200;
+    public static final int DEFAULT_CACHE_SIZE = 200;
+
+    /** Servlet resolver logger */
+    public static final Logger LOGGER = LoggerFactory.getLogger(SlingServletResolver.class);
+
+    @Property(value=DEFAULT_SERVLET_ROOT)
+    public static final String PROP_SERVLET_ROOT = "servletresolver.servletRoot";
+
+    @Property
+    public static final String PROP_SCRIPT_USER = "servletresolver.scriptUser";
+
+    @Property(intValue=DEFAULT_CACHE_SIZE)
+    public static final String PROP_CACHE_SIZE = "servletresolver.cacheSize";
+
+    @Property
+    public static final String PROP_DEFAULT_SCRIPT_WORKSPACE = "servletresolver.defaultScriptWorkspace";
+
+    private static final boolean DEFAULT_USE_DEFAULT_WORKSPACE = false;
+
+    @Property(boolValue=DEFAULT_USE_DEFAULT_WORKSPACE)
+    public static final String PROP_USE_REQUEST_WORKSPACE = "servletresolver.useRequestWorkspace";
+
+    private static final boolean DEFAULT_USE_REQUEST_WORKSPACE = false;
+
+    @Property(boolValue=DEFAULT_USE_REQUEST_WORKSPACE)
+    public static final String PROP_USE_DEFAULT_WORKSPACE = "servletresolver.useDefaultWorkspace";
+
 
     private static final String REF_SERVLET = "Servlet";
 
-    /**
-     * @scr.property values="/"
-     */
+    @Property(value="/", unbounded=PropertyUnbounded.ARRAY)
     public static final String PROP_PATHS = "servletresolver.paths";
 
     private static final String[] DEFAULT_PATHS = new String[] {"/"};
 
-    /**
-     * @scr.property values="html"
-     */
+    @Property(value="html", unbounded=PropertyUnbounded.ARRAY)
     public static final String PROP_DEFAULT_EXTENSIONS = "servletresolver.defaultExtensions";
 
     private static final String[] DEFAULT_DEFAULT_EXTENSIONS = new String[] {"html"};
 
-    /** @scr.reference */
+    @Reference
     private ServletContext servletContext;
 
-    /** @scr.reference */
+    @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
     private ResourceResolver scriptResolver;
