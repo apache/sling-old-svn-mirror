@@ -18,21 +18,24 @@
  */
 package org.apache.sling.engine.impl;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.engine.SlingSettingsService;
 
 /**
  * The implementation of the settings service has moved to the
  * settings module. This is just a wrapper for compatibility.
- * @scr.component metatype=false
- * @scr.service
  *
  * @deprecated
  */
+@Component
+@Service
 @Deprecated
 public class SlingSettingsServiceImpl
     implements SlingSettingsService {
 
-    /** @scr.reference */
+    @Reference
     private org.apache.sling.settings.SlingSettingsService settingsService;
 
     /**

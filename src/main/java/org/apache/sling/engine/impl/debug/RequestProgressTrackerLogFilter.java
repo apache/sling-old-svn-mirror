@@ -28,6 +28,10 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.slf4j.Logger;
@@ -36,14 +40,15 @@ import org.slf4j.LoggerFactory;
 /**
  * Filter that dumps the output of the RequestProgressTracker to the log after
  * processing the request.
- * 
- * @scr.component immediate="true" metatype="no"
- * @scr.property name="service.description" value="RequestProgressTracker dump
- *               filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.service
+ *
  */
+@Component
+@Service
+@Properties({
+    @Property(name="service.description", value="RequestProgressTracker dump filter"),
+    @Property(name="service.vendor", value="The Apache Software Foundation"),
+    @Property(name="filter.scope", value="request", propertyPrivate=true)
+})
 public class RequestProgressTrackerLogFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(RequestProgressTrackerLogFilter.class);
