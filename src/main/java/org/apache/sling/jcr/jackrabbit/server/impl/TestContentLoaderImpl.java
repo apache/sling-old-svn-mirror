@@ -21,6 +21,11 @@ import java.io.IOException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.jackrabbit.server.TestContentLoader;
 
@@ -30,16 +35,16 @@ import org.apache.sling.jcr.jackrabbit.server.TestContentLoader;
  * JackrabbitRepositoryStub class. Once that class is refactored, we can remove
  * almost all of this code.
  *
- * @scr.component metatype="no"
- * @scr.service
- *
- * @scr.property name="service.description" value="Test Content Loader"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- *
  */
+@Component
+@Service
+@Properties({
+    @Property(name="service.description", value="Test Content Loader"),
+    @Property(name="service.vendor", value="The Apache Software Foundation")
+})
 public class TestContentLoaderImpl implements TestContentLoader {
 
-    /** @scr.reference */
+    @Reference
     private SlingRepository repository;
 
     private String encoding = "UTF-8";
