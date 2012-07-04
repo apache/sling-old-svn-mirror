@@ -25,6 +25,10 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.extensions.gwt.sample.service.Note;
 import org.apache.sling.extensions.gwt.sample.service.NotesService;
 import org.apache.sling.extensions.gwt.user.server.rpc.SlingRemoteServiceServlet;
@@ -37,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * This class implements a servlet-based RPC remote service for handling RPC calls from the GWT client application.
  * <p/>
  * It registers as an OSGi service and component, under the <code>javax.servlet.Servlet</code> interface. It thus
- * acts as a servlet, registered under the path specified  by the <code>sling.servlet.paths</code> @scr.property.
+ * acts as a servlet, registered under the path specified  by the <code>sling.servlet.paths</code> scr property.
  * The path under which the servlet is registered must correspond to the GWT module's base url.
  * <p/>
  * The NotesServiceImpl class handles the creation, retrieval and deletion of {@link Note}s, as POJOs and as
@@ -47,10 +51,10 @@ import org.slf4j.LoggerFactory;
  * GWT RPC calls in a Sling environment. The servlet must be registered with the GWT client application in the
  * <code>Notes.gwt.xml</code> module configuration file.
  *
- * @scr.component metatype="false"
- * @scr.service interface="javax.servlet.Servlet"
- * @scr.property name="sling.servlet.paths" values="/gwt/org.apache.sling.extensions.gwt.sample.Notes/notesservice"
  */
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Property(name="sling.servlet.paths", value="/gwt/org.apache.sling.extensions.gwt.sample.Notes/notesservice")
 public class NotesServiceImpl extends SlingRemoteServiceServlet implements NotesService {
 
     /**
@@ -80,8 +84,8 @@ public class NotesServiceImpl extends SlingRemoteServiceServlet implements Notes
      * This is the <code>SlingRepository</code> as provided by the Sling environment. It is used for repository
      * access/operations.
      *
-     * @scr.reference
      */
+    @Reference
     private SlingRepository repository;
 
     /**
