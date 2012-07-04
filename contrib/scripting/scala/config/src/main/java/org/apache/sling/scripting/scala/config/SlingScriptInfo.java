@@ -21,6 +21,8 @@ import static org.apache.sling.scripting.scala.Utils.makeIdentifier;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -31,9 +33,9 @@ import org.apache.sling.scripting.scala.ScriptInfo;
  * This {@link ScriptInfo} implementation provides the script class name
  * by retrieving it from the <code>ScriptContext</code>.
  *
- * @scr.component
- * @scr.service
  */
+@Component
+@Service
 public class SlingScriptInfo extends AbstractScriptInfo {
 
     @Override
