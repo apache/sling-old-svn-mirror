@@ -82,7 +82,7 @@ public interface ResourceProvider {
      *         the path.
      * @throws org.apache.sling.api.SlingException
      *             may be thrown in case of any problem creating the <code>Resource</code> instance.
-     * @deprecated since 2.3.0 (and JCR Resource 2.1.0), this method will not be invoked.
+     * @deprecated since 2.2.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
     @Deprecated
     Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request, String path);
