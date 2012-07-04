@@ -49,6 +49,12 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.felix.bundlerepository.RepositoryAdminImpl;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.http.HttpContext;
@@ -60,14 +66,14 @@ import org.osgi.service.obr.Resolver;
 /**
  * The <code>OSGiBundleRepositoryServlet</code> TODO
  *
- * @scr.component immediate="true"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="OSGi Bundle Repository (OBR)"
- * @scr.property name="manager.root" value="/"
- * @scr.property name="obrLocation" value="obr"
- * @scr.property name="obrName" value="internal"
- * @author fmeschbe
  */
+@Component(metatype=true, immediate=true)
+@Properties({
+    @Property(name="service.description", value="OSGi Bundle Repository (OBR)"),
+    @Property(name="manager.root", value="/"),
+    @Property(name="obrLocation", value="obr"),
+    @Property(name="obrName", value="internal")
+})
 public class OSGiBundleRepositoryServlet extends HttpServlet {
 
     /**
@@ -87,10 +93,10 @@ public class OSGiBundleRepositoryServlet extends HttpServlet {
         "org.apache.sling.sling-servlet-bridge"
     };
 
-    /** @scr.reference cardinality="0..1" policy="dynamic" */
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private LogService log;
 
-    /** @scr.reference */
+    @Reference
     private HttpService httpService;
 
     private ComponentContext ctx;
