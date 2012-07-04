@@ -24,6 +24,10 @@ import java.util.Hashtable;
 
 import javax.jcr.Repository;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.osgi.service.log.LogService;
@@ -31,24 +35,19 @@ import org.osgi.service.log.LogService;
 /**
  * The <code>SlingClientRepository</code> TODO
  *
- * @scr.component label="%repository.name" description="%repository.description"
- *          name="org.apache.sling.jcr.jackrabbit.client.SlingClientRepository"
- *          configurationFactory="true" policy="require"
- *
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description"
- *      value="Factory for non-embedded JCR Repository Instances"
- *
- * @scr.property name="java.naming.factory.initial"
- *               value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"
- * @scr.property name="java.naming.provider.url" value="http://sling.apache.org"
  */
+@Component(name="org.apache.sling.jcr.jackrabbit.client.SlingClientRepository", metatype=true,
+    description="%repository.description", label="%repository.name", configurationFactory=true,
+    policy=ConfigurationPolicy.REQUIRE)
+@Properties({
+    @Property(name="service.description", value="Factory for non-embedded JCR Repository Instances"),
+    @Property(name="java.naming.factory.initial", value="org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory"),
+    @Property(name="java.naming.provider.url", value="http://sling.apache.org")
+})
 public class SlingClientRepository extends AbstractSlingRepository
         implements Repository, SlingRepository {
 
-    /**
-     * @scr.property value="jackrabbit"
-     */
+    @Property(value="jackrabbit")
     public static final String REPOSITORY_NAME = "name";
 
     //---------- Repository Publication ---------------------------------------
