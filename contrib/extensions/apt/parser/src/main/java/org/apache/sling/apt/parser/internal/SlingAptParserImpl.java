@@ -23,39 +23,38 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.maven.doxia.module.apt.AptParseException;
 import org.apache.maven.doxia.module.apt.AptParser;
 import org.apache.maven.doxia.sink.Sink;
 import org.apache.sling.apt.parser.SlingAptParseException;
 import org.apache.sling.apt.parser.SlingAptParser;
 
-/** SlingAptParser implementation, provided as an SCR service
- * 
-*   @scr.component metatype="no" 
-*       description="Converts APT documents to HTML format"
-*   @scr.property name="service.vendor" value="The Apache Software Foundation"
-*   @scr.property name="service.description"
-*       value="Sling APT structured text parser"
-*
-*   @scr.service
-*/
-
+/**
+ * SlingAptParser implementation, provided as an SCR service
+ *
+ */
+@Component()
+@Service
+@Property(name="service.description", value="Sling APT structured text parser")
 public class SlingAptParserImpl implements SlingAptParser {
 
     private final MacroResolver macroProvider;
-    
+
     public SlingAptParserImpl() {
         macroProvider = null;
     }
-    
+
     SlingAptParserImpl(MacroResolver mp) {
         macroProvider = mp;
     }
-    
+
     public void parse(Reader input, Writer output) throws IOException, SlingAptParseException {
         parse(input, output, null);
     }
-    
+
     public void parse(Reader input, Writer output, Map<String, Object> options) throws IOException, SlingAptParseException {
         final Sink sink = new CustomAptSink(output, options);
         final AptParser parser = new CustomAptParser(macroProvider);

@@ -25,6 +25,11 @@ import java.io.Writer;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
@@ -33,50 +38,35 @@ import org.apache.sling.apt.parser.SlingAptParser;
 /**
 * Parses APT structured text files and renders them in HTML
 *
-* @scr.service
-*  interface="javax.servlet.Servlet"
-*
-* @scr.component
-*  immediate="true"
-*  metatype="no"
-*
-* @scr.property
-*  name="service.description"
-*  value="Sling APT Servlet"
-*
-* @scr.property
-*  name="service.vendor"
-*  value="The Apache Software Foundation"
-*
 * Use this as the default GET servlet for apt requests
-* @scr.property
-*  name="sling.servlet.resourceTypes"
-*  value="sling/servlet/default"
 *
 * TODO for now we have to use this weird extension, added after the
 * full filename. We should add a sling.servlet.contentExtension parameter
 * to the servlet selection mechanism, and use that to tell sling to map
 * an html request to an apt file using this servlet.
-* 
-* @scr.property
-*  name="sling.servlet.extensions"
-*  value="aptml"
+*
 */
-
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Sling APT Servlet"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.extensions", value="aptml")
+})
 public class SlingAptServlet extends SlingSafeMethodsServlet {
-    
-    /** @scr.reference */
+
+    @Reference
     protected SlingAptParser parser;
-    
+
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         final InputStream stream = request.getResource().adaptTo(InputStream.class);
         if(stream == null) {
             response.sendError(
-                HttpServletResponse.SC_BAD_REQUEST, 
+                HttpServletResponse.SC_BAD_REQUEST,
                 "Resource does not adapt to an InputStream: " + request.getResource()
             );
         }
-        
+
         // TODO which encoding to use for input??
         // Should find out from the JCR resource node
         final String encoding = "UTF-8";
