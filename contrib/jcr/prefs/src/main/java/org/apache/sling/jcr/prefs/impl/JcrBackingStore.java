@@ -35,18 +35,21 @@ import org.apache.felix.prefs.BackingStore;
 import org.apache.felix.prefs.BackingStoreManager;
 import org.apache.felix.prefs.PreferencesDescription;
 import org.apache.felix.prefs.PreferencesImpl;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.prefs.BackingStoreException;
 
-/**
- * @scr.component metatype="false"
- * @scr.service interface="org.apache.felix.prefs.BackingStore"
- *
- * @scr.property name="sling.preferences.jcr.path" value="/preferences";
- * @scr.property name="sling.preferences.jcr.namespace" value="http://osgi.org/service/prefs/Preferences/1.1";
- * @scr.property name="sling.preferences.jcr.prefix" value="osgipref";
- */
+@Component
+@Service(value=BackingStore.class)
+@Properties({
+    @org.apache.felix.scr.annotations.Property(name="sling.preferences.jcr.path", value="/preferences"),
+    @org.apache.felix.scr.annotations.Property(name="sling.preferences.jcr.namespace",value="http://osgi.org/service/prefs/Preferences/1.1"),
+    @org.apache.felix.scr.annotations.Property(name="sling.preferences.jcr.prefix", value="osgipref")
+})
 public class JcrBackingStore implements BackingStore {
 
     protected static final String NS_URI = "http://osgi.org/service/prefs/Preferences/1.1";
@@ -55,7 +58,7 @@ public class JcrBackingStore implements BackingStore {
     protected static final String NAMESPACE_PROPERTY = "sling.preferences.jcr.namespace";
     protected static final String NAMESPACE_PREFIX_PROPERTY = "sling.preferences.jcr.prefix";
 
-    /** @scr.reference */
+    @Reference
     protected SlingRepository repository;
 
     protected boolean initialized = false;
