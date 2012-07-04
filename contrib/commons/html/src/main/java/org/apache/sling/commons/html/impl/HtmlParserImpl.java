@@ -21,6 +21,8 @@ package org.apache.sling.commons.html.impl;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.html.HtmlParser;
 import org.ccil.cowan.tagsoup.Parser;
 import org.w3c.dom.Document;
@@ -29,11 +31,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.LexicalHandler;
 
-/**
- * @scr.component metatype="false"
- * @scr.service interface="HtmlParser"
- *
- */
+@Component
+@Service(value=HtmlParser.class)
 public class HtmlParserImpl implements HtmlParser {
 
     /**

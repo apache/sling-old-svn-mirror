@@ -30,6 +30,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderProvider;
 import org.osgi.service.component.ComponentContext;
@@ -38,10 +41,10 @@ import org.osgi.service.component.ComponentContext;
  * The <code>FSClassLoaderProvider</code> is a dynamic class loader privder
  * which uses the file system to store and read class files from.
  *
- * @scr.component metatype="false"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Provides FileSystem ClassLoaders"
  */
+@Component
+@Service
+@Property( name="service.vendor", value="The Apache Software Foundation")
 public class FSClassLoaderProvider
     implements DynamicClassLoaderProvider, ClassLoaderWriter {
 
