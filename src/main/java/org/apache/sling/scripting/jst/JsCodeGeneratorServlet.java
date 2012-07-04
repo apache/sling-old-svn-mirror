@@ -26,6 +26,10 @@ import java.io.Reader;
 
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
@@ -35,24 +39,22 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 /**
  * A SlingSafeMethodsServlet that renders JST templates as javascript code
  *
- * @scr.component immediate="true" metatype="no"
- * @scr.service interface="javax.servlet.Servlet"
- * 
- * @scr.property name="service.description" value="JST code generator servlet"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * 
- * @scr.property name="sling.servlet.resourceTypes"
- *               value="sling/servlet/default"
- * @scr.property name="sling.servlet.extensions" value="js"
- * @scr.property name="sling.servlet.selectors" value="jst"
  */
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="JST code generator servlet"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
+    @Property(name="sling.servlet.extensions", value="js"),
+    @Property(name="sling.servlet.selectors", value="jst")
+})
 @SuppressWarnings("serial")
 public class JsCodeGeneratorServlet extends SlingSafeMethodsServlet {
 
     private final JsCodeGenerator codeGenerator = new JsCodeGenerator();
-    
+
     @Override
-    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
+    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
     throws ServletException, IOException {
         final Reader scriptReader = getReader(request.getResource());
         final PrintWriter output = new PrintWriter(response.getOutputStream());
@@ -60,7 +62,7 @@ public class JsCodeGeneratorServlet extends SlingSafeMethodsServlet {
         codeGenerator.generateCode(scriptReader, output);
         output.flush();
     }
-    
+
     /** Return a Reader for the given Resource */
     static Reader getReader(Resource resource) throws IOException {
         if(resource == null) {
@@ -69,8 +71,8 @@ public class JsCodeGeneratorServlet extends SlingSafeMethodsServlet {
         final InputStream ins = resource.adaptTo(InputStream.class);
         if (ins == null) {
             throw new IOException("Resource " + resource.getPath() + " cannot be adapted to an InputStream");
-        } 
-        
+        }
+
         String enc = (String) resource.getResourceMetadata().get(ResourceMetadata.CHARACTER_ENCODING);
         if (enc == null) {
             enc = "UTF-8";
