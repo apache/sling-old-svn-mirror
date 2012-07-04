@@ -38,6 +38,10 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
@@ -61,13 +65,14 @@ import org.apache.sling.engine.RequestUtil;
  * and in fact even slows response time down !!
  * </ul>
  *
- * @scr.component metatype="no" enabled="no"
- * @scr.property name="service.description" value="Sample Request Filter"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="filter.scope" value="request" private="true"
- * @scr.property name="filter.order" value="-2147483648" type="Integer" private="true"
- * @scr.service
  */
+@Component(enabled=false)
+@Service
+@Properties({
+    @Property(name="service.description", value="Sample Request Filter"),
+    @Property(name="filter.scope", value="request", propertyPrivate=true),
+    @Property(name="filter.order", intValue=-2147483648, propertyPrivate=true)
+})
 public class ZipFilter implements Filter {
 
     /**

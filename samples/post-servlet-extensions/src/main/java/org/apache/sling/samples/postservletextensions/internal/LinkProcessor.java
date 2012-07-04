@@ -22,6 +22,9 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.servlets.post.Modification;
@@ -30,20 +33,20 @@ import org.apache.sling.servlets.post.SlingPostProcessor;
 
 /**
  * This processor allows to create links between nodes.
- * 
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.servlets.post.SlingPostProcessor"
- * @scr.property name="sling.post.processor" value="link"
+ *
  */
+@Component
+@Service(value=SlingPostProcessor.class)
+@Property(name="sling.post.processor", value="link")
 public class LinkProcessor implements SlingPostProcessor {
 
 	public final LinkHelper linkHelper = new LinkHelper();
-	
+
 	public void process(SlingHttpServletRequest request,
 			List<Modification> changes) throws Exception {
 
 		Session session = request.getResourceResolver().adaptTo(Session.class);
-		
+
 		RequestParameter linkParam = request.getRequestParameter(":link");
 		if (linkParam != null){
 			String linkPath = linkParam.getString();
@@ -53,7 +56,7 @@ public class LinkProcessor implements SlingPostProcessor {
 				// is it possible to add the response to the method header ?
 				String resourcePath = changes.get(0).getSource();
 				Node source = (Node) session.getItem(resourcePath);
-				
+
 				// create a symetric link
 				if (session.itemExists(linkPath)) {
 					Item targetItem = session.getItem(linkPath);
@@ -63,7 +66,7 @@ public class LinkProcessor implements SlingPostProcessor {
 				}
 			}
 		}
-		
+
 
 	}
 }

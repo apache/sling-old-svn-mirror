@@ -24,6 +24,10 @@ import java.util.Iterator;
 
 import javax.servlet.ServletException;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
@@ -36,13 +40,14 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
  * considered a "page" if the Content object is an instance of the
  * {@link SamplePage} class.
  *
- * @scr.component immediate="true" metatype="no"
- * @scr.property name="service.description" value="Sample Navigation Component"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="sling.servlet.resourceTypes" value="sling/sample.navigation"
- * @scr.property name="sling.servlet.methods" value="html"
- * @scr.service interface="javax.servlet.Servlet"
  */
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name="service.description", value="Sample Navigation Component"),
+    @Property(name="sling.servlet.resourceTypes", value="sling/sample.navigation"),
+    @Property(name="sling.servlet.methods", value="html")
+})
 public class Navigation extends SlingSafeMethodsServlet {
 
     public static final String RESOURCE_TYPE = "sling/sample.navigation";

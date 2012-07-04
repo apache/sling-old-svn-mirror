@@ -24,6 +24,10 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceWrapper;
@@ -41,12 +45,10 @@ import org.slf4j.LoggerFactory;
  *  mapping applies, and "2" is the (1-based) index of the path component to
  *  use as the resource type.
  *
- * @scr.component immediate="true" label="%defaultRtp.name"
- *                description="%defaultRtp.description"
- * @scr.property name="service.vendor" value="The Apache Software Foundation"
- * @scr.property name="service.description" value="Sling Sample Resource Decorator"
- * @scr.service
  */
+@Component(metatype=true, label="%defaultRtp.name", description="%defaultRtp.description")
+@Service
+@Property(name="service.description", value="Sling Sample Resource Decorator")
 public class PathBasedResourceDecorator implements ResourceDecorator {
 
     /**
@@ -54,10 +56,8 @@ public class PathBasedResourceDecorator implements ResourceDecorator {
      *  specify the use of path component 2 for the /content path, and add a similar
      *  definition for the /sling-test-pbrt path that is used in integration testing.
      *
-     * @scr.property
-     *  values.1="/content:2"
-     *  values.2="/sling-test-pbrt:2"
      */
+    @Property(value={"/content:2", "/sling-test-pbrt:2"}, unbounded=PropertyUnbounded.ARRAY)
     private static final String PROP_PATH_MAPPING = "path.mapping";
 
     private final Logger log = LoggerFactory.getLogger(getClass());

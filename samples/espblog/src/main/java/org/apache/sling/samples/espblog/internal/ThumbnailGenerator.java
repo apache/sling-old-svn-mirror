@@ -39,6 +39,9 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -48,20 +51,18 @@ import org.slf4j.LoggerFactory;
  * Observe the espblog content for changes, and generate
  * thumbnails when images are added.
  *
- * @scr.component immediate="true" metatype="false"
- * @scr.property name="service.description" value="Sling ESP blog sample thumbnails generator"
- * @scr.property name="service.vendor" value="Apache Software Foundation"
- *
  */
+@Component(immediate=true)
+@Property(name="service.description", value="Sling ESP blog sample thumbnails generator")
 public class ThumbnailGenerator implements EventListener {
 
     private Session session;
     private ObservationManager observationManager;
 
-	/** @scr.reference */
+	@Reference
 	private SlingRepository repository;
 
-    /** @scr.property value="/content/espblog" */
+    @Property(value="/content/espblog")
     private static final String CONTENT_PATH_PROPERTY = "content.path";
 
 	private static final Logger log = LoggerFactory

@@ -20,27 +20,24 @@ import java.util.List;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
-import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.servlets.post.AbstractSlingPostOperation;
 import org.apache.sling.servlets.post.Modification;
-import org.apache.sling.servlets.post.SlingPostOperation;
-import org.apache.sling.servlets.post.SlingPostProcessor;
 
 /**
  * This operation allows to create links between nodes.
- * 
- * @scr.component metatype="no" immediate="true"
- * @scr.service interface="org.apache.sling.servlets.post.SlingPostOperation"
- * @scr.property name="sling.post.operation" value="link"
+ *
  */
+@Component
+@Service(value=org.apache.sling.servlets.post.SlingPostOperation.class)
+@org.apache.felix.scr.annotations.Property(name="sling.post.operation", value="link")
 public class LinkOperation extends AbstractSlingPostOperation {
 
     public final LinkHelper linkHelper = new LinkHelper();

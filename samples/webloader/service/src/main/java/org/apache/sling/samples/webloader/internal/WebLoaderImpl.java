@@ -21,47 +21,41 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.samples.webloader.Webloader;
 import org.apache.sling.samples.webloader.WebloaderJobStatus;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Webloader implementation, manages WebloaderJobs
- *  
- * @scr.service
- *
- * @scr.component
- *  immediate="true"
- *  metatype="no"
- *
- * @scr.property
- *  name="service.description"
- *  value="Sling Webloader service"
- *
- * @scr.property
- *  name="service.vendor"
- *  value="The Apache Software Foundation"
+/**
+ * Webloader implementation, manages WebloaderJobs
  *
  */
+@Component(immediate=true)
+@Service
+@Property(name="service.description", value="Sling Webloader service")
 public class WebLoaderImpl implements Webloader {
-    
+
     private static final Logger log = LoggerFactory.getLogger(WebLoaderImpl.class);
-    
+
     private final Map<String, WebloaderJob> jobs = new HashMap<String, WebloaderJob>();
-    
-    /** @scr.reference */
+
+    @Reference
     private SlingRepository repository;
-    
-    /** @scr.reference */
+
+    @Reference
     private MimeTypeService mimeTypeService;
 
     /** @inheritDoc */
-    public String createJob(String webQuery, String storagePath, String 
+    public String createJob(String webQuery, String storagePath, String
             fileExtensions, int maxDocsToRetrieve, int maxDocSizeInKb) {
         deleteFinishedJobs();
-        final WebloaderJob j = new WebloaderJob(repository, mimeTypeService, 
+        final WebloaderJob j = new WebloaderJob(repository, mimeTypeService,
                 webQuery, storagePath, fileExtensions, maxDocsToRetrieve, maxDocSizeInKb);
         synchronized (jobs) {
             jobs.put(j.getJobId(), j);
@@ -83,7 +77,7 @@ public class WebLoaderImpl implements Webloader {
                 toDelete.add(j);
             }
         }
-        
+
         synchronized (jobs) {
             for(WebloaderJob j : toDelete) {
                 jobs.remove(j.getJobId());
