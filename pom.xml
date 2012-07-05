@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>13-SNAPSHOT</version>
+        <version>14-SNAPSHOT</version>
     </parent>
 
     <artifactId>org.apache.sling.rewriter</artifactId>
