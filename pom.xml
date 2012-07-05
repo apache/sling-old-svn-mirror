@@ -28,7 +28,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <packaging>pom</packaging>
-    <version>13-SNAPSHOT</version>
+    <version>13</version>
 
     <name>Apache Sling (Parent)</name>
     <description>The parent project for Apache Sling</description>
@@ -55,9 +55,9 @@
 
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/parent</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/parent</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/parent</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/sling-13</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/sling-13</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/sling-13</url>
     </scm>
 
 
