@@ -40,12 +40,12 @@ public class JarExecutor {
     private final int serverPort;
     private final Properties config;
     private Executor executor;
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final int DEFAULT_PORT = 8765;
     public static final int DEFAULT_EXIT_TIMEOUT = 30;
-    
+
     public static final String DEFAULT_JAR_FOLDER = "target/dependency";
     public static final String DEFAULT_JAR_NAME_REGEXP = "org.apache.sling.*jar$";
     public static final String PROP_PREFIX = "jar.executor.";
@@ -56,7 +56,7 @@ public class JarExecutor {
     public static final String PROP_WORK_FOLDER = PROP_PREFIX + "work.folder";
     public static final String PROP_JAR_OPTIONS = PROP_PREFIX + "jar.options";
     public static final String PROP_EXIT_TIMEOUT_SECONDS = PROP_PREFIX + "exit.timeout.seconds";
-    
+
     @SuppressWarnings("serial")
     public static class ExecutorException extends Exception {
         ExecutorException(String reason) {
@@ -66,12 +66,12 @@ public class JarExecutor {
             super(reason, cause);
         }
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + ": " + jarToExecute.getName() + " (port " + serverPort + ")";
     }
-    
+
     public int getServerPort() {
         return serverPort;
     }
@@ -85,11 +85,11 @@ public class JarExecutor {
         serverPort = portStr == null ? DEFAULT_PORT : Integer.valueOf(portStr);
 
         javaExecutable = isWindows ? "java.exe" : "java";
-        
+
         String jarFolderPath = config.getProperty(PROP_JAR_FOLDER);
         jarFolderPath = jarFolderPath == null ? DEFAULT_JAR_FOLDER : jarFolderPath;
         final File jarFolder = new File(jarFolderPath);
-        
+
         String jarNameRegexp = config.getProperty(PROP_JAR_NAME_REGEXP);
         jarNameRegexp = jarNameRegexp == null ? DEFAULT_JAR_NAME_REGEXP : jarNameRegexp;
         final Pattern jarPattern = Pattern.compile(jarNameRegexp);
@@ -98,16 +98,14 @@ public class JarExecutor {
         final String [] candidates = jarFolder.list();
         if(candidates == null) {
             throw new ExecutorException(
-                    "No files found in jar folder specified by " 
+                    "No files found in jar folder specified by "
                     + PROP_JAR_FOLDER + " property: " + jarFolder.getAbsolutePath());
         }
         File f = null;
-        if(candidates != null) {
-            for(String filename : candidates) {
-                if(jarPattern.matcher(filename).matches()) {
-                    f = new File(jarFolder, filename);
-                    break;
-                }
+        for(String filename : candidates) {
+            if(jarPattern.matcher(filename).matches()) {
+                f = new File(jarFolder, filename);
+                break;
             }
         }
 
@@ -132,7 +130,7 @@ public class JarExecutor {
                 log.info("Process execution complete, exit code=" + result);
             }
         };
-        
+
         final String vmOptions = config.getProperty(PROP_VM_OPTIONS);
         executor = new DefaultExecutor();
         final CommandLine cl = new CommandLine(javaExecutable);
@@ -141,7 +139,7 @@ public class JarExecutor {
         }
         cl.addArgument("-jar");
         cl.addArgument(jarToExecute.getAbsolutePath());
-        
+
         // Additional options for the jar that's executed.
         // $JAREXEC_SERVER_PORT$ is replaced our serverPort value
         String jarOptions = config.getProperty(PROP_JAR_OPTIONS);
@@ -150,12 +148,12 @@ public class JarExecutor {
             log.info("Executable jar options: {}", jarOptions);
             cl.addArguments(jarOptions);
         }
-        
+
         final String workFolderOption = config.getProperty(PROP_WORK_FOLDER);
         if(workFolderOption != null && workFolderOption.length() > 0) {
             final File workFolder = new File(workFolderOption);
             if(!workFolder.isDirectory()) {
-                throw new IOException("Work dir set by " + PROP_WORK_FOLDER + " option does not exist: " 
+                throw new IOException("Work dir set by " + PROP_WORK_FOLDER + " option does not exist: "
                         + workFolder.getAbsolutePath());
             }
             log.info("Setting working directory for executable jar: {}", workFolder.getAbsolutePath());
@@ -171,7 +169,7 @@ public class JarExecutor {
                 new ShutdownHookSingleProcessDestroyer("java -jar " + jarToExecute.getName(), exitTimeoutSeconds));
         executor.execute(cl, h);
     }
-    
+
     /** Stop the process that we started, if any, and wait for it to exit before returning */
     public void stop() {
         if(executor == null) {
