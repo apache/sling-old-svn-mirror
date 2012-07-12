@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.resource;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 
@@ -122,6 +123,8 @@ public class JcrResourceUtil {
             val = fac.createValue(fac.createBinary((InputStream)value));
         } else if (value instanceof Node) {
             val = fac.createValue((Node)value);
+        } else if (value instanceof BigDecimal) {
+            val = fac.createValue((BigDecimal)value);
         } else if (value instanceof Long) {
             val = fac.createValue((Long)value);
         } else if (value instanceof Number) {

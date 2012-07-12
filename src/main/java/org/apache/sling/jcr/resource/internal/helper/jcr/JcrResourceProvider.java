@@ -41,12 +41,14 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
+import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,8 @@ public class JcrResourceProvider
     implements ResourceProvider,
                DynamicResourceProvider,
                AttributableResourceProvider,
-               QueriableResourceProvider {
+               QueriableResourceProvider,
+               ModifyingResourceProvider {
 
     /** column name for node path */
     private static final String QUERY_COLUMN_PATH = "jcr:path";
@@ -372,5 +375,91 @@ public class JcrResourceProvider
             return (AdapterType) session;
         }
         return super.adaptTo(type);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(ResourceResolver, java.lang.String, org.apache.sling.api.resource.ValueMap)
+     */
+    public Resource create(final ResourceResolver resolver, final String path, final ValueMap properties) {
+        // check for node type
+        final String nodeType = (properties != null ? properties.get("jcr:primaryType", String.class) : null);
+        try {
+            final Node node = JcrResourceUtil.createPath(path, null, nodeType, this.session, false);
+
+            // mixin types
+            final String[] mixinTypes = (properties != null ? properties.get("jcr:mixinTypes", String[].class) : null);
+            if ( mixinTypes != null ) {
+                for(final String mixin : mixinTypes ) {
+                    if ( !node.isNodeType(mixin) ) {
+                        node.addMixin(mixin);
+                    }
+                }
+            }
+            this.update(node, properties);
+
+            return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
+        } catch (final RepositoryException e) {
+            log.error("Unable to create node at " + path, e);
+        }
+        return null;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(ResourceResolver, java.lang.String)
+     */
+    public boolean delete(final ResourceResolver resolver, final String path) {
+        try {
+            if ( session.itemExists(path) ) {
+                session.getItem(path).remove();
+                return true;
+            }
+        } catch (final RepositoryException e) {
+            log.error("Unable to delete item at " + path, e);
+        }
+        return false;
+    }
+
+    private void update(final Node node, final ValueMap properties) throws RepositoryException {
+        for(final Map.Entry<String, Object> entry : properties.entrySet()) {
+            if ( !entry.getKey().equals("jcr:primaryType") && !entry.getKey().equals("jcr:mixinTypes") ) {
+                JcrResourceUtil.setProperty(node, entry.getKey(), entry.getValue());
+            }
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#update(org.apache.sling.api.resource.ResourceResolver, java.lang.String, org.apache.sling.api.resource.ValueMap)
+     */
+    public void update(final ResourceResolver resolver, final String path, final ValueMap properties) {
+        try {
+            final Node node = this.session.getNode(path);
+
+            this.update(node, properties);
+
+        } catch (final RepositoryException e) {
+            log.error("Unable to update node at " + path, e);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert()
+     */
+    public void revert() {
+        try {
+            this.session.refresh(false);
+        } catch (final RepositoryException e) {
+            log.error("Unable to refresh session.", e);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit()
+     */
+    public void commit() {
+        try {
+            this.session.save();
+        } catch (final RepositoryException e) {
+            log.error("Unable to commit changes to session.", e);
+        }
     }
 }
