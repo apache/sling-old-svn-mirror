@@ -17,20 +17,16 @@
 
 package org.apache.sling.servlets.post;
 
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletResponse;
+
 import junit.framework.TestCase;
+
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletResponse;
-import org.apache.sling.servlets.post.JSONResponse;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.Locale;
 
 public class JsonResponseTest extends TestCase {
     protected JSONResponse res;
