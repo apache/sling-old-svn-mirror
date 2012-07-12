@@ -37,6 +37,7 @@ import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
@@ -993,5 +994,52 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
 
         return absPath;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#delete(org.apache.sling.api.resource.Resource)
+     */
+    public boolean delete(final Resource resource) {
+        final String path = resource.getPath();
+        final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
+                        this,
+                        path);
+        return mrp.delete(this, path);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#addChild(org.apache.sling.api.resource.Resource, java.lang.String, org.apache.sling.api.resource.ValueMap)
+     */
+    public Resource addChild(final Resource parent, final String name, final ValueMap properties) {
+        final String path = parent.getPath() + '/' + name;
+        final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
+                        this,
+                        path);
+        return mrp.create(this, path, properties);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#update(org.apache.sling.api.resource.Resource, org.apache.sling.api.resource.ValueMap)
+     */
+    public void update(final Resource resource, final ValueMap properties) {
+        final String path = resource.getPath();
+        final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
+                        this,
+                        path);
+        mrp.update(this, path, properties);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#revert()
+     */
+    public void revert() {
+        this.context.revert();
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#commit()
+     */
+    public void commit() {
+        this.context.commit();
     }
 }

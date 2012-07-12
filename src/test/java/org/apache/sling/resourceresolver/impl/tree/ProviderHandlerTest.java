@@ -94,5 +94,11 @@ public class ProviderHandlerTest {
             return null;
         }
 
+        @Override
+        public ResourceProvider getResourceProvider(ResourceResolverContext ctx) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
     }
 }
