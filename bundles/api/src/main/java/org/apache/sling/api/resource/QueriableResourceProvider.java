@@ -30,6 +30,7 @@ import java.util.Map;
  * returned through a {@link ResourceProviderFactory}.
  *
  * TODO - what should the resource provider do, if the language is not supported?
+ * TODO - is returning null allowed?
  *
  * @since 2.2.0
  */

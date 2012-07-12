@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.DynamicResourceProvider;
+import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 
 /**
@@ -37,6 +38,9 @@ public class ResourceResolverContext {
 
     /** A set of all dynamic providers (for closing them later on) */
     private final Set<DynamicResourceProvider> dynamicProviders = new HashSet<DynamicResourceProvider>();
+
+    /** A set of all modifying providers */
+    private final Set<ModifyingResourceProvider> modifyingProviders = new HashSet<ModifyingResourceProvider>();
 
     /** Is this a resource resolver for an admin? */
     private final boolean isAdmin;
@@ -78,6 +82,9 @@ public class ResourceResolverContext {
         if (provider instanceof DynamicResourceProvider) {
             this.dynamicProviders.add((DynamicResourceProvider) provider);
         }
+        if (provider instanceof ModifyingResourceProvider) {
+            this.modifyingProviders.add((ModifyingResourceProvider) provider);
+        }
     }
 
     /**
@@ -112,5 +119,23 @@ public class ResourceResolverContext {
         }
         this.dynamicProviders.clear();
         this.providers.clear();
+    }
+
+    /**
+     * Revert all transient changes.
+     */
+    public void revert() {
+        for(final ModifyingResourceProvider provider : this.modifyingProviders) {
+            provider.revert();
+        }
+    }
+
+    /**
+     * Commit all transient changes
+     */
+    public void commit() {
+        for(final ModifyingResourceProvider provider : this.modifyingProviders) {
+            provider.commit();
+        }
     }
 }

@@ -34,9 +34,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.resourceresolver.impl.tree.ProviderHandler;
-import org.apache.sling.resourceresolver.impl.tree.ResourceProviderEntry;
-import org.apache.sling.resourceresolver.impl.tree.ResourceProviderHandler;
+import org.apache.sling.api.resource.ValueMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Constants;
@@ -300,6 +298,30 @@ public class ResourceProviderEntryTest {
 
         public Iterator<String> getAttributeNames() {
             return Collections.<String> emptyList().iterator();
+        }
+
+        public boolean delete(Resource resource) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public Resource addChild(Resource parent, String name, ValueMap properties) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        public void update(Resource resource, ValueMap properties) {
+            // TODO Auto-generated method stub
+        }
+
+        public void revert() {
+            // TODO Auto-generated method stub
+
+        }
+
+        public void commit() {
+            // TODO Auto-generated method stub
+
         }
     }
 

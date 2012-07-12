@@ -65,6 +65,13 @@ public class ResourceProviderHandler extends ProviderHandler {
     }
 
     /**
+     * @see org.apache.sling.resourceresolver.impl.tree.ProviderHandler#getResourceProvider(org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext)
+     */
+    public ResourceProvider getResourceProvider(final ResourceResolverContext ctx) {
+        return this.getResourceProvider();
+    }
+
+    /**
      * {@inheritDoc}
      * @see java.lang.Object#hashCode()
      */

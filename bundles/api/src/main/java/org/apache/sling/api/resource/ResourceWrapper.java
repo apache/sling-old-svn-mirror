@@ -35,7 +35,7 @@ public class ResourceWrapper implements Resource {
      * Creates a new wrapper instance delegating all method calls to the given
      * <code>resource</code>.
      */
-    public ResourceWrapper(Resource resource) {
+    public ResourceWrapper(final Resource resource) {
         this.resource = resource;
     }
 
@@ -158,4 +158,31 @@ public class ResourceWrapper implements Resource {
             + ", path=" + getPath() + ", resource=[" + getResource() + "]";
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#isModifiable()
+     */
+    public boolean isModifiable() {
+        return getResource().isModifiable();
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#remove()
+     */
+    public void remove() {
+        getResource().remove();
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ValueMap)
+     */
+    public void update(final ValueMap properties) {
+        getResource().update(properties);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#addChild(java.lang.String, org.apache.sling.api.resource.ValueMap)
+     */
+    public Resource addChild(final String name, final ValueMap properties) {
+        return getResource().addChild(name, properties);
+    }
 }

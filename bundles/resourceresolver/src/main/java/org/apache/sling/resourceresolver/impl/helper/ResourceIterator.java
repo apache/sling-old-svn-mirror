@@ -276,7 +276,7 @@ public class ResourceIterator implements Iterator<Resource> {
                     final Set<ProviderHandler> providers) {
 
         // collect providers along the ancestor path segements
-        final String[] elements = ResourceProviderEntry.split(path, '/');
+        final String[] elements = ResourceProviderEntry.split(path);
         ResourceProviderEntry base = rootProviderEntry;
         for (final String element : elements) {
             if (base.containsKey(element)) {

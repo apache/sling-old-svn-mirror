@@ -500,4 +500,14 @@ public interface ResourceResolver extends Adaptable {
      *             {@link #close() closed}.
      */
     Object getAttribute(String name);
+
+    boolean delete(Resource resource);
+
+    Resource addChild(Resource parent, String name, ValueMap properties);
+
+    void update(Resource resource, ValueMap properties);
+
+    void revert();
+
+    void commit();
 }

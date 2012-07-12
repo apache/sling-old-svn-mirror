@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections.FastTreeMap;
+import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -116,30 +117,10 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * @throws org.apache.sling.api.SlingException
      *             if an error occurrs trying to access an existing resource.
      */
-    public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
+    public Resource getResource(final ResourceResolverContext ctx,
+                    final ResourceResolver resourceResolver,
+                    final String path) {
         return getInternalResource(ctx, resourceResolver, path);
-    }
-
-    /**
-     * Adds the given resource provider into the tree for the given prefix.
-     *
-     * @return <code>true</code> if the provider could be entered into the
-     *         subtree below this entry. Otherwise <code>false</code> is
-     *         returned.
-     */
-    public synchronized boolean addResourceProvider(final String prefix, final ProviderHandler provider) {
-        final String[] elements = split(prefix, '/');
-        final List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
-        entryPath.add(this); // add this the start so if the list is empty
-        // we have a position to add to
-        populateProviderPath(entryPath, elements);
-        for (int i = entryPath.size() - 1; i < elements.length; i++) {
-            final String stubPrefix = elements[i];
-            final ResourceProviderEntry rpe2 = new ResourceProviderEntry(stubPrefix, new ProviderHandler[0]);
-            entryPath.get(i).put(stubPrefix, rpe2);
-            entryPath.add(rpe2);
-        }
-        return entryPath.get(elements.length).addInternalProvider(provider);
     }
 
     // ------------------ Map methods, here so that we can delegate 2 maps
@@ -164,19 +145,9 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return storageMapValues;
     }
 
-    public synchronized boolean removeResourceProvider(final String prefix, final ProviderHandler resourceProvider) {
-        final String[] elements = split(prefix, '/');
-        final List<ResourceProviderEntry> entryPath = new ArrayList<ResourceProviderEntry>();
-        populateProviderPath(entryPath, elements);
-        if (entryPath.size() > 0 && entryPath.size() == elements.length) {
-            // the last element is a perfect match;
-            return entryPath.get(entryPath.size() - 1).removeInternalProvider(resourceProvider);
-        }
-        return false;
-    }
-
-    // ---------- Comparable<ResourceProviderEntry> interface ------------------
-
+    /**
+     * @see java.lang.Comparable#compareTo(java.lang.Object)
+     */
     public int compareTo(final ResourceProviderEntry o) {
         return prefix.compareTo(o.prefix);
     }
@@ -191,9 +162,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     private boolean addInternalProvider(final ProviderHandler provider) {
         final int before = providers.length;
         final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
-        if (providers != null) {
-            set.addAll(Arrays.asList(providers));
-        }
+        set.addAll(Arrays.asList(providers));
+
         LOGGER.debug("Adding provider {} at {} ", provider, path);
         set.add(provider);
         providers = conditionalSort(set);
@@ -208,12 +178,51 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     private boolean removeInternalProvider(final ProviderHandler provider) {
         final int before = providers.length;
         final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
-        if (providers != null) {
-            set.addAll(Arrays.asList(providers));
-        }
+        set.addAll(Arrays.asList(providers));
+
+        LOGGER.debug("Removing provider {} at {} ", provider, path);
         set.remove(provider);
         providers = conditionalSort(set);
         return providers.length < before;
+    }
+
+    /**
+     * Adds the given resource provider into the tree for the given prefix.
+     *
+     * @return <code>true</code> if the provider could be entered into the
+     *         subtree below this entry. Otherwise <code>false</code> is
+     *         returned.
+     */
+    protected synchronized boolean addResourceProvider(final String prefix, final ProviderHandler provider) {
+        final String[] elements = split(prefix);
+        final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
+        this.populateProviderPath(entries, elements);
+
+        // add this=root to the start so if the list is empty
+        // we have a position to add to
+        entries.add(0, this);
+        for (int i = entries.size() - 1; i < elements.length; i++) {
+            final String stubPrefix = elements[i];
+            final ResourceProviderEntry rpe2 = new ResourceProviderEntry(stubPrefix, new ProviderHandler[0]);
+            entries.get(i).put(stubPrefix, rpe2);
+            entries.add(rpe2);
+        }
+        return entries.get(elements.length).addInternalProvider(provider);
+    }
+
+    /**
+     * Remove the given resource provider from the tree
+     */
+    protected synchronized boolean removeResourceProvider(final String prefix, final ProviderHandler resourceProvider) {
+        final String[] elements = split(prefix);
+        final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
+        this.populateProviderPath(entries, elements);
+
+        if (entries.size() > 0 && entries.size() == elements.length) {
+            // the last element is a perfect match;
+            return entries.get(entries.size() - 1).removeInternalProvider(resourceProvider);
+        }
+        return false;
     }
 
     /**
@@ -229,23 +238,19 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     }
 
     /**
-     * Get a of ResourceProvidersEntries leading to the fullPath in reverse
-     * order.
-     *
-     * @param fullPath
-     *            the full path
+     * Get a list of resource provider entries in reverse order.
+     * @param entries List to add the entries to
+     * @param elements The path already split into segments.
      */
-    private void populateProviderPath(final List<ResourceProviderEntry> providerEntryPath, final String[] elements) {
+    private void populateProviderPath(final List<ResourceProviderEntry> entries, final String[] elements) {
         ResourceProviderEntry base = this;
-        if (elements != null) {
-            for (final String element : elements) {
-                if (element != null) {
-                    if (base.containsKey(element)) {
-                        base = base.get(element);
-                        providerEntryPath.add(base);
-                    } else {
-                        break;
-                    }
+        for (final String element : elements) {
+            if (element != null) {
+                if (base.containsKey(element)) {
+                    base = base.get(element);
+                    entries.add(base);
+                } else {
+                    break;
                 }
             }
         }
@@ -254,28 +259,27 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     /**
      * Resolve a resource from a path into a Resource
      *
-     * @param resolver
-     *            the ResourceResolver.
-     * @param fullPath
-     *            the Full path
+     * @param ctx The resource resolver context
+     * @param resourceResolver the ResourceResolver.
+     * @param fullPath the Full path
      * @return null if no resource was found, a resource if one was found.
      */
-    private Resource getInternalResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String fullPath) {
-        final long start = System.currentTimeMillis();
+    private Resource getInternalResource(final ResourceResolverContext ctx,
+                    final ResourceResolver resourceResolver,
+                    final String fullPath) {
         try {
 
             if (fullPath == null || fullPath.length() == 0 || fullPath.charAt(0) != '/') {
-                LOGGER.debug("Not absolute {} :{}", fullPath, (System.currentTimeMillis() - start));
+                LOGGER.debug("Not absolute {}", fullPath);
                 return null; // fullpath must be absolute
             }
-            final String[] elements = split(fullPath, '/');
+            final String[] elements = split(fullPath);
+            final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
+            this.populateProviderPath(entries, elements);
 
-            final List<ResourceProviderEntry> list = new ArrayList<ResourceProviderEntry>();
-            populateProviderPath(list, elements);
             // the path is in reverse order end first
-
-            for (int i = list.size() - 1; i >= 0; i--) {
-                final ProviderHandler[] rps = list.get(i).getResourceProviders();
+            for (int i = entries.size() - 1; i >= 0; i--) {
+                final ProviderHandler[] rps = entries.get(i).getResourceProviders();
                 for (final ProviderHandler rp : rps) {
 
                     final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
@@ -284,6 +288,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                         return resource;
                     }
                 }
+                // TODO stop handling if provider claims subtree!
             }
 
             // resolve against this one
@@ -296,8 +301,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             // resource Provider: libs/sling/servlet/default/GET.servlet
             // list will match libs, sling, servlet, default
             // and there will be no resource provider at the end
-            if (list.size() > 0 && list.size() == elements.length) {
-                if (list.get(list.size() - 1).getResourceProviders().length == 0) {
+            if (entries.size() > 0 && entries.size() == elements.length) {
+                if (entries.get(entries.size() - 1).getResourceProviders().length == 0) {
                     LOGGER.debug("Resolved Synthetic {}", fullPath);
                     return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
                 }
@@ -311,7 +316,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         }
     }
 
-    public Resource getResourceFromProviders(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String fullPath) {
+    public Resource getResourceFromProviders(final ResourceResolverContext ctx,
+                    final ResourceResolver resourceResolver, final String fullPath) {
         final ProviderHandler[] rps = getResourceProviders();
         for (final ProviderHandler rp : rps) {
             final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
@@ -323,32 +329,56 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return null;
     }
 
+    public ModifyingResourceProvider getModifyingProvider(final ResourceResolverContext ctx,
+                    final ResourceResolver resourceResolver,
+                    final String fullPath) {
+        final String[] elements = split(fullPath);
+        final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
+        this.populateProviderPath(entries, elements);
+
+        for (int i = entries.size() - 1; i >= 0; i--) {
+            final ProviderHandler[] rps = entries.get(i).getResourceProviders();
+            for (final ProviderHandler rp : rps) {
+                final ResourceProvider provider = rp.getResourceProvider(ctx);
+                if ( provider instanceof ModifyingResourceProvider ) {
+                    return (ModifyingResourceProvider) provider;
+                }
+            }
+            // TODO stop handling if provider claims subtree!
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    private static final char SPLIT_SEP = '/';
+    private static final String[] EMPTY_RESULT = new String[0];
+
     /**
-     * @param st
-     * @param sep
+     * Split the string by slash.
+     * This method never returns null.
+     * @param st The string to split
      * @return an array of the strings between the separator
      */
-    public static String[] split(final String st, final char sep) {
+    public static String[] split(final String st) {
 
         if (st == null) {
-            return new String[0];
+            return EMPTY_RESULT;
         }
         final char[] pn = st.toCharArray();
         if (pn.length == 0) {
-            return new String[0];
+            return EMPTY_RESULT;
         }
-        if (pn.length == 1 && pn[0] == sep) {
-            return new String[0];
+        if (pn.length == 1 && pn[0] == SPLIT_SEP) {
+            return EMPTY_RESULT;
         }
         int n = 1;
         int start = 0;
         int end = pn.length;
-        while (start < end && sep == pn[start])
+        while (start < end && SPLIT_SEP == pn[start])
             start++;
-        while (start < end && sep == pn[end - 1])
+        while (start < end && SPLIT_SEP == pn[end - 1])
             end--;
         for (int i = start; i < end; i++) {
-            if (sep == pn[i]) {
+            if (SPLIT_SEP == pn[i]) {
                 n++;
             }
         }
@@ -356,7 +386,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         int s = start;
         int j = 0;
         for (int i = start; i < end; i++) {
-            if (pn[i] == sep) {
+            if (pn[i] == SPLIT_SEP) {
                 e[j++] = new String(pn, s, i - s);
                 s = i + 1;
             }

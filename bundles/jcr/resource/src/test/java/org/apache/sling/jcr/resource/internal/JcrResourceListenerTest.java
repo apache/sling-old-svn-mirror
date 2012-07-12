@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
@@ -202,6 +203,30 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
                 return null;
             }
 
+            public boolean delete(Resource resource) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            public Resource addChild(Resource parent, String name, ValueMap properties) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            public void update(Resource resource, ValueMap properties) {
+                // TODO Auto-generated method stub
+
+            }
+
+            public void revert() {
+                // TODO Auto-generated method stub
+
+            }
+
+            public void commit() {
+                // TODO Auto-generated method stub
+
+            }
         };
         final ResourceResolverFactory factory = new ResourceResolverFactory() {
 

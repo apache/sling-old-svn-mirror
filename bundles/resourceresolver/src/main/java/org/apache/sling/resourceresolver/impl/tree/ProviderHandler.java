@@ -142,6 +142,8 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
      */
     public abstract Iterator<Resource> listChildren(final ResourceResolverContext ctx, final Resource parent);
 
+    public abstract ResourceProvider getResourceProvider(final ResourceResolverContext ctx);
+
     /**
      * Return a name of the resource provider/factory.
      */
