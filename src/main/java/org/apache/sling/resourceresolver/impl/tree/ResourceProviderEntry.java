@@ -59,14 +59,6 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     // below the path of this entry.
     private ProviderHandler[] providers = new ProviderHandler[0];
 
-    private long ttime = 0L;
-
-    private long nmiss = 0L;
-
-    private long nsynthetic = 0L;
-
-    private long nreal = 0L;
-
     private final FastTreeMap storageMap = new FastTreeMap();
 
     private Collection<ResourceProviderEntry> storageMapValues = new ArrayList<ResourceProviderEntry>();
@@ -273,7 +265,6 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         try {
 
             if (fullPath == null || fullPath.length() == 0 || fullPath.charAt(0) != '/') {
-                nmiss++;
                 LOGGER.debug("Not absolute {} :{}", fullPath, (System.currentTimeMillis() - start));
                 return null; // fullpath must be absolute
             }
@@ -289,7 +280,6 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 
                     final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
                     if (resource != null) {
-                        nreal++;
                         LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
                         return resource;
                     }
@@ -308,20 +298,16 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             // and there will be no resource provider at the end
             if (list.size() > 0 && list.size() == elements.length) {
                 if (list.get(list.size() - 1).getResourceProviders().length == 0) {
-                    nsynthetic++;
                     LOGGER.debug("Resolved Synthetic {}", fullPath);
                     return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
                 }
             }
 
             LOGGER.debug("Resource null {} ", fullPath);
-            nmiss++;
             return null;
         } catch (final Exception ex) {
             LOGGER.debug("Failed! ", ex);
             return null;
-        } finally {
-            ttime += System.currentTimeMillis() - start;
         }
     }
 
@@ -330,7 +316,6 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         for (final ProviderHandler rp : rps) {
             final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
             if (resource != null) {
-                nreal++;
                 LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
                 return resource;
             }
@@ -380,22 +365,6 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             e[j++] = new String(pn, s, end - s);
         }
         return e;
-    }
-
-    public String getResolutionStats() {
-        final long tot = nreal + nsynthetic + nmiss;
-        if (tot == 0) {
-            return null;
-        }
-        final float n = tot;
-        final float t = ttime;
-        final float persec = 1000 * n / t;
-        final float avgtime = t / n;
-
-        final String stat = "Resolved: Real(" + nreal + ") Synthetic(" + nsynthetic + ") Missing(" + nmiss + ") Total(" + tot + ") at "
-                        + persec + " ops/sec avg " + avgtime + " ms";
-        ttime = nmiss = nsynthetic = nreal = 0L;
-        return stat;
     }
 
     /**
