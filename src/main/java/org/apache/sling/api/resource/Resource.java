@@ -140,4 +140,27 @@ public interface Resource extends Adaptable {
      * retrieved.
      */
     ResourceResolver getResourceResolver();
+
+    /**
+     * @since 2.2.0
+     */
+    boolean isModifiable();
+
+    /**
+     * @since 2.2.0
+     * @throws UnsupportedOperationException
+     */
+    void remove();
+
+    /**
+     * @since 2.2.0
+     * @throws UnsupportedOperationException
+     */
+    void update(final ValueMap properties);
+
+    /**
+     * @since 2.2.0
+     * @throws UnsupportedOperationException
+     */
+    Resource addChild(final String name, final ValueMap properties);
 }

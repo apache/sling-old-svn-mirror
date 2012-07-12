@@ -114,4 +114,32 @@ public abstract class AbstractResource
         //
         return ResourceUtil.isA(this, resourceType);
     }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#isModifiable()
+     */
+    public boolean isModifiable() {
+        return false;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#remove()
+     */
+    public void remove() {
+        this.getResourceResolver().delete(this);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ValueMap)
+     */
+    public void update(final ValueMap properties) {
+        this.getResourceResolver().update(this, properties);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#addChild(java.lang.String, org.apache.sling.api.resource.ValueMap)
+     */
+    public Resource addChild(final String name, final ValueMap properties) {
+        return this.getResourceResolver().addChild(this, name, properties);
+    }
 }
