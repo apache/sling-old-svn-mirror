@@ -18,27 +18,13 @@
  */
 package org.apache.sling.api.resource;
 
-
-
 /**
- * The <code>PersistableValueMap</code> is an extension
- * of the {@link ValueMap} which allows to modify and
- * persist the properties.
+ * The <code>ModifiableValueMap</code> marks a {@link ValueMap}
+ * as modifiable.
  *
- * Note, that each time you call {@link Resource#adaptTo(Class)}
- * you get a new map instance which does not share modified
- * properties with other representations.
+ * @since 2.2
  */
-public interface PersistableValueMap extends ModifiableValueMap {
+public interface ModifiableValueMap extends ValueMap {
 
-    /**
-     * Persists the changes.
-     * @throws PersistenceException If the changes can't be persisted.
-     */
-    void save() throws PersistenceException;
-
-    /**
-     * Reset the changes.
-     */
-    void reset();
+    // just a marker interface
 }

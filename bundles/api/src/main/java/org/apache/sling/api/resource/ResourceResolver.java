@@ -529,7 +529,7 @@ public interface ResourceResolver extends Adaptable {
      *
      * @throws PersistenceException, NullPointerException
      */
-    void update(Resource resource, ValueMap properties)
+    void update(Resource resource, ModifiableValueMap properties)
     throws PersistenceException;
 
     /**

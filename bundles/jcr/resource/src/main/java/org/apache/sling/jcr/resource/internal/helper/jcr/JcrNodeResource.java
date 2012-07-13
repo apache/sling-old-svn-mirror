@@ -41,6 +41,7 @@ import javax.jcr.ValueFormatException;
 import org.apache.jackrabbit.net.URLFactory;
 import org.apache.sling.adapter.annotations.Adaptable;
 import org.apache.sling.adapter.annotations.Adapter;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -299,5 +300,20 @@ public class JcrNodeResource extends JcrItemResource {
      */
     public boolean isModifiable() {
         return true;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.AbstractResource#getModifiableValueMap()
+     */
+    public ModifiableValueMap getModifiableValueMap() {
+        // check write
+        try {
+            getNode().getSession().checkPermission(getNode().getPath(),
+                "set_property");
+            return new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
+        } catch (RepositoryException e) {
+            // the user has no write permission
+        }
+        return null;
     }
 }

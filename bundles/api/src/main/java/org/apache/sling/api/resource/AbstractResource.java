@@ -130,9 +130,9 @@ public abstract class AbstractResource
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ValueMap)
+     * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ModifiableValueMap)
      */
-    public void update(final ValueMap properties) throws PersistenceException {
+    public void update(final ModifiableValueMap properties) throws PersistenceException {
         this.getResourceResolver().update(this, properties);
     }
 
@@ -142,5 +142,12 @@ public abstract class AbstractResource
     public Resource addChild(final String name, final ValueMap properties)
     throws PersistenceException {
         return this.getResourceResolver().addChild(this, name, properties);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#getModifiableValueMap()
+     */
+    public ModifiableValueMap getModifiableValueMap() {
+        return null;
     }
 }
