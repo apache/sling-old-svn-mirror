@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.AbstractResource;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -309,7 +310,7 @@ public class ResourceProviderEntryTest {
             return null;
         }
 
-        public void update(Resource resource, ValueMap properties) {
+        public void update(Resource resource, ModifiableValueMap properties) {
             // TODO Auto-generated method stub
         }
 
