@@ -140,40 +140,4 @@ public interface Resource extends Adaptable {
      * retrieved.
      */
     ResourceResolver getResourceResolver();
-
-    /**
-     * TODO : What does this mean?
-     * @since 2.2.0
-     */
-    boolean isModifiable();
-
-    /**
-     * @since 2.2.0
-     * @throws UnsupportedOperationException, PersistenceException
-     */
-    void remove() throws PersistenceException;
-
-    /**
-     * @since 2.2.0
-     * @return ModifiableValueMap or <code>null</code>
-     */
-    ModifiableValueMap getModifiableValueMap();
-
-    /**
-     * Update the resource.
-     * The passed in {@link ModifiableValueMap} must be the one fetched
-     * from {@link #getModifiableValueMap()}.
-     *
-     * @since 2.2.0
-     * @throws UnsupportedOperationException, PersistenceException
-     */
-    void update(final ModifiableValueMap properties) throws PersistenceException;
-
-    /**
-     * TODO - do we really need this method here?
-     * @since 2.2.0
-     * @throws UnsupportedOperationException, PersistenceException
-     */
-    Resource addChild(final String name, final ValueMap properties)
-    throws PersistenceException;
 }
