@@ -28,7 +28,6 @@ import javax.jcr.Property;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -135,11 +134,6 @@ public class MockResourceResolver implements ResourceResolver {
     public Resource addChild(Resource parent, String name, ValueMap properties) {
         // TODO Auto-generated method stub
         return null;
-    }
-
-    public void update(Resource resource, ModifiableValueMap properties) {
-        // TODO Auto-generated method stub
-
     }
 
     public void revert() {

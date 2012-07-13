@@ -41,7 +41,6 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
@@ -398,7 +397,7 @@ public class JcrResourceProvider
                         jcrMap.put(entry.getKey(), entry.getValue());
                     }
                 }
-                jcrMap.apply();
+                jcrMap.update();
             }
 
             return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
@@ -419,25 +418,6 @@ public class JcrResourceProvider
             throw new PersistenceException("Unable to delete item at " + path);
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to delete item at " + path, e);
-        }
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#update(org.apache.sling.api.resource.ResourceResolver, java.lang.String, org.apache.sling.api.resource.ModifiableValueMap)
-     */
-    public void update(final ResourceResolver resolver, final String path, final ModifiableValueMap properties)
-    throws PersistenceException {
-        if ( !(properties instanceof JcrModifiablePropertyMap) ) {
-            throw new PersistenceException("ModifiableValueMap"); // TODO - IllegalArgumentException ?
-        }
-        final JcrModifiablePropertyMap jcrMap = (JcrModifiablePropertyMap)properties;
-        if ( !jcrMap.getPath().equals(path) ) {
-            throw new PersistenceException("ModifiableValueMap"); // TODO - IllegalArgumentException ?
-        }
-        try {
-            jcrMap.apply();
-        } catch (final RepositoryException e) {
-            throw new PersistenceException("Unable to update node at " + path, e);
         }
     }
 
