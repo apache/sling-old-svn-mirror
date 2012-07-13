@@ -523,16 +523,6 @@ public interface ResourceResolver extends Adaptable {
     throws PersistenceException;
 
     /**
-     * Update the resource with the new properties set.
-     * @param resource The resource
-     * @param properties The properties
-     *
-     * @throws PersistenceException, NullPointerException
-     */
-    void update(Resource resource, ModifiableValueMap properties)
-    throws PersistenceException;
-
-    /**
      * Revert all pending changes.
      */
     void revert() throws PersistenceException;

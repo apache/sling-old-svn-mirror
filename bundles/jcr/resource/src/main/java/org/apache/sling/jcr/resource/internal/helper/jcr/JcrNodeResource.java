@@ -127,7 +127,7 @@ public class JcrNodeResource extends JcrItemResource {
             return (Type) getURL(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrPropertyMap(getNode(), this.dynamicClassLoader); // unchecked cast
-        } else if (type == PersistableValueMap.class) {
+        } else if (type == PersistableValueMap.class || type == ModifiableValueMap.class ) {
             // check write
             try {
                 getNode().getSession().checkPermission(getNode().getPath(),
@@ -136,12 +136,12 @@ public class JcrNodeResource extends JcrItemResource {
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(
-                    "adaptTo(PersistableValueMap): Cannot set properties on {}",
+                    "adaptTo(ModifiableValueMap): Cannot set properties on {}",
                     this);
             } catch (RepositoryException e) {
                 // some other problem, cannot adapt
                 LOGGER.debug(
-                    "adaptTo(PersistableValueMap): Unexpected problem for {}",
+                    "adaptTo(ModifiableValueMap): Unexpected problem for {}",
                     this);
             }
         }
@@ -293,27 +293,5 @@ public class JcrNodeResource extends JcrItemResource {
                 "setMetaData: Problem extracting metadata information for "
                     + getPath(), re);
         }
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.AbstractResource#isModifiable()
-     */
-    public boolean isModifiable() {
-        return true;
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.AbstractResource#getModifiableValueMap()
-     */
-    public ModifiableValueMap getModifiableValueMap() {
-        // check write
-        try {
-            getNode().getSession().checkPermission(getNode().getPath(),
-                "set_property");
-            return new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
-        } catch (RepositoryException e) {
-            // the user has no write permission
-        }
-        return null;
     }
 }

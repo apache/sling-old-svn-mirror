@@ -19,12 +19,37 @@
 package org.apache.sling.api.resource;
 
 /**
- * The <code>ModifiableValueMap</code> marks a {@link ValueMap}
- * as modifiable.
+ * The <code>ModifiableValueMap</code> is an extension
+ * of the {@link ValueMap} which allows to modify and
+ * persist the properties.
+ *
+ * Changes can be pushed into the persistence layer
+ * with a call to {@link #update()}. The changes are then
+ * stored in the persistence layer for committing. Once
+ * {@link ResourceResolver#commit()} is called, the
+ * changes get persisted.
+ *
+ * Note, that each time you call {@link Resource#adaptTo(Class)}
+ * you get a new map instance which does not share modified
+ * properties with other representations.
  *
  * @since 2.2
  */
 public interface ModifiableValueMap extends ValueMap {
 
-    // just a marker interface
+    /**
+     * Persists the changes.
+     * @throws PersistenceException If the changes can't be persisted.
+     */
+    void update() throws PersistenceException;
+
+    /**
+     * Revert temporary changes.
+     */
+    void revert();
+
+    /**
+     * Are there any changes?
+     */
+    boolean hasChanges();
 }

@@ -37,7 +37,6 @@ import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
@@ -1025,19 +1024,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                         this,
                         path);
         return mrp.create(this, path, properties);
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ResourceResolver#update(org.apache.sling.api.resource.Resource, org.apache.sling.api.resource.ModifiableValueMap)
-     */
-    public void update(final Resource resource, final ModifiableValueMap properties)
-    throws PersistenceException {
-        // if resource is null, we get an NPE as stated in the API
-        final String path = resource.getPath();
-        final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
-                        this,
-                        path);
-        mrp.update(this, path, properties);
     }
 
     /**
