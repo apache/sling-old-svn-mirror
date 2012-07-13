@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -212,7 +213,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
                 return null;
             }
 
-            public void update(Resource resource, ValueMap properties) {
+            public void update(Resource resource, ModifiableValueMap properties) {
                 // TODO Auto-generated method stub
 
             }

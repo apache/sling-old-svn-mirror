@@ -182,36 +182,48 @@ public final class JcrModifiablePropertyMap
             return;
         }
         try {
-            final Node node = getNode();
-            // check for mixin types
-            if ( this.changedProperties.contains(MIXIN_TYPES) ) {
-                if ( cache.containsKey(MIXIN_TYPES) ) {
-                    final JcrPropertyMapCacheEntry entry = cache.get(MIXIN_TYPES);
-                    handleMixinTypes(node, entry.values);
-                } else {
-                    // remove all mixin types!
-                    handleMixinTypes(node, null);
-                }
-            }
-
-            for(final String key : this.changedProperties) {
-                final String name = escapeKeyName(key);
-                if ( !MIXIN_TYPES.equals(name) ) {
-                    if ( cache.containsKey(key) ) {
-                        final JcrPropertyMapCacheEntry entry = cache.get(key);
-                        if ( entry.isMulti ) {
-                            node.setProperty(name, entry.values);
-                        } else {
-                            node.setProperty(name, entry.values[0]);
-                        }
-                    } else {
-                        node.setProperty(name, (String)null);
-                    }
-                }
-            }
-            node.getSession().save();
+            this.apply();
+            getNode().getSession().save();
         } catch (final RepositoryException re) {
             throw new PersistenceException("Unable to persist changes.", re);
+        }
+    }
+
+    /**
+     * Apply all changes but don't save
+     */
+    public void apply() throws RepositoryException {
+        if ( this.changedProperties == null || this.changedProperties.size() == 0 ) {
+            // nothing has changed
+            return;
+        }
+
+        final Node node = getNode();
+        // check for mixin types
+        if ( this.changedProperties.contains(MIXIN_TYPES) ) {
+            if ( cache.containsKey(MIXIN_TYPES) ) {
+                final JcrPropertyMapCacheEntry entry = cache.get(MIXIN_TYPES);
+                handleMixinTypes(node, entry.values);
+            } else {
+                // remove all mixin types!
+                handleMixinTypes(node, null);
+            }
+        }
+
+        for(final String key : this.changedProperties) {
+            final String name = escapeKeyName(key);
+            if ( !MIXIN_TYPES.equals(name) ) {
+                if ( cache.containsKey(key) ) {
+                    final JcrPropertyMapCacheEntry entry = cache.get(key);
+                    if ( entry.isMulti ) {
+                        node.setProperty(name, entry.values);
+                    } else {
+                        node.setProperty(name, entry.values[0]);
+                    }
+                } else {
+                    node.setProperty(name, (String)null);
+                }
+            }
         }
         this.reset();
     }

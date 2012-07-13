@@ -41,6 +41,7 @@ import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
@@ -50,6 +51,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -388,16 +390,16 @@ public class JcrResourceProvider
         try {
             final Node node = JcrResourceUtil.createPath(path, null, nodeType, this.session, false);
 
-            // mixin types
-            final String[] mixinTypes = (properties != null ? properties.get("jcr:mixinTypes", String[].class) : null);
-            if ( mixinTypes != null ) {
-                for(final String mixin : mixinTypes ) {
-                    if ( !node.isNodeType(mixin) ) {
-                        node.addMixin(mixin);
+            if ( properties != null ) {
+                // create modifiable map
+                final JcrModifiablePropertyMap jcrMap = new JcrModifiablePropertyMap(node, this.dynamicClassLoader);
+                for(final Map.Entry<String, Object> entry : properties.entrySet()) {
+                    if ( !"jcr:primaryType".equals(entry.getKey()) ) {
+                        jcrMap.put(entry.getKey(), entry.getValue());
                     }
                 }
+                jcrMap.apply();
             }
-            this.update(node, properties);
 
             return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
         } catch (final RepositoryException e) {
@@ -420,24 +422,20 @@ public class JcrResourceProvider
         }
     }
 
-    private void update(final Node node, final ValueMap properties) throws RepositoryException {
-        for(final Map.Entry<String, Object> entry : properties.entrySet()) {
-            if ( !entry.getKey().equals("jcr:primaryType") && !entry.getKey().equals("jcr:mixinTypes") ) {
-                JcrResourceUtil.setProperty(node, entry.getKey(), entry.getValue());
-            }
-        }
-    }
-
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#update(org.apache.sling.api.resource.ResourceResolver, java.lang.String, org.apache.sling.api.resource.ValueMap)
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#update(org.apache.sling.api.resource.ResourceResolver, java.lang.String, org.apache.sling.api.resource.ModifiableValueMap)
      */
-    public void update(final ResourceResolver resolver, final String path, final ValueMap properties)
+    public void update(final ResourceResolver resolver, final String path, final ModifiableValueMap properties)
     throws PersistenceException {
+        if ( !(properties instanceof JcrModifiablePropertyMap) ) {
+            throw new PersistenceException("ModifiableValueMap"); // TODO - IllegalArgumentException ?
+        }
+        final JcrModifiablePropertyMap jcrMap = (JcrModifiablePropertyMap)properties;
+        if ( !jcrMap.getPath().equals(path) ) {
+            throw new PersistenceException("ModifiableValueMap"); // TODO - IllegalArgumentException ?
+        }
         try {
-            final Node node = this.session.getNode(path);
-
-            this.update(node, properties);
-
+            jcrMap.apply();
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to update node at " + path, e);
         }
