@@ -37,13 +37,20 @@ package org.apache.sling.api.resource;
  */
 public interface ModifyingResourceProvider {
 
-    Resource create(ResourceResolver resolver, String path, ValueMap properties);
+    Resource create(ResourceResolver resolver, String path, ValueMap properties)
+    throws PersistenceException;
 
-    boolean delete(ResourceResolver resolver, String path);
+    void delete(ResourceResolver resolver, String path)
+    throws PersistenceException;
 
-    void update(ResourceResolver resolver, String path, ValueMap properties);
+    void update(ResourceResolver resolver, String path, ValueMap properties)
+    throws PersistenceException;
 
-    void revert();
+    void revert()
+    throws PersistenceException;
 
-    void commit();
+    void commit()
+    throws PersistenceException;
+
+    boolean hasChanges();
 }

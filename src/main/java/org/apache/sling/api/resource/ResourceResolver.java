@@ -501,13 +501,51 @@ public interface ResourceResolver extends Adaptable {
      */
     Object getAttribute(String name);
 
-    boolean delete(Resource resource);
+    /**
+     * Delete the resource
+     * @param resource The resource to delete
+     *
+     * @throws PersistenceException, NullPointerException
+     */
+    void delete(Resource resource)
+    throws PersistenceException;
 
-    Resource addChild(Resource parent, String name, ValueMap properties);
+    /**
+     * Add a child resource to the given parent resource
+     * @param parent The parent resource
+     * @param name   The name of the child resource
+     * @param properties Optional properties for the resource
+     * @return The new resource
+     *
+     * @throws PersistenceException, NullPointerException
+     */
+    Resource addChild(Resource parent, String name, ValueMap properties)
+    throws PersistenceException;
 
-    void update(Resource resource, ValueMap properties);
+    /**
+     * Update the resource with the new properties set.
+     * @param resource The resource
+     * @param properties The properties
+     *
+     * @throws PersistenceException, NullPointerException
+     */
+    void update(Resource resource, ValueMap properties)
+    throws PersistenceException;
 
-    void revert();
+    /**
+     * Revert all pending changes.
+     */
+    void revert() throws PersistenceException;
 
-    void commit();
+    /**
+     * Persist all pending changes.
+     *
+     * @throws PersistenceException
+     */
+    void commit() throws PersistenceException;
+
+    /**
+     * Are there any pending changes?
+     */
+    boolean hasChanges();
 }

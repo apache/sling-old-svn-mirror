@@ -148,19 +148,20 @@ public interface Resource extends Adaptable {
 
     /**
      * @since 2.2.0
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException, PersistenceException
      */
-    void remove();
+    void remove() throws PersistenceException;
 
     /**
      * @since 2.2.0
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException, PersistenceException
      */
-    void update(final ValueMap properties);
+    void update(final ValueMap properties) throws PersistenceException;
 
     /**
      * @since 2.2.0
-     * @throws UnsupportedOperationException
+     * @throws UnsupportedOperationException, PersistenceException
      */
-    Resource addChild(final String name, final ValueMap properties);
+    Resource addChild(final String name, final ValueMap properties)
+    throws PersistenceException;
 }
