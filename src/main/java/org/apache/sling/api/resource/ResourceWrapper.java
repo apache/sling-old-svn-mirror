@@ -173,9 +173,9 @@ public class ResourceWrapper implements Resource {
     }
 
     /**
-     * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ValueMap)
+     * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ModifiableValueMap)
      */
-    public void update(final ValueMap properties) throws PersistenceException {
+    public void update(final ModifiableValueMap properties) throws PersistenceException {
         getResource().update(properties);
     }
 
@@ -185,5 +185,12 @@ public class ResourceWrapper implements Resource {
     public Resource addChild(final String name, final ValueMap properties)
     throws PersistenceException {
         return getResource().addChild(name, properties);
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.Resource#getModifiableValueMap()
+     */
+    public ModifiableValueMap getModifiableValueMap() {
+        return getResource().getModifiableValueMap();
     }
 }

@@ -142,6 +142,7 @@ public interface Resource extends Adaptable {
     ResourceResolver getResourceResolver();
 
     /**
+     * TODO : What does this mean?
      * @since 2.2.0
      */
     boolean isModifiable();
@@ -154,11 +155,22 @@ public interface Resource extends Adaptable {
 
     /**
      * @since 2.2.0
-     * @throws UnsupportedOperationException, PersistenceException
+     * @return ModifiableValueMap or <code>null</code>
      */
-    void update(final ValueMap properties) throws PersistenceException;
+    ModifiableValueMap getModifiableValueMap();
 
     /**
+     * Update the resource.
+     * The passed in {@link ModifiableValueMap} must be the one fetched
+     * from {@link #getModifiableValueMap()}.
+     *
+     * @since 2.2.0
+     * @throws UnsupportedOperationException, PersistenceException
+     */
+    void update(final ModifiableValueMap properties) throws PersistenceException;
+
+    /**
+     * TODO - do we really need this method here?
      * @since 2.2.0
      * @throws UnsupportedOperationException, PersistenceException
      */

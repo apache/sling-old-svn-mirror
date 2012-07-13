@@ -43,7 +43,7 @@ public interface ModifyingResourceProvider {
     void delete(ResourceResolver resolver, String path)
     throws PersistenceException;
 
-    void update(ResourceResolver resolver, String path, ValueMap properties)
+    void update(ResourceResolver resolver, String path, ModifiableValueMap properties)
     throws PersistenceException;
 
     void revert()
