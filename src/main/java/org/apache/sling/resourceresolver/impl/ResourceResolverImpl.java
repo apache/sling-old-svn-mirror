@@ -39,6 +39,7 @@ import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -999,18 +1000,25 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#delete(org.apache.sling.api.resource.Resource)
      */
-    public boolean delete(final Resource resource) {
+    public void delete(final Resource resource)
+    throws PersistenceException {
+        // if resource is null, we get an NPE as stated in the API
         final String path = resource.getPath();
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
                         this,
                         path);
-        return mrp.delete(this, path);
+        mrp.delete(this, path);
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#addChild(org.apache.sling.api.resource.Resource, java.lang.String, org.apache.sling.api.resource.ValueMap)
      */
-    public Resource addChild(final Resource parent, final String name, final ValueMap properties) {
+    public Resource addChild(final Resource parent, final String name, final ValueMap properties)
+    throws PersistenceException {
+        // if parent or name is null, we get an NPE as stated in the API
+        if ( name == null ) {
+            throw new NullPointerException("name");
+        }
         final String path = parent.getPath() + '/' + name;
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
                         this,
@@ -1021,7 +1029,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#update(org.apache.sling.api.resource.Resource, org.apache.sling.api.resource.ValueMap)
      */
-    public void update(final Resource resource, final ValueMap properties) {
+    public void update(final Resource resource, final ValueMap properties)
+    throws PersistenceException {
+        // if resource is null, we get an NPE as stated in the API
         final String path = resource.getPath();
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
                         this,
@@ -1032,14 +1042,21 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#revert()
      */
-    public void revert() {
+    public void revert() throws PersistenceException {
         this.context.revert();
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#commit()
      */
-    public void commit() {
+    public void commit() throws PersistenceException {
         this.context.commit();
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#hasChanges()
+     */
+    public boolean hasChanges() {
+        return this.context.hasChanges();
     }
 }
