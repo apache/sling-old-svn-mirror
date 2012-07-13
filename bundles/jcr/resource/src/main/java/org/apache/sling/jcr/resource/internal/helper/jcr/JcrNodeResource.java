@@ -294,4 +294,10 @@ public class JcrNodeResource extends JcrItemResource {
         }
     }
 
+    /**
+     * @see org.apache.sling.api.resource.AbstractResource#isModifiable()
+     */
+    public boolean isModifiable() {
+        return true;
+    }
 }

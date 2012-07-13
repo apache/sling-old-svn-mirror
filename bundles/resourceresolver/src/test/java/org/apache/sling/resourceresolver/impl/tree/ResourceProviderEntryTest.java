@@ -300,9 +300,8 @@ public class ResourceProviderEntryTest {
             return Collections.<String> emptyList().iterator();
         }
 
-        public boolean delete(Resource resource) {
+        public void delete(Resource resource) {
             // TODO Auto-generated method stub
-            return false;
         }
 
         public Resource addChild(Resource parent, String name, ValueMap properties) {
@@ -322,6 +321,11 @@ public class ResourceProviderEntryTest {
         public void commit() {
             // TODO Auto-generated method stub
 
+        }
+
+        public boolean hasChanges() {
+            // TODO Auto-generated method stub
+            return false;
         }
     }
 

@@ -42,6 +42,7 @@ import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.AttributableResourceProvider;
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
@@ -380,7 +381,8 @@ public class JcrResourceProvider
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(ResourceResolver, java.lang.String, org.apache.sling.api.resource.ValueMap)
      */
-    public Resource create(final ResourceResolver resolver, final String path, final ValueMap properties) {
+    public Resource create(final ResourceResolver resolver, final String path, final ValueMap properties)
+    throws PersistenceException {
         // check for node type
         final String nodeType = (properties != null ? properties.get("jcr:primaryType", String.class) : null);
         try {
@@ -399,24 +401,23 @@ public class JcrResourceProvider
 
             return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
         } catch (final RepositoryException e) {
-            log.error("Unable to create node at " + path, e);
+            throw new PersistenceException("Unable to create node at " + path, e);
         }
-        return null;
     }
 
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(ResourceResolver, java.lang.String)
      */
-    public boolean delete(final ResourceResolver resolver, final String path) {
+    public void delete(final ResourceResolver resolver, final String path)
+    throws PersistenceException {
         try {
             if ( session.itemExists(path) ) {
                 session.getItem(path).remove();
-                return true;
             }
+            throw new PersistenceException("Unable to delete item at " + path);
         } catch (final RepositoryException e) {
-            log.error("Unable to delete item at " + path, e);
+            throw new PersistenceException("Unable to delete item at " + path, e);
         }
-        return false;
     }
 
     private void update(final Node node, final ValueMap properties) throws RepositoryException {
@@ -430,36 +431,49 @@ public class JcrResourceProvider
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#update(org.apache.sling.api.resource.ResourceResolver, java.lang.String, org.apache.sling.api.resource.ValueMap)
      */
-    public void update(final ResourceResolver resolver, final String path, final ValueMap properties) {
+    public void update(final ResourceResolver resolver, final String path, final ValueMap properties)
+    throws PersistenceException {
         try {
             final Node node = this.session.getNode(path);
 
             this.update(node, properties);
 
         } catch (final RepositoryException e) {
-            log.error("Unable to update node at " + path, e);
+            throw new PersistenceException("Unable to update node at " + path, e);
         }
     }
 
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert()
      */
-    public void revert() {
+    public void revert() throws PersistenceException {
         try {
             this.session.refresh(false);
         } catch (final RepositoryException e) {
-            log.error("Unable to refresh session.", e);
+            throw new PersistenceException("Unable to refresh session.", e);
         }
     }
 
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit()
      */
-    public void commit() {
+    public void commit() throws PersistenceException {
         try {
             this.session.save();
         } catch (final RepositoryException e) {
-            log.error("Unable to commit changes to session.", e);
+            throw new PersistenceException("Unable to commit changes to session.", e);
         }
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges()
+     */
+    public boolean hasChanges() {
+        try {
+            return this.session.hasPendingChanges();
+        } catch (final RepositoryException ignore) {
+            log.warn("Unable to check session for pending changes.", ignore);
+        }
+        return false;
     }
 }

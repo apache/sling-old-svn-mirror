@@ -168,21 +168,22 @@ public class ResourceWrapper implements Resource {
     /**
      * @see org.apache.sling.api.resource.Resource#remove()
      */
-    public void remove() {
+    public void remove() throws PersistenceException {
         getResource().remove();
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#update(org.apache.sling.api.resource.ValueMap)
      */
-    public void update(final ValueMap properties) {
+    public void update(final ValueMap properties) throws PersistenceException {
         getResource().update(properties);
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#addChild(java.lang.String, org.apache.sling.api.resource.ValueMap)
      */
-    public Resource addChild(final String name, final ValueMap properties) {
+    public Resource addChild(final String name, final ValueMap properties)
+    throws PersistenceException {
         return getResource().addChild(name, properties);
     }
 }

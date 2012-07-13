@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceProvider;
 
 /**
@@ -124,7 +125,7 @@ public class ResourceResolverContext {
     /**
      * Revert all transient changes.
      */
-    public void revert() {
+    public void revert() throws PersistenceException {
         for(final ModifyingResourceProvider provider : this.modifyingProviders) {
             provider.revert();
         }
@@ -133,9 +134,21 @@ public class ResourceResolverContext {
     /**
      * Commit all transient changes
      */
-    public void commit() {
+    public void commit() throws PersistenceException {
         for(final ModifyingResourceProvider provider : this.modifyingProviders) {
             provider.commit();
         }
+    }
+
+    /**
+     * Do we have changes?
+     */
+    public boolean hasChanges() {
+        for(final ModifyingResourceProvider provider : this.modifyingProviders) {
+            if ( provider.hasChanges() ) {
+                return true;
+            }
+        }
+        return false;
     }
 }
