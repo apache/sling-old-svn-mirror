@@ -33,6 +33,9 @@ package org.apache.sling.api.resource;
  * you get a new map instance which does not share modified
  * properties with other representations.
  *
+ * TODO - we can convert this to a plain marker interface and
+ * directly set the changes properties in the persistence layer!
+ *
  * @since 2.2
  */
 public interface ModifiableValueMap extends ValueMap {
