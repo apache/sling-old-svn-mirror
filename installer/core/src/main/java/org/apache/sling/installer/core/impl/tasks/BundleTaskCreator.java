@@ -210,7 +210,7 @@ public class BundleTaskCreator
 		    } else {
 	            logger.debug("Bundle {}:{} is not installed anymore - nothing to remove.", symbolicName,
 	                    toActivate.getAttribute(Constants.BUNDLE_VERSION));
-	            result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
+	            result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
 	        }
 
 		// Install
