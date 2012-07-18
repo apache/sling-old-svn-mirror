@@ -112,6 +112,6 @@ public abstract class AbstractResource
         // the implementation) to prevent problems if there are implementations
         // of the pre-2.1.0 Resource interface in the framework.
         //
-        return ResourceUtil.isA(this, resourceType);
+        return ResourceUtil.internalIsA(this, resourceType);
     }
 }

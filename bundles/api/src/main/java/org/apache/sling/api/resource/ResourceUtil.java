@@ -447,11 +447,32 @@ public class ResourceUtil {
      *         <code>resourceType</code>.
      * @since 2.0.6
      */
-    public static boolean isA(final Resource resource, String resourceType) {
+    public static boolean isA(final Resource resource, final String resourceType) {
         if (resource == null || resourceType == null) {
             return false;
         }
 
+        try {
+            return resource.isResourceType(resourceType);
+        } catch (final AbstractMethodError ame) {
+            // this might occur with old pre 2.1.0 resource implementations (see SLING-2457)
+            return internalIsA(resource, resourceType);
+        }
+    }
+
+    /**
+     * Check if the resource is of the given type. This method first checks the
+     * resource type of the resource, then its super resource type and continues
+     * to go up the resource super type hierarchy.
+     *
+     * @param resource the resource to check
+     * @param resourceType the resource type to check the resource against
+     * @return <code>false</code> if <code>resource</code> is <code>null</code>.
+     *         Otherwise returns the result of calling
+     *         {@link Resource#isResourceType(String)} with the given
+     *         <code>resourceType</code>.
+     */
+    static boolean internalIsA(final Resource resource, final String resourceType) {
         if (resourceType.equals(resource.getResourceType())) {
             return true;
         }
