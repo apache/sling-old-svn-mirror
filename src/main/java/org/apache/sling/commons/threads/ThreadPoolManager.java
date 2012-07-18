@@ -18,7 +18,7 @@ package org.apache.sling.commons.threads;
 
 
 /**
- * The <cod>ThreadPoolManager</code> manages thread pools.
+ * The <code>ThreadPoolManager</code> manages thread pools.
  *
  */
 public interface ThreadPoolManager {
