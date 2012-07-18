@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.threads.impl;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.sling.commons.threads.ThreadPool;
@@ -43,8 +45,22 @@ public final class ThreadPoolFacade implements ThreadPool {
     /**
      * @see org.apache.sling.commons.threads.ThreadPool#execute(java.lang.Runnable)
      */
-    public void execute(Runnable runnable) {
+    public void execute(final Runnable runnable) {
         this.delegatee.execute(runnable);
+    }
+
+    /**
+     * @see org.apache.sling.commons.threads.ThreadPool#submit(java.util.concurrent.Callable)
+     */
+    public <T> Future<T> submit(final Callable<T> callable) {
+        return this.delegatee.submit(callable);
+    }
+
+    /**
+     * @see org.apache.sling.commons.threads.ThreadPool#submit(java.lang.Runnable)
+     */
+    public Future<?> submit(final Runnable runnable) {
+        return this.delegatee.submit(runnable);
     }
 
     /**

@@ -17,7 +17,9 @@
 package org.apache.sling.commons.threads.impl;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.SynchronousQueue;
@@ -152,23 +154,36 @@ public class DefaultThreadPool
     /**
      * @see org.apache.sling.commons.threads.ThreadPool#execute(java.lang.Runnable)
      */
-    public void execute(Runnable runnable) {
-        if ( this.executor == null ) {
-            throw new IllegalStateException("Thread pool " + this.name + " is already shutdown.");
-        }
+    public void execute(final Runnable runnable) {
+        checkExecutor();
         if ( runnable != null ) {
-            if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Executing runnable: {}, pool={}, active={}, corePoolSize={}, maxPoolSize={}, queueSize={}",
-                        new Object[] {runnable,
-                                      this.name,
-                                      this.executor.getActiveCount(),
-                                      this.executor.getCorePoolSize(),
-                                      this.executor.getMaximumPoolSize(),
-                                      this.executor.getQueue().size()});
+            if ( logger.isDebugEnabled() ) {
+                logOperation("Executing runnable: ", runnable);
             }
-
-        	this.executor.execute(runnable);
+            executor.execute(runnable);
         }
+    }
+
+    /**
+     * @see org.apache.sling.commons.threads.ThreadPool#submit(java.util.concurrent.Callable)
+     */
+    public <T> Future<T> submit(final Callable<T> callable) {
+        checkExecutor();
+        if ( logger.isDebugEnabled() ) {
+            logOperation("Submitting callable: ", callable);
+        }
+        return executor.submit(callable);
+    }
+
+    /**
+     * @see org.apache.sling.commons.threads.ThreadPool#submit(java.lang.Runnable)
+     */
+    public Future<?> submit(final Runnable runnable) {
+        checkExecutor();
+        if ( logger.isDebugEnabled() ) {
+            logOperation("Submitting runnable: ", runnable);
+        }
+        return executor.submit(runnable);
     }
 
     /**
@@ -202,5 +217,20 @@ public class DefaultThreadPool
 
     public ThreadPoolExecutor getExecutor() {
         return this.executor;
+    }
+
+    private void checkExecutor() {
+        if ( this.executor == null ) {
+            throw new IllegalStateException("Thread pool " + this.name + " is already shutdown.");
+        }
+    }
+
+    private void logOperation(final String msg, final Object obj) {
+        logger.debug("{} {}, pool={}, active={}, corePoolSize={}, maxPoolSize={}, queueSize={}",
+                new Object[] {msg, obj, name,
+                        executor.getActiveCount(),
+                        executor.getCorePoolSize(),
+                        executor.getMaximumPoolSize(),
+                        executor.getQueue().size()});
     }
 }
