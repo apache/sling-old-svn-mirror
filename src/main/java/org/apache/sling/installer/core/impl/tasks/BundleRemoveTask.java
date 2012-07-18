@@ -47,7 +47,7 @@ public class BundleRemoveTask extends AbstractBundleTask {
         final Bundle b = BundleInfo.getMatchingBundle(this.getBundleContext(), symbolicName, version);
         if (b == null) {
             // nothing to do, so just stop
-            this.setFinishedState(ResourceState.IGNORED);
+            this.setFinishedState(ResourceState.UNINSTALLED);
             return;
         }
         final int state = b.getState();
