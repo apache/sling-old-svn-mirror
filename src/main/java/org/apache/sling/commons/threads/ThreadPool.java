@@ -16,6 +16,9 @@
  */
 package org.apache.sling.commons.threads;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
 /**
  * The thread pool interface allows to start runnables by
  * getting threads from a managed pool.
@@ -27,6 +30,22 @@ public interface ThreadPool {
      * @param runnable The {@link Runnable} to execute
      */
     void execute(Runnable runnable);
+
+    /**
+     * Submits a callable for execution
+     * @param callable The {@link Callable} to submit
+     * @return A {@link Future} representing pending completion of the {@link Callable}
+     * @since 3.2
+     */
+    <T> Future<T> submit(Callable<T> callable);
+
+    /**
+     * Submits a runnable for execution
+     * @param runnable The {@link Runnable} to submit
+     * @return A {@link Future} representing pending completion of the {@link Runnable}
+     * @since 3.2
+     */
+    Future<?> submit(Runnable runnable);
 
     /**
      * The name of the thread pool.
