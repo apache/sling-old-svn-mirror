@@ -46,6 +46,9 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
     /** Configured roots. */
     private final String[] roots;
 
+    /** Owns roots? */
+    private final boolean ownsRoots;
+
     /**
      * Create a new handler
      */
@@ -75,6 +78,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             Collections.sort(configuredRoots);
             this.roots = configuredRoots.toArray(new String[configuredRoots.size()]);
         }
+        this.ownsRoots = PropertiesUtil.toBoolean(properties.get(ResourceProvider.OWNS_ROOTS), false);
     }
 
     /**
@@ -89,6 +93,13 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
      */
     public Long getServiceId() {
         return this.serviceId;
+    }
+
+    /**
+     * Does this provider own the roots?
+     */
+    public boolean ownsRoots() {
+        return this.ownsRoots;
     }
 
     /**
@@ -142,6 +153,9 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
      */
     public abstract Iterator<Resource> listChildren(final ResourceResolverContext ctx, final Resource parent);
 
+    /**
+     * Return the resource provider.
+     */
     public abstract ResourceProvider getResourceProvider(final ResourceResolverContext ctx);
 
     /**
