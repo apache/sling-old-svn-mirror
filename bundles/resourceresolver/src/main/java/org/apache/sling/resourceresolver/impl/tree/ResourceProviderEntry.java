@@ -287,8 +287,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                         LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
                         return resource;
                     }
+                    if ( rp.ownsRoots() ) {
+                        LOGGER.debug("Resource null {} ", fullPath);
+                        return null;
+                    }
                 }
-                // TODO stop handling if provider claims subtree!
             }
 
             // resolve against this one
@@ -343,8 +346,10 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                 if ( provider instanceof ModifyingResourceProvider ) {
                     return (ModifyingResourceProvider) provider;
                 }
+                if ( rp.ownsRoots() ) {
+                    throw new UnsupportedOperationException();
+                }
             }
-            // TODO stop handling if provider claims subtree!
         }
         throw new UnsupportedOperationException();
     }
