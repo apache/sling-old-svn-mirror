@@ -54,6 +54,17 @@ public interface ResourceProvider {
     String ROOTS = "provider.roots";
 
     /**
+     * The name of the service registration property containing the a boolean
+     * flag whether this provider owns the tree registered by the roots. The
+     * default for this value is <code>false</code>. If a provider owns a root
+     * no other providers are asked for resources under this root if this
+     * provider does not have a resource. (value is "provider.ownsRoots").
+     *
+     * @since 2.2
+     */
+    String OWNS_ROOTS = "provider.ownsRoots";
+
+    /**
      * The resource type be set on resources returned by the
      * {@link #listChildren(Resource)} method to enable traversing the
      * resource
