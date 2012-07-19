@@ -22,95 +22,29 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import org.apache.sling.installer.api.InstallableResource;
+import org.apache.sling.installer.api.info.InfoProvider;
+import org.apache.sling.installer.api.info.InstallationState;
+import org.apache.sling.installer.api.info.Resource;
+import org.apache.sling.installer.api.info.ResourceGroup;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
-import org.apache.sling.installer.api.tasks.TaskResource;
-import org.apache.sling.installer.core.impl.EntityResourceList;
-import org.apache.sling.installer.core.impl.OsgiInstallerImpl;
-import org.apache.sling.installer.core.impl.RegisteredResourceImpl;
 
 @SuppressWarnings("serial")
 public class OsgiInstallerWebConsolePlugin extends GenericServlet {
 
-    private final OsgiInstallerImpl installer;
+    private final InfoProvider installer;
 
-    public OsgiInstallerWebConsolePlugin(final OsgiInstallerImpl installer) {
+    public OsgiInstallerWebConsolePlugin(final InfoProvider installer) {
         this.installer = installer;
-    }
-
-    /**
-     * Internal class to collect the current state.
-     */
-    private static final class State {
-        public final List<EntityResourceList> activeResources = new ArrayList<EntityResourceList>();
-        public final List<EntityResourceList> installedResources = new ArrayList<EntityResourceList>();
-        public final List<RegisteredResource> untransformedResources = new ArrayList<RegisteredResource>();
-    }
-
-    private static final Comparator<EntityResourceList> COMPARATOR = new Comparator<EntityResourceList>() {
-
-        public int compare(EntityResourceList o1, EntityResourceList o2) {
-            RegisteredResource r1 = null;
-            RegisteredResource r2 = null;
-            if ( o1.getResources().size() > 0 ) {
-                r1 = o1.getResources().iterator().next();
-            }
-            if ( o2.getResources().size() > 0 ) {
-                r2 = o2.getResources().iterator().next();
-            }
-            int result;
-            if ( r1 == null && r2 == null ) {
-                result = 0;
-            } else if ( r1 == null ) {
-                result = -1;
-            } else if ( r2 == null ) {
-                result = 1;
-            } else {
-                result = r1.getType().compareTo(r2.getType());
-                if ( result == 0 ) {
-                    result = r1.getEntityId().compareTo(r2.getEntityId());
-                }
-            }
-            return result;
-        }
-
-    };
-
-    /**
-     * Get the current installer state.
-     * This method should be called from within a synchronized block for the resources!
-     */
-    private State getCurrentState() {
-        final State state = new State();
-
-        for(final String entityId : this.installer.getPersistentResourceList().getEntityIds()) {
-            final EntityResourceList group = this.installer.getPersistentResourceList().getEntityResourceList(entityId);
-            if ( group.getActiveResource() != null ) {
-                state.activeResources.add(group);
-            } else {
-                state.installedResources.add(group);
-            }
-        }
-
-        Collections.sort(state.activeResources, COMPARATOR);
-        Collections.sort(state.installedResources, COMPARATOR);
-
-        state.untransformedResources.addAll(this.installer.getPersistentResourceList().getUntransformedResources());
-
-        return state;
     }
 
     private String getType(final RegisteredResource rsrc) {
@@ -136,7 +70,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return (alias == null ? id : id + '\n' + alias);
     }
 
-    private String getURL(final TaskResource rsrc) {
+    private String getURL(final Resource rsrc) {
         if ( rsrc.getVersion() != null ) {
             return rsrc.getURL() + " (" + rsrc.getVersion() + ")";
         }
@@ -168,101 +102,99 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         final PrintWriter pw = res.getWriter();
 
         pw.print("<p class='statline ui-state-highlight'>Apache Sling OSGi Installer</p>");
-        synchronized ( this.installer.getResourcesLock() ) {
-            final State state = this.getCurrentState();
+        final InstallationState state = this.installer.getInstallationState();
 
-            String rt = null;
-            for(final EntityResourceList group : state.activeResources) {
-                final TaskResource toActivate = group.getActiveResource();
-                if ( !toActivate.getType().equals(rt) ) {
+        String rt = null;
+        for(final ResourceGroup group : state.getActiveResources()) {
+            final Resource toActivate = group.getResources().get(0);
+            if ( !toActivate.getType().equals(rt) ) {
+                if ( rt != null ) {
+                    pw.println("</tbody></table>");
+                }
+                pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
+                pw.printf("<span style='float: left; margin-left: 1em;'>Active Resources - %s</span>", getType(toActivate));
+                pw.println("</div>");
+                pw.println("<table class='nicetable'><tbody>");
+                pw.printf("<tr><th>Entity ID</th><th>Digest/Priority</th><th>URL (Version)</th><th>State</th></tr>");
+                rt = toActivate.getType();
+            }
+            pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
+                    getEntityId(toActivate, group.getAlias()),
+                    getInfo(toActivate),
+                    getURL(toActivate),
+                    toActivate.getState());
+        }
+        if ( rt != null ) {
+            pw.println("</tbody></table>");
+        }
+        rt = null;
+
+        for(final ResourceGroup group : state.getInstalledResources()) {
+            final Collection<Resource> resources = group.getResources();
+            if (resources.size() > 0) {
+                final Iterator<Resource> iter = resources.iterator();
+                final Resource first = iter.next();
+                if ( !first.getType().equals(rt) ) {
                     if ( rt != null ) {
                         pw.println("</tbody></table>");
                     }
                     pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
-                    pw.printf("<span style='float: left; margin-left: 1em;'>Active Resources - %s</span>", getType(toActivate));
+                    pw.printf("<span style='float: left; margin-left: 1em;'>Processed Resources - %s</span>", getType(first));
                     pw.println("</div>");
                     pw.println("<table class='nicetable'><tbody>");
                     pw.printf("<tr><th>Entity ID</th><th>Digest/Priority</th><th>URL (Version)</th><th>State</th></tr>");
-                    rt = toActivate.getType();
+                    rt = first.getType();
                 }
-                pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
-                        getEntityId(toActivate, group.getAlias()),
-                        getInfo(toActivate),
-                        getURL(toActivate),
-                        toActivate.getState());
-            }
-            if ( rt != null ) {
-                pw.println("</tbody></table>");
-            }
-            rt = null;
-
-            for(final EntityResourceList group : state.installedResources) {
-                final Collection<TaskResource> resources = group.getResources();
-                if (resources.size() > 0) {
-                    final Iterator<TaskResource> iter = resources.iterator();
-                    final TaskResource first = iter.next();
-                    if ( !first.getType().equals(rt) ) {
-                        if ( rt != null ) {
-                            pw.println("</tbody></table>");
-                        }
-                        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
-                        pw.printf("<span style='float: left; margin-left: 1em;'>Processed Resources - %s</span>", getType(first));
-                        pw.println("</div>");
-                        pw.println("<table class='nicetable'><tbody>");
-                        pw.printf("<tr><th>Entity ID</th><th>Digest/Priority</th><th>URL (Version)</th><th>State</th></tr>");
-                        rt = first.getType();
-                    }
-                    pw.print("<tr><td>");
-                    pw.print(getEntityId(first, group.getAlias()));
-                    pw.print("</td><td>");
-                    pw.print(getInfo(first));
-                    pw.print("</td><td>");
-                    pw.print(getURL(first));
-                    pw.print("</td><td>");
-                    pw.print(first.getState());
-                    if ( first.getState() == ResourceState.INSTALLED ) {
-                        final long lastChange = ((RegisteredResourceImpl)first).getLastChange();
-                        if ( lastChange > 0 ) {
-                            pw.print("<br/>");
-                            pw.print(formatDate(lastChange));
-                        }
-                    }
-                    pw.print("</td></tr>");
-
-                    while ( iter.hasNext() ) {
-                        final TaskResource resource = iter.next();
-                        pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
-                            getInfo(resource),
-                            getURL(resource),
-                            resource.getState());
+                pw.print("<tr><td>");
+                pw.print(getEntityId(first, group.getAlias()));
+                pw.print("</td><td>");
+                pw.print(getInfo(first));
+                pw.print("</td><td>");
+                pw.print(getURL(first));
+                pw.print("</td><td>");
+                pw.print(first.getState());
+                if ( first.getState() == ResourceState.INSTALLED ) {
+                    final long lastChange = first.getLastChange();
+                    if ( lastChange > 0 ) {
+                        pw.print("<br/>");
+                        pw.print(formatDate(lastChange));
                     }
                 }
-            }
-            if ( rt != null ) {
-                pw.println("</tbody></table>");
-            }
+                pw.print("</td></tr>");
 
-            rt = null;
-            for(final RegisteredResource registeredResource : state.untransformedResources) {
-                if ( !registeredResource.getType().equals(rt) ) {
-                    if ( rt != null ) {
-                        pw.println("</tbody></table>");
-                    }
-                    pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
-                    pw.printf("<span style='float: left; margin-left: 1em;'>Untransformed Resources - %s</span>", getType(registeredResource));
-                    pw.println("</div>");
-                    pw.println("<table class='nicetable'><tbody>");
-                    pw.printf("<tr><th>Digest/Priority</th><th>URL</th></tr>");
-
-                    rt = registeredResource.getType();
+                while ( iter.hasNext() ) {
+                    final Resource resource = iter.next();
+                    pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
+                        getInfo(resource),
+                        getURL(resource),
+                        resource.getState());
                 }
-                pw.printf("<tr><td>%s</td><td>%s</td></tr>",
-                    getInfo(registeredResource),
-                    registeredResource.getURL());
             }
-            if ( rt != null ) {
-                pw.println("</tbody></table>");
+        }
+        if ( rt != null ) {
+            pw.println("</tbody></table>");
+        }
+
+        rt = null;
+        for(final RegisteredResource registeredResource : state.getUntransformedResources()) {
+            if ( !registeredResource.getType().equals(rt) ) {
+                if ( rt != null ) {
+                    pw.println("</tbody></table>");
+                }
+                pw.println("<div class='ui-widget-header ui-corner-top buttonGroup' style='height: 15px;'>");
+                pw.printf("<span style='float: left; margin-left: 1em;'>Untransformed Resources - %s</span>", getType(registeredResource));
+                pw.println("</div>");
+                pw.println("<table class='nicetable'><tbody>");
+                pw.printf("<tr><th>Digest/Priority</th><th>URL</th></tr>");
+
+                rt = registeredResource.getType();
             }
+            pw.printf("<tr><td>%s</td><td>%s</td></tr>",
+                getInfo(registeredResource),
+                registeredResource.getURL());
+        }
+        if ( rt != null ) {
+            pw.println("</tbody></table>");
         }
     }
 
@@ -275,65 +207,63 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         }
         pw.println("Apache Sling OSGi Installer");
         pw.println("===========================");
-        synchronized ( this.installer.getResourcesLock() ) {
-            final State state = this.getCurrentState();
-            pw.println("Active Resources");
-            pw.println("----------------");
-            String rt = null;
-            for(final EntityResourceList group : state.activeResources) {
-                final TaskResource toActivate = group.getActiveResource();
-                if ( !toActivate.getType().equals(rt) ) {
-                    pw.printf("%s:%n", getType(toActivate));
-                    rt = toActivate.getType();
-                }
-                pw.printf("- %s: %s, %s, %s%n",
-                        getEntityId(toActivate, group.getAlias()),
-                        getInfo(toActivate),
-                        getURL(toActivate),
-                        toActivate.getState());
+        final InstallationState state = this.installer.getInstallationState();
+        pw.println("Active Resources");
+        pw.println("----------------");
+        String rt = null;
+        for(final ResourceGroup group : state.getActiveResources()) {
+            final Resource toActivate = group.getResources().get(0);
+            if ( !toActivate.getType().equals(rt) ) {
+                pw.printf("%s:%n", getType(toActivate));
+                rt = toActivate.getType();
             }
-            pw.println();
+            pw.printf("- %s: %s, %s, %s%n",
+                    getEntityId(toActivate, group.getAlias()),
+                    getInfo(toActivate),
+                    getURL(toActivate),
+                    toActivate.getState());
+        }
+        pw.println();
 
-            pw.println("Processed Resources");
-            pw.println("-------------------");
-            rt = null;
-            for(final EntityResourceList group : state.installedResources) {
-                final Collection<TaskResource> resources = group.getResources();
-                if (resources.size() > 0) {
-                    final Iterator<TaskResource> iter = resources.iterator();
-                    final TaskResource first = iter.next();
-                    if ( !first.getType().equals(rt) ) {
-                        pw.printf("%s:%n", getType(first));
-                        rt = first.getType();
-                    }
-                    pw.printf("* %s: %s, %s, %s%n",
-                            getEntityId(first, group.getAlias()),
-                            getInfo(first),
-                            getURL(first),
-                            first.getState());
-                    while ( iter.hasNext() ) {
-                        final TaskResource resource = iter.next();
-                        pw.printf("  - %s, %s, %s%n",
-                            getInfo(resource),
-                            getURL(resource),
-                            resource.getState());
-                    }
+        pw.println("Processed Resources");
+        pw.println("-------------------");
+        rt = null;
+        for(final ResourceGroup group : state.getInstalledResources()) {
+            final Collection<Resource> resources = group.getResources();
+            if (resources.size() > 0) {
+                final Iterator<Resource> iter = resources.iterator();
+                final Resource first = iter.next();
+                if ( !first.getType().equals(rt) ) {
+                    pw.printf("%s:%n", getType(first));
+                    rt = first.getType();
+                }
+                pw.printf("* %s: %s, %s, %s%n",
+                        getEntityId(first, group.getAlias()),
+                        getInfo(first),
+                        getURL(first),
+                        first.getState());
+                while ( iter.hasNext() ) {
+                    final Resource resource = iter.next();
+                    pw.printf("  - %s, %s, %s%n",
+                        getInfo(resource),
+                        getURL(resource),
+                        resource.getState());
                 }
             }
-            pw.println();
+        }
+        pw.println();
 
-            pw.println("Untransformed Resources");
-            pw.println("-----------------------");
-            rt = null;
-            for(final RegisteredResource registeredResource : state.untransformedResources) {
-                if ( !registeredResource.getType().equals(rt) ) {
-                    pw.printf("%s:%n", getType(registeredResource));
-                    rt = registeredResource.getType();
-                }
-                pw.printf("- %s, %s%n",
-                        getInfo(registeredResource),
-                        registeredResource.getURL());
+        pw.println("Untransformed Resources");
+        pw.println("-----------------------");
+        rt = null;
+        for(final RegisteredResource registeredResource : state.getUntransformedResources()) {
+            if ( !registeredResource.getType().equals(rt) ) {
+                pw.printf("%s:%n", getType(registeredResource));
+                rt = registeredResource.getType();
             }
+            pw.printf("- %s, %s%n",
+                    getInfo(registeredResource),
+                    registeredResource.getURL());
         }
     }
 }
