@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
+import org.apache.sling.installer.api.info.InfoProvider;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.RetryHandler;
@@ -74,6 +75,7 @@ public class Activator implements BundleActivator {
         this.osgiControllerService.start();
         final String [] serviceInterfaces = {
                 OsgiInstaller.class.getName(),
+                InfoProvider.class.getName(),
                 ResourceChangeListener.class.getName(),
                 RetryHandler.class.getName()
         };

@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,6 +41,10 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
 import org.apache.sling.installer.api.UpdateHandler;
 import org.apache.sling.installer.api.UpdateResult;
+import org.apache.sling.installer.api.info.InfoProvider;
+import org.apache.sling.installer.api.info.InstallationState;
+import org.apache.sling.installer.api.info.Resource;
+import org.apache.sling.installer.api.info.ResourceGroup;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.InstallationContext;
@@ -52,6 +58,7 @@ import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +73,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OsgiInstallerImpl
     extends Thread
-    implements OsgiInstaller, ResourceChangeListener, RetryHandler {
+    implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -252,14 +259,6 @@ public class OsgiInstallerImpl
         if ( scheme.indexOf(':') != -1 ) {
             throw new IllegalArgumentException("Scheme must not contain a colon");
         }
-    }
-
-    public Object getResourcesLock() {
-        return this.resourcesLock;
-    }
-
-    public PersistentResourceList getPersistentResourceList() {
-        return this.persistentList;
     }
 
     /**
@@ -972,4 +971,137 @@ public class OsgiInstallerImpl
         }
         return null;
     }
+
+    /**
+     * @see org.apache.sling.installer.api.info.InfoProvider#getInstallationState()
+     */
+    public InstallationState getInstallationState() {
+        synchronized ( this.resourcesLock ) {
+            final InstallationState state = new InstallationState() {
+
+                private final List<ResourceGroup> activeResources = new ArrayList<ResourceGroup>();
+                private final List<ResourceGroup> installedResources = new ArrayList<ResourceGroup>();
+                private final List<RegisteredResource> untransformedResources = new ArrayList<RegisteredResource>();
+
+                public List<ResourceGroup> getActiveResources() {
+                    return activeResources;
+                }
+
+                public List<ResourceGroup> getInstalledResources() {
+                    return installedResources;
+                }
+
+                public List<RegisteredResource> getUntransformedResources() {
+                    return untransformedResources;
+                }
+
+            };
+
+            for(final String entityId : this.persistentList.getEntityIds()) {
+                final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+
+                final String alias = group.getAlias();
+                final List<Resource> resources = new ArrayList<Resource>();
+                for(final TaskResource tr : group.getResources()) {
+                    resources.add(new Resource() {
+
+                        public String getScheme() {
+                            return tr.getScheme();
+                        }
+
+                        public String getURL() {
+                            return tr.getURL();
+                        }
+
+                        public String getType() {
+                            return tr.getType();
+                        }
+
+                        public InputStream getInputStream() throws IOException {
+                            return tr.getInputStream();
+                        }
+
+                        public Dictionary<String, Object> getDictionary() {
+                            return tr.getDictionary();
+                        }
+
+                        public String getDigest() {
+                            return tr.getDigest();
+                        }
+
+                        public int getPriority() {
+                            return tr.getPriority();
+                        }
+
+                        public String getEntityId() {
+                            return tr.getEntityId();
+                        }
+
+                        public ResourceState getState() {
+                            return tr.getState();
+                        }
+
+                        public Version getVersion() {
+                            return tr.getVersion();
+                        }
+
+                        public long getLastChange() {
+                            return ((RegisteredResourceImpl)tr).getLastChange();
+                        }
+                    });
+                }
+                final ResourceGroup rg = new ResourceGroup() {
+
+                    public List<Resource> getResources() {
+                        return resources;
+                    }
+
+                    public String getAlias() {
+                        return alias;
+                    }
+                };
+                if ( group.getActiveResource() != null ) {
+                    state.getActiveResources().add(rg);
+                } else {
+                    state.getInstalledResources().add(rg);
+                }
+            }
+
+            Collections.sort(state.getActiveResources(), COMPARATOR);
+            Collections.sort(state.getInstalledResources(), COMPARATOR);
+
+            state.getUntransformedResources().addAll(this.persistentList.getUntransformedResources());
+
+            return state;
+        }
+    }
+
+    private static final Comparator<ResourceGroup> COMPARATOR = new Comparator<ResourceGroup>() {
+
+        public int compare(ResourceGroup o1, ResourceGroup o2) {
+            RegisteredResource r1 = null;
+            RegisteredResource r2 = null;
+            if ( o1.getResources().size() > 0 ) {
+                r1 = o1.getResources().iterator().next();
+            }
+            if ( o2.getResources().size() > 0 ) {
+                r2 = o2.getResources().iterator().next();
+            }
+            int result;
+            if ( r1 == null && r2 == null ) {
+                result = 0;
+            } else if ( r1 == null ) {
+                result = -1;
+            } else if ( r2 == null ) {
+                result = 1;
+            } else {
+                result = r1.getType().compareTo(r2.getType());
+                if ( result == 0 ) {
+                    result = r1.getEntityId().compareTo(r2.getEntityId());
+                }
+            }
+            return result;
+        }
+
+    };
 }

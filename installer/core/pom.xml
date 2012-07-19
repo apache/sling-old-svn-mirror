@@ -61,6 +61,7 @@
                         </DynamicImport-Package>
 						<Export-Package>
 							org.apache.sling.installer.api;version=3.1.0,
+                            org.apache.sling.installer.api.info;version=1.0.0,
                             org.apache.sling.installer.api.event;version=1.0.0,
                             org.apache.sling.installer.api.tasks;version=1.2.0
                         </Export-Package>
