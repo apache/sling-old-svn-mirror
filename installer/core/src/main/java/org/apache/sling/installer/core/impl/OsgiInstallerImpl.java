@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.ResourceChangeListener;
@@ -72,8 +73,7 @@ import org.slf4j.LoggerFactory;
  *  the main list at the end of the cycle.
  */
 public class OsgiInstallerImpl
-    extends Thread
-    implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider {
+    implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Runnable {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -97,7 +97,7 @@ public class OsgiInstallerImpl
     private volatile boolean active = true;
 
     /** Are we still running? */
-    private volatile boolean backgroundThreadIsRunning = false;
+    private volatile Thread backgroundThread;
 
     /** Flag indicating that a retry event occured during tasks executions. */
     private volatile boolean retryDuringTaskExecution = false;
@@ -146,13 +146,17 @@ public class OsgiInstallerImpl
 
         this.listener.dispose();
 
-        if ( this.backgroundThreadIsRunning ) {
+        if ( this.backgroundThread != null ) {
             this.logger.debug("Waiting for installer thread to stop");
-            while ( this.backgroundThreadIsRunning ) {
-                try {
-                    this.join(50L);
-                } catch (InterruptedException e) {
-                    // we simply ignore this
+            while ( this.backgroundThread != null ) {
+                // use a local variable to avoid NPEs
+                final Thread t = this.backgroundThread;
+                if ( t != null ) {
+                    try {
+                        t.join(50L);
+                    } catch (final InterruptedException e) {
+                        // we simply ignore this
+                    }
                 }
             }
         }
@@ -161,6 +165,10 @@ public class OsgiInstallerImpl
         FileDataStore.SHARED = null;
 
         this.logger.info("Apache Sling OSGi Installer Service stopped.");
+    }
+
+    public void start() {
+        this.startBackgroundThread();
     }
 
     /**
@@ -175,13 +183,20 @@ public class OsgiInstallerImpl
         this.updateHandlerTracker = new SortingServiceTracker<UpdateHandler>(ctx, UpdateHandler.class.getName(), null);
         this.updateHandlerTracker.open();
 
-        setName(getClass().getSimpleName());
         this.logger.info("Apache Sling OSGi Installer Service started.");
     }
 
-    @Override
+    private void startBackgroundThread() {
+        this.backgroundThread = new Thread(this);
+        this.backgroundThread.setName(getClass().getSimpleName());
+        this.backgroundThread.setDaemon(true);
+        this.backgroundThread.start();
+    }
+
+    /**
+     * @see java.lang.Runnable#run()
+     */
     public void run() {
-        this.backgroundThreadIsRunning = true;
         try {
             this.init();
 
@@ -226,7 +241,7 @@ public class OsgiInstallerImpl
             }
             this.listener.suspend();
         } finally {
-            this.backgroundThreadIsRunning = false;
+            this.backgroundThread = null;
         }
     }
 
@@ -582,7 +597,6 @@ public class OsgiInstallerImpl
     private ACTION executeTasks(final SortedSet<InstallTask> tasks) {
         if ( !tasks.isEmpty() ) {
 
-            final List<InstallTask> asyncTasks = new ArrayList<InstallTask>();
             final InstallationContext ctx = new InstallationContext() {
 
                 public void addTaskToNextCycle(final InstallTask t) {
@@ -593,21 +607,39 @@ public class OsgiInstallerImpl
                 }
 
                 public void addTaskToCurrentCycle(final InstallTask t) {
-                    logger.debug("Adding task to current cycle: {}", t);
+                    logger.debug("Adding {}task to current cycle: {}", t.isAsynchronousTask() ? "async " : "", t);
                     synchronized ( tasks ) {
                         tasks.add(t);
                     }
                 }
 
-                public void addAsyncTask(InstallTask t) {
-                    logger.debug("Adding async task: {}", t);
-                    synchronized (asyncTasks) {
-                        asyncTasks.add(t);
+                public void addAsyncTask(final InstallTask t) {
+                    if ( t.isAsynchronousTask() ) {
+                        logger.warn("Deprecated method addAsyncTask is called: {}", t);
+                        this.addTaskToCurrentCycle(t);
+                    } else {
+                        logger.warn("Deprecated method addAsyncTask is called with non async task(!): {}", t);
+                        this.addTaskToCurrentCycle(new AsyncWrapperInstallTask(t));
                     }
                 }
 
-                public void log(String message, Object... args) {
+                public void log(final String message, final Object... args) {
                     auditLogger.info(message, args);
+                }
+
+                public void asyncTaskFailed(final InstallTask t) {
+                    // persist all changes and retry restart
+                    // remove attribute
+                    if ( t.getResource() != null ) {
+                        t.getResource().setAttribute(InstallTask.ASYNC_ATTR_NAME, null);
+                    }
+                    persistentList.save();
+                    synchronized ( resourcesLock ) {
+                        if ( !active ) {
+                            active = true;
+                            startBackgroundThread();
+                        }
+                    }
                 }
             };
             while (this.active && !tasks.isEmpty()) {
@@ -616,8 +648,47 @@ public class OsgiInstallerImpl
                     task = tasks.first();
                     tasks.remove(task);
                 }
-                logger.debug("Executing task: {}", task);
+                // async tasks are executed "immediately"
+                if ( task.isAsynchronousTask() ) {
+                    logger.debug("Executing async task: {}", task);
+                    // set attribute
+                    final Integer oldValue;
+                    if ( task.getResource() != null ) {
+                        oldValue = (Integer)task.getResource().getAttribute(InstallTask.ASYNC_ATTR_NAME);
+                        final Integer newValue;
+                        if ( oldValue == null ) {
+                            newValue = 1;
+                        } else {
+                            newValue = oldValue + 1;
+                        }
+                        task.getResource().setAttribute(InstallTask.ASYNC_ATTR_NAME, newValue);
+                    } else {
+                        oldValue = null;
+                    }
+                    // save new state
+                    this.cleanupInstallableResources();
+                    final InstallTask aSyncTask = task;
+                    final Thread t = new Thread() {
+
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(2000L);
+                            } catch (final InterruptedException ie) {
+                                // ignore
+                            }
+                            // reset attribute
+                            if ( aSyncTask.getResource() != null ) {
+                                aSyncTask.getResource().setAttribute(InstallTask.ASYNC_ATTR_NAME, oldValue);
+                            }
+                            aSyncTask.execute(ctx);
+                        }
+                    };
+                    t.start();
+                    return ACTION.SHUTDOWN;
+                }
                 try {
+                    logger.debug("Executing task: {}", task);
                     task.execute(ctx);
                 } catch (final Throwable t) {
                     logger.error("Uncaught exception during task execution!", t);
@@ -625,26 +696,6 @@ public class OsgiInstallerImpl
             }
             // save new state
             final boolean newCycle = this.cleanupInstallableResources();
-
-            // let's check if we have async tasks and no other tasks
-            if ( this.active && !asyncTasks.isEmpty() ) {
-                final InstallTask task = asyncTasks.get(0);
-                logger.debug("Executing async task: {}", task);
-                final Thread t = new Thread() {
-
-                    @Override
-                    public void run() {
-                        try {
-                            Thread.sleep(2000L);
-                        } catch (final InterruptedException ie) {
-                            // ignore
-                        }
-                        task.execute(ctx);
-                    }
-                };
-                t.start();
-                return ACTION.SHUTDOWN;
-            }
             if ( newCycle ) {
                 return ACTION.CYCLE;
             }
@@ -941,7 +992,7 @@ public class OsgiInstallerImpl
     private UpdateHandler findHandler(final String scheme) {
         final List<ServiceReference> references = this.updateHandlerTracker.getSortedServiceReferences();
         for(final ServiceReference ref : references) {
-            final String[] supportedSchemes = toStringArray(ref.getProperty(UpdateHandler.PROPERTY_SCHEMES));
+            final String[] supportedSchemes = PropertiesUtil.toStringArray(ref.getProperty(UpdateHandler.PROPERTY_SCHEMES));
             if ( supportedSchemes != null ) {
                 for(final String support : supportedSchemes ) {
                     if ( scheme.equals(support) ) {
@@ -949,25 +1000,6 @@ public class OsgiInstallerImpl
                     }
                 }
             }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the parameter as an array of Strings.
-     */
-    public static String[] toStringArray(final Object propValue) {
-        if (propValue == null) {
-            return null;
-
-        } else if (propValue instanceof String) {
-            // single string
-            return new String[] { (String) propValue };
-
-        } else if (propValue instanceof String[]) {
-            // String[]
-            return (String[]) propValue;
-
         }
         return null;
     }

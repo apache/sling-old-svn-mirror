@@ -33,6 +33,13 @@ package org.apache.sling.installer.api.tasks;
  */
 public abstract class InstallTask implements Comparable<InstallTask> {
 
+    /**
+     * Attribute which is set by the OSGi installer for asynchronous execution.
+     * The value of the attribute is an Integer which is increased on each async call,
+     * it starts with the value <code>1</code>.
+     */
+    public static final String ASYNC_ATTR_NAME = "org.apache.sling.installer.api.tasks.ASyncInstallTask";
+
     /** The resource group this task is working on. */
     private final TaskResourceGroup resourceGroup;
 
@@ -120,5 +127,27 @@ public abstract class InstallTask implements Comparable<InstallTask> {
      */
     public final int compareTo(final InstallTask o) {
         return getSortKey().compareTo(o.getSortKey());
+    }
+
+    /**
+     * If this an asynchronous task it should return <code>true</code>
+     * The OSGi installer will set the attribute {@link #ASYNC_ATTR_NAME}
+     * with an integer value.
+     * The next time, after the asynchronous task has been run and
+     * the OSGi installer has restarted, this attribute will be set
+     * on the resource.
+     *
+     * Asynchronous tasks should only be used for tasks which require
+     * the OSGi installer to stop and force it to restart, like
+     * a bundle update of the installer itself or a system update.
+     * The OSGi installer stops itself for an asynchronous task and
+     * is not able to restart itself!
+     *
+     * @return If this is a async request, <code>true</code>
+     *         otherwise <code>false</code>
+     * @since 1.3
+     */
+    public boolean isAsynchronousTask() {
+        return false;
     }
 }

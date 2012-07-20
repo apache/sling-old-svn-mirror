@@ -36,9 +36,6 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.Version;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,24 +50,11 @@ public class BundleTaskCreator
      */
     private final static String FORCE_INSTALL_VERSION = "force.install.version";
 
-    private final static String SPECIAL_ATTR = "sling.osgi.installer.special";
-
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
 
-    public static final String ATTR_START = "sling.osgi.installer.start.bundle";
-
-    /** Interface of the package admin */
-    private static String PACKAGE_ADMIN_NAME = PackageAdmin.class.getName();
-
-    /** Interface of the start level */
-    private static String START_LEVEL_NAME = StartLevel.class.getName();
-
-    /** Tracker for the package admin. */
-    private ServiceTracker packageAdminTracker;
-
-    /** Tracker for the start level service. */
-    private ServiceTracker startLevelTracker;
+    /** Support service for the tasks */
+    private TaskSupport taskSupport;
 
     /** The bundle context. */
     private BundleContext bundleContext;
@@ -88,11 +72,7 @@ public class BundleTaskCreator
         this.bundleContext.addBundleListener(this);
         this.bundleContext.addFrameworkListener(this);
 
-        // create and start tracker
-        this.packageAdminTracker = new ServiceTracker(bc, PACKAGE_ADMIN_NAME, null);
-        this.packageAdminTracker.open();
-        this.startLevelTracker = new ServiceTracker(bc, START_LEVEL_NAME, null);
-        this.startLevelTracker.open();
+        this.taskSupport = new TaskSupport(bc);
     }
 
     /**
@@ -103,13 +83,9 @@ public class BundleTaskCreator
             this.bundleContext.removeBundleListener(this);
             this.bundleContext.removeFrameworkListener(this);
         }
-        if ( this.packageAdminTracker != null ) {
-            this.packageAdminTracker.close();
-            this.packageAdminTracker = null;
-        }
-        if ( this.startLevelTracker != null ) {
-            this.startLevelTracker.close();
-            this.startLevelTracker = null;
+        if ( this.taskSupport != null ) {
+            this.taskSupport.deactivate();
+            this.taskSupport = null;
         }
     }
 
@@ -139,18 +115,6 @@ public class BundleTaskCreator
      */
     public String getDescription() {
         return "Apache Sling Bundle Install Task Factory";
-    }
-
-    public BundleContext getBundleContext() {
-        return this.bundleContext;
-    }
-
-    public StartLevel getStartLevel() {
-        return (StartLevel) this.startLevelTracker.getService();
-    }
-
-    public PackageAdmin getPackageAdmin() {
-        return (PackageAdmin)this.packageAdminTracker.getService();
     }
 
 	/**
@@ -204,7 +168,7 @@ public class BundleTaskCreator
 	                    logger.debug("Prevent completely uninstalling installer bundle {}", symbolicName);
 	                    result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
 	                } else {
-	                    result = new BundleRemoveTask(resourceList, this);
+	                    result = new BundleRemoveTask(resourceList, this.taskSupport);
 	                }
 	            }
 		    } else {
@@ -215,69 +179,74 @@ public class BundleTaskCreator
 
 		// Install
 		} else {
-		    // for install and update, we want the bundle with the highest version
-	        final BundleInfo info = this.getBundleInfo(symbolicName, null);
-		    // check if we should start the bundle as we installed it in the previous run
-		    if (info == null) {
-			    // bundle is not installed yet: install
-			    result = new BundleInstallTask(resourceList, this);
-		    } else if ( toActivate.getAttribute(ATTR_START) != null ) {
-	            result = new BundleStartTask(resourceList, info.id, this);
-			} else {
-	            boolean doUpdate = false;
-
-	            final Version newVersion = new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
-			    final int compare = info.version.compareTo(newVersion);
-                if (compare < 0) {
-                    // installed version is lower -> update
-                    doUpdate = true;
-                } else if (compare > 0) {
-                    final String forceVersion = (String) toActivate.getAttribute(FORCE_INSTALL_VERSION);
-                    if ( forceVersion != null && info.version.compareTo(new Version(forceVersion)) == 0 ) {
-                        doUpdate = true;
-                    } else {
-                        logger.debug("Bundle " + info.symbolicName + " " + newVersion
-                                    + " is not installed, bundle with higher version is already installed.");
-                    }
-			    } else if (compare == 0 && BundleInfo.isSnapshot(newVersion)) {
-			        // check if system bundle or installer bundle
-			        if ( isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
-			            if ( toActivate.getAttribute(SPECIAL_ATTR) != null ) {
-			                toActivate.setAttribute(SPECIAL_ATTR, null);
-			                result = new ChangeStateTask(resourceList, ResourceState.INSTALLED);
-			                return result;
-                        }
-		                toActivate.setAttribute(SPECIAL_ATTR, "installingsnapshot");
-			        }
-			        // installed, same version but SNAPSHOT
-			        doUpdate = true;
-			    }
-                if (doUpdate) {
-
-                    logger.debug("Scheduling update of {}", toActivate);
-                    // check if this is the system bundle
-                    if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
-                        result = new SystemBundleUpdateTask(resourceList, this);
-                        // check if this is a installer update
-                    } else if ( isInstallerCoreBundle ) {
-                        result = new InstallerBundleUpdateTask(resourceList, this);
-                    } else {
-                        result = new BundleUpdateTask(resourceList, this);
-                    }
-                } else if ( compare == 0 && (isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName)) ) {
-                    // the installer core bundle / system bundle has been updated, just set state
-                    result = new ChangeStateTask(resourceList, ResourceState.INSTALLED);
+		    // check for installer and system update
+		    final Integer asyncTaskCounter = (Integer)toActivate.getAttribute(InstallTask.ASYNC_ATTR_NAME);
+		    if ( asyncTaskCounter != null ) {
+                if ( isInstallerCoreBundle ) {
+                    result = new InstallerBundleUpdateTask(resourceList, this.taskSupport);
                 } else {
-                    logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
-                    result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
+                    // system bundle
+                    result = new ChangeStateTask(resourceList, ResourceState.INSTALLED, null,
+                                    new String[] {InstallTask.ASYNC_ATTR_NAME});
                 }
-			}
-		    toActivate.setAttribute(FORCE_INSTALL_VERSION, null);
+		    } else {
+    		    // for install and update, we want the bundle with the highest version
+    	        final BundleInfo info = this.getBundleInfo(symbolicName, null);
+
+    		    // check if we should start the bundle as we installed it in the previous run
+    		    if (info == null) {
+    			    // bundle is not installed yet: install
+    			    result = new BundleInstallTask(resourceList, this.taskSupport);
+    		    } else if ( BundleUtil.isBundleStart(toActivate) ) {
+    	            result = new BundleStartTask(resourceList, info.id, this.taskSupport);
+    			} else {
+    	            boolean doUpdate = false;
+
+    	            final Version newVersion = new Version((String)toActivate.getAttribute(Constants.BUNDLE_VERSION));
+    			    final int compare = info.version.compareTo(newVersion);
+                    if (compare < 0) {
+                        // installed version is lower -> update
+                        doUpdate = true;
+                    } else if (compare > 0) {
+                        final String forceVersion = (String) toActivate.getAttribute(FORCE_INSTALL_VERSION);
+                        if ( forceVersion != null && info.version.compareTo(new Version(forceVersion)) == 0 ) {
+                            doUpdate = true;
+                        } else {
+                            logger.debug("Bundle " + info.symbolicName + " " + newVersion
+                                        + " is not installed, bundle with higher version is already installed.");
+                        }
+    			    } else if (compare == 0 && BundleInfo.isSnapshot(newVersion)) {
+
+                        // installed, same version but SNAPSHOT
+    			        doUpdate = true;
+    			    }
+                    if (doUpdate) {
+
+                        logger.debug("Scheduling update of {}", toActivate);
+                        // check if this is the system bundle
+                        if ( Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName) ) {
+                            result = new SystemBundleUpdateTask(resourceList, this.taskSupport);
+                            // check if this is a installer update
+                        } else if ( isInstallerCoreBundle ) {
+                            result = new InstallerBundleUpdateTask(resourceList, this.taskSupport);
+                        } else {
+                            result = new BundleUpdateTask(resourceList, this.taskSupport);
+                        }
+                    } else if ( compare == 0 && (isInstallerCoreBundle || Constants.SYSTEM_BUNDLE_SYMBOLICNAME.equals(symbolicName)) ) {
+                        // the installer core bundle / system bundle has been updated, just set state
+                        result = new ChangeStateTask(resourceList, ResourceState.INSTALLED);
+                    } else {
+                        logger.debug("Nothing to install for {}, same version {} already installed.", toActivate, newVersion);
+                        result = new ChangeStateTask(resourceList, ResourceState.IGNORED);
+                    }
+    			}
+		    }
+            toActivate.setAttribute(FORCE_INSTALL_VERSION, null);
 		}
 		return result;
 	}
 
     protected BundleInfo getBundleInfo(final String symbolicName, final String version) {
-        return BundleInfo.getBundleInfo(this.getBundleContext(), symbolicName, version);
+        return BundleInfo.getBundleInfo(this.bundleContext, symbolicName, version);
     }
 }

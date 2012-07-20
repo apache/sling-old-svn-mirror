@@ -19,6 +19,7 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.osgi.framework.Bundle;
 import org.osgi.service.startlevel.StartLevel;
@@ -29,10 +30,10 @@ import org.osgi.service.startlevel.StartLevel;
  */
 public class BundleInstallTask extends AbstractBundleTask {
 
-    private static final String BUNDLE_INSTALL_ORDER = "50-";
+    private static final String BUNDLE_INSTALL_ORDER = "40-";
 
     public BundleInstallTask(final TaskResourceGroup r,
-            final BundleTaskCreator creator) {
+            final TaskSupport creator) {
         super(r, creator);
     }
 
@@ -56,10 +57,31 @@ public class BundleInstallTask extends AbstractBundleTask {
                 }
             }
 
-            // mark this resource as installed and to be started
-            this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
-            ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.getCreator()));
-        } catch (Exception ex) {
+            // fragment?
+            if ( BundleUtil.isSystemBundleFragment(b) ) {
+                this.setFinishedState(ResourceState.INSTALLED);
+                ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, this.getTaskSupport()));
+            } else {
+                final String fragmentHostHeader = BundleUtil.getFragmentHostHeader(b);
+                if (fragmentHostHeader != null) {
+                    this.getLogger().debug("Need to do a refresh of the bundle's host");
+                    for (final Bundle bundle : this.getBundleContext().getBundles()) {
+                        if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
+                            this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
+                            RefreshBundlesTask.markBundleForRefresh(ctx, this.getTaskSupport(), bundle);
+                            break;
+                        }
+                    }
+
+                    this.setFinishedState(ResourceState.INSTALLED);
+                } else {
+
+                    // mark this resource as to be started
+                    BundleUtil.markBundleStart(getResource());
+                    ctx.addTaskToCurrentCycle(new BundleStartTask(getResourceGroup(), b.getBundleId(), this.getTaskSupport()));
+                }
+            }
+        } catch (final Exception ex) {
             // if something goes wrong we simply try it again
             this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
         }

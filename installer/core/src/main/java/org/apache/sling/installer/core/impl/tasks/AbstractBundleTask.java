@@ -21,9 +21,7 @@ package org.apache.sling.installer.core.impl.tasks;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.AbstractInstallTask;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 
@@ -32,27 +30,27 @@ import org.osgi.service.startlevel.StartLevel;
  */
 public abstract class AbstractBundleTask extends AbstractInstallTask {
 
-    private final BundleTaskCreator creator;
+    private final TaskSupport support;
 
-    public AbstractBundleTask(final TaskResourceGroup erl, final BundleTaskCreator creator) {
+    public AbstractBundleTask(final TaskResourceGroup erl, final TaskSupport support) {
         super(erl);
-        this.creator = creator;
+        this.support = support;
     }
 
     protected PackageAdmin getPackageAdmin() {
-        return this.creator.getPackageAdmin();
+        return this.support.getPackageAdmin();
     }
 
     protected BundleContext getBundleContext() {
-        return this.creator.getBundleContext();
+        return this.support.getBundleContext();
     }
 
     protected StartLevel getStartLevel() {
-        return this.creator.getStartLevel();
+        return this.support.getStartLevel();
     }
 
-    protected BundleTaskCreator getCreator() {
-        return this.creator;
+    protected TaskSupport getTaskSupport() {
+        return this.support;
     }
 
     /**
@@ -98,52 +96,5 @@ public abstract class AbstractBundleTask extends AbstractInstallTask {
             return "0" + String.valueOf(startLevel);
         }
         return String.valueOf(startLevel);
-    }
-
-    /**
-     * Check if the bundle is active.
-     * This is true if the bundle has the active state or of the bundle
-     * is in the starting state and has the lazy activation policy.
-     * Or if the bundle is a fragment, it's considered active as well
-     */
-    protected boolean isBundleActive(final Bundle b) {
-        if ( b.getState() == Bundle.ACTIVE ) {
-            return true;
-        }
-        if ( b.getState() == Bundle.STARTING && isLazyActivatian(b) ) {
-            return true;
-        }
-        return ( getFragmentHostHeader(b) != null );
-    }
-
-    /**
-     * Gets the bundle's Fragment-Host header.
-     */
-    protected String getFragmentHostHeader(final Bundle b) {
-        return (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
-    }
-
-    /**
-     * Check if the bundle has the lazy activation policy
-     */
-    private boolean isLazyActivatian(final Bundle b) {
-        return Constants.ACTIVATION_LAZY.equals(b.getHeaders().get(Constants.BUNDLE_ACTIVATIONPOLICY));
-    }
-
-    /**
-     * Refresh host bundle
-     */
-    protected void refreshHostBundle(final Bundle b) {
-        final String fragmentHostHeader = getFragmentHostHeader(b);
-        if (fragmentHostHeader != null) {
-            this.getLogger().debug("Need to do a refresh of the bundle's host");
-            for (final Bundle bundle : this.getBundleContext().getBundles()) {
-                if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
-                    this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
-                    this.getPackageAdmin().refreshPackages(new Bundle[] { bundle });
-                    break;
-                }
-            }
-        }
     }
 }

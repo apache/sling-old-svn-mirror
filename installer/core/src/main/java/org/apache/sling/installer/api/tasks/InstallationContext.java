@@ -57,6 +57,20 @@ public interface InstallationContext {
      * Add an async task.
      * This adds a task for asynchronous execution.
      * @since 1.2.0
+     * @deprecated A async task should return <code>true</code> for {@link InstallTask#isAsynchronousTask()}
+     *             and be add with {@link #addTaskToCurrentCycle(InstallTask)}
      */
+	@Deprecated
     void addAsyncTask(InstallTask t);
+
+    /**
+     * Inform the installer about a failed async task.
+     * This will restart the OSGi installer.
+     *
+     * This will also remove the {@link InstallTask#ASYNC_ATTR_NAME}
+     * attribute from the resource.
+     *
+     * @since 1.3.0
+     */
+    void asyncTaskFailed(InstallTask t);
 }

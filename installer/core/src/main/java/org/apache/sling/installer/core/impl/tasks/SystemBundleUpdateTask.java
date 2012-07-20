@@ -21,7 +21,6 @@ package org.apache.sling.installer.core.impl.tasks;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
@@ -34,80 +33,60 @@ import org.osgi.framework.BundleException;
  */
 public class SystemBundleUpdateTask extends AbstractInstallTask {
 
-    private static final String BUNDLE_UPDATE_ORDER = "99-";
+    private static final String BUNDLE_UPDATE_ORDER = "01-";
 
     private static final String SYSTEM_BUNDLE_UPDATE_ORDER = BUNDLE_UPDATE_ORDER + "systembundle(0)";
 
-    private final BundleTaskCreator creator;
+    private final TaskSupport taskSupport;
 
     public SystemBundleUpdateTask(final TaskResourceGroup r,
-            final BundleTaskCreator creator) {
+            final TaskSupport taskSupport) {
         super(r);
-        this.creator = creator;
+        this.taskSupport = taskSupport;
     }
 
     @Override
     public void execute(final InstallationContext ctx) {
-        final Bundle systemBundle = this.creator.getBundleContext().getBundle(0);
+        final Bundle systemBundle = this.taskSupport.getBundleContext().getBundle(0);
         // sanity check
         if ( systemBundle == null ) {
+            this.setFinishedState(ResourceState.IGNORED);
+            ctx.asyncTaskFailed(this);
             return;
         }
 
         // restart system bundle
         if ( this.getResource() == null ) {
-            // do an async update
-            ctx.addAsyncTask(new InstallTask(this.getResourceGroup()) {
-
-                @Override
-                public String getSortKey() {
-                    return SYSTEM_BUNDLE_UPDATE_ORDER;
-                }
-
-                @Override
-                public void execute(final InstallationContext ctx) {
-                    try {
-                        systemBundle.update();
-                    } catch (final BundleException e) {
-                        getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
-                    }
-                }
-            });
+            try {
+                systemBundle.update();
+            } catch (final BundleException e) {
+                getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
+                this.setFinishedState(ResourceState.IGNORED);
+                ctx.asyncTaskFailed(this);
+            }
         } else {
             InputStream is = null;
             try {
                 is = getResource().getInputStream();
                 if (is == null) {
-                    throw new IllegalStateException(
-                            "RegisteredResource provides null InputStream, cannot update bundle: "
+                    getLogger().warn(
+                            "RegisteredResource provides null InputStream, cannot update system bundle: "
                             + getResource());
+                    this.setFinishedState(ResourceState.IGNORED);
+                    ctx.asyncTaskFailed(this);
+                } else {
+                    try {
+                        systemBundle.update(is);
+                    } catch (final BundleException e) {
+                        getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
+                        this.setFinishedState(ResourceState.IGNORED);
+                        ctx.asyncTaskFailed(this);
+                    }
                 }
-                // delayed system bundle update
-                final InputStream backgroundIS = is;
-                is = null;
-                ctx.addAsyncTask(new InstallTask(this.getResourceGroup()) {
-
-                    @Override
-                    public String getSortKey() {
-                        return BUNDLE_UPDATE_ORDER + getResource().getURL();
-                    }
-
-                    @Override
-                    public void execute(final InstallationContext ctx) {
-                        try {
-                            systemBundle.update(backgroundIS);
-                        } catch (final BundleException e) {
-                            getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
-                        } finally {
-                            try {
-                                backgroundIS.close();
-                            } catch (final IOException ignore) {}
-                        }
-                    }
-                });
             } catch (final IOException e) {
-                this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+                this.getLogger().warn("Removing failing task - unable to retry: " + this, e);
                 this.setFinishedState(ResourceState.IGNORED);
+                ctx.asyncTaskFailed(this);
             } finally {
                 if ( is != null ) {
                     try {
@@ -116,6 +95,11 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean isAsynchronousTask() {
+        return true;
     }
 
     @Override
