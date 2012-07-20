@@ -32,12 +32,10 @@ import org.osgi.service.startlevel.StartLevel;
  */
 public class BundleUpdateTask extends AbstractBundleTask {
 
-    private static final String BUNDLE_UPDATE_ORDER = "40-";
-
-    private boolean canRetry = true;
+    private static final String BUNDLE_UPDATE_ORDER = "50-";
 
     public BundleUpdateTask(final TaskResourceGroup r,
-                            final BundleTaskCreator creator) {
+                            final TaskSupport creator) {
         super(r, creator);
     }
 
@@ -47,8 +45,8 @@ public class BundleUpdateTask extends AbstractBundleTask {
      * is in the starting state and has the lazy activation policy.
      * Or if the bundle is a fragment, it's considered active as well
      */
-    protected boolean isBundleActive(final Bundle b) {
-        if ( super.isBundleActive(b) ) {
+    private boolean isBundleActive(final Bundle b) {
+        if ( BundleUtil.isBundleActive(b) ) {
             return true;
         }
         final StartLevel startLevelService = this.getStartLevel();
@@ -58,7 +56,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
-    public void execute(InstallationContext ctx) {
+    public void execute(final InstallationContext ctx) {
         final String symbolicName = (String)getResource().getAttribute(Constants.BUNDLE_SYMBOLICNAME);
         final Bundle b = BundleInfo.getMatchingBundle(this.getBundleContext(), symbolicName, null);
         if (b == null) {
@@ -103,27 +101,33 @@ public class BundleUpdateTask extends AbstractBundleTask {
             ctx.log("Updated bundle {} from resource {}", b, getResource());
 
             if (reactivate) {
-                if ( isSystemBundleFragment(b) ) {
+                if ( BundleUtil.isSystemBundleFragment(b) ) {
                     this.setFinishedState(ResourceState.INSTALLED);
-                    ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, this.getCreator()));
-                } else if ( this.getFragmentHostHeader(b) != null ) {
-                    // if this is a fragment, we're done after a refresh
-                    this.getPackageAdmin().refreshPackages(new Bundle[] {b});
+                    ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, this.getTaskSupport()));
+                } else if ( BundleUtil.getFragmentHostHeader(b) != null ) {
+                    // if this is a fragment, we're done after a refresh of the host
+                    final String fragmentHostHeader = BundleUtil.getFragmentHostHeader(b);
+                    this.getLogger().debug("Need to do a refresh of the bundle's host");
+                    for (final Bundle bundle : this.getBundleContext().getBundles()) {
+                        if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
+                            this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
+                            RefreshBundlesTask.markBundleForRefresh(ctx, this.getTaskSupport(), bundle);
+                            break;
+                        }
+                    }
                     this.setFinishedState(ResourceState.INSTALLED);
                 } else {
-                    this.getResource().setAttribute(BundleTaskCreator.ATTR_START, "true");
-                    ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.getCreator()));
-                    ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.getCreator()));
+                    BundleUtil.markBundleStart(this.getResource());
+                    RefreshBundlesTask.markBundleForRefresh(ctx, this.getTaskSupport(), b);
+                    ctx.addTaskToCurrentCycle(new BundleStartTask(this.getResourceGroup(), b.getBundleId(), this.getTaskSupport()));
                 }
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
             this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
-    	} catch (Exception e) {
-            if ( !canRetry ) {
-                this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
-                this.setFinishedState(ResourceState.IGNORED);
-            }
+    	} catch (final Exception e) {
+            this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+            this.setFinishedState(ResourceState.IGNORED);
     	}
     }
 
@@ -132,9 +136,4 @@ public class BundleUpdateTask extends AbstractBundleTask {
         return BUNDLE_UPDATE_ORDER + getSortableStartLevel() + "-" + getResource().getEntityId();
     }
 
-    private boolean isSystemBundleFragment(final Bundle installedBundle) {
-        final String fragmentHeader = this.getFragmentHostHeader(installedBundle);
-        return fragmentHeader != null
-            && fragmentHeader.indexOf(Constants.EXTENSION_DIRECTIVE) > 0;
-    }
 }

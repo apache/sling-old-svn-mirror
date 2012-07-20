@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.api.tasks;
 
+import java.util.Map;
+
 
 /**
  * Simple general task, setting the state of a registered resource.
@@ -29,16 +31,55 @@ public class ChangeStateTask extends InstallTask {
 
     private final ResourceState state;
 
+    private final String[] removeAttributes;
+
+    private final Map<String, Object> addAttributes;
+
+    /**
+     * Change the state of the task
+     * @param r The resource group to change.
+     * @param s The new state.,
+     */
     public ChangeStateTask(final TaskResourceGroup r,
                            final ResourceState s) {
+        this(r, s, null, null);
+    }
+
+    /**
+     * Change the state of the task
+     * @param r The resource group to change.
+     * @param s The new state.,
+     * @param addAttributes    An optional map of attributes to set before the state is changed.
+     * @param removeAttributes A optional list of attributes to remove before the state is changed.
+     * @since 1.3
+     */
+    public ChangeStateTask(final TaskResourceGroup r,
+                           final ResourceState s,
+                           final Map<String, Object> addAttributes,
+                           final String[] removeAttributes) {
         super(r);
         this.state = s;
+        this.addAttributes = addAttributes;
+        this.removeAttributes = removeAttributes;
     }
 
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
+        final TaskResource resource = this.getResource();
+        if ( resource != null ) {
+            if ( this.removeAttributes != null ) {
+                for(final String name : this.removeAttributes ) {
+                    resource.setAttribute(name, null);
+                }
+            }
+            if ( this.addAttributes != null ) {
+                for(final Map.Entry<String, Object> entry : this.addAttributes.entrySet()) {
+                    resource.setAttribute(entry.getKey(), entry.getValue());
+                }
+            }
+        }
         this.setFinishedState(this.state);
     }
 

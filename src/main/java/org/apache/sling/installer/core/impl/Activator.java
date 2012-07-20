@@ -66,7 +66,6 @@ public class Activator implements BundleActivator {
         props.put(Constants.SERVICE_VENDOR, VENDOR);
 
         this.osgiControllerService = new OsgiInstallerImpl(context);
-        this.osgiControllerService.setDaemon(true);
 
         // register internal services
         this.registerServices(context);

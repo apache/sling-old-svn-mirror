@@ -20,62 +20,58 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
+import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.AbstractInstallTask;
 import org.osgi.framework.Bundle;
-import org.osgi.service.packageadmin.PackageAdmin;
 
 /**
  * Update the installer itself
  */
 public class InstallerBundleUpdateTask extends AbstractInstallTask {
 
-    private static final String BUNDLE_UPDATE_ORDER = "98-";
+    private static final String BUNDLE_UPDATE_ORDER = "02-";
 
-    private final BundleTaskCreator creator;
+    private final TaskSupport taskSupport;
+
+    private final Integer count;
 
     public InstallerBundleUpdateTask(final TaskResourceGroup r,
-                                     final BundleTaskCreator creator) {
+                                     final TaskSupport taskSupport) {
         super(r);
-        this.creator = creator;
+        this.taskSupport = taskSupport;
+        this.count = (Integer)this.getResource().getAttribute(InstallTask.ASYNC_ATTR_NAME);
     }
 
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
-        final Bundle b = this.creator.getBundleContext().getBundle();
-        final PackageAdmin pa = this.creator.getPackageAdmin();
+        final Bundle b = this.taskSupport.getBundleContext().getBundle();
+        if ( this.count == null ) {
+            // first step: update bundle
 
-        ctx.addAsyncTask(new InstallTask(this.getResourceGroup()) {
-
-            @Override
-            public String getSortKey() {
-                return BUNDLE_UPDATE_ORDER + getResource().getEntityId();
+            try {
+                b.update(getResource().getInputStream());
+                ctx.log("Updated bundle {} from resource {}", b, getResource());
+            } catch (final Exception e) {
+                getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+                this.setFinishedState(ResourceState.IGNORED);
+                ctx.asyncTaskFailed(this);
             }
+        } else if ( this.count == 1 ) {
+            // second step: refresh
+            this.taskSupport.getPackageAdmin().refreshPackages(new Bundle[] {b});
+        } else {
+            // finished
+            this.getResource().setAttribute(ASYNC_ATTR_NAME, null);
+            this.setFinishedState(ResourceState.INSTALLED);
+        }
+    }
 
-            @Override
-            public void execute(final InstallationContext ctx) {
-                try {
-                    b.update(getResource().getInputStream());
-                    ctx.log("Updated bundle {} from resource {}", b, getResource());
-
-                    if ( pa != null ) {
-                        // wait for asynchronous bundle start tasks to finish
-                        try {
-                            Thread.sleep(2000L);
-                        } catch (final InterruptedException ignore) {
-                            // just ignore
-                        }
-
-                        pa.refreshPackages( new Bundle[] { b } );
-                    }
-                    getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
-                } catch (final Exception e) {
-                    getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
-                }
-            }
-        });
+    @Override
+    public boolean isAsynchronousTask() {
+        return this.count == null || this.count == 1;
     }
 
     @Override

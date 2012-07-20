@@ -39,7 +39,7 @@ public class BundleStartTask extends AbstractBundleTask {
     private final long bundleId;
     private final String sortKey;
 
-    public BundleStartTask(final TaskResourceGroup r, final long bundleId, final BundleTaskCreator btc) {
+    public BundleStartTask(final TaskResourceGroup r, final long bundleId, final TaskSupport btc) {
         super(r, btc);
         this.bundleId = bundleId;
         this.sortKey = BUNDLE_START_ORDER + new DecimalFormat("00000").format(bundleId);
@@ -55,6 +55,14 @@ public class BundleStartTask extends AbstractBundleTask {
         return getClass().getSimpleName() + ": bundle " + bundleId;
     }
 
+    @Override
+    public void setFinishedState(final ResourceState state) {
+        if ( this.getResource() != null ) {
+            BundleUtil.clearBundleStart(this.getResource());
+        }
+        super.setFinishedState(state);
+    }
+
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
@@ -68,30 +76,18 @@ public class BundleStartTask extends AbstractBundleTask {
             return;
         }
 
+        // and another sanity chheck
         final Bundle b = this.getBundleContext().getBundle(bundleId);
         if (b == null) {
             this.getLogger().info("Cannot start bundle, id not found: {}", bundleId);
+            this.setFinishedState(ResourceState.IGNORED);
             return;
         }
 
-        final String fragmentHostHeader = getFragmentHostHeader(b);
-        if (fragmentHostHeader != null) {
-            this.getLogger().debug("Need to do a refresh of the bundle's host");
-            for (final Bundle bundle : this.getBundleContext().getBundles()) {
-                if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
-                    this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
-                    this.getPackageAdmin().refreshPackages(new Bundle[] { bundle });
-                    break;
-                }
-            }
-
+        if (BundleUtil.isBundleActive(b) ) {
+            this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
             this.setFinishedState(ResourceState.INSTALLED);
         } else {
-            if (isBundleActive(b) ) {
-                this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
-                this.setFinishedState(ResourceState.INSTALLED);
-                return;
-            }
             // Try to start bundle, and if that doesn't work we'll need to retry
             try {
                 b.start();

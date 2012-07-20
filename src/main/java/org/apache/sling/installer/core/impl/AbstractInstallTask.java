@@ -23,16 +23,24 @@ import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Abstract base class providing an additional logger
+ */
 public abstract class AbstractInstallTask extends InstallTask {
-
-    public AbstractInstallTask(TaskResourceGroup erl) {
-        super(erl);
-    }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * Constructor
+     */
+    public AbstractInstallTask(final TaskResourceGroup erl) {
+        super(erl);
+    }
+
+    /**
+     * Get a logger.
+     */
     protected Logger getLogger() {
         return this.logger;
     }
-
 }

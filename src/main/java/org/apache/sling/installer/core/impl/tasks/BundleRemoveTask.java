@@ -34,7 +34,7 @@ public class BundleRemoveTask extends AbstractBundleTask {
     private static final String BUNDLE_REMOVE_ORDER = "30-";
 
     public BundleRemoveTask(final TaskResourceGroup r,
-                            final BundleTaskCreator creator) {
+                            final TaskSupport creator) {
         super(r, creator);
     }
 
@@ -57,8 +57,11 @@ public class BundleRemoveTask extends AbstractBundleTask {
             }
             b.uninstall();
             ctx.log("Uninstalled bundle {} from resource {}", b, getResource());
+            // if the bundle exported packages, we need to refresh
+            if ( BundleUtil.getFragmentHostHeader(b) == null ) {
+                RefreshBundlesTask.markBundleForRefresh(ctx, this.getTaskSupport(), b);
+            }
             this.setFinishedState(ResourceState.UNINSTALLED);
-            ctx.addTaskToCurrentCycle(new SynchronousRefreshPackagesTask(this.getCreator()));
         } catch (final BundleException be) {
             this.getLogger().debug("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);
         }

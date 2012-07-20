@@ -41,11 +41,11 @@ public class RefreshOptionalPackagesTask extends AbstractInstallTask {
     private static final String MARKER = DIRECTIVE + ":=" + DIRECTIVE_OPTIONAL;
 
     /** Tracker for the package admin. */
-    private final BundleTaskCreator bundleTaskCreator;
+    private final TaskSupport taskSupport;
 
-	public RefreshOptionalPackagesTask(final BundleTaskCreator bundleTaskCreator) {
+	public RefreshOptionalPackagesTask(final TaskSupport taskSupport) {
 	    super(null);
-	    this.bundleTaskCreator = bundleTaskCreator;
+	    this.taskSupport = taskSupport;
 	}
 
 	@Override
@@ -58,20 +58,16 @@ public class RefreshOptionalPackagesTask extends AbstractInstallTask {
 		return getClass().getSimpleName();
 	}
 
-    private PackageAdmin getPackageAdmin() {
-        return this.bundleTaskCreator.getPackageAdmin();
-    }
-
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
         getLogger().info("** Invoking refresh optional packages!");
-        final PackageAdmin packageAdmin = this.getPackageAdmin();
+        final PackageAdmin packageAdmin = this.taskSupport.getPackageAdmin();
 
         ExportedPackage[] exports = null;
         final List<Bundle> refreshBundles = new ArrayList<Bundle>();
-        final Bundle[] bundles = this.bundleTaskCreator.getBundleContext().getBundles();
+        final Bundle[] bundles = this.taskSupport.getBundleContext().getBundles();
         for(final Bundle bundle : bundles) {
             if ( bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.ACTIVE ) {
                 final String importHeader = (String)bundle.getHeaders().get(Constants.IMPORT_PACKAGE);

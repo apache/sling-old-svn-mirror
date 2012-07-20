@@ -252,8 +252,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      * @see org.apache.sling.installer.api.tasks.TaskResourceGroup#setFinishState(org.apache.sling.installer.api.tasks.ResourceState, java.lang.String)
      */
     public void setFinishState(final ResourceState state, final String alias) {
-        this.setFinishState(state);
         this.alias = alias;
+        this.setFinishState(state);
     }
 
     private void cleanup(final RegisteredResource rr) {

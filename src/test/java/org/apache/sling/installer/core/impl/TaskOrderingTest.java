@@ -34,7 +34,7 @@ import org.apache.sling.installer.core.impl.tasks.BundleRemoveTask;
 import org.apache.sling.installer.core.impl.tasks.BundleStartTask;
 import org.apache.sling.installer.core.impl.tasks.BundleUpdateTask;
 import org.apache.sling.installer.core.impl.tasks.MockInstallationListener;
-import org.apache.sling.installer.core.impl.tasks.SynchronousRefreshPackagesTask;
+import org.apache.sling.installer.core.impl.tasks.RefreshBundlesTask;
 
 /** Test the ordering and duplicates elimination of
  * 	OsgiControllerTasks
@@ -85,10 +85,10 @@ public class TaskOrderingTest {
 		int testIndex = 1;
 		final InstallTask [] tasksInOrder = {
 		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
+            new BundleInstallTask(getRegisteredResource("test:url"), null),
 		    new BundleUpdateTask(getRegisteredResource("test:url"), null),
-		    new BundleInstallTask(getRegisteredResource("test:url"), null),
-			new SynchronousRefreshPackagesTask(null),
-			new BundleStartTask(null, 0, null),
+            new RefreshBundlesTask(null),
+			new BundleStartTask(null, 0, null)
 		};
 
 		taskSet.clear();
@@ -134,8 +134,8 @@ public class TaskOrderingTest {
 		final InstallTask [] tasksInOrder = {
 			new BundleInstallTask(getRegisteredResource("test:someURIa.nothing"), null),
             new BundleInstallTask(getRegisteredResource("test:someURIb.nothing"), null),
-			new SynchronousRefreshPackagesTask(null),
-			new BundleStartTask(null, 0, null),
+            new RefreshBundlesTask(null),
+			new BundleStartTask(null, 0, null)
 		};
 
 		taskSet.clear();
@@ -158,31 +158,31 @@ public class TaskOrderingTest {
 		int testIndex = 1;
 		final InstallTask [] tasksInOrder = {
 		    new BundleRemoveTask(getRegisteredResource("test:url"), null),
-			new SynchronousRefreshPackagesTask(null),
+            new RefreshBundlesTask(null),
 			new BundleStartTask(null, 0, null),
-			new BundleStartTask(null, 1, null),
+			new BundleStartTask(null, 1, null)
 		};
 
 		taskSet.clear();
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[3]);
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[1]);
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
 		taskSet.add(tasksInOrder[0]);
 		taskSet.add(tasksInOrder[3]);
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
 		taskSet.add(tasksInOrder[3]);
 		taskSet.add(tasksInOrder[2]);
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
 		taskSet.add(tasksInOrder[2]);
 		taskSet.add(tasksInOrder[1]);
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
 		taskSet.add(tasksInOrder[1]);
-		taskSet.add(new SynchronousRefreshPackagesTask(null));
+		taskSet.add(new RefreshBundlesTask(null));
 
 		assertOrder(testIndex++, taskSet, tasksInOrder);
 	}
