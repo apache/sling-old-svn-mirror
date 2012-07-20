@@ -346,6 +346,11 @@ public class JcrPropertyMap
                 final Property prop = node.getProperty(key);
                 return cacheProperty(prop);
             }
+        } catch (final RepositoryException re) {
+            throw new IllegalArgumentException(re);
+        }
+
+        try {
             // for compatiblity with older versions we use the (wrong) ISO9075 path
             // encoding
             final String oldKey = ISO9075.encodePath(name);
@@ -354,7 +359,7 @@ public class JcrPropertyMap
                 return cacheProperty(prop);
             }
         } catch (final RepositoryException re) {
-            throw new IllegalArgumentException(re);
+            // we ignore this
         }
 
         // property not found
@@ -370,7 +375,8 @@ public class JcrPropertyMap
      */
     protected String escapeKeyName(final String key) throws RepositoryException {
         final int indexOfPrefix = key.indexOf(':');
-        if (indexOfPrefix != -1 && key.length() > indexOfPrefix + 1) {
+        // check if colon is neither the first nor the last character
+        if (indexOfPrefix > 0 && key.length() > indexOfPrefix + 1) {
             final String prefix = key.substring(0, indexOfPrefix);
             for (final String existingPrefix : getNode().getSession()
                     .getNamespacePrefixes()) {

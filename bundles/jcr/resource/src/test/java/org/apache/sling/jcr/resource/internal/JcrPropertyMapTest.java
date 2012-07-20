@@ -295,6 +295,7 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
     private static final String PROP1 = "-prop";
     private static final String PROP2 = "1prop";
     private static final String PROP3 = "jcr:title";
+    private static final String PROP4 = ":prop";
 
     public void testNames() throws Exception {
         this.rootNode.getSession().refresh(false);
@@ -307,6 +308,16 @@ public class JcrPropertyMapTest extends RepositoryTestBase {
         assertEquals(VALUE1, vm.get(PROP1));
         assertEquals(VALUE2, vm.get(PROP2));
         assertEquals(VALUE3, vm.get(PROP3));
+        vm.get(PROP4);
+    }
+
+    public void testColon() throws Exception {
+        this.rootNode.getSession().refresh(false);
+        final ValueMap vm = this.createPropertyMap(this.rootNode);
+        assertNull(vm.get(":prop"));
+        assertNull(vm.get("prop:"));
+        assertNull(vm.get("jcr:title"));
+        assertNull(vm.get("unknown:prefix"));
     }
 
     public void testIerators() throws Exception {
