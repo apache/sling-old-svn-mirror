@@ -32,14 +32,11 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
 
     private static final String BUNDLE_UPDATE_ORDER = "02-";
 
-    private final TaskSupport taskSupport;
-
     private final Integer count;
 
     public InstallerBundleUpdateTask(final TaskResourceGroup r,
                                      final TaskSupport taskSupport) {
-        super(r);
-        this.taskSupport = taskSupport;
+        super(r, taskSupport);
         this.count = (Integer)this.getResource().getAttribute(InstallTask.ASYNC_ATTR_NAME);
     }
 
@@ -47,7 +44,7 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
-        final Bundle b = this.taskSupport.getBundleContext().getBundle();
+        final Bundle b = this.getBundleContext().getBundle();
         if ( this.count == null ) {
             // first step: update bundle
 
@@ -61,7 +58,7 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
             }
         } else if ( this.count == 1 ) {
             // second step: refresh
-            this.taskSupport.getPackageAdmin().refreshPackages(new Bundle[] {b});
+            this.getPackageAdmin().refreshPackages(new Bundle[] {b});
         } else {
             // finished
             this.getResource().setAttribute(ASYNC_ATTR_NAME, null);

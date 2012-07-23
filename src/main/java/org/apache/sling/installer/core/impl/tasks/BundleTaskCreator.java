@@ -28,6 +28,7 @@ import org.apache.sling.installer.api.tasks.RetryHandler;
 import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.InternalService;
+import org.apache.sling.installer.core.impl.PersistentResourceList;
 import org.apache.sling.installer.core.impl.Util;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -125,6 +126,9 @@ public class BundleTaskCreator
 	public InstallTask createTask(final TaskResourceGroup resourceList) {
 	    // quick check of the resource type.
 	    final TaskResource toActivate = resourceList.getActiveResource();
+	    if ( toActivate.getType().equals(PersistentResourceList.RESTART_ACTIVE_BUNDLES_TYPE) ) {
+	        return new RestartActiveBundlesTask(resourceList, this.taskSupport);
+	    }
 	    if ( !toActivate.getType().equals(InstallableResource.TYPE_BUNDLE) ) {
 	        return null;
 	    }

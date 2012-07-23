@@ -200,14 +200,19 @@ public class OsgiInstallerImpl
         try {
             this.init();
 
+            this.listener.start();
             while (this.active) {
-                this.listener.start();
+                this.logger.debug("Running new installer cycle");
 
                 // merge potential new resources
                 this.mergeNewlyRegisteredResources();
 
                 // invoke transformers
                 this.transformResources();
+
+                // special resources
+                final EntityResourceList erl = this.persistentList.getEntityResourceList(PersistentResourceList.RESTART_ACTIVE_BUNDLES_ENTITY_ID );
+                ((RegisteredResourceImpl)erl.getResources().iterator().next()).setState(ResourceState.INSTALL);
 
                 // Compute tasks
                 final SortedSet<InstallTask> tasks = this.computeTasks();
@@ -229,7 +234,6 @@ public class OsgiInstallerImpl
                             } catch (final InterruptedException ignore) {}
                             if ( active ) {
                                 this.listener.start();
-                                this.logger.debug("Running new installer cycle");
                             }
                         }
                     }
@@ -1030,72 +1034,74 @@ public class OsgiInstallerImpl
             };
 
             for(final String entityId : this.persistentList.getEntityIds()) {
-                final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
+                if ( !this.persistentList.isSpecialEntityId(entityId) ) {
+                    final EntityResourceList group = this.persistentList.getEntityResourceList(entityId);
 
-                final String alias = group.getAlias();
-                final List<Resource> resources = new ArrayList<Resource>();
-                for(final TaskResource tr : group.getResources()) {
-                    resources.add(new Resource() {
+                    final String alias = group.getAlias();
+                    final List<Resource> resources = new ArrayList<Resource>();
+                    for(final TaskResource tr : group.getResources()) {
+                        resources.add(new Resource() {
 
-                        public String getScheme() {
-                            return tr.getScheme();
-                        }
+                            public String getScheme() {
+                                return tr.getScheme();
+                            }
 
-                        public String getURL() {
-                            return tr.getURL();
-                        }
+                            public String getURL() {
+                                return tr.getURL();
+                            }
 
-                        public String getType() {
-                            return tr.getType();
-                        }
+                            public String getType() {
+                                return tr.getType();
+                            }
 
-                        public InputStream getInputStream() throws IOException {
-                            return tr.getInputStream();
-                        }
+                            public InputStream getInputStream() throws IOException {
+                                return tr.getInputStream();
+                            }
 
-                        public Dictionary<String, Object> getDictionary() {
-                            return tr.getDictionary();
-                        }
+                            public Dictionary<String, Object> getDictionary() {
+                                return tr.getDictionary();
+                            }
 
-                        public String getDigest() {
-                            return tr.getDigest();
-                        }
+                            public String getDigest() {
+                                return tr.getDigest();
+                            }
 
-                        public int getPriority() {
-                            return tr.getPriority();
-                        }
+                            public int getPriority() {
+                                return tr.getPriority();
+                            }
 
-                        public String getEntityId() {
-                            return tr.getEntityId();
-                        }
+                            public String getEntityId() {
+                                return tr.getEntityId();
+                            }
 
-                        public ResourceState getState() {
-                            return tr.getState();
-                        }
+                            public ResourceState getState() {
+                                return tr.getState();
+                            }
 
-                        public Version getVersion() {
-                            return tr.getVersion();
-                        }
+                            public Version getVersion() {
+                                return tr.getVersion();
+                            }
 
-                        public long getLastChange() {
-                            return ((RegisteredResourceImpl)tr).getLastChange();
-                        }
-                    });
-                }
-                final ResourceGroup rg = new ResourceGroup() {
-
-                    public List<Resource> getResources() {
-                        return resources;
+                            public long getLastChange() {
+                                return ((RegisteredResourceImpl)tr).getLastChange();
+                            }
+                        });
                     }
+                    final ResourceGroup rg = new ResourceGroup() {
 
-                    public String getAlias() {
-                        return alias;
+                        public List<Resource> getResources() {
+                            return resources;
+                        }
+
+                        public String getAlias() {
+                            return alias;
+                        }
+                    };
+                    if ( group.getActiveResource() != null ) {
+                        state.getActiveResources().add(rg);
+                    } else {
+                        state.getInstalledResources().add(rg);
                     }
-                };
-                if ( group.getActiveResource() != null ) {
-                    state.getActiveResources().add(rg);
-                } else {
-                    state.getInstalledResources().add(rg);
                 }
             }
 

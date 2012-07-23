@@ -21,36 +21,14 @@ package org.apache.sling.installer.core.impl.tasks;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.AbstractInstallTask;
-import org.osgi.framework.BundleContext;
-import org.osgi.service.packageadmin.PackageAdmin;
-import org.osgi.service.startlevel.StartLevel;
 
 /**
  * Abstract base class for bundle related tasks.
  */
 public abstract class AbstractBundleTask extends AbstractInstallTask {
 
-    private final TaskSupport support;
-
     public AbstractBundleTask(final TaskResourceGroup erl, final TaskSupport support) {
-        super(erl);
-        this.support = support;
-    }
-
-    protected PackageAdmin getPackageAdmin() {
-        return this.support.getPackageAdmin();
-    }
-
-    protected BundleContext getBundleContext() {
-        return this.support.getBundleContext();
-    }
-
-    protected StartLevel getStartLevel() {
-        return this.support.getStartLevel();
-    }
-
-    protected TaskSupport getTaskSupport() {
-        return this.support;
+        super(erl, support);
     }
 
     /**

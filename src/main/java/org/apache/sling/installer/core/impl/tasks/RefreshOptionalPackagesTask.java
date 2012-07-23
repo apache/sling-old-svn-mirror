@@ -40,12 +40,8 @@ public class RefreshOptionalPackagesTask extends AbstractInstallTask {
     private static final String DIRECTIVE_OPTIONAL = "optional";
     private static final String MARKER = DIRECTIVE + ":=" + DIRECTIVE_OPTIONAL;
 
-    /** Tracker for the package admin. */
-    private final TaskSupport taskSupport;
-
 	public RefreshOptionalPackagesTask(final TaskSupport taskSupport) {
-	    super(null);
-	    this.taskSupport = taskSupport;
+	    super(null, taskSupport);
 	}
 
 	@Override
@@ -63,11 +59,11 @@ public class RefreshOptionalPackagesTask extends AbstractInstallTask {
      */
     public void execute(final InstallationContext ctx) {
         getLogger().info("** Invoking refresh optional packages!");
-        final PackageAdmin packageAdmin = this.taskSupport.getPackageAdmin();
+        final PackageAdmin packageAdmin = this.getPackageAdmin();
 
         ExportedPackage[] exports = null;
         final List<Bundle> refreshBundles = new ArrayList<Bundle>();
-        final Bundle[] bundles = this.taskSupport.getBundleContext().getBundles();
+        final Bundle[] bundles = this.getBundleContext().getBundles();
         for(final Bundle bundle : bundles) {
             if ( bundle.getState() == Bundle.RESOLVED || bundle.getState() == Bundle.ACTIVE ) {
                 final String importHeader = (String)bundle.getHeaders().get(Constants.IMPORT_PACKAGE);
