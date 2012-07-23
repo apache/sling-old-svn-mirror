@@ -20,6 +20,10 @@ package org.apache.sling.installer.core.impl;
 
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
+import org.apache.sling.installer.core.impl.tasks.TaskSupport;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.packageadmin.PackageAdmin;
+import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +34,14 @@ public abstract class AbstractInstallTask extends InstallTask {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private final TaskSupport support;
+
     /**
      * Constructor
      */
-    public AbstractInstallTask(final TaskResourceGroup erl) {
+    public AbstractInstallTask(final TaskResourceGroup erl, final TaskSupport support) {
         super(erl);
+        this.support = support;
     }
 
     /**
@@ -42,5 +49,24 @@ public abstract class AbstractInstallTask extends InstallTask {
      */
     protected Logger getLogger() {
         return this.logger;
+    }
+
+    /**
+     * Get the bundle context.
+     */
+    protected BundleContext getBundleContext() {
+        return this.support.getBundleContext();
+    }
+
+    protected PackageAdmin getPackageAdmin() {
+        return this.support.getPackageAdmin();
+    }
+
+    protected StartLevel getStartLevel() {
+        return this.support.getStartLevel();
+    }
+
+    protected TaskSupport getTaskSupport() {
+        return this.support;
     }
 }

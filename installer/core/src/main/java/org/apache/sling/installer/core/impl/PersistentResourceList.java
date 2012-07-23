@@ -29,6 +29,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,11 @@ public class PersistentResourceList {
 
     /** Serialization version. */
     private static final int VERSION = 2;
+
+    /** Entity id for restart active bundles. */
+    public static final String RESTART_ACTIVE_BUNDLES_TYPE = "org.apache.sling.installer.core.restart.bundles";
+    public static final String RESTART_ACTIVE_BUNDLES_ID = "org.apache.sling.installer.core.restart.bundles";
+    public static final String RESTART_ACTIVE_BUNDLES_ENTITY_ID = RESTART_ACTIVE_BUNDLES_TYPE + ':' + RESTART_ACTIVE_BUNDLES_ID;
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -112,6 +118,20 @@ public class PersistentResourceList {
         for(final Map.Entry<String, EntityResourceList> entry : this.data.entrySet()) {
             entry.getValue().setResourceId(entry.getKey());
             entry.getValue().setListener(listener);
+        }
+
+        // check for special resources
+        if ( this.getEntityResourceList(RESTART_ACTIVE_BUNDLES_ENTITY_ID) == null ) {
+            final RegisteredResource rr = this.addOrUpdate(new InternalResource("$sling-installer$",
+                            RESTART_ACTIVE_BUNDLES_ID,
+                            null,
+                            new Hashtable<String, Object>(),
+                            InstallableResource.TYPE_PROPERTIES, "1",
+                            null, null, null));
+            final TransformationResult result = new TransformationResult();
+            result.setId(RESTART_ACTIVE_BUNDLES_ID);
+            result.setResourceType(RESTART_ACTIVE_BUNDLES_TYPE);
+            this.transform(rr, new TransformationResult[] {result});
         }
     }
 
@@ -314,4 +334,10 @@ public class PersistentResourceList {
         }
     }
 
+    /**
+     * Check if the id is a special id and should not be included in the info report
+     */
+    public boolean isSpecialEntityId(final String id) {
+        return RESTART_ACTIVE_BUNDLES_ENTITY_ID.equals(id);
+    }
 }

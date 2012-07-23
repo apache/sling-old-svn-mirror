@@ -37,17 +37,14 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
     private static final String SYSTEM_BUNDLE_UPDATE_ORDER = BUNDLE_UPDATE_ORDER + "systembundle(0)";
 
-    private final TaskSupport taskSupport;
-
     public SystemBundleUpdateTask(final TaskResourceGroup r,
             final TaskSupport taskSupport) {
-        super(r);
-        this.taskSupport = taskSupport;
+        super(r, taskSupport);
     }
 
     @Override
     public void execute(final InstallationContext ctx) {
-        final Bundle systemBundle = this.taskSupport.getBundleContext().getBundle(0);
+        final Bundle systemBundle = this.getBundleContext().getBundle(0);
         // sanity check
         if ( systemBundle == null ) {
             this.setFinishedState(ResourceState.IGNORED);
