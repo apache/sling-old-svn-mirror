@@ -210,10 +210,6 @@ public class OsgiInstallerImpl
                 // invoke transformers
                 this.transformResources();
 
-                // special resources
-                final EntityResourceList erl = this.persistentList.getEntityResourceList(PersistentResourceList.RESTART_ACTIVE_BUNDLES_ENTITY_ID );
-                ((RegisteredResourceImpl)erl.getResources().iterator().next()).setState(ResourceState.INSTALL);
-
                 // Compute tasks
                 final SortedSet<InstallTask> tasks = this.computeTasks();
                 // execute tasks and see if we have to stop processing
