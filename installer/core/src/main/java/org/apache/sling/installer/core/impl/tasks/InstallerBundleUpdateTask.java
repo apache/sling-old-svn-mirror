@@ -52,13 +52,14 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
                 b.update(getResource().getInputStream());
                 ctx.log("Updated bundle {} from resource {}", b, getResource());
             } catch (final Exception e) {
-                getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+                getLogger().info("Removing failing tasks - unable to retry: " + this, e);
                 this.setFinishedState(ResourceState.IGNORED);
                 ctx.asyncTaskFailed(this);
             }
         } else if ( this.count == 1 ) {
             // second step: refresh
             this.getPackageAdmin().refreshPackages(new Bundle[] {b});
+            ctx.log("Refreshing packages for bundle {}.", b);
         } else {
             // finished
             this.getResource().setAttribute(ASYNC_ATTR_NAME, null);

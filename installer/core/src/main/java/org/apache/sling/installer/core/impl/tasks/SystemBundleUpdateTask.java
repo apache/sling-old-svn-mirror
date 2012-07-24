@@ -56,6 +56,7 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
         if ( this.getResource() == null ) {
             try {
                 systemBundle.update();
+                ctx.log("Updated system bundle.");
             } catch (final BundleException e) {
                 getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
                 this.setFinishedState(ResourceState.IGNORED);

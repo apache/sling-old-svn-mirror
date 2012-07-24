@@ -51,8 +51,9 @@ public class BundleInstallTask extends AbstractBundleTask {
                 final StartLevel startLevelService = this.getStartLevel();
                 if (startLevelService != null) {
                     startLevelService.setBundleStartLevel(b, startLevel);
+                    ctx.log("Set start level for bundle {} to {}", b, startLevel);
                 } else {
-                    this.getLogger().warn("Ignoring start level {} for bundle {} - start level service not available.",
+                    this.getLogger().info("Ignoring start level {} for bundle {} - start level service not available.",
                             startLevel, b);
                 }
             }
@@ -64,10 +65,10 @@ public class BundleInstallTask extends AbstractBundleTask {
             } else {
                 final String fragmentHostHeader = BundleUtil.getFragmentHostHeader(b);
                 if (fragmentHostHeader != null) {
-                    this.getLogger().debug("Need to do a refresh of the bundle's host");
+                    this.getLogger().debug("Need to do a refresh of the bundle's {} host", b);
                     for (final Bundle bundle : this.getBundleContext().getBundles()) {
                         if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
-                            this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
+                            this.getLogger().debug("Found host bundle for {} to refresh: {}", b, bundle);
                             RefreshBundlesTask.markBundleForRefresh(ctx, this.getTaskSupport(), bundle);
                             break;
                         }
@@ -83,7 +84,7 @@ public class BundleInstallTask extends AbstractBundleTask {
             }
         } catch (final Exception ex) {
             // if something goes wrong we simply try it again
-            this.getLogger().debug("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
+            this.getLogger().info("Exception during install of bundle " + this.getResource() + " : " + ex.getMessage() + ". Retrying later.", ex);
         }
     }
 
