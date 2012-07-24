@@ -266,10 +266,10 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
         EventHelper helper = new EventHelper(newSession);
         helper.waitForEvents(5000);
         helper.dispose();
+        listener.dispose();
+
         newSession.logout();
         session.logout();
-
-        listener.dispose();
 
         return events;
     }
