@@ -72,9 +72,10 @@ public class RestartActiveBundlesTask extends AbstractInstallTask {
                      && bundle.getState() != Bundle.UNINSTALLED) {
                     try {
                         bundle.start();
+                        ctx.log("Started bundle {}", bundle);
                         remove.add(id);
                     } catch (final BundleException e) {
-                        ctx.log("Unable to start bundle: {}", e.getMessage());
+                        getLogger().info("Unable to start bundle {} : {}", bundle, e.getMessage());
                     }
                 } else {
                     remove.add(id);

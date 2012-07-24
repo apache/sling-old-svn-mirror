@@ -95,6 +95,7 @@ public class BundleUpdateTask extends AbstractBundleTask {
                 final int oldStartLevel = startLevelService.getBundleStartLevel(b);
                 if ( newStartLevel != oldStartLevel && newStartLevel != 0 ) {
                     startLevelService.setBundleStartLevel(b, newStartLevel);
+                    ctx.log("Set start level for bundle {} to {}", b, newStartLevel);
                 }
             }
             b.update(getResource().getInputStream());
@@ -107,10 +108,10 @@ public class BundleUpdateTask extends AbstractBundleTask {
                 } else if ( BundleUtil.getFragmentHostHeader(b) != null ) {
                     // if this is a fragment, we're done after a refresh of the host
                     final String fragmentHostHeader = BundleUtil.getFragmentHostHeader(b);
-                    this.getLogger().debug("Need to do a refresh of the bundle's host");
+                    this.getLogger().debug("Need to do a refresh of the bundle's {} host", b);
                     for (final Bundle bundle : this.getBundleContext().getBundles()) {
                         if (fragmentHostHeader.equals(bundle.getSymbolicName())) {
-                            this.getLogger().debug("Found host bundle to refresh {}", bundle.getBundleId());
+                            this.getLogger().debug("Found host bundle for {} to refresh: {}", b, bundle);
                             RefreshBundlesTask.markBundleForRefresh(ctx, this.getTaskSupport(), bundle);
                             break;
                         }
@@ -124,9 +125,8 @@ public class BundleUpdateTask extends AbstractBundleTask {
             } else {
                 this.setFinishedState(ResourceState.INSTALLED);
             }
-            this.getLogger().debug("Bundle updated: {}/{}", b.getBundleId(), b.getSymbolicName());
     	} catch (final Exception e) {
-            this.getLogger().warn("Removing failing tasks - unable to retry: " + this, e);
+            this.getLogger().info("Removing failing update task - unable to retry: " + this, e);
             this.setFinishedState(ResourceState.IGNORED);
     	}
     }

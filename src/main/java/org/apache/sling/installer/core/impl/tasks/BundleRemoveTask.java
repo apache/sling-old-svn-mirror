@@ -63,7 +63,7 @@ public class BundleRemoveTask extends AbstractBundleTask {
             }
             this.setFinishedState(ResourceState.UNINSTALLED);
         } catch (final BundleException be) {
-            this.getLogger().debug("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);
+            this.getLogger().info("Exception during removal of bundle " + this.getResource() + " : " + be.getMessage() + ". Retrying later.", be);
         }
     }
 

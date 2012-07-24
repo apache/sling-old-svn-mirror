@@ -79,24 +79,23 @@ public class BundleStartTask extends AbstractBundleTask {
         // and another sanity chheck
         final Bundle b = this.getBundleContext().getBundle(bundleId);
         if (b == null) {
-            this.getLogger().info("Cannot start bundle, id not found: {}", bundleId);
+            this.getLogger().debug("Cannot start bundle, id not found: {}", bundleId);
             this.setFinishedState(ResourceState.IGNORED);
             return;
         }
 
         if (BundleUtil.isBundleActive(b) ) {
-            this.getLogger().debug("Bundle already started, no action taken: {}/{}", bundleId, b.getSymbolicName());
+            this.getLogger().debug("Bundle already started, no action taken: {}", b);
             this.setFinishedState(ResourceState.INSTALLED);
         } else {
             // Try to start bundle, and if that doesn't work we'll need to retry
             try {
                 b.start();
                 this.setFinishedState(ResourceState.INSTALLED);
-                this.getLogger().info("Bundle started (bundle ID={}) : {}",
-                        new Object[] {bundleId, b.getSymbolicName()});
+                ctx.log("Started bundle {}", b);
             } catch (final BundleException e) {
-                this.getLogger().info("Could not start bundle (bundle ID={}) : {}. Reason: {}. Will retry.",
-                        new Object[] {bundleId, b.getSymbolicName(), e});
+                this.getLogger().info("Could not start bundle {}. Reason: {}. Will retry.",
+                        new Object[] {b, e});
             }
         }
     }
