@@ -81,7 +81,6 @@ public class JcrResourceConstants {
      * The type of this property, if present, is <code>String</code>.
      *
      * @since 2.1
-     * @deprecated
      */
     public static final String AUTHENTICATION_INFO_WORKSPACE = "user.jcr.workspace";
 

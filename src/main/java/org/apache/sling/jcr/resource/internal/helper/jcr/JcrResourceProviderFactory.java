@@ -104,9 +104,10 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         // derive the session to be used
         Session session;
         try {
+            final String workspace = getWorkspace(authenticationInfo);
             if (isAdmin) {
                 // requested admin session to any workspace (or default)
-                session = repository.loginAdministrative(null);
+                session = repository.loginAdministrative(workspace);
 
             } else {
 
@@ -114,7 +115,29 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                 if (session == null) {
                     // requested non-admin session to any workspace (or default)
                     final Credentials credentials = getCredentials(authenticationInfo);
-                    session = repository.login(credentials, null);
+                    session = repository.login(credentials, workspace);
+
+                } else if (workspace != null) {
+                    // session provided by map; but requested a different
+                    // workspace impersonate can only change the user not switch
+                    // the workspace as a workaround we login to the requested
+                    // workspace with admin and then switch to the provided
+                    // session's user (if required)
+                    Session tmpSession = null;
+                    try {
+                        tmpSession = repository.loginAdministrative(workspace);
+                        if (tmpSession.getUserID().equals(session.getUserID())) {
+                            session = tmpSession;
+                            tmpSession = null;
+                        } else {
+                            session = tmpSession.impersonate(new SimpleCredentials(
+                                session.getUserID(), new char[0]));
+                        }
+                    } finally {
+                        if (tmpSession != null) {
+                            tmpSession.logout();
+                        }
+                    }
 
                 } else {
                     // session provided; no special workspace; just make sure
@@ -122,7 +145,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                     logoutSession = false;
                 }
             }
-        } catch (RepositoryException re) {
+        } catch (final RepositoryException re) {
             throw getLoginException(re);
         }
 
@@ -143,6 +166,23 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             final Object sudoObject = authenticationInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
             if (sudoObject instanceof String) {
                 return (String) sudoObject;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Return the workspace name.
+     * If the workspace name is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Optional authentication info.
+     * @return The configured workspace name or <code>null</code>
+     */
+    private String getWorkspace(final Map<String, Object> authenticationInfo) {
+        if (authenticationInfo != null) {
+            final Object workspaceObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE);
+            if (workspaceObject instanceof String) {
+                return (String) workspaceObject;
             }
         }
         return null;
