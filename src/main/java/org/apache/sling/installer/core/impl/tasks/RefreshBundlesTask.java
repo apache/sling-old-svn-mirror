@@ -25,13 +25,23 @@ import java.util.Set;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkEvent;
+import org.osgi.framework.FrameworkListener;
 
 /**
  * Refresh a set of bundles.
  */
-public class RefreshBundlesTask extends AbstractBundleTask {
+public class RefreshBundlesTask
+    extends AbstractBundleTask
+    implements FrameworkListener{
 
     private static final String REFRESH_PACKAGES_ORDER = "60-";
+
+    /** Max time allowed to refresh packages */
+    private static final int MAX_REFRESH_PACKAGES_WAIT_SECONDS = 90;
+
+    /** Counter for package refresh events. */
+    private volatile long refreshEventCount;
 
     /** Global set of bundles to refresh. */
     private static final Set<Long> BUNDLE_IDS = new HashSet<Long>();
@@ -78,7 +88,42 @@ public class RefreshBundlesTask extends AbstractBundleTask {
         }
         if ( bundles.size() > 0 ) {
             ctx.log("Refreshing bundles {}", bundles);
-            this.getPackageAdmin().refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
+            this.refreshEventCount = -1;
+            this.getBundleContext().addFrameworkListener(this);
+            try {
+                this.refreshEventCount = 0;
+                this.getPackageAdmin().refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
+                final long start = System.currentTimeMillis();
+                do {
+                    synchronized ( this ) {
+                        try {
+                            this.wait(MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000);
+                        } catch (final InterruptedException ignore) {
+                            // ignore
+                        }
+                        if ( start + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000 < System.currentTimeMillis() ) {
+                            this.getLogger().warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {}"
+                                            + " seconds after refresh.", MAX_REFRESH_PACKAGES_WAIT_SECONDS);
+                            this.refreshEventCount++;
+                        }
+                    }
+                } while ( this.refreshEventCount < 1);
+            } finally {
+                this.getBundleContext().removeFrameworkListener(this);
+            }
         }
 	}
+
+    /**
+     * @see org.osgi.framework.FrameworkListener#frameworkEvent(org.osgi.framework.FrameworkEvent)
+     */
+    public void frameworkEvent(final FrameworkEvent event) {
+        if (event.getType() == FrameworkEvent.PACKAGES_REFRESHED) {
+            this.getLogger().debug("FrameworkEvent.PACKAGES_REFRESHED");
+            synchronized (this) {
+                this.refreshEventCount++;
+                this.notify();
+            }
+        }
+    }
 }
