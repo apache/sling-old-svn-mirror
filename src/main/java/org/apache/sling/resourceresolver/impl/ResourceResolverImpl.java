@@ -1022,6 +1022,10 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( name == null ) {
             throw new NullPointerException("name");
         }
+        // name should be a name not a path
+        if ( name.indexOf("/") != -1 ) {
+            throw new PersistenceException("Name should not contain a slash: " + name, null, parent.getPath(), null);
+        }
         final String path;
         if ( parent.getPath().equals("/") ) {
             path = parent.getPath() + name;
