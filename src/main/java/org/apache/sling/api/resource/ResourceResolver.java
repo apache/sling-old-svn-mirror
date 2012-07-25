@@ -506,7 +506,7 @@ public interface ResourceResolver extends Adaptable {
      * Delete the resource
      * @param resource The resource to delete
      *
-     * @throws PersistenceException, NullPointerException
+     * @throws PersistenceException, NullPointerException, UnsupportedOperationException
      */
     void delete(Resource resource)
     throws PersistenceException;
@@ -518,7 +518,7 @@ public interface ResourceResolver extends Adaptable {
      * @param properties Optional properties for the resource
      * @return The new resource
      *
-     * @throws PersistenceException, NullPointerException
+     * @throws PersistenceException, NullPointerException, UnsupportedOperationException
      */
     Resource addChild(Resource parent, String name, ValueMap properties)
     throws PersistenceException;
