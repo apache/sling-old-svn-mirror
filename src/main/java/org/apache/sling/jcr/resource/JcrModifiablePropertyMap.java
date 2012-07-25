@@ -229,7 +229,7 @@ public final class JcrModifiablePropertyMap
             }
             this.reset();
         } catch (final RepositoryException re) {
-            throw new PersistenceException("Unable to persist changes.", re);
+            throw new PersistenceException("Unable to persist changes.", re, getPath(), null);
         }
     }
 
