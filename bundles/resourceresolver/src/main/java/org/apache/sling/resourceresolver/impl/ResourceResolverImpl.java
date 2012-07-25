@@ -1029,7 +1029,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#revert()
      */
-    public void revert() throws PersistenceException {
+    public void revert() {
         this.context.revert();
     }
 
