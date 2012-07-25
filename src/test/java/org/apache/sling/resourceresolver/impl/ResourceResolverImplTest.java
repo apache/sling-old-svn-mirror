@@ -41,8 +41,11 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.NonExistingResource;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
@@ -299,6 +302,50 @@ public class ResourceResolverImplTest {
 
         rr.close();
     }
+
+    @Test public void testBasicCrud() throws Exception {
+        try {
+            this.resResolver.addChild(null, "a", null);
+            fail("Null parent resource should throw NPE");
+        } catch (final NullPointerException npe) {
+            // correct
+        }
+        try {
+            this.resResolver.addChild(new ResourceImpl(), null, null);
+            fail("Null name should throw NPE");
+        } catch (final NullPointerException npe) {
+            // correct
+        }
+        try {
+            this.resResolver.addChild(new ResourceImpl(), "a/b", null);
+            fail("Slash in name should throw persistence exception");
+        } catch (final PersistenceException pe) {
+            // correct
+        }
+    }
+
+    private static final class ResourceImpl extends AbstractResource {
+
+        public String getPath() {
+            return "/some";
+        }
+
+        public String getResourceType() {
+            return null;
+        }
+
+        public String getResourceSuperType() {
+            return null;
+        }
+
+        public ResourceMetadata getResourceMetadata() {
+            return null;
+        }
+
+        public ResourceResolver getResourceResolver() {
+            return null;
+        }
+    };
 
     private static final class ResourceResolverTestRequest implements
     HttpServletRequest {
