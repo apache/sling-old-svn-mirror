@@ -18,17 +18,13 @@
  */
 package org.apache.sling.api.resource;
 
-
-
 /**
  * A modifying resource provider is an extension of a resource provider which
  * is only supported if the resource provider has been created through
  * a {@link ResourceProviderFactory}.
  *
  * A modifying resource provider allows to create, update, and delete
- * resources.
- *
- * TODO - Exception handling, return values
+ * resources. Update is handled through {@link ModifiableValueMap}.
  *
  * @see ResourceProviderFactory#getResourceProvider(java.util.Map)
  * @see ResourceProviderFactory#getAdministrativeResourceProvider(java.util.Map)
@@ -37,17 +33,49 @@ package org.apache.sling.api.resource;
  */
 public interface ModifyingResourceProvider {
 
+    /**
+     * Create a new resource at the given path.
+     * The new resource is put into the transient space of this provider
+     * until {@link #commit()} is called.
+     *
+     * @param resolver The current resource resolver.
+     * @param path The resource path.
+     * @param properties Optional properties
+     * @return The new resource.
+     *
+     * @throws PersistenceException If anything fails
+     */
     Resource create(ResourceResolver resolver, String path, ValueMap properties)
     throws PersistenceException;
 
+    /**
+     * Delete the resource at the given path.
+     * This change is kept in the transient space of this provider
+     * until {@link #commit()} is called.
+     *
+     * @param resolver The current resource resolver.
+     * @param path The resource path.
+     *
+     * @throws PersistenceException If anything fails
+     */
     void delete(ResourceResolver resolver, String path)
     throws PersistenceException;
 
-    void revert()
-    throws PersistenceException;
+    /**
+     * Revert all transient changes: create, delete and updates.
+     */
+    void revert();
 
+    /**
+     * Commit all transient changes: create, delete and updates
+     *
+     * @throws PersistenceException If anything fails
+     */
     void commit()
     throws PersistenceException;
 
+    /**
+     * Are there any transient changes?
+     */
     boolean hasChanges();
 }
