@@ -125,7 +125,7 @@ public class ResourceResolverContext {
     /**
      * Revert all transient changes.
      */
-    public void revert() throws PersistenceException {
+    public void revert() {
         for(final ModifyingResourceProvider provider : this.modifyingProviders) {
             provider.revert();
         }
