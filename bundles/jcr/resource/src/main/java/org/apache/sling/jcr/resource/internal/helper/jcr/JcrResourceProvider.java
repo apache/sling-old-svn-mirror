@@ -402,7 +402,7 @@ public class JcrResourceProvider
 
             return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
         } catch (final RepositoryException e) {
-            throw new PersistenceException("Unable to create node at " + path, e);
+            throw new PersistenceException("Unable to create node at " + path, e, path, null);
         }
     }
 
@@ -415,20 +415,20 @@ public class JcrResourceProvider
             if ( session.itemExists(path) ) {
                 session.getItem(path).remove();
             }
-            throw new PersistenceException("Unable to delete item at " + path);
+            throw new PersistenceException("Unable to delete item at " + path, null, path, null);
         } catch (final RepositoryException e) {
-            throw new PersistenceException("Unable to delete item at " + path, e);
+            throw new PersistenceException("Unable to delete item at " + path, e, path, null);
         }
     }
 
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert()
      */
-    public void revert() throws PersistenceException {
+    public void revert() {
         try {
             this.session.refresh(false);
-        } catch (final RepositoryException e) {
-            throw new PersistenceException("Unable to refresh session.", e);
+        } catch (final RepositoryException ignore) {
+            log.warn("Unable to revert pending changes.", ignore);
         }
     }
 
