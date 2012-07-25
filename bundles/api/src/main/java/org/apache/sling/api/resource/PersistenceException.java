@@ -21,23 +21,75 @@ package org.apache.sling.api.resource;
 import java.io.IOException;
 
 /**
- * This exception will be thrown during the try to persists
- * changes to a {@link PersistableValueMap}.
+ * This exception will be thrown during the try to persist
+ * changes to a {@link PersistableValueMap}, a
+ * {@link ModifiableValueMap#update()} or
+ * the {@link ResourceResolver}.
  */
 public class PersistenceException extends IOException {
 
-    private static final long serialVersionUID = -147631829162481787L;
+    private static final long serialVersionUID = 2454225989618227698L;
 
+    /** Optional resource path. */
+    private final String resourcePath;
+
+    /** Optional property name. */
+    private final String propertyName;
+
+    /**
+     * Create a new persistence exception.
+     */
     public PersistenceException() {
-        super();
+        this(null, null, null, null);
     }
 
-    public PersistenceException(String s) {
-        super(s);
+    /**
+     * Create a new persistence exception.
+     * @param msg Exception message.
+     */
+    public PersistenceException(final String msg) {
+        this(msg, null, null, null);
     }
 
-    public PersistenceException(String s, Throwable t) {
-        super(s);
-        initCause(t);
+    /**
+     * Create a new persistence exception.
+     * @param msg Exception message.
+     * @param cause Exception cause.
+     */
+    public PersistenceException(final String msg, final Throwable cause) {
+        this(msg, cause, null, null);
+    }
+
+    /**
+     * Create a new persistence exception.
+     * @param msg Exception message.
+     * @param cause Exception cause.
+     */
+    public PersistenceException(final String msg,
+                    final Throwable cause,
+                    final String resourcePath,
+                    final String propertyName) {
+        super(msg);
+        initCause(cause);
+        this.resourcePath = resourcePath;
+        this.propertyName = propertyName;
+    }
+
+    /**
+     * Get the resource path related to this exception.
+     * @return The resource path or <code>null</code>
+     * @since 2.2
+     */
+    public String getResourcePath() {
+        return this.resourcePath;
+    }
+
+    /**
+     * Get the property name related to this exception.
+     * @return The property name or <code>null</code>
+     * @since 2.2
+     */
+    public String getPropertyName() {
+        return this.propertyName;
     }
 }

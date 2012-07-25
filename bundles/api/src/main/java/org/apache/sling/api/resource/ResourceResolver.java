@@ -31,6 +31,7 @@ import org.apache.sling.api.adapter.Adaptable;
  * the request processing servlet through the
  * {@link org.apache.sling.api.SlingHttpServletRequest#getResourceResolver()}
  * method.
+ * A resource resolver can also be created through the {@link ResourceResolverFactory}.
  * <p>
  * The <code>ResourceResolver</code> is also an {@link Adaptable} to get
  * adapters to other types. A JCR based resource resolver might support adapting
@@ -78,7 +79,7 @@ import org.apache.sling.api.adapter.Adaptable;
  * Resource Resolver using any of the factory methods and ends with calling the
  * {@link #close()} method. It is very important to call the {@link #close()}
  * method once the resource resolver is not used any more to ensure any system
- * resources are properly clean up.
+ * resources are properly cleaned up.
  * <p>
  * To check whether a Resource Resolver can still be used, the {@link #isLive()}
  * method can be called.
@@ -525,7 +526,7 @@ public interface ResourceResolver extends Adaptable {
     /**
      * Revert all pending changes.
      */
-    void revert() throws PersistenceException;
+    void revert();
 
     /**
      * Persist all pending changes.

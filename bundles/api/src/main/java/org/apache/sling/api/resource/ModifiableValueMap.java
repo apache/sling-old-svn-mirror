@@ -21,27 +21,31 @@ package org.apache.sling.api.resource;
 /**
  * The <code>ModifiableValueMap</code> is an extension
  * of the {@link ValueMap} which allows to modify and
- * persist the properties.
+ * persist properties. All changes to this map are transient
+ * and only available through this map instance.
  *
- * Changes can be pushed into the persistence layer
- * with a call to {@link #update()}. The changes are then
- * stored in the persistence layer for committing. Once
+ * Changes can be pushed into the transient persistence layer
+ * with a call to {@link #update()}. This causes the changes
+ * to be stored in the persistence layer for committing. Once
  * {@link ResourceResolver#commit()} is called, the
- * changes get persisted.
+ * changes are finally persisted.
  *
  * Note, that each time you call {@link Resource#adaptTo(Class)}
  * you get a new map instance which does not share modified
- * properties with other representations.
- *
- * TODO - we can convert this to a plain marker interface and
- * directly set the changes properties in the persistence layer!
+ * properties with other representations until {@link #update()}
+ * is called. In general, to avoid confusion, it's better to use
+ * one modifiable value map for a resource per resource resolver.
  *
  * @since 2.2
  */
 public interface ModifiableValueMap extends ValueMap {
 
     /**
-     * Persists the changes.
+     * Persists the changes in the transient persistence layer.
+     * Once update is called this map has no temporary changes
+     * any more.
+     * A call to {@link ResourceResolver#commit()} is required
+     * to permanently persist the changes.
      * @throws PersistenceException If the changes can't be persisted.
      */
     void update() throws PersistenceException;
@@ -52,7 +56,7 @@ public interface ModifiableValueMap extends ValueMap {
     void revert();
 
     /**
-     * Are there any changes?
+     * Are there any temporary changes?
      */
     boolean hasChanges();
 }
