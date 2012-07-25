@@ -322,6 +322,12 @@ public class ResourceResolverImplTest {
         } catch (final PersistenceException pe) {
             // correct
         }
+        try {
+            this.resResolver.addChild(new ResourceImpl(), "a", null);
+            fail("This should be unsupported.");
+        } catch (final UnsupportedOperationException uoe) {
+            // correct
+        }
     }
 
     private static final class ResourceImpl extends AbstractResource {
