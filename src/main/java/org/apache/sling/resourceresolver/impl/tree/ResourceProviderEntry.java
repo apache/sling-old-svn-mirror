@@ -347,11 +347,18 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                     return (ModifyingResourceProvider) provider;
                 }
                 if ( rp.ownsRoots() ) {
-                    throw new UnsupportedOperationException();
+                    return null;
                 }
             }
         }
-        throw new UnsupportedOperationException();
+        // try this one
+        for(final ProviderHandler rp : this.providers) {
+            final ResourceProvider provider = rp.getResourceProvider(ctx);
+            if ( provider instanceof ModifyingResourceProvider) {
+                return (ModifyingResourceProvider) provider;
+            }
+        }
+        return null;
     }
 
     private static final char SPLIT_SEP = '/';

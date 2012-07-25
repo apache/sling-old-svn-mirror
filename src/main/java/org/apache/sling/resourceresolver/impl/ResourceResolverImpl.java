@@ -1007,6 +1007,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
                         this,
                         path);
+        if ( mrp == null ) {
+            throw new UnsupportedOperationException("delete at '" + path + "'");
+        }
         mrp.delete(this, path);
     }
 
@@ -1019,10 +1022,18 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( name == null ) {
             throw new NullPointerException("name");
         }
-        final String path = parent.getPath() + '/' + name;
+        final String path;
+        if ( parent.getPath().equals("/") ) {
+            path = parent.getPath() + name;
+        } else {
+            path = parent.getPath() + "/" + name;
+        }
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
                         this,
                         path);
+        if ( mrp == null ) {
+            throw new UnsupportedOperationException("addChild '" + name + "' at " + parent.getPath());
+        }
         return mrp.create(this, path, properties);
     }
 
