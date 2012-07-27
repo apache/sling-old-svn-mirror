@@ -1014,9 +1014,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     /**
-     * @see org.apache.sling.api.resource.ResourceResolver#addChild(org.apache.sling.api.resource.Resource, java.lang.String, org.apache.sling.api.resource.ValueMap)
+     * @see org.apache.sling.api.resource.ResourceResolver#addChild(org.apache.sling.api.resource.Resource, java.lang.String, Map)
      */
-    public Resource addChild(final Resource parent, final String name, final ValueMap properties)
+    public Resource addChild(final Resource parent, final String name, final Map<String, Object> properties)
     throws PersistenceException {
         // if parent or name is null, we get an NPE as stated in the API
         if ( name == null ) {

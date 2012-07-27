@@ -34,7 +34,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Constants;
@@ -304,7 +303,7 @@ public class ResourceProviderEntryTest {
             // TODO Auto-generated method stub
         }
 
-        public Resource addChild(Resource parent, String name, ValueMap properties) {
+        public Resource addChild(Resource parent, String name, Map<String, Object> properties) {
             // TODO Auto-generated method stub
             return null;
         }
