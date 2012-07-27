@@ -154,7 +154,13 @@ public class ResourceWrapper implements Resource {
      */
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ", type=" + getResourceType()
+        final String className;
+        if ( getClass().getSimpleName() == null ) {
+            className = getClass().getName();
+        } else {
+            className = getClass().getSimpleName();
+        }
+        return className + ", type=" + getResourceType()
             + ", path=" + getPath() + ", resource=[" + getResource() + "]";
     }
 }

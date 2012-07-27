@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.Map;
+
 /**
  * A modifying resource provider is an extension of a resource provider which
  * is only supported if the resource provider has been created through
@@ -45,7 +47,7 @@ public interface ModifyingResourceProvider {
      *
      * @throws PersistenceException If anything fails
      */
-    Resource create(ResourceResolver resolver, String path, ValueMap properties)
+    Resource create(ResourceResolver resolver, String path, Map<String, Object> properties)
     throws PersistenceException;
 
     /**

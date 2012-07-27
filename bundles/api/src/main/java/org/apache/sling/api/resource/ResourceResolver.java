@@ -520,7 +520,7 @@ public interface ResourceResolver extends Adaptable {
      *
      * @throws PersistenceException, NullPointerException, UnsupportedOperationException
      */
-    Resource addChild(Resource parent, String name, ValueMap properties)
+    Resource addChild(Resource parent, String name, Map<String, Object> properties)
     throws PersistenceException;
 
     /**
