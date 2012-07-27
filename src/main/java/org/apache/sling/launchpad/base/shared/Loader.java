@@ -164,14 +164,14 @@ public class Loader {
 
         try {
             if(!newVi.isBundle()) {
-                throw new IllegalArgumentException("New launcher jar is not a bundle, cannot get version info:" + launcherJar);
+                throw new IOException("New launcher jar is not a bundle, cannot get version info:" + launcherJar);
             }
 
             // Compare versions to decide whether to use the existing or new launcher jar
             if (currentLauncherJarFile.exists()) {
                 final FileBundleVersionInfo currentVi = new FileBundleVersionInfo(currentLauncherJarFile);
                 if(!currentVi.isBundle()) {
-                    throw new IllegalArgumentException("Existing launcher jar is not a bundle, cannot get version info:"
+                    throw new IOException("Existing launcher jar is not a bundle, cannot get version info:"
                             + currentLauncherJarFile.getAbsolutePath());
                 }
 
@@ -193,7 +193,7 @@ public class Loader {
             if(installNewLauncher) {
                 final File f = new File(tmp.getParentFile(), SharedConstants.LAUNCHER_JAR_REL_PATH + "." + System.currentTimeMillis());
                 if(!tmp.renameTo(f)) {
-                    throw new IllegalStateException("Failed to rename " + tmp.getName() + " to " + f.getName());
+                    throw new IOException("Failed to rename " + tmp.getName() + " to " + f.getName());
                 }
                 info("Installing new launcher: " + launcherJar  + ", " + getBundleInfo(newVi) + " (" + f.getName() + ")");
             }
