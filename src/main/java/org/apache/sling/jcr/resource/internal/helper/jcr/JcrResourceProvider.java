@@ -49,7 +49,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.slf4j.Logger;
@@ -380,12 +379,13 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(ResourceResolver, java.lang.String, org.apache.sling.api.resource.ValueMap)
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(ResourceResolver, java.lang.String, Map)
      */
-    public Resource create(final ResourceResolver resolver, final String path, final ValueMap properties)
+    public Resource create(final ResourceResolver resolver, final String path, final Map<String, Object> properties)
     throws PersistenceException {
         // check for node type
-        final String nodeType = (properties != null ? properties.get("jcr:primaryType", String.class) : null);
+        final Object nodeObj = (properties != null ? properties.get("jcr:primaryType") : null);
+        final String nodeType = (nodeObj != null ? nodeObj.toString() : null);
         try {
             final Node node = JcrResourceUtil.createPath(path, null, nodeType, this.session, false);
 

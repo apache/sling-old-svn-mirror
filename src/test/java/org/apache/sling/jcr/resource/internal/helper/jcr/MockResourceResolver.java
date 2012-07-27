@@ -30,7 +30,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ValueMap;
 
 public class MockResourceResolver implements ResourceResolver {
 
@@ -131,7 +130,7 @@ public class MockResourceResolver implements ResourceResolver {
         // TODO Auto-generated method stub
     }
 
-    public Resource addChild(Resource parent, String name, ValueMap properties) {
+    public Resource addChild(Resource parent, String name, Map<String, Object> properties) {
         // TODO Auto-generated method stub
         return null;
     }
