@@ -116,13 +116,13 @@ public class Main {
         // check for control commands
         int rc = main.doControlAction();
         if (rc >= 0) {
-            main.terminateVM(rc);
+            terminateVM(rc);
         }
 
         // finally start Sling
         if (!main.doStart()) {
             error("Failed to start Sling; terminating", null);
-            main.terminateVM(1);
+            terminateVM(1);
         }
     }
 
@@ -184,6 +184,7 @@ public class Main {
         this.commandLineArgs = (args == null)
                 ? new HashMap<String, String>()
                 : args;
+
         // sling.home from the command line or system properties, else default
         String home = getSlingHome(commandLineArgs);
         final File slingHomeFile = new File(home);
@@ -284,7 +285,7 @@ public class Main {
      *
      * @param status The application status exit code.
      */
-    void terminateVM(final int status) {
+    static void terminateVM(final int status) {
         System.exit(status);
     }
 
@@ -316,6 +317,12 @@ public class Main {
      *         has been logged and <code>false</code> is returned.
      */
     protected boolean doStart() {
+        // ensure up-to-date launcher jar
+        return doStart(getClass().getResource(
+            SharedConstants.DEFAULT_SLING_LAUNCHER_JAR));
+    }
+
+    protected boolean doStart(final URL launcherJar) {
 
         // prevent duplicate start
         if ( this.started) {
@@ -326,7 +333,6 @@ public class Main {
         info("Starting Apache Sling in " + slingHome, null);
         this.started = true;
 
-        // The Loader helper
         Loader loaderTmp = null;
         try {
             final File launchpadHome = getLaunchpadHome(slingHome,
@@ -345,51 +351,6 @@ public class Main {
         }
         this.loader = loaderTmp;
 
-        // ensure up-to-date launcher jar
-        return startSling(getClass().getResource(
-            SharedConstants.DEFAULT_SLING_LAUNCHER_JAR));
-    }
-
-    /**
-     * Maybe called by the application to cause the Sling Application to
-     * properly terminate by stopping the OSGi Framework.
-     * <p>
-     * After calling this method the Sling Application can be started again
-     * by calling the {@link #doStart()} method.
-     * <p>
-     * Calling this method multiple times without calling the {@link #doStart()}
-     * method in between has no effect after the Sling Application has been
-     * terminated.
-     */
-    protected void doStop() {
-        this.stopSling();
-    }
-
-    private void addShutdownHook() {
-        if (this.shutdownHook == null) {
-            this.shutdownHook = new Thread(new ShutdownHook(),
-                "Apache Sling Terminator");
-            Runtime.getRuntime().addShutdownHook(this.shutdownHook);
-        }
-    }
-
-    private void removeShutdownHook() {
-        // remove the shutdown hook, will fail if called from the
-        // shutdown hook itself. Otherwise this prevents shutdown
-        // from being called again
-        Thread shutdownHook = this.shutdownHook;
-        this.shutdownHook = null;
-
-        if (shutdownHook != null) {
-            try {
-                Runtime.getRuntime().removeShutdownHook(shutdownHook);
-            } catch (Throwable t) {
-                // don't care for problems removing the hook
-            }
-        }
-    }
-
-    private boolean startSling(final URL launcherJar) {
         if (launcherJar != null) {
             try {
                 loader.installLauncherJar(launcherJar);
@@ -439,7 +400,18 @@ public class Main {
         return false;
     }
 
-    void stopSling() {
+    /**
+     * Maybe called by the application to cause the Sling Application to
+     * properly terminate by stopping the OSGi Framework.
+     * <p>
+     * After calling this method the Sling Application can be started again
+     * by calling the {@link #doStart()} method.
+     * <p>
+     * Calling this method multiple times without calling the {@link #doStart()}
+     * method in between has no effect after the Sling Application has been
+     * terminated.
+     */
+    protected void doStop() {
         removeShutdownHook();
 
         // now really shutdown sling
@@ -457,6 +429,30 @@ public class Main {
 
         // further cleanup
         this.started = false;
+    }
+
+    private void addShutdownHook() {
+        if (this.shutdownHook == null) {
+            this.shutdownHook = new Thread(new ShutdownHook(),
+                "Apache Sling Terminator");
+            Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+        }
+    }
+
+    private void removeShutdownHook() {
+        // remove the shutdown hook, will fail if called from the
+        // shutdown hook itself. Otherwise this prevents shutdown
+        // from being called again
+        Thread shutdownHook = this.shutdownHook;
+        this.shutdownHook = null;
+
+        if (shutdownHook != null) {
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (Throwable t) {
+                // don't care for problems removing the hook
+            }
+        }
     }
 
     /**
@@ -791,10 +787,56 @@ public class Main {
             message), null);
     }
 
+    /**
+     * Removes well-known stray threads and thread groups and removes framework
+     * thread context class loaders. Well-known stray threads and thread groups
+     * are:
+     * <ul>
+     * <li>The FileCleaningTracker$Reaper thread of the commons-io library</li>
+     * <li>The QuartzScheduler:ApacheSling thread group. See <a
+     * href="https://issues.apache.org/jira/browse/SLING-2535">SLING-2535
+     * QuartzScheduler:ApacheSling thread group remaining after stopping the
+     * scheduler bundle</a></li>
+     * </ul>
+     */
+    static void cleanupThreads() {
+
+        // the current thread is the SlingNotifier thread part of
+        // the main thread group, whose parent is the system thread
+        // group. We only care for the main thread group here
+        ThreadGroup tg = Thread.currentThread().getThreadGroup();
+        Thread[] active = new Thread[tg.activeCount()];
+        tg.enumerate(active);
+        for (Thread thread : active) {
+            if (thread != null) {
+                if (thread.getName().equals("FileCleaningTracker$Reaper")) {
+                    // I know, but this thread is stray ...
+                    // Commons-IO bundle (or consumer of it) should
+                    // actually stop it
+                    thread.stop();
+                } else {
+                    ClassLoader loader = thread.getContextClassLoader();
+                    if (loader != null && loader.getClass().getName().startsWith("org.apache.felix.framework.")) {
+                        thread.setContextClassLoader(null);
+                    }
+                }
+            }
+        }
+
+        // SLING-2535 - Scheduler thread group
+        ThreadGroup[] groups = new ThreadGroup[tg.activeGroupCount()];
+        tg.enumerate(groups);
+        for (ThreadGroup group : groups) {
+            if (group != null && group.getName().equals("QuartzScheduler:ApacheSling")) {
+                group.destroy();
+            }
+        }
+    }
+
     private class ShutdownHook implements Runnable {
         public void run() {
-            info("Java VM is shutting down", null);
-            Main.this.stopSling();
+            Main.info("Java VM is shutting down", null);
+            Main.this.doStop();
         }
     }
 
@@ -818,7 +860,7 @@ public class Main {
             Main.info("Apache Sling has been stopped", null);
 
             Main.this.sling = null;
-            Main.this.stopSling();
+            Main.this.doStop();
         }
 
         /**
@@ -837,14 +879,16 @@ public class Main {
         public void updated(File updateFile) {
 
             Main.this.sling = null;
-            Main.this.stopSling();
+            Main.this.doStop();
+
+            Main.cleanupThreads();
 
             if (updateFile == null) {
 
                 Main.info("Restarting Framework and Apache Sling", null);
-                if (!Main.this.startSling(null)) {
+                if (!Main.this.doStart(null)) {
                     Main.error("Failed to restart Sling; terminating", null);
-                    Main.this.terminateVM(1);
+                    Main.terminateVM(1);
                 }
 
             } else {
@@ -853,7 +897,7 @@ public class Main {
                     "Restarting Framework with update from " + updateFile, null);
                 boolean started = false;
                 try {
-                    started = Main.this.startSling(updateFile.toURI().toURL());
+                    started = Main.this.doStart(updateFile.toURI().toURL());
                 } catch (MalformedURLException mue) {
                     Main.error("Cannot get URL for file " + updateFile, mue);
                 } finally {
@@ -862,7 +906,7 @@ public class Main {
 
                 if (!started) {
                     Main.error("Failed to restart Sling; terminating", null);
-                    Main.this.terminateVM(1);
+                    Main.terminateVM(1);
                 }
             }
         }
