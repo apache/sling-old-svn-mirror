@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -51,7 +50,6 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
-import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
 import org.osgi.service.url.URLConstants;
 import org.osgi.service.url.URLStreamHandlerService;
@@ -165,16 +163,6 @@ public class Sling {
     private static final long REINIT_TIMEOUT = 1000L;
 
     /**
-     * List of multiple Execution Environment names supported by various
-     * Java Runtime versions.
-     * @see #setExecutionEnvironment(Map)
-     */
-    private static final String[][] EE_NAMES = { { "JRE-1.1" }, { "J2SE-1.2" },
-        { "J2SE-1.3", "OSGi/Minimum-1.0", "CDC-1.0/Foundation-1.0" },
-        { "J2SE-1.4", "OSGi/Minimum-1.1", "CDC-1.1/Foundation-1.1" },
-        { "J2SE-1.5" }, { "JavaSE-1.6" } };
-
-    /**
      * The simple logger to log messages during startup and shutdown to
      */
     protected final Logger logger;
@@ -214,9 +202,6 @@ public class Sling {
 
         // check for auto-start bundles
         this.setInstallBundles(props);
-
-        // ensure execution environment
-        this.setExecutionEnvironment(props);
 
         // create the framework and start it
         try {
@@ -311,7 +296,7 @@ public class Sling {
      *            bundle of the OSGi framework.
      * @throws BundleException May be thrown if the {@link #doStartBundle()} throws.
      */
-    private final void startup(BundleContext bundleContext) throws BundleException {
+    private final void startup(BundleContext bundleContext) {
 
         // register the context URL handler
         Hashtable<String, Object> props = new Hashtable<String, Object>();
@@ -484,11 +469,7 @@ public class Sling {
 
         // add property file locations
         runtimeProps.put(SharedConstants.SLING_PROPERTIES, propFile.getAbsolutePath());
-        try {
-            runtimeProps.put(SharedConstants.SLING_PROPERTIES_URL, propFile.toURL().toString());
-        } catch (MalformedURLException e) {
-            // we simple ignore this
-        }
+        runtimeProps.put(SharedConstants.SLING_PROPERTIES_URL, propFile.toURI().toString());
 
         // Perform variable substitution for system properties.
         for (Entry<String, String> entry : runtimeProps.entrySet()) {
@@ -692,58 +673,6 @@ public class Sling {
         props.put(prefix + "bundles", buf.toString());
     }
 
-    /**
-     * Sets the correct execution environment values for the Java Runtime in
-     * which Sling is runnin. This method takes any
-     * <code>org.osgi.framework.executionenvironment</code> property already set
-     * and ensures the older settings are included. If the property is not set
-     * yet, it is fully constructed by this method.
-     *
-     * @param props The configuration properties to check and optionally ammend.
-     */
-    private void setExecutionEnvironment(Map<String, String> props) {
-        // get the current Execution Environment setting
-        String ee = props.get(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
-        if (ee == null) {
-            ee = System.getProperty(Constants.FRAMEWORK_EXECUTIONENVIRONMENT);
-        }
-
-        // prepare for building the new property value
-        StringBuilder eebuilder = new StringBuilder();
-        if (ee != null) {
-            eebuilder.append(ee);
-        }
-
-        // get the minor Java versions (expected to be 5, 6, or higher)
-        int javaMinor;
-        try {
-            String specVString = System.getProperty("java.specification.version");
-            javaMinor = Version.parseVersion(specVString).getMinor();
-        } catch (IllegalArgumentException iae) {
-            // don't care, assume minimal sling version (1.5)
-            javaMinor = 5;
-        }
-
-        // walk the list of known names and include any by java minor version
-        for (int i = 0; i < javaMinor && i < EE_NAMES.length; i++) {
-            String[] vmEENames = EE_NAMES[i];
-            for (String vmEEName : vmEENames) {
-                if (eebuilder.indexOf(vmEEName) < 0) {
-                    if (eebuilder.length() > 0) {
-                        eebuilder.append(',');
-                    }
-                    eebuilder.append(vmEEName);
-                }
-            }
-        }
-
-        // finally set the new execution environment value
-        ee = eebuilder.toString();
-        this.logger.log(Logger.LOG_INFO,
-            "Using Execution Environment setting: " + ee);
-        props.put(Constants.FRAMEWORK_EXECUTIONENVIRONMENT, ee);
-    }
-
     // ---------- Extension support --------------------------------------------
 
     /**
@@ -769,7 +698,7 @@ public class Sling {
      * @param properties The <code>Properties</code> object to which custom
      *            properties may be added.
      */
-    protected void loadPropertiesOverride(Map<String, String> properties) {
+    protected void loadPropertiesOverride(@SuppressWarnings("unused") Map<String, String> properties) {
     }
 
     /**
