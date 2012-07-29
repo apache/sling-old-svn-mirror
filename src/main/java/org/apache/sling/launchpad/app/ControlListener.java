@@ -245,7 +245,7 @@ class ControlListener implements Runnable {
         // the VM should stop. If there are still some non-daemon threads
         // active, this will not happen, so we force this here ...
         Main.info("Apache Sling terminated, exiting Java VM", null);
-        Main.terminateVM(0);
+        this.slingMain.terminateVM(0);
     }
 
     // ---------- socket support
