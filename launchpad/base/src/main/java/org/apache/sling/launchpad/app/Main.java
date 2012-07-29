@@ -116,13 +116,13 @@ public class Main {
         // check for control commands
         int rc = main.doControlAction();
         if (rc >= 0) {
-            terminateVM(rc);
+            main.terminateVM(rc);
         }
 
         // finally start Sling
         if (!main.doStart()) {
             error("Failed to start Sling; terminating", null);
-            terminateVM(1);
+            main.terminateVM(1);
         }
     }
 
@@ -285,7 +285,8 @@ public class Main {
      *
      * @param status The application status exit code.
      */
-    static void terminateVM(final int status) {
+    // default accessor to enable overwriting for unit tests
+    void terminateVM(final int status) {
         System.exit(status);
     }
 
@@ -888,7 +889,7 @@ public class Main {
                 Main.info("Restarting Framework and Apache Sling", null);
                 if (!Main.this.doStart(null)) {
                     Main.error("Failed to restart Sling; terminating", null);
-                    Main.terminateVM(1);
+                    Main.this.terminateVM(1);
                 }
 
             } else {
@@ -906,7 +907,7 @@ public class Main {
 
                 if (!started) {
                     Main.error("Failed to restart Sling; terminating", null);
-                    Main.terminateVM(1);
+                    Main.this.terminateVM(1);
                 }
             }
         }
