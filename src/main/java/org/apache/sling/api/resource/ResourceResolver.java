@@ -367,12 +367,14 @@ public interface ResourceResolver extends Adaptable {
      * provided by the query result.
      *
      * @param query The query string to use to find the resources.
-     * @param language The language in which the query is formulated.
+     * @param language The language in which the query is formulated. The
+     *                 language should always be specified. However for
+     *                 compatibility with older version, if no language
+     *                 is specified, "xpath" is used.
      * @return An <code>Iterator</code> of {@link Resource} objects matching the
      *         query.
      * @throws QuerySyntaxException If the query is not syntactically correct
-     *             according to the query language indicator of if the query
-     *             language is not supported.
+     *             according to the query language indicator.
      * @throws org.apache.sling.api.SlingException If an error occurrs querying
      *             for the resources.
      * @throws IllegalStateException if this resource resolver has already been
@@ -395,12 +397,14 @@ public interface ResourceResolver extends Adaptable {
      * for a value of property type <em>Boolean</em>.
      *
      * @param query The query string to use to find the resources.
-     * @param language The language in which the query is formulated.
+     * @param language The language in which the query is formulated. The
+     *                 language should always be specified. However for
+     *                 compatibility with older version, if no language
+     *                 is specified, "xpath" is used.
      * @return An <code>Iterator</code> of <code>Map</code> instances providing
      *         access to the query result.
      * @throws QuerySyntaxException If the query is not syntactically correct
-     *             according to the query language indicator of if the query
-     *             language is not supported.
+     *             according to the query language indicator.
      * @throws org.apache.sling.api.SlingException If an error occurrs querying
      *             for the resources.
      * @throws IllegalStateException if this resource resolver has already been
@@ -506,7 +510,10 @@ public interface ResourceResolver extends Adaptable {
      * Delete the resource
      * @param resource The resource to delete
      *
-     * @throws PersistenceException, NullPointerException, UnsupportedOperationException
+     * @throws NullPointerException if the resource parameter is null
+     * @throws UnsupportedOperationException If the resource provider does not allow to
+     *                                       delete this resource.
+     * @throws PersistenceException If the operation fails.
      */
     void delete(Resource resource)
     throws PersistenceException;
@@ -514,13 +521,17 @@ public interface ResourceResolver extends Adaptable {
     /**
      * Add a child resource to the given parent resource
      * @param parent The parent resource
-     * @param name   The name of the child resource
+     * @param name   The name of the child resource - this is a plain name, not a path!
      * @param properties Optional properties for the resource
      * @return The new resource
      *
-     * @throws PersistenceException, NullPointerException, UnsupportedOperationException
+     * @throws NullPointerException if the resource parameter or name parameter is null
+     * @throws IllegalArgumentException if the name contains a slash
+     * @throws UnsupportedOperationException If the resource provider does not allow to
+     *                                       create a resource at that location.
+     * @throws PersistenceException If the operation fails.
      */
-    Resource addChild(Resource parent, String name, Map<String, Object> properties)
+    Resource create(Resource parent, String name, Map<String, Object> properties)
     throws PersistenceException;
 
     /**

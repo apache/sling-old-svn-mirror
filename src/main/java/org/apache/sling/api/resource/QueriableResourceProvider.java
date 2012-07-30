@@ -29,12 +29,17 @@ import java.util.Map;
  * {@link ResourceProvider} interface and {@link ResourceProvider}s
  * returned through a {@link ResourceProviderFactory}.
  *
- * TODO - what should the resource provider do, if the language is not supported?
- * TODO - is returning null allowed?
- *
  * @since 2.2.0
  */
 public interface QueriableResourceProvider {
+
+    /**
+     * The name of the service registration property containing the supported
+     * languages of the resource provider (value is "provider.query.languages").
+     * If the resource provider is delivered by a {@link ResourceProviderFactory}
+     * this property should be declared on the factory.
+     */
+    String LANGUAGES = "provider.query.languages";
 
     /**
      * Searches for resources using the given query formulated in the given
@@ -50,10 +55,11 @@ public interface QueriableResourceProvider {
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of {@link Resource} objects matching the
-     *         query.
+     *         query. If no resources match, <code>null</code> might be
+     *         returned instead of an empty iterator.
      * @throws QuerySyntaxException If the query is not syntactically correct
-     *             according to the query language indicator of if the query
-     *             language is not supported.
+     *             according to the query language indicator or if the query
+     *             language is not supported as specified in {@link #LANGUAGES}.
      * @throws org.apache.sling.api.SlingException If an error occurrs querying
      *             for the resources.
      * @throws IllegalStateException if this resource provider has already been
@@ -78,10 +84,11 @@ public interface QueriableResourceProvider {
      * @param query The query string to use to find the resources.
      * @param language The language in which the query is formulated.
      * @return An <code>Iterator</code> of <code>Map</code> instances providing
-     *         access to the query result.
+     *         access to the query result. If no resources match, <code>null</code>
+     *         might be returned instead of an empty iterator.
      * @throws QuerySyntaxException If the query is not syntactically correct
-     *             according to the query language indicator of if the query
-     *             language is not supported.
+     *             according to the query language indicator or if the query
+     *             language is not supported as specified in {@link #LANGUAGES}.
      * @throws org.apache.sling.api.SlingException If an error occurrs querying
      *             for the resources.
      * @throws IllegalStateException if this resource provider has already been

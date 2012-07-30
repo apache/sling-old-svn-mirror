@@ -21,42 +21,37 @@ package org.apache.sling.api.resource;
 /**
  * The <code>ModifiableValueMap</code> is an extension
  * of the {@link ValueMap} which allows to modify and
- * persist properties. All changes to this map are transient
- * and only available through this map instance.
- *
- * Changes can be pushed into the transient persistence layer
- * with a call to {@link #update()}. This causes the changes
- * to be stored in the persistence layer for committing. Once
- * {@link ResourceResolver#commit()} is called, the
+ * persist properties. All changes to this map are
+ * stored in the transient layer of the resource resolver
+ * or more precisely in the transient layer of the
+ * resource provider managing this resource.
+ * <p>
+ * Once{@link ResourceResolver#commit()} is called, the
  * changes are finally persisted.
- *
- * Note, that each time you call {@link Resource#adaptTo(Class)}
- * you get a new map instance which does not share modified
- * properties with other representations until {@link #update()}
- * is called. In general, to avoid confusion, it's better to use
- * one modifiable value map for a resource per resource resolver.
- *
+ * <p>
+ * The modifiable value map is only changeable through
+ * one of these methods
+ * <ul>
+ *  <li>{@link #put(String, Object)}</li>
+ *  <li>{@link #putAll(java.util.Map)}</li>
+ *  <li>{@link #remove(Object)}</li>
+ * </ul>
+ * <p>
+ * The map is not modifiable through the collection provided
+ * by
+ * <ul>
+ *  <li>{@link #entrySet()}</li>
+ *  <li>{@link #keySet()}</li>
+ *  <li>{@link #values()}</li>
+ * </ul>
+ * or one of these methods:
+ * <ul>
+ *  <li>{@link #clear()}</li>
+ * </ul>
+ * <p>
  * @since 2.2
  */
 public interface ModifiableValueMap extends ValueMap {
 
-    /**
-     * Persists the changes in the transient persistence layer.
-     * Once update is called this map has no temporary changes
-     * any more.
-     * A call to {@link ResourceResolver#commit()} is required
-     * to permanently persist the changes.
-     * @throws PersistenceException If the changes can't be persisted.
-     */
-    void update() throws PersistenceException;
-
-    /**
-     * Revert temporary changes.
-     */
-    void revert();
-
-    /**
-     * Are there any temporary changes?
-     */
-    boolean hasChanges();
+    // just a marker
 }
