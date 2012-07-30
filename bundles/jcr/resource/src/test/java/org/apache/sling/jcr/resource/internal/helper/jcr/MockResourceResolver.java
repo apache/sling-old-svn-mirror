@@ -130,7 +130,7 @@ public class MockResourceResolver implements ResourceResolver {
         // TODO Auto-generated method stub
     }
 
-    public Resource addChild(Resource parent, String name, Map<String, Object> properties) {
+    public Resource create(Resource parent, String name, Map<String, Object> properties) {
         // TODO Auto-generated method stub
         return null;
     }

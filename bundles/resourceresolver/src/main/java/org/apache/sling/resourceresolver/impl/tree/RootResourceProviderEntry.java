@@ -105,7 +105,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
      * @see Adaptable
      */
     public <AdapterType> AdapterType adaptTo(final ResourceResolverContext ctx, final Class<AdapterType> type) {
-        final Iterator<Adaptable> i = this.adaptableProviders.getProviders(ctx);
+        final Iterator<Adaptable> i = this.adaptableProviders.getProviders(ctx, null);
         AdapterType result = null;
         while ( result == null && i.hasNext() ) {
             final Adaptable adap = i.next();
@@ -120,7 +120,14 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
      */
     public Iterator<Resource> findResources(final ResourceResolverContext ctx,
                     final ResourceResolver resolver, final String query, final String language) {
-        final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx);
+        final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx,
+                        new SortedProviderList.Filter<QueriableResourceProvider>() {
+
+                            public boolean select(final ProviderHandler handler, final QueriableResourceProvider provider) {
+                                return handler.supportsQueryLanguages(language);
+                            }
+
+                        });
         return new Iterator<Resource>() {
 
             private Resource nextObject = this.seek();
@@ -180,7 +187,14 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
      * @see QueriableResourceProvider#queryResources(String, String)
      */
     public Iterator<Map<String, Object>> queryResources(final ResourceResolverContext ctx, final String query, final String language) {
-        final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx);
+        final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx,
+                        new SortedProviderList.Filter<QueriableResourceProvider>() {
+
+            public boolean select(final ProviderHandler handler, final QueriableResourceProvider provider) {
+                return handler.supportsQueryLanguages(language);
+            }
+
+        });
         return new Iterator<Map<String, Object>>() {
 
             private Map<String, Object> nextObject = this.seek();
@@ -246,7 +260,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         if ( ctx.getAuthenticationInfo() != null ) {
             names.addAll(ctx.getAuthenticationInfo().keySet());
         }
-        final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx);
+        final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx, null);
         while ( i.hasNext() ) {
             final AttributableResourceProvider adap = i.next();
             final Collection<String> newNames = adap.getAttributeNames();
@@ -270,7 +284,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                 result = ctx.getAuthenticationInfo().get(name);
             }
             if ( result == null ) {
-                final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx);
+                final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx, null);
                 while ( result == null && i.hasNext() ) {
                     final AttributableResourceProvider adap = i.next();
                     result = adap.getAttribute(name);

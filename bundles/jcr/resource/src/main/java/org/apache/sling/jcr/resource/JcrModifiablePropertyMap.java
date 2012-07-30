@@ -28,7 +28,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
@@ -39,7 +38,7 @@ import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
  */
 public final class JcrModifiablePropertyMap
     extends JcrPropertyMap
-    implements PersistableValueMap, ModifiableValueMap {
+    implements PersistableValueMap {
 
     /** Set of removed and changed properties. */
     private Set<String> changedProperties;
@@ -177,28 +176,12 @@ public final class JcrModifiablePropertyMap
     /**
      * @see org.apache.sling.api.resource.PersistableValueMap#save()
      */
+    @SuppressWarnings("javadoc")
     public void save() throws PersistenceException {
         if ( this.changedProperties == null || this.changedProperties.size() == 0 ) {
             // nothing has changed
             return;
         }
-        try {
-            this.update();
-            getNode().getSession().save();
-        } catch (final RepositoryException re) {
-            throw new PersistenceException("Unable to persist changes.", re);
-        }
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifiableValueMap#update()
-     */
-    public void update() throws PersistenceException {
-        if ( this.changedProperties == null || this.changedProperties.size() == 0 ) {
-            // nothing has changed
-            return;
-        }
-
         try {
             final Node node = getNode();
             // check for mixin types
@@ -227,23 +210,10 @@ public final class JcrModifiablePropertyMap
                     }
                 }
             }
+            getNode().getSession().save();
             this.reset();
         } catch (final RepositoryException re) {
             throw new PersistenceException("Unable to persist changes.", re, getPath(), null);
         }
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifiableValueMap#revert()
-     */
-    public void revert() {
-        this.reset();
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifiableValueMap#hasChanges()
-     */
-    public boolean hasChanges() {
-        return this.changedProperties != null && this.changedProperties.size() > 0;
     }
 }

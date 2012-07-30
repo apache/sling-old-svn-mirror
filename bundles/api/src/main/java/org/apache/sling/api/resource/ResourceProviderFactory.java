@@ -22,7 +22,12 @@ import java.util.Map;
 
 /**
  * The <code>ResourceProviderFactory</code> defines the service API to get and
- * create <code>ResourceProviders</code>s.
+ * create <code>ResourceProviders</code>s dynamically on a per usage base.
+ *
+ * Instead of sharing a resource provider between resource resolvers, the
+ * factory allows to create an own instance of a resource provider per resource
+ * resolver.
+ * The factory also supports authentication.
  * <p>
  * If the resource provider is not used anymore and implements the {@link DynamicResourceProvider}
  * interface, the close method should be called.
@@ -45,8 +50,8 @@ public interface ResourceProviderFactory {
      * Generally this map will contain a user name and password to authenticate.
      * <p>
      * If the <code>authenticationInfo</code> map is <code>null</code> the
-     * <code>ResourceProvider</code> returned will generally not be authenticated and only provide
-     * minimal privileges, if any at all.
+     * <code>ResourceProvider</code> returned will generally not be authenticated
+     * and only provide minimal privileges, if any at all.
      *
      * @param authenticationInfo
      *            A map of further credential information which may be used by
