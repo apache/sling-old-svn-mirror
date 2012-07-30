@@ -49,8 +49,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -391,13 +391,16 @@ public class JcrResourceProvider
 
             if ( properties != null ) {
                 // create modifiable map
-                final JcrModifiablePropertyMap jcrMap = new JcrModifiablePropertyMap(node, this.dynamicClassLoader);
+                final JcrModifiableValueMap jcrMap = new JcrModifiableValueMap(node, this.dynamicClassLoader);
                 for(final Map.Entry<String, Object> entry : properties.entrySet()) {
                     if ( !"jcr:primaryType".equals(entry.getKey()) ) {
-                        jcrMap.put(entry.getKey(), entry.getValue());
+                        try {
+                            jcrMap.put(entry.getKey(), entry.getValue());
+                        } catch (final IllegalArgumentException iae) {
+                            throw new PersistenceException(iae.getMessage(), iae, path, entry.getKey());
+                        }
                     }
                 }
-                jcrMap.update();
             }
 
             return new JcrNodeResource(resolver, node, this.dynamicClassLoader);

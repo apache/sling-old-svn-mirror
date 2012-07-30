@@ -50,6 +50,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.jcr.resource.JcrModifiablePropertyMap;
 import org.apache.sling.jcr.resource.JcrPropertyMap;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,12 +128,29 @@ public class JcrNodeResource extends JcrItemResource {
             return (Type) getURL(); // unchecked cast
         } else if (type == Map.class || type == ValueMap.class) {
             return (Type) new JcrPropertyMap(getNode(), this.dynamicClassLoader); // unchecked cast
-        } else if (type == PersistableValueMap.class || type == ModifiableValueMap.class ) {
+        } else if (type == PersistableValueMap.class ) {
             // check write
             try {
                 getNode().getSession().checkPermission(getNode().getPath(),
                     "set_property");
                 return (Type) new JcrModifiablePropertyMap(getNode(), this.dynamicClassLoader);
+            } catch (AccessControlException ace) {
+                // the user has no write permission, cannot adapt
+                LOGGER.debug(
+                    "adaptTo(PersistableValueMap): Cannot set properties on {}",
+                    this);
+            } catch (RepositoryException e) {
+                // some other problem, cannot adapt
+                LOGGER.debug(
+                    "adaptTo(PersistableValueMap): Unexpected problem for {}",
+                    this);
+            }
+        } else if (type == ModifiableValueMap.class ) {
+            // check write
+            try {
+                getNode().getSession().checkPermission(getNode().getPath(),
+                    "set_property");
+                return (Type) new JcrModifiableValueMap(getNode(), this.dynamicClassLoader);
             } catch (AccessControlException ace) {
                 // the user has no write permission, cannot adapt
                 LOGGER.debug(

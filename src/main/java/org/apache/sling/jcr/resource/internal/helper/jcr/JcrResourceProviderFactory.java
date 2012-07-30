@@ -25,6 +25,7 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.query.Query;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -34,6 +35,7 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -53,7 +55,8 @@ import org.osgi.framework.Constants;
     @Property(name=ResourceProviderFactory.PROPERTY_REQUIRED, boolValue=true),
     @Property(name=ResourceProvider.ROOTS, value="/"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JCR Resource Provider Factory"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
+    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
+    @Property(name = QueriableResourceProvider.LANGUAGES, value = {Query.XPATH, Query.SQL, Query.JCR_SQL2})
 })
 public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
