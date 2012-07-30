@@ -36,7 +36,7 @@
         vm.put("a", request.getParameter("a"));
         vm.put("b", request.getParameter("b"));
         
-        final Resource rsrc = resolver.addChild(resolver.getResource("/"), name, vm);
+        final Resource rsrc = resolver.create(resolver.getResource("/"), name, vm);
         
         resolver.commit();
         %>Resource created at <%= rsrc.getPath() %><%
