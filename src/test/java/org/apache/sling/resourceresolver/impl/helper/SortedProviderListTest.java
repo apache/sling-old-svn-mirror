@@ -153,7 +153,7 @@ public class SortedProviderListTest {
         final SortedProviderList<Adaptable> spl = new SortedProviderList<Adaptable>(Adaptable.class);
         spl.add(new ResourceProviderHandler(rp2, rp2.getProperties()));
 
-        final Iterator<Adaptable> i = spl.getProviders(null);
+        final Iterator<Adaptable> i = spl.getProviders(null, null);
         assertTrue(i.hasNext());
         i.next(); // one entry
         assertFalse(i.hasNext());
@@ -179,7 +179,7 @@ public class SortedProviderListTest {
                     final ResourceResolverContext ctx,
                     final Adaptable... objects) {
         final int expectedCount = objects == null ? 0 : objects.length;
-        final Iterator<Adaptable> i = spl.getProviders(ctx);
+        final Iterator<Adaptable> i = spl.getProviders(ctx, null);
         int count = 0;
         while ( i.hasNext() ) {
             final Adaptable a = i.next();

@@ -618,6 +618,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     // ---------- Querying resources
 
+    private static final String DEFAULT_QUERY_LANGUAGE = "xpath";
+
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#findResources(java.lang.String,
      *      java.lang.String)
@@ -626,7 +628,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         checkClosed();
 
         return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
-                        this.factory.getRootProviderEntry().findResources(this.context, this, query, language));
+                        this.factory.getRootProviderEntry().findResources(this.context, this, query,
+                                        language == null ? DEFAULT_QUERY_LANGUAGE : language));
     }
 
     /**
@@ -637,7 +640,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     throws SlingException {
         checkClosed();
 
-        return this.factory.getRootProviderEntry().queryResources(this.context, query, language);
+        return this.factory.getRootProviderEntry().queryResources(this.context, query,
+                        language == null ? DEFAULT_QUERY_LANGUAGE : language);
     }
 
     /**
@@ -1014,9 +1018,9 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     /**
-     * @see org.apache.sling.api.resource.ResourceResolver#addChild(org.apache.sling.api.resource.Resource, java.lang.String, Map)
+     * @see org.apache.sling.api.resource.ResourceResolver#create(org.apache.sling.api.resource.Resource, java.lang.String, Map)
      */
-    public Resource addChild(final Resource parent, final String name, final Map<String, Object> properties)
+    public Resource create(final Resource parent, final String name, final Map<String, Object> properties)
     throws PersistenceException {
         // if parent or name is null, we get an NPE as stated in the API
         if ( name == null ) {
@@ -1024,7 +1028,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         // name should be a name not a path
         if ( name.indexOf("/") != -1 ) {
-            throw new PersistenceException("Name should not contain a slash: " + name, null, parent.getPath(), null);
+            throw new IllegalArgumentException("Name should not contain a slash: " + name);
         }
         final String path;
         if ( parent.getPath().equals("/") ) {

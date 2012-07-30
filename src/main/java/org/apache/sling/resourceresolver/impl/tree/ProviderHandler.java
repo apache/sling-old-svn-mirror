@@ -19,10 +19,13 @@ package org.apache.sling.resourceresolver.impl.tree;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -45,6 +48,9 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
 
     /** Configured roots. */
     private final String[] roots;
+
+    /** Configured languages for queries. */
+    private final Set<String> queryLanguages;
 
     /** Owns roots? */
     private final boolean ownsRoots;
@@ -79,6 +85,23 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             this.roots = configuredRoots.toArray(new String[configuredRoots.size()]);
         }
         this.ownsRoots = PropertiesUtil.toBoolean(properties.get(ResourceProvider.OWNS_ROOTS), false);
+        final Set<String> configuredLanguages = new HashSet<String>();
+        final String[] languages = PropertiesUtil.toStringArray(properties.get(QueriableResourceProvider.LANGUAGES));
+        if ( languages != null) {
+            for(final String l : languages) {
+                if (l != null) {
+                    String language = l.trim();
+                    if ( language.length() > 0 ) {
+                        configuredLanguages.add(language);
+                    }
+                }
+            }
+        }
+        if ( configuredLanguages.size() == 0 ) {
+            this.queryLanguages = null;
+        } else {
+            this.queryLanguages = configuredLanguages;
+        }
     }
 
     /**
@@ -109,6 +132,13 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
      */
     public String[] getRoots() {
         return this.roots;
+    }
+
+    /**
+     * Check if the resource provider supports the language.
+     */
+    public boolean supportsQueryLanguages(final String language) {
+        return this.queryLanguages != null && this.queryLanguages.contains(language);
     }
 
     /**

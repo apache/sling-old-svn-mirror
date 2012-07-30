@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.sling.resourceresolver.impl.tree.ProviderHandler;
 import org.apache.sling.resourceresolver.impl.tree.ResourceProviderFactoryHandler;
 import org.apache.sling.resourceresolver.impl.tree.ResourceProviderHandler;
 
@@ -32,7 +33,6 @@ import org.apache.sling.resourceresolver.impl.tree.ResourceProviderHandler;
  * Helper class to get a sorted list of resource providers which implement
  * a specific feature interface.
  */
-//TODO - Implement sorting
 public class SortedProviderList<T> {
 
     /** The feature interface class. */
@@ -49,11 +49,16 @@ public class SortedProviderList<T> {
         this.genericClass = genericClass;
     }
 
+    public interface Filter<T> {
+
+        boolean select(ProviderHandler handler, T provider);
+    }
+
     /**
      * Return an iterator for the current sorted list of providers
      * implementing the feature interface.
      */
-    public Iterator<T> getProviders(final ResourceResolverContext ctx) {
+    public Iterator<T> getProviders(final ResourceResolverContext ctx, final Filter<T> filter) {
         return new Iterator<T>() {
 
             private final Entry[] list = sortedList;
@@ -65,16 +70,20 @@ public class SortedProviderList<T> {
             private Object seek() {
                 Object result;
                 if ( this.index < list.length ) {
-                    result = list[this.index].object;
+                    final Entry entry = list[this.index];
+                    result = entry.object;
                     this.index++;
                     if ( result instanceof ResourceProviderFactoryHandler ) {
                         result = ((ResourceProviderFactoryHandler)result).getResourceProvider(ctx);
                         if ( !genericClass.isAssignableFrom(result.getClass())) {
                             result = null;
                         }
-                        if ( result == null ) {
-                            result = seek();
-                        }
+                    }
+                    if ( result != null && filter != null && !filter.select(entry.handler, (T)result)) {
+                        result = null;
+                    }
+                    if ( result == null ) {
+                        result = seek();
                     }
                 } else {
                     result = null;
@@ -115,11 +124,10 @@ public class SortedProviderList<T> {
      * Add an object to the list
      */
     private synchronized void addToList(final Object obj,
-                    final String[] roots,
-                    final Long serviceId) {
+                    final ProviderHandler handler) {
         final List<Entry> list = new ArrayList<Entry>();
         list.addAll(Arrays.asList(this.sortedList));
-        list.add(new Entry(obj, roots, serviceId));
+        list.add(new Entry(obj, handler));
         Collections.sort(list);
         this.sortedList = list.toArray(new Entry[list.size()]);
     }
@@ -147,7 +155,7 @@ public class SortedProviderList<T> {
      */
     public void add(final ResourceProviderHandler rpHandler) {
         if ( genericClass.isAssignableFrom(rpHandler.getResourceProvider().getClass())) {
-            this.addToList(rpHandler.getResourceProvider(), rpHandler.getRoots(), rpHandler.getServiceId());
+            this.addToList(rpHandler.getResourceProvider(), rpHandler);
         }
     }
 
@@ -157,7 +165,7 @@ public class SortedProviderList<T> {
      * This will be checked on demand.
      */
     public void add(final ResourceProviderFactoryHandler factory) {
-        this.addToList(factory, factory.getRoots(), factory.getServiceId());
+        this.addToList(factory, factory);
     }
 
     /**
@@ -179,18 +187,20 @@ public class SortedProviderList<T> {
     private static final class Entry implements Comparable<Entry> {
 
         private final String path;
-        private final Long   id;
+
+        public final ProviderHandler handler;
 
         public final Object object;
 
-        public Entry(final Object object, final String[] roots, final Long serviceId) {
-            this.id = serviceId;
+        public Entry(final Object object,
+                     final ProviderHandler handler) {
             this.object = object;
-            if ( roots != null ) {
-                this.path = roots[0];
+            if ( handler.getRoots() != null ) {
+                this.path = handler.getRoots()[0];
             } else {
                 this.path = "";
             }
+            this.handler = handler;
         }
 
         /**
@@ -199,10 +209,9 @@ public class SortedProviderList<T> {
         public int compareTo(final Entry other) {
             int result = this.path.compareTo(other.path);
             if ( result == 0 ) {
-                result = this.id.compareTo(other.id);
+                result = this.handler.getServiceId().compareTo(other.handler.getServiceId());
             }
             return result;
         }
-
     }
 }
