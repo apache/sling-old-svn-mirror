@@ -37,7 +37,7 @@ package org.apache.sling.api.resource;
  *
  * @since 2.2
  */
-public interface DynamicResourceProvider {
+public interface DynamicResourceProvider extends ResourceProvider {
 
     /**
      * Returns <code>true</code> if this resource provider has not been closed
