@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.installer.api.InstallableResource;
@@ -118,6 +119,7 @@ public class OsgiInstallerImpl
     private final Object resourcesLock = new Object();
 
     private final InstallListener listener;
+    private final AtomicLong backgroundTaskCounter = new AtomicLong();
 
 
     /** Constructor */
@@ -136,6 +138,7 @@ public class OsgiInstallerImpl
     public void deactivate() {
         // wake up sleeping thread
         synchronized (this.resourcesLock) {
+            logger.debug("Deactivating and notifying resourcesLock");
             this.active = false;
             this.resourcesLock.notify();
         }
@@ -147,7 +150,13 @@ public class OsgiInstallerImpl
         this.listener.dispose();
 
         if ( this.backgroundThread != null ) {
-            this.logger.debug("Waiting for installer thread to stop");
+            if(logger.isDebugEnabled()) {
+                try {
+                    logger.debug("Waiting for main background thread {} to stop", backgroundThread.getName());
+                } catch(NullPointerException ignore) {
+                }
+            }
+            
             while ( this.backgroundThread != null ) {
                 // use a local variable to avoid NPEs
                 final Thread t = this.backgroundThread;
@@ -159,6 +168,7 @@ public class OsgiInstallerImpl
                     }
                 }
             }
+            logger.debug("Done waiting for background thread");
         }
 
         // remove file util
@@ -197,12 +207,13 @@ public class OsgiInstallerImpl
      * @see java.lang.Runnable#run()
      */
     public void run() {
+        logger.debug("Main background thread starts");
         try {
             this.init();
 
             this.listener.start();
             while (this.active) {
-                this.logger.debug("Running new installer cycle");
+                this.logger.debug("Starting new installer cycle");
 
                 // merge potential new resources
                 this.mergeNewlyRegisteredResources();
@@ -223,18 +234,25 @@ public class OsgiInstallerImpl
                         if ( !this.hasNewResources() && this.active && !this.retryDuringTaskExecution) {
                             // No tasks to execute - wait until new resources are
                             // registered
-                            logger.debug("No tasks to process, going idle");
+                            logger.debug("No more tasks to process, suspending listener and going idle");
                             this.listener.suspend();
+                            
                             try {
+                                logger.debug("wait() on resourcesLock");
                                 this.resourcesLock.wait();
                             } catch (final InterruptedException ignore) {}
+                            
                             if ( active ) {
+                                logger.debug("Done wait()ing on resourcesLock, restarting listener");
                                 this.listener.start();
+                            } else {
+                                logger.debug("Done wait()ing on resourcesLock, but active={}, listener won't be restarted now", active);
                             }
                         }
                     }
                 } else if ( action == ACTION.SHUTDOWN ) {
                     // stop processing
+                    logger.debug("Action is SHUTDOWN, going inactive");
                     this.active = false;
                 }
 
@@ -243,12 +261,14 @@ public class OsgiInstallerImpl
         } finally {
             this.backgroundThread = null;
         }
+        logger.debug("Main background thread ends");
     }
 
     /**
      * Wake up the run cycle.
      */
     private void wakeUp() {
+        logger.debug("wakeUp called");
         this.listener.start();
         synchronized (this.resourcesLock) {
             this.resourcesLock.notify();
@@ -292,7 +312,7 @@ public class OsgiInstallerImpl
                     createdResources.add(rr);
                     logger.debug("Registering new resource: {}", rr);
                 } catch (final IOException ioe) {
-                    logger.warn("Cannot create internal resource (resource will be ignored):" + r, ioe);
+                    logger.warn("Cannot create InternalResource (resource will be ignored):" + r, ioe);
                 }
             }
         }
@@ -430,10 +450,6 @@ public class OsgiInstallerImpl
         }
     }
 
-    /**
-     * This is the heart of the installer.
-     * It processes the rendezvous between a resource provider and available resources.
-     */
     private void mergeNewlyRegisteredResources() {
         synchronized ( this.resourcesLock ) {
             for(final Map.Entry<String, List<InternalResource>> entry : this.newResourcesSchemes.entrySet()) {
@@ -491,9 +507,8 @@ public class OsgiInstallerImpl
     }
 
     /**
-     * This is the heart of the installer -
-     * it processes new resources and deleted resources and
-     * merges them with existing resources.
+     * Process new resources and deleted resources and
+     * merge them with existing resources.
      */
     private void mergeNewResources() {
         // if we have new resources we have to sync them
@@ -521,24 +536,24 @@ public class OsgiInstallerImpl
         if ( !logger.isDebugEnabled() ) {
             return;
         }
+        int counter = 0;
         final StringBuilder sb = new StringBuilder();
         sb.append(hint);
         sb.append(" Resources={\n");
         for(final String id : this.persistentList.getEntityIds() ) {
-            sb.append("- ");
+            sb.append("- ").append(hint).append(" RegisteredResource ");
             sb.append(id);
-            sb.append(" : [");
-            boolean first = true;
+            sb.append("\n    RegisteredResource.info=[");
+            String sep = "";
             for(final RegisteredResource rr : this.persistentList.getEntityResourceList(id).getResources()) {
-                if ( !first) {
-                    sb.append(", ");
-                }
-                first = false;
+                sb.append(sep);
+                sep=", ";
                 sb.append(rr);
+                counter++;
             }
             sb.append("]\n");
         }
-        sb.append("}\n");
+        sb.append("} (").append(hint).append("): ").append(counter).append(" RegisteredResources\n");
         logger.debug(sb.toString());
     }
 
@@ -600,7 +615,7 @@ public class OsgiInstallerImpl
             final InstallationContext ctx = new InstallationContext() {
 
                 public void addTaskToNextCycle(final InstallTask t) {
-                    logger.warn("Deprecated method addTaskToNextCycle is called. Task is executed in this cycle(!): {}", t);
+                    logger.warn("Deprecated method addTaskToNextCycle was called. Task will be executed in this cycle instead: {}", t);
                     synchronized ( tasks ) {
                         tasks.add(t);
                     }
@@ -615,7 +630,7 @@ public class OsgiInstallerImpl
 
                 public void addAsyncTask(final InstallTask t) {
                     if ( t.isAsynchronousTask() ) {
-                        logger.warn("Deprecated method addAsyncTask is called: {}", t);
+                        logger.warn("Deprecated method addAsyncTask was called: {}", t);
                         this.addTaskToCurrentCycle(t);
                     } else {
                         logger.warn("Deprecated method addAsyncTask is called with non async task(!): {}", t);
@@ -630,14 +645,18 @@ public class OsgiInstallerImpl
                 public void asyncTaskFailed(final InstallTask t) {
                     // persist all changes and retry restart
                     // remove attribute
+                    logger.debug("asyncTaskFailed: {}", t);
                     if ( t.getResource() != null ) {
                         t.getResource().setAttribute(InstallTask.ASYNC_ATTR_NAME, null);
                     }
                     persistentList.save();
                     synchronized ( resourcesLock ) {
                         if ( !active ) {
+                            logger.debug("Restarting background thread from asyncTaskFailed");
                             active = true;
                             startBackgroundThread();
+                        } else {
+                            logger.debug("active={}, no need to restart background thread", active);
                         }
                     }
                 }
@@ -668,10 +687,14 @@ public class OsgiInstallerImpl
                     // save new state
                     this.cleanupInstallableResources();
                     final InstallTask aSyncTask = task;
-                    final Thread t = new Thread() {
+                    final String threadName = "BackgroundTaskThread" + backgroundTaskCounter.incrementAndGet();
+                    final Thread t = new Thread(threadName) {
 
                         @Override
                         public void run() {
+                            logger.debug("Starting background thread {} to execute {}", 
+                                    Thread.currentThread().getName(), 
+                                    aSyncTask);
                             try {
                                 Thread.sleep(2000L);
                             } catch (final InterruptedException ie) {
@@ -682,6 +705,7 @@ public class OsgiInstallerImpl
                                 aSyncTask.getResource().setAttribute(InstallTask.ASYNC_ATTR_NAME, oldValue);
                             }
                             aSyncTask.execute(ctx);
+                            logger.debug("Background thread {} ends",  Thread.currentThread().getName()); 
                         }
                     };
                     t.start();
@@ -712,6 +736,7 @@ public class OsgiInstallerImpl
         final boolean result = this.persistentList.compact();
         this.persistentList.save();
         printResources("Compacted");
+        logger.debug("cleanupInstallableResources returns {}", result);
         return result;
     }
 
@@ -771,6 +796,7 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.tasks.RetryHandler#scheduleRetry()
      */
     public void scheduleRetry() {
+        logger.debug("scheduleRetry called");
         this.listener.start();
         synchronized ( this.resourcesLock ) {
             this.retryDuringTaskExecution = true;

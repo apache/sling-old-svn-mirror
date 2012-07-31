@@ -77,12 +77,12 @@ public class InstallListener implements InstallationListener {
     public void onEvent(final InstallationEvent event) {
         if ( this.logger.isDebugEnabled() ) {
             if ( event.getType() == InstallationEvent.TYPE.STARTED ) {
-                logger.debug("Notify installer started.");
+                logger.debug("onEvent(STARTED).");
             } else if ( event.getType() == InstallationEvent.TYPE.SUSPENDED ) {
-                logger.debug("Notify installer suspended.");
+                logger.debug("onEvent(SUSPENDED).");
             } else {
                 final TaskResource src = (TaskResource)event.getSource();
-                logger.debug("Notify processed {}", src);
+                logger.debug("onEvent(event.getSource(): {})", src);
             }
         }
         final Object[] listeners = this.tracker.getServices();

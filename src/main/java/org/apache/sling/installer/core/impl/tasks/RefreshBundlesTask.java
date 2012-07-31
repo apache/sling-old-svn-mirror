@@ -78,7 +78,7 @@ public class RefreshBundlesTask
             for(final Long id : BUNDLE_IDS) {
                 final Bundle b = this.getBundleContext().getBundle(id);
                 if ( b != null ) {
-                    getLogger().debug("Refreshing bundle {}", b);
+                    getLogger().debug("Will refresh bundle {}", b);
                     bundles.add(b);
                 } else {
                     getLogger().debug("Unable to refresh bundle {} - already gone.", id);
@@ -87,7 +87,7 @@ public class RefreshBundlesTask
             BUNDLE_IDS.clear();
         }
         if ( bundles.size() > 0 ) {
-            ctx.log("Refreshing bundles {}", bundles);
+            ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
             this.refreshEventCount = -1;
             this.getBundleContext().addFrameworkListener(this);
             try {
@@ -97,13 +97,15 @@ public class RefreshBundlesTask
                 do {
                     synchronized ( this ) {
                         try {
+                            ctx.log("Waiting up to {} seconds for bundles refresh", MAX_REFRESH_PACKAGES_WAIT_SECONDS);
                             this.wait(MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000);
                         } catch (final InterruptedException ignore) {
                             // ignore
                         }
                         if ( start + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000 < System.currentTimeMillis() ) {
                             this.getLogger().warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {}"
-                                            + " seconds after refresh.", MAX_REFRESH_PACKAGES_WAIT_SECONDS);
+                                            + " seconds after refresh, aborting wait.", 
+                                            MAX_REFRESH_PACKAGES_WAIT_SECONDS);
                             this.refreshEventCount++;
                         }
                     }
@@ -111,6 +113,7 @@ public class RefreshBundlesTask
             } finally {
                 this.getBundleContext().removeFrameworkListener(this);
             }
+            ctx.log("Done refreshing {} bundles", bundles.size());
         }
 	}
 
