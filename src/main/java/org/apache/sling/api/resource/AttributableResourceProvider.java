@@ -34,7 +34,7 @@ import java.util.Collection;
  *
  * @since 2.2
  */
-public interface AttributableResourceProvider {
+public interface AttributableResourceProvider extends ResourceProvider {
 
     /**
      * Returns a collection of attribute names whose value can be retrieved

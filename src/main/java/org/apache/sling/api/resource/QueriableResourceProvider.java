@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * @since 2.2.0
  */
-public interface QueriableResourceProvider {
+public interface QueriableResourceProvider extends ResourceProvider {
 
     /**
      * The name of the service registration property containing the supported

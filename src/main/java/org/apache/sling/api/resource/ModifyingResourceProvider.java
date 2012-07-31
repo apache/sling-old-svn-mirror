@@ -33,7 +33,7 @@ import java.util.Map;
  *
  * @since 2.2.0
  */
-public interface ModifyingResourceProvider {
+public interface ModifyingResourceProvider extends ResourceProvider {
 
     /**
      * Create a new resource at the given path.

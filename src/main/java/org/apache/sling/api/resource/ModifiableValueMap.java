@@ -26,7 +26,7 @@ package org.apache.sling.api.resource;
  * or more precisely in the transient layer of the
  * resource provider managing this resource.
  * <p>
- * Once{@link ResourceResolver#commit()} is called, the
+ * Once {@link ResourceResolver#commit()} is called, the
  * changes are finally persisted.
  * <p>
  * The modifiable value map is only changeable through
@@ -37,14 +37,14 @@ package org.apache.sling.api.resource;
  *  <li>{@link #remove(Object)}</li>
  * </ul>
  * <p>
- * The map is not modifiable through the collection provided
+ * The map is not modifiable through the collections provided
  * by
  * <ul>
  *  <li>{@link #entrySet()}</li>
  *  <li>{@link #keySet()}</li>
  *  <li>{@link #values()}</li>
  * </ul>
- * or one of these methods:
+ * And it can't be modified by these methods:
  * <ul>
  *  <li>{@link #clear()}</li>
  * </ul>
