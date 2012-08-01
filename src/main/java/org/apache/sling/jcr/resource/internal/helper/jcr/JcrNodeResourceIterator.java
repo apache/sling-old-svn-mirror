@@ -21,6 +21,7 @@ package org.apache.sling.jcr.resource.internal.helper.jcr;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 
 import org.apache.sling.api.resource.Resource;
@@ -92,7 +93,11 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
                     nodes.nextNode(), dynamicClassLoader);
                 LOGGER.debug("seek: Returning Resource {}", resource);
                 return resource;
-            } catch (Throwable t) {
+            } catch (final ItemNotFoundException infe) {
+                LOGGER.debug(
+                                "seek: Problem creating Resource for next node, skipping",
+                                infe);
+            } catch (final Throwable t) {
                 LOGGER.error(
                     "seek: Problem creating Resource for next node, skipping",
                     t);
