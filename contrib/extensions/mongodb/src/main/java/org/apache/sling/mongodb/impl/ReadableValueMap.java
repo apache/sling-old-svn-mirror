@@ -20,7 +20,6 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,16 +38,11 @@ public class ReadableValueMap implements ValueMap {
     }
 
     protected void createValueMap(final DBObject dbObject) {
-        @SuppressWarnings("unchecked")
-        final Map<String, Object> map = new HashMap<String, Object>(dbObject.toMap());
-        final Set<String> names = new HashSet<String>(map.keySet());
-        for(final String name : names) {
-            if ( name.startsWith("__") ) {
-                final Object value = map.remove(name);
-                map.put(name.substring(1), value);
-            } else if ( name.startsWith("_") ) {
-                // remove internal props, like _id, _path
-                map.remove(name);
+        final Map<String, Object> map = new HashMap<String, Object>();
+        for(final Map.Entry<String, Object> entry : map.entrySet()) {
+            final String name = MongoDBResourceProvider.keyToPropName(entry.getKey());
+            if ( name != null ) {
+                map.put(name, entry.getValue());
             }
         }
         this.valueMap = Collections.unmodifiableMap(map);

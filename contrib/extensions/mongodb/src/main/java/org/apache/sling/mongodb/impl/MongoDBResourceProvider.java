@@ -66,6 +66,22 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
         this.context = context;
     }
 
+    public static String propNameToKey(final String name) {
+        if ( name.startsWith("_") ) {
+            return "_" + name;
+        }
+        return name;
+    }
+
+    public static String keyToPropName(final String key) {
+        if ( key.startsWith("__") ) {
+            return key.substring(1);
+        } else if ( key.startsWith("_") ) {
+            return null;
+        }
+        return key;
+    }
+
     /**
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(org.apache.sling.api.resource.ResourceResolver, java.lang.String, java.util.Map)
      */
@@ -82,12 +98,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
             dbObj.put(PROP_PATH, info[1]);
             if ( properties != null ) {
                 for(Map.Entry<String, Object> entry : properties.entrySet()) {
-                    final String key;
-                    if ( entry.getKey().startsWith("_") ) {
-                        key = "_" + entry.getKey();
-                    } else {
-                        key = entry.getKey();
-                    }
+                    final String key = propNameToKey(entry.getKey());
                     dbObj.put(key, entry.getValue());
                 }
             }
@@ -107,12 +118,33 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
      */
     public void delete(final ResourceResolver resolver, final String path)
     throws PersistenceException {
-        final Resource rsrc = this.getResource(resolver, path);
-        if ( rsrc != null ) {
-            // TODO - delete all child resources!
-            this.deletedResources.add(path);
-            this.changedResources.remove(path);
+        if ( deletedResources.contains(path) ) {
+            return;
         }
+
+        final String[] info = this.extractResourceInfo(path);
+        if ( info != null ) {
+            final Resource rsrc = this.getResource(resolver, path, info);
+            if ( rsrc instanceof MongoDBResource ) {
+                this.deletedResources.add(path);
+                this.changedResources.remove(path);
+
+                final DBCollection col = this.getCollection(info[0]);
+                final String pattern = "^" + Pattern.quote(info[1]) + "/";
+
+                final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
+                final DBCursor cur = col.find(query);
+                while ( cur.hasNext() ) {
+                    final DBObject dbObj = cur.next();
+                    final String childPath = info[0] + '/' + dbObj.get(PROP_PATH);
+                    this.deletedResources.add(childPath);
+                    this.changedResources.remove(childPath);
+                }
+                return;
+            }
+
+        }
+        throw new PersistenceException("Unable to delete resource at {}" + path, null, path, null);
     }
 
     /**
@@ -131,12 +163,10 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
             for(final String deleted : this.deletedResources) {
                 final String[] info = this.extractResourceInfo(deleted);
 
-                // check if the database still exists
-                if ( this.hasDatabase(info[0]) ) {
-                    final DBCollection col = this.context.getDatabase().getCollection(info[0]);
-                    if ( col != null ) {
-                        col.findAndRemove(QueryBuilder.start(PROP_PATH).is(info[1]).get());
-                    }
+                // check if the collection still exists
+                final DBCollection col = this.getCollection(info[0]);
+                if ( col != null ) {
+                    col.findAndRemove(QueryBuilder.start(PROP_PATH).is(info[1]).get());
                 }
             }
             for(final MongoDBResource changed : this.changedResources.values()) {
@@ -217,48 +247,46 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
 
                 };
             }
-            if ( this.hasDatabase(info[0]) ) {
-                final DBCollection col = this.context.getDatabase().getCollection(info[0]);
-                if ( col != null ) {
-                    final String pattern;
-                    if ( info.length == 1 ) {
-                        pattern = "^([^/])*$";
-                    } else {
-                        pattern = "^" + Pattern.quote(info[1]) + "/([^/])*$";
+            final DBCollection col = this.getCollection(info[0]);
+            if ( col != null ) {
+                final String pattern;
+                if ( info.length == 1 ) {
+                    pattern = "^([^/])*$";
+                } else {
+                    pattern = "^" + Pattern.quote(info[1]) + "/([^/])*$";
+                }
+
+                final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
+                final DBCursor cur = col.find(query).
+                                sort(BasicDBObjectBuilder.start(PROP_PATH, 1).get());
+                return new Iterator<Resource>() {
+
+                    public boolean hasNext() {
+                        return cur.hasNext();
                     }
 
-                    final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
-                    final DBCursor cur = col.find(query).
-                                    sort(BasicDBObjectBuilder.start(PROP_PATH, 1).get());
-                    return new Iterator<Resource>() {
-
-                        public boolean hasNext() {
-                            return cur.hasNext();
+                    public Resource next() {
+                        final DBObject obj = cur.next();
+                        final String objPath = obj.get(PROP_PATH).toString();
+                        final int lastSlash = objPath.lastIndexOf('/');
+                        final String name;
+                        if (lastSlash == -1) {
+                            name = objPath;
+                        } else {
+                            name = objPath.substring(lastSlash + 1);
                         }
+                        return new MongoDBResource(parent.getResourceResolver(),
+                                        parent.getPath() + '/' + name,
+                                        info[0],
+                                        obj,
+                                        MongoDBResourceProvider.this);
+                    }
 
-                        public Resource next() {
-                            final DBObject obj = cur.next();
-                            final String objPath = obj.get(PROP_PATH).toString();
-                            final int lastSlash = objPath.lastIndexOf('/');
-                            final String name;
-                            if (lastSlash == -1) {
-                                name = objPath;
-                            } else {
-                                name = objPath.substring(lastSlash + 1);
-                            }
-                            return new MongoDBResource(parent.getResourceResolver(),
-                                            parent.getPath() + '/' + name,
-                                            info[0],
-                                            obj,
-                                            MongoDBResourceProvider.this);
-                        }
+                    public void remove() {
+                        throw new UnsupportedOperationException("remove");
+                    }
 
-                        public void remove() {
-                            throw new UnsupportedOperationException("remove");
-                        }
-
-                    };
-                }
+                };
             }
         }
         return null;
@@ -303,15 +331,25 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     }
 
     /**
-     * Check if a database with a given name exists
+     * Check if a collection with a given name exists
      */
-    private boolean hasDatabase(final String name) {
+    private boolean hasCollection(final String name) {
         final Set<String> names = this.context.getDatabase().getCollectionNames();
         return names.contains(name) && !this.context.isFilterCollectionName(name);
     }
 
     /**
-     * Create a resource
+     * Check if a collection with a given name exists and return it
+     */
+    private DBCollection getCollection(final String name) {
+        if ( this.hasCollection(name) ) {
+            return this.context.getDatabase().getCollection(name);
+        }
+        return null;
+    }
+
+    /**
+     * Get a resource
      */
     private Resource getResource(final ResourceResolver resourceResolver, final String path, final String[] info) {
         if ( info.length == 0 ) {
@@ -319,26 +357,25 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
             return new MongoDBCollectionResource(resourceResolver, path);
         } else if ( info.length == 1 ) {
             // special resource : collection
-            if ( this.hasDatabase(info[0]) ) {
+            if ( this.hasCollection(info[0]) ) {
                 return new MongoDBCollectionResource(resourceResolver, path);
             }
             return null;
         }
-        logger.info("Searching {} in {}", info[1], info[0]);
-        if ( this.hasDatabase(info[0]) ) {
-            final DBCollection col = this.context.getDatabase().getCollection(info[0]);
-            if ( col != null ) {
-                final DBObject obj = col.findOne(QueryBuilder.start(PROP_PATH).is(info[1]).get());
-                logger.info("Result={}", obj);
-                if ( obj != null ) {
-                    return new MongoDBResource(resourceResolver,
-                                    path,
-                                    info[0],
-                                    obj,
-                                    this);
-                }
+        logger.debug("Searching {} in {}", info[1], info[0]);
+        final DBCollection col = this.getCollection(info[0]);
+        if ( col != null ) {
+            final DBObject obj = col.findOne(QueryBuilder.start(PROP_PATH).is(info[1]).get());
+            logger.debug("Found {}", obj);
+            if ( obj != null ) {
+                return new MongoDBResource(resourceResolver,
+                                path,
+                                info[0],
+                                obj,
+                                this);
             }
         }
+
         return null;
     }
 

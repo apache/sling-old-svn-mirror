@@ -43,12 +43,8 @@ public class ChangeableValueMap
      */
     public Object put(final String name, final Object value) {
         final Object oldValue = this.valueMap.get(name);
-        final String key;
-        if ( name.startsWith("_") ) {
-            key = "_" + name;
-        } else {
-            key = name;
-        }
+        final String key = MongoDBResourceProvider.propNameToKey(name);
+
         this.resource.getProperties().put(key, value);
 
         // update map and resource
@@ -73,12 +69,8 @@ public class ChangeableValueMap
     public Object remove(final Object name) {
         final Object result = this.valueMap.get(name);
         if ( result != null ) {
-            final String key;
-            if ( name.toString().startsWith("_") ) {
-                key = "_" + name;
-            } else {
-                key = name.toString();
-            }
+            final String key = MongoDBResourceProvider.propNameToKey(name.toString());
+
             this.resource.getProperties().removeField(key);
 
             // update map and resource
