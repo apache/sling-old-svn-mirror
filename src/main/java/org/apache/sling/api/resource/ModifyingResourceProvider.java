@@ -28,6 +28,14 @@ import java.util.Map;
  * A modifying resource provider allows to create, update, and delete
  * resources. Update is handled through {@link ModifiableValueMap}.
  *
+ * All changes should be kept in a transient store until {@link #commit()}
+ * is called. {@link #revert()} discards all transient changes.
+ *
+ * If the modifying resource provider needs to clean up resources when it
+ * is discarded like removing objects from the transient state which are
+ * not committed etc., it should also implement the {@link DynamicResourceProvider}
+ * interface.
+ *
  * @see ResourceProviderFactory#getResourceProvider(java.util.Map)
  * @see ResourceProviderFactory#getAdministrativeResourceProvider(java.util.Map)
  *
