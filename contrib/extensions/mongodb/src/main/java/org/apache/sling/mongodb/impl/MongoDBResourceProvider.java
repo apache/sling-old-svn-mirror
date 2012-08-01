@@ -214,6 +214,9 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
         return null;
     }
 
+    /**
+     * Inform about changes of a resource.
+     */
     public void changed(final MongoDBResource resource) {
         this.deletedResources.remove(resource.getPath());
         this.changedResources.put(resource.getPath(), resource);
