@@ -71,7 +71,7 @@ import org.apache.sling.engine.RequestUtil;
 @Properties({
     @Property(name="service.description", value="Sample Request Filter"),
     @Property(name="filter.scope", value="request", propertyPrivate=true),
-    @Property(name="filter.order", intValue=-2147483648, propertyPrivate=true)
+    @Property(name="filter.order", intValue=-2147483647, propertyPrivate=true)
 })
 public class ZipFilter implements Filter {
 
