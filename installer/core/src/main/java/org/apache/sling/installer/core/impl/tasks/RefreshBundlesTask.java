@@ -23,12 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
-import org.osgi.service.packageadmin.ExportedPackage;
 
 /**
  * Refresh a set of bundles.
@@ -71,23 +69,10 @@ public class RefreshBundlesTask
 		return getClass().getSimpleName();
 	}
 
-	private boolean isExportingLogApi(final Bundle bundle) {
-	    final ExportedPackage[] pcks = this.getPackageAdmin().getExportedPackages(bundle);
-	    if ( pcks != null ) {
-	        for(final ExportedPackage pak : pcks ) {
-	            if ( pak.getName().equals("org.slf4j") || pak.getName().equals("javax.servlet.http")) {
-	                return true;
-	            }
-	        }
-	    }
-	    return false;
-	}
-
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
     public void execute(final InstallationContext ctx) {
-        boolean requireAsyncRefresh = false;
         final List<Bundle> bundles = new ArrayList<Bundle>();
         synchronized ( BUNDLE_IDS ) {
             for(final Long id : BUNDLE_IDS) {
@@ -95,11 +80,6 @@ public class RefreshBundlesTask
                 if ( b != null ) {
                     getLogger().debug("Will refresh bundle {}", b);
                     bundles.add(b);
-                    if ( b.getBundleId() == this.getBundleContext().getBundle().getBundleId() ) {
-                        requireAsyncRefresh = true;
-                    } else if ( this.isExportingLogApi(b) ) {
-                        requireAsyncRefresh = true;
-                    }
                 } else {
                     getLogger().debug("Unable to refresh bundle {} - already gone.", id);
                 }
@@ -107,11 +87,6 @@ public class RefreshBundlesTask
             BUNDLE_IDS.clear();
         }
         if ( bundles.size() > 0 ) {
-            if ( requireAsyncRefresh ) {
-                ctx.log("Async refreshing of {} bundles: {} required", bundles.size(), bundles);
-                ctx.addTaskToCurrentCycle(new AsyncRefreshBundlesTask(bundles));
-                return;
-            }
             ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
             this.refreshEventCount = -1;
             this.getBundleContext().addFrameworkListener(this);
@@ -129,7 +104,7 @@ public class RefreshBundlesTask
                         }
                         if ( start + MAX_REFRESH_PACKAGES_WAIT_SECONDS * 1000 < System.currentTimeMillis() ) {
                             this.getLogger().warn("No FrameworkEvent.PACKAGES_REFRESHED event received within {}"
-                                            + " seconds after refresh, aborting wait.",
+                                            + " seconds after refresh, aborting wait.", 
                                             MAX_REFRESH_PACKAGES_WAIT_SECONDS);
                             this.refreshEventCount++;
                         }
@@ -152,33 +127,6 @@ public class RefreshBundlesTask
                 this.refreshEventCount++;
                 this.notify();
             }
-        }
-    }
-
-    private class AsyncRefreshBundlesTask extends InstallTask {
-
-        private final List<Bundle> bundles;
-
-        public AsyncRefreshBundlesTask(final List<Bundle> bundles) {
-            super(null);
-            this.bundles = bundles;
-        }
-
-        @Override
-        public void execute(final InstallationContext ctx) {
-            ctx.log("Refreshing {} bundles: {}", bundles.size(), bundles);
-            RefreshBundlesTask.this.getPackageAdmin().refreshPackages(bundles.toArray(new Bundle[bundles.size()]));
-            ctx.log("Done refreshing {} bundles", bundles.size());
-        }
-
-        @Override
-        public String getSortKey() {
-            return REFRESH_PACKAGES_ORDER;
-        }
-
-        @Override
-        public boolean isAsynchronousTask() {
-            return true;
         }
     }
 }
