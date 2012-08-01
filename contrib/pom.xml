@@ -94,6 +94,7 @@
           <module>extensions/gwt/servlet</module>
           <module>extensions/i18n</module>
           <module>extensions/obr</module>
+          <module>extensions/mongodb</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/rewriter</module>
           <module>jcr/jackrabbit-client</module>
