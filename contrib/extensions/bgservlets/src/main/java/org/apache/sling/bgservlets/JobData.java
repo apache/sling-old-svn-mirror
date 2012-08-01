@@ -27,7 +27,7 @@ import java.util.Date;
  */
 public interface JobData {
     String JOB_DATA_MIXIN = "sling:bgJobData";
-    String PROP_EXTENSION = "sling;jobExtension";
+    String PROP_EXTENSION = "sling:jobExtension";
     
 	/** Return unique path of this data item */
 	String getPath();
