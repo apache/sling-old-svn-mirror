@@ -35,12 +35,29 @@ public class LaunchpadListener implements InstallationListener {
      */
     public void onEvent(final InstallationEvent event) {
         if ( event.getType() == InstallationEvent.TYPE.STARTED ) {
+            this.start();
+        } else if ( event.getType() == InstallationEvent.TYPE.SUSPENDED ) {
+            this.stop();
+        }
+    }
+
+    /**
+     * Suspend the startup handler (if not already done so)
+     */
+    public void start() {
+        if ( !started ) {
             this.startupHandler.waitWithStartup(true);
             started = true;
-        } else if ( event.getType() == InstallationEvent.TYPE.SUSPENDED ) {
-            if ( started ) {
-                this.startupHandler.waitWithStartup(false);
-            }
+        }
+    }
+
+    /**
+     * Make sure the startup handler is not in suspended state
+     */
+    public void stop() {
+        if ( started ) {
+            this.startupHandler.waitWithStartup(false);
+            started = false;
         }
     }
 

@@ -57,6 +57,8 @@ public class ServicesListener {
     /** Boolean marker to not reprocess things. */
     private volatile boolean installed = false;
 
+    private LaunchpadListener launchpadListener;
+
     /**
      * Start listeners
      */
@@ -84,7 +86,7 @@ public class ServicesListener {
         if ( installer != null && lcp != null && handler != null ) {
             if ( !this.installed ) {
                 this.installed = true;
-                final LaunchpadListener launchpadListener = new LaunchpadListener(handler);
+                this.launchpadListener = new LaunchpadListener(handler);
                 final Dictionary<String, Object> props = new Hashtable<String, Object>();
                 props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Launchpad Startup Listener");
                 props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -102,9 +104,11 @@ public class ServicesListener {
         this.providerListener.deactivate();
         this.startupListener.deactivate();
         if ( this.launchpadListenerReg != null ) {
+            this.launchpadListener.stop();
             this.launchpadListenerReg.unregister();
             this.launchpadListenerReg = null;
         }
+        this.launchpadListener = null;
     }
 
     /**
