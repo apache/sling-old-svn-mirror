@@ -31,8 +31,13 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
-    <name>org.apache.sling.mongodb</name>
-    <url>http://maven.apache.org</url>
+    <name>Apache Sling MongoDB Resource Provider</name>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/mongodb</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/mongodb</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/mongodb</url>
+    </scm>
 
     <build>
         <plugins>
