@@ -114,6 +114,11 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     }
 
     /**
+     * TODO - we should handle delete different and not put all child resources into the
+     * deleted set.
+     * Instead when getting resources, the parents of the resource should be checked
+     * first.
+     * This minimizes concurrency issues.
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */
     public void delete(final ResourceResolver resolver, final String path)
@@ -235,6 +240,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     }
 
     /**
+     * TODO - we have to check for deleted and added resources
      * @see org.apache.sling.api.resource.ResourceProvider#listChildren(org.apache.sling.api.resource.Resource)
      */
     public Iterator<Resource> listChildren(final Resource parent) {
