@@ -118,27 +118,39 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
      */
     public void delete(final ResourceResolver resolver, final String path)
     throws PersistenceException {
-        if ( deletedResources.contains(path) ) {
-            return;
-        }
-
         final String[] info = this.extractResourceInfo(path);
         if ( info != null ) {
-            final Resource rsrc = this.getResource(resolver, path, info);
-            if ( rsrc instanceof MongoDBResource ) {
-                this.deletedResources.add(path);
-                this.changedResources.remove(path);
+            boolean deletedResource = false;
+            if ( !deletedResources.contains(path) ) {
+                final Resource rsrc = this.getResource(resolver, path, info);
+                if ( rsrc instanceof MongoDBResource ) {
+                    this.deletedResources.add(path);
+                    this.changedResources.remove(path);
 
-                final DBCollection col = this.getCollection(info[0]);
-                final String pattern = "^" + Pattern.quote(info[1]) + "/";
+                    final DBCollection col = this.getCollection(info[0]);
+                    final String pattern = "^" + Pattern.quote(info[1]) + "/";
 
-                final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
-                final DBCursor cur = col.find(query);
-                while ( cur.hasNext() ) {
-                    final DBObject dbObj = cur.next();
-                    final String childPath = info[0] + '/' + dbObj.get(PROP_PATH);
-                    this.deletedResources.add(childPath);
-                    this.changedResources.remove(childPath);
+                    final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
+                    final DBCursor cur = col.find(query);
+                    while ( cur.hasNext() ) {
+                        final DBObject dbObj = cur.next();
+                        final String childPath = info[0] + '/' + dbObj.get(PROP_PATH);
+                        this.deletedResources.add(childPath);
+                        this.changedResources.remove(childPath);
+                    }
+                    deletedResource = true;
+                }
+            } else {
+                deletedResource = true;
+            }
+            if ( deletedResource ) {
+                final String prefix = path + "/";
+                final Iterator<Map.Entry<String, MongoDBResource>> i = this.changedResources.entrySet().iterator();
+                while ( i.hasNext() ) {
+                    final Map.Entry<String, MongoDBResource> entry = i.next();
+                    if ( entry.getKey().startsWith(prefix) ) {
+                        i.remove();
+                    }
                 }
                 return;
             }
