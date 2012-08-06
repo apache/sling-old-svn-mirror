@@ -214,16 +214,31 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         // check for redirect URL if processing succeeded
         if (htmlResponse.isSuccessful()) {
-            String redirect = getRedirectUrl(request, htmlResponse);
-            if (redirect != null) {
-                response.sendRedirect(redirect);
-                return;
+            if (redirectIfNeeded(getRedirectUrl(request, htmlResponse), response)) {
+            	return;
             }
         }
 
         // create a html response and send if unsuccessful or no redirect
         htmlResponse.send(response, isSetStatus(request));
     }
+
+	/**
+	 * Redirects the HttpServletResponse, if redirectURL is not empty
+	 * @param redirectURL The computed redirect URL
+	 * @param response The HttpServletResponse to use for redirection 
+	 * @return Whether a redirect was requested
+	 * @throws IOException
+	 */
+	boolean redirectIfNeeded(String redirectURL,
+			SlingHttpServletResponse response)
+			throws IOException {
+		if (redirectURL != null) {
+		    response.sendRedirect(response.encodeRedirectURL(redirectURL));
+		    return true;
+		}
+		return false;
+	}
 
     /**
      * Creates an instance of a PostResponse.
