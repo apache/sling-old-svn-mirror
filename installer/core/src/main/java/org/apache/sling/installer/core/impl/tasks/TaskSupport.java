@@ -18,6 +18,8 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import org.apache.sling.installer.core.impl.util.BundleRefresher;
+import org.apache.sling.installer.core.impl.util.PABundleRefresher;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
@@ -73,8 +75,9 @@ public class TaskSupport {
         return (StartLevel) this.startLevelTracker.getService();
     }
 
-    public PackageAdmin getPackageAdmin() {
-        return (PackageAdmin)this.packageAdminTracker.getService();
+    public BundleRefresher getBundleRefresher() {
+        return new PABundleRefresher((PackageAdmin) this.packageAdminTracker.getService(),
+                        this.bundleContext);
     }
 
 }
