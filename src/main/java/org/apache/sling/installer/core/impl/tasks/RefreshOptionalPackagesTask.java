@@ -59,7 +59,7 @@ public class RefreshOptionalPackagesTask extends AbstractInstallTask {
      */
     public void execute(final InstallationContext ctx) {
         getLogger().info("** Invoking refresh optional packages!");
-        final PackageAdmin packageAdmin = this.getPackageAdmin();
+        final PackageAdmin packageAdmin = null;
 
         ExportedPackage[] exports = null;
         final List<Bundle> refreshBundles = new ArrayList<Bundle>();

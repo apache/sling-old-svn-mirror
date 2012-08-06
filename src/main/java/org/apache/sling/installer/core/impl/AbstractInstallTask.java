@@ -21,8 +21,8 @@ package org.apache.sling.installer.core.impl;
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.TaskResourceGroup;
 import org.apache.sling.installer.core.impl.tasks.TaskSupport;
+import org.apache.sling.installer.core.impl.util.BundleRefresher;
 import org.osgi.framework.BundleContext;
-import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.service.startlevel.StartLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +58,8 @@ public abstract class AbstractInstallTask extends InstallTask {
         return this.support.getBundleContext();
     }
 
-    protected PackageAdmin getPackageAdmin() {
-        return this.support.getPackageAdmin();
+    protected BundleRefresher getBundleRefresher() {
+        return this.support.getBundleRefresher();
     }
 
     protected StartLevel getStartLevel() {

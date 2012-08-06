@@ -18,6 +18,9 @@
  */
 package org.apache.sling.installer.core.impl.tasks;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -58,8 +61,9 @@ public class InstallerBundleUpdateTask extends AbstractInstallTask {
             }
         } else if ( this.count == 1 ) {
             // second step: refresh
-            this.getPackageAdmin().refreshPackages(new Bundle[] {b});
-            ctx.log("Refreshing packages for bundle {}.", b);
+            final List<Bundle> bundles = new ArrayList<Bundle>();
+            bundles.add(b);
+            this.getBundleRefresher().refreshBundles(ctx, bundles, false);
         } else {
             // finished
             this.getResource().setAttribute(ASYNC_ATTR_NAME, null);
