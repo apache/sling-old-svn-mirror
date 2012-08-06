@@ -18,9 +18,14 @@
  */
 package org.apache.sling.servlets.post.impl;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 import junit.framework.TestCase;
 
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
+import org.apache.sling.commons.testing.sling.MockSlingHttpServletResponse;
 import org.apache.sling.servlets.post.JSONResponse;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -70,6 +75,39 @@ public class SlingPostServletTest extends TestCase {
         SlingPostServlet servlet = new SlingPostServlet();
         PostResponse result = servlet.createPostResponse(req);
         assertTrue(result instanceof JSONResponse);
+    }
+    
+    public void testRedirection() throws Exception {
+    	final String[] redirectLocation = new String[1];
+    	MockSlingHttpServletResponse resp = new MockSlingHttpServletResponse() {
+    		@Override
+    		public String encodeRedirectURL(String s) {
+    			try {
+					return URLEncoder.encode(s, "UTF-8");
+				} catch (UnsupportedEncodingException e) {
+					fail("Should have UTF-8?? " + e);
+					return null;
+				}
+    		}
+    		
+    		@Override
+    		public void sendRedirect(String s) throws IOException {
+    			redirectLocation[0] = s;
+    		}
+    	};
+    	
+    	SlingPostServlet servlet = new SlingPostServlet();
+
+    	assertTrue(servlet.redirectIfNeeded("\u0414\u0440\u0443\u0433\u0430.html", resp));
+    	assertEquals("Should encode UTF-8", "%D0%94%D1%80%D1%83%D0%B3%D0%B0.html", redirectLocation[0]);
+
+    	redirectLocation[0] = null;
+    	assertTrue(servlet.redirectIfNeeded("fred.html", resp));
+    	assertEquals("Plain old ASCII passes through", "fred.html", redirectLocation[0]);
+
+    	redirectLocation[0] = null;
+    	assertFalse(servlet.redirectIfNeeded(null, resp));
+    	assertNull("Shouldn't have encoded anything", redirectLocation[0]);
     }
 
     private static class StatusParamSlingHttpServletRequest extends
