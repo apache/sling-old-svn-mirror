@@ -62,6 +62,10 @@
                         <Private-Package>
                             org.apache.sling.samples.pathbasedrtp
                         </Private-Package>
+                        <Import-Package>
+                            javax.jcr.*;version=1.0,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
