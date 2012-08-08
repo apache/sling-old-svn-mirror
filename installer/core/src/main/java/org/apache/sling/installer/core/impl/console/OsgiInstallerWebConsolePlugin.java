@@ -96,9 +96,8 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
     }
 
     @Override
-    public void service(ServletRequest req, ServletResponse res)
+    public void service(final ServletRequest req, final ServletResponse res)
     throws IOException {
-
         final PrintWriter pw = res.getWriter();
 
         pw.print("<p class='statline ui-state-highlight'>Apache Sling OSGi Installer</p>");

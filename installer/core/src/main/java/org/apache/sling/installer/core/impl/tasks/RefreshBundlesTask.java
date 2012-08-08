@@ -78,7 +78,38 @@ public class RefreshBundlesTask
             BUNDLE_IDS.clear();
         }
         if ( bundles.size() > 0 ) {
-            this.getBundleRefresher().refreshBundles(ctx, bundles, true);
+            // check if the installer bundle is affected
+            if ( !this.getBundleRefresher().isInstallerBundleAffected(bundles) ) {
+                this.getBundleRefresher().refreshBundles(ctx, bundles, true);
+            } else {
+                ctx.log("Installer bundle is affected by bundle refresh, initiating asynchronous refresh");
+                ctx.addTaskToCurrentCycle(new AsyncRefreshBundlesTask(this.getTaskSupport(), bundles));
+            }
         }
 	}
+
+    private final class AsyncRefreshBundlesTask extends AbstractBundleTask {
+
+        private final List<Bundle> bundles;
+
+        public AsyncRefreshBundlesTask(final TaskSupport btc, final List<Bundle> bundles) {
+            super(null, btc);
+            this.bundles = bundles;
+        }
+
+        @Override
+        public void execute(final InstallationContext ctx) {
+            this.getBundleRefresher().refreshBundles(ctx, bundles, false);
+        }
+
+        @Override
+        public String getSortKey() {
+            return "07-";
+        }
+
+        @Override
+        public boolean isAsynchronousTask() {
+            return true;
+        }
+    }
 }
