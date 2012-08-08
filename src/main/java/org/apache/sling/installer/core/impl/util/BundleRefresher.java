@@ -23,7 +23,12 @@ import java.util.List;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.osgi.framework.Bundle;
 
+/**
+ * Service for refreshing bundles.
+ */
 public interface BundleRefresher {
 
     void refreshBundles(final InstallationContext ctx, final List<Bundle> bundles, boolean wait);
+
+    boolean isInstallerBundleAffected(final List<Bundle> bundles);
 }
