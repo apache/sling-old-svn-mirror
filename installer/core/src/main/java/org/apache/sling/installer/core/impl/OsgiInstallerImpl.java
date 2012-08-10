@@ -211,9 +211,9 @@ public class OsgiInstallerImpl
         try {
             this.init();
 
-            this.listener.start();
             while (this.active) {
                 this.logger.debug("Starting new installer cycle");
+                this.listener.start();
 
                 // merge potential new resources
                 this.mergeNewlyRegisteredResources();
