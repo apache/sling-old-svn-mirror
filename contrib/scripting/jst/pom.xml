@@ -58,6 +58,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <!-- Override default - we don't export anything -->
+                        <Export-Package></Export-Package>
                         <!--
                           TODO the xerces and dom dependencies should
                           come from separate bundles
@@ -73,10 +75,11 @@
                         
                         <Import-Package>
                             org.apache.bsf.*;
+                            org.apache.xml.serialize;
                             sun.misc; resolution:=optional,
-                            javax.xml.*
+                            javax.jcr.*;version="[1.0,3.0)",
+                            javax.xml.*, *
                         </Import-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
                         
                         <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
                         <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
