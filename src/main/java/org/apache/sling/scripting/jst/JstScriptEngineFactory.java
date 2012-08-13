@@ -34,13 +34,13 @@ public class JstScriptEngineFactory extends AbstractScriptEngineFactory {
         setMimeTypes(JST_MIME_TYPE);
         setNames(SHORT_NAME);
     }
-    
+
     public ScriptEngine getScriptEngine() {
         return new JstScriptEngine(this);
     }
 
     public String getEngineName() {
-        return "JST script engine (sling JavaScript Templates)";
+        return "Apache Sling JST script engine (Sling JavaScript Templates)";
     }
 
     public String getEngineVersion() {
