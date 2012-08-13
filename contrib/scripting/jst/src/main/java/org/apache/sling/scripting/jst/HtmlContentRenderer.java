@@ -12,19 +12,19 @@ import javax.jcr.Value;
 import org.apache.sling.api.resource.Resource;
 
 public class HtmlContentRenderer {
-	
+
 	// TODO make this configurable
-	public static final String BREADCRUMB_PREFIX = "/content";
-	
+	private static final String BREADCRUMB_PREFIX = "/content/";
+
 	public void render(PrintWriter pw, Resource r, Node n, String title)
 	throws RepositoryException {
 		pw.print("<h1 class='title'>");
 		pw.print(escape(title));
 		pw.println("</h1>");
-		
+
 		renderBreadcrumbs(pw, n);
 		renderChildNodes(pw, n);
-		
+
 		for (PropertyIterator pi = n.getProperties(); pi.hasNext();) {
 			final Property p = pi.nextProperty();
 			if(displayProperty(p.getName())) {
@@ -36,8 +36,8 @@ public class HtmlContentRenderer {
 	protected void renderBreadcrumbs(PrintWriter pw, Node n) throws RepositoryException {
 		final String path = n.getPath();
 		pw.println("<div class='breadcrumbs'>");
-		if(path.startsWith(BREADCRUMB_PREFIX)) {
-			final String [] crumbs = path.substring(BREADCRUMB_PREFIX.length() + 1).split("/");
+		if (path.startsWith(BREADCRUMB_PREFIX) ) {
+			final String [] crumbs = path.substring(BREADCRUMB_PREFIX.length()).split("/");
 			// omit the last path element when iterating, it's this node's name
 			for(int i=0; i < crumbs.length - 1; i++) {
 				final String c = crumbs[i];
@@ -51,7 +51,7 @@ public class HtmlContentRenderer {
 		}
 		pw.println("</div>");
 	}
-	
+
 	protected String getDotDots(int start, int len) {
 		final StringBuffer sb = new StringBuffer();
 		for(int i=start; i < len - 1; i++) {
@@ -59,7 +59,7 @@ public class HtmlContentRenderer {
 		}
 		return sb.toString();
 	}
-	
+
 	protected void renderChildNodes(PrintWriter pw, Node parent) throws RepositoryException {
 		pw.println("<div class='childnodes'>");
 		final String prefix = parent.getName() + "/";
@@ -75,7 +75,7 @@ public class HtmlContentRenderer {
 		}
 		pw.println("</div>");
 	}
-	
+
 	protected void renderPropertyValue(PrintWriter pw, Property p)
 	throws RepositoryException {
 
@@ -114,7 +114,7 @@ public class HtmlContentRenderer {
 		}
 		return sb.toString();
 	}
-	
+
 	protected boolean displayProperty(String name) {
 		return !name.startsWith("jcr:") && !name.startsWith("sling:");
 	}
