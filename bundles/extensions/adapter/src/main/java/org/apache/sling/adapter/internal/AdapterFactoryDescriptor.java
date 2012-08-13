@@ -29,7 +29,7 @@ import org.osgi.service.component.ComponentContext;
  */
 public class AdapterFactoryDescriptor {
 
-    private AdapterFactory factory;
+    private volatile AdapterFactory factory;
 
     private final String[] adapters;
 
@@ -48,12 +48,8 @@ public class AdapterFactoryDescriptor {
 
     public AdapterFactory getFactory() {
         if ( factory == null ) {
-            synchronized ( this ) {
-                if ( factory == null ) {
-                    factory = (AdapterFactory) context.locateService(
-                            "AdapterFactory", reference);
-                }
-            }
+            factory = (AdapterFactory) context.locateService(
+                    "AdapterFactory", reference);
         }
         return factory;
     }

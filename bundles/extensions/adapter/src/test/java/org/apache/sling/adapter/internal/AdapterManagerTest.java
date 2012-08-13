@@ -161,7 +161,7 @@ public class AdapterManagerTest {
     @org.junit.Test public void testUnitialized() {
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
-        assertNull("AdapterFactory cache must be null", am.getFactoryCache());
+        assertTrue("AdapterFactory cache must be empty", am.getFactoryCache().isEmpty());
     }
 
     @org.junit.Test public void testInitialized() throws Exception {
@@ -169,7 +169,7 @@ public class AdapterManagerTest {
 
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
-        assertNull("AdapterFactory cache must be null", am.getFactoryCache());
+        assertTrue("AdapterFactory cache must be empty", am.getFactoryCache().isEmpty());
     }
 
     @org.junit.Test public void testBindBeforeActivate() throws Exception {
@@ -179,14 +179,14 @@ public class AdapterManagerTest {
         // no cache and no factories yet
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
-        assertNull("AdapterFactory cache must be null", am.getFactoryCache());
+        assertTrue("AdapterFactory cache must be empty", am.getFactoryCache().isEmpty());
 
         am.activate(this.createComponentContext());
 
         // expect the factory, but cache is empty
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertEquals("AdapterFactoryDescriptors must contain one entry", 1, am.getFactories().size());
-        assertNull("AdapterFactory cache must be null", am.getFactoryCache());
+        assertTrue("AdapterFactory cache must be empty", am.getFactoryCache().isEmpty());
     }
 
     @org.junit.Test public void testBindAfterActivate() throws Exception {
@@ -195,7 +195,7 @@ public class AdapterManagerTest {
         // no cache and no factories yet
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertTrue("AdapterFactoryDescriptors must be empty", am.getFactories().isEmpty());
-        assertNull("AdapterFactory cache must be null", am.getFactoryCache());
+        assertTrue("AdapterFactory cache must be empty", am.getFactoryCache().isEmpty());
 
         final ServiceReference ref = createServiceReference();
         am.bindAdapterFactory(ref);
@@ -203,7 +203,7 @@ public class AdapterManagerTest {
         // expect the factory, but cache is empty
         assertNotNull("AdapterFactoryDescriptors must not be null", am.getFactories());
         assertEquals("AdapterFactoryDescriptors must contain one entry", 1, am.getFactories().size());
-        assertNull("AdapterFactory cache must be null", am.getFactoryCache());
+        assertTrue("AdapterFactory cache must be empty", am.getFactoryCache().isEmpty());
 
         Map<String, AdapterFactoryDescriptorMap> f = am.getFactories();
         AdapterFactoryDescriptorMap afdm = f.get(TestSlingAdaptable.class.getName());

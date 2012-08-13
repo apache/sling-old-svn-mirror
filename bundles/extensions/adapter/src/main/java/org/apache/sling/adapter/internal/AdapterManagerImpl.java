@@ -24,10 +24,14 @@ import static org.apache.sling.api.adapter.AdapterFactory.ADAPTER_CLASSES;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -89,18 +93,19 @@ public class AdapterManagerImpl implements AdapterManager {
      *
      * @see AdapterFactoryDescriptorMap
      */
-    private Map<String, AdapterFactoryDescriptorMap> factories = new HashMap<String, AdapterFactoryDescriptorMap>();
+    private Map<String, AdapterFactoryDescriptorMap> descriptors = new HashMap<String, AdapterFactoryDescriptorMap>();
 
     /**
-     * Matrix of {@link AdapterFactory} instances primarily indexed by the fully
+     * Matrix of {@link AdapterFactoryDescriptor} instances primarily indexed by the fully
      * qualified name of the class to be adapted and secondarily indexed by the
      * fully qualified name of the class to adapt to (the target class).
      * <p>
      * This cache is built on demand by calling the
-     * {@link #getAdapterFactories(Class)} class. It is removed altogether
+     * {@link #getAdapterFactories(Class)} method. It is cleared
      * whenever an adapter factory is registered on unregistered.
      */
-    private Map<String, Map<String, AdapterFactory>> factoryCache;
+    private final ConcurrentMap<String, Map<String, AdapterFactoryDescriptor>> factoryCache
+                   = new ConcurrentHashMap<String, Map<String, AdapterFactoryDescriptor>>();
 
     /**
      * The service tracker for the event admin
@@ -113,15 +118,18 @@ public class AdapterManagerImpl implements AdapterManager {
     /**
      * Returns the adapted <code>adaptable</code> or <code>null</code> if
      * the object cannot be adapted.
+     *
+     * @see org.apache.sling.api.adapter.AdapterManager#getAdapter(java.lang.Object, java.lang.Class)
      */
-    public <AdapterType> AdapterType getAdapter(Object adaptable,
-            Class<AdapterType> type) {
+    public <AdapterType> AdapterType getAdapter(final Object adaptable,
+            final Class<AdapterType> type) {
 
         // get the adapter factories for the type of adaptable object
-        Map<String, AdapterFactory> factories = getAdapterFactories(adaptable.getClass());
+        final Map<String, AdapterFactoryDescriptor> factories = getAdapterFactories(adaptable.getClass());
 
         // get the factory for the target type
-        AdapterFactory factory = factories.get(type.getName());
+        final AdapterFactoryDescriptor desc = factories.get(type.getName());
+        final AdapterFactory factory = desc == null ? null : desc.getFactory();
 
         // have the factory adapt the adaptable if the factory exists
         if (factory != null) {
@@ -139,7 +147,12 @@ public class AdapterManagerImpl implements AdapterManager {
 
     // ----------- SCR integration ---------------------------------------------
 
-    protected void activate(ComponentContext context) {
+    /**
+     * Activate the manager.
+     * Bind all already registered factories
+     * @param context Component context
+     */
+    protected void activate(final ComponentContext context) {
         this.context = context;
 
         // register all adapter factories bound before activation
@@ -148,7 +161,7 @@ public class AdapterManagerImpl implements AdapterManager {
             refs = new ArrayList<ServiceReference>(this.boundAdapterFactories);
             boundAdapterFactories.clear();
         }
-        for (ServiceReference reference : refs) {
+        for (final ServiceReference reference : refs) {
             registerAdapterFactory(context, reference);
         }
 
@@ -157,14 +170,18 @@ public class AdapterManagerImpl implements AdapterManager {
     }
 
     /**
+     * Deactivate
      * @param context Not used
      */
-    protected void deactivate(ComponentContext context) {
+    protected void deactivate(final ComponentContext context) {
         SyntheticResource.unsetAdapterManager(this);
         this.context = null;
     }
 
-    protected void bindAdapterFactory(ServiceReference reference) {
+    /**
+     * Bind a new adapter factory.
+     */
+    protected void bindAdapterFactory(final ServiceReference reference) {
         boolean create = true;
         if (context == null) {
             synchronized ( this.boundAdapterFactories ) {
@@ -179,7 +196,10 @@ public class AdapterManagerImpl implements AdapterManager {
         }
     }
 
-    protected void unbindAdapterFactory(ServiceReference reference) {
+    /**
+     * Unbind a adapter factory.
+     */
+    protected void unbindAdapterFactory(final ServiceReference reference) {
         unregisterAdapterFactory(reference);
     }
 
@@ -192,7 +212,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * MODIFIED WITHOUT NOTICE.</em></strong>
      */
     Map<String, AdapterFactoryDescriptorMap> getFactories() {
-        return factories;
+        return descriptors;
     }
 
     /**
@@ -201,7 +221,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * <strong><em>THIS METHOD IS FOR UNIT TESTING ONLY. IT MAY BE REMOVED OR
      * MODIFIED WITHOUT NOTICE.</em></strong>
      */
-    Map<String, Map<String, AdapterFactory>> getFactoryCache() {
+    Map<String, Map<String, AdapterFactoryDescriptor>> getFactoryCache() {
         return factoryCache;
     }
 
@@ -209,8 +229,8 @@ public class AdapterManagerImpl implements AdapterManager {
      * Unregisters the {@link AdapterFactory} referred to by the service
      * <code>reference</code> from the registry.
      */
-    private void registerAdapterFactory(ComponentContext context,
-            ServiceReference reference) {
+    private void registerAdapterFactory(final ComponentContext context,
+            final ServiceReference reference) {
         final String[] adaptables = PropertiesUtil.toStringArray(reference.getProperty(ADAPTABLE_CLASSES));
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
@@ -222,19 +242,22 @@ public class AdapterManagerImpl implements AdapterManager {
         final AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(context,
             reference, adapters);
 
-        synchronized (factories) {
-            for (final String adaptable : adaptables) {
-                AdapterFactoryDescriptorMap adfMap = factories.get(adaptable);
+        for (final String adaptable : adaptables) {
+            AdapterFactoryDescriptorMap adfMap = null;
+            synchronized ( this.descriptors ) {
+                adfMap = descriptors.get(adaptable);
                 if (adfMap == null) {
                     adfMap = new AdapterFactoryDescriptorMap();
-                    factories.put(adaptable, adfMap);
+                    descriptors.put(adaptable, adfMap);
                 }
+            }
+            synchronized ( adfMap ) {
                 adfMap.put(reference, factoryDesc);
             }
         }
 
         // clear the factory cache to force rebuild on next access
-        factoryCache = null;
+        this.factoryCache.clear();
 
         // send event
         final EventAdmin localEA = this.eventAdmin;
@@ -251,7 +274,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * Unregisters the {@link AdapterFactory} referred to by the service
      * <code>reference</code> from the registry.
      */
-    private void unregisterAdapterFactory(ServiceReference reference) {
+    private void unregisterAdapterFactory(final ServiceReference reference) {
         synchronized ( this.boundAdapterFactories ) {
             boundAdapterFactories.remove(reference);
         }
@@ -264,14 +287,14 @@ public class AdapterManagerImpl implements AdapterManager {
         }
 
         boolean factoriesModified = false;
-        synchronized (factories) {
-            for (String adaptable : adaptables) {
-                AdapterFactoryDescriptorMap adfMap = factories.get(adaptable);
-                if (adfMap != null) {
+        AdapterFactoryDescriptorMap adfMap = null;
+        for (final String adaptable : adaptables) {
+            synchronized ( this.descriptors ) {
+                adfMap = this.descriptors.get(adaptable);
+            }
+            if (adfMap != null) {
+                synchronized ( adfMap ) {
                     factoriesModified |= (adfMap.remove(reference) != null);
-                    if (adfMap.isEmpty()) {
-                        factories.remove(adaptable);
-                    }
                 }
             }
         }
@@ -279,7 +302,7 @@ public class AdapterManagerImpl implements AdapterManager {
         // only remove cache if some adapter factories have actually been
         // removed
         if (factoriesModified) {
-            factoryCache = null;
+            this.factoryCache.clear();
         }
 
         // send event
@@ -290,28 +313,6 @@ public class AdapterManagerImpl implements AdapterManager {
             props.put(SlingConstants.PROPERTY_ADAPTER_CLASSES, adapters);
             localEA.postEvent(new Event(SlingConstants.TOPIC_ADAPTER_FACTORY_REMOVED,
                     props));
-        }
-    }
-
-    /**
-     * Returns a map of {@link AdapterFactory} instances for the given class to
-     * be adapted. The returned map is indexed by the fully qualified name of
-     * the target classes (to adapt to) registered.
-     *
-     * @param clazz The type of the object for which the registered adapter
-     *            factories are requested
-     * @return The map of adapter factories. If there is no adapter factory
-     *         registered for this type, the returned map is empty.
-     */
-    private Map<String, AdapterFactory> getAdapterFactories(Class<?> clazz) {
-        Map<String, Map<String, AdapterFactory>> cache = factoryCache;
-        if (cache == null) {
-            cache = new HashMap<String, Map<String, AdapterFactory>>();
-            factoryCache = cache;
-        }
-
-        synchronized (cache) {
-            return getAdapterFactories(clazz, cache);
         }
     }
 
@@ -327,15 +328,13 @@ public class AdapterManagerImpl implements AdapterManager {
      *         empty if there is no adapter factory for the adaptable
      *         <code>clazz</code>.
      */
-    private Map<String, AdapterFactory> getAdapterFactories(Class<?> clazz,
-            Map<String, Map<String, AdapterFactory>> cache) {
-
-        String className = clazz.getName();
-        Map<String, AdapterFactory> entry = cache.get(className);
+    private Map<String, AdapterFactoryDescriptor> getAdapterFactories(final Class<?> clazz) {
+        final String className = clazz.getName();
+        Map<String, AdapterFactoryDescriptor> entry = this.factoryCache.get(className);
         if (entry == null) {
             // create entry
-            entry = createAdapterFactoryMap(clazz, cache);
-            cache.put(className, entry);
+            entry = createAdapterFactoryMap(clazz);
+            this.factoryCache.put(className, entry);
         }
 
         return entry;
@@ -350,43 +349,45 @@ public class AdapterManagerImpl implements AdapterManager {
      *
      * @param clazz The adaptable <code>Class</code> for which to build the
      *            adapter factory map by target class name.
-     * @param cache The cache of already defined adapter factory mappings
      * @return The map of adapter factories by target class name. The map may be
      *         empty if there is no adapter factory for the adaptable
      *         <code>clazz</code>.
      */
-    private Map<String, AdapterFactory> createAdapterFactoryMap(Class<?> clazz,
-            Map<String, Map<String, AdapterFactory>> cache) {
-        Map<String, AdapterFactory> afm = new HashMap<String, AdapterFactory>();
+    private Map<String, AdapterFactoryDescriptor> createAdapterFactoryMap(final Class<?> clazz) {
+        final Map<String, AdapterFactoryDescriptor> afm = new HashMap<String, AdapterFactoryDescriptor>();
 
         // AdapterFactories for this class
-        synchronized (factories) {
-            AdapterFactoryDescriptorMap afdMap = factories.get(clazz.getName());
-            if (afdMap != null) {
-                for (AdapterFactoryDescriptor afd : afdMap.values()) {
-                    String[] adapters = afd.getAdapters();
-                    for (String adapter : adapters) {
-                        if (!afm.containsKey(adapter)) {
-                            final AdapterFactory factory = afd.getFactory();
-                            if (factory != null) {
-                                afm.put(adapter, factory);
-                            }
-                        }
+        AdapterFactoryDescriptorMap afdMap = null;
+        synchronized ( this.descriptors ) {
+            afdMap = this.descriptors.get(clazz.getName());
+        }
+        if (afdMap != null) {
+            final Set<AdapterFactoryDescriptor> afdSet;
+            synchronized ( afdMap ) {
+                afdSet = new HashSet<AdapterFactoryDescriptor>(afdMap.values());
+            }
+            for (final AdapterFactoryDescriptor afd : afdSet) {
+                final String[] adapters = afd.getAdapters();
+                for (final String adapter : adapters) {
+                    // to handle service ranking, we only add if the map does not
+                    // have a value for this adapter yet
+                    if (!afm.containsKey(adapter)) {
+                        afm.put(adapter, afd);
                     }
                 }
             }
         }
 
         // AdapterFactories for the interfaces
-        Class<?>[] interfaces = clazz.getInterfaces();
-        for (Class<?> iFace : interfaces) {
-            copyAdapterFactories(afm, iFace, cache);
+        final Class<?>[] interfaces = clazz.getInterfaces();
+        for (final Class<?> iFace : interfaces) {
+            copyAdapterFactories(afm, iFace);
         }
 
         // AdapterFactories for the super class
-        Class<?> superClazz = clazz.getSuperclass();
+        final Class<?> superClazz = clazz.getSuperclass();
         if (superClazz != null) {
-            copyAdapterFactories(afm, superClazz, cache);
+            copyAdapterFactories(afm, superClazz);
         }
 
         return afm;
@@ -403,19 +404,16 @@ public class AdapterManagerImpl implements AdapterManager {
      *            replaced.
      * @param clazz The adaptable class whose adapter factories are considered
      *            for adding into <code>dest</code>.
-     * @param cache The adapter factory cache providing the adapter factories
-     *            for <code>clazz</code> to consider for copying into
-     *            <code>dest</code>.
      */
-    private void copyAdapterFactories(Map<String, AdapterFactory> dest,
-            Class<?> clazz, Map<String, Map<String, AdapterFactory>> cache) {
+    private void copyAdapterFactories(final Map<String, AdapterFactoryDescriptor> dest,
+            final Class<?> clazz) {
 
         // get the adapter factories for the adaptable clazz
-        Map<String, AdapterFactory> scMap = getAdapterFactories(clazz, cache);
+        final Map<String, AdapterFactoryDescriptor> scMap = getAdapterFactories(clazz);
 
         // for each target class copy the entry to dest if dest does
         // not contain the target class already
-        for (Map.Entry<String, AdapterFactory> entry : scMap.entrySet()) {
+        for (Map.Entry<String, AdapterFactoryDescriptor> entry : scMap.entrySet()) {
             if (!dest.containsKey(entry.getKey())) {
                 dest.put(entry.getKey(), entry.getValue());
             }
