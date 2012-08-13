@@ -74,6 +74,8 @@
                         </Private-Package>
                         
                         <Import-Package>
+                            org.w3c.dom,
+                            org.w3c.dom.html,
                             org.apache.bsf.*;
                             org.apache.xml.serialize;
                             sun.misc; resolution:=optional,
