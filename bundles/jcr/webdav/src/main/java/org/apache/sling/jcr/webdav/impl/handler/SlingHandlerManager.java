@@ -19,6 +19,8 @@
 package org.apache.sling.jcr.webdav.impl.handler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
@@ -58,17 +60,29 @@ public class SlingHandlerManager<ManagedType> {
 
             final ArrayList<ManagedType> ioHandlers = new ArrayList<ManagedType>(
                 entries.size());
+            final Map<ServiceReference, ManagedType> updates = new HashMap<ServiceReference, ManagedType>();
             for (Entry<ServiceReference, ManagedType> entry : entries) {
                 final ManagedType ioHandler;
                 if (entry.getValue() == null) {
+                    final ServiceReference key = entry.getKey();
                     // unckecked cast
                     ioHandler = (ManagedType) this.componentContext.locateService(
-                        referenceName, entry.getKey());
-                    entry.setValue(ioHandler);
+                        referenceName, key);
+                    // since we're inside the entries iterator, we can't update the map
+                    // defer updating the map until this loop is finished
+                    if (ioHandler != null) {
+                        updates.put(key, ioHandler);
+                    }
                 } else {
                     ioHandler = entry.getValue();
                 }
                 ioHandlers.add(ioHandler);
+            }
+
+            if (!updates.isEmpty()) {
+                synchronized (this.handlerServices) {
+                    this.handlerServices.putAll(updates);
+                }
             }
 
             // unckecked cast
