@@ -43,7 +43,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 @Component
 @Service(value=javax.servlet.Servlet.class)
 @Properties({
-    @Property(name="service.description", value="JST code generator servlet"),
+    @Property(name="service.description", value="Apache Sling JST code generator servlet"),
     @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
     @Property(name="sling.servlet.extensions", value="js"),
     @Property(name="sling.servlet.selectors", value="jst")
