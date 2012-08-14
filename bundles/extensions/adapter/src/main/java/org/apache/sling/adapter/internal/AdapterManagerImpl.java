@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory;
     cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
 public class AdapterManagerImpl implements AdapterManager {
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The OSGi <code>ComponentContext</code> to retrieve
@@ -83,7 +83,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * the manager has been activated. These bound services will be accessed as
      * soon as the manager is being activated.
      */
-    private List<ServiceReference> boundAdapterFactories = new LinkedList<ServiceReference>();
+    private final List<ServiceReference> boundAdapterFactories = new LinkedList<ServiceReference>();
 
     /**
      * A map of {@link AdapterFactoryDescriptorMap} instances. The map is
@@ -93,7 +93,7 @@ public class AdapterManagerImpl implements AdapterManager {
      *
      * @see AdapterFactoryDescriptorMap
      */
-    private Map<String, AdapterFactoryDescriptorMap> descriptors = new HashMap<String, AdapterFactoryDescriptorMap>();
+    private final Map<String, AdapterFactoryDescriptorMap> descriptors = new HashMap<String, AdapterFactoryDescriptorMap>();
 
     /**
      * Matrix of {@link AdapterFactoryDescriptor} instances primarily indexed by the fully
