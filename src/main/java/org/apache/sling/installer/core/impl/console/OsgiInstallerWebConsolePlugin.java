@@ -100,8 +100,12 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
     throws IOException {
         final PrintWriter pw = res.getWriter();
 
-        pw.print("<p class='statline ui-state-highlight'>Apache Sling OSGi Installer</p>");
         final InstallationState state = this.installer.getInstallationState();
+        pw.print("<p class='statline ui-state-highlight'>Apache Sling OSGi Installer");
+        if ( state.getActiveResources().size() == 0 && state.getInstalledResources().size() == 0 && state.getUntransformedResources().size() == 0 ) {
+            pw.print(" - no resources registered.");
+        }
+        pw.print("</p>");
 
         String rt = null;
         for(final ResourceGroup group : state.getActiveResources()) {
