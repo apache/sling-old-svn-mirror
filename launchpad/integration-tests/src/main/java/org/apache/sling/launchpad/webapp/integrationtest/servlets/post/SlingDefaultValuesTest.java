@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.integration.NameValuePairList;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /** {#link SlingPropertyValueSetter} sets the value of some properties
@@ -61,6 +62,45 @@ public class SlingDefaultValuesTest extends HttpTestBase {
         content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
 
         assertJavascript("undefined", content, "out.println(\"\" + data.a)");
+
+        // check array
+        NameValuePairList params = new NameValuePairList();
+        params.add("x", "1");
+        params.add("x", "2");
+        params.add("x", "3");
+
+        testClient.createNode(createdNodeUrl, params, null, false);
+        content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+        assertJavascript("123", content, "out.println(data.x)");
+
+        // check array with empty value
+        params = new NameValuePairList();
+        params.add("x", "1");
+        params.add("x", "");
+        params.add("x", "3");
+
+        testClient.createNode(createdNodeUrl, params, null, false);
+        content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+        assertJavascript("3.0", content, "out.println(data.x.length)");
+        assertJavascript("1", content, "out.println(data.x[0])");
+        assertJavascript("", content, "out.println(data.x[1])");
+        assertJavascript("3", content, "out.println(data.x[2])");
+
+        // check array with empty value and ignore blanks
+        params = new NameValuePairList();
+        params.add("x", "1");
+        params.add("x", "");
+        params.add("x", "3");
+        params.add("x@IgnoreBlanks", "true");
+
+        testClient.createNode(createdNodeUrl, params, null, false);
+        content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+        assertJavascript("2.0", content, "out.println(data.x.length)");
+        assertJavascript("1", content, "out.println(data.x[0])");
+        assertJavascript("3", content, "out.println(data.x[1])");
     }
 
     public void testWithSpecificDefault() throws IOException {
