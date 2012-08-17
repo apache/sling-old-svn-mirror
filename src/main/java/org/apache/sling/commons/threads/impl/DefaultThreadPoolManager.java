@@ -161,6 +161,19 @@ public class DefaultThreadPoolManager
         if ( config == null ) {
             throw new IllegalArgumentException("Config must not be null.");
         }
+
+        if ( label == null ) {
+            // generate the label by taking the first external frame off the stack trace
+            final StackTraceElement[] stackTrace = new Exception().getStackTrace();
+            if ( stackTrace != null && stackTrace.length > 1 ) {
+                if ( stackTrace[1].getClassName().equals( this.getClass().getName() ) ) {
+                    label = stackTrace[2].getClassName();
+                } else {
+                    label = stackTrace[1].getClassName();
+                }
+            }
+        }
+
         final String name = "ThreadPool-" + UUID.randomUUID().toString() +
              (label == null ? "" : " (" + label + ")");
         final Entry entry = new Entry(null, config, name);
