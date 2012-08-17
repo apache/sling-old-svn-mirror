@@ -1,5 +1,5 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
+k * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -61,6 +61,7 @@ public class RestartActiveBundlesTask extends AbstractInstallTask {
     public void execute(final InstallationContext ctx) {
         @SuppressWarnings("unchecked")
         final Set<Long> ids = (Set<Long>) this.getResource().getAttribute(ATTR);
+        int started = 0;
         if ( ids != null ) {
             final Set<Long> remove = new HashSet<Long>();
             for(final Long id : ids) {
@@ -72,17 +73,20 @@ public class RestartActiveBundlesTask extends AbstractInstallTask {
                      && bundle.getState() != Bundle.UNINSTALLED) {
                     try {
                         bundle.start();
+                        started++;
                         ctx.log("Started bundle {}", bundle);
                         remove.add(id);
                     } catch (final BundleException e) {
                         getLogger().info("Unable to start bundle {} : {}", bundle, e.getMessage());
                     }
                 } else {
+                    getLogger().debug("Bundle does not need restart: {} (state {})", bundle, bundle.getState());
                     remove.add(id);
                 }
             }
             ids.removeAll(remove);
         }
+        getLogger().debug("{} bundles were started", started);
     }
 
     @Override
