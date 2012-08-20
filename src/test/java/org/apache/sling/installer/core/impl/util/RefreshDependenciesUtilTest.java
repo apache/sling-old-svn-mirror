@@ -29,7 +29,6 @@ import java.util.List;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
@@ -44,6 +43,7 @@ public class RefreshDependenciesUtilTest {
     private Bundle B;
     private Bundle C;
     private Bundle D;
+    private Bundle E;
     private PackageAdmin pa;
     private RefreshDependenciesUtil rdu;
     private long counter = 1;
@@ -72,6 +72,8 @@ public class RefreshDependenciesUtilTest {
             jmock.checking(new Expectations() {{
                 allowing(ep).getExportingBundle();
                 will(returnValue(result));
+                allowing(ep).getName();
+                will(returnValue(exportsPackages));
             }});
         }
             
@@ -90,13 +92,14 @@ public class RefreshDependenciesUtilTest {
         rdu = new RefreshDependenciesUtil(pa);
         
         // Target depends on A directly and does not depend on B
-        target = setupBundle("target", "com.targetImportsOne;com.targetImportsTwo", null);
+        target = setupBundle("testTarget", "com.targetImportsOne;com.targetImportsTwo", null);
         A = setupBundle("A", null, "com.targetImportsOne");
         B = setupBundle("B", "some.import", "some.export");
         
         // Target depends on C which in turns depends on D
-        C = setupBundle("C", null, "com.targetImportsTwo");
-        D = setupBundle("D", null, null);
+        C = setupBundle("C", "com.CimportsOne", "com.targetImportsTwo");
+        D = setupBundle("D", null, "com.CimportsOne");
+        E = setupBundle("E", null, null);
     }
     
     @Test
@@ -114,6 +117,14 @@ public class RefreshDependenciesUtilTest {
     }
     
     @Test
+    public void testTargetDoesNotDependOnBundleBorE() {
+        final List<Bundle> bundles = new ArrayList<Bundle>();
+        bundles.add(B);
+        bundles.add(E);
+        assertFalse(rdu.isBundleAffected(target, bundles));
+    }
+    
+    @Test
     public void testTargetDependsOnBundleC() {
         final List<Bundle> bundles = new ArrayList<Bundle>();
         bundles.add(C);
@@ -121,11 +132,21 @@ public class RefreshDependenciesUtilTest {
     }
     
     @Test
-    @Ignore("SLING-2567 - transitive dependencies are not taken into account")
     public void testTargetDependsOnBundleD() {
         final List<Bundle> bundles = new ArrayList<Bundle>();
         bundles.add(D);
         assertTrue(rdu.isBundleAffected(target, bundles));
     }
-        
+    
+    @Test
+    public void testAllBundlesInList() {
+        final List<Bundle> bundles = new ArrayList<Bundle>();
+        bundles.add(A);
+        bundles.add(B);
+        bundles.add(C);
+        bundles.add(D);
+        bundles.add(E);
+        bundles.add(target);
+        assertTrue(rdu.isBundleAffected(target, bundles));
+    }
 }
