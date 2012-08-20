@@ -18,19 +18,13 @@
  */
 package org.apache.sling.installer.core.impl.util;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.sling.commons.osgi.ManifestHeader;
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkEvent;
 import org.osgi.framework.FrameworkListener;
-import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +43,7 @@ public class PABundleRefresher implements BundleRefresher, FrameworkListener {
     private volatile long refreshEventCount;
 
     private final PackageAdmin pckAdmin;
-
+    private final RefreshDependenciesUtil rdu;
     private final BundleContext bundleContext;
 
     /** Lock object for syncing. */
@@ -58,15 +52,7 @@ public class PABundleRefresher implements BundleRefresher, FrameworkListener {
     public PABundleRefresher(final PackageAdmin pa, final BundleContext bundleContext) {
         this.pckAdmin = pa;
         this.bundleContext = bundleContext;
-    }
-
-    private Set<String> getImportPackages(final Bundle bundle) {
-        final ManifestHeader header = ManifestHeader.parse(bundle.getHeaders().get(Constants.IMPORT_PACKAGE).toString());
-        final Set<String> packages = new HashSet<String>();
-        for(final ManifestHeader.Entry entry : header.getEntries()) {
-            packages.add(entry.getValue());
-        }
-        return packages;
+        this.rdu = new RefreshDependenciesUtil(pa);
     }
 
     /**
@@ -118,46 +104,7 @@ public class PABundleRefresher implements BundleRefresher, FrameworkListener {
      * @see org.apache.sling.installer.core.impl.util.BundleRefresher#isInstallerBundleAffected(java.util.List)
      */
     public boolean isInstallerBundleAffected(final List<Bundle> bundles) {
-        // we put all bundle ids into a set
-        final Set<Long> ids = new HashSet<Long>();
-        for(final Bundle b : bundles) {
-            ids.add(b.getBundleId());
-        }
-
-        final Set<Long> processed = new HashSet<Long>();
-        final List<Bundle> toProcess = new ArrayList<Bundle>();
-        toProcess.add(this.bundleContext.getBundle());
-        processed.add(this.bundleContext.getBundle().getBundleId());
-
-        while ( !toProcess.isEmpty() ) {
-            final Bundle bundle = toProcess.remove(0);
-
-            if ( ids.contains(bundle.getBundleId()) ) {
-                return true;
-            }
-
-            for(final String name : this.getImportPackages(bundle) ) {
-
-                final ExportedPackage[] pcks = this.pckAdmin.getExportedPackages(name);
-                if ( pcks != null ) {
-                    for(final ExportedPackage pck : pcks) {
-                        final Bundle exportingBundle = pck.getExportingBundle();
-                        if ( exportingBundle.getBundleId() == 0 || exportingBundle.getBundleId() == this.bundleContext.getBundle().getBundleId() ) {
-                            continue;
-                        }
-                        if ( ids.contains(exportingBundle.getBundleId()) ) {
-                            return true;
-                        }
-                        if ( !processed.contains(exportingBundle.getBundleId())) {
-                            processed.add(exportingBundle.getBundleId());
-                            toProcess.add(exportingBundle);
-                        }
-                    }
-                }
-            }
-        }
-
-        return false;
+        return rdu.isBundleAffected(bundleContext.getBundle(), bundles);
     }
 
     /**
