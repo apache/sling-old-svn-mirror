@@ -296,7 +296,7 @@ public class Loader implements NamespaceMapper, BundleListener {
                     NodeTypeLoader.registerNodeType(session, mappingURL.toString(), new InputStreamReader(ins), reregisterBool);
                     // log a message if retry is successful
                     if ( isRetry ) {
-                        log.info("Retrytring to register node types from {} in bundle {} succeeded.",
+                        log.info("Retrying to register node types from {} in bundle {} succeeded.",
                            new Object[]{ nodeTypeFile, bundle.getSymbolicName()});
                     }
                 } catch (IOException ioe) {
