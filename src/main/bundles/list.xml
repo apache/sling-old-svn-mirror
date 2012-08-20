@@ -228,12 +228,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.installer</artifactId>
-            <version>1.1.5-SNAPSHOT</version>
+            <version>1.1.4</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.3.9-SNAPSHOT</version>
+            <version>3.3.8</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
