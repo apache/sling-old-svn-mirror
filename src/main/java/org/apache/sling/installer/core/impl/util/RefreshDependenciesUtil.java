@@ -18,13 +18,10 @@
  */
 package org.apache.sling.installer.core.impl.util;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.sling.commons.osgi.ManifestHeader;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.Constants;
 import org.osgi.service.packageadmin.ExportedPackage;
 import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
@@ -40,71 +37,56 @@ class RefreshDependenciesUtil {
         this.pckAdmin = pa;
     }
 
-    private Set<String> getImportPackages(final Bundle bundle) {
-        final Set<String> packages = new HashSet<String>();
-        final String imports = (String)bundle.getHeaders().get(Constants.IMPORT_PACKAGE);
-        if(imports != null) {
-            final ManifestHeader header = ManifestHeader.parse(imports);
-            for(final ManifestHeader.Entry entry : header.getEntries()) {
-                packages.add(entry.getValue());
-            }
-        }
-        return packages;
-    }
-
     /**
      * Check whether a packages refresh of the supplied bundles would affect targetBundle
      */
-    boolean isBundleAffected(Bundle targetBundle, final List<Bundle> bundles) {
-        final Set<Long> checkedId = new HashSet<Long>();
-        final boolean result = isBundleAffected(checkedId, targetBundle, bundles);
-        log.debug("isBundleAffected({}, {}) -> {}", new Object[] { targetBundle, bundles, result});
-        return result;
+    boolean isBundleAffected(Bundle target, final List<Bundle> bundles) {
+        log.debug("isBundleAffected({}, {})", target, bundles);
+     
+        final List<Long> idChecked = new ArrayList<Long>();
+        for(Bundle b : bundles) {
+            if(dependsOn(idChecked, target, b)) {
+                log.debug("isBundleAffected({}) is true, dependency on bundle {}", target, b);
+                return true;
+            }
+        }
+        
+        log.debug("isBundleAffected({}) is false, no dependencies on {}", target, bundles);
+        return false;
     }
     
-    private boolean isBundleAffected(Set<Long> checkedId, Bundle targetBundle, final List<Bundle> bundles) {
+    /** True if target depends on source via package imports */
+    private boolean dependsOn(List<Long> idChecked, Bundle target, Bundle source) {
         
-        // Avoid cycles
-        if(checkedId.contains(targetBundle.getBundleId())) {
+        if(idChecked.contains(source.getBundleId())) {
             return false;
         }
-        checkedId.add(targetBundle.getBundleId());
-        log.debug("Checking if {} is affected by {}", targetBundle, bundles);
+        idChecked.add(source.getBundleId());
         
-        // ID of bundles that we check against
-        final Set<Long> ids = new HashSet<Long>();
-        for(final Bundle b : bundles) {
-            ids.add(b.getBundleId());
+        final ExportedPackage [] eps = pckAdmin.getExportedPackages(source);
+        if(eps == null) {
+            return false;
         }
         
-        // Find all bundles from which we import packages, return true if one of them is in our bundles list,
-        // and call this method recursively on them as well.
-        // We don't care about possible duplicates in there, will be removed by the above cycle avoidance code.
-        for(final String name : getImportPackages(targetBundle)) {
-            final ExportedPackage[] pcks = this.pckAdmin.getExportedPackages(name);
-            if ( pcks == null ) {
-                log.debug("No bundles present that export {}", name);
-            } else {
-                log.debug("{} imports {}", targetBundle, name);
-                for(final ExportedPackage pck : pcks) {
-                    final Bundle exportingBundle = pck.getExportingBundle();
-                    log.debug("Checking {} which exports {}", exportingBundle, pck.getName());
-                    if ( exportingBundle.getBundleId() == 0 || exportingBundle.getBundleId() == targetBundle.getBundleId() ) {
-                        log.debug("Exporting bundle {} is framework bundle or self, ignored", exportingBundle);
-                        continue;
-                    } else if ( ids.contains(exportingBundle.getBundleId()) ) {
-                        log.debug("Bundle {} affects {} due to package {}, returning true", 
-                                new Object[] { exportingBundle, targetBundle, pck.getName() });
-                        return true;
-                    } else if(isBundleAffected(checkedId, exportingBundle, bundles)) {
-                        log.debug("{} recursively affects {}, returning true", exportingBundle, targetBundle); 
-                        return true;
-                    }
-                    log.debug("{} does not affect {}", exportingBundle, targetBundle); 
+        for(ExportedPackage ep : eps) {
+            final Bundle [] importers = ep.getImportingBundles();
+            if(importers == null) {
+                continue;
+            }
+            for(Bundle b : importers) {
+                if(b.getBundleId() == target.getBundleId()) {
+                    log.debug("{} depends on {} via package {}", 
+                            new Object[] { target, source, ep.getName() });
+                    return true;
+                }
+                if(dependsOn(idChecked, target, b)) {
+                    log.debug("{} depends on {} which depends on {}, returning true",
+                            new Object[] { target, b, source });
+                    return true;
                 }
             }
         }
-
+        
         return false;
     }
 }
