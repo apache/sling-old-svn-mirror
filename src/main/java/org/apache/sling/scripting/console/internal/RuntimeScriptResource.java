@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.sling.scripting.console.internal;
 
 import java.io.ByteArrayInputStream;
@@ -23,24 +22,18 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Iterator;
 
-import org.apache.sling.adapter.SlingAdaptable;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 
-/**
- * User: chetanm
- * Date: 5/1/12
- * Time: 12:20 PM
- */
-class RuntimeScriptResource extends SlingAdaptable implements Resource {
+class RuntimeScriptResource extends AbstractResource implements Resource {
+
     private ResourceMetadata metadata = new ResourceMetadata();
-    private final String extension;
     private final String path;
     private final byte[] scriptContent;
 
     public RuntimeScriptResource(String extension, String scriptText) {
-        this.extension = extension;
         this.scriptContent = getScriptContent(scriptText);
         this.path = "script." + extension;
     }
