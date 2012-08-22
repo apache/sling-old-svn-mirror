@@ -14,13 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.sling.scripting.console.internal;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.servlet.ServletException;
@@ -29,7 +33,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.io.IOUtils;
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.DefaultVariableResolver;
 import org.apache.felix.webconsole.SimpleWebConsolePlugin;
@@ -43,15 +52,11 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * User: chetanm
- * Date: 4/30/12
- * Time: 9:06 PM
- */
 @Component
 @Service
 @Property(name = "felix.webconsole.label", value = ScriptConsolePlugin.NAME)
 public class ScriptConsolePlugin extends SimpleWebConsolePlugin {
+
     private Logger log = LoggerFactory.getLogger(getClass());
     public static final String NAME = "scriptconsole";
     private static final String TITLE = "%script.title";
@@ -96,8 +101,6 @@ public class ScriptConsolePlugin extends SimpleWebConsolePlugin {
         //Also expose the bundleContext to simplify scripts interaction with the
         //enclosing OSGi container
         bindings.put("bundleContext", bundleContext);
-
-
 
         final String lang = WebConsoleUtil.getParameter(req, "lang");
         final Resource resource = new RuntimeScriptResource(lang, script);
@@ -241,6 +244,4 @@ public class ScriptConsolePlugin extends SimpleWebConsolePlugin {
     public void deactivate() {
         super.deactivate();
     }
-
-
 }
