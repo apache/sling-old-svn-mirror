@@ -49,4 +49,12 @@ public class JSONObjectTest extends TestCase {
         }
     }
 
+    public void testNull() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put(KEY, JSONObject.NULL);
+
+        TestCase.assertTrue(obj.has(KEY));
+        TestCase.assertTrue(obj.get(KEY).equals(null));
+        TestCase.assertEquals("{\"" + KEY + "\":null}", obj.toString());
+    }
 }
