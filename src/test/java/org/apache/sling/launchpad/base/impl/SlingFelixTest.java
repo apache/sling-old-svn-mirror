@@ -56,6 +56,18 @@ public class SlingFelixTest {
         stopSling();
         TestCase.assertNull("Expect the framework field to be cleared", this.framework);
 
+        // as the notifiable is notified async we wait
+        final long start = System.currentTimeMillis();
+        while ( !this.notifiable.stoppedCalled ) {
+            // we wait max 3 seconds
+            if ( System.currentTimeMillis() - start > 3000 ) {
+                break;
+            }
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException ignore) {
+            }
+        }
         TestCase.assertTrue("Expect Notifiable.stopped to be called", this.notifiable.stoppedCalled);
         TestCase.assertFalse("Expect Notifiable.updated to not be called", this.notifiable.updatedCalled);
         TestCase.assertNull("Expect Notifiable.updated to not be called", this.notifiable.updatedCalledFile);
@@ -172,11 +184,11 @@ public class SlingFelixTest {
 
     private static class TestNotifiable implements Notifiable {
 
-        boolean stoppedCalled = false;
+        volatile boolean stoppedCalled = false;
 
-        boolean updatedCalled = false;
+        volatile boolean updatedCalled = false;
 
-        File updatedCalledFile = null;
+        volatile File updatedCalledFile = null;
 
         public void stopped() {
             this.stoppedCalled = true;
