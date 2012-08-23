@@ -30,6 +30,11 @@ import javax.servlet.GenericServlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.info.InfoProvider;
 import org.apache.sling.installer.api.info.InstallationState;
@@ -37,15 +42,22 @@ import org.apache.sling.installer.api.info.Resource;
 import org.apache.sling.installer.api.info.ResourceGroup;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.osgi.framework.Constants;
 
+
+@Component
+@Service(value=javax.servlet.Servlet.class)
+@Properties({
+    @Property(name=Constants.SERVICE_DESCRIPTION, value="Apache Sling OSGi Installer Web Console Plugin"),
+    @Property(name="felix.webconsole.label", value="osgi-installer"),
+    @Property(name="felix.webconsole.title", value="OSGi Installer"),
+    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"})
+})
 @SuppressWarnings("serial")
 public class OsgiInstallerWebConsolePlugin extends GenericServlet {
 
-    private final InfoProvider installer;
-
-    public OsgiInstallerWebConsolePlugin(final InfoProvider installer) {
-        this.installer = installer;
-    }
+    @Reference
+    private InfoProvider installer;
 
     private String getType(final RegisteredResource rsrc) {
         final String type = rsrc.getType();
