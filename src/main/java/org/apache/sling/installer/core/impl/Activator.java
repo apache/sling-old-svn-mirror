@@ -29,13 +29,10 @@ import org.apache.sling.installer.api.info.InfoProvider;
 import org.apache.sling.installer.api.tasks.InstallTaskFactory;
 import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.apache.sling.installer.api.tasks.RetryHandler;
-import org.apache.sling.installer.core.impl.console.OsgiInstallerWebConsolePlugin;
 import org.apache.sling.installer.core.impl.tasks.BundleTaskCreator;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
@@ -52,9 +49,6 @@ public class Activator implements BundleActivator {
 
     private OsgiInstallerImpl osgiControllerService;
     private ServiceRegistration osgiControllerServiceReg;
-
-    /** Registration for the web console plugin. */
-    private ServiceRegistration webReg;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
@@ -79,40 +73,12 @@ public class Activator implements BundleActivator {
                 RetryHandler.class.getName()
         };
         osgiControllerServiceReg = context.registerService(serviceInterfaces, osgiControllerService, props);
-
-        // register service factory for the web console plugin
-        final Hashtable<String, Object> consoleProps = new Hashtable<String, Object>();
-        consoleProps.put("felix.webconsole.label", "osgi-installer");
-        consoleProps.put("felix.webconsole.title", "OSGi Installer");
-        consoleProps.put("felix.webconsole.configprinter.modes", new String[] {"zip", "txt"});
-        consoleProps.put(Constants.SERVICE_VENDOR, Activator.VENDOR);
-        consoleProps.put(Constants.SERVICE_DESCRIPTION,
-            "OSGi Installer Web Console Plugin");
-        this.webReg = context.registerService("javax.servlet.Servlet",
-                new ServiceFactory() {
-
-                    public void ungetService(final Bundle bundle,
-                            final ServiceRegistration reg,
-                            final Object consoleObject) {
-                        // nothing to do
-                    }
-
-                    public Object getService(final Bundle bundle,
-                            final ServiceRegistration reg) {
-                        return new OsgiInstallerWebConsolePlugin(osgiControllerService);
-                    }
-                }, consoleProps);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) {
-        // stop web console plugin
-        if ( this.webReg != null ) {
-            this.webReg.unregister();
-            this.webReg = null;
-        }
         // stop osgi installer service
         if ( this.osgiControllerService != null ) {
             this.osgiControllerService.deactivate();
