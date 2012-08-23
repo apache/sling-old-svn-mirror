@@ -80,7 +80,8 @@ public class RestartActiveBundlesTask extends AbstractInstallTask {
                         getLogger().info("Unable to start bundle {} : {}", bundle, e.getMessage());
                     }
                 } else {
-                    getLogger().debug("Bundle does not need restart: {} (state {})", bundle, bundle.getState());
+                    // bundle might be null(!)
+                    getLogger().debug("Bundle does not need restart: {} (state {})", bundle, (bundle == null ? "uninstalled" : bundle.getState()));
                     remove.add(id);
                 }
             }
