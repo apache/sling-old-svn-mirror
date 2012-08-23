@@ -360,10 +360,10 @@ public class JcrResourceListener implements EventListener {
                 final EventAdmin localEa = this.eventAdmin;
                 if (localEa != null) {
                     final String topic = (String) event.remove(EventConstants.EVENT_TOPIC);
+                    final String path = (String) event.get(SlingConstants.PROPERTY_PATH);
+                    Resource resource = this.resourceResolver.getResource(path);
                     boolean sendEvent = true;
                     if (!SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
-                        final String path = (String) event.get(SlingConstants.PROPERTY_PATH);
-                        Resource resource = this.resourceResolver.getResource(path);
                         if (resource != null) {
                             // check if this is a JCR backed resource, otherwise it is not visible!
                             final Node node = resource.adaptTo(Node.class);
@@ -402,6 +402,11 @@ public class JcrResourceListener implements EventListener {
                             logger.debug(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
                                 path);
+                            sendEvent = false;
+                        }
+                    } else {
+                        // check if the resource is still available - if so the node was not visible!
+                        if ( resource != null ) {
                             sendEvent = false;
                         }
                     }
