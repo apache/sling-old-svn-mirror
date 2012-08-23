@@ -40,6 +40,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
@@ -68,7 +69,7 @@ public class JcrResourceListener implements EventListener {
     /** Logger */
     private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
 
-    @Reference
+    @Reference(policy=ReferencePolicy.DYNAMIC)
     private EventAdmin eventAdmin;
 
     @Reference
@@ -115,28 +116,47 @@ public class JcrResourceListener implements EventListener {
     }
 
     @Activate
-    protected void activate() throws RepositoryException, LoginException {
+    protected void activate() throws LoginException {
         this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        try {
-            this.session = this.resourceResolver.adaptTo(Session.class);
-            this.startPath = "/";
-            this.mountPrefix = null;
+        this.startPath = "/";
+        this.mountPrefix = null;
 
-            this.osgiEventQueue = new LinkedBlockingQueue<Dictionary<String,Object>>();
-            Thread oeqt = new Thread(new Runnable() {
-                public void run() {
-                    processOsgiEventQueue();
+        this.osgiEventQueue = new LinkedBlockingQueue<Dictionary<String,Object>>();
+        final Thread oeqt = new Thread(new Runnable() {
+            public void run() {
+                init();
+                processOsgiEventQueue();
+            }
+        }, "JCR Resource Event Queue Processor");
+        oeqt.start();
+
+    }
+
+    private void init() {
+        // lazy polling
+        Session session = null;
+        ResourceResolver resolver = this.resourceResolver;
+        while ( resolver != null && session == null ) {
+            session = this.resourceResolver.adaptTo(Session.class);
+            if ( session == null ) {
+                try {
+                    Thread.sleep(100);
+                } catch (final InterruptedException ignore) {
+                    // we ignore this
                 }
-            }, "JCR Resource Event Queue Processor");
-            oeqt.start();
-
-            this.session.getWorkspace().getObservationManager().addEventListener(this,
-                Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
-                this.startPath, true, null, null, false);
-        } catch (final RepositoryException re) {
-            this.resourceResolver.close();
-            this.resourceResolver = null;
-            throw re;
+                resolver = this.resourceResolver;
+            }
+        }
+        if ( session != null ) {
+            try {
+                session.getWorkspace().getObservationManager().addEventListener(this,
+                                Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
+                                this.startPath, true, null, null, false);
+                this.session = session;
+            } catch (final RepositoryException re) {
+                logger.error("Unable to register event listener.", re);
+                this.deactivate();
+            }
         }
     }
 
@@ -155,6 +175,7 @@ public class JcrResourceListener implements EventListener {
         }
         if ( this.resourceResolver != null ) {
             this.resourceResolver.close();
+            this.resourceResolver = null;
         }
 
         // drop any remaining OSGi Events not processed yet
@@ -165,7 +186,7 @@ public class JcrResourceListener implements EventListener {
     /**
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
-    public void onEvent(EventIterator events) {
+    public void onEvent(final EventIterator events) {
         // if the event admin is currently not available, we just skip this
         final EventAdmin localEA = this.eventAdmin;
         if ( localEA == null ) {
