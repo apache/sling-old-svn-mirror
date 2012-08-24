@@ -27,7 +27,9 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.query.Query;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -41,9 +43,12 @@ import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.internal.JcrResourceListener;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.ComponentContext;
 
 /**
  * The <code>JcrResourceProviderFactory</code> creates
@@ -66,6 +71,24 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
     @Reference
     private SlingRepository repository;
+
+    /** The jcr resource listner. */
+    private JcrResourceListener listener;
+
+    @Activate
+    protected void activate(final ComponentContext context)
+    throws RepositoryException {
+        final String root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.ROOTS), "/");
+        this.listener = new JcrResourceListener(root, null, this.repository, context.getBundleContext());
+    }
+
+    @Deactivate
+    protected void deactivate() {
+        if ( this.listener != null ) {
+            this.listener.deactivate();
+            this.listener = null;
+        }
+    }
 
     /** Get the dynamic class loader if available */
     ClassLoader getDynamicClassLoader() {
