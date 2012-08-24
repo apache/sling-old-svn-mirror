@@ -58,7 +58,7 @@ public class ResourceResolverImplTest {
     private ResourceResolverFactoryImpl resFac;
 
     @Before public void setup() {
-        resFac = new ResourceResolverFactoryImpl();
+        resFac = new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
         resResolver = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null));
     }
 
