@@ -180,6 +180,7 @@
         
         <!-- Installer -->
         <module>installer/core</module>
+        <module>installer/console</module>
         <module>installer/providers/file</module>
         <module>installer/providers/jcr</module>
         <module>installer/factories/configuration</module>
