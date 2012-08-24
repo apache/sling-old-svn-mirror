@@ -34,6 +34,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
+import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -47,6 +48,21 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
     private String pathToDelete;
 
     private String pathToModify;
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        RepositoryUtil.startRepository();
+        final Session adminSession = RepositoryUtil.getRepository().loginAdministrative(null);
+        RepositoryUtil.registerSlingNodeTypes(adminSession);
+        adminSession.logout();
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        RepositoryUtil.stopRepository();
+    }
 
     public void testDefaultWorkspace() throws Exception {
         List<Event> events = generateEvents(null);
