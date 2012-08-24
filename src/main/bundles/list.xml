@@ -206,26 +206,6 @@
         </bundle>
         
         <bundle>
-            <groupId>org.apache.aries.jmx</groupId>
-            <artifactId>org.apache.aries.jmx.api</artifactId>
-            <version>0.3</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.aries</groupId>
-            <artifactId>org.apache.aries.util</artifactId>
-            <version>0.3</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.aries.jmx</groupId>
-            <artifactId>org.apache.aries.jmx.core</artifactId>
-            <version>0.3</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.aries.jmx</groupId>
-            <artifactId>org.apache.aries.jmx.whiteboard</artifactId>
-            <version>0.3</version>
-        </bundle>
-        <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.installer</artifactId>
             <version>1.1.4</version>
@@ -358,6 +338,26 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.extensions.groovy</artifactId>
             <version>1.0.0-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.aries.jmx</groupId>
+            <artifactId>org.apache.aries.jmx.api</artifactId>
+            <version>0.3</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.aries</groupId>
+            <artifactId>org.apache.aries.util</artifactId>
+            <version>0.3</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.aries.jmx</groupId>
+            <artifactId>org.apache.aries.jmx.core</artifactId>
+            <version>0.3</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.aries.jmx</groupId>
+            <artifactId>org.apache.aries.jmx.whiteboard</artifactId>
+            <version>0.3</version>
         </bundle>
     </startLevel>
 
