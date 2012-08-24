@@ -52,11 +52,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
                 <executions>
                     <execution>
                         <id>testbundles</id>
                         <phase>process-test-classes</phase>
                         <configuration>
+                            <skip>${maven.test.skip}</skip>
                             <target name="build">
                                 <taskdef resource="aQute/bnd/ant/taskdef.properties"
                                     classpathref="maven.plugin.classpath" />
