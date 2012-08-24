@@ -60,9 +60,9 @@
                             <target name="build">
                                 <taskdef resource="aQute/bnd/ant/taskdef.properties"
                                     classpathref="maven.plugin.classpath" />
-                                <bnd classpath="${build.testOutputDirectory}" failok="false"
+                                <bnd classpath="${project.build.testOutputDirectory}" failok="false"
                                     exceptions="true" files="src/test/resources/test1.bnd"
-                                    output="${build.testOutputDirectory}" />
+                                    output="${project.build.testOutputDirectory}" />
                             </target>
                         </configuration>
                         <goals>
