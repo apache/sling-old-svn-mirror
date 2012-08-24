@@ -166,6 +166,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
     private boolean mangleNamespacePrefixes;
 
     /** Event admin. */
+    @Reference
     private EventAdmin eventAdmin;
 
     /** The web console plugin. */
