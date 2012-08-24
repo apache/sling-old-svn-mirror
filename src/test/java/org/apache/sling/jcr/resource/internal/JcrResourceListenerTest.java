@@ -16,6 +16,10 @@
  */
 package org.apache.sling.jcr.resource.internal;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -36,8 +40,10 @@ import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Test of JcrResourceListener.
@@ -52,16 +58,16 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        RepositoryUtil.startRepository();
-        final Session adminSession = RepositoryUtil.getRepository().loginAdministrative(null);
-        RepositoryUtil.registerSlingNodeTypes(adminSession);
-        adminSession.logout();
+        RepositoryUtil.stopRepository();
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        RepositoryUtil.stopRepository();
+        RepositoryUtil.startRepository();
+        final Session adminSession = RepositoryUtil.getRepository().loginAdministrative(null);
+        RepositoryUtil.registerSlingNodeTypes(adminSession);
+        adminSession.logout();
     }
 
     public void testDefaultWorkspace() throws Exception {
@@ -264,7 +270,16 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
             }
         };
 
-        SynchronousJcrResourceListener listener = new SynchronousJcrResourceListener(factory, mockEA);
+        final ServiceTracker tracker = mock(ServiceTracker.class);
+        when(tracker.getService()).thenReturn(mockEA);
+
+        final BundleContext bundleContext = mock(BundleContext.class);
+        when(bundleContext.createFilter(any(String.class))).thenReturn(null);
+        when(bundleContext.getServiceReference(any(String.class))).thenReturn(null);
+        when(bundleContext.getService(null)).thenReturn(mockEA);
+
+        SynchronousJcrResourceListener listener = new SynchronousJcrResourceListener(factory, getRepository(),
+                        bundleContext, resolver, tracker);
 
         createdPath = createTestPath();
         createNode(session, createdPath);

@@ -34,22 +34,18 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.osgi.framework.Constants;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,34 +54,26 @@ import org.slf4j.LoggerFactory;
  * events and creates resource events which are sent through the
  * OSGi event admin.
  */
-@Component(immediate = true)
-@Properties({
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JcrResourceListener"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
-
-})
 public class JcrResourceListener implements EventListener {
 
     /** Logger */
     private final Logger logger = LoggerFactory.getLogger(JcrResourceListener.class);
 
-    @Reference(policy=ReferencePolicy.DYNAMIC)
-    private EventAdmin eventAdmin;
+    private final ServiceTracker eventAdminTracker;
 
-    @Reference
-    private ResourceResolverFactory resourceResolverFactory;
+    private ServiceReference resourceResolverFactoryReference;
 
     /** The admin resource resolver. */
     private ResourceResolver resourceResolver;
 
     /** The session for observation. */
-    private Session session;
+    private final Session session;
 
     /** Everything below this path is observed. */
-    private String startPath;
+    private final String startPath;
 
     /** The repository is mounted under this path. */
-    private String mountPrefix;
+    private final String mountPrefix;
 
     /** Is the Jackrabbit event class available? */
     private final boolean hasJackrabbitEventClass;
@@ -96,7 +84,9 @@ public class JcrResourceListener implements EventListener {
      * waiting for actual dispatching to the OSGi Event Admin in
      * {@link #processOsgiEventQueue()}
      */
-    private LinkedBlockingQueue<Dictionary<String, Object>> osgiEventQueue;
+    private final LinkedBlockingQueue<Dictionary<String, Object>> osgiEventQueue;
+
+    private final BundleContext bundleContext;
 
     /**
      * Marker event for {@link #processOsgiEventQueue()} to be signaled to
@@ -104,7 +94,11 @@ public class JcrResourceListener implements EventListener {
      */
     private final Dictionary<String, Object> TERMINATE_PROCESSING = new Hashtable<String, Object>(1);
 
-    public JcrResourceListener() {
+    public JcrResourceListener(final String startPath,
+                    final String mountPrefix,
+                    final SlingRepository repository,
+                    final BundleContext bundleContext)
+    throws RepositoryException {
         boolean foundClass = false;
         try {
             this.getClass().getClassLoader().loadClass(JackrabbitEvent.class.getName());
@@ -113,58 +107,36 @@ public class JcrResourceListener implements EventListener {
             // we ignore this
         }
         this.hasJackrabbitEventClass = foundClass;
-    }
+        this.startPath = startPath;
+        this.mountPrefix = mountPrefix;
+        this.bundleContext = bundleContext;
 
-    @Activate
-    protected void activate() throws LoginException {
-        this.resourceResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        this.startPath = "/";
-        this.mountPrefix = null;
+        this.eventAdminTracker = new ServiceTracker(bundleContext, EventAdmin.class.getName(), null);
+        this.eventAdminTracker.open();
+
+        this.session = repository.loginAdministrative(null);
+        try {
+            session.getWorkspace().getObservationManager().addEventListener(this,
+                            Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
+                            this.startPath, true, null, null, false);
+        } catch (final RepositoryException re) {
+            session.logout();
+            throw re;
+        }
 
         this.osgiEventQueue = new LinkedBlockingQueue<Dictionary<String,Object>>();
         final Thread oeqt = new Thread(new Runnable() {
             public void run() {
-                init();
                 processOsgiEventQueue();
             }
-        }, "JCR Resource Event Queue Processor");
+        }, "Apche Sling JCR Resource Event Queue Processor for path '" + this.startPath + "'");
         oeqt.start();
-
-    }
-
-    private void init() {
-        // lazy polling
-        Session session = null;
-        ResourceResolver resolver = this.resourceResolver;
-        while ( resolver != null && session == null ) {
-            session = this.resourceResolver.adaptTo(Session.class);
-            if ( session == null ) {
-                try {
-                    Thread.sleep(100);
-                } catch (final InterruptedException ignore) {
-                    // we ignore this
-                }
-                resolver = this.resourceResolver;
-            }
-        }
-        if ( session != null ) {
-            try {
-                session.getWorkspace().getObservationManager().addEventListener(this,
-                                Event.NODE_ADDED|Event.NODE_REMOVED|Event.PROPERTY_ADDED|Event.PROPERTY_CHANGED|Event.PROPERTY_REMOVED,
-                                this.startPath, true, null, null, false);
-                this.session = session;
-            } catch (final RepositoryException re) {
-                logger.error("Unable to register event listener.", re);
-                this.deactivate();
-            }
-        }
     }
 
     /**
      * Dispose this listener.
      */
-    @Deactivate
-    protected void deactivate() {
+    public void deactivate() {
         // unregister from observations
         if ( this.session != null ) {
             try {
@@ -178,9 +150,17 @@ public class JcrResourceListener implements EventListener {
             this.resourceResolver = null;
         }
 
+        if ( this.resourceResolverFactoryReference != null ) {
+            this.bundleContext.ungetService(this.resourceResolverFactoryReference);
+        }
+
         // drop any remaining OSGi Events not processed yet
         this.osgiEventQueue.clear();
         this.osgiEventQueue.offer(TERMINATE_PROCESSING);
+
+        if ( this.eventAdminTracker != null ) {
+            this.eventAdminTracker.close();
+        }
     }
 
     /**
@@ -188,7 +168,7 @@ public class JcrResourceListener implements EventListener {
      */
     public void onEvent(final EventIterator events) {
         // if the event admin is currently not available, we just skip this
-        final EventAdmin localEA = this.eventAdmin;
+        final EventAdmin localEA = (EventAdmin) this.eventAdminTracker.getService();
         if ( localEA == null ) {
             return;
         }
@@ -338,6 +318,28 @@ public class JcrResourceListener implements EventListener {
     }
 
     /**
+     * Get a resource resolver.
+     * We don't need any syncing as this is called from the process osgi thread.
+     */
+    private ResourceResolver getResourceResolver() {
+        if ( this.resourceResolver == null ) {
+            final ServiceReference ref = this.bundleContext.getServiceReference(ResourceResolverFactory.class.getName());
+            if ( ref != null ) {
+                final ResourceResolverFactory factory = (ResourceResolverFactory) this.bundleContext.getService(ref);
+                if ( factory != null ) {
+                    try {
+                        this.resourceResolver = factory.getAdministrativeResourceResolver(null);
+                        this.resourceResolverFactoryReference = ref;
+                    } catch (final LoginException le) {
+                        logger.error("Unable to get administrative resource resolver.", le);
+                        this.bundleContext.ungetService(ref);
+                    }
+                }
+            }
+        }
+        return this.resourceResolver;
+    }
+    /**
      * Called by the Runnable.run method of the JCR Event Queue processor to
      * process the {@link #osgiEventQueue} until the
      * {@link #TERMINATE_PROCESSING} event is received.
@@ -357,11 +359,12 @@ public class JcrResourceListener implements EventListener {
             }
 
             try {
-                final EventAdmin localEa = this.eventAdmin;
-                if (localEa != null) {
+                final EventAdmin localEa = (EventAdmin) this.eventAdminTracker.getService();
+                final ResourceResolver resolver = this.getResourceResolver();
+                if (localEa != null && resolver != null ) {
                     final String topic = (String) event.remove(EventConstants.EVENT_TOPIC);
                     final String path = (String) event.get(SlingConstants.PROPERTY_PATH);
-                    Resource resource = this.resourceResolver.getResource(path);
+                    Resource resource = resolver.getResource(path);
                     boolean sendEvent = true;
                     if (!SlingConstants.TOPIC_RESOURCE_REMOVED.equals(topic)) {
                         if (resource != null) {
