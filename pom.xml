@@ -245,6 +245,13 @@
                 <module>contrib</module>
             </modules>
         </profile>
+         <!-- Profile for including performan tests -->
+        <profile>
+            <id>withPerformanceTest</id>
+            <modules>
+                <module>performance</module>
+            </modules>
+        </profile>
     </profiles>
 
 </project>

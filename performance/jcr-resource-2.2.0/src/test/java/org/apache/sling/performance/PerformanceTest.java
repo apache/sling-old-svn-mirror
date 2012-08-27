@@ -1,0 +1,141 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+package org.apache.sling.performance;
+
+import static org.mockito.Mockito.mock;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.Session;
+
+import junitx.util.PrivateAccessor;
+
+import org.apache.sling.api.SlingConstants;
+import org.apache.sling.api.resource.QueriableResourceProvider;
+import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceProviderFactory;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
+import org.apache.sling.performance.tests.ResolveWith10000AliasTest;
+import org.apache.sling.performance.tests.ResolveWith10000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveWith1000AliasTest;
+import org.apache.sling.performance.tests.ResolveWith1000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveWith30000AliasTest;
+import org.apache.sling.performance.tests.ResolveWith30000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveWith5000AliasTest;
+import org.apache.sling.performance.tests.ResolveWith5000VanityPathTest;
+import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
+import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
+import org.apache.sling.resourceresolver.impl.mapping.Mapping;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+
+public class PerformanceTest extends AbstractPerformanceTest {
+
+    private class Helper implements TestHelper {
+
+        private MapEntries mapEntries;
+
+        private ResourceResolver resourceResolver;
+        
+        public void dispose() {
+             mapEntries.dispose();
+        }
+
+        public ResourceResolver getResourceResolver() {
+            return resourceResolver;
+        }
+
+        public void init(String rootPath, Session session, SlingRepository repository) throws Exception {
+            ResourceResolverFactoryImpl resFac = new ResourceResolverFactoryImpl();
+
+            JcrResourceProviderFactory providerFactory = new JcrResourceProviderFactory();
+            PrivateAccessor.setField(providerFactory, "repository", repository);
+
+            Map<String, Object> props = new HashMap<String, Object>();
+            props.put(Constants.SERVICE_ID, -1l);
+            props.put(ResourceProviderFactory.PROPERTY_REQUIRED, true);
+            props.put(ResourceProvider.ROOTS, "/");
+            props.put(QueriableResourceProvider.LANGUAGES, new String[] { "xpath", "sql" });
+
+            try {
+                PrivateAccessor.invoke(resFac, "bindResourceProviderFactory", new Class[] { ResourceProviderFactory.class,
+                        Map.class }, new Object[] { providerFactory, props });
+            } catch (Throwable e) {
+                throw new Exception(e);
+            }
+
+            // setup mappings
+            PrivateAccessor.setField(resFac, "mappings", new Mapping[] { new Mapping("/-/"), new Mapping(rootPath + "/-/") });
+
+            // ensure namespace mangling
+            PrivateAccessor.setField(resFac, "mangleNamespacePrefixes", true);
+
+            // setup mapping root
+            PrivateAccessor.setField(resFac, "mapRoot", "/etc/map");
+            
+            final EventAdmin mockVoidEA = new EventAdmin() {
+
+                public void postEvent(Event event) {
+                    // nothing to do
+                }
+
+                public void sendEvent(Event event) {
+                    // nothing to do
+                }
+            };
+
+            mapEntries = new MapEntries(resFac, mock(BundleContext.class), mockVoidEA);
+            PrivateAccessor.setField(resFac, "mapEntries", mapEntries);
+
+            try {
+                NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
+                nsr.registerNamespace(SlingConstants.NAMESPACE_PREFIX, JcrResourceConstants.SLING_NAMESPACE_URI);
+            } catch (Exception e) {
+                // don't care for now
+            }
+
+            Map<String, Object> authInfo = Collections.<String, Object> singletonMap(
+                    JcrResourceConstants.AUTHENTICATION_INFO_SESSION, session);
+            resourceResolver = resFac.getResourceResolver(authInfo);
+        }
+    }
+    
+    public void testPerformance() throws Exception {
+        Helper helper = new Helper();
+        
+        List<AbstractTest> tests = new ArrayList<AbstractTest>();
+        tests.add(new ResolveWith1000VanityPathTest(helper));
+        tests.add(new ResolveWith5000VanityPathTest(helper));
+        tests.add(new ResolveWith10000VanityPathTest(helper));
+        //tests.add(new ResolveWith30000VanityPathTest(helper));
+        tests.add(new ResolveWith1000AliasTest(helper));
+        tests.add(new ResolveWith5000AliasTest(helper));
+        tests.add(new ResolveWith10000AliasTest(helper));
+        //tests.add(new ResolveWith30000AliasTest(helper));
+        testPerformance("jcr.resource-2.2.0", tests);
+    }
+}
