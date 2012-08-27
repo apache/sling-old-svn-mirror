@@ -20,10 +20,17 @@
 %>
 
 <%    
-   var queryManager = currentNode.getSession().getWorkspace().getQueryManager();  
-   var query = queryManager.createQuery("/jcr:root/content/espblog/posts/element(*, nt:unstructured) order by @created descending", "xpath");
-   var result = query.execute().getNodes();
-   
+    // SLING-1540 - currentNode might not be present
+    if(typeof(currentNode) == 'undefined') {
+        currentNode = null;
+    }    
+
+   var result = null;
+   if(currentNode) {
+       var queryManager = currentNode.getSession().getWorkspace().getQueryManager();  
+       var query = queryManager.createQuery("/jcr:root/content/espblog/posts/element(*, nt:unstructured) order by @created descending", "xpath");
+       result = query.execute().getNodes();
+   }       
 %>
 
 <rss version="2.0">
@@ -33,11 +40,11 @@
       <description>RSS 2.0 feed of my Sling blog</description>
       
       <%
-      	df = new java.text.SimpleDateFormat( "EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Packages.java.util.Locale.US);
-	var counter = 0;
-	while(result.hasNext() && counter < 10) {
-		counter++;
-		post = result.nextNode()
+        df = new java.text.SimpleDateFormat( "EEE', 'dd' 'MMM' 'yyyy' 'HH:mm:ss' 'Z", Packages.java.util.Locale.US);
+        var counter = 0;
+        while(result && result.hasNext() && counter < 10) {
+            counter++;
+            post = result.nextNode()
       %>
       
       <item>

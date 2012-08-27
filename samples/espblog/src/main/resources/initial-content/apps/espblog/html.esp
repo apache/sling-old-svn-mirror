@@ -24,6 +24,11 @@
 load("header.esp");
 load("constants.esp");
 
+// SLING-1540 - currentNode might not be present
+if(typeof(currentNode) == 'undefined') {
+    currentNode = null;
+}    
+
 function render(attachmentNode) {
   if(attachmentNode.getNode("jcr:content").getProperty("jcr:mimeType").getString().substring(0,5) == "image") {
     %><p><img src="<%=attachmentNode%>"></p><%
@@ -35,10 +40,12 @@ function render(attachmentNode) {
 function renderMedia(postNode, mediaFolderName) {
 	if(postNode.hasNode(mediaFolderName)) {
 		%><h3><%= mediaFolderName %></h3><%
-		var nodes = currentNode.getNode(mediaFolderName).getNodes();
-		for(i in nodes) {
-	      render(nodes[i]);
-		}
+		if(currentNode) {
+		  var nodes = currentNode.getNode(mediaFolderName).getNodes();
+		  for(i in nodes) {
+	       render(nodes[i]);
+		  }
+        }
 	}
 }
 %>
@@ -60,11 +67,11 @@ function renderMedia(postNode, mediaFolderName) {
        <div class="main">
 			<h1><%= BLOG_TITLE %></h1>
 			<div id="postbody">	
-				<h2><%=currentNode.title ? currentNode.title : ""%></h2>	
-				<p><%=currentNode.posttext ? currentNode.posttext : ""%></p>
+				<h2><%=(currentNode && currentNode.title) ? currentNode.title : ""%></h2>	
+				<p><%=(currentNode && currentNode.posttext) ? currentNode.posttext : ""%></p>
 				
 				<%
-				if(currentNode.hasNode("comments")) {
+				if(currentNode && currentNode.hasNode("comments")) {
 				    %><h3>Comments</h3><%
 					comments = currentNode.getNode("comments").getNodes()
 					for (a in comments) {
@@ -83,7 +90,7 @@ function renderMedia(postNode, mediaFolderName) {
 				}
 				%>
 						
-				<% if(currentNode.title) { %>							
+				<% if(currentNode && currentNode.title) { %>							
 			    <h3>Comment on this post</h3>
 				<form class="hform" method="POST" action="<%=currentNode%>/comments/*">
                     <p>
@@ -99,8 +106,10 @@ function renderMedia(postNode, mediaFolderName) {
 				<% } %>
 			</div>
 			<div id="resources">
-				<% renderMedia(currentNode, "attachments"); %>
-				<% renderMedia(currentNode, "thumbnails"); %>
+                <% if(currentNode) { %>                            
+				    <% renderMedia(currentNode, "attachments"); %>
+				    <% renderMedia(currentNode, "thumbnails"); %>
+                <% } %>
 			</div>
 		</div>			
 	</body>
