@@ -45,6 +45,7 @@ import org.apache.sling.performance.tests.ResolveWith30000AliasTest;
 import org.apache.sling.performance.tests.ResolveWith30000VanityPathTest;
 import org.apache.sling.performance.tests.ResolveWith5000AliasTest;
 import org.apache.sling.performance.tests.ResolveWith5000VanityPathTest;
+import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
@@ -70,7 +71,7 @@ public class PerformanceTest extends AbstractPerformanceTest {
         }
 
         public void init(String rootPath, Session session, SlingRepository repository) throws Exception {
-            ResourceResolverFactoryImpl resFac = new ResourceResolverFactoryImpl();
+            ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
 
             JcrResourceProviderFactory providerFactory = new JcrResourceProviderFactory();
             PrivateAccessor.setField(providerFactory, "repository", repository);
@@ -82,20 +83,20 @@ public class PerformanceTest extends AbstractPerformanceTest {
             props.put(QueriableResourceProvider.LANGUAGES, new String[] { "xpath", "sql" });
 
             try {
-                PrivateAccessor.invoke(resFac, "bindResourceProviderFactory", new Class[] { ResourceProviderFactory.class,
+                PrivateAccessor.invoke(activator, "bindResourceProviderFactory", new Class[] { ResourceProviderFactory.class,
                         Map.class }, new Object[] { providerFactory, props });
             } catch (Throwable e) {
                 throw new Exception(e);
             }
 
             // setup mappings
-            PrivateAccessor.setField(resFac, "mappings", new Mapping[] { new Mapping("/-/"), new Mapping(rootPath + "/-/") });
+            PrivateAccessor.setField(activator, "mappings", new Mapping[] { new Mapping("/-/"), new Mapping(rootPath + "/-/") });
 
             // ensure namespace mangling
-            PrivateAccessor.setField(resFac, "mangleNamespacePrefixes", true);
+            PrivateAccessor.setField(activator, "mangleNamespacePrefixes", true);
 
             // setup mapping root
-            PrivateAccessor.setField(resFac, "mapRoot", "/etc/map");
+            PrivateAccessor.setField(activator, "mapRoot", "/etc/map");
             
             final EventAdmin mockVoidEA = new EventAdmin() {
 
@@ -107,6 +108,7 @@ public class PerformanceTest extends AbstractPerformanceTest {
                     // nothing to do
                 }
             };
+            ResourceResolverFactoryImpl resFac = new ResourceResolverFactoryImpl(activator);
 
             mapEntries = new MapEntries(resFac, mock(BundleContext.class), mockVoidEA);
             PrivateAccessor.setField(resFac, "mapEntries", mapEntries);
