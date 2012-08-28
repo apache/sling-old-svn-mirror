@@ -71,7 +71,7 @@
                             SLING-INF/nodetypes/message.cnd
                         </Sling-Nodetypes>
                         <Embed-Dependency>
-                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ServiceUtil*"
+                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ServiceUtil*|org/apache/sling/commons/osgi/PropertiesUtil*"
                         </Embed-Dependency>
 
                     </instructions>
