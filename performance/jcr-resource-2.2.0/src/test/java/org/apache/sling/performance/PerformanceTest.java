@@ -97,20 +97,9 @@ public class PerformanceTest extends AbstractPerformanceTest {
 
             // setup mapping root
             PrivateAccessor.setField(activator, "mapRoot", "/etc/map");
-            
-            final EventAdmin mockVoidEA = new EventAdmin() {
-
-                public void postEvent(Event event) {
-                    // nothing to do
-                }
-
-                public void sendEvent(Event event) {
-                    // nothing to do
-                }
-            };
             ResourceResolverFactoryImpl resFac = new ResourceResolverFactoryImpl(activator);
 
-            mapEntries = new MapEntries(resFac, mock(BundleContext.class), mockVoidEA);
+            mapEntries = new MapEntries(resFac, mock(BundleContext.class), mock(EventAdmin.class));
             PrivateAccessor.setField(resFac, "mapEntries", mapEntries);
 
             try {
