@@ -179,7 +179,9 @@ public class I18NFilter implements Filter {
 
         public Locale getDefaultLocale() {
             // ask all registered providers, use the first one that returns
-            for (final ResourceBundleProvider provider : sortedProviders) {
+            final ResourceBundleProvider[] providers = sortedProviders;
+            for(int i=providers.length-1; i >= 0; i--) {
+                final ResourceBundleProvider provider = providers[i];
                 final Locale locale = provider.getDefaultLocale();
                 if (locale != null) {
                     return locale;
@@ -190,7 +192,9 @@ public class I18NFilter implements Filter {
 
         public ResourceBundle getResourceBundle(final Locale locale) {
             // ask all registered providers, use the first one that returns
-            for (final ResourceBundleProvider provider : sortedProviders) {
+            final ResourceBundleProvider[] providers = sortedProviders;
+            for(int i=providers.length-1; i >= 0; i--) {
+                final ResourceBundleProvider provider = providers[i];
                 final ResourceBundle bundle = provider.getResourceBundle(locale);
                 if (bundle != null) {
                     return bundle;
@@ -201,7 +205,9 @@ public class I18NFilter implements Filter {
 
         public ResourceBundle getResourceBundle(final String baseName, final Locale locale) {
             // ask all registered providers, use the first one that returns
-            for (final ResourceBundleProvider provider : sortedProviders) {
+            final ResourceBundleProvider[] providers = sortedProviders;
+            for(int i=providers.length-1; i >= 0; i--) {
+                final ResourceBundleProvider provider = providers[i];
                 final ResourceBundle bundle = provider.getResourceBundle(baseName, locale);
                 if (bundle != null) {
                     return bundle;
