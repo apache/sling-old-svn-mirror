@@ -23,8 +23,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.TreeMap;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -45,6 +47,7 @@ import org.apache.felix.scr.annotations.sling.SlingFilter;
 import org.apache.felix.scr.annotations.sling.SlingFilterScope;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
+import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.i18n.DefaultLocaleResolver;
 import org.apache.sling.i18n.LocaleResolver;
 import org.apache.sling.i18n.RequestLocaleResolver;
@@ -58,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * the resource bundle for the current request.
  */
 @SlingFilter(generateComponent = false, generateService = true, order = -700, scope = SlingFilterScope.REQUEST)
-@Component(immediate = true, metatype = false)
+@Component(immediate = true, metatype = false, specVersion="1.1")
 @Properties({
     @Property(name = "pattern", value="/.*"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
@@ -76,8 +79,15 @@ public class I18NFilter implements Filter {
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private RequestLocaleResolver requestLocaleResolver = DEFAULT_LOCALE_RESOLVER;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private ResourceBundleProvider resourceBundleProvider;
+    @Reference(name = "resourceBundleProvider",
+               referenceInterface = ResourceBundleProvider.class,
+               cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+               policy = ReferencePolicy.DYNAMIC)
+    private final Map<Object, ResourceBundleProvider> providers = new TreeMap<Object, ResourceBundleProvider>();
+
+    private volatile ResourceBundleProvider[] sortedProviders = new ResourceBundleProvider[0];
+
+    private final ResourceBundleProvider combinedProvider = new CombinedBundleProvider();
 
     /** Count the number init() has been called. */
     private volatile int initCount;
@@ -104,13 +114,13 @@ public class I18NFilter implements Filter {
             if ( !runGlobal || this.requestLocaleResolver == DEFAULT_LOCALE_RESOLVER ) {
                 // wrap with our ResourceBundle provisioning
                 request = new I18NSlingHttpServletRequest(request,
-                    resourceBundleProvider, localeResolver);
+                        combinedProvider, localeResolver);
             } else {
-                request = new BaseI18NSlingHttpServletRequest(request, resourceBundleProvider);
+                request = new BaseI18NSlingHttpServletRequest(request, combinedProvider);
             }
         } else {
             request = new I18NHttpServletRequest(request,
-                    resourceBundleProvider, requestLocaleResolver);
+                    combinedProvider, requestLocaleResolver);
         }
 
         // and forward the request
@@ -147,7 +157,59 @@ public class I18NFilter implements Filter {
             this.requestLocaleResolver = DEFAULT_LOCALE_RESOLVER;
         }
     }
+
+    protected void bindResourceBundleProvider(final ResourceBundleProvider provider, final Map<String, Object> props) {
+        synchronized ( this.providers ) {
+            this.providers.put(ServiceUtil.getComparableForServiceRanking(props), provider);
+            this.sortedProviders = this.providers.values().toArray(new ResourceBundleProvider[this.providers.size()]);
+        }
+    }
+
+    protected void unbindResourceBundleProvider(final ResourceBundleProvider provider, final Map<String, Object> props) {
+        synchronized ( this.providers ) {
+            this.providers.remove(ServiceUtil.getComparableForServiceRanking(props));
+            this.sortedProviders = this.providers.values().toArray(new ResourceBundleProvider[this.providers.size()]);
+        }
+    }
+
     // ---------- internal -----------------------------------------------------
+
+    /** Provider that goes through a list of registered providers and takes the first non-null responses */
+    private class CombinedBundleProvider implements ResourceBundleProvider {
+
+        public Locale getDefaultLocale() {
+            // ask all registered providers, use the first one that returns
+            for (final ResourceBundleProvider provider : sortedProviders) {
+                final Locale locale = provider.getDefaultLocale();
+                if (locale != null) {
+                    return locale;
+                }
+            }
+            return null;
+        }
+
+        public ResourceBundle getResourceBundle(final Locale locale) {
+            // ask all registered providers, use the first one that returns
+            for (final ResourceBundleProvider provider : sortedProviders) {
+                final ResourceBundle bundle = provider.getResourceBundle(locale);
+                if (bundle != null) {
+                    return bundle;
+                }
+            }
+            return null;
+        }
+
+        public ResourceBundle getResourceBundle(final String baseName, final Locale locale) {
+            // ask all registered providers, use the first one that returns
+            for (final ResourceBundleProvider provider : sortedProviders) {
+                final ResourceBundle bundle = provider.getResourceBundle(baseName, locale);
+                if (bundle != null) {
+                    return bundle;
+                }
+            }
+            return null;
+        }
+    }
 
     // ---------- internal class -----------------------------------------------
 
