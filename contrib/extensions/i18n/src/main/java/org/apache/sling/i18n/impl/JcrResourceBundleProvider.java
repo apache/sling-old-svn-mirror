@@ -18,6 +18,9 @@
  */
 package org.apache.sling.i18n.impl;
 
+import static org.apache.sling.i18n.impl.JcrResourceBundle.PROP_BASENAME;
+import static org.apache.sling.i18n.impl.JcrResourceBundle.PROP_LANGUAGE;
+
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -48,15 +51,13 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.commons.osgi.OsgiUtil;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.i18n.ResourceBundleProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.sling.i18n.impl.JcrResourceBundle.*;
 
 /**
  * The <code>JcrResourceBundleProvider</code> implements the
@@ -192,21 +193,21 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     protected void activate(ComponentContext context) {
         Dictionary<?, ?> props = context.getProperties();
 
-        String user = OsgiUtil.toString(props.get(PROP_USER), null);
+        String user = PropertiesUtil.toString(props.get(PROP_USER), null);
         if (user == null || user.length() == 0) {
             repoCredentials = null;
         } else {
-            String pass = OsgiUtil.toString(props.get(PROP_PASS), null);
+            String pass = PropertiesUtil.toString(props.get(PROP_PASS), null);
             char[] pwd = (pass == null) ? new char[0] : pass.toCharArray();
             repoCredentials = new HashMap<String, Object>();
             repoCredentials.put(ResourceResolverFactory.USER, user);
             repoCredentials.put(ResourceResolverFactory.PASSWORD, pwd);
         }
 
-        String localeString = OsgiUtil.toString(props.get(PROP_DEFAULT_LOCALE),
+        String localeString = PropertiesUtil.toString(props.get(PROP_DEFAULT_LOCALE),
             null);
         this.defaultLocale = toLocale(localeString);
-        this.preloadBundles = OsgiUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
+        this.preloadBundles = PropertiesUtil.toBoolean(props.get(PROP_PRELOAD_BUNDLES), DEFAULT_PRELOAD_BUNDLES);
 
         this.bundleContext = context.getBundleContext();
         this.bundleServiceRegistrations = new ArrayList<ServiceRegistration>();
