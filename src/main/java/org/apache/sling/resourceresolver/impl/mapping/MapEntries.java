@@ -84,7 +84,7 @@ public class MapEntries implements EventHandler {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ResourceResolverFactoryImpl factory;
+    private MapConfigurationProvider factory;
 
     private volatile ResourceResolver resolver;
 
@@ -118,7 +118,7 @@ public class MapEntries implements EventHandler {
     }
 
     @SuppressWarnings("unchecked")
-    public MapEntries(final ResourceResolverFactoryImpl factory, final BundleContext bundleContext, final EventAdmin eventAdmin)
+    public MapEntries(final MapConfigurationProvider factory, final BundleContext bundleContext, final EventAdmin eventAdmin)
                     throws LoginException {
         this.resolver = factory.getAdministrativeResourceResolver(null);
         this.factory = factory;
@@ -162,7 +162,7 @@ public class MapEntries implements EventHandler {
      * to trigger a call to doInit. Terminates when the resolver has been
      * null-ed after having been triggered.
      */
-    void init() {
+    private void init() {
         while (this.resolver != null) {
             try {
                 this.initTrigger.acquire();
@@ -175,16 +175,16 @@ public class MapEntries implements EventHandler {
     }
 
     /**
-     * Actual initializer. Guards itself agains concurrent use by using a
+     * Actual initializer. Guards itself against concurrent use by using a
      * ReentrantLock. Does nothing if the resource resolver has already been
      * null-ed.
      */
-    private void doInit() {
+    protected void doInit() {
 
         this.initializing.lock();
         try {
             final ResourceResolver resolver = this.resolver;
-            final ResourceResolverFactoryImpl factory = this.factory;
+            final MapConfigurationProvider factory = this.factory;
             if (resolver == null || factory == null) {
                 return;
             }
@@ -551,7 +551,7 @@ public class MapEntries implements EventHandler {
         return result;
     }
 
-    private void loadConfiguration(final ResourceResolverFactoryImpl factory, final List<MapEntry> entries) {
+    private void loadConfiguration(final MapConfigurationProvider factory, final List<MapEntry> entries) {
         // virtual uris
         final Map<?, ?> virtuals = factory.getVirtualURLMap();
         if (virtuals != null) {
@@ -592,7 +592,7 @@ public class MapEntries implements EventHandler {
         }
     }
 
-    private void loadMapConfiguration(final ResourceResolverFactoryImpl factory, final Map<String, MapEntry> entries) {
+    private void loadMapConfiguration(final MapConfigurationProvider factory, final Map<String, MapEntry> entries) {
         // URL Mappings
         final Mapping[] mappings = factory.getMappings();
         if (mappings != null) {

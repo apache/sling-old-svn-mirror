@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
+import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
@@ -44,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  *
  */
-public class ResourceResolverFactoryImpl implements ResourceResolverFactory {
+public class ResourceResolverFactoryImpl implements ResourceResolverFactory, MapConfigurationProvider {
 
     /** Helper for the resource resolver. */
     private MapEntries mapEntries = MapEntries.EMPTY;
