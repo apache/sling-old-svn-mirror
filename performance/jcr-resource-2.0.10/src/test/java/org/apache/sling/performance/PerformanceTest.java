@@ -99,6 +99,6 @@ public class PerformanceTest extends AbstractPerformanceTest {
         tests.add(new ResolveNonExistingWith5000AliasTest(helper));
         tests.add(new ResolveNonExistingWith10000AliasTest(helper));
         //tests.add(new ResolveNonExistingWith30000AliasTest(helper));
-        testPerformance("jcr.resource-2.1.0", tests);
+        testPerformance("jcr.resource-2.0.10", tests);
     }
 }
