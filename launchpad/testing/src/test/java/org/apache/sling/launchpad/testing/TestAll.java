@@ -51,7 +51,7 @@ public class TestAll extends TestCase {
         // Get the URLs
         final URL[] urls = ((URLClassLoader) sysClassLoader).getURLs();
         final String testPattern = System.getProperty("integrationTestPattern",
-            "**/launchpad/webapp/integrationtest/**/*Test");
+            "**/launchpad/*/integrationtest/**/*Test");
         final String testRegex = convertToRegex(testPattern);
         final Pattern pattern = Pattern.compile(testRegex);
         for (URL u : urls) {
