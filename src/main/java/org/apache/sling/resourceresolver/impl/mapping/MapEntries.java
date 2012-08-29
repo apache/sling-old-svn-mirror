@@ -500,7 +500,16 @@ public class MapEntries implements EventHandler {
                 map.put(parentPath, parentMap);
             }
             for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
-                parentMap.put(alias, resourceName);
+                if (parentMap.containsKey(alias)) {
+                    log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
+                            alias,
+                            parentPath,
+                            parentMap.get(alias),
+                            resourceName
+                    });
+                } else {
+                    parentMap.put(alias, resourceName);
+                }
             }
         }
 
