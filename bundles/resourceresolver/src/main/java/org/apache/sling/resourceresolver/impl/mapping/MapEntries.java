@@ -484,14 +484,23 @@ public class MapEntries implements EventHandler {
                 continue;
             }
 
-            final String parentPath = resource.getParent().getPath();
+            final String resourceName;
+            final String parentPath;
+            if (resource.getName().equals("jcr:content")) {
+                final Resource containingResource = resource.getParent();
+                parentPath = containingResource.getParent().getPath();
+                resourceName = containingResource.getName();
+            } else {
+                parentPath = resource.getParent().getPath();
+                resourceName = resource.getName();
+            }
             Map<String, String> parentMap = map.get(parentPath);
             if (parentMap == null) {
                 parentMap = new HashMap<String, String>();
                 map.put(parentPath, parentMap);
             }
             for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
-                parentMap.put(alias, resource.getName());
+                parentMap.put(alias, resourceName);
             }
         }
 
