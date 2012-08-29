@@ -96,8 +96,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
     private ResourceResolver resResolver;
 
     private TestMapEntries mapEntries;
-  
-    //private SynchronousJcrResourceListener listener;
 
     private String vanity;
 
@@ -204,8 +202,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         final ServiceTracker tracker = mock(ServiceTracker.class);
         when(tracker.getService()).thenReturn(mockEA);
   
-        //listener = new SynchronousJcrResourceListener(resFac, getRepository(), );
-  
         resResolver = resFac.getAdministrativeResourceResolver(null);
   /*
         UserManager userMan = AccessControlUtil.getUserManager(session);
@@ -231,13 +227,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         if (mapRoot != null) {
             mapRoot.remove();
         }
-/*
-        if ( this.listener != null ) {
-            this.listener.dispose();
-        }
-*/
+        
         session.save();
-
 
         super.tearDown();
     }
