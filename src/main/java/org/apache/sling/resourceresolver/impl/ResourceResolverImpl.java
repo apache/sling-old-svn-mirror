@@ -80,7 +80,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
 
-    private static final String PROP_ALIAS = "sling:alias";
+    public static final String PROP_ALIAS = "sling:alias";
 
     // The suffix of a resource being a content node of some parent
     // such as nt:file. The slash is included to prevent false
@@ -863,19 +863,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // we do not have a child with the exact name, so we look for
         // a child, whose alias matches the childName
-        final Iterator<Resource> children = listChildren(parent);
-        while (children.hasNext()) {
-            child = children.next();
-            if (!child.getPath().endsWith(JCR_CONTENT_LEAF)) {
-                final String[] aliases = getProperty(child, PROP_ALIAS, String[].class);
-                if (aliases != null) {
-                    for (final String alias : aliases) {
-                        if (childName.equals(alias)) {
-                            logger.debug("getChildInternal: Found Resource {} with alias {} to use", child, childName);
-                            return child;
-                        }
-                    }
-                }
+        
+        final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parent.getPath());
+        if (aliases != null) {
+            if (aliases.containsKey(childName)) {
+                final Resource aliasedChild = getResource(parent, aliases.get(childName));
+                logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
+                return aliasedChild;
             }
         }
 
