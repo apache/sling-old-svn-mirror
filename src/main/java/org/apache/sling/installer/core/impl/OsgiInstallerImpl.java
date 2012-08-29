@@ -122,7 +122,11 @@ public class OsgiInstallerImpl
     private final AtomicLong backgroundTaskCounter = new AtomicLong();
 
 
-    /** Constructor */
+    /**
+     *  Constructor
+     *
+     *  Most of the initialization is defered to the background thread
+     */
     public OsgiInstallerImpl(final BundleContext ctx) {
         this.ctx = ctx;
         // Initialize file util
@@ -144,19 +148,26 @@ public class OsgiInstallerImpl
         }
 
         // Stop service trackers.
-        this.factoryTracker.close();
-        this.transformerTracker.close();
+        if ( this.factoryTracker != null ) {
+            this.factoryTracker.close();
+        }
+        if ( this.transformerTracker != null ) {
+            this.transformerTracker.close();
+        }
+        if ( this.updateHandlerTracker != null ) {
+            this.updateHandlerTracker.close();
+        }
 
         this.listener.dispose();
 
         if ( this.backgroundThread != null ) {
-            if(logger.isDebugEnabled()) {
-                try {
-                    logger.debug("Waiting for main background thread {} to stop", backgroundThread.getName());
-                } catch(NullPointerException ignore) {
+            if ( logger.isDebugEnabled() ) {
+                final Thread t = this.backgroundThread;
+                if ( t != null ) {
+                    logger.debug("Waiting for main background thread {} to stop", t.getName());
                 }
             }
-            
+
             while ( this.backgroundThread != null ) {
                 // use a local variable to avoid NPEs
                 final Thread t = this.backgroundThread;
@@ -177,6 +188,9 @@ public class OsgiInstallerImpl
         this.logger.info("Apache Sling OSGi Installer Service stopped.");
     }
 
+    /**
+     * Start this component.
+     */
     public void start() {
         this.startBackgroundThread();
     }
@@ -196,6 +210,9 @@ public class OsgiInstallerImpl
         this.logger.info("Apache Sling OSGi Installer Service started.");
     }
 
+    /**
+     * Start the background thread.
+     */
     private void startBackgroundThread() {
         this.backgroundThread = new Thread(this);
         this.backgroundThread.setName(getClass().getSimpleName());
@@ -236,12 +253,12 @@ public class OsgiInstallerImpl
                             // registered
                             logger.debug("No more tasks to process, suspending listener and going idle");
                             this.listener.suspend();
-                            
+
                             try {
                                 logger.debug("wait() on resourcesLock");
                                 this.resourcesLock.wait();
                             } catch (final InterruptedException ignore) {}
-                            
+
                             if ( active ) {
                                 logger.debug("Done wait()ing on resourcesLock, restarting listener");
                                 this.listener.start();
@@ -692,8 +709,8 @@ public class OsgiInstallerImpl
 
                         @Override
                         public void run() {
-                            logger.debug("Starting background thread {} to execute {}", 
-                                    Thread.currentThread().getName(), 
+                            logger.debug("Starting background thread {} to execute {}",
+                                    Thread.currentThread().getName(),
                                     aSyncTask);
                             try {
                                 Thread.sleep(2000L);
@@ -705,7 +722,7 @@ public class OsgiInstallerImpl
                                 aSyncTask.getResource().setAttribute(InstallTask.ASYNC_ATTR_NAME, oldValue);
                             }
                             aSyncTask.execute(ctx);
-                            logger.debug("Background thread {} ends",  Thread.currentThread().getName()); 
+                            logger.debug("Background thread {} ends",  Thread.currentThread().getName());
                         }
                     };
                     t.start();
