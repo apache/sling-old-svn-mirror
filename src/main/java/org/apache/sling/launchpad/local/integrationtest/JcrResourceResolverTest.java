@@ -1179,6 +1179,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
         content.setProperty("sling:alias", alias);
         session.save();
+        
+        mapEntries.doInit();
 
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
             + "/" + alias + ".print.html");
@@ -1221,6 +1223,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child", "nt:unstructured");
         child.setProperty("sling:alias", alias);
         session.save();
+        
+        mapEntries.doInit();
 
         res = resResolver.resolve(request, path);
         assertEquals(child.getPath(), res.getPath());
@@ -2037,6 +2041,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         child.setProperty("sling:alias", new String[] {
             "kind", "enfant" });
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
         // the rootPath onto root
@@ -2076,6 +2082,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node grandchild = child.addNode("grandchild");
         grandchild.setProperty("sling:alias", "enkel");
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind/enkel due to alias and no parent due to mapping
         // the rootPath onto root
@@ -2117,6 +2125,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
         // the rootPath onto root
@@ -2138,6 +2148,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node grandchild = child.addNode("grandchild");
         grandchild.setProperty("sling:alias", "enkel");
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind/enkel due to alias and no parent due to mapping
         // the rootPath onto root
@@ -2165,6 +2177,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
         // the rootPath onto root
@@ -2186,6 +2200,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node grandchild = child.addNode("grandchild");
         grandchild.setProperty("sling:alias", "enkel");
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind/enkel due to alias and no parent due to mapping
         // the rootPath onto root
@@ -2213,6 +2229,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
         session.save();
+        
+        mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
         // the rootPath onto root
