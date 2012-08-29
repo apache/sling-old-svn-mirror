@@ -18,10 +18,10 @@ package org.apache.sling.performance.tests;
 
 import org.apache.sling.performance.TestHelper;
 
-public class ResolveWith5000AliasTest extends ResolveWithManyAliasTest {
+public class ResolveNonExistingWith1000AliasTest extends ResolveNonExistingWithManyAliasTest {
     
-    public ResolveWith5000AliasTest(TestHelper helper) {
-        super(helper, 5000);
+    public ResolveNonExistingWith1000AliasTest(TestHelper helper) {
+        super(helper, 1000);
     }
 
 }

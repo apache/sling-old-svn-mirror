@@ -18,10 +18,10 @@ package org.apache.sling.performance.tests;
 
 import org.apache.sling.performance.TestHelper;
 
-public class ResolveWith30000VanityPathTest extends ResolveWithManyVanityPathTest {
+public class ResolveNonExistingWith1000VanityPathTest extends ResolveNonExistingWithManyVanityPathTest {
 
-    public ResolveWith30000VanityPathTest(TestHelper helper) {
-        super(helper, 300, 100);
+    public ResolveNonExistingWith1000VanityPathTest(TestHelper helper) {
+        super(helper, 100, 10);
     }
 
 }

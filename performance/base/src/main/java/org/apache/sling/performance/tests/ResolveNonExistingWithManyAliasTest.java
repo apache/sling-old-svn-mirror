@@ -16,8 +16,6 @@
  */
 package org.apache.sling.performance.tests;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -33,16 +31,16 @@ import org.apache.sling.performance.AbstractRepositoryTest;
 import org.apache.sling.performance.TestHelper;
 import org.apache.sling.performance.ResourceResolverTestRequest;
 
-class ResolveWithManyVanityPathTest extends AbstractRepositoryTest {
-    
-    private static final String NT_VANITY_PATH = "sling:VanityPath";
+import static org.junit.Assert.assertNotNull;
 
-    private static final String PN_VANITY_PATH = "sling:vanityPath";
+class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
+    
+    private static final String PN_SLING_ALIAS = "sling:alias";
     
     private final TestHelper helper;
-    
+
     private Node mapRoot;
-    
+
     private ResourceResolver resResolver;
     
     private Node rootNode;
@@ -51,12 +49,9 @@ class ResolveWithManyVanityPathTest extends AbstractRepositoryTest {
 
     private final int nodeCount;
     
-    private final int childNodeCount;
-    
-    public ResolveWithManyVanityPathTest(TestHelper helper, int nodeCount, int childNodeCount) {
+    public ResolveNonExistingWithManyAliasTest(TestHelper helper, int nodeCount) {
         this.helper = helper;
         this.nodeCount = nodeCount;
-        this.childNodeCount = childNodeCount;
     }
 
     @Override
@@ -87,30 +82,24 @@ class ResolveWithManyVanityPathTest extends AbstractRepositoryTest {
 
         // test data
         rootPath = "/test" + System.currentTimeMillis();
-        rootNode = getSession().getRootNode().addNode(rootPath.substring(1), "nt:unstructured");
+        rootNode = getSession().getRootNode().addNode(rootPath.substring(1), JcrConstants.NT_UNSTRUCTURED);
 
         // test mappings
-        mapRoot = getSession().getRootNode().addNode("etc", JcrConstants.NT_FOLDER);
+        mapRoot = getSession().getRootNode().addNode("etc", "nt:folder");
         Node map = mapRoot.addNode("map", "sling:Mapping");
         Node http = map.addNode("http", "sling:Mapping");
         http.addNode("localhost.80", "sling:Mapping");
         Node https = map.addNode("https", "sling:Mapping");
         https.addNode("localhost.443", "sling:Mapping");
 
+        // define a vanity path for the rootPath
         SecureRandom random = new SecureRandom();
-
-        // creating <nodeCount> x <childNodeCount> nodes with vanity
+        // creating <nodeCount> nodes
         for (int j = 0; j < nodeCount; j++) {
             Node content = rootNode.addNode("a" + j, JcrConstants.NT_UNSTRUCTURED);
-            String s = new BigInteger(130, random).toString(32);
-            content.addMixin(NT_VANITY_PATH);
-            content.setProperty(PN_VANITY_PATH, s);
-            for (int k = 0; k < childNodeCount; k++) {
-                Node content2 = content.addNode("b" + k, JcrConstants.NT_UNSTRUCTURED);
-                String ss = new BigInteger(130, random).toString(32);
-                content2.addMixin(NT_VANITY_PATH);
-                content2.setProperty(PN_VANITY_PATH, ss);
-            }
+            String alias = new BigInteger(130, random).toString(32);
+            content.setProperty(PN_SLING_ALIAS, alias);
+
             if (j % 10 == 0) {
                 session.save();
             }
@@ -126,11 +115,10 @@ class ResolveWithManyVanityPathTest extends AbstractRepositoryTest {
 
     @Override
     protected void runTest() throws Exception {
-        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/" + "testNonExistingVanity"
+        String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/" + "testNonExistingAlias"
                 + ".print.html");
         HttpServletRequest request = new ResourceResolverTestRequest(path);
         Resource res = resResolver.resolve(request, path);
         assertNotNull(res);
     }
-
 }

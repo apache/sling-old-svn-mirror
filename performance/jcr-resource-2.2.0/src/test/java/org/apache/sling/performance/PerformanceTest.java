@@ -37,14 +37,14 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
-import org.apache.sling.performance.tests.ResolveWith10000AliasTest;
-import org.apache.sling.performance.tests.ResolveWith10000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveWith1000AliasTest;
-import org.apache.sling.performance.tests.ResolveWith1000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveWith30000AliasTest;
-import org.apache.sling.performance.tests.ResolveWith30000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveWith5000AliasTest;
-import org.apache.sling.performance.tests.ResolveWith5000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith10000AliasTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith10000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith1000AliasTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith1000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith30000AliasTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith30000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith5000AliasTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWith5000VanityPathTest;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
@@ -119,14 +119,14 @@ public class PerformanceTest extends AbstractPerformanceTest {
         Helper helper = new Helper();
         
         List<AbstractTest> tests = new ArrayList<AbstractTest>();
-        tests.add(new ResolveWith1000VanityPathTest(helper));
-        tests.add(new ResolveWith5000VanityPathTest(helper));
-        tests.add(new ResolveWith10000VanityPathTest(helper));
-        //tests.add(new ResolveWith30000VanityPathTest(helper));
-        tests.add(new ResolveWith1000AliasTest(helper));
-        tests.add(new ResolveWith5000AliasTest(helper));
-        tests.add(new ResolveWith10000AliasTest(helper));
-        //tests.add(new ResolveWith30000AliasTest(helper));
+        tests.add(new ResolveNonExistingWith1000VanityPathTest(helper));
+        tests.add(new ResolveNonExistingWith5000VanityPathTest(helper));
+        tests.add(new ResolveNonExistingWith10000VanityPathTest(helper));
+        //tests.add(new ResolveNonExistingWith30000VanityPathTest(helper));
+        tests.add(new ResolveNonExistingWith1000AliasTest(helper));
+        tests.add(new ResolveNonExistingWith5000AliasTest(helper));
+        tests.add(new ResolveNonExistingWith10000AliasTest(helper));
+        //tests.add(new ResolveNonExistingWith30000AliasTest(helper));
         testPerformance("jcr.resource-2.2.0", tests);
     }
 }

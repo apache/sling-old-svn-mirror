@@ -103,14 +103,14 @@ public class PerformanceTest extends AbstractPerformanceTest {
         Helper helper = new Helper();
         
         List<AbstractTest> tests = new ArrayList<AbstractTest>();
-        tests.add(new ResolveWith1000VanityPathTest(helper));
-        tests.add(new ResolveWith5000VanityPathTest(helper));
-        tests.add(new ResolveWith10000VanityPathTest(helper));
-        //tests.add(new ResolveWith30000VanityPathTest(helper));
-        tests.add(new ResolveWith1000AliasTest(helper));
-        tests.add(new ResolveWith5000AliasTest(helper));
-        tests.add(new ResolveWith10000AliasTest(helper));
-        //tests.add(new ResolveWith30000AliasTest(helper));
+        tests.add(new ResolveNonExistingWith1000VanityPathTest(helper));
+        tests.add(new ResolveNonExistingWith5000VanityPathTest(helper));
+        tests.add(new ResolveNonExistingWith10000VanityPathTest(helper));
+        //tests.add(new ResolveNonExistingWith30000VanityPathTest(helper));
+        tests.add(new ResolveNonExistingWith1000AliasTest(helper));
+        tests.add(new ResolveNonExistingWith5000AliasTest(helper));
+        tests.add(new ResolveNonExistingWith10000AliasTest(helper));
+        //tests.add(new ResolveNonExistingWith30000AliasTest(helper));
         testPerformance("jcr.resource-2.1.0", tests);
     }
 }
