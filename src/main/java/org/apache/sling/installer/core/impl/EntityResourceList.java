@@ -277,6 +277,11 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             final TaskResource rr = taskIter.next();
             if ( rr.getURL().equals(r.getURL()) ) {
                 if ( RegisteredResourceImpl.isSameResource((RegisteredResourceImpl)rr, (RegisteredResourceImpl)r) ) {
+                    if ( !rr.getDigest().equals(r.getDigest()) ) {
+                        // same resource but different digest, we need to remove the file
+                        LOGGER.debug("Cleanup duplicate resource: {}", r);
+                        this.cleanup(r);
+                    }
                     // same resource, just ignore the new one
                     add = false;
                 } else {
