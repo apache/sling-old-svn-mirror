@@ -43,7 +43,6 @@ class ResolveWithManyVanityPathTest extends AbstractRepositoryTest {
     
     private Node mapRoot;
     
-    // private JcrResourceListener listener;
     private ResourceResolver resResolver;
     
     private Node rootNode;

@@ -66,9 +66,6 @@ class ResolveWithManyAliasTest extends AbstractRepositoryTest {
         if (mapRoot != null) {
             mapRoot.remove();
         }
-        /*
-         * if ( this.listener != null ) { this.listener.dispose(); }
-         */
         session.save();
     }
 
