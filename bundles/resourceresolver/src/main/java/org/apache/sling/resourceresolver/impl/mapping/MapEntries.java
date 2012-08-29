@@ -96,6 +96,8 @@ public class MapEntries implements EventHandler {
 
     private Collection<String> vanityTargets;
 
+    private Map<String, Map<String, String>> aliasMap;
+
     private ServiceRegistration registration;
 
     private EventAdmin eventAdmin;
@@ -113,6 +115,7 @@ public class MapEntries implements EventHandler {
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
+        this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
         this.registration = null;
         this.eventAdmin = null;
     }
@@ -128,6 +131,7 @@ public class MapEntries implements EventHandler {
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
         this.mapMaps = Collections.<MapEntry> emptyList();
         this.vanityTargets = Collections.<String> emptySet();
+        this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
 
         doInit();
 
@@ -207,9 +211,12 @@ public class MapEntries implements EventHandler {
             Collections.sort(globalResolveMap);
             newResolveMapsMap.put(GLOBAL_LIST_KEY, globalResolveMap);
 
+            final Map<String, Map<String, String>> aliasMap = this.loadAliases(resolver);
+
             this.vanityTargets = Collections.unmodifiableCollection(vanityTargets);
             this.resolveMapsMap = Collections.unmodifiableMap(newResolveMapsMap);
             this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
+            this.aliasMap = makeUnmodifiableMap(aliasMap);
 
             sendChangeEvent();
 
@@ -222,6 +229,14 @@ public class MapEntries implements EventHandler {
             this.initializing.unlock();
 
         }
+    }
+
+    private <K1, K2, V> Map<K1, Map<K2, V>> makeUnmodifiableMap(final Map<K1, Map<K2, V>> map) {
+        final Map<K1, Map<K2, V>> newMap = new HashMap<K1, Map<K2, V>>();
+        for (final K1 key : map.keySet()) {
+            newMap.put(key, Collections.unmodifiableMap(map.get(key)));
+        }
+        return Collections.unmodifiableMap(newMap);
     }
 
     /**
@@ -311,6 +326,10 @@ public class MapEntries implements EventHandler {
         return mapMaps;
     }
 
+    public Map<String, String> getAliasMap(final String parentPath) {
+        return aliasMap.get(parentPath);
+    }
+
     // ---------- EventListener interface
 
     /**
@@ -341,6 +360,12 @@ public class MapEntries implements EventHandler {
         if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) && !path.startsWith(this.mapRoot)) {
             doInit = false;
             for (final String target : this.vanityTargets) {
+                if (target.startsWith(path)) {
+                    doInit = true;
+                    break;
+                }
+            }
+            for (final String target : this.aliasMap.keySet()) {
                 if (target.startsWith(path)) {
                     doInit = true;
                     break;
@@ -437,6 +462,41 @@ public class MapEntries implements EventHandler {
         entries.add(entry);
         // and finally sort list
         Collections.sort(entries);
+    }
+
+    private Map<String, Map<String, String>> loadAliases(final ResourceResolver resolver) {
+        final Map<String, Map<String, String>> map = new HashMap<String, Map<String, String>>();
+        final String queryString = "SELECT sling:alias FROM nt:base WHERE sling:alias IS NOT NULL";
+        final Iterator<Resource> i = resolver.findResources(queryString, "sql");
+        while (i.hasNext()) {
+            final Resource resource = i.next();
+
+            // ignore system tree
+            if (resource.getPath().startsWith(JCR_SYSTEM_PREFIX)) {
+                log.debug("loadAliases: Ignoring {}", resource);
+                continue;
+            }
+
+            // require properties
+            final ValueMap props = resource.adaptTo(ValueMap.class);
+            if (props == null) {
+                log.debug("loadAliases: Ignoring {} without properties", resource);
+                continue;
+            }
+
+            final String parentPath = resource.getParent().getPath();
+            Map<String, String> parentMap = map.get(parentPath);
+            if (parentMap == null) {
+                parentMap = new HashMap<String, String>();
+                map.put(parentPath, parentMap);
+            }
+            for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
+                parentMap.put(alias, resource.getName());
+            }
+        }
+
+        return map;
+
     }
 
     /**
@@ -648,7 +708,7 @@ public class MapEntries implements EventHandler {
         final String[] nodeProps = { "sling:vanityPath", "sling:vanityOrder",
                         PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, PROP_REDIRECT_EXTERNAL,
                         ResourceResolverImpl.PROP_REDIRECT_INTERNAL, PROP_REDIRECT_EXTERNAL_STATUS,
-                        PROP_REG_EXP };
+                        PROP_REG_EXP, ResourceResolverImpl.PROP_ALIAS };
         final String[] eventProps = { "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes" };
         final StringBuilder filter = new StringBuilder();
         filter.append("(|");
