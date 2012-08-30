@@ -108,7 +108,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     private File[] rewriteRuleFiles;
 
     /**
-     * The comma separated list of tokens to include when copying configs
+     * The list of tokens to include when copying configs
      * from partial bundle lists.
      *
      * @parameter default-value="**"
@@ -116,12 +116,20 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
     private String[] configIncludes;
 
     /**
-     * The comma separated list of tokens to exclude when copying the configs
+     * The list of tokens to exclude when copying the configs
      * from partial bundle lists.
      *
      * @parameter
      */
     private String[] configExcludes;
+
+    /**
+     * The list of names to exclude when copying properties
+     * from partial bundle lists.
+     *
+     * @parameter
+     */
+    private String[] propertiesExcludes;
 
     /**
      * @component
@@ -406,18 +414,21 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                     } else {
                         this.copyProperties(loadedProps, this.slingProperties);
                     }
+                    filterProperties(this.slingProperties);
                 } else if ( mode == 1 ) {
                     if ( this.slingWebappProperties == null ) {
                         this.slingWebappProperties = loadedProps;
                     } else {
                         this.copyProperties(loadedProps, this.slingWebappProperties);
                     }
+                    filterProperties(this.slingWebappProperties);
                 } else {
                     if ( this.slingStandaloneProperties == null ) {
                         this.slingStandaloneProperties = loadedProps;
                     } else {
                         this.copyProperties(loadedProps, this.slingStandaloneProperties);
                     }
+                    filterProperties(this.slingStandaloneProperties);
                 }
             } catch (IOException e) {
                 throw new MojoExecutionException("Unable to create filtered properties file", e);
@@ -427,6 +438,17 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 if (tmp != null) {
                     tmp.delete();
                 }
+            }
+        }
+    }
+
+    /**
+     * Filter properties by removing excluded properties
+     */
+    private void filterProperties(final Properties props) {
+        if ( this.propertiesExcludes != null ) {
+            for(final String name : this.propertiesExcludes) {
+                props.remove(name.trim());
             }
         }
     }
