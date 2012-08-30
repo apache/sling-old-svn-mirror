@@ -38,6 +38,7 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.util.FileUtils;
+import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
@@ -105,6 +106,22 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
      * @parameter
      */
     private File[] rewriteRuleFiles;
+
+    /**
+     * The comma separated list of tokens to include when copying configs
+     * from partial bundle lists.
+     *
+     * @parameter default-value="**"
+     */
+    private String[] configIncludes;
+
+    /**
+     * The comma separated list of tokens to exclude when copying the configs
+     * from partial bundle lists.
+     *
+     * @parameter
+     */
+    private String[] configExcludes;
 
     /**
      * @component
@@ -312,8 +329,16 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                         this.tempConfigDir.mkdirs();
                         this.overlayConfigDir = this.tempConfigDir;
                     }
+                    String excludes = FileUtils.getDefaultExcludesAsString();
+                    if ( this.configExcludes != null ) {
+                        excludes = excludes + ',' + StringUtils.join(this.configExcludes, ",");
+                    }
+                    String includes = null;
+                    if ( this.configIncludes != null ) {
+                        includes = StringUtils.join(this.configIncludes, ",");
+                    }
                     FileUtils.copyDirectory(configDir, this.overlayConfigDir,
-                            null, FileUtils.getDefaultExcludesAsString());
+                                    includes, excludes);
                 }
             } catch (final ArchiverException ae) {
                 throw new MojoExecutionException("Unable to extract configuration archive.",ae);
