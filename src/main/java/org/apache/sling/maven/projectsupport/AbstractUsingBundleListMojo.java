@@ -239,7 +239,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         for (Artifact artifact : dependencies) {
             if (PARTIAL.equals(artifact.getType())) {
                 getLog().info(
-                        String.format("merging partial bundle list for %s:%s:%s", artifact.getGroupId(),
+                        String.format("Merging partial bundle list %s:%s:%s", artifact.getGroupId(),
                                 artifact.getArtifactId(), artifact.getVersion()));
                 initializedBundleList.merge(readBundleList(artifact.getFile()));
             }
@@ -263,15 +263,17 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         final Set<Artifact> dependencies = project.getDependencyArtifacts();
         for (Artifact artifact : dependencies) {
             if (PARTIAL.equals(artifact.getType())) {
-                getLog().info(
-                        String.format("merging configuration from partial bundle list for %s:%s:%s", artifact.getGroupId(),
-                                artifact.getArtifactId(), artifact.getVersion()));
                 extractConfiguration(artifact);
             }
         }
+        // copy own config files
+        if ( this.overlayConfigDir != null && super.getConfigDirectory().exists() ) {
+            FileUtils.copyDirectory(super.getConfigDirectory(), this.overlayConfigDir,
+                    null, FileUtils.getDefaultExcludesAsString());
+        }
     }
 
-    private void extractConfiguration(Artifact artifact) throws MojoExecutionException, IOException {
+    private void extractConfiguration(final Artifact artifact) throws MojoExecutionException, IOException {
         // check for configuration artifact
         Artifact cfgArtifact = null;
         try {
@@ -285,7 +287,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
         if ( cfgArtifact != null ) {
             getLog().info(
-                    String.format("merging partial bundle list configuration for %s:%s:%s", cfgArtifact.getGroupId(),
+                    String.format("Merging settings from partial bundle list %s:%s:%s", cfgArtifact.getGroupId(),
                             cfgArtifact.getArtifactId(), cfgArtifact.getVersion()));
 
             // extract
@@ -304,17 +306,13 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                 this.readSlingBootstrap(new File(slingDir, AttachPartialBundleListMojo.SLING_STANDALONE_BOOTSTRAP), 2);
 
                 // and now configurations
-                if ( this.overlayConfigDir == null ) {
-                    this.tempConfigDir.mkdirs();
-                    if ( this.getConfigDirectory().exists() ) {
-                        FileUtils.copyDirectory(this.getConfigDirectory(), this.tempConfigDir,
-                                null, FileUtils.getDefaultExcludesAsString());
-                    }
-                    this.overlayConfigDir = this.tempConfigDir;
-                }
                 final File configDir = new File(this.tmpOutputDir, "config");
                 if ( configDir.exists() ) {
-                    FileUtils.copyDirectory(configDir, this.tempConfigDir,
+                    if ( this.overlayConfigDir == null ) {
+                        this.tempConfigDir.mkdirs();
+                        this.overlayConfigDir = this.tempConfigDir;
+                    }
+                    FileUtils.copyDirectory(configDir, this.overlayConfigDir,
                             null, FileUtils.getDefaultExcludesAsString());
                 }
             } catch (final ArchiverException ae) {
