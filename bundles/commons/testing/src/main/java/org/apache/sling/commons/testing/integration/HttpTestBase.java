@@ -45,6 +45,10 @@ import org.slf4j.MDC;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
+
+    /** If this system property is set, the startup check is skipped. */
+    public static final String PROPERTY_SKIP_STARTUP_CHECK = "launchpad.skip.startupcheck";
+
     public static final String HTTP_BASE_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
     public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", "http://localhost:8888"));
     public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", ""));
@@ -120,7 +124,7 @@ public class HttpTestBase extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        
+
         MDC.put("testclass", getClass().getName());
         MDC.put("testcase", getName());
 
@@ -155,7 +159,7 @@ public class HttpTestBase extends TestCase {
     protected void tearDown() throws Exception {
         MDC.remove("testcase");
         MDC.remove("testclass");
-        
+
         super.tearDown();
 
         for(String url : urlsToDelete) {
@@ -176,6 +180,10 @@ public class HttpTestBase extends TestCase {
                 return;
             }
             fail("Sling services not available. Already checked in earlier tests.");
+        }
+        if ( System.getProperty(PROPERTY_SKIP_STARTUP_CHECK) != null ) {
+            slingStartupOk = true;
+            return;
         }
         slingStartupOk = false;
 
