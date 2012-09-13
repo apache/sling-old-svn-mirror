@@ -18,8 +18,6 @@
  */
 package org.apache.sling.resourceresolver.impl.mapping;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * The <code>MapEntry</code> class represents a mapping entry in the mapping
  * configuration tree at <code>/etc/map</code>.
  * <p>
- * 
+ *
  * @see "http://cwiki.apache.org/SLING/flexible-resource-resolution.html"
  */
 public class MapEntry implements Comparable<MapEntry> {
@@ -72,7 +70,7 @@ public class MapEntry implements Comparable<MapEntry> {
     /**
      * Returns a string used for matching map entries against the given request
      * or URI parts.
-     * 
+     *
      * @param scheme
      *            The URI scheme
      * @param host
@@ -110,16 +108,17 @@ public class MapEntry implements Comparable<MapEntry> {
         return uriPath;
     }
 
-    public static URI toURI(final String uriPath) {
+    /**
+     * Converts the resolution path of the form http/host.77/the/path into an
+     * URI of the form http://host:77/the/path where any potential default port
+     * (80 for http and 443 for https) is actually removed. If the path is just
+     * a regular path such as /the/path, this method returns <code>null</code>.
+     */
+    public static String toURI(final String uriPath) {
         for (int i = 0; i < PATH_TO_URL_MATCH.length; i++) {
             final Matcher m = PATH_TO_URL_MATCH[i].matcher(uriPath);
             if (m.find()) {
-                final String newUriPath = m.replaceAll(PATH_TO_URL_REPLACEMENT[i]);
-                try {
-                    return new URI(newUriPath);
-                } catch (final URISyntaxException use) {
-                    // ignore, just don't return the uri as such
-                }
+                return m.replaceAll(PATH_TO_URL_REPLACEMENT[i]);
             }
         }
 
@@ -143,9 +142,9 @@ public class MapEntry implements Comparable<MapEntry> {
                 return new MapEntry(url, status, trailingSlash, redirect);
             }
 
-            final String[] internalRedirect = props
-                            .get(ResourceResolverImpl.PROP_REDIRECT_INTERNAL,
-                                            String[].class);
+            final String[] internalRedirectProps = props.get(ResourceResolverImpl.PROP_REDIRECT_INTERNAL,
+                String[].class);
+            final String[] internalRedirect = filterRegExp(internalRedirectProps);
             if (internalRedirect != null) {
                 return new MapEntry(url, -1, trailingSlash, internalRedirect);
             }
@@ -196,12 +195,11 @@ public class MapEntry implements Comparable<MapEntry> {
                                             String[].class);
             if (internalRedirect != null) {
 
+                // check whether the url is considered external or internal
                 int status = -1;
-                final URI extPathPrefix = toURI(url);
-                if (extPathPrefix != null) {
-                    url = getURI(extPathPrefix.getScheme(),
-                                    extPathPrefix.getHost(), extPathPrefix.getPort(),
-                                    extPathPrefix.getPath());
+                final String pathUri = toURI(url);
+                if (pathUri != null) {
+                    url = pathUri;
                     status = 302;
                 }
 
@@ -323,7 +321,7 @@ public class MapEntry implements Comparable<MapEntry> {
     /**
      * Returns <code>true</code> if the string contains unescaped regular
      * expression special characters '+', '*', '?', '|', '(', '), '[', and ']'
-     * 
+     *
      * @param string
      * @return
      */
@@ -337,5 +335,27 @@ public class MapEntry implements Comparable<MapEntry> {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns an array of strings copied from the given strings where any
+     * regular expressions in the array are removed. If the input is
+     * <code>null</code> or no strings are provided <code>null</code> is
+     * returned. <code>null</code> is also returned if the strings only contain
+     * regular expressions.
+     */
+    private static String[] filterRegExp(final String... strings) {
+        if (strings == null || strings.length == 0) {
+            return null;
+        }
+
+        ArrayList<String> list = new ArrayList<String>(strings.length);
+        for (String string : strings) {
+            if (!isRegExp(string)) {
+                list.add(string);
+            }
+        }
+
+        return list.isEmpty() ? null : (String[]) list.toArray(new String[list.size()]);
     }
 }

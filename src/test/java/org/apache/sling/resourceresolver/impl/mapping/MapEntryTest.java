@@ -23,8 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Method;
-import java.net.URI;
-
 import junit.framework.TestCase;
 
 import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
@@ -149,8 +147,39 @@ public class MapEntryTest {
         TestCase.assertTrue(isRegExp("http/[^.]+.www.example.com.8080/bla"));
     }
 
+    @Test public void test_filterRegExp() {
+        TestCase.assertNull(filterRegExp((String[]) null));
+        TestCase.assertNull(filterRegExp(new String[0]));
+
+        String aString = "plain";
+        String aString2 = "plain2";
+        String aPattern = "http/[^.]+.www.example.com.8080/bla";
+
+        TestCase.assertNull(filterRegExp(aPattern));
+
+        String[] res = filterRegExp(aString);
+        TestCase.assertNotNull(res);
+        TestCase.assertEquals(1, res.length);
+        TestCase.assertEquals(aString, res[0]);
+
+        res = filterRegExp(aString, aPattern);
+        TestCase.assertNotNull(res);
+        TestCase.assertEquals(1, res.length);
+        TestCase.assertEquals(aString, res[0]);
+
+        res = filterRegExp(aPattern, aString, aPattern);
+        TestCase.assertNotNull(res);
+        TestCase.assertEquals(1, res.length);
+        TestCase.assertEquals(aString, res[0]);
+
+        res = filterRegExp(aPattern, aString);
+        TestCase.assertNotNull(res);
+        TestCase.assertEquals(1, res.length);
+        TestCase.assertEquals(aString, res[0]);
+    }
+
     private void assertEqualUri(String expected, String uriPath) {
-        URI uri = MapEntry.toURI(uriPath);
+        String uri = MapEntry.toURI(uriPath);
         assertNotNull("Failed converting " + uriPath, uri);
         assertEquals(expected, uri.toString());
     }
@@ -169,6 +198,19 @@ public class MapEntryTest {
         } catch (Exception e) {
             fail(e.toString());
             return false; // quiesc compiler
+        }
+    }
+
+    private String[] filterRegExp(final String... strings) {
+        try {
+            Method m = MapEntry.class.getDeclaredMethod("filterRegExp", String[].class);
+            m.setAccessible(true);
+            return (String[]) m.invoke(null, new Object[] {
+                strings
+            });
+        } catch (Exception e) {
+            fail(e.toString());
+            return null; // quiesc compiler
         }
     }
 }
