@@ -525,8 +525,10 @@ public class MapEntries implements EventHandler {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Set<String> targetPaths = new HashSet<String>();
-        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
+        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus, sling:vanityOrder FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
+
+        final Set<String> processedVanityPaths = new HashSet<String>();
 
         while (i.hasNext()) {
             final Resource resource = i.next();
@@ -552,33 +554,36 @@ public class MapEntries implements EventHandler {
                 if (result != null) {
                     final String url = result[0] + result[1];
 
-                    // redirect target is the node providing the
-                    // sling:vanityPath
-                    // property (or its parent if the node is called
-                    // jcr:content)
-                    final String redirect;
-                    if (resource.getName().equals("jcr:content")) {
-                        redirect = resource.getParent().getPath();
-                    } else {
-                        redirect = resource.getPath();
+                    if ( !processedVanityPaths.contains(url) ) {
+                        processedVanityPaths.add(url);
+                        // redirect target is the node providing the
+                        // sling:vanityPath
+                        // property (or its parent if the node is called
+                        // jcr:content)
+                        final String redirect;
+                        if (resource.getName().equals("jcr:content")) {
+                            redirect = resource.getParent().getPath();
+                        } else {
+                            redirect = resource.getPath();
+                        }
+
+                        // whether the target is attained by a 302/FOUND or by an
+                        // internal redirect is defined by the sling:redirect
+                        // property
+                        final int status = props.get("sling:redirect", false) ? props.get(
+                                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
+                                        : -1;
+
+                        final String checkPath = result[1];
+                        // 1. entry with exact match
+                        this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect + ".html"));
+
+                        // 2. entry with match supporting selectors and extension
+                        this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false, redirect + "$1"));
+
+                        // 3. keep the path to return
+                        targetPaths.add(redirect);
                     }
-
-                    // whether the target is attained by a 302/FOUND or by an
-                    // internal redirect is defined by the sling:redirect
-                    // property
-                    final int status = props.get("sling:redirect", false) ? props.get(
-                                    PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
-                                    : -1;
-
-                                    final String checkPath = result[1];
-                                    // 1. entry with exact match
-                                    this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect + ".html"));
-
-                                    // 2. entry with match supporting selectors and extension
-                                    this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false, redirect + "$1"));
-
-                                    // 3. keep the path to return
-                                    targetPaths.add(redirect);
                 }
             }
         }
