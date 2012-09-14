@@ -525,7 +525,7 @@ public class MapEntries implements EventHandler {
         // sling:VanityPath (uppercase V) is the mixin name
         // sling:vanityPath (lowercase) is the property name
         final Set<String> targetPaths = new HashSet<String>();
-        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus, sling:vanityOrder FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
+        final String queryString = "SELECT sling:vanityPath, sling:redirect, sling:redirectStatus FROM sling:VanityPath WHERE sling:vanityPath IS NOT NULL ORDER BY sling:vanityOrder DESC";
         final Iterator<Resource> i = resolver.findResources(queryString, "sql");
 
         final Set<String> processedVanityPaths = new HashSet<String>();
