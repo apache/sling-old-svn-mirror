@@ -37,11 +37,11 @@ public class TestAllPaths {
     private final String path;
     public static final String TEST_URL_SUFFIX = ".test.txt";
     public static final String PASSED = "TEST_PASSED";
-    
+
     public TestAllPaths(String path) {
         this.path = path;
     }
-    
+
     /** Let JUnit run this all on our paths */
     @Parameters
     public static Collection<Object[]> data() {
@@ -55,16 +55,25 @@ public class TestAllPaths {
     @Test
     public void verifyContent() throws Exception {
         final TestContext ctx = ScriptableTestsProvider.getTestContext();
-        
+
         // Get content via internal Sling request
         final HttpRequest req = new HttpRequest(path);
         final HttpResponse resp = new HttpResponse();
         ctx.requestProcessor.processRequest(req, resp, ctx.resourceResolver);
         final String content = resp.getContent();
         assertEquals("Expecting HTTP status 200 for path " + path, 200, resp.getStatus());
-        
+
         // Expect a single line of content with TEST_PASSED, ignoring
         // empty lines and lines that start with #
+        boolean testSuccess = checkTest(content);
+        if (!testSuccess) {
+            fail("Unexpected content at path " + path
+                    + ", should be just " + PASSED + " (lines starting with # and empty lines are ignored)"
+                    + "\ncontent was:\n" + content + "\n");
+        }
+    }
+
+    public static boolean checkTest(String content) throws Exception {
         final BufferedReader br = new BufferedReader(new StringReader(content));
         String line = null;
         int passedCount = 0;
@@ -76,10 +85,13 @@ public class TestAllPaths {
             } else if(line.trim().equals(PASSED) && passedCount == 0) {
                 passedCount++;
             } else {
-                fail("Unexpected content at path " + path 
-                        + ", should be just " + PASSED + " (lines starting with # and empty lines are ignored)"
-                        + "\ncontent was:\n" + content + "\n");
+                return false;
             }
         }
+        // if there are only empty lines and/or comments and no TEST_PASSED string, the test fails
+        if (passedCount == 0) {
+            return false;
+        }
+        return true;
     }
 }
