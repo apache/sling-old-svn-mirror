@@ -38,7 +38,7 @@ public class TestAllPathsTest {
         assertTrue(TestAllPaths.checkTest(script1));
         assertFalse(TestAllPaths.checkTest(script2));
         assertFalse(TestAllPaths.checkTest(script3));
-        assertFalse(TestAllPaths.checkTest(script4));
+        assertFalse(TestAllPaths.checkTest(script4)); //test
     }
 
 }
