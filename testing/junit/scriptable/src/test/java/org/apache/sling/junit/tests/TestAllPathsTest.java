@@ -15,7 +15,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Adobe Systems Incorporated.
  **************************************************************************/
-package java.org.apache.sling.junit.tests;
+package org.apache.sling.junit.tests;
 
 import org.junit.Test;
 import org.apache.sling.junit.scriptable.TestAllPaths;
