@@ -31,7 +31,7 @@
 
   <name>Apache Sling Startup Filter Disabler</name>
   <description> 
-    The Activator of this bundle disables the Sling Startup Filter.
+    Registers a StartupFilterDisabler to disable the Sling Startup Filter.
     Configure this bundle with a high enough run level to remove the
     startup filter once the system is ready. 
   </description>
@@ -55,7 +55,6 @@
         <configuration>
           <instructions>
             <Private-Package>org.apache.sling.startupfilterdisabler.impl.*</Private-Package>
-            <Bundle-Activator>org.apache.sling.startupfilterdisabler.impl.Activator</Bundle-Activator>
           </instructions>
         </configuration>
       </plugin>
@@ -66,6 +65,10 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

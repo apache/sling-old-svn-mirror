@@ -35,8 +35,12 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.startupfilter.StartupFilter;
+import org.apache.sling.startupfilter.StartupFilterDisabler;
 import org.apache.sling.startupfilter.StartupInfoProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -71,8 +75,21 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     public static final String DEFAULT_MESSAGE_PROP = "default.message";
     private String defaultMessage;
     
+    @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
+    private StartupFilterDisabler startupFilterDisabler;
+    
     /** @inheritDoc */
     public void doFilter(ServletRequest request, ServletResponse sr, FilterChain chain) throws IOException, ServletException {
+        
+        // Disable if a StartupFilterDisabler is present
+        if(startupFilterDisabler!= null) {
+            log.info("StartupFilterDisabler service present, disabling StartupFilter ({})", 
+                    startupFilterDisabler.getReason());
+            disable();
+            chain.doFilter(request, sr);
+            return;
+        }
+        
         updateProviders();
         
         final StringBuilder sb = new StringBuilder();
