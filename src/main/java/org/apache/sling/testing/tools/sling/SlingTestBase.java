@@ -48,7 +48,7 @@ public class SlingTestBase {
     public static final String START_BUNDLES_TIMEOUT_SECONDS = "start.bundles.timeout.seconds";
     public static final String BUNDLE_INSTALL_TIMEOUT_SECONDS = "bundle.install.timeout.seconds";
     public static final String ADMIN = "admin";
-    
+
     private static final boolean keepJarRunning = "true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP));
     private final String serverBaseUrl;
     private RequestBuilder builder;
@@ -67,7 +67,7 @@ public class SlingTestBase {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private static JarExecutor jarExecutor;
-    
+
     /** Get configuration but do not start server yet, that's done on demand */
     public SlingTestBase() {
         if(jarExecutor == null) {
@@ -80,8 +80,8 @@ public class SlingTestBase {
                 }
             }
         }
-        
-        final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP);
+
+        final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP, System.getProperty("launchpad.http.server.url"));
         if(configuredUrl != null) {
             serverBaseUrl = configuredUrl;
             serverStarted = true;
@@ -97,7 +97,7 @@ public class SlingTestBase {
         webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
         builder = new RequestBuilder(serverBaseUrl);
         bundlesInstaller = new BundlesInstaller(webconsoleClient);
-        
+
         if(!serverInfoLogged) {
             log.info("Server base URL={}", serverBaseUrl);
             serverInfoLogged = true;
@@ -128,18 +128,18 @@ public class SlingTestBase {
             fail("maybeStartServer() failed: " + e);
         }
     }
-    
+
     protected void installAdditionalBundles() {
         if(installBundlesFailed) {
             fail("Bundles could not be installed, cannot run tests");
         } else if(!extraBundlesInstalled) {
             final String path = System.getProperty(ADDITONAL_BUNDLES_PATH);
             if(path == null) {
-                log.info("System property {} not set, additional bundles won't be installed", 
+                log.info("System property {} not set, additional bundles won't be installed",
                         ADDITONAL_BUNDLES_PATH);
             } else {
                 final List<File> toInstall = getBundlesToInstall(path);
-                
+
                 try {
                     // Install bundles, check that they are installed and start them all
                     bundlesInstaller.installBundles(toInstall, false);
@@ -147,7 +147,7 @@ public class SlingTestBase {
                     for(File f : toInstall) {
                         symbolicNames.add(bundlesInstaller.getBundleSymbolicName(f));
                     }
-                    bundlesInstaller.waitForBundlesInstalled(symbolicNames, 
+                    bundlesInstaller.waitForBundlesInstalled(symbolicNames,
                             TimeoutsProvider.getInstance().getTimeout(BUNDLE_INSTALL_TIMEOUT_SECONDS, 10));
                     bundlesInstaller.startAllBundles(symbolicNames,
                             TimeoutsProvider.getInstance().getTimeout(START_BUNDLES_TIMEOUT_SECONDS, 30));
@@ -158,16 +158,16 @@ public class SlingTestBase {
                     log.info("Exception while installing additional bundles", e);
                     installBundlesFailed = true;
                 }
-                
+
                 if(installBundlesFailed) {
                     fail("Could not start all installed bundles:" + toInstall);
                 }
             }
         }
-        
+
         extraBundlesInstalled = !installBundlesFailed;
     }
-    
+
     /** Start server if needed, and return a RequestBuilder that points to it */
     protected RequestBuilder getRequestBuilder() {
         startServerIfNeeded();
@@ -180,7 +180,7 @@ public class SlingTestBase {
         return serverBaseUrl;
     }
 
-    /** Optionally block here so that the runnable jar stays up - we can 
+    /** Optionally block here so that the runnable jar stays up - we can
      *  then run tests against it from another VM.
      */
     protected void blockIfRequested() {
@@ -196,7 +196,7 @@ public class SlingTestBase {
             }
         }
     }
-    
+
     /** Check a number of server URLs for readyness */
     protected void waitForServerReady() throws Exception {
         if(serverReady) {
@@ -205,7 +205,7 @@ public class SlingTestBase {
         if(serverReadyTestFailed) {
             fail("Server is not ready according to previous tests");
         }
-        
+
         // Timeout for readiness test
         final String sec = System.getProperty(SERVER_READY_TIMEOUT_PROP);
         final int timeoutSec = TimeoutsProvider.getInstance().getTimeout(sec == null ? 60 : Integer.valueOf(sec));
@@ -222,10 +222,10 @@ public class SlingTestBase {
                 testPaths.add(System.getProperty(key));
             }
         }
-        
-        // Consider the server ready if it responds to a GET on each of 
+
+        // Consider the server ready if it responds to a GET on each of
         // our configured request paths with a 200 result and content
-        // that contains the pattern that's optionally supplied with the 
+        // that contains the pattern that's optionally supplied with the
         // path, separated by a colon
         log.info("Checking that GET requests return expected content (timeout={} seconds): {}", timeoutSec, testPaths);
         while(System.currentTimeMillis() < endTime) {
@@ -240,7 +240,7 @@ public class SlingTestBase {
                     .assertContentContains(pattern);
                 } catch(AssertionError ae) {
                     errors = true;
-                    log.debug("Request to {}{} failed, will retry ({})", 
+                    log.debug("Request to {}{} failed, will retry ({})",
                             new Object[] { serverBaseUrl, path, ae});
                 } catch(Exception e) {
                     errors = true;
@@ -248,7 +248,7 @@ public class SlingTestBase {
                             new Object[] { serverBaseUrl, path, pattern, e });
                 }
             }
-            
+
             if(!errors) {
                 serverReady = true;
                 log.info("All {} paths return expected content, server ready", testPaths.size());
@@ -256,7 +256,7 @@ public class SlingTestBase {
             }
             Thread.sleep(TimeoutsProvider.getInstance().getTimeout(1000L));
         }
-        
+
         if(!serverReady) {
             serverReadyTestFailed = true;
             final String msg = "Server not ready after " + timeoutSec + " seconds, giving up";
@@ -264,20 +264,20 @@ public class SlingTestBase {
             fail(msg);
         }
     }
-    
-    /** Get the list of additional bundles to install, as specified by path parameter */ 
+
+    /** Get the list of additional bundles to install, as specified by path parameter */
     protected List<File> getBundlesToInstall(String additionalBundlesPath) {
-        final List<File> result = new LinkedList<File>(); 
+        final List<File> result = new LinkedList<File>();
         if(additionalBundlesPath == null) {
             return result;
         }
-        
+
         final File dir = new File(additionalBundlesPath);
         if(!dir.isDirectory() || !dir.canRead()) {
             log.info("Cannot read additional bundles directory {}, ignored", dir.getAbsolutePath());
             return result;
         }
-        
+
         // Collect all filenames of candidate bundles
         final List<String> bundleNames = new ArrayList<String>();
         final String [] files = dir.list();
@@ -288,7 +288,7 @@ public class SlingTestBase {
                 }
             }
         }
-        
+
         // We'll install those that are specified by system properties, in order
         final List<String> sortedPropertyKeys = new ArrayList<String>();
         for(Object key : System.getProperties().keySet()) {
@@ -306,22 +306,22 @@ public class SlingTestBase {
                 }
             }
         }
-        
+
         return result;
     }
-    
+
     protected boolean isServerStartedByThisClass() {
         return serverStartedByThisClass;
     }
-    
+
     protected HttpClient getHttpClient() {
         return httpClient;
     }
-    
+
     protected RequestExecutor getRequestExecutor() {
         return executor;
     }
-    
+
     protected WebconsoleClient getWebconsoleClient() {
         startServerIfNeeded();
         return webconsoleClient;
