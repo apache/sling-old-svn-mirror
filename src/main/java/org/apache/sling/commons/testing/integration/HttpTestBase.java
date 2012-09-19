@@ -49,9 +49,10 @@ public class HttpTestBase extends TestCase {
     /** If this system property is set, the startup check is skipped. */
     public static final String PROPERTY_SKIP_STARTUP_CHECK = "launchpad.skip.startupcheck";
 
-    public static final String HTTP_BASE_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
-    public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", "http://localhost:8888"));
-    public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", ""));
+    public static final String HTTP_URL = removeEndingSlash(System.getProperty("launchpad.http.server.url", "http://localhost:8888"));
+    public static final String HTTP_BASE_URL = removePath(HTTP_URL);
+    public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", HTTP_BASE_URL));
+    public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", getPath(HTTP_URL)));
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
@@ -119,6 +120,24 @@ public class HttpTestBase extends TestCase {
             return str.substring(0, str.length() - 1);
         }
         return str;
+    }
+
+    private static String removePath(String str) {
+        final int pos = str.indexOf(":/");
+        final int slashPos = str.indexOf('/', pos+3);
+        if ( slashPos != -1 ) {
+            return str.substring(0, slashPos);
+        }
+        return str;
+    }
+
+    private static String getPath(String str) {
+        final int pos = str.indexOf(":/");
+        final int slashPos = str.indexOf('/', pos+3);
+        if ( slashPos != -1 ) {
+            return str.substring(slashPos);
+        }
+        return "";
     }
 
     @Override
