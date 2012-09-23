@@ -35,8 +35,6 @@ import org.apache.sling.performance.tests.ResolveNonExistingWith10000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith10000VanityPathTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith1000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith1000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith30000AliasTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith30000VanityPathTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith5000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith5000VanityPathTest;
 

@@ -41,8 +41,6 @@ import org.apache.sling.performance.tests.ResolveNonExistingWith10000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith10000VanityPathTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith1000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith1000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith30000AliasTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith30000VanityPathTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith5000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith5000VanityPathTest;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
@@ -51,7 +49,6 @@ import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
 public class PerformanceTest extends AbstractPerformanceTest {

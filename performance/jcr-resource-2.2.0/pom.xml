@@ -67,5 +67,10 @@
             <version>2.1.0</version>
             <scope>compile</scope>
         </dependency>
+         <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.performance.tests</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>
