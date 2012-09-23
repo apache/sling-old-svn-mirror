@@ -57,6 +57,7 @@
         <module>jcr-resource-2.0.10</module>
         <module>jcr-resource-2.1.0</module>
         <module>jcr-resource-2.2.0</module>
+        <module>tests</module>
     </modules>
 
     <build>
