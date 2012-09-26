@@ -94,5 +94,5 @@ public interface QueriableResourceProvider extends ResourceProvider {
      * @throws IllegalStateException if this resource provider has already been
      *             closed.
      */
-    Iterator<Map<String, Object>> queryResources(String query, String language);
+    Iterator<Map<String, Object>> queryResources(ResourceResolver resolver, String query, String language);
 }
