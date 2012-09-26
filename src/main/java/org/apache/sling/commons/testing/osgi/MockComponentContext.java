@@ -44,9 +44,18 @@ public class MockComponentContext implements ComponentContext {
     public MockComponentContext(MockBundle bundle) {
         mockBundleContext = new MockBundleContext(bundle);
     }
+    
+    public MockComponentContext(MockBundleContext mockBundleContext) {
+        this.mockBundleContext = mockBundleContext;
+    }
 
     public MockComponentContext(MockBundle bundle, Servlet servlet) {
         mockBundleContext = new MockBundleContext(bundle);
+        this.servlet = servlet;
+    }
+    
+    public MockComponentContext(MockBundleContext mockBundleContext, Servlet servlet) {
+        this.mockBundleContext = mockBundleContext;
         this.servlet = servlet;
     }
 
