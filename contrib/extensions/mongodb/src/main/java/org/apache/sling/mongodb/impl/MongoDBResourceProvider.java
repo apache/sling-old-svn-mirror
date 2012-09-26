@@ -165,17 +165,17 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert()
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert(ResourceResolver)
      */
-    public void revert() {
+    public void revert(final ResourceResolver resolver) {
         this.changedResources.clear();
         this.deletedResources.clear();
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit()
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit(ResourceResolver)
      */
-    public void commit() throws PersistenceException {
+    public void commit(final ResourceResolver resolver) throws PersistenceException {
         try {
             for(final String deleted : this.deletedResources) {
                 final String[] info = this.extractResourceInfo(deleted);
@@ -203,14 +203,14 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                 }
             }
         } finally {
-            this.revert();
+            this.revert(resolver);
         }
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges()
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges(ResourceResolver)
      */
-    public boolean hasChanges() {
+    public boolean hasChanges(final ResourceResolver resolver) {
         return this.changedResources.size() > 0 || this.deletedResources.size() > 0;
     }
 
