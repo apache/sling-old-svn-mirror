@@ -387,7 +387,20 @@ public class JcrResourceProvider
         final Object nodeObj = (properties != null ? properties.get("jcr:primaryType") : null);
         final String nodeType = (nodeObj != null ? nodeObj.toString() : null);
         try {
-            final Node node = JcrResourceUtil.createPath(path, null, nodeType, this.session, false);
+            final int lastPos = path.lastIndexOf('/');
+            final Node parent;
+            if ( lastPos == 0 ) {
+                parent = this.session.getRootNode();
+            } else {
+                parent = (Node)this.session.getItem(path.substring(0, lastPos));
+            }
+            final String name = path.substring(lastPos + 1);
+            final Node node;
+            if ( nodeType != null ) {
+                node = parent.addNode(name, nodeType);
+            } else {
+                node = parent.addNode(name);
+            }
 
             if ( properties != null ) {
                 // create modifiable map
