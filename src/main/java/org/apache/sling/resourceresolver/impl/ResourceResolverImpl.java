@@ -863,7 +863,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // we do not have a child with the exact name, so we look for
         // a child, whose alias matches the childName
-        
+
         final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parent.getPath());
         if (aliases != null) {
             if (aliases.containsKey(childName)) {
@@ -1043,20 +1043,20 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#revert()
      */
     public void revert() {
-        this.context.revert();
+        this.context.revert(this);
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#commit()
      */
     public void commit() throws PersistenceException {
-        this.context.commit();
+        this.context.commit(this);
     }
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#hasChanges()
      */
     public boolean hasChanges() {
-        return this.context.hasChanges();
+        return this.context.hasChanges(this);
     }
 }
