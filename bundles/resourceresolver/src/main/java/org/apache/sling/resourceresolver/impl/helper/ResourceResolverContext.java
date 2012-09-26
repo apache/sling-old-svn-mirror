@@ -26,6 +26,7 @@ import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.ResourceProvider;
+import org.apache.sling.api.resource.ResourceResolver;
 
 /**
  * This class keeps track of the used resource providers for a
@@ -125,27 +126,27 @@ public class ResourceResolverContext {
     /**
      * Revert all transient changes.
      */
-    public void revert() {
+    public void revert(final ResourceResolver resolver) {
         for(final ModifyingResourceProvider provider : this.modifyingProviders) {
-            provider.revert();
+            provider.revert(resolver);
         }
     }
 
     /**
      * Commit all transient changes
      */
-    public void commit() throws PersistenceException {
+    public void commit(final ResourceResolver resolver) throws PersistenceException {
         for(final ModifyingResourceProvider provider : this.modifyingProviders) {
-            provider.commit();
+            provider.commit(resolver);
         }
     }
 
     /**
      * Do we have changes?
      */
-    public boolean hasChanges() {
+    public boolean hasChanges(final ResourceResolver resolver) {
         for(final ModifyingResourceProvider provider : this.modifyingProviders) {
-            if ( provider.hasChanges() ) {
+            if ( provider.hasChanges(resolver) ) {
                 return true;
             }
         }

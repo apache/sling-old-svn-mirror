@@ -438,9 +438,9 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert()
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert(ResourceResolver)
      */
-    public void revert() {
+    public void revert(final ResourceResolver resolver) {
         try {
             this.session.refresh(false);
         } catch (final RepositoryException ignore) {
@@ -449,9 +449,9 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit()
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit(ResourceResolver)
      */
-    public void commit() throws PersistenceException {
+    public void commit(final ResourceResolver resolver) throws PersistenceException {
         try {
             this.session.save();
         } catch (final RepositoryException e) {
@@ -460,9 +460,9 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges()
+     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges(ResourceResolver)
      */
-    public boolean hasChanges() {
+    public boolean hasChanges(final ResourceResolver resolver) {
         try {
             return this.session.hasPendingChanges();
         } catch (final RepositoryException ignore) {
