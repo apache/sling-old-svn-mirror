@@ -176,7 +176,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     public Iterator<String> getAttributeNames() {
         checkClosed();
-        return this.factory.getRootProviderEntry().getAttributeNames(this.context);
+        return this.factory.getRootProviderEntry().getAttributeNames(this.context, this);
     }
 
     /**
@@ -188,7 +188,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             throw new NullPointerException("name");
         }
 
-        return this.factory.getRootProviderEntry().getAttribute(this.context, name);
+        return this.factory.getRootProviderEntry().getAttribute(this.context, this, name);
     }
 
     // ---------- resolving resources
@@ -640,7 +640,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     throws SlingException {
         checkClosed();
 
-        return this.factory.getRootProviderEntry().queryResources(this.context, query,
+        return this.factory.getRootProviderEntry().queryResources(this.context, this, query,
                         language == null ? DEFAULT_QUERY_LANGUAGE : language);
     }
 

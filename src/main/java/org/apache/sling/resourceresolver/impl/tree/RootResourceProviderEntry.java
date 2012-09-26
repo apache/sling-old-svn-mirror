@@ -184,9 +184,10 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
 
     /**
      * Invoke all queriable resource providers.
-     * @see QueriableResourceProvider#queryResources(String, String)
+     * @see QueriableResourceProvider#queryResources(ResourceResolver, String, String)
      */
-    public Iterator<Map<String, Object>> queryResources(final ResourceResolverContext ctx, final String query, final String language) {
+    public Iterator<Map<String, Object>> queryResources(final ResourceResolverContext ctx,
+                    final ResourceResolver resolver, final String query, final String language) {
         final Iterator<QueriableResourceProvider> i = this.queriableProviders.getProviders(ctx,
                         new SortedProviderList.Filter<QueriableResourceProvider>() {
 
@@ -207,7 +208,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                     nextResourceIter = null;
                     while ( i.hasNext() && nextResourceIter == null ) {
                         final QueriableResourceProvider adap = i.next();
-                        nextResourceIter = adap.queryResources(query, language);
+                        nextResourceIter = adap.queryResources(resolver, query, language);
                     }
                 }
                 if ( nextResourceIter != null ) {
@@ -253,9 +254,9 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
 
     /**
      * Invoke all attributes providers and combine the result
-     * @see AttributableResourceProvider#getAttributeNames()
+     * @see AttributableResourceProvider#getAttributeNames(ResourceResolver)
      */
-    public Iterator<String> getAttributeNames(final ResourceResolverContext ctx) {
+    public Iterator<String> getAttributeNames(final ResourceResolverContext ctx, final ResourceResolver resolver) {
         final Set<String> names = new HashSet<String>();
         if ( ctx.getAuthenticationInfo() != null ) {
             names.addAll(ctx.getAuthenticationInfo().keySet());
@@ -263,7 +264,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx, null);
         while ( i.hasNext() ) {
             final AttributableResourceProvider adap = i.next();
-            final Collection<String> newNames = adap.getAttributeNames();
+            final Collection<String> newNames = adap.getAttributeNames(resolver);
             if ( newNames != null ) {
                 names.addAll(newNames);
             }
@@ -275,9 +276,9 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
 
     /**
      * Return the result from the first matching attributes provider
-     * @see AttributableResourceProvider#getAttribute(String)
+     * @see AttributableResourceProvider#getAttribute(ResourceResolver, String)
      */
-    public Object getAttribute(final ResourceResolverContext ctx, final String name) {
+    public Object getAttribute(final ResourceResolverContext ctx, final ResourceResolver resolver, final String name) {
         Object result = null;
         if (!FORBIDDEN_ATTRIBUTE.equals(name) )  {
             if (ctx.getAuthenticationInfo() != null) {
@@ -287,7 +288,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                 final Iterator<AttributableResourceProvider> i = this.attributableProviders.getProviders(ctx, null);
                 while ( result == null && i.hasNext() ) {
                     final AttributableResourceProvider adap = i.next();
-                    result = adap.getAttribute(name);
+                    result = adap.getAttribute(resolver, name);
                 }
             }
         }
