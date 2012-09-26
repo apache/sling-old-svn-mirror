@@ -255,9 +255,9 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.QueriableResourceProvider#queryResources(java.lang.String, java.lang.String)
+     * @see org.apache.sling.api.resource.QueriableResourceProvider#queryResources(ResourceResolver, java.lang.String, java.lang.String)
      */
-    public Iterator<Map<String, Object>> queryResources(final String query, final String language) {
+    public Iterator<Map<String, Object>> queryResources(final ResourceResolver resolver, final String query, final String language) {
         checkClosed();
 
         final String queryLanguage = isSupportedQueryLanguage(language) ? language : DEFAULT_QUERY_LANGUAGE;
@@ -336,9 +336,9 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.AttributableResourceProvider#getAttributeNames()
+     * @see org.apache.sling.api.resource.AttributableResourceProvider#getAttributeNames(ResourceResolver)
      */
-    public Collection<String> getAttributeNames() {
+    public Collection<String> getAttributeNames(final ResourceResolver resolver) {
         this.checkClosed();
 
         final Set<String> names = new HashSet<String>();
@@ -352,9 +352,9 @@ public class JcrResourceProvider
     }
 
     /**
-     * @see org.apache.sling.api.resource.AttributableResourceProvider#getAttribute(java.lang.String)
+     * @see org.apache.sling.api.resource.AttributableResourceProvider#getAttribute(ResourceResolver, java.lang.String)
      */
-    public Object getAttribute(final String name) {
+    public Object getAttribute(final ResourceResolver resolver, final String name) {
         this.checkClosed();
 
         if ( JcrResourceProviderFactory.isAttributeVisible(name) ) {
