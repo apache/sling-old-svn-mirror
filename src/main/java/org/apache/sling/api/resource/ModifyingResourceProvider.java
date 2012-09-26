@@ -28,8 +28,8 @@ import java.util.Map;
  * A modifying resource provider allows to create, update, and delete
  * resources. Update is handled through {@link ModifiableValueMap}.
  *
- * All changes should be kept in a transient store until {@link #commit()}
- * is called. {@link #revert()} discards all transient changes.
+ * All changes should be kept in a transient store until {@link #commit(ResourceResolver)}
+ * is called. {@link #revert(ResourceResolver)} discards all transient changes.
  *
  * If the modifying resource provider needs to clean up resources when it
  * is discarded like removing objects from the transient state which are
@@ -46,7 +46,7 @@ public interface ModifyingResourceProvider extends ResourceProvider {
     /**
      * Create a new resource at the given path.
      * The new resource is put into the transient space of this provider
-     * until {@link #commit()} is called.
+     * until {@link #commit(ResourceResolver)} is called.
      *
      * @param resolver The current resource resolver.
      * @param path The resource path.
@@ -61,7 +61,7 @@ public interface ModifyingResourceProvider extends ResourceProvider {
     /**
      * Delete the resource at the given path.
      * This change is kept in the transient space of this provider
-     * until {@link #commit()} is called.
+     * until {@link #commit(ResourceResolver)} is called.
      *
      * @param resolver The current resource resolver.
      * @param path The resource path.
@@ -73,19 +73,25 @@ public interface ModifyingResourceProvider extends ResourceProvider {
 
     /**
      * Revert all transient changes: create, delete and updates.
+     *
+     * @param resolver The current resource resolver.
      */
-    void revert();
+    void revert(ResourceResolver resolver);
 
     /**
      * Commit all transient changes: create, delete and updates
      *
+     * @param resolver The current resource resolver.
+     *
      * @throws PersistenceException If anything fails
      */
-    void commit()
+    void commit(ResourceResolver resolver)
     throws PersistenceException;
 
     /**
      * Are there any transient changes?
+     *
+     * @param resolver The current resource resolver.
      */
-    boolean hasChanges();
+    boolean hasChanges(ResourceResolver resolver);
 }
