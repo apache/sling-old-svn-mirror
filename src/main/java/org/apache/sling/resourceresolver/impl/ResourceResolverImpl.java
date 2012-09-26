@@ -1036,7 +1036,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( mrp == null ) {
             throw new UnsupportedOperationException("addChild '" + name + "' at " + parent.getPath());
         }
-        return mrp.create(this, path, properties);
+        return this.factory.getResourceDecoratorTracker().decorate(mrp.create(this, path, properties));
     }
 
     /**
