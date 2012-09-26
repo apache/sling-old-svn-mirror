@@ -33,7 +33,7 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-class MockBundleContext implements BundleContext {
+public class MockBundleContext implements BundleContext {
     private MockBundle bundle;
 
     public MockBundleContext(MockBundle bundle) {
