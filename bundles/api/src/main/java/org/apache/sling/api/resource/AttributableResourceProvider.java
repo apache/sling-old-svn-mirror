@@ -38,13 +38,13 @@ public interface AttributableResourceProvider extends ResourceProvider {
 
     /**
      * Returns a collection of attribute names whose value can be retrieved
-     * calling the {@link #getAttribute(String)} method.
+     * calling the {@link #getAttribute(ResourceResolver, String)} method.
      *
      * @return A collection of attribute names or <code>null</code>
      * @throws IllegalStateException if this resource provider has already been
      *                               closed.
      */
-    Collection<String> getAttributeNames();
+    Collection<String> getAttributeNames(ResourceResolver resolver);
 
     /**
      * Returns the value of the given resource provider attribute or <code>null</code>
@@ -60,5 +60,5 @@ public interface AttributableResourceProvider extends ResourceProvider {
      * @throws IllegalStateException
      *             if this resource provider has already been closed.
      */
-    Object getAttribute(String name);
+    Object getAttribute(ResourceResolver resolver, String name);
 }
