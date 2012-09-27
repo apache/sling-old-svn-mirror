@@ -57,20 +57,20 @@ public abstract class AbstractPostOperation implements PostOperation {
      * getting the absolute path of the item to operate on by calling the
      * {@link #getItemPath(SlingHttpServletRequest)} method and setting the
      * location and parent location on the response. After the operation has
-     * been done in the {@link #doRun(SlingHttpServletRequest, HtmlResponse, List)}
+     * been done in the {@link #doRun(SlingHttpServletRequest, PostResponse, List)}
      * method the session is saved if there are unsaved modifications. In case
      * of errorrs, the unsaved changes in the session are rolled back.
      *
      * @param request the request to operate on
-     * @param response The <code>HtmlResponse</code> to record execution
+     * @param response The <code>PostResponse</code> to record execution
      *            progress.
      */
-    public void run(SlingHttpServletRequest request,
-                    PostResponse response,
-                    SlingPostProcessor[] processors) {
-        Session session = request.getResourceResolver().adaptTo(Session.class);
+    public void run(final SlingHttpServletRequest request,
+                    final PostResponse response,
+                    final SlingPostProcessor[] processors) {
+        final Session session = request.getResourceResolver().adaptTo(Session.class);
 
-        VersioningConfiguration versionableConfiguration = getVersioningConfiguration(request);
+        final VersioningConfiguration versionableConfiguration = getVersioningConfiguration(request);
 
         try {
             // calculate the paths
@@ -98,7 +98,7 @@ public abstract class AbstractPostOperation implements PostOperation {
                 }
             }
 
-            Set<String> nodesToCheckin = new LinkedHashSet<String>();
+            final Set<String> nodesToCheckin = new LinkedHashSet<String>();
 
             // set changes on html response
             for(Modification change : changes) {
@@ -126,13 +126,13 @@ public abstract class AbstractPostOperation implements PostOperation {
             }
 
             if (isSessionSaveRequired(session, request)) {
-                session.save();
+                request.getResourceResolver().commit();
             }
 
             if (!isSkipCheckin(request)) {
                 // now do the checkins
                 for(String checkinPath : nodesToCheckin) {
-                    if (checkin(session, checkinPath)) {
+                    if (checkin(request.getResourceResolver(), checkinPath)) {
                         response.onChange("checkin", checkinPath);
                     }
                 }
@@ -146,7 +146,7 @@ public abstract class AbstractPostOperation implements PostOperation {
         } finally {
             try {
                 if (isSessionSaveRequired(session, request)) {
-                    session.refresh(false);
+                    request.getResourceResolver().revert();
                 }
             } catch (RepositoryException e) {
                 log.warn("RepositoryException in finally block: {}",
@@ -179,23 +179,35 @@ public abstract class AbstractPostOperation implements PostOperation {
             PostResponse response,
             List<Modification> changes) throws RepositoryException;
 
+    /**
+     * Get the versioning configuration.
+     */
     protected VersioningConfiguration getVersioningConfiguration(SlingHttpServletRequest request) {
         VersioningConfiguration versionableConfiguration =
             (VersioningConfiguration) request.getAttribute(VersioningConfiguration.class.getName());
         return versionableConfiguration != null ? versionableConfiguration : new VersioningConfiguration();
     }
 
+    /**
+     * Check if checkin should be skipped
+     */
     protected boolean isSkipCheckin(SlingHttpServletRequest request) {
         return !getVersioningConfiguration(request).isAutoCheckin();
     }
 
+    /**
+     * Check whether changes should be written back
+     */
     protected boolean isSkipSessionHandling(SlingHttpServletRequest request) {
         return Boolean.parseBoolean((String) request.getAttribute(SlingPostConstants.ATTR_SKIP_SESSION_HANDLING)) == true;
     }
 
+    /**
+     * Check whether commit to the resource resolver should be called.
+     */
     protected boolean isSessionSaveRequired(Session session, SlingHttpServletRequest request)
             throws RepositoryException {
-        return !isSkipSessionHandling(request) && session.hasPendingChanges();
+        return !isSkipSessionHandling(request) && request.getResourceResolver().hasChanges();
     }
 
     /**
@@ -209,12 +221,10 @@ public abstract class AbstractPostOperation implements PostOperation {
             if (!workspaceName.equals(session.getWorkspace().getName())) {
                 throw new RepositoryException("Incorrect workspace. Expecting " + workspaceName + ". Received "
                         + session.getWorkspace().getName());
-            } else {
-                return path.substring(wsSepPos + 1);
             }
-        } else {
-            return path;
+            return path.substring(wsSepPos + 1);
         }
+        return path;
     }
 
 
@@ -244,7 +254,7 @@ public abstract class AbstractPostOperation implements PostOperation {
     protected Iterator<Resource> getApplyToResources(
             SlingHttpServletRequest request) {
 
-        String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
+        final String[] applyTo = request.getParameterValues(SlingPostConstants.RP_APPLY_TO);
         if (applyTo == null) {
             return null;
         }
@@ -428,14 +438,13 @@ public abstract class AbstractPostOperation implements PostOperation {
     protected Node findVersionableAncestor(Node node) throws RepositoryException {
         if (isVersionable(node)) {
             return node;
-        } else {
-            try {
-                node = node.getParent();
-                return findVersionableAncestor(node);
-            } catch (ItemNotFoundException e) {
-                // top-level
-                return null;
-            }
+        }
+        try {
+            node = node.getParent();
+            return findVersionableAncestor(node);
+        } catch (ItemNotFoundException e) {
+            // top-level
+            return null;
         }
     }
 
@@ -456,10 +465,10 @@ public abstract class AbstractPostOperation implements PostOperation {
         }
     }
 
-    private boolean checkin(Session session, String path) throws RepositoryException {
-        Item item = session.getItem(path);
-        if (item instanceof Node) {
-            Node node = (Node) item;
+    private boolean checkin(final ResourceResolver resolver, final String path) throws RepositoryException {
+        final Resource rsrc = resolver.getResource(path);
+        final Node node = (rsrc == null ? null : rsrc.adaptTo(Node.class));
+        if (node != null) {
             if (node.isCheckedOut() && isVersionable(node)) {
                 node.checkin();
                 return true;
@@ -479,7 +488,7 @@ public abstract class AbstractPostOperation implements PostOperation {
         private Resource nextResource;
 
         private Iterator<Resource> resourceIterator = null;
-        
+
         ApplyToIterator(SlingHttpServletRequest request, String[] paths) {
             this.resolver = request.getResourceResolver();
             this.baseResource = request.getResource();
@@ -514,9 +523,8 @@ public abstract class AbstractPostOperation implements PostOperation {
             		//return the next resource in the iterator
         			Resource res = resourceIterator.next();
         			return res;
-        		} else {
-        			resourceIterator = null;
-        		}
+                }
+    			resourceIterator = null;
         	}
             while (pathIndex < paths.length) {
                 String path = paths[pathIndex];
@@ -536,15 +544,14 @@ public abstract class AbstractPostOperation implements PostOperation {
                             	resourceIterator = res.listChildren();
                             }
                     	}
-                    } 
+                    }
                 	if (resourceIterator != null) {
                 		//return the first resource in the iterator
                 		if (resourceIterator.hasNext()) {
                 			Resource res = resourceIterator.next();
                 			return res;
-                		} else {
-                			resourceIterator = null;
                 		}
+                        resourceIterator = null;
                 	}
                 } else {
                     Resource res = resolver.getResource(baseResource, path);

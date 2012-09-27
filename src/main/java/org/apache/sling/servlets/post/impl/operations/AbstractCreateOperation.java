@@ -18,13 +18,14 @@
 package org.apache.sling.servlets.post.impl.operations;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.jcr.Item;
+
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
@@ -34,10 +35,15 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.version.VersionException;
+import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
@@ -89,78 +95,54 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
      *
      * @throws RepositoryException if a repository error occurs
      */
-    protected void processCreate(Session session,
-            Map<String, RequestProperty> reqProperties, PostResponse response, List<Modification> changes,
-            VersioningConfiguration versioningConfiguration)
-            throws RepositoryException {
+    protected void processCreate(final ResourceResolver resolver,
+            final Map<String, RequestProperty> reqProperties,
+            final PostResponse response,
+            final List<Modification> changes,
+            final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException, RepositoryException {
 
-        String path = response.getPath();
+        final String path = response.getPath();
 
-        if (!session.itemExists(path)) {
+        if ( resolver.getResource(path) == null ) {
 
-            deepGetOrCreateNode(session, path, reqProperties, changes, versioningConfiguration);
+            deepGetOrCreateNode(resolver, path, reqProperties, changes, versioningConfiguration);
             response.setCreateRequest(true);
 
         } else {
-            updateNodeType(session, path, reqProperties, changes, versioningConfiguration);
-            updateMixins(session, path, reqProperties, changes, versioningConfiguration);
+            updateNodeType(resolver, path, reqProperties, changes, versioningConfiguration);
+            updateMixins(resolver, path, reqProperties, changes, versioningConfiguration);
         }
     }
 
-    protected void updateNodeType(Session session, String path, Map<String, RequestProperty> reqProperties,
-            List<Modification> changes, VersioningConfiguration versioningConfiguration) throws PathNotFoundException,
+    protected void updateNodeType(final ResourceResolver resolver,
+                    final String path,
+                    final Map<String, RequestProperty> reqProperties,
+                    final List<Modification> changes,
+                    final VersioningConfiguration versioningConfiguration)
+   throws PathNotFoundException,
             RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
-        String nodeType = getPrimaryType(reqProperties, path);
+        final String nodeType = getPrimaryType(reqProperties, path);
         if (nodeType != null) {
-            Item item = session.getItem(path);
-            if (item.isNode()) {
-                Node node = (Node) item;
-                boolean wasVersionable = isVersionable(node);
+            final Resource rsrc = resolver.getResource(path);
+            final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
+            if ( mvm != null ) {
+                final Node node = rsrc.adaptTo(Node.class);
+                final boolean wasVersionable = (node == null ? false : isVersionable(node));
 
-                checkoutIfNecessary(node, changes, versioningConfiguration);
-                node.setPrimaryType(nodeType);
-
-                // this is a bit of a cheat; there isn't a formal checkout, but assigning
-                // the mix:versionable mixin does an implicit checkout
-                if (!wasVersionable &&
-                        versioningConfiguration.isCheckinOnNewVersionableNode() &&
-                        isVersionable(node)) {
-                    changes.add(Modification.onCheckout(path));
-                }
-            }
-        }
-    }
-
-    protected void updateMixins(Session session, String path, Map<String, RequestProperty> reqProperties,
-            List<Modification> changes, VersioningConfiguration versioningConfiguration) throws PathNotFoundException,
-            RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
-        String[] mixins = getMixinTypes(reqProperties, path);
-        if (mixins != null) {
-
-            Item item = session.getItem(path);
-            if (item.isNode()) {
-
-                Set<String> newMixins = new HashSet<String>();
-                newMixins.addAll(Arrays.asList(mixins));
-
-                // clear existing mixins first
-                Node node = (Node) item;
-                checkoutIfNecessary(node, changes, versioningConfiguration);
-
-                for (NodeType mixin : node.getMixinNodeTypes()) {
-                    String mixinName = mixin.getName();
-                    if (!newMixins.remove(mixinName)) {
-                        node.removeMixin(mixinName);
-                    }
+                if ( node != null ) {
+                    checkoutIfNecessary(node, changes, versioningConfiguration);
+                    node.setPrimaryType(nodeType);
+                } else {
+                    mvm.put("jcr:primaryType", nodeType);
                 }
 
-                // add new mixins
-                for (String mixin : newMixins) {
-                    node.addMixin(mixin);
+                if ( node != null ) {
                     // this is a bit of a cheat; there isn't a formal checkout, but assigning
                     // the mix:versionable mixin does an implicit checkout
-                    if (mixin.equals("mix:versionable") &&
-                            versioningConfiguration.isCheckinOnNewVersionableNode()) {
+                    if (!wasVersionable &&
+                            versioningConfiguration.isCheckinOnNewVersionableNode() &&
+                            isVersionable(node)) {
                         changes.add(Modification.onCheckout(path));
                     }
                 }
@@ -168,21 +150,68 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         }
     }
 
+    protected void updateMixins(final ResourceResolver resolver,
+                    final String path,
+                    final Map<String, RequestProperty> reqProperties,
+                    final List<Modification> changes,
+                    final VersioningConfiguration versioningConfiguration)
+    throws PathNotFoundException,
+            RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
+        final String[] mixins = getMixinTypes(reqProperties, path);
+        if (mixins != null) {
+
+            final Resource rsrc = resolver.getResource(path);
+            final ModifiableValueMap mvm = rsrc.adaptTo(ModifiableValueMap.class);
+            if ( mvm != null ) {
+                final Node node = rsrc.adaptTo(Node.class);
+
+                final Set<String> newMixins = new HashSet<String>();
+                newMixins.addAll(Arrays.asList(mixins));
+
+                // clear existing mixins first
+                if ( node != null ) {
+                    checkoutIfNecessary(node, changes, versioningConfiguration);
+                    for (NodeType mixin : node.getMixinNodeTypes()) {
+                        String mixinName = mixin.getName();
+                        if (!newMixins.remove(mixinName)) {
+                            node.removeMixin(mixinName);
+                        }
+                    }
+
+                    // add new mixins
+                    for (String mixin : newMixins) {
+                        node.addMixin(mixin);
+                        // this is a bit of a cheat; there isn't a formal checkout, but assigning
+                        // the mix:versionable mixin does an implicit checkout
+                        if (mixin.equals("mix:versionable") &&
+                                versioningConfiguration.isCheckinOnNewVersionableNode()) {
+                            changes.add(Modification.onCheckout(path));
+                        }
+                    }
+                } else {
+                    mvm.put("jcr:mixinTypes", mixins);
+                }
+
+            }
+        }
+    }
+
     /**
      * Collects the properties that form the content to be written back to the
-     * repository.
+     * resource tree.
      *
      * @throws RepositoryException if a repository error occurs
      * @throws ServletException if an internal error occurs
      */
     protected Map<String, RequestProperty> collectContent(
-            SlingHttpServletRequest request, PostResponse response) {
+            final SlingHttpServletRequest request,
+            final PostResponse response) {
 
-        boolean requireItemPrefix = requireItemPathPrefix(request);
+        final boolean requireItemPrefix = requireItemPathPrefix(request);
 
         // walk the request parameters and collect the properties
-        LinkedHashMap<String, RequestProperty> reqProperties = new LinkedHashMap<String, RequestProperty>();
-        for (Map.Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
+        final LinkedHashMap<String, RequestProperty> reqProperties = new LinkedHashMap<String, RequestProperty>();
+        for (final Map.Entry<String, RequestParameter[]> e : request.getRequestParameterMap().entrySet()) {
             final String paramName = e.getKey();
 
             if (ignoreParameter(paramName)) {
@@ -195,14 +224,14 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             }
 
             // ensure the paramName is an absolute property name
-            String propPath = toPropertyPath(paramName, response);
+            final String propPath = toPropertyPath(paramName, response);
 
             // @TypeHint example
             // <input type="text" name="./age" />
             // <input type="hidden" name="./age@TypeHint" value="long" />
             // causes the setProperty using the 'long' property type
             if (propPath.endsWith(SlingPostConstants.TYPE_HINT_SUFFIX)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.TYPE_HINT_SUFFIX);
 
@@ -216,7 +245,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
             // @DefaultValue
             if (propPath.endsWith(SlingPostConstants.DEFAULT_VALUE_SUFFIX)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.DEFAULT_VALUE_SUFFIX);
 
@@ -232,14 +261,14 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // causes the JCR Text property to be set to the value of the
             // fulltext form field.
             if (propPath.endsWith(SlingPostConstants.VALUE_FROM_SUFFIX)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.VALUE_FROM_SUFFIX);
 
                 // @ValueFrom params must have exactly one value, else ignored
                 if (e.getValue().length == 1) {
-                    String refName = e.getValue()[0].getString();
-                    RequestParameter[] refValues = request.getRequestParameters(refName);
+                    final String refName = e.getValue()[0].getString();
+                    final RequestParameter[] refValues = request.getRequestParameters(refName);
                     if (refValues != null) {
                         prop.setValues(refValues);
                     }
@@ -253,7 +282,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // <input name="./Text@Delete" type="hidden" />
             // causes the JCR Text property to be deleted before update
             if (propPath.endsWith(SlingPostConstants.SUFFIX_DELETE)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath, SlingPostConstants.SUFFIX_DELETE);
 
                 prop.setDelete(true);
@@ -267,13 +296,13 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // causes the JCR Text property to be set by moving the /tmp/path
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_MOVE_FROM)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.SUFFIX_MOVE_FROM);
 
                 // @MoveFrom params must have exactly one value, else ignored
                 if (e.getValue().length == 1) {
-                    String sourcePath = e.getValue()[0].getString();
+                    final String sourcePath = e.getValue()[0].getString();
                     prop.setRepositorySource(sourcePath, true);
                 }
 
@@ -286,13 +315,13 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // causes the JCR Text property to be set by copying the /tmp/path
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_COPY_FROM)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.SUFFIX_COPY_FROM);
 
                 // @MoveFrom params must have exactly one value, else ignored
                 if (e.getValue().length == 1) {
-                    String sourcePath = e.getValue()[0].getString();
+                    final String sourcePath = e.getValue()[0].getString();
                     prop.setRepositorySource(sourcePath, false);
                 }
 
@@ -308,7 +337,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // causes the JCR Text property to be set by copying the /tmp/path
             // property to Text.
             if (propPath.endsWith(SlingPostConstants.SUFFIX_IGNORE_BLANKS)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.SUFFIX_IGNORE_BLANKS);
 
@@ -320,7 +349,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             }
 
             if (propPath.endsWith(SlingPostConstants.SUFFIX_USE_DEFAULT_WHEN_MISSING)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                     reqProperties, propPath,
                     SlingPostConstants.SUFFIX_USE_DEFAULT_WHEN_MISSING);
 
@@ -337,7 +366,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             // <input name="tags"          value="+apple" type="hidden" />
             // <input name="tags"          value="-orange" type="hidden" />
             if (propPath.endsWith(SlingPostConstants.SUFFIX_PATCH)) {
-                RequestProperty prop = getOrCreateRequestProperty(
+                final RequestProperty prop = getOrCreateRequestProperty(
                         reqProperties, propPath,
                         SlingPostConstants.SUFFIX_PATCH);
 
@@ -347,7 +376,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
             }
 
             // plain property, create from values
-            RequestProperty prop = getOrCreateRequestProperty(reqProperties,
+            final RequestProperty prop = getOrCreateRequestProperty(reqProperties,
                 propPath, null);
             prop.setValues(e.getValue());
         }
@@ -432,85 +461,89 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
      * @throws IllegalArgumentException if the path is relative and parent is
      *             <code>null</code>
      */
-    protected Node deepGetOrCreateNode(Session session, String path,
-            Map<String, RequestProperty> reqProperties, List<Modification> changes,
-            VersioningConfiguration versioningConfiguration)
-            throws RepositoryException {
+    protected Resource deepGetOrCreateNode(final ResourceResolver resolver,
+                    final String path,
+                    final Map<String, RequestProperty> reqProperties,
+                    final List<Modification> changes,
+                    final VersioningConfiguration versioningConfiguration)
+    throws PersistenceException, RepositoryException {
         if (log.isDebugEnabled()) {
-            log.debug("Deep-creating Node '{}'", path);
+            log.debug("Deep-creating resource '{}'", path);
         }
         if (path == null || !path.startsWith("/")) {
             throw new IllegalArgumentException("path must be an absolute path.");
         }
-        // get the starting node
-        String startingNodePath = path;
-        Node startingNode = null;
-        while (startingNode == null) {
-            if (startingNodePath.equals("/")) {
-                startingNode = session.getRootNode();
-            } else if (session.itemExists(startingNodePath)) {
-                startingNode = (Node) session.getItem(startingNodePath);
-                updateNodeType(session, startingNodePath, reqProperties, changes, versioningConfiguration);
-                updateMixins(session, startingNodePath, reqProperties, changes, versioningConfiguration);
+        // get the starting resource
+        String startingResourcePath = path;
+        Resource startingResource = null;
+        while (startingResource == null) {
+            if (startingResourcePath.equals("/")) {
+                startingResource = resolver.getResource("/");
+            } else if (resolver.getResource(startingResourcePath) != null) {
+                startingResource = resolver.getResource(startingResourcePath);
+                updateNodeType(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
+                updateMixins(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
             } else {
-                int pos = startingNodePath.lastIndexOf('/');
+                int pos = startingResourcePath.lastIndexOf('/');
                 if (pos > 0) {
-                    startingNodePath = startingNodePath.substring(0, pos);
+                    startingResourcePath = startingResourcePath.substring(0, pos);
                 } else {
-                    startingNodePath = "/";
+                    startingResourcePath = "/";
                 }
             }
         }
-        // is the searched node already existing?
-        if (startingNodePath.length() == path.length()) {
-            return startingNode;
+        // is the searched resource already existing?
+        if (startingResourcePath.length() == path.length()) {
+            return startingResource;
         }
         // create nodes
-        int from = (startingNodePath.length() == 1
+        int from = (startingResourcePath.length() == 1
                 ? 1
-                : startingNodePath.length() + 1);
-        Node node = startingNode;
+                : startingResourcePath.length() + 1);
+        Resource resource = startingResource;
         while (from > 0) {
             final int to = path.indexOf('/', from);
             final String name = to < 0 ? path.substring(from) : path.substring(
                 from, to);
-            // although the node should not exist (according to the first test
+            // although the resource should not exist (according to the first test
             // above)
             // we do a sanety check.
-            if (node.hasNode(name)) {
-                node = node.getNode(name);
-                updateNodeType(session, node.getPath(), reqProperties, changes, versioningConfiguration);
-                updateMixins(session, node.getPath(), reqProperties, changes, versioningConfiguration);
+            if (resource.getChild(name) != null) {
+                resource = resource.getChild(name);
+                updateNodeType(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
+                updateMixins(resolver, resource.getPath(), reqProperties, changes, versioningConfiguration);
             } else {
                 final String tmpPath = to < 0 ? path : path.substring(0, to);
                 // check for node type
                 final String nodeType = getPrimaryType(reqProperties, tmpPath);
-                checkoutIfNecessary(node, changes, versioningConfiguration);
+
+                final Node node = resource.adaptTo(Node.class);
+                if ( node != null ) {
+                    checkoutIfNecessary(node, changes, versioningConfiguration);
+                }
 
                 try {
+                    final Map<String, Object> props = new HashMap<String, Object>();
                     if (nodeType != null) {
-                        node = node.addNode(name, nodeType);
-                    } else {
-                        node = node.addNode(name);
-
+                        props.put("jcr:primaryType", nodeType);
                     }
-                } catch (VersionException e) {
-                    log.error("Unable to create node named " + name + " in "+node.getPath());
+                    // check for mixin types
+                    final String[] mixinTypes = getMixinTypes(reqProperties,
+                        tmpPath);
+                    if (mixinTypes != null) {
+                        props.put("jcr:mixinTypes", mixinTypes);
+                    }
+
+                    resource = resolver.create(resource, name, props);
+                } catch (final PersistenceException e) {
+                    log.error("Unable to create resource named " + name + " in " + resource.getPath());
                     throw e;
                 }
-                // check for mixin types
-                final String[] mixinTypes = getMixinTypes(reqProperties,
-                    tmpPath);
-                if (mixinTypes != null) {
-                    for (String mix : mixinTypes) {
-                        node.addMixin(mix);
-                    }
-                }
-                changes.add(Modification.onCreated(node.getPath()));
+                changes.add(Modification.onCreated(resource.getPath()));
             }
             from = to + 1;
         }
-        return node;
+        return resource;
     }
 
     /**
@@ -558,7 +591,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 		        // if the resulting path already exists then report an error
 		        Session session = request.getResourceResolver().adaptTo(Session.class);
 	            String jcrPath = removeAndValidateWorkspace(basePath, session);
-	            if (session.itemExists(jcrPath)) {
+	            if (request.getResourceResolver().getResource(jcrPath) != null) {
 	    		    throw new RepositoryException(
 	    			        "Collision in node names for path=" + basePath);
 	            }
@@ -595,28 +628,29 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
     private String ensureUniquePath(SlingHttpServletRequest request, String basePath) throws RepositoryException {
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
-		Session session = request.getResourceResolver().adaptTo(Session.class);
+		final Session session = request.getResourceResolver().adaptTo(Session.class);
+        final ResourceResolver resolver = request.getResourceResolver();
 
 		String jcrPath = removeAndValidateWorkspace(basePath, session);
 
 		// if resulting path exists, add a suffix until it's not the case
 		// anymore
-		if (session.itemExists(jcrPath)) {
+		if (resolver.getResource(jcrPath) != null ) {
 		    for (int idx = 0; idx < 1000; idx++) {
 		        String newPath = jcrPath + "_" + idx;
-		        if (!session.itemExists(newPath)) {
+		        if (resolver.getResource(newPath) == null) {
 		            basePath = basePath + "_" + idx;
 		            jcrPath = newPath;
 		            break;
 		        }
 		    }
+	        // if it still exists there are more than 1000 nodes ?
+	        if (resolver.getResource(jcrPath) != null ) {
+	            throw new RepositoryException(
+	                "Collision in generated node names for path=" + basePath);
+	        }
 		}
 
-		// if it still exists there are more than 1000 nodes ?
-		if (session.itemExists(jcrPath)) {
-		    throw new RepositoryException(
-		        "Collision in generated node names for path=" + basePath);
-		}
 
 		return basePath;
     }

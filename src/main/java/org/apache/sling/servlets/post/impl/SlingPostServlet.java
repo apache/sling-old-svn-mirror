@@ -226,7 +226,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 	/**
 	 * Redirects the HttpServletResponse, if redirectURL is not empty
 	 * @param redirectURL The computed redirect URL
-	 * @param response The HttpServletResponse to use for redirection 
+	 * @param response The HttpServletResponse to use for redirection
 	 * @return Whether a redirect was requested
 	 * @throws IOException
 	 */

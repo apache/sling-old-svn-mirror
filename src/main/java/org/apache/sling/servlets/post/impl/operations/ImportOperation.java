@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.jcr.contentloader.ContentImportListener;
 import org.apache.sling.jcr.contentloader.ContentImporter;
 import org.apache.sling.jcr.contentloader.ImportOptions;
@@ -65,7 +66,7 @@ public class ImportOperation extends AbstractCreateOperation {
     	}
     	return requestParameter.getString();
     }
-    
+
     @Override
     protected void doRun(SlingHttpServletRequest request, PostResponse response, final List<Modification> changes)
             throws RepositoryException {
@@ -83,7 +84,14 @@ public class ImportOperation extends AbstractCreateOperation {
         // do not change order unless you have a very good reason.
         Session session = request.getResourceResolver().adaptTo(Session.class);
 
-        processCreate(session, reqProperties, response, changes, versioningConfiguration);
+        try {
+            processCreate(request.getResourceResolver(), reqProperties, response, changes, versioningConfiguration);
+        } catch ( final PersistenceException pe) {
+            if ( pe.getCause() instanceof RepositoryException ) {
+                throw (RepositoryException)pe.getCause();
+            }
+            throw new RepositoryException(pe);
+        }
         String path = response.getPath();
         Node node = null;
         try {
