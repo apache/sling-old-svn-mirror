@@ -385,6 +385,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
                         mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
         	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "2.1.2"),
+        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.api", "3.3.9-SNAPSHOT"), // TODO: Switch to released version when released.
         	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),
                         mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION)
         		)

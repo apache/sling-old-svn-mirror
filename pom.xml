@@ -179,6 +179,7 @@
         <module>testing/junit/remote</module>
         
         <!-- Installer -->
+        <module>installer/api</module>
         <module>installer/core</module>
         <module>installer/console</module>
         <module>installer/providers/file</module>
