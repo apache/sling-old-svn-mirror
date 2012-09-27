@@ -194,6 +194,12 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
 
         // only upload if packaging as an osgi-bundle
         File bundleFile = new File(bundleFileName);
+
+        if(!bundleFile.exists()) {
+            getLog().info(bundleFile + " does not exist, no uploading");
+            return;
+        }
+
         String bundleName = getBundleSymbolicName(bundleFile);
         if (bundleName == null) {
             getLog().info(bundleFile + " is not an OSGi Bundle, not uploading");
