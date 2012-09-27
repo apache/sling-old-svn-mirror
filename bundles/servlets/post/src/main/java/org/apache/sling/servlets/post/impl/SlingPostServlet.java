@@ -22,11 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
@@ -214,8 +214,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         // check for redirect URL if processing succeeded
         if (htmlResponse.isSuccessful()) {
-            if (redirectIfNeeded(getRedirectUrl(request, htmlResponse), response)) {
-            	return;
+            if (redirectIfNeeded(request, htmlResponse, response)) {
+                return;
             }
         }
 
@@ -223,22 +223,37 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         htmlResponse.send(response, isSetStatus(request));
     }
 
-	/**
-	 * Redirects the HttpServletResponse, if redirectURL is not empty
-	 * @param redirectURL The computed redirect URL
-	 * @param response The HttpServletResponse to use for redirection
-	 * @return Whether a redirect was requested
-	 * @throws IOException
-	 */
-	boolean redirectIfNeeded(String redirectURL,
-			SlingHttpServletResponse response)
-			throws IOException {
-		if (redirectURL != null) {
-		    response.sendRedirect(response.encodeRedirectURL(redirectURL));
-		    return true;
-		}
-		return false;
-	}
+    /**
+     * Redirects the HttpServletResponse, if redirectURL is not empty
+     * @param htmlResponse 
+     * @param request 
+     * @param redirectURL The computed redirect URL
+     * @param response The HttpServletResponse to use for redirection 
+     * @return Whether a redirect was requested
+     * @throws IOException
+     */
+    boolean redirectIfNeeded(SlingHttpServletRequest request, PostResponse htmlResponse, SlingHttpServletResponse response)
+            throws IOException {
+        String redirectURL = getRedirectUrl(request, htmlResponse);
+        if (redirectURL != null) {
+            Matcher m = REDIRECT_WITH_SCHEME_PATTERN.matcher(redirectURL);
+            boolean hasScheme = m.matches();
+            String encodedURL;
+            if (hasScheme && m.group(2).length() > 0) {
+                encodedURL = m.group(1) + response.encodeRedirectURL(m.group(2));
+            } else if (hasScheme) {
+                encodedURL = redirectURL;
+            } else {
+                log.debug("Request path is [{}]", request.getPathInfo());
+                encodedURL = response.encodeRedirectURL(redirectURL);
+            }
+            log.debug("redirecting to URL [{}] - encoded as [{}]", redirectURL, encodedURL);
+            response.sendRedirect(encodedURL);
+            return true;
+        }
+        return false;
+    }
+    private static final Pattern REDIRECT_WITH_SCHEME_PATTERN = Pattern.compile("^(https?://[^/]+)(.*)$");
 
     /**
      * Creates an instance of a PostResponse.
@@ -287,10 +302,11 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
-    protected String getRedirectUrl(HttpServletRequest request, PostResponse ctx) {
+    protected String getRedirectUrl(SlingHttpServletRequest request, PostResponse ctx) {
         // redirect param has priority (but see below, magic star)
         String result = request.getParameter(SlingPostConstants.RP_REDIRECT_TO);
         if (result != null && ctx.getPath() != null) {
+            log.debug("redirect requested as [{}] for path [{}]", result, ctx.getPath());
 
             // redirect to created/modified Resource
             int star = result.indexOf('*');
@@ -310,18 +326,23 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                     buf.append(result.substring(star + 1));
                 }
 
+                // Prepend request path if it ends with create suffix and result isn't absolute
+                String requestPath = request.getPathInfo();
+                if (requestPath.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX) && buf.charAt(0) != '/' && 
+                        !REDIRECT_WITH_SCHEME_PATTERN.matcher(buf).matches()) {
+                    buf.insert(0, requestPath);
+                }
+
                 // use the created path as the redirect result
                 result = buf.toString();
-
+                
             } else if (result.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX)) {
                 // if the redirect has a trailing slash, append modified node
                 // name
                 result = result.concat(ResourceUtil.getName(ctx.getPath()));
             }
 
-            if (log.isDebugEnabled()) {
-                log.debug("Will redirect to " + result);
-            }
+            log.debug("Will redirect to {}", result);
         }
         return result;
     }
