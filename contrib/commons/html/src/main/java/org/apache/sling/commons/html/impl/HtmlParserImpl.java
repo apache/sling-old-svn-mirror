@@ -35,6 +35,9 @@ import org.xml.sax.ext.LexicalHandler;
 @Service(value=HtmlParser.class)
 public class HtmlParserImpl implements HtmlParser {
 
+    private void test() {
+        BundleContext bundleContext = null;
+    }
     /**
      * @see org.apache.sling.commons.html.HtmlParser#parse(java.io.InputStream, java.lang.String, org.xml.sax.ContentHandler)
      */
