@@ -31,6 +31,19 @@ public class PostRedirectTest extends HttpTestBase {
     private String postUrl = HTTP_BASE_URL + "/" + postPath
         + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
 
+    public void testEncodedRedirect() throws IOException {
+        final Map<String, String> params = new HashMap<String, String>();
+        params.put(":redirect", "*");
+        params.put(":name", "\u0414\u0440\u0443\u0433\u0430");
+        final Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Referer", "http://referer/");
+
+        final String location = testClient.createNode(postUrl, params, headers,
+            false);
+        assertTrue("With UTF-8 in path, redirect must be encoded :"+location,
+            location.contains(postPath + "/%D0%94%D1%80%D1%83%D0%B3%D0%B0"));
+    }
+
     public void testForcedRedirect() throws IOException {
         final Map<String, String> params = new HashMap<String, String>();
         params.put(":redirect", "http://forced");
