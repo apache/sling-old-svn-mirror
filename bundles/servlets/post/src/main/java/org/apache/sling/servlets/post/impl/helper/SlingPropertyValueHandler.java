@@ -27,10 +27,14 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.nodetype.ConstraintViolationException;
 
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -100,40 +104,48 @@ public class SlingPropertyValueHandler {
      * @param prop the request property
      * @throws RepositoryException if a repository error occurs
      */
-    public void setProperty(Node parent, RequestProperty prop)
-            throws RepositoryException {
+    public void setProperty(final Resource parent, final RequestProperty prop)
+    throws RepositoryException, PersistenceException {
+        final Modifiable mod = new Modifiable();
+        mod.resource = parent;
+        mod.node = parent.adaptTo(Node.class);
+        mod.valueMap = parent.adaptTo(ModifiableValueMap.class);
+        if ( mod.valueMap == null ) {
+            throw new PersistenceException("Resource at '" + parent.getPath() + "' is not modifiable.");
+        }
 
         final String name = prop.getName();
         if (prop.providesValue()) {
             // if user provided a value, don't mess with it
-            setPropertyAsIs(parent, prop);
+            setPropertyAsIs(mod, prop);
 
         } else if (AUTO_PROPS.containsKey(name)) {
             // avoid collision with protected properties
+            final boolean isNew = (mod.node != null ? mod.node.isNew() : true);
             try {
                 switch (AUTO_PROPS.get(name)) {
                     case CREATED:
-                        if (parent.isNew()) {
-                            setCurrentDate(parent, name);
+                        if (isNew) {
+                            setCurrentDate(mod, name);
                         }
                         break;
                     case CREATED_BY:
-                        if (parent.isNew()) {
-                            setCurrentUser(parent, name);
+                        if (isNew) {
+                            setCurrentUser(mod, name);
                         }
                         break;
                     case MODIFIED:
-                        setCurrentDate(parent, name);
+                        setCurrentDate(mod, name);
                         break;
                     case MODIFIED_BY:
-                        setCurrentUser(parent, name);
+                        setCurrentUser(mod, name);
                         break;
                 }
             } catch (ConstraintViolationException e) {
             }
         } else {
             // no magic field, set value as provided
-            setPropertyAsIs(parent, prop);
+            setPropertyAsIs(mod, prop);
         }
     }
 
@@ -143,12 +155,11 @@ public class SlingPropertyValueHandler {
      * @param name name of the property
      * @throws RepositoryException if a repository error occurs
      */
-    private void setCurrentDate(Node parent, String name)
-            throws RepositoryException {
+    private void setCurrentDate(Modifiable parent, String name)
+    throws RepositoryException, PersistenceException {
         removePropertyIfExists(parent, name);
-        changes.add(Modification.onModified(
-            parent.setProperty(name, now).getPath()
-        ));
+        parent.valueMap.put(name, now);
+        changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
     }
 
     /**
@@ -157,12 +168,12 @@ public class SlingPropertyValueHandler {
      * @param name name of the property
      * @throws RepositoryException if a repository error occurs
      */
-    private void setCurrentUser(Node parent, String name)
-            throws RepositoryException {
+    private void setCurrentUser(Modifiable parent, String name)
+    throws RepositoryException, PersistenceException {
         removePropertyIfExists(parent, name);
-        changes.add(Modification.onModified(
-            parent.setProperty(name, parent.getSession().getUserID()).getPath()
-        ));
+        final String user = parent.resource.getResourceResolver().getUserID();
+        parent.valueMap.put(name, user);
+        changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
     }
 
     /**
@@ -175,14 +186,19 @@ public class SlingPropertyValueHandler {
      *         it was not removed
      * @throws RepositoryException if a repository error occurs.
      */
-    private String removePropertyIfExists(Node parent, String name)
-            throws RepositoryException {
-        if (parent.hasProperty(name)) {
-            Property prop = parent.getProperty(name);
-            if (!prop.getDefinition().isMandatory()) {
-                String path = prop.getPath();
-                prop.remove();
-                return path;
+    private String removePropertyIfExists(final Modifiable parent, final String name)
+    throws RepositoryException, PersistenceException {
+        if (parent.valueMap.containsKey(name) ) {
+            if ( parent.node != null ) {
+                final Property prop = parent.node.getProperty(name);
+                if (!prop.getDefinition().isMandatory()) {
+                    final String path = prop.getPath();
+                    prop.remove();
+                    return path;
+                }
+            } else {
+                parent.valueMap.remove(name);
+                return parent.resource.getPath() + '/' + name;
             }
         }
         return null;
@@ -195,8 +211,8 @@ public class SlingPropertyValueHandler {
      * @param prop the request property
      * @throws RepositoryException if a repository error occurs.
      */
-    private void setPropertyAsIs(Node parent, RequestProperty prop)
-            throws RepositoryException {
+    private void setPropertyAsIs(final Modifiable parent, final RequestProperty prop)
+    throws RepositoryException, PersistenceException {
 
         String[] values = prop.getStringValues();
 
@@ -218,7 +234,8 @@ public class SlingPropertyValueHandler {
                 }
             }
 
-            final ValueFactory valFac = parent.getSession().getValueFactory();
+            // TODO - we should check for session
+            final ValueFactory valFac = parent.resource.getResourceResolver().adaptTo(Session.class).getValueFactory();
 
             final boolean multiValue = isMultiValue(parent, prop, values);
             final int type = getType(parent, prop);
@@ -245,7 +262,8 @@ public class SlingPropertyValueHandler {
     /**
      * Patches a multi-value property using add and remove operations per value.
      */
-    private String[] patch(Node parent, String name, String[] values) throws RepositoryException {
+    private String[] patch(final Modifiable parent, String name, String[] values)
+    throws RepositoryException, PersistenceException {
         // we do not use a Set here, as we want to be very restrictive in our
         // actions and avoid touching elements that are not modified through the
         // add/remove patch operations; e.g. if the value "foo" occurs twice
@@ -253,16 +271,25 @@ public class SlingPropertyValueHandler {
         // still be two times "foo" in the list, even if this is not a real set.
         List<String> oldValues = new ArrayList<String>();
 
-        if (parent.hasProperty(name)) {
-            Property p = parent.getProperty(name);
+        if (parent.valueMap.containsKey(name)) {
+            if ( parent.node != null ) {
+                final Property p = parent.node.getProperty(name);
 
-            // can only patch multi-value props
-            if (!p.getDefinition().isMultiple()) {
-                return null;
-            }
+                // can only patch multi-value props
+                if (!p.getDefinition().isMultiple()) {
+                    return null;
+                }
 
-            for (Value v : p.getValues()) {
-                oldValues.add(v.getString());
+                for (Value v : p.getValues()) {
+                    oldValues.add(v.getString());
+                }
+            } else {
+                final String[] setValues = parent.valueMap.get(name, String[].class);
+                if ( setValues != null ) {
+                    for(final String v : setValues) {
+                        oldValues.add(v);
+                    }
+                }
             }
         }
 
@@ -308,7 +335,7 @@ public class SlingPropertyValueHandler {
      * either by an explicit type hint in the request or simply the type of the
      * existing property.
      */
-    private int getType(Node parent, RequestProperty prop) throws RepositoryException {
+    private int getType(final Modifiable parent, RequestProperty prop) throws RepositoryException {
         // no explicit typehint
         int type = PropertyType.UNDEFINED;
         if (prop.getTypeHint() != null) {
@@ -320,8 +347,10 @@ public class SlingPropertyValueHandler {
         }
         String[] values = prop.getStringValues();
         if ( type == PropertyType.UNDEFINED && values != null && values.length > 0 ) {
-            if ( parent.hasProperty(prop.getName()) ) {
-                type = parent.getProperty(prop.getName()).getType();
+            if ( parent.node != null ) {
+                if ( parent.node.hasProperty(prop.getName()) ) {
+                    type = parent.node.getProperty(prop.getName()).getType();
+                }
             }
         }
         return type;
@@ -330,7 +359,7 @@ public class SlingPropertyValueHandler {
     /**
      * Returns whether the property should be handled as multi-valued.
      */
-    private boolean isMultiValue(Node parent, RequestProperty prop, String[] values) throws RepositoryException {
+    private boolean isMultiValue(final Modifiable parent, RequestProperty prop, String[] values) throws RepositoryException {
         // multiple values are provided
         if (values != null && values.length > 1) {
             return true;
@@ -344,8 +373,15 @@ public class SlingPropertyValueHandler {
             return true;
         }
         // nothing in the request, so check the current JCR property definition
-        if (parent.hasProperty(prop.getName()) ) {
-            return parent.getProperty(prop.getName()).getDefinition().isMultiple();
+        if ( parent.node != null ) {
+            if (parent.node.hasProperty(prop.getName()) ) {
+                return parent.node.getProperty(prop.getName()).getDefinition().isMultiple();
+            }
+        } else {
+            final Object value = parent.valueMap.get(prop.getName());
+            if ( value != null && value.getClass().isArray() ) {
+                return true;
+            }
         }
         return false;
     }
@@ -354,18 +390,24 @@ public class SlingPropertyValueHandler {
      * Clears a property: sets an empty string for single-value properties, and
      * removes multi-value properties.
      */
-    private void clearProperty(Node parent, RequestProperty prop) throws RepositoryException {
-        if (parent.hasProperty(prop.getName())) {
-            if (parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
-                //the existing property is multi-valued, so just delete it?
-                final String removePath = removePropertyIfExists(parent, prop.getName());
-                if ( removePath != null ) {
-                    changes.add(Modification.onDeleted(removePath));
+    private void clearProperty(final Modifiable parent, RequestProperty prop)
+    throws RepositoryException, PersistenceException {
+        if (parent.valueMap.containsKey(prop.getName())) {
+            if ( parent.node != null ) {
+                if (parent.node.getProperty(prop.getName()).getDefinition().isMultiple()) {
+                    //the existing property is multi-valued, so just delete it?
+                    final String removePath = removePropertyIfExists(parent, prop.getName());
+                    if ( removePath != null ) {
+                        changes.add(Modification.onDeleted(removePath));
+                    }
+                } else {
+                    changes.add(Modification.onModified(
+                                    parent.node.setProperty(prop.getName(), "").getPath()
+                    ));
                 }
             } else {
-                changes.add(Modification.onModified(
-                    parent.setProperty(prop.getName(), "").getPath()
-                ));
+                parent.valueMap.put(prop.getName(), "");
+                changes.add(Modification.onModified(parent.resource.getPath() + '/' + prop.getName()));
             }
         }
     }
@@ -373,7 +415,8 @@ public class SlingPropertyValueHandler {
     /**
      * Removes the property if it exists.
      */
-    private void removeProperty(Node parent, RequestProperty prop) throws RepositoryException {
+    private void removeProperty(final Modifiable parent, RequestProperty prop)
+    throws RepositoryException, PersistenceException {
         final String removePath = removePropertyIfExists(parent, prop.getName());
         if ( removePath != null ) {
             changes.add(Modification.onDeleted(removePath));
@@ -383,11 +426,20 @@ public class SlingPropertyValueHandler {
     /**
      * Removes the property if it exists and is single-valued.
      */
-    private void removeIfSingleValueProperty(Node parent, RequestProperty prop) throws RepositoryException {
-        if (parent.hasProperty(prop.getName())) {
-            if (!parent.getProperty(prop.getName()).getDefinition().isMultiple()) {
-                // the existing property is single-valued, so we have to delete it before setting the
-                // multi-value variation
+    private void removeIfSingleValueProperty(final Modifiable parent,
+                    final RequestProperty prop)
+    throws RepositoryException, PersistenceException {
+        if (parent.valueMap.containsKey(prop.getName())) {
+            if ( parent.node != null ) {
+                if (!parent.node.getProperty(prop.getName()).getDefinition().isMultiple()) {
+                    // the existing property is single-valued, so we have to delete it before setting the
+                    // multi-value variation
+                    final String removePath = removePropertyIfExists(parent, prop.getName());
+                    if ( removePath != null ) {
+                        changes.add(Modification.onDeleted(removePath));
+                    }
+                }
+            } else {
                 final String removePath = removePropertyIfExists(parent, prop.getName());
                 if ( removePath != null ) {
                     changes.add(Modification.onDeleted(removePath));
@@ -402,22 +454,32 @@ public class SlingPropertyValueHandler {
      *
      * @return true only if parsing was successfull and the property was actually changed
      */
-    private boolean storeAsDate(Node parent, String name, String[] values, boolean multiValued, ValueFactory valFac) throws RepositoryException {
+    private boolean storeAsDate(final Modifiable parent, String name, String[] values, boolean multiValued, ValueFactory valFac)
+                    throws RepositoryException, PersistenceException {
         if (multiValued) {
-            Value[] array = dateParser.parse(values, valFac);
+            final Value[] array = dateParser.parse(values, valFac);
             if (array != null) {
-                changes.add(Modification.onModified(
-                    parent.setProperty(name, array).getPath()
-                ));
+                if ( parent.node != null ) {
+                    parent.node.setProperty(name, array);
+                } else {
+                    final Calendar[] dates = new Calendar[array.length];
+                    int index = 0;
+                    for(final Value v : array) {
+                        dates[index] = v.getDate();
+                        index++;
+                    }
+                    parent.valueMap.put(name, dates);
+                }
+                changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
                 return true;
             }
         } else {
             if (values.length >= 1) {
-                Calendar c = dateParser.parse(values[0]);
+                final Calendar c = dateParser.parse(values[0]);
                 if (c != null) {
-                    changes.add(Modification.onModified(
-                        parent.setProperty(name, c).getPath()
-                    ));
+                    parent.valueMap.put(name, c);
+                    changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
+
                     return true;
                 }
             }
@@ -431,12 +493,17 @@ public class SlingPropertyValueHandler {
      *
      * @return true only if parsing was successfull and the property was actually changed
      */
-    private boolean storeAsReference(Node parent, String name, String[] values, int type, boolean multiValued, ValueFactory valFac) throws RepositoryException {
+    private boolean storeAsReference(final Modifiable parent, String name, String[] values, int type, boolean multiValued, ValueFactory valFac)
+    throws RepositoryException, PersistenceException {
+        if ( parent.node == null ) {
+            // TODO
+            throw new PersistenceException("Resource " + parent.resource.getPath() + " does not support reference properties.");
+        }
         if (multiValued) {
             Value[] array = referenceParser.parse(values, valFac, isWeakReference(type));
             if (array != null) {
                 changes.add(Modification.onModified(
-                    parent.setProperty(name, array).getPath()
+                                parent.node.setProperty(name, array).getPath()
                 ));
                 return true;
             }
@@ -445,7 +512,7 @@ public class SlingPropertyValueHandler {
                 Value v = referenceParser.parse(values[0], valFac, isWeakReference(type));
                 if (v != null) {
                     changes.add(Modification.onModified(
-                        parent.setProperty(name, v).getPath()
+                                    parent.node.setProperty(name, v).getPath()
                     ));
                     return true;
                 }
@@ -458,25 +525,41 @@ public class SlingPropertyValueHandler {
      * Stores the property as string or via a strign value, but with an explicit
      * type. Both multi-value or single-value.
      */
-    private void store(Node parent, String name, String[] values, int type, boolean multiValued /*, ValueFactory valFac */) throws RepositoryException {
-        Property p = null;
+    private void store(final Modifiable parent,
+                    final String name,
+                    final String[] values,
+                    final int type,
+                    final boolean multiValued)
+    throws RepositoryException, PersistenceException {
+        // TODO
+        if ( parent.node != null ) {
+            Property p = null;
 
-        if (multiValued) {
-            if (type == PropertyType.UNDEFINED) {
-                p = parent.setProperty(name, values);
-            } else {
-                p = parent.setProperty(name, values, type);
+            if (multiValued) {
+                if (type == PropertyType.UNDEFINED) {
+                    p = parent.node.setProperty(name, values);
+                } else {
+                    p = parent.node.setProperty(name, values, type);
+                }
+            } else if (values.length >= 1) {
+                if (type == PropertyType.UNDEFINED) {
+                    p = parent.node.setProperty(name, values[0]);
+                } else {
+                    p = parent.node.setProperty(name, values[0], type);
+                }
             }
-        } else if (values.length >= 1) {
-            if (type == PropertyType.UNDEFINED) {
-                p = parent.setProperty(name, values[0]);
-            } else {
-                p = parent.setProperty(name, values[0], type);
-            }
-        }
 
-        if (p != null) {
-            changes.add(Modification.onModified(p.getPath()));
+            if (p != null) {
+                changes.add(Modification.onModified(p.getPath()));
+            }
+        } else {
+            if (multiValued) {
+                parent.valueMap.put(name, values);
+                changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
+            } else if (values.length >= 1) {
+                parent.valueMap.put(name, values[0]);
+                changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
+            }
         }
     }
 
@@ -488,5 +571,11 @@ public class SlingPropertyValueHandler {
         CREATED_BY,
         MODIFIED,
         MODIFIED_BY
+    }
+
+    public final static class Modifiable {
+        public Resource resource;
+        public ModifiableValueMap valueMap;
+        public Node node;
     }
 }

@@ -19,11 +19,11 @@ package org.apache.sling.servlets.post.impl.operations;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Item;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.AbstractPostOperation;
 import org.apache.sling.servlets.post.Modification;
@@ -38,35 +38,52 @@ import org.apache.sling.servlets.post.VersioningConfiguration;
 public class DeleteOperation extends AbstractPostOperation {
 
     @Override
-    protected void doRun(SlingHttpServletRequest request, PostResponse response, List<Modification> changes)
+    protected void doRun(final SlingHttpServletRequest request,
+                    final PostResponse response,
+                    final List<Modification> changes)
     throws RepositoryException {
-        VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
+        final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
-        Iterator<Resource> res = getApplyToResources(request);
+        final Iterator<Resource> res = getApplyToResources(request);
         if (res == null) {
 
-            Resource resource = request.getResource();
-            Item item = resource.adaptTo(Item.class);
-            if (item == null) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND,
-                    "Missing source " + resource + " for delete");
-                return;
-            }
-            checkoutIfNecessary(item.getParent(), changes, versioningConfiguration);
+            final Resource resource = request.getResource();
+            final Node node = resource.adaptTo(Node.class);
+            if ( node != null ) {
+                checkoutIfNecessary(node.getParent(), changes, versioningConfiguration);
 
-            item.remove();
+                node.remove();
+            } else {
+                try {
+                    request.getResourceResolver().delete(resource);
+                } catch (final PersistenceException pe) {
+                    if ( pe.getCause() instanceof RepositoryException ) {
+                        throw (RepositoryException)pe.getCause();
+                    }
+                    throw new RepositoryException(pe);
+                }
+            }
             changes.add(Modification.onDeleted(resource.getPath()));
 
         } else {
 
             while (res.hasNext()) {
-                Resource resource = res.next();
-                Item item = resource.adaptTo(Item.class);
-                if (item != null) {
-                    checkoutIfNecessary(item.getParent(), changes, versioningConfiguration);
-                    item.remove();
-                    changes.add(Modification.onDeleted(resource.getPath()));
+                final Resource resource = res.next();
+                final Node node = resource.adaptTo(Node.class);
+                if ( node != null ) {
+                    checkoutIfNecessary(node.getParent(), changes, versioningConfiguration);
+                    node.remove();
+                } else {
+                    try {
+                        request.getResourceResolver().delete(resource);
+                    } catch (final PersistenceException pe) {
+                        if ( pe.getCause() instanceof RepositoryException ) {
+                            throw (RepositoryException)pe.getCause();
+                        }
+                        throw new RepositoryException(pe);
+                    }
                 }
+                changes.add(Modification.onDeleted(resource.getPath()));
             }
 
         }

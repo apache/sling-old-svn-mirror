@@ -28,6 +28,8 @@ import javax.servlet.ServletContext;
 
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 
 /**
@@ -102,7 +104,7 @@ public class SlingFileUploadHandler {
      * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    public void setFile(Node parent, RequestProperty prop, List<Modification> changes)
+    private void setFile(Node parent, RequestProperty prop, List<Modification> changes)
             throws RepositoryException {
     	RequestParameter[] values = prop.getValues();
     	for (RequestParameter requestParameter : values) {
@@ -199,6 +201,26 @@ public class SlingFileUploadHandler {
                 throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
             }
 		}
+    }
+
+    /**
+     * Uses the file(s) in the request parameter for creation of new nodes.
+     * if the parent node is a nt:folder a new nt:file is created. otherwise
+     * just a nt:resource. if the <code>name</code> is '*', the filename of
+     * the uploaded file is used.
+     *
+     * @param parent the parent node
+     * @param prop the assembled property info
+     * @throws RepositoryException if an error occurs
+     */
+    public void setFile(Resource parent, RequestProperty prop, List<Modification> changes)
+    throws RepositoryException, PersistenceException {
+        final Node node = parent.adaptTo(Node.class);
+        if ( node == null ) {
+            // TODO
+            throw new PersistenceException("Binary properties for resource '" + parent.getPath() + "' currently not supported.");
+        }
+        this.setFile(node, prop, changes);
     }
 
     private Node getOrCreateChildNode(Node parent, String name, String typeHint,
