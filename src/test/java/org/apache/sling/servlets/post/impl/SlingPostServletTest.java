@@ -21,21 +21,31 @@ package org.apache.sling.servlets.post.impl;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.StringTokenizer;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletRequest;
 import org.apache.sling.commons.testing.sling.MockSlingHttpServletResponse;
+import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.servlets.post.JSONResponse;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.MediaRangeList;
 
 public class SlingPostServletTest extends TestCase {
+    
+    private SlingPostServlet servlet;
+    
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        servlet = new SlingPostServlet();
+    }
 
     public void testIsSetStatus() {
         StatusParamSlingHttpServletRequest req = new StatusParamSlingHttpServletRequest();
-        SlingPostServlet servlet = new SlingPostServlet();
 
         // 1. null parameter, expect true
         req.setStatusParam(null);
@@ -72,42 +82,82 @@ public class SlingPostServletTest extends TestCase {
                 return null;
             }
         };
-        SlingPostServlet servlet = new SlingPostServlet();
         PostResponse result = servlet.createPostResponse(req);
         assertTrue(result instanceof JSONResponse);
     }
     
     public void testRedirection() throws Exception {
-    	final String[] redirectLocation = new String[1];
-    	MockSlingHttpServletResponse resp = new MockSlingHttpServletResponse() {
-    		@Override
-    		public String encodeRedirectURL(String s) {
-    			try {
-					return URLEncoder.encode(s, "UTF-8");
-				} catch (UnsupportedEncodingException e) {
-					fail("Should have UTF-8?? " + e);
-					return null;
-				}
-    		}
-    		
-    		@Override
-    		public void sendRedirect(String s) throws IOException {
-    			redirectLocation[0] = s;
-    		}
-    	};
-    	
-    	SlingPostServlet servlet = new SlingPostServlet();
+        String utf8Path = "\u0414\u0440\u0443\u0433\u0430";
+        String encodedUtf8 = "%D0%94%D1%80%D1%83%D0%B3%D0%B0";
+        testRedirection("/", "/fred", "*.html", "/fred.html");
+        testRedirection("/xyz/", "/xyz/"+utf8Path, "*", "/xyz/"+encodedUtf8);
+        testRedirection("/", "/fred/abc", "http://forced", "http://forced");
+        testRedirection("/", "/fred/"+utf8Path, "http://forced/xyz/*", "http://forced/xyz/"+encodedUtf8);
+        testRedirection("/", "/fred/"+utf8Path, null, null);
+    }
 
-    	assertTrue(servlet.redirectIfNeeded("\u0414\u0440\u0443\u0433\u0430.html", resp));
-    	assertEquals("Should encode UTF-8", "%D0%94%D1%80%D1%83%D0%B3%D0%B0.html", redirectLocation[0]);
+    private void testRedirection(String requestPath, String resourcePath, String redirect, String expected) 
+            throws Exception {
+        RedirectServletResponse resp = new RedirectServletResponse();
+        SlingHttpServletRequest request = new RedirectServletRequest(redirect, requestPath);
+        PostResponse htmlResponse = new HtmlResponse();
+        htmlResponse.setPath(resourcePath);
+        assertEquals(expected != null, servlet.redirectIfNeeded(request, htmlResponse, resp));
+        assertEquals(expected, resp.redirectLocation);
+    }
 
-    	redirectLocation[0] = null;
-    	assertTrue(servlet.redirectIfNeeded("fred.html", resp));
-    	assertEquals("Plain old ASCII passes through", "fred.html", redirectLocation[0]);
+    /**
+     *
+     */
+    private final class RedirectServletRequest extends MockSlingHttpServletRequest {
 
-    	redirectLocation[0] = null;
-    	assertFalse(servlet.redirectIfNeeded(null, resp));
-    	assertNull("Shouldn't have encoded anything", redirectLocation[0]);
+        private String requestPath;
+        private String redirect;
+
+        private RedirectServletRequest(String redirect, String requestPath) {
+            super(null, null, null, null, null);
+            this.requestPath = requestPath;
+            this.redirect = redirect;
+        }
+
+        public String getPathInfo() {
+            return requestPath;
+        }
+        
+        @Override
+        public String getParameter(String name) {
+            return SlingPostConstants.RP_REDIRECT_TO.equals(name) ? redirect : null;
+        }
+    }
+
+    private final class RedirectServletResponse extends MockSlingHttpServletResponse {
+
+        private String redirectLocation;
+
+        @Override
+        public String encodeRedirectURL(String s) {
+            StringTokenizer st = new StringTokenizer(s, "/", true);
+            StringBuilder sb = new StringBuilder();
+        	try {
+        	    while (st.hasMoreTokens()) {
+        	        String token = st.nextToken();
+        	        if ("/".equals(token)) {
+                        sb.append(token);
+        	        } else {
+        	            sb.append(URLEncoder.encode(token, "UTF-8"));
+        	        }
+        	    }
+        	} catch (UnsupportedEncodingException e) {
+        		fail("Should have UTF-8?? " + e);
+        		return null;
+        	}
+            return sb.toString();
+        }
+
+        @Override
+        public void sendRedirect(String s) throws IOException {
+        	redirectLocation = s;
+        }
     }
 
     private static class StatusParamSlingHttpServletRequest extends
