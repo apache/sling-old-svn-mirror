@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.OptingServlet;
 import org.apache.sling.commons.testing.osgi.MockBundle;
+import org.apache.sling.commons.testing.osgi.MockBundleContext;
 import org.apache.sling.commons.testing.osgi.MockComponentContext;
 import org.apache.sling.commons.testing.osgi.MockServiceReference;
 import org.apache.sling.commons.testing.sling.MockResource;
@@ -51,6 +53,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 
 @RunWith(JMock.class)
 public class SlingServletResolverTest {
@@ -115,8 +118,19 @@ public class SlingServletResolverTest {
         resolverField.set(servletResolver, factory);
 
         MockBundle bundle = new MockBundle(1L);
+        MockBundleContext bundleContext = new MockBundleContext(bundle) {
+            @Override
+            public ServiceRegistration registerService(String s, Object o, Dictionary dictionary) {
+                return null;
+            }
+            
+            @Override
+            public ServiceRegistration registerService(String[] strings, Object o, Dictionary dictionary) {
+                return null;
+            }
+        };
         MockComponentContext mockComponentContext = new MockComponentContext(
-            bundle, SlingServletResolverTest.this.servlet);
+            bundleContext, SlingServletResolverTest.this.servlet);
         MockServiceReference serviceReference = new MockServiceReference(bundle);
         serviceReference.setProperty(Constants.SERVICE_ID, 1L);
         serviceReference.setProperty(SLING_SERLVET_NAME,

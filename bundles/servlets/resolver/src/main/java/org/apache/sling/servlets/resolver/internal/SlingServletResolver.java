@@ -28,12 +28,17 @@ import static org.osgi.framework.Constants.SERVICE_PID;
 import static org.osgi.service.component.ComponentConstants.COMPONENT_NAME;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,9 +46,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -81,6 +89,7 @@ import org.apache.sling.servlets.resolver.internal.helper.ResourceCollector;
 import org.apache.sling.servlets.resolver.internal.helper.SlingServletConfig;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProvider;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -231,6 +240,8 @@ public class SlingServletResolver
      * The default extensions
      */
     private String[] defaultExtensions;
+
+    private ServletResolverWebConsolePlugin plugin;
 
     // ---------- ServletResolver interface -----------------------------------
 
@@ -877,6 +888,8 @@ public class SlingServletResolver
         // and finally register as event listener
         this.eventHandlerReg = context.getBundleContext().registerService(EventHandler.class.getName(), this,
                 properties);
+        
+        this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
     }
 
     /**
@@ -885,6 +898,10 @@ public class SlingServletResolver
     protected void deactivate(final ComponentContext context) {
         // stop registering of servlets immediately
         this.context = null;
+
+        if (this.plugin != null) {
+            this.plugin.dispose();
+        }
 
         // unregister event handler
         if (this.eventHandlerReg != null) {
@@ -1138,5 +1155,244 @@ public class SlingServletResolver
     public Resource decorate(final Resource resource, final HttpServletRequest request) {
         // this is deprecated, but we just delegate anyway
         return this.decorate(resource);
+    }
+    
+    @SuppressWarnings("serial")
+    class ServletResolverWebConsolePlugin extends HttpServlet {
+        private static final String PARAMETER_URL = "url";
+        private static final String PARAMETER_METHOD = "method";
+
+        private ServiceRegistration service;
+
+        public ServletResolverWebConsolePlugin(BundleContext context) {
+            Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put(Constants.SERVICE_DESCRIPTION,
+                    "Sling Servlet Resolver Web Console Plugin");
+            props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+            props.put(Constants.SERVICE_PID, getClass().getName());
+            props.put("felix.webconsole.label", "servletresolver");
+            props.put("felix.webconsole.title", "Sling Servlet Resolver");
+            props.put("felix.webconsole.css", "/servletresolver/res/ui/styles.css");
+
+            service = context.registerService(
+                    new String[] { "javax.servlet.Servlet" }, this, props);
+        }
+
+        public void dispose() {
+            if (service != null) {
+                service.unregister();
+                service = null;
+            }
+        }
+        
+        class DecomposedURL {
+            final String extension;
+            final String path;
+            final String[] selectors;
+            
+            DecomposedURL(String url) {
+                if (url != null) {
+                    final int lastDot = url.lastIndexOf('.');
+                    final int firstDot = url.indexOf('.');
+                    if (lastDot > 0) {
+                        final int slashInExtension = url.indexOf('/', lastDot);
+                        // strip suffix, if any
+                        if (slashInExtension > 0) {
+                            extension = url.substring(lastDot + 1, slashInExtension);
+                        } else {
+                            extension = url.substring(lastDot + 1);
+                        }
+
+                        path = url.substring(0, firstDot);
+                        if (lastDot != firstDot) {
+                            // has selectors
+                            final String selectorString = url.substring(firstDot + 1, lastDot);
+                            selectors = selectorString.split("\\.");
+                        } else {
+                            selectors = new String[0];
+                        }
+                    } else {
+                        extension = "";
+                        path = url;
+                        selectors = new String[0];
+                    }
+                } else {
+                    extension = "";
+                    path = "";
+                    selectors = new String[0];
+                }
+            }
+        }
+        
+        @Override
+        protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+            final String url = request.getParameter(PARAMETER_URL);
+            final DecomposedURL decomposed = new DecomposedURL(url);
+            String method = request.getParameter(PARAMETER_METHOD);
+            if (StringUtils.isBlank(method)) {
+                method = "GET";
+            }
+
+            ResourceResolver resourceResolver = null;
+            try {
+                resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+                
+                final PrintWriter pw = response.getWriter();
+
+                pw.print("<form method='get'>");
+                pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
+        
+                titleHtml(
+                        pw,
+                        "Servlet Resolver Test",
+                        "To check which servlet is responsible for rendering a response, enter a request path into " +
+                                 "the field and click 'Resolve' to resolve it.");
+        
+                tr(pw);
+                tdLabel(pw, "URL");
+                tdContent(pw);
+                
+                pw.println("<input type='text' name='" + PARAMETER_URL + "' value='" +
+                         (url != null ? url : "") + "' class='input' size='50'>");
+                closeTd(pw);
+                closeTr(pw);
+                closeTr(pw);
+
+                tr(pw);
+                tdLabel(pw, "Method");
+                tdContent(pw);
+                pw.println("<select name='" + PARAMETER_METHOD + "'>");
+                pw.println("<option value='GET'>GET</option>");
+                pw.println("<option value='POST'>POST</option>");
+                pw.println("</select>");
+                pw.println("&nbsp;&nbsp;<input type='submit'" +
+                         "' value='Resolve' class='submit'>");
+
+                closeTd(pw);
+                closeTr(pw);
+
+                if (StringUtils.isNotBlank(url)) {
+                    tr(pw);
+                    tdLabel(pw, "Decomposed URL");
+                    tdContent(pw);
+                    pw.println("<dl>");
+                    pw.println("<dt>Path</dt>");
+                    pw.println("<dd>" + decomposed.path + "</dd>");
+                    pw.println("<dt>Selectors</dt>");
+                    pw.print("<dd>");
+                    if (decomposed.selectors.length == 0) {
+                        pw.print("&lt;none&gt;");
+                    } else {
+                        pw.print("[");
+                        pw.print(StringUtils.join(decomposed.selectors, ", "));
+                        pw.print("]");
+                    }
+                    pw.println("</dd>");
+                    pw.println("<dt>Extension</dt>");
+                    pw.println("<dd>" + decomposed.extension + "</dd>");
+                    pw.println("</dl>");
+                    closeTd(pw);
+                    closeTr(pw);
+                }
+
+                if (StringUtils.isNotBlank(decomposed.path)) {
+                    final Collection<Resource> servlets;
+                    Resource resource = resourceResolver.resolve(decomposed.path);
+                    if (resource.adaptTo(Servlet.class) != null) {
+                        servlets = Collections.singleton(resource);
+                    } else {
+                        final ResourceCollector locationUtil = ResourceCollector.create(resource, defaultWorkspaceName, decomposed.extension, executionPaths, defaultExtensions, method, decomposed.selectors);
+                        servlets = locationUtil.getServlets(resourceResolver);
+                    }
+                    tr(pw);
+                    tdLabel(pw, "&nbsp;");
+                    tdContent(pw);
+
+                    if (servlets == null || servlets.isEmpty()) {
+                        pw.println("Could not find a suitable servlet for this request!");
+                    } else {
+                        pw.println("Candidate servlets and scripts in order of preference:<br/>");
+                        pw.println("<ol class='servlets'>");
+                        Iterator<Resource> iterator = servlets.iterator();
+                        outputServlets(pw, iterator);
+                        pw.println("</ol>");
+                    }
+                    pw.println("</td>");
+                    closeTr(pw);
+                }
+
+                pw.println("</table>");
+                pw.print("</form>");
+            } catch (LoginException e) {
+                throw new ServletException(e);
+            } finally {
+                if (resourceResolver != null) {
+                    resourceResolver.close();
+                }
+            }
+        }
+
+        private void tdContent(final PrintWriter pw) {
+            pw.print("<td class='content' colspan='2'>");
+        }
+
+        private void closeTd(final PrintWriter pw) {
+            pw.print("</td>");
+        }
+        
+        @SuppressWarnings("unused")
+        private URL getResource(final String path) {
+            if (path.startsWith("/servletresolver/res/ui")) {
+                return this.getClass().getResource(path.substring(16));
+            } else {
+                return null;
+            }
+        }
+
+        private void closeTr(final PrintWriter pw) {
+            pw.println("</tr>");
+        }
+
+        private void tdLabel(final PrintWriter pw, final String label) {
+            pw.println("<td class='content'>" + label + "</td>");
+        }
+
+        private void tr(final PrintWriter pw) {
+            pw.println("<tr class='content'>");
+        }
+
+        private void outputServlets(PrintWriter pw, Iterator<Resource> iterator) {
+            while (iterator.hasNext()) {
+                Resource candidateResource = iterator.next();
+                Servlet candidate = candidateResource.adaptTo(Servlet.class);
+                if (candidate != null) {
+                    boolean isOptingServlet = false;
+                    
+                    if (candidate instanceof SlingScript) {
+                        pw.println("<li>" + candidateResource.getPath() + "</li>");
+                    } else {
+                        if (candidate instanceof OptingServlet) {
+                            isOptingServlet = true;
+                        }
+                        pw.println("<li>" + candidate.getClass().getName() + (isOptingServlet ? " (OptingServlet)" : "") + "</li>");
+                    }
+                }
+            }
+        }
+
+        private void titleHtml(PrintWriter pw, String title, String description) {
+            tr(pw);
+            pw.println("<th colspan='3' class='content container'>" + title +
+                     "</th>");
+            closeTr(pw);
+
+            if (description != null) {
+                tr(pw);
+                pw.println("<td colspan='3' class='content'>" + description +
+                         "</th>");
+                closeTr(pw);
+            }
+        }
+
     }
 }
