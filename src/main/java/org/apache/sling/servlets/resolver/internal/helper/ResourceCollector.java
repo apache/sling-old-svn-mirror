@@ -18,10 +18,12 @@
  */
 package org.apache.sling.servlets.resolver.internal.helper;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
@@ -86,8 +88,20 @@ public class ResourceCollector extends AbstractResourceCollector {
     public static ResourceCollector create(
             final SlingHttpServletRequest request, final String workspaceName,
             final String[] executionPaths, final String[] defaultExtensions) {
-        boolean isDefaultExtension = ArrayUtils.contains(defaultExtensions, request.getRequestPathInfo().getExtension());
-        return new ResourceCollector(request, workspaceName, executionPaths, isDefaultExtension);
+        final RequestPathInfo requestPathInfo = request.getRequestPathInfo();
+        final boolean isDefaultExtension = ArrayUtils.contains(defaultExtensions, requestPathInfo.getExtension());
+        return new ResourceCollector(request.getResource(), workspaceName, requestPathInfo.getExtension(), executionPaths, isDefaultExtension,
+                request.getMethod(), requestPathInfo.getSelectors());
+    }
+    
+    public static ResourceCollector create(final Resource resource, 
+            final String workspaceName,
+            final String extension,
+            final String[] executionPaths, final String[] defaultExtensions,
+            final String methodName, final String[] selectors
+            ) {
+        boolean isDefaultExtension = ArrayUtils.contains(defaultExtensions, extension);
+        return new ResourceCollector(resource, workspaceName, extension, executionPaths, isDefaultExtension, methodName, selectors);
     }
 
     /**
@@ -133,7 +147,7 @@ public class ResourceCollector extends AbstractResourceCollector {
 
     /**
      * Creates a <code>ResourceCollector</code> finding servlets and scripts for
-     * the given <code>methodName</code>.
+     * the given <code>resource</code>.
      *
      * @param methodName The <code>methodName</code> used to find scripts for.
      *            This must not be <code>null</code>.
@@ -144,34 +158,35 @@ public class ResourceCollector extends AbstractResourceCollector {
      *            {@link org.apache.sling.servlets.resolver.internal.ServletResolverConstants#DEFAULT_SERVLET_NAME}
      *            is assumed.
      */
-    private ResourceCollector(final SlingHttpServletRequest request,
-            final String workspaceName, final String[] executionPaths,
-            final boolean isDefaultExtension) {
+    private ResourceCollector(final Resource resource,
+            final String workspaceName, final String extension,
+            final String[] executionPaths,
+            final boolean isDefaultExtension,
+            final String methodName,
+            final String[] selectors) {
         super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
-            request.getResource().getResourceType(),
-            request.getResource().getResourceSuperType(), workspaceName,
-            request.getRequestPathInfo().getExtension(), executionPaths);
-        this.methodName = request.getMethod();
+                resource.getResourceType(),
+                resource.getResourceSuperType(), workspaceName,
+                extension, executionPaths);
+            this.methodName = methodName;
 
-        this.suffExt = "." + extension;
-        this.suffMethod = "." + methodName;
-        this.suffExtMethod = suffExt + suffMethod;
+            this.suffExt = "." + extension;
+            this.suffMethod = "." + methodName;
+            this.suffExtMethod = suffExt + suffMethod;
 
-        RequestPathInfo requestpaInfo = request.getRequestPathInfo();
+            this.requestSelectors = selectors;
+            this.numRequestSelectors = requestSelectors.length;
 
-        this.requestSelectors = requestpaInfo.getSelectors();
-        this.numRequestSelectors = requestSelectors.length;
+            this.isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
+            this.isDefaultExtension = isDefaultExtension;
 
-        this.isGet = "GET".equals(methodName) || "HEAD".equals(methodName);
-        this.isDefaultExtension = isDefaultExtension;
-
-        // create the hash code once
-        final String key = methodName + ':' + baseResourceType + ':'
-            + extension + ':' + requestpaInfo.getSelectorString() + ':'
-            + (this.resourceType == null ? "" : this.resourceType) + ':'
-            + (this.resourceSuperType == null ? "" : this.resourceSuperType)
-            + ':' + (this.workspaceName == null ? "" : this.workspaceName);
-        this.hashCode = key.hashCode();
+            // create the hash code once
+            final String key = methodName + ':' + baseResourceType + ':'
+                + extension + ':' + StringUtils.join(requestSelectors, '.') + ':'
+                + (this.resourceType == null ? "" : this.resourceType) + ':'
+                + (this.resourceSuperType == null ? "" : this.resourceSuperType)
+                + ':' + (this.workspaceName == null ? "" : this.workspaceName);
+            this.hashCode = key.hashCode();
     }
 
     protected void getWeightedResources(final Set<Resource> resources,
