@@ -52,6 +52,7 @@
                     <exclude>**/.project</exclude>
                     <exclude>**/.classpath</exclude>
                     <exclude>**/target/**</exclude>
+                    <exclude>**/*.iml</exclude>
                 </excludes>
             </testResource>
         </testResources>
