@@ -16,12 +16,20 @@
  */
 package org.apache.sling.performance.tests;
 
+import org.apache.sling.performance.PerformanceRunner;
 import org.apache.sling.performance.TestHelper;
+import org.apache.sling.performance.annotation.PerformanceTest;
+import org.junit.runner.RunWith;
 
+@RunWith(PerformanceRunner.class)
 public class ResolveNonExistingWith1000AliasTest extends ResolveNonExistingWithManyAliasTest {
     
     public ResolveNonExistingWith1000AliasTest(TestHelper helper) {
         super(helper, 1000);
     }
 
+    @PerformanceTest
+    public void resolveNonExistingWith10000AliasTest() throws Exception {
+        super.runTest();
+    }
 }

@@ -17,18 +17,12 @@
 package org.apache.sling.performance;
 
 import static org.mockito.Mockito.mock;
-
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Session;
-
 import junitx.util.PrivateAccessor;
-
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -37,6 +31,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
+import org.apache.sling.performance.annotation.PerformanceTestSuite;
 import org.apache.sling.performance.tests.ResolveNonExistingWith10000AliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith10000VanityPathTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWith1000AliasTest;
@@ -47,11 +42,13 @@ import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
+import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.service.event.EventAdmin;
 
-public class PerformanceTest extends AbstractPerformanceTest {
+@RunWith(PerformanceRunner.class)
+public class PerformanceTest {
 
     private class Helper implements TestHelper {
 
@@ -112,18 +109,21 @@ public class PerformanceTest extends AbstractPerformanceTest {
         }
     }
     
-    public void testPerformance() throws Exception {
+    @PerformanceTestSuite
+    public ParameterizedTestList testPerformance() throws Exception {
         Helper helper = new Helper();
         
-        List<AbstractTest> tests = new ArrayList<AbstractTest>();
-        tests.add(new ResolveNonExistingWith1000VanityPathTest(helper));
-        tests.add(new ResolveNonExistingWith5000VanityPathTest(helper));
-        tests.add(new ResolveNonExistingWith10000VanityPathTest(helper));
+        ParameterizedTestList testCenter = new ParameterizedTestList();
+        testCenter.setTestSuiteTitle("jcr.resource-2.2.0");
+        testCenter.addTestObject(new ResolveNonExistingWith1000VanityPathTest(helper));
+        testCenter.addTestObject(new ResolveNonExistingWith5000VanityPathTest(helper));
+        testCenter.addTestObject(new ResolveNonExistingWith10000VanityPathTest(helper));
         //tests.add(new ResolveNonExistingWith30000VanityPathTest(helper));
-        tests.add(new ResolveNonExistingWith1000AliasTest(helper));
-        tests.add(new ResolveNonExistingWith5000AliasTest(helper));
-        tests.add(new ResolveNonExistingWith10000AliasTest(helper));
+        testCenter.addTestObject(new ResolveNonExistingWith1000AliasTest(helper));
+        testCenter.addTestObject(new ResolveNonExistingWith5000AliasTest(helper));
+        testCenter.addTestObject(new ResolveNonExistingWith10000AliasTest(helper));
         //tests.add(new ResolveNonExistingWith30000AliasTest(helper));
-        testPerformance("jcr.resource-2.2.0", tests);
+        
+        return testCenter;
     }
 }

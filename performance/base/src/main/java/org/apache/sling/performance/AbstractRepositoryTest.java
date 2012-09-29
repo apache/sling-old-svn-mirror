@@ -26,7 +26,7 @@ import org.apache.sling.jcr.api.SlingRepository;
 
 
   
-public abstract class AbstractRepositoryTest extends AbstractTest {
+public abstract class AbstractRepositoryTest {
 	
 	private static class ShutdownThread extends Thread {
         @Override
@@ -34,7 +34,7 @@ public abstract class AbstractRepositoryTest extends AbstractTest {
             try {
                 RepositoryUtil.stopRepository();
             } catch(Exception e) {
-                System.out.println("Exception in ShutdownThread:" + e);
+                //ignore for now
             }
         }
         
@@ -81,10 +81,4 @@ public abstract class AbstractRepositoryTest extends AbstractTest {
         return testRoot;
     }
 
-    @Override
-    public void tearDown() throws Exception {
-        super.tearDown();
-        if(session != null) {
-            session.logout();
-        }
-    }}
+}

@@ -32,6 +32,8 @@ import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.performance.AbstractRepositoryTest;
 import org.apache.sling.performance.TestHelper;
 import org.apache.sling.performance.ResourceResolverTestRequest;
+import org.junit.After;
+import org.junit.Before;
 
 class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
     
@@ -59,7 +61,7 @@ class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
         this.childNodeCount = childNodeCount;
     }
 
-    @Override
+    @After
     protected void afterSuite() throws Exception {
         if (helper != null) {
             helper.dispose();
@@ -74,7 +76,7 @@ class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
         session.save();
     }
 
-    @Override
+    @Before
     protected void beforeSuite() throws Exception {
         RepositoryUtil.registerNodeType(getSession(),
                 this.getClass().getResourceAsStream("/SLING-INF/nodetypes/folder.cnd"));
@@ -124,7 +126,7 @@ class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
 
     }
 
-    @Override
+
     protected void runTest() throws Exception {
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/" + "testNonExistingVanity"
                 + ".print.html");
