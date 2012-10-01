@@ -22,19 +22,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Represents the object that will be returned by the method 
- * in which a new PerformanceTestSuite is created
- *
+ * Represents the object that will be returned by the method in which a new
+ * PerformanceTestSuite is created
+ * 
  */
 public class ParameterizedTestList {
 
 	public static final String TEST_CASE_ONLY = "TESTCASEONLY";
-	
+
 	private List<Object> testObjectList = new ArrayList<Object>();
 	private String testSuiteTitle = TEST_CASE_ONLY;
 	private Map<String, String> parameters = new LinkedHashMap<String, String>();
 	private Map<String, Object> parametersObjects = new LinkedHashMap<String, Object>();
-	
+
 	public Map<String, Object> getParametersObjects() {
 		return parametersObjects;
 	}
@@ -42,23 +42,23 @@ public class ParameterizedTestList {
 	public void addParameterObject(String key, Object parameterObject) {
 		this.parametersObjects.put(key, parameterObject);
 	}
-	
+
 	public Map<String, String> getParameters() {
 		return parameters;
 	}
-	
+
 	public void addParameter(String key, String value) {
 		parameters.put(key, value);
 	}
-	
+
 	public List<Object> getTestObjectList() {
 		return testObjectList;
 	}
-	
+
 	public void addTestObject(Object testObject) {
 		testObjectList.add(testObject);
 	}
-	
+
 	public String getTestSuiteName() {
 		return testSuiteTitle;
 	}
@@ -66,5 +66,5 @@ public class ParameterizedTestList {
 	public void setTestSuiteTitle(String testSuiteTitle) {
 		this.testSuiteTitle = testSuiteTitle;
 	}
-	
+
 }

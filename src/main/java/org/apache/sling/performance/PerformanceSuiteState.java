@@ -21,25 +21,25 @@ import java.lang.reflect.Method;
 public class PerformanceSuiteState {
 
 	public String testSuiteName = ParameterizedTestList.TEST_CASE_ONLY;
-	
+
 	private Method beforeSuiteMethod;
 	private Method afterSuiteMethod;
 	private int numberOfMethodsInSuite = 0;
 	private int numberOfExecutedMethods = 0;
 	private Object targetObjectSuite;
-	
-	public PerformanceSuiteState(String testSuiteName){
+
+	public PerformanceSuiteState(String testSuiteName) {
 		this.testSuiteName = testSuiteName;
 	}
-	
-	public void incrementNumberOfTestMethodsInSuite(){
+
+	public void incrementNumberOfTestMethodsInSuite() {
 		numberOfMethodsInSuite++;
 	}
-	
-	public void incrementNumberOfExecutedTestMethods(){
+
+	public void incrementNumberOfExecutedTestMethods() {
 		numberOfExecutedMethods++;
 	}
-	
+
 	public String getTestSuiteName() {
 		return testSuiteName;
 	}
@@ -87,5 +87,5 @@ public class PerformanceSuiteState {
 	public void setTargetObjectSuite(Object targetObjectSuite) {
 		this.targetObjectSuite = targetObjectSuite;
 	}
-	
+
 }
