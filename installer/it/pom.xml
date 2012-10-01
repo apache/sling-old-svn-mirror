@@ -87,6 +87,10 @@
                             <value>${project.version}</value>
                         </property>
                         <property>
+                            <name>installer.api.version</name>
+                            <value>1.0-SNAPSHOT</value>
+                        </property>
+                        <property>
                             <name>installer.configuration.version</name>
                             <value>1.0.9-SNAPSHOT</value>
                         </property>
