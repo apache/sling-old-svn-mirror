@@ -109,7 +109,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#clone(Map)
      */
     public ResourceResolver clone(final Map<String, Object> authenticationInfo)
-    throws LoginException {
+            throws LoginException {
         // ensure resolver is still live
         checkClosed();
 
@@ -152,6 +152,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * cleaned up before it is being collected by the garbage collector because
      * it is not referred to any more.
      */
+    @Override
     protected void finalize() throws Throwable {
         close();
         super.finalize();
@@ -264,7 +265,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                     // external redirect
                     logger.debug("resolve: Returning external redirect");
                     return this.factory.getResourceDecoratorTracker().decorate(
-                                    new RedirectResource(this, absPath, mappedPath[0], mapEntry.getStatus()));
+                            new RedirectResource(this, absPath, mappedPath[0], mapEntry.getStatus()));
                 }
             }
 
@@ -384,7 +385,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             fragmentQuery = resourcePath.substring(fragmentQueryMark);
             mappedPath = resourcePath.substring(0, fragmentQueryMark);
             logger.debug("map: Splitting resource path '{}' into '{}' and '{}'", new Object[] { resourcePath, mappedPath,
-                            fragmentQuery });
+                    fragmentQuery });
         } else {
             fragmentQuery = null;
             mappedPath = resourcePath;
@@ -397,7 +398,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             schemehostport = MapEntry.getURI(request.getScheme(), request.getServerName(), request.getServerPort(), "/");
             schemePrefix = request.getScheme().concat("://");
             logger.debug("map: Mapping path {} for {} (at least with scheme prefix {})", new Object[] { resourcePath,
-                            schemehostport, schemePrefix });
+                    schemehostport, schemePrefix });
 
         } else {
 
@@ -613,7 +614,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             return listChildren(((ResourceWrapper) parent).getResource());
         }
         return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
-                        new ResourceIterator(this.context, parent, this.factory.getRootProviderEntry()));
+                new ResourceIterator(this.context, parent, this.factory.getRootProviderEntry()));
     }
 
     // ---------- Querying resources
@@ -628,8 +629,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         checkClosed();
 
         return new ResourceIteratorDecorator(this.factory.getResourceDecoratorTracker(),
-                        this.factory.getRootProviderEntry().findResources(this.context, this, query,
-                                        language == null ? DEFAULT_QUERY_LANGUAGE : language));
+                this.factory.getRootProviderEntry().findResources(this.context, this, query,
+                        language == null ? DEFAULT_QUERY_LANGUAGE : language));
     }
 
     /**
@@ -637,11 +638,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      *      java.lang.String)
      */
     public Iterator<Map<String, Object>> queryResources(final String query, final String language)
-    throws SlingException {
+            throws SlingException {
         checkClosed();
 
         return this.factory.getRootProviderEntry().queryResources(this.context, this, query,
-                        language == null ? DEFAULT_QUERY_LANGUAGE : language);
+                language == null ? DEFAULT_QUERY_LANGUAGE : language);
     }
 
     /**
@@ -700,6 +701,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * @see org.apache.sling.api.adapter.SlingAdaptable#adaptTo(java.lang.Class)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         checkClosed();
@@ -840,7 +842,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 resource.getResourceMetadata().setResolutionPathInfo(pathInfo);
 
                 logger.debug("resolveInternal: Found resource {} with path info {} for {}", new Object[] { resource, pathInfo,
-                                absPath });
+                        absPath });
             }
         }
 
@@ -854,7 +856,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             if (alias != null) {
                 // TODO: might be a redirect ??
                 logger.warn("getChildInternal: Internal redirect to {} for Resource {} is not supported yet, ignoring", alias,
-                                child);
+                        child);
             }
 
             // we have the resource name, continue with the next level
@@ -999,12 +1001,12 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#delete(org.apache.sling.api.resource.Resource)
      */
     public void delete(final Resource resource)
-    throws PersistenceException {
+            throws PersistenceException {
         // if resource is null, we get an NPE as stated in the API
         final String path = resource.getPath();
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
-                        this,
-                        path);
+                this,
+                path);
         if ( mrp == null ) {
             throw new UnsupportedOperationException("delete at '" + path + "'");
         }
@@ -1015,7 +1017,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      * @see org.apache.sling.api.resource.ResourceResolver#create(org.apache.sling.api.resource.Resource, java.lang.String, Map)
      */
     public Resource create(final Resource parent, final String name, final Map<String, Object> properties)
-    throws PersistenceException {
+            throws PersistenceException {
         // if parent or name is null, we get an NPE as stated in the API
         if ( name == null ) {
             throw new NullPointerException("name");
@@ -1030,11 +1032,15 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             path = parent.getPath() + "/" + name;
         }
+        // experimental code for handling synthetic resources
+        if ( ResourceUtil.isSyntheticResource(parent) ) {
+            this.create(parent.getParent(), parent.getName(), null);
+        }
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
-                        this,
-                        path);
+                this,
+                path);
         if ( mrp == null ) {
-            throw new UnsupportedOperationException("addChild '" + name + "' at " + parent.getPath());
+            throw new UnsupportedOperationException("Create '" + name + "' at " + parent.getPath());
         }
         return this.factory.getResourceDecoratorTracker().decorate(mrp.create(this, path, properties));
     }
