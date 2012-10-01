@@ -16,12 +16,9 @@
  */
 package org.apache.sling.performance.tests;
 
-import org.apache.sling.performance.PerformanceRunner;
 import org.apache.sling.performance.TestHelper;
 import org.apache.sling.performance.annotation.PerformanceTest;
-import org.junit.runner.RunWith;
 
-@RunWith(PerformanceRunner.class)
 public class ResolveNonExistingWith30000VanityPathTest extends ResolveNonExistingWithManyVanityPathTest {
 
     public ResolveNonExistingWith30000VanityPathTest(TestHelper helper) {
