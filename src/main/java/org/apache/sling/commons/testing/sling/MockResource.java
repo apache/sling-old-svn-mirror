@@ -24,11 +24,13 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class MockResource extends SyntheticResource {
 
     private String resourceType;
     private String resourceSuperType;
+    private Map<String,Object> properties = new HashMap<String,Object>();
 
     public MockResource(ResourceResolver resourceResolver, String path,
             String resourceType) {
@@ -41,6 +43,14 @@ public class MockResource extends SyntheticResource {
 
         setResourceType(resourceType);
         setResourceSuperType(resourceSuperType);
+    }
+
+    public void addProperty(String key, Object value){
+        this.properties.put(key,value);
+    }
+
+    public Map<String,Object> getProperties(){
+        return this.properties;
     }
 
     @Override
@@ -61,19 +71,21 @@ public class MockResource extends SyntheticResource {
         this.resourceSuperType = resourceSuperType;
     }
 
-	@SuppressWarnings("unchecked")
-	public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-		if (type == ValueMap.class) {
-			ValueMap map = new ValueMapDecorator(new HashMap<String, Object>());
-			if (resourceType != null) {
-				map.put("resourceType", resourceType);
-			}
-			if (resourceSuperType != null) {
-				map.put("resourceSuperType", resourceSuperType);
-			}
-			return (AdapterType) map;
-		}
-		throw new UnsupportedOperationException("AdaptTo " + type.getSimpleName() + " not implemented");
-	}
-
+    @SuppressWarnings("unchecked")
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+        if (type == ValueMap.class) {
+            ValueMap map = new ValueMapDecorator(new HashMap<String, Object>());
+            if (resourceType != null) {
+                map.put("resourceType", resourceType);
+            }
+            if (resourceSuperType != null) {
+                map.put("resourceSuperType", resourceSuperType);
+            }
+            for (String key : this.properties.keySet()) {
+                map.put(key,this.properties.get(key));
+            }
+            return (AdapterType) map;
+        }
+        throw new UnsupportedOperationException("AdaptTo " + type.getSimpleName() + " not implemented");
+    }
 }
