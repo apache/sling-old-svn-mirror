@@ -41,6 +41,7 @@ for dat in target/*.txt; do
     rows=`grep -v "#" "$dat" | wc -l`
     gnuplot <<PLOT
 set term svg size 800,400
+set xtic rotate by -45
 set xlabel "bundle version"
 set xrange [-1:$rows]
 set ylabel "Time (ms)"
