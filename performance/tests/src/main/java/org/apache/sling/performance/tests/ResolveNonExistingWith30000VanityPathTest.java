@@ -29,7 +29,7 @@ public class ResolveNonExistingWith30000VanityPathTest extends ResolveNonExistin
     }
 
     @PerformanceTest
-    public void resolveNonExistingWith10000AliasTest() throws Exception {
+    public void resolveNonExistingWith30000VanityPathTest() throws Exception {
         super.runTest();
     }
 }

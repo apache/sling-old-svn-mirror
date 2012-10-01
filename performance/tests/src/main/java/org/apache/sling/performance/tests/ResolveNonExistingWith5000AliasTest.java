@@ -29,7 +29,7 @@ public class ResolveNonExistingWith5000AliasTest extends ResolveNonExistingWithM
     }
     
     @PerformanceTest
-    public void resolveNonExistingWith10000AliasTest() throws Exception {
+    public void resolveNonExistingWith5000AliasTest() throws Exception {
         super.runTest();
     }
 
