@@ -24,11 +24,13 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +42,10 @@ import com.mongodb.Mongo;
  * in MongoDB.
  */
 @Component(label="%factory.name",
-           description="%factory.description",
-           configurationFactory=true,
-           policy=ConfigurationPolicy.REQUIRE,
-           metatype=true)
+description="%factory.description",
+configurationFactory=true,
+policy=ConfigurationPolicy.REQUIRE,
+metatype=true)
 @Service(value=ResourceProviderFactory.class)
 @Properties({
     @Property(name=ResourceProvider.ROOTS, value="/mongo")
@@ -74,21 +76,35 @@ public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
     /** The global context passed to each resource provider. */
     private MongoDBContext context;
 
+    @Reference
+    private EventAdmin eventAdmin;
+
     @Activate
     protected void activate(final Map<String, Object> props) throws Exception {
+        final String[] roots = PropertiesUtil.toStringArray(props.get(ResourceProvider.ROOTS));
+        if ( roots == null || roots.length == 0 ) {
+            throw new Exception("Roots configuration is missing.");
+        }
+        if ( roots.length > 1 ) {
+            throw new Exception("Only a single root should be configured.");
+        }
+        if ( roots[0] == null || roots[0].trim().length() == 0 ) {
+            throw new Exception("Roots configuration is missing.");
+        }
         final String host = PropertiesUtil.toString(props.get(PROP_HOST), DEFAULT_HOST);
         final int port = PropertiesUtil.toInteger(props.get(PROP_PORT), DEFAULT_PORT);
         final String db = PropertiesUtil.toString(props.get(PROP_DB), DEFAULT_DB);
         logger.info("Starting MongoDB resource provider with host={}, port={}, db={}",
-                        new Object[] {host, port, db});
+                new Object[] {host, port, db});
 
         final Mongo m = new Mongo( host , port );
         final DB database = m.getDB( db );
         logger.info("Connected to database {}", database);
 
         this.context = new MongoDBContext(database,
-                        PropertiesUtil.toStringArray(props.get(ResourceProvider.ROOTS)),
-                        PropertiesUtil.toStringArray(props.get(PROP_FILTER_COLLECTIONS)));
+                roots[0],
+                PropertiesUtil.toStringArray(props.get(PROP_FILTER_COLLECTIONS)),
+                this.eventAdmin);
     }
 
     /**

@@ -16,20 +16,24 @@
  */
 package org.apache.sling.mongodb.impl;
 
-import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Hashtable;
 import java.util.Set;
+
+import org.apache.sling.api.SlingConstants;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 
 import com.mongodb.DB;
 
 public class MongoDBContext {
 
     /** The roots. */
-    private final String[] roots;
+    private final String root;
 
     /** The roots ended by a slash. */
-    private final String[] rootsWithSlash;
+    private final String rootWithSlash;
 
     /** Don't show these collections. */
     private final Set<String> filterCollectionNames = new HashSet<String>();
@@ -37,46 +41,45 @@ public class MongoDBContext {
     /** The database to be used. */
     private final DB database;
 
+    private final EventAdmin eventAdmin;
+
     public MongoDBContext(final DB database,
-                    final String[] configuredRoots,
-                    final String[] configuredFilterCollectionNames) {
+            final String configuredRoot,
+            final String[] configuredFilterCollectionNames,
+            final EventAdmin eventAdmin) {
         this.database = database;
-        if ( configuredRoots != null ) {
-            final List<String> rootsList = new ArrayList<String>();
-            final List<String> rootsWithSlashList = new ArrayList<String>();
-            for(final String r : configuredRoots) {
-                if ( r != null ) {
-                    final String value = r.trim();
-                    if ( value.length() > 0 ) {
-                        if ( value.endsWith("/") ) {
-                            rootsWithSlashList.add(value);
-                            rootsList.add(value.substring(0, value.length() - 1));
-                        } else {
-                            rootsWithSlashList.add(value + "/");
-                            rootsList.add(value);
-                        }
-                    }
+        if ( configuredRoot != null ) {
+            final String value = configuredRoot.trim();
+            if ( value.length() > 0 ) {
+                if ( value.endsWith("/") ) {
+                    this.rootWithSlash = configuredRoot;
+                    this.root = configuredRoot.substring(0, configuredRoot.length() - 1);
+                } else {
+                    this.rootWithSlash = configuredRoot + "/";
+                    this.root = configuredRoot;
                 }
+            } else {
+                this.root = "";
+                this.rootWithSlash = "/";
             }
-            this.roots = rootsList.toArray(new String[rootsList.size()]);
-            this.rootsWithSlash = rootsWithSlashList.toArray(new String[rootsWithSlashList.size()]);
         } else {
-            this.roots = new String[0];
-            this.rootsWithSlash = new String[0];
+            this.root = "";
+            this.rootWithSlash = "/";
         }
         if ( configuredFilterCollectionNames != null ) {
             for(final String name : configuredFilterCollectionNames) {
                 this.filterCollectionNames.add(name);
             }
         }
+        this.eventAdmin = eventAdmin;
     }
 
-    public String[] getRoots() {
-        return roots;
+    public String getRoot() {
+        return root;
     }
 
-    public String[] getRootsWithSlash() {
-        return this.rootsWithSlash;
+    public String getRootWithSlash() {
+        return this.rootWithSlash;
     }
 
     public boolean isFilterCollectionName(final String name) {
@@ -89,5 +92,26 @@ public class MongoDBContext {
 
     public DB getDatabase() {
         return this.database;
+    }
+
+    public void notifyRemoved(final String[] info) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(SlingConstants.PROPERTY_PATH, this.rootWithSlash + info[0] + '/' + info[1]);
+        final Event event = new Event(SlingConstants.TOPIC_RESOURCE_REMOVED, props);
+        this.eventAdmin.postEvent(event);
+    }
+
+    public void notifyAddeed(final String[] info) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(SlingConstants.PROPERTY_PATH, this.rootWithSlash + info[0] + '/' + info[1]);
+        final Event event = new Event(SlingConstants.TOPIC_RESOURCE_ADDED, props);
+        this.eventAdmin.postEvent(event);
+    }
+
+    public void notifyUpdated(final String[] info) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(SlingConstants.PROPERTY_PATH, this.rootWithSlash + info[0] + '/' + info[1]);
+        final Event event = new Event(SlingConstants.TOPIC_RESOURCE_CHANGED, props);
+        this.eventAdmin.postEvent(event);
     }
 }

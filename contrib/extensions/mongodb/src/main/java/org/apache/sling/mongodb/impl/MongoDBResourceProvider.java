@@ -86,7 +86,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(org.apache.sling.api.resource.ResourceResolver, java.lang.String, java.util.Map)
      */
     public Resource create(final ResourceResolver resolver, final String path, final Map<String, Object> properties)
-    throws PersistenceException {
+            throws PersistenceException {
         final String[] info = this.extractResourceInfo(path);
         if ( info != null && info.length == 2) {
             final boolean deleted = this.deletedResources.remove(path);
@@ -122,7 +122,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
      * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
      */
     public void delete(final ResourceResolver resolver, final String path)
-    throws PersistenceException {
+            throws PersistenceException {
         final String[] info = this.extractResourceInfo(path);
         if ( info != null ) {
             boolean deletedResource = false;
@@ -183,20 +183,26 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                 // check if the collection still exists
                 final DBCollection col = this.getCollection(info[0]);
                 if ( col != null ) {
-                    col.findAndRemove(QueryBuilder.start(PROP_PATH).is(info[1]).get());
+                    if ( col.findAndRemove(QueryBuilder.start(PROP_PATH).is(info[1]).get()) != null ) {
+                        this.context.notifyRemoved(info);
+                    }
                 }
             }
             for(final MongoDBResource changed : this.changedResources.values()) {
 
                 final DBCollection col = this.context.getDatabase().getCollection(changed.getCollection());
                 if ( col != null ) {
+                    final String[] info = new String[] {changed.getCollection(),
+                            changed.getProperties().get(PROP_PATH).toString()};
                     // create or update?
                     if ( changed.getProperties().get(PROP_ID) != null ) {
                         col.update(QueryBuilder.start(PROP_PATH).is(changed.getProperties().get(PROP_PATH)).get(),
-                                        changed.getProperties());
+                                changed.getProperties());
+                        this.context.notifyUpdated(info);
                     } else {
                         // create
                         col.save(changed.getProperties());
+                        this.context.notifyUpdated(info);
                     }
                 } else {
                     throw new PersistenceException("Unable to create collection " + changed.getCollection(), null, changed.getPath(), null);
@@ -279,7 +285,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
 
                 final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
                 final DBCursor cur = col.find(query).
-                                sort(BasicDBObjectBuilder.start(PROP_PATH, 1).get());
+                        sort(BasicDBObjectBuilder.start(PROP_PATH, 1).get());
                 return new Iterator<Resource>() {
 
                     public boolean hasNext() {
@@ -297,10 +303,10 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                             name = objPath.substring(lastSlash + 1);
                         }
                         return new MongoDBResource(parent.getResourceResolver(),
-                                        parent.getPath() + '/' + name,
-                                        info[0],
-                                        obj,
-                                        MongoDBResourceProvider.this);
+                                parent.getPath() + '/' + name,
+                                info[0],
+                                obj,
+                                MongoDBResourceProvider.this);
                     }
 
                     public void remove() {
@@ -318,8 +324,8 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
      */
     @SuppressWarnings("javadoc")
     public Resource getResource(final ResourceResolver resourceResolver,
-                    final HttpServletRequest request,
-                    final String path) {
+            final HttpServletRequest request,
+            final String path) {
         return this.getResource(resourceResolver, path);
     }
 
@@ -327,27 +333,25 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
      * Extract info about collection and path
      */
     private String[] extractResourceInfo(final String path) {
-        for(final String root : this.context.getRootsWithSlash()) {
-            if ( path.startsWith(root) ) {
-                if ( path.length() == root.length() ) {
-                    // special resource - show all collections
-                    return new String[0];
-                }
-                final String info = path.substring(root.length());
-                final int slashPos = info.indexOf('/');
-                if ( slashPos != -1 ) {
-                    return new String[] {info.substring(0, slashPos), info.substring(slashPos + 1)};
-                }
-                // special resource - collection
-                return new String[] {info};
-            }
-        }
-        for(final String root : this.context.getRoots()) {
-            if ( path.equals(root) ) {
+        if ( path.startsWith(this.context.getRootWithSlash()) ) {
+            if ( path.length() == this.context.getRootWithSlash().length() ) {
                 // special resource - show all collections
                 return new String[0];
             }
+            final String info = path.substring(this.context.getRootWithSlash().length());
+            final int slashPos = info.indexOf('/');
+            if ( slashPos != -1 ) {
+                return new String[] {info.substring(0, slashPos), info.substring(slashPos + 1)};
+            }
+            // special resource - collection
+            return new String[] {info};
         }
+
+        if ( path.equals(this.context.getRoot()) ) {
+            // special resource - show all collections
+            return new String[0];
+        }
+
         return null;
     }
 
@@ -390,10 +394,10 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
             logger.debug("Found {}", obj);
             if ( obj != null ) {
                 return new MongoDBResource(resourceResolver,
-                                path,
-                                info[0],
-                                obj,
-                                this);
+                        path,
+                        info[0],
+                        obj,
+                        this);
             }
         }
 
