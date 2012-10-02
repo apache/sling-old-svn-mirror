@@ -91,8 +91,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
     }
 
     private String getState(final Resource rsrc) {
-        if ( rsrc.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED) != null ) {
-            return "EXCLUDED";
+        // INSTALLED state has some variants
+        if ( rsrc.getState() == ResourceState.INSTALLED) {
+            if(rsrc.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED) != null ) {
+                return "EXCLUDED";
+            } else if(rsrc.getAttribute(TaskResource.ATTR_INSTALL_INFO) != null) {
+                return "INSTALLED(*)";
+            }
         }
         return rsrc.getState().toString();
     }
