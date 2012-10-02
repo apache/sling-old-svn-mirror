@@ -42,6 +42,7 @@ import org.apache.sling.installer.api.info.Resource;
 import org.apache.sling.installer.api.info.ResourceGroup;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.TaskResource;
 import org.osgi.framework.Constants;
 
 
@@ -89,6 +90,13 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
         return rsrc.getURL();
     }
 
+    private String getState(final Resource rsrc) {
+        if ( rsrc.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED) != null ) {
+            return "EXCLUDED";
+        }
+        return rsrc.getState().toString();
+    }
+
     private String getInfo(final RegisteredResource rsrc) {
         return rsrc.getDigest() + '/' + String.valueOf(rsrc.getPriority());
     }
@@ -109,7 +117,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
 
     @Override
     public void service(final ServletRequest req, final ServletResponse res)
-    throws IOException {
+            throws IOException {
         final PrintWriter pw = res.getWriter();
 
         final InstallationState state = this.installer.getInstallationState();
@@ -167,7 +175,7 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                 pw.print("</td><td>");
                 pw.print(getURL(first));
                 pw.print("</td><td>");
-                pw.print(first.getState());
+                pw.print(getState(first));
                 if ( first.getState() == ResourceState.INSTALLED ) {
                     final long lastChange = first.getLastChange();
                     if ( lastChange > 0 ) {
@@ -176,13 +184,21 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                     }
                 }
                 pw.print("</td></tr>");
+                if ( first.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED) != null ) {
+                    pw.printf("<tr><td></td><td colspan='2'>%s</td><td></td></tr>",
+                            first.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED));
+                }
+                if ( first.getAttribute(TaskResource.ATTR_INSTALL_INFO) != null ) {
+                    pw.printf("<tr><td></td><td colspan='2'>%s</td><td></td></tr>",
+                            first.getAttribute(TaskResource.ATTR_INSTALL_INFO));
 
+                }
                 while ( iter.hasNext() ) {
                     final Resource resource = iter.next();
                     pw.printf("<tr><td></td><td>%s</td><td>%s</td><td>%s</td></tr>",
-                        getInfo(resource),
-                        getURL(resource),
-                        resource.getState());
+                            getInfo(resource),
+                            getURL(resource),
+                            resource.getState());
                 }
             }
         }
@@ -205,8 +221,8 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                 rt = registeredResource.getType();
             }
             pw.printf("<tr><td>%s</td><td>%s</td></tr>",
-                getInfo(registeredResource),
-                registeredResource.getURL());
+                    getInfo(registeredResource),
+                    registeredResource.getURL());
         }
         if ( rt != null ) {
             pw.println("</tbody></table>");
@@ -256,13 +272,22 @@ public class OsgiInstallerWebConsolePlugin extends GenericServlet {
                         getEntityId(first, group.getAlias()),
                         getInfo(first),
                         getURL(first),
-                        first.getState());
+                        getState(first));
+                if ( first.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED) != null ) {
+                    pw.printf("  : %s",
+                            first.getAttribute(TaskResource.ATTR_INSTALL_EXCLUDED));
+                }
+                if ( first.getAttribute(TaskResource.ATTR_INSTALL_INFO) != null ) {
+                    pw.printf("  : %s",
+                            first.getAttribute(TaskResource.ATTR_INSTALL_INFO));
+
+                }
                 while ( iter.hasNext() ) {
                     final Resource resource = iter.next();
                     pw.printf("  - %s, %s, %s%n",
-                        getInfo(resource),
-                        getURL(resource),
-                        resource.getState());
+                            getInfo(resource),
+                            getURL(resource),
+                            resource.getState());
                 }
             }
         }

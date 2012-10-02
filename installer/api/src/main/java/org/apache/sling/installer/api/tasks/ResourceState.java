@@ -20,12 +20,25 @@ package org.apache.sling.installer.api.tasks;
 
 /**
  * The state of a resource.
+ * 
+ * The state represents the OSGi installer's view. It might not
+ * reflect the current state of the system. For example if a
+ * bundle is installed through the OSGi installer, it gets the
+ * state "INSTALLED". However if the admin now deinstalls the
+ * bundle through any other way like e.g. the web console,
+ * the artifact still has the state "INSTALLED".
+ * 
+ * The state "INSTALLED" might either mean installed or
+ * if the attribute {@link TaskResource#ATTR_INSTALL_EXCLUDED}
+ * is set on the resource, the resource is excluded from
+ * installation. It gets also marked as "INSTALLED" in order
+ * to mark it as "processed" for the OSGi installer.
  */
 public enum ResourceState {
 
-        INSTALL,        // the resource should be installed
-        UNINSTALL,      // the resource should be uninstalled
-        INSTALLED,      // the resource is installed
-        UNINSTALLED,    // the resource is uninstalled
-        IGNORED         // the resource has been ignored
+    INSTALL,        // the resource should be installed
+    UNINSTALL,      // the resource should be uninstalled
+    INSTALLED,      // the resource is installed
+    UNINSTALLED,    // the resource is uninstalled
+    IGNORED         // the resource has been ignored
 }
