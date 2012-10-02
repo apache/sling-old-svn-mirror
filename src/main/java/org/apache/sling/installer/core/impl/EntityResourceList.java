@@ -75,7 +75,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      * @throws IOException
      */
     private void writeObject(final java.io.ObjectOutputStream out)
-    throws IOException {
+            throws IOException {
         out.writeInt(VERSION);
         out.writeInt(resources.size());
         for(final RegisteredResource rr : this.resources) {
@@ -91,7 +91,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      * - deserialize each entry in the resources list
      */
     private void readObject(final java.io.ObjectInputStream in)
-    throws IOException, ClassNotFoundException {
+            throws IOException, ClassNotFoundException {
         final int version = in.readInt();
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
@@ -122,7 +122,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         if ( !resources.isEmpty() ) {
             final TaskResource r = resources.first();
             if ( r.getState() == ResourceState.INSTALL
-              || r.getState() == ResourceState.UNINSTALL ) {
+                    || r.getState() == ResourceState.UNINSTALL ) {
                 return r;
             }
         }
@@ -199,7 +199,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         final TaskResource toActivate = getActiveResource();
         if ( toActivate != null ) {
             if ( toActivate.getState() == ResourceState.UNINSTALL
-                 && this.resources.size() > 1 ) {
+                    && this.resources.size() > 1 ) {
 
                 final TaskResource second = this.getNextActiveResource();
                 if ( state == ResourceState.UNINSTALLED ) {
@@ -232,6 +232,22 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
 
             }
             ((RegisteredResourceImpl)toActivate).setState(state);
+
+            if ( state != ResourceState.INSTALLED ) {
+                // make sure to remove all install info attributes if the resource is not
+                // installed anymore
+                toActivate.setAttribute(TaskResource.ATTR_INSTALL_EXCLUDED, null);
+                toActivate.setAttribute(TaskResource.ATTR_INSTALL_INFO, null);
+            }
+            // remove install info attributes on all other resources in the group
+            final Iterator<TaskResource> tri = this.resources.iterator();
+            tri.next(); // skip first
+            while ( tri.hasNext() ) {
+                final TaskResource rsrc = tri.next();
+                rsrc.setAttribute(TaskResource.ATTR_INSTALL_EXCLUDED, null);
+                rsrc.setAttribute(TaskResource.ATTR_INSTALL_INFO, null);
+            }
+
             this.listener.onEvent(new InstallationEvent() {
 
                 public TYPE getType() {
