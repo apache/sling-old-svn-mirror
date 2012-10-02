@@ -18,8 +18,10 @@
  */
 package org.apache.sling.installer.api.info;
 
+import org.apache.sling.installer.api.tasks.InstallTask;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
+import org.apache.sling.installer.api.tasks.ResourceTransformer;
 import org.osgi.framework.Version;
 
 
@@ -47,4 +49,14 @@ public interface Resource extends RegisteredResource {
      * @return -1 if no change , 0 if unknown, > 0 otherwise
      */
     long getLastChange();
+
+    /**
+     * Get the value of an attribute.
+     * Attributes are specific to the resource and are either set
+     * by a {@link ResourceTransformer} or a {@link InstallTask} for
+     * processing.
+     * @param key The name of the attribute
+     * @return The value of the attribute or <code>null</code>
+     */
+    Object getAttribute(String key);
 }

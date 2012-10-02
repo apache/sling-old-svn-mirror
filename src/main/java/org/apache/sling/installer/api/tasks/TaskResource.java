@@ -28,9 +28,24 @@ import org.osgi.framework.Version;
  */
 public interface TaskResource extends RegisteredResource {
 
+    /** Additional installation information in human readable format. */
+    String ATTR_INSTALL_INFO = "org.apache.sling.installer.api.resource.install.info";
+
+    /** If this attribute is set and the resource has the state installed,
+     * it actually means that this resource has been processed but not installed.
+     * For example this can be used to exclude environment specific bundles on non
+     * supported environments etc.
+     * The value of this attribute should contain some human readable reason why this
+     * resource has been excluded.
+     */
+    String ATTR_INSTALL_EXCLUDED = "org.apache.sling.installer.api.resource.install.excluded";
+
     /**
      * Get the value of an attribute.
-     * Attributes include the bundle symbolic name, bundle version, etc.
+     * Attributes are specific to the resource and are either set
+     * by a {@link ResourceTransformer} or a {@link InstallTask} for
+     * processing.
+     * Typical attributes are the bundle symbolic name or bundle version.
      * @param key The name of the attribute
      * @return The value of the attribute or <code>null</code>
      */

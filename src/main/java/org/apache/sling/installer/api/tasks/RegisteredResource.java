@@ -30,12 +30,12 @@ import java.util.Dictionary;
 public interface RegisteredResource {
 
     /**
-     * Return the scheme from where the artifact is orginated.
+     * Return the scheme from where the artifact is originated.
      */
     String getScheme();
 
     /**
-     * Return this data's url. The url is the {@link #getScheme}
+     * Return this data's URL. The URL is the {@link #getScheme}
      * followed by a colon, followed by a unique identifier of
      * the resource within the providers space..
      */
@@ -75,12 +75,12 @@ public interface RegisteredResource {
     /**
      * Return the priority of this resource. Priorities are used to decide which
      * resource to install when several are registered for the same OSGi entity
-     * (bundle, config, etc.)
+     * (bundle, configuration, etc.)
      */
     int getPriority();
 
-	/**
-	 * Return the identifier of the OSGi "entity" that this resource
+    /**
+     * Return the identifier of the OSGi "entity" that this resource
      * represents, for example "bundle:SID" where SID is the bundle's
      * symbolic ID, or "config:PID" where PID is config's PID.
      */
