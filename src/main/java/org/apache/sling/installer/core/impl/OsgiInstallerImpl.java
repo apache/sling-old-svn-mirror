@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
  *  the main list at the end of the cycle.
  */
 public class OsgiInstallerImpl
-    implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Runnable {
+implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Runnable {
 
     /** The logger */
     private final Logger logger =  LoggerFactory.getLogger(this.getClass());
@@ -318,7 +318,7 @@ public class OsgiInstallerImpl
      * The new versions has a set resource type.
      */
     private List<InternalResource> createResources(final String scheme,
-                                                   final InstallableResource[] resources) {
+            final InstallableResource[] resources) {
         checkScheme(scheme);
         List<InternalResource> createdResources = null;
         if ( resources != null && resources.length > 0 ) {
@@ -360,8 +360,8 @@ public class OsgiInstallerImpl
      * @see org.apache.sling.installer.api.OsgiInstaller#updateResources(java.lang.String, org.apache.sling.installer.api.InstallableResource[], java.lang.String[])
      */
     public void updateResources(final String scheme,
-                                final InstallableResource[] resources,
-                                final String[] ids) {
+            final InstallableResource[] resources,
+            final String[] ids) {
         this.listener.start();
         try {
             final List<InternalResource> updatedResources = this.createResources(scheme, resources);
@@ -497,7 +497,7 @@ public class OsgiInstallerImpl
                             if ( !found) {
                                 logger.debug("Resource {} seems to be removed.", r);
                                 if ( first && (r.getState() == ResourceState.INSTALLED
-                                           ||  r.getState() == ResourceState.INSTALL) ) {
+                                        ||  r.getState() == ResourceState.INSTALL) ) {
                                     ((RegisteredResourceImpl)r).setState(ResourceState.UNINSTALL);
                                 } else {
                                     toRemove.add(r);
@@ -776,7 +776,7 @@ public class OsgiInstallerImpl
                     // check if this transformer has already been invoked for the resource
                     final String transformers = (String)((RegisteredResourceImpl)resource).getAttribute(ResourceTransformer.class.getName());
                     if ( id == null ||
-                         (transformers != null && transformers.contains(":" + id + ':'))) {
+                            (transformers != null && transformers.contains(":" + id + ':'))) {
                         continue;
                     }
                     final ResourceTransformer transformer = (ResourceTransformer) this.transformerTracker.getService(reference);
@@ -855,7 +855,7 @@ public class OsgiInstallerImpl
                         final InputStream localIS = data.getInputStream();
                         try {
                             final UpdateResult result = (localIS == null ? handler.handleUpdate(resourceType, entityId, tr.getURL(), data.getDictionary(), attributes)
-                                                                         : handler.handleUpdate(resourceType, entityId, tr.getURL(), localIS, attributes));
+                                    : handler.handleUpdate(resourceType, entityId, tr.getURL(), localIS, attributes));
                             if ( result != null ) {
                                 if ( !result.getURL().equals(tr.getURL()) && !result.getResourceIsMoved() ) {
                                     // resource has been added!
@@ -919,7 +919,7 @@ public class OsgiInstallerImpl
                         final InputStream localIS = data.getInputStream();
                         try {
                             final UpdateResult result = (localIS == null ? handler.handleUpdate(resourceType, entityId, null, data.getDictionary(), attributes)
-                                                                         : handler.handleUpdate(resourceType, entityId, null, localIS, attributes));
+                                    : handler.handleUpdate(resourceType, entityId, null, localIS, attributes));
                             if ( result != null ) {
                                 final InternalResource internalResource = new InternalResource(result.getScheme(),
                                         result.getResourceId(),
@@ -1123,6 +1123,10 @@ public class OsgiInstallerImpl
 
                             public long getLastChange() {
                                 return ((RegisteredResourceImpl)tr).getLastChange();
+                            }
+
+                            public Object getAttribute(final String key) {
+                                return tr.getAttribute(key);
                             }
                         });
                     }
