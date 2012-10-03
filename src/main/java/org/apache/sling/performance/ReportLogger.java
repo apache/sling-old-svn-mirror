@@ -13,7 +13,7 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 public class ReportLogger {
 
 	public enum ReportType {
-		TXT, XML
+		TXT
 	}
 
 	public static void writeReport(String test, String testSuiteName,
@@ -23,8 +23,6 @@ public class ReportLogger {
 		case TXT:
 			writeReportTxt(test, testSuiteName, name, statistics);
 			break;
-		case XML:
-			throw new Exception("The XML reporting format is not yet supported");
 		default:
 			throw new Exception(
 					"The specified reporting format is not yet supported");
@@ -60,8 +58,8 @@ public class ReportLogger {
 		// useful if we run the test cases from the command line for example
 		// by using maven
 		if (testSuiteName.equals(ParameterizedTestList.TEST_CASE_ONLY)) {
-			if (System.getenv("testsuitename") != null) {
-				testSuiteName = System.getenv("testsuitename");
+			if (System.getProperty("testsuitename") != null) {
+				testSuiteName = System.getProperty("testsuitename");
 			}
 		}
 
