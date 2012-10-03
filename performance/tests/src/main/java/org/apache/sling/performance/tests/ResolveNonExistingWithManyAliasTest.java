@@ -21,7 +21,7 @@ import java.security.SecureRandom;
 
 import javax.jcr.Node;
 import javax.servlet.http.HttpServletRequest;
-
+import junit.framework.Assert;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -32,8 +32,6 @@ import org.apache.sling.performance.TestHelper;
 import org.apache.sling.performance.ResourceResolverTestRequest;
 import org.junit.After;
 import org.junit.Before;
-
-import static org.junit.Assert.assertNotNull;
 
 class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
     
@@ -120,6 +118,6 @@ class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
                 + ".print.html");
         HttpServletRequest request = new ResourceResolverTestRequest(path);
         Resource res = resResolver.resolve(request, path);
-        assertNotNull(res);
+        Assert.assertNotNull(res);
     }
 }

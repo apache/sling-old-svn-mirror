@@ -16,14 +16,11 @@
  */
 package org.apache.sling.performance.tests;
 
-import static org.junit.Assert.assertNotNull;
-
 import java.math.BigInteger;
 import java.security.SecureRandom;
-
 import javax.jcr.Node;
 import javax.servlet.http.HttpServletRequest;
-
+import junit.framework.Assert;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -132,7 +129,7 @@ class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
                 + ".print.html");
         HttpServletRequest request = new ResourceResolverTestRequest(path);
         Resource res = resResolver.resolve(request, path);
-        assertNotNull(res);
+        Assert.assertNotNull(res);
     }
 
 }
