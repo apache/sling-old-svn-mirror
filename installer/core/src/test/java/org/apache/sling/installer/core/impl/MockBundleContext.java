@@ -269,6 +269,11 @@ public class MockBundleContext implements BundleContext {
                 // TODO Auto-generated method stub
                 return null;
             }
+
+            public <A> A adapt(Class<A> type) {
+                // TODO Auto-generated method stub
+                return null;
+            }
         };
     }
 
