@@ -57,6 +57,17 @@
 						<Private-Package>
 						    org.apache.sling.installer.core.impl.*
 						</Private-Package>
+				     <!-- 
+				        As we make use of optional features from 4.3 if they
+				        are available, we have to add the framework imports 
+				        by hand:
+				     -->
+				        <Import-Package>
+				            org.osgi.framework;version="[1.4,2]",
+				            org.osgi.framework.wiring;resolution:=optional,
+				            *
+				        </Import-Package>
+				        <Export-Package>!*</Export-Package>
                         <Embed-Dependency>
                             org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
                             org.osgi.compendium;inline="org/osgi/util/tracker/*",
@@ -116,6 +127,7 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
