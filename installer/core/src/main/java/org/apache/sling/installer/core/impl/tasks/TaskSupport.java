@@ -89,11 +89,11 @@ public class TaskSupport {
                 checkedWireAdmin = false;
             }
         }
-        if ( checkedWireAdmin ) {
-            return new PABundleRefresher((PackageAdmin) this.packageAdminTracker.getService(),
+        if ( checkedWireAdmin.booleanValue() ) {
+            return new WABundleRefresher(this.bundleContext.getBundle(0).adapt(FrameworkWiring.class),
                     this.bundleContext);
         } else {
-            return new WABundleRefresher(this.bundleContext.getBundle(0).adapt(FrameworkWiring.class),
+            return new PABundleRefresher((PackageAdmin) this.packageAdminTracker.getService(),
                     this.bundleContext);
         }
     }
