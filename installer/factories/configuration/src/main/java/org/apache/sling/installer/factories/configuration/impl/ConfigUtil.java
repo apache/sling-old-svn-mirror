@@ -120,18 +120,28 @@ abstract class ConfigUtil {
         return cleanedConfig;
     }
 
+    /**
+     * Encode the value for the ldap filter: \, *, (, and ) should be escaped.
+     */
+    private static String encode(final String value) {
+        return value.replace("\\", "\\\\")
+                .replace("*", "\\*")
+                .replace("(", "\\(")
+                .replace(")", "\\)");
+    }
+
     public static Configuration getConfiguration(final ConfigurationAdmin ca,
             final String factoryPid,
             final String configPid,
             final boolean createIfNeeded)
-    throws IOException, InvalidSyntaxException {
+                    throws IOException, InvalidSyntaxException {
         Configuration result = null;
 
         if (factoryPid == null) {
             if (createIfNeeded) {
                 result = ca.getConfiguration(configPid, null);
             } else {
-                String filter = "(" + Constants.SERVICE_PID + "=" + configPid
+                String filter = "(" + Constants.SERVICE_PID + "=" + encode(configPid)
                         + ")";
                 Configuration[] configs = ca.listConfigurations(filter);
                 if (configs != null && configs.length > 0) {
@@ -142,15 +152,15 @@ abstract class ConfigUtil {
             Configuration configs[] = null;
             if ( configPid != null ) {
                 configs = ca.listConfigurations("(&("
-                        + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + factoryPid
-                        + ")(" + Constants.SERVICE_PID + "=" + configPid
+                        + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + encode(factoryPid)
+                        + ")(" + Constants.SERVICE_PID + "=" + encode(configPid)
                         + "))");
             }
             if (configs == null || configs.length == 0) {
                 // check for old style with alias pid
                 configs = ca.listConfigurations(
                         "(&(" + ConfigurationAdmin.SERVICE_FACTORYPID
-                        + "=" + factoryPid + ")(" + ALIAS_KEY + "=" + configPid
+                        + "=" + factoryPid + ")(" + ALIAS_KEY + "=" + encode(configPid)
                         + "))");
 
                 if (configs == null || configs.length == 0) {
