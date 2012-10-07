@@ -96,6 +96,8 @@ public abstract class AbstractAccessPostServlet extends SlingAllMethodsServlet {
                     case COPY :   htmlResponse.onCopied(change.getSource(), change.getDestination()); break;
                     case CREATE : htmlResponse.onCreated(change.getSource()); break;
                     case ORDER : htmlResponse.onChange("ordered", change.getSource(), change.getDestination()); break;
+				default:
+					break;
                 }
             }
 

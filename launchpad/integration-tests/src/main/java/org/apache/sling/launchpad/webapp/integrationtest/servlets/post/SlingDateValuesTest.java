@@ -19,9 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.commons.testing.integration.NameValuePairList;

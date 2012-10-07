@@ -17,6 +17,8 @@
 package org.apache.sling.launchpad.webapp.integrationtest.accessManager;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import javax.servlet.http.HttpServletResponse;
@@ -44,6 +46,33 @@ public abstract class AbstractAccessManagerTest extends AbstractAuthenticatedTes
         assertTrue("Node (" + location + ") must created be under POST URL (" + postUrl + ")",
                 location.contains(postUrl + "/"));
 
+        return location;
+	}
+	
+	protected String createTestFolder(String jsonContent) throws IOException {
+        final String testPath = TEST_BASE_PATH;
+        Map<String, String> props = new HashMap<String, String>();
+        String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
+        urlsToDelete.add(testNode);
+
+        props.clear();
+        props.put(SlingPostConstants.RP_OPERATION,
+        		SlingPostConstants.OPERATION_IMPORT);
+
+        String testNodeName = "testNode_" + String.valueOf(random.nextInt());
+        props.put(SlingPostConstants.RP_NODE_NAME_HINT, testNodeName);
+        props.put(SlingPostConstants.RP_CONTENT, jsonContent);
+        props.put(SlingPostConstants.RP_CONTENT_TYPE, "json");
+        props.put(SlingPostConstants.RP_REDIRECT_TO, SERVLET_CONTEXT + testPath + "/*");
+        String location = testClient.createNode(HTTP_BASE_URL + testPath, props);
+
+        assertHttpStatus(location + DEFAULT_EXT, HttpServletResponse.SC_OK,
+                "POST must redirect to created resource (" + location + ")");
+        assertTrue("Node (" + location + ") must have generated name",
+                !location.endsWith("/*"));
+        assertTrue("Node (" + location + ") must created be under POST URL (" + testPath + ")",
+                location.contains(testPath + "/"));
+        
         return location;
 	}
 }
