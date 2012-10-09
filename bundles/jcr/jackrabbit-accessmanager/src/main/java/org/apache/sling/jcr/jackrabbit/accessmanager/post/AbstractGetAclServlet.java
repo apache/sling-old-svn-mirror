@@ -23,8 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Item;
@@ -69,7 +69,21 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 	        response.setContentType("application/json");
 	        response.setCharacterEncoding("UTF-8");
 
-	        acl.write(response.getWriter());
+	        boolean isTidy = false;
+	        final String[] selectors = request.getRequestPathInfo().getSelectors();
+	        if (selectors != null && selectors.length > 0) {
+	        	for (final String level : selectors) {
+		            if("tidy".equals(level)) {
+		            	isTidy = true;
+		            }
+				}
+	        }
+
+	        if (isTidy) {
+		        response.getWriter().append(acl.toString(2));
+	        } else {
+	        	acl.write(response.getWriter());
+	        }
         } catch (AccessDeniedException ade) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } catch (ResourceNotFoundException rnfe) {

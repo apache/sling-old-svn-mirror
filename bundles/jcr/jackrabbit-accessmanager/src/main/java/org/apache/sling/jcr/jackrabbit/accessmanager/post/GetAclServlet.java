@@ -115,7 +115,10 @@ import org.apache.sling.jcr.jackrabbit.accessmanager.GetAcl;
 	@Property (name="sling.servlet.methods", 
 			value="GET"),
 	@Property (name="sling.servlet.selectors", 
-			value="acl"),
+			value={
+			"acl",
+			"tidy.acl"
+		}),
 	@Property (name="sling.servlet.extensions", 
 			value="json")
 })
