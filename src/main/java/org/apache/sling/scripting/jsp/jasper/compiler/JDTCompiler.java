@@ -58,6 +58,9 @@ import org.eclipse.jdt.internal.compiler.problem.DefaultProblemFactory;
  */
 public class JDTCompiler extends org.apache.sling.scripting.jsp.jasper.compiler.Compiler {
 
+    public JDTCompiler(boolean defaultIsSession) {
+        super(defaultIsSession);
+    }
 
     /**
      * Compile the servlet from .java file to .class file

@@ -47,6 +47,7 @@ import org.apache.sling.api.scripting.SlingScriptConstants;
 import org.apache.sling.api.scripting.SlingScriptHelper;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.Options;
@@ -86,6 +87,9 @@ public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
     implements EventHandler {
 
+    @Property(boolValue = true)
+    private static final String PROP_DEFAULT_IS_SESSION = "default.is.session";
+
     /** Default logger */
     private final Logger logger = LoggerFactory.getLogger(JspScriptEngineFactory.class);
 
@@ -114,6 +118,8 @@ public class JspScriptEngineFactory
     private ServletConfig servletConfig;
 
     private ServiceRegistration eventHandlerRegistration;
+
+    private boolean defaultIsSession;
 
     /** The handler for the jsp factories. */
     private JspRuntimeContext.JspFactoryHandler jspFactoryHandler;
@@ -254,7 +260,7 @@ public class JspScriptEngineFactory
         }
 
         wrapper = new JspServletWrapper(servletConfig, options,
-                scriptName, false, rctxt);
+                scriptName, false, rctxt, defaultIsSession);
         wrapper = rctxt.addWrapper(scriptName, wrapper);
 
         return wrapper;
@@ -273,6 +279,9 @@ public class JspScriptEngineFactory
      * Activate this component
      */
     protected void activate(final ComponentContext componentContext) {
+        Dictionary<?, ?> properties = componentContext.getProperties();
+        this.defaultIsSession = PropertiesUtil.toBoolean(properties.get(PROP_DEFAULT_IS_SESSION), true);
+
         // set the current class loader as the thread context loader for
         // the setup of the JspRuntimeContext
         final ClassLoader old = Thread.currentThread().getContextClassLoader();
@@ -294,7 +303,7 @@ public class JspScriptEngineFactory
                 slingServletContext, tldLocationsCache);
 
             servletConfig = new JspServletConfig(jspServletContext,
-                componentContext.getProperties());
+                properties);
 
         } finally {
             // make sure the context loader is reset after setting up the
