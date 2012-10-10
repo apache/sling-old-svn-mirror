@@ -94,7 +94,7 @@ class PageInfo {
     private Vector pluginDcls;      // Id's for tagplugin declarations
 
 
-    PageInfo(BeanRepository beanRepository, String jspFile) {
+    PageInfo(BeanRepository beanRepository, String jspFile, boolean isSession) {
 
         this.jspFile = jspFile;
         this.beanRepository = beanRepository;
@@ -108,6 +108,8 @@ class PageInfo {
         this.includeCoda = new Vector();
         this.pluginDcls = new Vector();
         this.prefixes = new HashSet();
+
+        this.isSession = isSession;
 
         // Enter standard imports
         for(int i = 0; i < Constants.STANDARD_IMPORTS.length; i++)

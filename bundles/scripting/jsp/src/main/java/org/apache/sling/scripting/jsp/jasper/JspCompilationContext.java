@@ -79,12 +79,15 @@ public class JspCompilationContext {
     private TagInfo tagInfo;
     private URL tagFileJarUrl;
 
+    private final boolean defaultIsSession;
+
     // jspURI _must_ be relative to the context
     public JspCompilationContext(String jspUri,
                                  boolean isErrPage,
                                  Options options,
                                  ServletContext context,
-                                 JspRuntimeContext rctxt) {
+                                 JspRuntimeContext rctxt,
+                                 boolean defaultIsSession) {
 
         this.jspUri = canonicalURI(jspUri);
         this.isErrPage = isErrPage;
@@ -107,6 +110,7 @@ public class JspCompilationContext {
         this.rctxt = rctxt;
         this.tagFileJarUrls = new HashMap<String, URL>();
         this.basePackageName = Constants.JSP_PACKAGE_NAME;
+        this.defaultIsSession = defaultIsSession;
     }
 
     public JspCompilationContext(String tagfile,
@@ -114,8 +118,9 @@ public class JspCompilationContext {
                                  Options options,
                                  ServletContext context,
                                  JspRuntimeContext rctxt,
+                                 boolean defaultIsSession,
                                  URL tagFileJarUrl) {
-        this(tagfile, false, options, context, rctxt);
+        this(tagfile, false, options, context, rctxt, defaultIsSession);
         this.isTagFile = true;
         this.tagInfo = tagInfo;
         this.tagFileJarUrl = tagFileJarUrl;
@@ -193,7 +198,7 @@ public class JspCompilationContext {
         if (jspCompiler != null ) {
             return jspCompiler;
         }
-        jspCompiler = new JDTCompiler();
+        jspCompiler = new JDTCompiler(defaultIsSession);
         jspCompiler.init(this);
         return jspCompiler;
     }

@@ -103,14 +103,15 @@ public class JspServletWrapper {
             final Options options,
             final String jspUri,
             final boolean isErrorPage,
-            final JspRuntimeContext rctxt) {
+            final JspRuntimeContext rctxt,
+            final boolean defaultIsSession) {
 	    this.isTagFile = false;
         this.config = config;
         this.options = options;
         this.jspUri = jspUri;
         this.ctxt = new JspCompilationContext(jspUri, isErrorPage, options,
 					 config.getServletContext(),
-					 rctxt);
+					 rctxt, defaultIsSession);
         if ( log.isDebugEnabled() ) {
             log.debug("Creating new wrapper for servlet " + jspUri);
         }
@@ -124,6 +125,7 @@ public class JspServletWrapper {
 			     final String tagFilePath,
 			     final TagInfo tagInfo,
 			     final JspRuntimeContext rctxt,
+			     final boolean defaultIsSession,
 			     final URL tagFileJarUrl)
     throws JasperException {
         this.isTagFile = true;
@@ -131,7 +133,7 @@ public class JspServletWrapper {
         this.options = options;
         this.jspUri = tagFilePath;
         this.ctxt = new JspCompilationContext(jspUri, tagInfo, options,
-					 servletContext, rctxt,
+					 servletContext, rctxt, defaultIsSession,
 					 tagFileJarUrl);
         if ( log.isDebugEnabled() ) {
             log.debug("Creating new wrapper for tagfile " + jspUri);
