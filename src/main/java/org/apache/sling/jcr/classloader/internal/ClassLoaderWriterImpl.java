@@ -45,6 +45,9 @@ import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.mime.MimeTypeService;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +61,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(metatype=true, label="%loader.name", description="%loader.description",
            name="org.apache.sling.jcr.classloader.internal.DynamicClassLoaderProviderImpl")
-@Service(value=ClassLoaderWriter.class)
+@Service(value = ClassLoaderWriter.class, serviceFactory = true)
 @Properties({
     @org.apache.felix.scr.annotations.Property(name="service.vendor", value="The Apache Software Foundation"),
     @org.apache.felix.scr.annotations.Property(name="service.description", value="Repository based classloader writer")
@@ -96,18 +99,30 @@ public class ClassLoaderWriterImpl
     @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private MimeTypeService mimeTypeService;
 
-    @Reference
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
+    @Reference(
+            referenceInterface = DynamicClassLoaderManager.class,
+            bind = "bindDynamicClassLoaderManager",
+            unbind = "unbindDynamicClassLoaderManager")
+    private ServiceReference dynamicClassLoaderManager;
+
+    /** The bundle asking for this service instance */
+    private Bundle callerBundle;
 
     /** Cached repository class loader. */
     private volatile RepositoryClassLoader repositoryClassLoader;
+
+    /**
+     * The dynamic class loader used as the parent of the repository
+     * class loader.
+     */
+    private volatile ClassLoader dynamicClassLoader;
 
     /**
      * Activate this component.
      * @param props The configuration properties
      */
     @Activate
-    protected void activate(final Map<String, Object> properties) {
+    protected void activate(final ComponentContext componentContext, final Map<String, Object> properties) {
         Object prop = properties.get(CLASS_PATH_PROP);
         if ( prop instanceof String[] && ((String[])prop).length > 0 ) {
             this.classPath = ((String[])prop)[0];
@@ -120,6 +135,8 @@ public class ClassLoaderWriterImpl
 
         prop = properties.get(OWNER_PROP);
         this.classLoaderOwner = (prop instanceof String)? (String) prop : OWNER_DEFAULT;
+
+        this.callerBundle = componentContext.getUsingBundle();
     }
 
     /**
@@ -127,9 +144,43 @@ public class ClassLoaderWriterImpl
      */
     @Deactivate
     protected void deactivate() {
-        if ( this.repositoryClassLoader != null ) {
+        destroyRepositoryClassLoader();
+    }
+
+    /**
+     * Called to handle binding the DynamicClassLoaderManager service
+     * reference
+     */
+    @SuppressWarnings("unused")
+    private void bindDynamicClassLoaderManager(final ServiceReference ref) {
+        this.dynamicClassLoaderManager = ref;
+    }
+
+    /**
+     * Called to handle unbinding the DynamicClassLoaderManager service
+     * reference
+     */
+    @SuppressWarnings("unused")
+    private void unbindDynamicClassLoaderManager(final ServiceReference ref) {
+        if (this.dynamicClassLoaderManager == ref) {
+            this.dynamicClassLoaderManager = null;
+        }
+    }
+
+    /**
+     * Destroys the repository class loader if existing and ungets the
+     * DynamicClassLoaderManager service if a dynamic class loader is
+     * being used.
+     */
+    private void destroyRepositoryClassLoader() {
+        if (this.repositoryClassLoader != null) {
             this.repositoryClassLoader.destroy();
             this.repositoryClassLoader = null;
+        }
+
+        if (this.dynamicClassLoader != null) {
+            this.callerBundle.getBundleContext().ungetService(this.dynamicClassLoaderManager);
+            this.dynamicClassLoader = null;
         }
     }
 
@@ -162,13 +213,20 @@ public class ClassLoaderWriterImpl
 
     private synchronized ClassLoader getOrCreateClassLoader() {
         if ( this.repositoryClassLoader == null || !this.repositoryClassLoader.isLive() ) {
-            if ( this.repositoryClassLoader != null ) {
-                this.repositoryClassLoader.destroy();
-            }
+
+            // make sure to cleanup any existing class loader
+            this.destroyRepositoryClassLoader();
+
+            // get the dynamic class loader for the bundle using this
+            // class loader writer
+            DynamicClassLoaderManager dclm = (DynamicClassLoaderManager) this.callerBundle.getBundleContext().getService(
+                this.dynamicClassLoaderManager);
+            this.dynamicClassLoader = dclm.getDynamicClassLoader();
+
             this.repositoryClassLoader = new RepositoryClassLoader(
                     this.classPath,
                     this,
-                    this.dynamicClassLoaderManager.getDynamicClassLoader());
+                    this.dynamicClassLoader);
         }
         return this.repositoryClassLoader;
     }
