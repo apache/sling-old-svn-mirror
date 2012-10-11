@@ -57,7 +57,7 @@ public abstract class Compiler {
 
     protected Node.Nodes pageNodes;
 
-    protected final boolean defaultIsSession;
+    private final boolean defaultIsSession;
 
     // ------------------------------------------------------------ Constructor
 
@@ -397,6 +397,10 @@ public abstract class Compiler {
             }
         }
 
+    }
+    
+    protected boolean getDefaultIsSession() {
+        return defaultIsSession;
     }
 
     private static final class CleanVisitor extends Node.Visitor {
