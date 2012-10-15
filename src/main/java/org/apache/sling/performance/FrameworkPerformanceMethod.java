@@ -37,13 +37,14 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 
 	private Object target;
 	private PerformanceSuiteState performanceSuiteState;
+	private PerformanceRunner.ReportLevel reportLevel = PerformanceRunner.ReportLevel.ClassLevel;
 
 	public FrameworkPerformanceMethod(Method method, Object target,
-			PerformanceSuiteState performanceSuiteState) {
+			PerformanceSuiteState performanceSuiteState, PerformanceRunner.ReportLevel reportLevel) {
 		super(method);
 		this.target = target;
 		this.performanceSuiteState = performanceSuiteState;
-
+		this.reportLevel = reportLevel;
 	}
 
 	@Override
@@ -176,7 +177,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 					.writeReport(this.target.getClass().getName(),
 							this.performanceSuiteState.testSuiteName,
 							getMethod().getName(), statistics,
-							ReportLogger.ReportType.TXT);
+							ReportLogger.ReportType.TXT, reportLevel);
 		}
 
 		// In case of a PerformanceSuite we need to run the methods annotated

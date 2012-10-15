@@ -17,6 +17,10 @@
 package org.apache.sling.performance;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,12 +41,34 @@ import org.junit.runners.model.InitializationError;
  * The custom JUnit runner that collects the performance tests
  * 
  */
+
+
+
 public class PerformanceRunner extends BlockJUnit4ClassRunner {
 	protected LinkedList<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
 	private List<PerformanceSuiteState> suitesState = new ArrayList<PerformanceSuiteState>();
-
+	public ReportLevel reportLevel = ReportLevel.ClassLevel;
+	
+	public static enum ReportLevel{
+		ClassLevel,
+		MethodLevel
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.TYPE)
+	public @interface Parameters {
+		public ReportLevel reportLevel() default ReportLevel.ClassLevel;
+	}
+	
 	public PerformanceRunner(Class<?> clazz) throws InitializationError {
 		super(clazz);
+		
+		// set the report level for the tests that are run with the PerformanceRunner
+		// by default set to class level for legacy tests compatibility
+		if (clazz.getAnnotation(Parameters.class) != null){
+			reportLevel = clazz.getAnnotation(Parameters.class).reportLevel();
+		}
+		
 		try {
 			computeTests();
 		} catch (Exception e) {
@@ -159,7 +185,7 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 
 				for (Method method : testMethods) {
 					FrameworkPerformanceMethod performaceTestMethod = new FrameworkPerformanceMethod(
-							method, testObject, current);
+							method, testObject, current, reportLevel);
 					tests.add(performaceTestMethod);
 				}
 			}
@@ -174,7 +200,7 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 				PerformanceTest.class)) {
 			Object targetObject = getTestClass().getJavaClass().newInstance();
 			FrameworkPerformanceMethod performaceTestMethod = new FrameworkPerformanceMethod(
-					method.getMethod(), targetObject, current);
+					method.getMethod(), targetObject, current, reportLevel);
 			tests.add(performaceTestMethod);
 		}
 
