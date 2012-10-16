@@ -23,8 +23,10 @@ import org.apache.sling.commons.log.internal.config.ConfigurationServiceFactory;
 import org.apache.sling.commons.log.internal.slf4j.LogConfigManager;
 import org.apache.sling.commons.log.internal.slf4j.SlingConfigurationPrinter;
 import org.apache.sling.commons.log.internal.slf4j.SlingLogPanel;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +76,8 @@ public class LogManager {
 
     private ServiceRegistration configConfigurer;
 
+    private ServiceRegistration panelRegistration;
+
     LogManager(final BundleContext context) {
 
         // set the root folder for relative log file names
@@ -120,9 +124,10 @@ public class LogManager {
         // setup the web console plugin panel. This may fail loading
         // the panel class if the Servlet API is not wired
         try {
-            SlingLogPanel.registerPanel(context);
+            registerPanel(context);
         } catch (Throwable ignore) {
         }
+
         // setup the web console configuration printer.
         SlingConfigurationPrinter.registerPrinter(context);
     }
@@ -131,10 +136,8 @@ public class LogManager {
 
         // tear down the web console plugin panel (if created at all). This
         // may fail loading the panel class if the Servlet API is not wired
-        try {
-             SlingLogPanel.unregisterPanel();
-        } catch (Throwable ignore) {
-        }
+         unregisterPanel();
+
         // tear down the web console configuration printer (if created at all).
         SlingConfigurationPrinter.unregisterPrinter();
 
@@ -179,4 +182,43 @@ public class LogManager {
 
         return config;
     }
+
+    //---------- Logging Web Console Plugin
+
+    private void registerPanel(BundleContext ctx) {
+        if (panelRegistration == null) {
+            Dictionary<String, Object> props = new Hashtable<String, Object>();
+            props.put("felix.webconsole.label", "slinglog");
+            props.put("felix.webconsole.title", "Sling Log Support");
+
+            // SLING-1068 Prevent ClassCastException in Sling Engine 2.0.2-incubator
+            props.put("sling.core.servletName", "Sling Log Support Console Servlet");
+
+            panelRegistration = ctx.registerService("javax.servlet.Servlet", new ServiceFactory() {
+
+                private Object instance;
+
+                public Object getService(Bundle bundle, ServiceRegistration registration) {
+                    synchronized (this) {
+                        if (this.instance == null) {
+                            this.instance = new SlingLogPanel(LogManager.this.logConfigManager);
+                        }
+                        return instance;
+                    }
+                }
+
+                public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
+                    // nothing to do for cleanup, just drop reference
+                }
+            }, props);
+        }
+    }
+
+    private void unregisterPanel() {
+        if (panelRegistration != null) {
+            panelRegistration.unregister();
+            panelRegistration = null;
+        }
+    }
+
 }

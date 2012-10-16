@@ -20,16 +20,11 @@ package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Iterator;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * The <code>SlingLogPanel</code> is a Felix Web Console plugin to display the
@@ -42,28 +37,10 @@ public class SlingLogPanel extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    private static ServiceRegistration panelRegistration;
+    private final LogConfigManager logConfigManager;
 
-    public static void registerPanel(BundleContext ctx) {
-        if (panelRegistration == null) {
-            Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put("felix.webconsole.label", "slinglog");
-            props.put("felix.webconsole.title", "Sling Log Support");
-
-            // SLING-1068 Prevent ClassCastException in Sling Engine 2.0.2-incubator
-            props.put("sling.core.servletName", "Sling Log Support Console Servlet");
-
-            SlingLogPanel panel = new SlingLogPanel();
-            panelRegistration = ctx.registerService("javax.servlet.Servlet",
-                panel, props);
-        }
-    }
-
-    public static void unregisterPanel() {
-        if (panelRegistration != null) {
-            panelRegistration.unregister();
-            panelRegistration = null;
-        }
+    public SlingLogPanel(final LogConfigManager logConfigManager) {
+        this.logConfigManager = logConfigManager;
     }
 
     @Override
@@ -71,7 +48,7 @@ public class SlingLogPanel extends HttpServlet {
             throws IOException {
 
         final PrintWriter pw = resp.getWriter();
-        final LogConfigManager logConfigManager = LogConfigManager.getInstance();
+        final LogConfigManager logConfigManager = this.logConfigManager;
 
         final String consoleAppRoot = (String) req.getAttribute("felix.webconsole.appRoot");
         final String cfgColTitle = (consoleAppRoot == null) ? "PID" : "Configuration";
