@@ -38,7 +38,8 @@ import org.apache.sling.servlets.post.SlingPostConstants;
     private String nodeUrlD;
     private String nodeUrlE;
     private String nodeUrlF;
-    private String scriptPath;
+    private String nodeUrlG;
+    private String nodeUrlH;
     private String forcedResourceType;
     private Set<String> toDelete = new HashSet<String>();
 
@@ -85,6 +86,12 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         props.put("pathToInclude", pathToInclude);
         nodeUrlD = testClient.createNode(url, props);
 
+        // Node G is used for the basic "call" test
+        props.remove("forceResourceType");
+        props.remove("pathToInclude");
+        props.put("testCallScript", "called-test.jsp");
+        nodeUrlG = testClient.createNode(url, props);
+
         // Script for forced resource type
         scriptPath = "/apps/" + forcedResourceType;
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
@@ -94,13 +101,27 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         scriptPath = "/apps/nt/unstructured";
         testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
         toDelete.add(uploadTestScript(scriptPath,"include-test.jsp","html.jsp"));
+        toDelete.add(uploadTestScript(scriptPath,"called-test.jsp","called-test.jsp"));
+
+        // Node H is used for "call" test where the called script is inherited from the supertype
+        String nodeHResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
+        String nodeHSuperResourceType = getClass().getSimpleName() + "/super" + System.currentTimeMillis();
+        props.put("sling:resourceType", nodeHResourceType);
+        props.put("sling:resourceSuperType", nodeHSuperResourceType);
+        nodeUrlH = testClient.createNode(url, props);
+        scriptPath = "/apps/" + nodeHResourceType;
+        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
+        toDelete.add(uploadTestScript(scriptPath,"calling-test.jsp","html.jsp"));
+        scriptPath = "/apps/" + nodeHSuperResourceType;
+        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
+        toDelete.add(uploadTestScript(scriptPath,"called-test.jsp","called-test.jsp"));
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         for(String script : toDelete) {
-            testClient.delete(script);
+           testClient.delete(script);
         }
     }
 
@@ -166,5 +187,20 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         assertTrue("Include has been used",content.contains("<p>Including"));
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
         assertTrue("Resource type has been forced (" + content + ")",content.contains("Forced resource type:" + forcedResourceType));
+    }
+
+    public void testCall() throws IOException {
+        final String content = getContent(nodeUrlG + ".html", CONTENT_TYPE_HTML);
+        assertTrue("Content includes JSP marker",content.contains("JSP template"));
+        assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
+        assertTrue("Call has been used",content.contains("<p>Calling"));
+        assertTrue("Call has been made",content.contains("called"));
+    }
+
+    public void testCallToSupertype() throws IOException {
+        System.out.println(nodeUrlH);
+        final String content = getContent(nodeUrlH + ".html", CONTENT_TYPE_HTML);
+        assertTrue("Content includes JSP marker",content.contains("JSP template"));
+        assertTrue("Call has been made",content.contains("called"));
     }
 }
