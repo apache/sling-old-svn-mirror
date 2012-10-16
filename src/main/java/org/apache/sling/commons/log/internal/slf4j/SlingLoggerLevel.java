@@ -30,7 +30,7 @@ public enum SlingLoggerLevel {
 
     /**
      * Translates SLF4J logging levels into {@link SlingLoggerLevel}
-     * 
+     *
      * @param level The SLF4J logging level
      * @return The matching {@link SlingLoggerLevel}
      */
@@ -52,4 +52,76 @@ public enum SlingLoggerLevel {
         return slingLevel;
     }
 
+    /**
+     * Converts the given {@code levelString} to a {@link SlingLoggerLevel}
+     * instance or {@code null} of not possible. If the value converted to an
+     * upper case string is one of the {@link SlingLoggerLevel} constant names,
+     * the respective constant is returned. Otherwise the string is converted to
+     * an int (if possible) and the following mapping is applied:
+     * <table>
+     * <tr>
+     * <th>level</th>
+     * <th>SlingLoggerLevel</th>
+     * </tr>
+     * <tr>
+     * <td>0 or 1</td>
+     * <td>{@link #ERROR}</td>
+     * </tr>
+     * <tr>
+     * <td>2</td>
+     * <td>{@link #WARN}</td>
+     * </tr>
+     * <tr>
+     * <td>3</td>
+     * <td>{@link #INFO}</td>
+     * </tr>
+     * <tr>
+     * <td>4</td>
+     * <td>{@link #DEBUG}</td>
+     * </tr>
+     * <tr>
+     * <td>5</td>
+     * <td>{@link #TRACE}</td>
+     * </tr>
+     * </table>
+     * <p>
+     * If the string value is not one of the constant names, or cannot be
+     * converted to a number or the number is not one of the supported values,
+     * {@code null} is returned.
+     *
+     * @param levelString The string value to convert into a
+     *            {@code SlingLoggerLevel}
+     * @return The {@link SlingLoggerLevel} instance or {@code null} if the
+     *         string value cannot be converted.
+     */
+    public static SlingLoggerLevel fromString(final String levelString) {
+        if (levelString != null && levelString.length() > 0) {
+            try {
+                return SlingLoggerLevel.valueOf(levelString.toUpperCase());
+            } catch (IllegalArgumentException iae) {
+                // ignore
+            }
+
+            try {
+                final int level = Integer.parseInt(levelString);
+                switch (level) {
+                    case 0:
+                    case 1:
+                        return ERROR;
+                    case 2:
+                        return WARN;
+                    case 3:
+                        return INFO;
+                    case 4:
+                        return DEBUG;
+                    case 5:
+                        return TRACE;
+                }
+            } catch (NumberFormatException nfe) {
+                // ignore
+            }
+        }
+
+        return null;
+    }
 }

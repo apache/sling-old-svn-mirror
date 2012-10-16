@@ -479,7 +479,11 @@ public class LogConfigManager implements ILoggerFactory {
                 throw new ConfigurationException(LogManager.LOG_LEVEL,
                     "Value required");
             }
-            SlingLoggerLevel logLevel = SlingLoggerLevel.valueOf(level.toUpperCase());
+            SlingLoggerLevel logLevel = SlingLoggerLevel.fromString(level);
+            if (logLevel == null) {
+                throw new ConfigurationException(LogManager.LOG_LEVEL,
+                    "Unsupported value: " + level);
+            }
 
             // verify pattern
             if (pattern == null || pattern.length() == 0) {
