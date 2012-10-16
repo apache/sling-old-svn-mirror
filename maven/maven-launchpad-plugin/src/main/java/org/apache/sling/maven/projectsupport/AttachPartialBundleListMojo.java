@@ -97,6 +97,7 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
 
         final BundleListXpp3Writer writer = new BundleListXpp3Writer();
         try {
+            this.bundleListOutput.getParentFile().mkdirs();
             writer.write(new FileWriter(bundleListOutput), initializedBundleList);
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to write bundle list", e);
