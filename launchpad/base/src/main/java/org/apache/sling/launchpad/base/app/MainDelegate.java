@@ -33,7 +33,9 @@ import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Launcher;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
 
 /**
  * The <code>Main</code> class is a simple Java Application which interprests
@@ -156,7 +158,7 @@ public class MainDelegate implements Launcher {
                 DEFAULT_LOG_LEVEL);
             commandLine.put(LOG_LEVEL_PROP, String.valueOf(logLevel));
         }
-        final Logger logger = new Logger();
+        final Logger logger = new SlingLogger();
 
         // Display port number on console, in case HttpService doesn't
         info("HTTP server port: " + commandLine.get(PROP_PORT), null);
@@ -320,9 +322,19 @@ public class MainDelegate implements Launcher {
         System.exit(code);
     }
 
+    // emit an debugging message to standard out
+    static void debug(String message, Throwable t) {
+        log(System.out, "*DEBUG*", message, t);
+    }
+
     // emit an informational message to standard out
     static void info(String message, Throwable t) {
         log(System.out, "*INFO *", message, t);
+    }
+
+    // emit an warning message to standard out
+    static void warn(String message, Throwable t) {
+        log(System.out, "*WARN *", message, t);
     }
 
     // emit an error message to standard err
@@ -347,19 +359,55 @@ public class MainDelegate implements Launcher {
         linePrefixBuilder.append("] ");
         final String linePrefix = linePrefixBuilder.toString();
 
-        out.print(linePrefix);
-        out.println(message);
-        if (t != null) {
-            t.printStackTrace(new PrintStream(out) {
-                @Override
-                public void println(String x) {
-                    synchronized (this) {
-                        print(linePrefix);
-                        super.println(x);
-                        flush();
+        synchronized (out) {
+            out.print(linePrefix);
+            out.println(message);
+            if (t != null) {
+                t.printStackTrace(new PrintStream(out) {
+                    @Override
+                    public void println(String x) {
+                        synchronized (this) {
+                            print(linePrefix);
+                            super.println(x);
+                            flush();
+                        }
                     }
-                }
-            });
+                });
+            }
+        }
+    }
+
+    private static class SlingLogger extends Logger {
+
+        @Override
+        protected void doLog(Bundle bundle, ServiceReference sr, int level, String msg, Throwable throwable) {
+
+            // unwind throwable if it is a BundleException
+            if ((throwable instanceof BundleException) && (((BundleException) throwable).getNestedException() != null)) {
+                throwable = ((BundleException) throwable).getNestedException();
+            }
+
+            String s = (sr == null) ? null : "SvcRef " + sr;
+            s = (s == null) ? null : s + " Bundle '" + bundle.getBundleId() + "'";
+            s = (s == null) ? msg : s + " " + msg;
+            s = (throwable == null) ? s : s + " (" + throwable + ")";
+
+            switch (level) {
+                case LOG_DEBUG:
+                    debug("DEBUG: " + s, null);
+                    break;
+                case LOG_INFO:
+                    info("INFO: " + s, null);
+                    break;
+                case LOG_WARNING:
+                    warn("WARNING: " + s, null);
+                    break;
+                case LOG_ERROR:
+                    error("ERROR: " + s, throwable);
+                    break;
+                default:
+                    warn("UNKNOWN[" + level + "]: " + s, null);
+            }
         }
     }
 }
