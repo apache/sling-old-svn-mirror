@@ -61,6 +61,7 @@ public class AttachBundleListMojo extends AbstractUsingBundleListMojo {
     protected void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
         FileWriter fw = null;
         try {
+            this.outputFile.getParentFile().mkdirs();
             fw = new FileWriter(outputFile);
             writer.write(fw, getInitializedBundleList());
             projectHelper.attachArtifact(project, AttachPartialBundleListMojo.TYPE, AttachPartialBundleListMojo.CLASSIFIER, outputFile);
