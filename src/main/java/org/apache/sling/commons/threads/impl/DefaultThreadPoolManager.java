@@ -18,6 +18,7 @@ package org.apache.sling.commons.threads.impl;
 
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,8 +29,10 @@ import org.apache.sling.commons.threads.ThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPoolPolicy;
 import org.apache.sling.commons.threads.ThreadPoolConfig.ThreadPriority;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.commons.threads.jmx.ThreadPoolMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
 import org.slf4j.Logger;
@@ -69,11 +72,14 @@ public class DefaultThreadPoolManager
     public void destroy() {
         this.logger.debug("Disposing all thread pools");
 
+        final Map<String, Entry> localCopy = new HashMap<String, Entry>(this.pools.size());
         synchronized ( this.pools ) {
-            for (final Entry entry : this.pools.values()) {
-                entry.shutdown();
-            }
+            localCopy.putAll(this.pools);
             this.pools.clear();
+        }
+        for (final Entry entry : localCopy.values()) {
+            entry.unregisterMBean();
+            entry.shutdown();
         }
         this.logger.info("Stopped Apache Sling Thread Pool Manager");
     }
@@ -119,17 +125,22 @@ public class DefaultThreadPoolManager
     public ThreadPool get(final String name) {
         final String poolName = (name == null ? DEFAULT_THREADPOOL_NAME : name);
         Entry entry = null;
+        boolean created = false;
         synchronized (this.pools) {
             entry = this.pools.get(poolName);
             if ( entry == null ) {
                 this.logger.debug("Creating new pool with name {}", poolName);
                 final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
-                entry = new Entry(null, config, poolName);
+                entry = new Entry(null, config, poolName, bundleContext);
+                created = true;
 
                 this.pools.put(poolName, entry);
             }
-            return entry.incUsage();
         }
+        if (created) {
+            entry.registerMBean();
+        }
+        return entry.incUsage();
     }
 
     /**
@@ -137,14 +148,19 @@ public class DefaultThreadPoolManager
      */
     public void release(ThreadPool pool) {
         if ( pool instanceof ThreadPoolFacade ) {
+            Entry removedEntry = null;
             synchronized ( this.pools ) {
                 final Entry entry = this.pools.get(pool.getName());
                 if ( entry != null ) {
                     entry.decUsage();
                     if ( !entry.isUsed() ) {
+                        removedEntry = entry;
                         this.pools.remove(pool.getName());
                     }
                 }
+            }
+            if ( removedEntry != null ) {
+                removedEntry.unregisterMBean();
             }
         }
 
@@ -176,10 +192,11 @@ public class DefaultThreadPoolManager
 
         final String name = "ThreadPool-" + UUID.randomUUID().toString() +
              (label == null ? "" : " (" + label + ")");
-        final Entry entry = new Entry(null, config, name);
+        final Entry entry = new Entry(null, config, name, bundleContext);
         synchronized ( this.pools ) {
             this.pools.put(name, entry);
         }
+        entry.registerMBean();
         return entry.incUsage();
     }
 
@@ -210,6 +227,7 @@ public class DefaultThreadPoolManager
             throw new ConfigurationException(ModifiableThreadPoolConfig.PROPERTY_NAME, "Property is missing or empty.");
         }
         this.logger.debug("Updating {} with {}", pid, properties);
+        Entry createdEntry = null;
         synchronized ( this.pools ) {
             final ThreadPoolConfig config = this.createConfig(properties);
 
@@ -241,8 +259,12 @@ public class DefaultThreadPoolManager
                 foundEntry.update(config, name, pid);
             } else {
                 // create
-                this.pools.put(name, new Entry(pid, config, name));
+                createdEntry = new Entry(pid, config, name, bundleContext);
+                this.pools.put(name, createdEntry);
             }
+        }
+        if ( createdEntry != null ) {
+            createdEntry.registerMBean(); 
         }
     }
 
@@ -275,6 +297,8 @@ public class DefaultThreadPoolManager
     }
 
     protected static final class Entry {
+        private static final Logger logger = LoggerFactory.getLogger(Entry.class);
+
         /** The configuration pid. (might be null for anonymous pools.*/
         private volatile String pid;
 
@@ -290,10 +314,15 @@ public class DefaultThreadPoolManager
         /** The corresponding pool - might be null if unused. */
         private volatile ThreadPoolFacade pool;
 
-        public Entry(final String pid, final ThreadPoolConfig config, final String name) {
+        private ServiceRegistration mbeanRegistration;
+
+        private BundleContext bundleContext;
+
+        public Entry(final String pid, final ThreadPoolConfig config, final String name, final BundleContext bundleContext) {
             this.pid = pid;
             this.config = config;
             this.name = name;
+            this.bundleContext = bundleContext;
         }
 
         public String getPid() {
@@ -351,6 +380,25 @@ public class DefaultThreadPoolManager
                 return this.pool.getExecutor();
             }
             return null;
+        }
+
+        protected void unregisterMBean() {
+            if ( this.mbeanRegistration != null ) {
+                this.mbeanRegistration.unregister();
+                this.mbeanRegistration = null;
+            }
+        }
+
+        protected void registerMBean() {
+            try {
+                final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+                mbeanProps.put("jmx.objectname", "org.apache.sling:type=threads,service=ThreadPool,name=" + this.name);
+
+                final ThreadPoolMBeanImpl mbean = new ThreadPoolMBeanImpl(this);
+                this.mbeanRegistration = bundleContext.registerService(ThreadPoolMBean.class.getName(), mbean, mbeanProps);
+            } catch (Throwable t) {
+                logger.warn("Unable to register Thread Pool MBean", t);
+            }
         }
     }
 }
