@@ -176,26 +176,26 @@ public class ResourceResolverImplTest {
         final Resource res00 = resResolver.resolve((String) null);
         assertNotNull(res00);
         assertTrue("Resource must be NonExistingResource",
-                        res00 instanceof NonExistingResource);
+                res00 instanceof NonExistingResource);
         assertEquals("Null path is expected to return root", "/",
-            res00.getPath());
+                res00.getPath());
 
         // relative paths are treated as if absolute
         final String path01 = "relPath/relPath";
         final Resource res01 = resResolver.resolve(path01);
         assertNotNull(res01);
         assertEquals("Expecting absolute path for relative path", "/" + path01,
-            res01.getPath());
+                res01.getPath());
         assertTrue("Resource must be NonExistingResource",
-            res01 instanceof NonExistingResource);
+                res01 instanceof NonExistingResource);
 
         final String no_resource_path = "/no_resource/at/this/location";
         final Resource res02 = resResolver.resolve(no_resource_path);
         assertNotNull(res02);
         assertEquals("Expecting absolute path for relative path",
-            no_resource_path, res02.getPath());
+                no_resource_path, res02.getPath());
         assertTrue("Resource must be NonExistingResource",
-            res01 instanceof NonExistingResource);
+                res01 instanceof NonExistingResource);
 
         try {
             resResolver.resolve((HttpServletRequest) null);
@@ -207,25 +207,34 @@ public class ResourceResolverImplTest {
         final Resource res0 = resResolver.resolve(null, no_resource_path);
         assertNotNull("Expecting resource if resolution fails", res0);
         assertTrue("Resource must be NonExistingResource",
-            res0 instanceof NonExistingResource);
+                res0 instanceof NonExistingResource);
         assertEquals("Path must be the original path", no_resource_path,
-            res0.getPath());
+                res0.getPath());
 
         final HttpServletRequest req1 = new ResourceResolverTestRequest(
-            no_resource_path);
+                no_resource_path);
         final Resource res1 = resResolver.resolve(req1);
         assertNotNull("Expecting resource if resolution fails", res1);
         assertTrue("Resource must be NonExistingResource",
-            res1 instanceof NonExistingResource);
+                res1 instanceof NonExistingResource);
         assertEquals("Path must be the original path", no_resource_path,
-            res1.getPath());
+                res1.getPath());
 
         final HttpServletRequest req2 = new ResourceResolverTestRequest(null);
         final Resource res2 = resResolver.resolve(req2);
         assertNotNull("Expecting resource if resolution fails", res2);
         assertTrue("Resource must be NonExistingResource",
-            res2 instanceof NonExistingResource);
+                res2 instanceof NonExistingResource);
         assertEquals("Path must be the the root path", "/", res2.getPath());
+
+        final Resource res3 = resResolver.getResource(null);
+        assertNull("Expected null resource for null path", res3);
+
+        final Resource res4 = resResolver.getResource(null, null);
+        assertNull("Expected null resource for null path", res4);
+
+        final Resource res5 = resResolver.getResource(res01, null);
+        assertNull("Expected null resource for null path", res5);
     }
 
     @Test public void test_clone_based_on_anonymous() throws Exception {
@@ -297,7 +306,7 @@ public class ResourceResolverImplTest {
         assertTrue(validNames.remove(names.next()));
         assertFalse("Expect no more names", names.hasNext());
         assertTrue("Expect validNames set to be empty now",
-            validNames.isEmpty());
+                validNames.isEmpty());
 
         rr.close();
     }
