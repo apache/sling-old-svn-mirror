@@ -563,31 +563,32 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public Resource getResource(String path) {
         checkClosed();
 
-        // if the path is absolute, normalize . and .. segements and get res
-        if (path.startsWith("/")) {
-            path = ResourceUtil.normalize(path);
-            Resource result = (path != null) ? getResourceInternal(path) : null;
-            if (result != null) {
-                result = this.factory.getResourceDecoratorTracker().decorate(result);
-                return result;
-            }
-            return null;
-        }
+        Resource result = null;
+        if ( path != null ) {
+            // if the path is absolute, normalize . and .. segments and get res
+            if (path.startsWith("/")) {
+                path = ResourceUtil.normalize(path);
+                result = (path != null) ? getResourceInternal(path) : null;
+                if (result != null) {
+                    result = this.factory.getResourceDecoratorTracker().decorate(result);
+                }
+            } else {
 
-        // otherwise we have to apply the search path
-        // (don't use this.getSearchPath() to save a few cycle for not cloning)
-        final String[] paths = factory.getSearchPath();
-        if (paths != null) {
-            for (final String prefix : factory.getSearchPath()) {
-                final Resource res = getResource(prefix + path);
-                if (res != null) {
-                    return res;
+                // otherwise we have to apply the search path
+                // (don't use this.getSearchPath() to save a few cycle for not cloning)
+                final String[] paths = factory.getSearchPath();
+                if (paths != null) {
+                    for (final String prefix : factory.getSearchPath()) {
+                        result = getResource(prefix + path);
+                        if (result != null) {
+                            break;
+                        }
+                    }
                 }
             }
         }
 
-        // no resource found, if we get here
-        return null;
+        return result;
     }
 
     /**
@@ -597,7 +598,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public Resource getResource(final Resource base, String path) {
         checkClosed();
 
-        if (!path.startsWith("/") && base != null) {
+        if (path != null && !path.startsWith("/") && base != null) {
             path = base.getPath() + "/" + path;
         }
 
