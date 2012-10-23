@@ -23,7 +23,7 @@ import java.io.Reader;
 
 
 public class CompilationUnit
-    implements org.apache.sling.commons.compiler.CompilationUnit {
+    implements org.apache.sling.commons.compiler.CompilationUnitWithSource {
 
     private final SlingIOProvider ioProvider;
     private final String className;
@@ -65,5 +65,18 @@ public class CompilationUnit
      */
     public long getLastModified() {
         return this.ioProvider.lastModified(this.sourceFile);
+    }
+
+
+    /**
+     * @see org.apache.sling.commons.compiler.CompilationUnitWithSource#getLastModified()
+     */
+    public String getFileName() {
+        final int idx = this.sourceFile.lastIndexOf('/');
+        if (idx == -1) {
+            return this.sourceFile;
+        } else {
+            return this.sourceFile.substring(idx + 1);
+        }
     }
 }

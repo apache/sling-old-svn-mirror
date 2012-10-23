@@ -59,7 +59,7 @@
                             !org.eclipse.*,*
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.commons.compiler;version=2.0.0
+                            org.apache.sling.commons.compiler;version=2.1.0
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.compiler.impl

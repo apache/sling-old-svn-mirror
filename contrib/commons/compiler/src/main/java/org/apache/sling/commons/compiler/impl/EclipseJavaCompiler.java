@@ -33,6 +33,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
+import org.apache.sling.commons.compiler.CompilationUnitWithSource;
 import org.apache.sling.commons.compiler.JavaCompiler;
 import org.apache.sling.commons.compiler.Options;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
@@ -453,7 +454,11 @@ public class EclipseJavaCompiler implements JavaCompiler {
          * @see org.eclipse.jdt.internal.compiler.env.IDependent#getFileName()
          */
         public char[] getFileName() {
-            return (this.packageName.replace('.', '/') + '/' + this.mainTypeName + ".java").toCharArray();
+            if (compUnit instanceof CompilationUnitWithSource) {
+                return ((CompilationUnitWithSource)compUnit).getFileName().toCharArray();
+            } else {
+                return (this.packageName.replace('.', '/') + '/' + this.mainTypeName + ".java").toCharArray();
+            }
         }
     }
 }
