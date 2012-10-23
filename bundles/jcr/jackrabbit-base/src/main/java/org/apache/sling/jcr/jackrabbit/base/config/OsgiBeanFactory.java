@@ -21,6 +21,7 @@ package org.apache.sling.jcr.jackrabbit.base.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -92,7 +93,7 @@ public class OsgiBeanFactory implements BeanFactory, ServiceTrackerCustomizer {
         this.tracker = new ServiceTracker(bundleContext, filter, this);
     }
 
-    public void initialize(InputSource configSource) throws IOException, ConfigurationException {
+    public void initialize(final InputSource configSource) throws ConfigurationException {
         determineDependencies(configSource);
         createClassNameMappings();
         tracker.open();
@@ -192,19 +193,26 @@ public class OsgiBeanFactory implements BeanFactory, ServiceTrackerCustomizer {
         }
     }
 
-    private void determineDependencies(InputSource source) throws ConfigurationException, IOException {
-        Properties p = new Properties();
+    private void determineDependencies(final InputSource source) throws ConfigurationException {
+        final Properties p = new Properties();
         p.putAll(System.getProperties());
         p.setProperty(RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE, "/fake/path");
-        RepositoryConfigurationParser parser = new RepositoryConfigurationParser(p);
+
+        final RepositoryConfigurationParser parser = new RepositoryConfigurationParser(p);
         parser.setConfigVisitor(new DepFinderBeanConfigVisitor());
 
         try {
             parser.parseRepositoryConfig(source);
         } finally {
-            InputStream is = source.getByteStream();
+            // close source
+            final InputStream is = source.getByteStream();
             if (is != null) {
-                is.close();
+                try { is.close(); } catch (final IOException ignore) {}
+            } else {
+                final Reader r = source.getCharacterStream();
+                if ( r != null ) {
+                    try { r.close(); } catch (final IOException ignore) {}
+                }
             }
         }
 
