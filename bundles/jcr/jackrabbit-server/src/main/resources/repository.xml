@@ -18,8 +18,8 @@
   under the License.
 -->
 <!DOCTYPE Repository
-          PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN"
-          "http://jackrabbit.apache.org/dtd/repository-2.0.dtd">
+          PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 2.4//EN"
+          "http://jackrabbit.apache.org/dtd/repository-2.4.dtd">
 
 <Repository>
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
@@ -30,6 +30,11 @@
 
     <Security appName="Jackrabbit">
         <SecurityManager class="org.apache.jackrabbit.core.DefaultSecurityManager" workspaceName="security">
+            <UserManager class="org.apache.jackrabbit.core.security.user.UserManagerImpl">
+                <param name="defaultDepth" value="1"/>
+                <param name="autoExpandTree" value="true"/>
+                <AuthorizableAction class="org.apache.jackrabbit.core.security.user.action.AuthorizableAction" />
+            </UserManager>
         </SecurityManager>
 
         <AccessManager class="org.apache.sling.jcr.jackrabbit.server.impl.security.PluggableDefaultAccessManager">
