@@ -35,10 +35,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.config.BeanFactory;
+import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.config.RepositoryConfigurationParser;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AdministrativeCredentials;
@@ -47,6 +51,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+import org.xml.sax.InputSource;
 
 /**
  * The <code>SlingServerRepository</code> TODO
@@ -90,6 +95,9 @@ public class SlingServerRepository extends AbstractSlingRepository
     @Property(value="")
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
+    @Reference
+    private BeanFactory beanFactory;
+
     //---------- Repository Management ----------------------------------------
 
     @Override
@@ -102,21 +110,8 @@ public class SlingServerRepository extends AbstractSlingRepository
         @SuppressWarnings("unchecked")
         Dictionary<String, Object> environment = this.getComponentContext().getProperties();
         String configURLObj = (String) environment.get(REPOSITORY_CONFIG_URL);
-        String home = (String) environment.get(REPOSITORY_HOME_DIR);
-
-        // ensure absolute home (path)
+        String home = getAbsoluteHomePath(environment,getComponentContext().getBundleContext());
         File homeFile = new File(home);
-        if (!homeFile.isAbsolute()) {
-            BundleContext context = getComponentContext().getBundleContext();
-            String slingHomePath = context.getProperty("sling.home");
-            if (slingHomePath != null) {
-                homeFile = new File(slingHomePath, home);
-            } else {
-                homeFile = homeFile.getAbsoluteFile();
-            }
-            home = homeFile.getAbsolutePath();
-        }
-
         // somewhat dirty hack to have the derby.log file in a sensible
         // location, but don't overwrite anything already set
         if (System.getProperty("derby.stream.error.file") == null) {
@@ -157,9 +152,9 @@ public class SlingServerRepository extends AbstractSlingRepository
                         log(LogService.LOG_INFO, "Using configuration file " + configFile.getAbsolutePath());
                     }
                 }
-                crc = RepositoryConfig.create(ins, home);
+                crc = create(new InputSource(ins), homeFile);
             } else {
-                crc = RepositoryConfig.create(homeFile);
+                crc = create(getRepositoryConfigSource(homeFile), homeFile);
             }
 
             return RepositoryImpl.create(crc);
@@ -188,6 +183,7 @@ public class SlingServerRepository extends AbstractSlingRepository
         // got no repository ....
         return null;
     }
+
 
     @Override
     protected void disposeRepository(Repository repository) {
@@ -303,6 +299,27 @@ public class SlingServerRepository extends AbstractSlingRepository
         }
     }
 
+    public static String getAbsoluteHomePath(Dictionary<String, Object> p,BundleContext context){
+        String home = (String) p.get(REPOSITORY_HOME_DIR);
+
+        // ensure absolute home (path)
+        File homeFile = new File(home);
+        if (!homeFile.isAbsolute()) {
+            String slingHomePath = context.getProperty("sling.home");
+            if (slingHomePath != null) {
+                homeFile = new File(slingHomePath, home);
+            } else {
+                homeFile = homeFile.getAbsoluteFile();
+            }
+            home = homeFile.getAbsolutePath();
+        }
+        return home;
+    }
+
+    public static InputSource getRepositoryConfigSource(File homeFile) throws FileNotFoundException {
+        return new InputSource(new FileInputStream(new File(homeFile, "repository.xml")));
+    }
+
     /**
      * {@inheritDoc}
      * @see org.apache.sling.jcr.base.AbstractSlingRepository#getAdministrativeCredentials(java.lang.String)
@@ -320,4 +337,16 @@ public class SlingServerRepository extends AbstractSlingRepository
     protected Credentials getAnonCredentials(String anonUser) {
         return new AnonCredentials(anonUser);
     }
+
+    private RepositoryConfig create(InputSource xml, File dir) throws ConfigurationException {
+        java.util.Properties variables = new java.util.Properties(System.getProperties());
+        variables.setProperty(RepositoryConfigurationParser.REPOSITORY_HOME_VARIABLE, dir.getPath());
+        RepositoryConfigurationParser parser =
+                new RepositoryConfigurationParser(variables);
+        parser.setBeanFactory(beanFactory);
+        RepositoryConfig config = parser.parseRepositoryConfig(xml);
+        config.init();
+        return config;
+    }
+
 }

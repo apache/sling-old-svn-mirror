@@ -71,7 +71,7 @@ public abstract class TrustedCredentials implements Credentials {
     /**
      * @return
      */
-    protected Authentication getTrustedAuthentication() {
+    public Authentication getTrustedAuthentication() {
         return authentication;
     }
 
