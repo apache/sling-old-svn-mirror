@@ -151,7 +151,7 @@ public class ResourceUtilTest {
 
         assertNull(ResourceUtil.getParent("b"));
         assertNull(ResourceUtil.getParent("/b/.."));
-        
+
         assertEquals("security:/", ResourceUtil.getParent("security:/b"));
         assertEquals("security:/b", ResourceUtil.getParent("security:/b/c"));
         assertEquals("security:/b/c", ResourceUtil.getParent("security:/b/c/d"));
@@ -384,33 +384,92 @@ public class ResourceUtilTest {
     }
 
     @Test public void testIsStarResource() {
-		final Resource nonStar = context.mock(Resource.class, "nonStarResource");
-		final String starPath = "/foo/*";
-		final Resource star = context.mock(Resource.class, "starResource");
-		final String nonStarPath = "/foo/*";
+        final Resource nonStar = context.mock(Resource.class, "nonStarResource");
+        final String starPath = "/foo/*";
+        final Resource star = context.mock(Resource.class, "starResource");
+        final String nonStarPath = "/foo/*";
         this.context.checking(new Expectations() {{
-        	allowing(star).getPath(); will(returnValue(starPath));
-        	allowing(nonStar).getPath(); will(returnValue(nonStarPath));
+            allowing(star).getPath(); will(returnValue(starPath));
+            allowing(nonStar).getPath(); will(returnValue(nonStarPath));
         }});
 
-		assertTrue("expecting star==true for path" + starPath,
-				ResourceUtil.isStarResource(star));
-		assertTrue("expecting star==false for path" + starPath,
-				ResourceUtil.isStarResource(nonStar));
+        assertTrue("expecting star==true for path" + starPath,
+                ResourceUtil.isStarResource(star));
+        assertTrue("expecting star==false for path" + starPath,
+                ResourceUtil.isStarResource(nonStar));
     }
     @Test public void testIsSyntheticResource() {
-		final Resource synth = new SyntheticResource(null, "foo", "bar");
-		final Resource star = context.mock(Resource.class);
+        final Resource synth = new SyntheticResource(null, "foo", "bar");
+        final Resource star = context.mock(Resource.class);
         this.context.checking(new Expectations() {{
-        	allowing(star).getPath(); will(returnValue("/foo/*"));
+            allowing(star).getPath(); will(returnValue("/foo/*"));
         }});
         final Resource wrapped = new ResourceWrapper(synth);
 
-		assertTrue("expecting synthetic==true for SyntheticResource",
-				ResourceUtil.isSyntheticResource(synth));
-		assertFalse("expecting synthetic==false for star resource",
-				ResourceUtil.isSyntheticResource(star));
-		assertTrue("expecting synthetic==true for wrapped Resource",
-				ResourceUtil.isSyntheticResource(wrapped));
+        assertTrue("expecting synthetic==true for SyntheticResource",
+                ResourceUtil.isSyntheticResource(synth));
+        assertFalse("expecting synthetic==false for star resource",
+                ResourceUtil.isSyntheticResource(star));
+        assertTrue("expecting synthetic==true for wrapped Resource",
+                ResourceUtil.isSyntheticResource(wrapped));
+    }
+
+    @Test public void testGetParentLevel() throws Exception {
+        boolean caughtNullPointerException = false;
+        try {
+            ResourceUtil.getParent(null, 4);
+        } catch (NullPointerException e) {
+            // Expected exception
+            caughtNullPointerException = true;
+        } catch (Exception e) {
+            fail("Expected NullPointerException, but caught " +
+                    e.getClass().getName() + " instead.");
+        }
+        if (!caughtNullPointerException) {
+            fail("Expected NullPointerException, but no exception was thrown.");
+        }
+
+        boolean caughtIllegalArgumentException = false;
+        try {
+            ResourceUtil.getParent("/a/b", -2);
+        } catch (IllegalArgumentException e) {
+            // Expected exception
+            caughtIllegalArgumentException = true;
+        } catch (Exception e) {
+            fail("Expected IllegalArgumentException, but caught " +
+                    e.getClass().getName() + " instead.");
+        }
+        if (!caughtIllegalArgumentException) {
+            fail("Expected IllegalArgumentException, but no exception was thrown.");
+        }
+
+        assertNull(ResourceUtil.getParent("/a", 4));
+        assertNull(ResourceUtil.getParent("/", 1));
+        assertNull(ResourceUtil.getParent("b/c", 2));
+        assertNull(ResourceUtil.getParent("/b/..", 1));
+        assertNull(ResourceUtil.getParent("b", 1));
+        assertNull(ResourceUtil.getParent("", 3));
+        assertNull(ResourceUtil.getParent("/..", 1));
+        assertNull(ResourceUtil.getParent("security:/b", 2));
+        assertNull(ResourceUtil.getParent("/b///", 2));
+
+        assertEquals("", ResourceUtil.getParent("", 0));
+        assertEquals("b", ResourceUtil.getParent("b", 0));
+        assertEquals("/", ResourceUtil.getParent("/", 0));
+        assertEquals("/a/b", ResourceUtil.getParent("/a/b", 0));
+        assertEquals("security:/b", ResourceUtil.getParent("security:/b", 0));
+
+        assertEquals("/", ResourceUtil.getParent("/b", 1));
+        assertEquals("b", ResourceUtil.getParent("b/c", 1));
+        assertEquals("b/c", ResourceUtil.getParent("b/c/d", 1));
+        assertEquals("/b/c", ResourceUtil.getParent("/b/c/d", 1));
+        assertEquals("security:/", ResourceUtil.getParent("security:/b", 1));
+        assertEquals("security:/b", ResourceUtil.getParent("security:/b/c", 1));
+        assertEquals("security:/b/c", ResourceUtil.getParent("security:/b/c/d", 1));
+
+        assertEquals("b", ResourceUtil.getParent("b/c/d", 2));
+        assertEquals("b/c", ResourceUtil.getParent("b/c/d/e", 2));
+        assertEquals("/", ResourceUtil.getParent("/b/c/d", 3));
+        assertEquals("/", ResourceUtil.getParent("/b///", 1));
     }
 }
