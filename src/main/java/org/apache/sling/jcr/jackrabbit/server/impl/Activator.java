@@ -17,19 +17,14 @@
 package org.apache.sling.jcr.jackrabbit.server.impl;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
-import org.apache.sling.jcr.jackrabbit.base.config.OsgiBeanFactory;
-import org.apache.sling.jcr.jackrabbit.base.security.MultiplexingAuthorizableAction;
-import org.apache.sling.jcr.jackrabbit.base.security.PrincipalProviderTracker;
 import org.apache.sling.jcr.jackrabbit.server.security.LoginModulePlugin;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -43,7 +38,6 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.InputSource;
 
 /**
  * The <code>Activator</code> TODO
@@ -90,12 +84,6 @@ public class Activator implements BundleActivator, ServiceListener {
     private String slingContext;
     private static AccessManagerFactoryTracker accessManagerFactoryTracker;
 
-    private static PrincipalProviderTracker principalProviderTracker;
-
-    private OsgiBeanFactory beanFactory;
-
-    private MultiplexingAuthorizableAction authorizableActionTracker;
-
     protected String getRepositoryName() {
     	String repoName = bundleContext.getProperty("sling.repository.name");
     	if (repoName != null) {
@@ -141,16 +129,6 @@ public class Activator implements BundleActivator, ServiceListener {
             accessManagerFactoryTracker = new AccessManagerFactoryTracker(bundleContext);
         }
         accessManagerFactoryTracker.open();
-
-        if(principalProviderTracker == null){
-            principalProviderTracker = new PrincipalProviderTracker(bundleContext);
-        }
-        principalProviderTracker.open();
-
-        if(authorizableActionTracker == null){
-            authorizableActionTracker = new MultiplexingAuthorizableAction(bundleContext);
-        }
-        authorizableActionTracker.open();
     }
 
     public void stop(BundleContext arg0) {
@@ -167,21 +145,6 @@ public class Activator implements BundleActivator, ServiceListener {
         if (accessManagerFactoryTracker != null) {
             accessManagerFactoryTracker.close();
             accessManagerFactoryTracker = null;
-        }
-
-        if(principalProviderTracker != null){
-            principalProviderTracker.close();
-            principalProviderTracker = null;
-        }
-
-        if(beanFactory != null){
-            beanFactory.close();
-            beanFactory = null;
-        }
-
-        if(authorizableActionTracker != null){
-            authorizableActionTracker.close();
-            authorizableActionTracker = null;
         }
 
         // clear the bundle context field
@@ -247,10 +210,6 @@ public class Activator implements BundleActivator, ServiceListener {
         return accessManagerFactoryTracker;
     }
 
-    public static PrincipalProviderTracker getPrincipalProviderTracker(){
-        return principalProviderTracker;
-    }
-
     // ---------- internal -----------------------------------------------------
 
     private void verifyConfiguration(ServiceReference ref) {
@@ -270,7 +229,6 @@ public class Activator implements BundleActivator, ServiceListener {
                     "verifyConfiguration: {} Configurations available for {}, nothing to do",
                     new Object[] { new Integer(cfgs.length),
                         SERVER_REPOSITORY_FACTORY_PID });
-                createBeanFactory(cfgs[0]);
                 return;
             }
 
@@ -290,7 +248,7 @@ public class Activator implements BundleActivator, ServiceListener {
             // create the factory and set the properties
             Configuration config = ca.createFactoryConfiguration(SERVER_REPOSITORY_FACTORY_PID);
             config.update(defaultConfig);
-            createBeanFactory(config);
+
             log.info("verifyConfiguration: Created configuration {} for {}",
                 config.getPid(), config.getFactoryPid());
 
@@ -299,47 +257,6 @@ public class Activator implements BundleActivator, ServiceListener {
                 "verifyConfiguration: Cannot check or define configuration", t);
         } finally {
             bundleContext.ungetService(ref);
-        }
-    }
-
-    /**
-     * Creates the BeanFactory by finding out the location of repository
-     * configuration. Currently it depends on internal of SlingServerRepository implementation on how it accesses the
-     * repository configuration.
-     *
-     * TODO - Find a better way to centralize logic related to configuration access
-     */
-    private void createBeanFactory(Configuration c){
-        InputSource source = null;
-        try {
-            Dictionary config = c.getProperties();
-            String home = (String) config.get(SlingServerRepository.REPOSITORY_HOME_DIR);
-
-            //1. Check override url
-            String configUrl = (String) config.get(RepositoryAccessor.REPOSITORY_URL_OVERRIDE_PROPERTY);
-
-            //2. Check default url
-            if(configUrl == null){
-              configUrl = (String) config.get(SlingServerRepository.REPOSITORY_CONFIG_URL);
-            }
-
-            //If url found create InputSource from it else
-            //point to repository home director
-            if(configUrl != null){
-                source = new InputSource(new FileInputStream(new File(configUrl)));
-            }else if(home != null){
-                String homePath = SlingServerRepository.getAbsoluteHomePath(config,bundleContext);
-                source = SlingServerRepository.getRepositoryConfigSource(new File(homePath));
-            }
-
-            if(source == null){
-                throw new IllegalStateException("Cannot determine repository configuration file location");
-            }
-
-            beanFactory = new OsgiBeanFactory(bundleContext);
-            beanFactory.initialize(source);
-        } catch (Exception e) {
-            throw new RuntimeException("Error occurred while initializing bean factory",e);
         }
     }
 
