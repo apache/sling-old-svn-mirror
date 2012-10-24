@@ -16,9 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-@Version("2.2")
 package org.apache.sling.api.wrappers;
 
-import aQute.bnd.annotation.Version;
+import java.util.Map;
 
+import org.apache.sling.api.resource.ModifiableValueMap;
+
+/**
+ * <code>ModifiableValueMapDecorator</code> decorates another {@link Map}
+ * to provide a basic implementation for the additional methods
+ * of a {@link ModifiableValueMap}.
+ * 
+ * @since 2.2
+ */
+public class ModifiableValueMapDecorator
+extends ValueMapDecorator
+implements ModifiableValueMap {
+
+    /**
+     * Creates a new wrapper around a given map.
+     * @param base wrapped object
+     */
+    public ModifiableValueMapDecorator(final Map<String, Object> base) {
+        super(base);
+    }
+}
