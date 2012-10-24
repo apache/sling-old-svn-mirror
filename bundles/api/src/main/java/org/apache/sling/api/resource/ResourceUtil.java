@@ -162,6 +162,40 @@ public class ResourceUtil {
     }
 
     /**
+     * Utility method returns the ancestor's path at the given <code>level</code>
+     * relative to <code>path</code>, which is normalized by {@link #normalize(String)}
+     * before resolving the ancestor.
+     * 
+     * <ul>
+     * <li><code>level</code> = 0 returns the <code>path</code>.</li>
+     * <li><code>level</code> = 1 returns the parent of <code>path</code>, if it exists, <code>null</code> otherwise.</li>
+     * <li><code>level</code> = 2 returns the grandparent of <code>path</code>, if it exists, <code>null</code> otherwise.</li>
+     * </ul>
+     * 
+     * @param path The path whose ancestor is to be returned.
+     * @param level The relative level of the ancestor, relative to <code>path</code>.
+     * @return <code>null</code> if <code>path</code> doesn't have an ancestor at the
+     *            specified <code>level</code>.
+     * @throws IllegalArgumentException If the path cannot be normalized by the
+     *             {@link #normalize(String)} method or if <code>level</code> < 0.
+     * @throws NullPointerException If <code>path</code> is <code>null</code>.
+     * @since 2.2
+     */
+    public static String getParent(final String path, final int level) {
+        if ( level < 0 ) {
+            throw new IllegalArgumentException("level must be non-negative");
+        }
+        String result = path;
+        for(int i=0; i<level; i++) {
+            result = getParent(result);
+            if ( result == null ) {
+                break;
+            }
+        }
+        return result;
+    }
+
+    /**
      * Utility method returns the parent resource of the resource.
      *
      * @throws NullPointerException If <code>rsrc</code> is <code>null</code>.
@@ -402,9 +436,9 @@ public class ResourceUtil {
             // if the path is relative we use the search paths
             for (final String searchPath : resourceResolver.getSearchPath()) {
                 final Resource rtResource = resourceResolver.getResource(searchPath
-                    + rtPath);
+                        + rtPath);
                 if (rtResource != null
-                    && rtResource.getResourceSuperType() != null) {
+                        && rtResource.getResourceSuperType() != null) {
                     resourceSuperType = rtResource.getResourceSuperType();
                     break;
                 }
@@ -429,7 +463,7 @@ public class ResourceUtil {
         String resourceSuperType = resource.getResourceSuperType();
         if (resourceSuperType == null) {
             resourceSuperType = getResourceSuperType(
-                resource.getResourceResolver(), resource.getResourceType());
+                    resource.getResourceResolver(), resource.getResourceType());
         }
         return resourceSuperType;
     }
@@ -483,7 +517,7 @@ public class ResourceUtil {
                 return true;
             }
             superType = getResourceSuperType(resource.getResourceResolver(),
-                superType);
+                    superType);
         }
 
         return false;
