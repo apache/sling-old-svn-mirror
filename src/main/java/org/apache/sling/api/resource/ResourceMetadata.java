@@ -106,6 +106,20 @@ public class ResourceMetadata extends HashMap<String, Object> {
     public static final String MODIFICATION_TIME = "sling.modificationTime";
 
     /**
+     * Returns whether the resource resolver should continue to search for a
+     * resource.
+     * A resource provider can set this flag to indicate that the resource
+     * resolver should search for a provider with a lower priority. If it
+     * finds a resource using such a provider, that resource is returned
+     * instead. If none is found this resource is returned.
+     * This flag should never be manipulated by application code!
+     * The value of this property has no meaning, the resource resolver
+     * just checks whether this flag is set or not.
+     * @since 2.2
+     */
+    public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
+
+    /**
      * Sets the {@link #CHARACTER_ENCODING} property to <code>encoding</code>
      * if not <code>null</code>.
      */
