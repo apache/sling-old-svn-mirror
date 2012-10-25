@@ -98,6 +98,7 @@
         <module>maven/archetypes/servlet</module>
         <module>maven/archetypes/bundle</module>
         <module>maven/archetypes/bundle-for-jcrinstall</module>
+        <module>maven/archetypes/taglib</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
