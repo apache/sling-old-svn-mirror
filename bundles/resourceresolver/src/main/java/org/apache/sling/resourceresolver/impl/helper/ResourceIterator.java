@@ -120,8 +120,8 @@ public class ResourceIterator implements Iterator<Resource> {
     private final ResourceResolverContext resourceResolverContext;
 
     public ResourceIterator(final ResourceResolverContext ctx,
-                    final Resource parentResource,
-                    final RootResourceProviderEntry rootProviderEntry) {
+            final Resource parentResource,
+            final RootResourceProviderEntry rootProviderEntry) {
         this.resourceResolverContext = ctx;
         this.parentResource = parentResource;
         this.rootProviderEntry = rootProviderEntry;
@@ -141,7 +141,7 @@ public class ResourceIterator implements Iterator<Resource> {
 
         if (log.isDebugEnabled()) {
             log.debug(" Provider Set for path {} {} ", path, Arrays
-                            .toString(providersSet.toArray(new ProviderHandler[providersSet.size()])));
+                    .toString(providersSet.toArray(new ProviderHandler[providersSet.size()])));
         }
         this.iteratorPath = path;
         providers = providersSet.iterator();
@@ -173,7 +173,7 @@ public class ResourceIterator implements Iterator<Resource> {
     private Resource seek() {
         while (delayedIter == null) {
             while ((resources == null || !resources.hasNext())
-                            && providers.hasNext()) {
+                    && providers.hasNext()) {
                 final ProviderHandler provider = providers.next();
                 resources = provider.listChildren(this.resourceResolverContext, parentResource);
                 log.debug("     Checking Provider {} ", provider);
@@ -214,18 +214,17 @@ public class ResourceIterator implements Iterator<Resource> {
                     final ResourceProviderEntry rpw = baseEntryValues.next();
                     final String resPath = iteratorPath + rpw.getPath();
                     if (!visited.contains(resPath)) {
-                        final ResourceResolver rr = parentResource
-                                        .getResourceResolver();
+                        final ResourceResolver rr = parentResource.getResourceResolver();
                         final Resource res = rpw.getResourceFromProviders(this.resourceResolverContext, rr,
-                                        resPath);
+                                resPath);
                         if (res == null) {
                             if (!delayed.containsKey(resPath)) {
                                 delayed.put(
+                                        resPath,
+                                        new SyntheticResource(
+                                                rr,
                                                 resPath,
-                                                new SyntheticResource(
-                                                                rr,
-                                                                resPath,
-                                                                ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
+                                                ResourceProvider.RESOURCE_TYPE_SYNTHETIC));
                             }
                         } else {
                             // return the real resource immediately, add
@@ -234,7 +233,7 @@ public class ResourceIterator implements Iterator<Resource> {
                             delayed.remove(resPath);
                             visited.add(resPath);
                             log.debug("   B  resource {} {}", resPath,
-                                            res.getClass());
+                                    res.getClass());
                             return res;
                         }
                     }
@@ -273,7 +272,7 @@ public class ResourceIterator implements Iterator<Resource> {
      *         <code>null</code> if there is no entry at the given location
      */
     private ResourceProviderEntry getResourceProviders(final String path,
-                    final Set<ProviderHandler> providers) {
+            final Set<ProviderHandler> providers) {
 
         // collect providers along the ancestor path segements
         final String[] elements = ResourceProviderEntry.split(path);
@@ -283,7 +282,7 @@ public class ResourceIterator implements Iterator<Resource> {
                 base = base.get(element);
                 if (log.isDebugEnabled()) {
                     log.debug("Loading from {}  {} ", element,
-                                    base.getResourceProviders().length);
+                            base.getResourceProviders().length);
                 }
                 for (final ProviderHandler rp : base.getResourceProviders()) {
                     log.debug("Adding {} for {} ", rp, path);

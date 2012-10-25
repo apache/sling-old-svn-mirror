@@ -25,9 +25,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Iterator;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -68,16 +65,6 @@ public class BundleResource extends AbstractResource implements Resource {
         // able to return an item-based resource
         URL entry = bundle.getEntry(entryPath.concat("/"));
         if (entry != null) {
-            Session session = resourceResolver.adaptTo(Session.class);
-            if (session != null) {
-                try {
-                    if (session.itemExists(resourcePath)) {
-                        return null;
-                    }
-                } catch (RepositoryException re) {
-                    // don't care
-                }
-            }
 
             // append the slash to path for next steps
             resourcePath = resourcePath.concat("/");
@@ -93,7 +80,7 @@ public class BundleResource extends AbstractResource implements Resource {
         // or a bundle file
         if (entry != null) {
             return new BundleResource(resourceResolver, bundle, mappedPath,
-                resourcePath);
+                    resourcePath);
         }
 
         // the bundle does not contain the path
@@ -117,6 +104,7 @@ public class BundleResource extends AbstractResource implements Resource {
 
             this.path = resourcePath.substring(0, resourcePath.length() - 1);
             this.resourceType = NT_FOLDER;
+            metadata.put(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING, Boolean.TRUE);
 
         } else {
 
@@ -153,6 +141,7 @@ public class BundleResource extends AbstractResource implements Resource {
         return resourceResolver;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
         if (type == InputStream.class) {
@@ -165,9 +154,10 @@ public class BundleResource extends AbstractResource implements Resource {
         return super.adaptTo(type);
     }
 
+    @Override
     public String toString() {
         return getClass().getSimpleName() + ", type=" + getResourceType()
-            + ", path=" + getPath();
+                + ", path=" + getPath();
     }
 
     // ---------- internal -----------------------------------------------------
@@ -186,7 +176,7 @@ public class BundleResource extends AbstractResource implements Resource {
                 }
             } catch (IOException ioe) {
                 log.error(
-                    "getInputStream: Cannot get input stream for " + this, ioe);
+                        "getInputStream: Cannot get input stream for " + this, ioe);
             }
         }
 
@@ -198,8 +188,8 @@ public class BundleResource extends AbstractResource implements Resource {
         if (url == null) {
             try {
                 url = new URL(BundleResourceURLStreamHandler.PROTOCOL, null,
-                    -1, path, new BundleResourceURLStreamHandler(
-                        bundle.getBundle(), mappedPath.getEntryPath(path)));
+                        -1, path, new BundleResourceURLStreamHandler(
+                                bundle.getBundle(), mappedPath.getEntryPath(path)));
             } catch (MalformedURLException mue) {
                 log.error("getURL: Cannot get URL for " + this, mue);
             }
@@ -208,6 +198,7 @@ public class BundleResource extends AbstractResource implements Resource {
         return url;
     }
 
+    @Override
     public Iterator<Resource> listChildren() {
         return new BundleResourceIterator(this);
     }

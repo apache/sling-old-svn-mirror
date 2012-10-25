@@ -110,6 +110,9 @@ public class FsResource extends AbstractResource implements Resource {
             metaData.setContentLength(file.length());
             metaData.setModificationTime(file.lastModified());
             metaData.setResolutionPath(resourcePath);
+            if ( this.file.isDirectory() ) {
+                metaData.put(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING, Boolean.TRUE);
+            }
         }
         return metaData;
     }
@@ -138,7 +141,7 @@ public class FsResource extends AbstractResource implements Resource {
         if (resourceType == null) {
             resourceType = file.isFile()
                     ? RESOURCE_TYPE_FILE
-                    : RESOURCE_TYPE_FOLDER;
+                            : RESOURCE_TYPE_FOLDER;
         }
 
         return resourceType;
@@ -149,6 +152,7 @@ public class FsResource extends AbstractResource implements Resource {
      * <code>File</code>, <code>InputStream</code> and <code>URL</code>
      * plus those supported by the adapter manager.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == File.class) {
@@ -163,8 +167,8 @@ public class FsResource extends AbstractResource implements Resource {
                     return (AdapterType) new FileInputStream(file);
                 } catch (IOException ioe) {
                     getLog().info(
-                        "adaptTo: Cannot open a stream on the file " + file,
-                        ioe);
+                            "adaptTo: Cannot open a stream on the file " + file,
+                            ioe);
                 }
 
             } else {
@@ -179,12 +183,12 @@ public class FsResource extends AbstractResource implements Resource {
                 return (AdapterType) file.toURI().toURL();
             } catch (MalformedURLException mue) {
                 getLog().info(
-                    "adaptTo: Cannot convert the file path " + file
+                        "adaptTo: Cannot convert the file path " + file
                         + " to an URL", mue);
             }
 
         } else if (type == ValueMap.class) {
-            
+
             // this resource simulates nt:file/nt:folder behavior by returning it as resource type
             // we should simulate the corresponding JCR properties in a value map as well
             if (file.exists() && file.canRead()) {
@@ -196,9 +200,9 @@ public class FsResource extends AbstractResource implements Resource {
                 props.put("jcr:created", lastModifed);
                 return (AdapterType) new ValueMapDecorator(props);
             }
-            
+
         }
-        
+
         return super.adaptTo(type);
     }
 

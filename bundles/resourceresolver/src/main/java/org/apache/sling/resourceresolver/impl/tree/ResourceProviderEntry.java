@@ -29,6 +29,7 @@ import java.util.Set;
 import org.apache.commons.collections.FastTreeMap;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
@@ -118,8 +119,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      *             if an error occurrs trying to access an existing resource.
      */
     public Resource getResource(final ResourceResolverContext ctx,
-                    final ResourceResolver resourceResolver,
-                    final String path) {
+            final ResourceResolver resourceResolver,
+            final String path) {
         return getInternalResource(ctx, resourceResolver, path);
     }
 
@@ -265,8 +266,8 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * @return null if no resource was found, a resource if one was found.
      */
     private Resource getInternalResource(final ResourceResolverContext ctx,
-                    final ResourceResolver resourceResolver,
-                    final String fullPath) {
+            final ResourceResolver resourceResolver,
+            final String fullPath) {
         try {
 
             if (fullPath == null || fullPath.length() == 0 || fullPath.charAt(0) != '/') {
@@ -277,19 +278,29 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
             this.populateProviderPath(entries, elements);
 
+            Resource fallbackResource = null;
+
             // the path is in reverse order end first
             for (int i = entries.size() - 1; i >= 0; i--) {
                 final ProviderHandler[] rps = entries.get(i).getResourceProviders();
                 for (final ProviderHandler rp : rps) {
 
+                    boolean foundFallback = false;
                     final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
                     if (resource != null) {
-                        LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
-                        return resource;
+                        if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
+                            LOGGER.debug("Resolved Full {} using {} from {} - continue resolving flag is set!", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            fallbackResource = resource;
+                            fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
+                            foundFallback = true;
+                        } else {
+                            LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            return resource;
+                        }
                     }
-                    if ( rp.ownsRoots() ) {
+                    if ( rp.ownsRoots() && !foundFallback ) {
                         LOGGER.debug("Resource null {} ", fullPath);
-                        return null;
+                        return fallbackResource;
                     }
                 }
             }
@@ -298,6 +309,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             final Resource resource = getResourceFromProviders(ctx, resourceResolver, fullPath);
             if (resource != null) {
                 return resource;
+            }
+
+            if ( fallbackResource != null ) {
+                LOGGER.debug("Using first found resource {} for {}", fallbackResource, fullPath);
+                return fallbackResource;
             }
 
             // query: /libs/sling/servlet/default
@@ -320,21 +336,36 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     }
 
     public Resource getResourceFromProviders(final ResourceResolverContext ctx,
-                    final ResourceResolver resourceResolver, final String fullPath) {
+            final ResourceResolver resourceResolver,
+            final String fullPath) {
+        Resource fallbackResource = null;
         final ProviderHandler[] rps = getResourceProviders();
         for (final ProviderHandler rp : rps) {
+            boolean foundFallback = false;
+
             final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
             if (resource != null) {
-                LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
-                return resource;
+                if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
+                    LOGGER.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);
+                    fallbackResource = resource;
+                    fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
+                    foundFallback = true;
+                } else {
+                    LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
+                    return resource;
+                }
+            }
+            if ( rp.ownsRoots() && !foundFallback ) {
+                LOGGER.debug("Resource null {} ", fullPath);
+                return fallbackResource;
             }
         }
-        return null;
+        return fallbackResource;
     }
 
     public ModifyingResourceProvider getModifyingProvider(final ResourceResolverContext ctx,
-                    final ResourceResolver resourceResolver,
-                    final String fullPath) {
+            final ResourceResolver resourceResolver,
+            final String fullPath) {
         final String[] elements = split(fullPath);
         final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
         this.populateProviderPath(entries, elements);

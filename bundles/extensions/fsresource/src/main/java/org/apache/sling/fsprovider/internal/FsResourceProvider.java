@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.felix.scr.annotations.Component;
@@ -54,18 +52,18 @@ import org.osgi.service.event.EventAdmin;
  * resource ({@link #PROP_PROVIDER_FILE}).
  */
 @Component(
-    name="org.apache.sling.fsprovider.internal.FsResourceProvider",
-    label="%resource.resolver.name",
-    description="%resource.resolver.description",
-    configurationFactory=true,
-    policy=ConfigurationPolicy.REQUIRE,
-    metatype=true
-)
+        name="org.apache.sling.fsprovider.internal.FsResourceProvider",
+        label="%resource.resolver.name",
+        description="%resource.resolver.description",
+        configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE,
+        metatype=true
+        )
 @Service(ResourceProvider.class)
 @Properties({
     @Property(name="service.description", value="Sling Filesystem Resource Provider"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name=ResourceProvider.ROOTS)    
+    @Property(name=ResourceProvider.ROOTS)
 })
 public class FsResourceProvider implements ResourceProvider {
 
@@ -148,8 +146,8 @@ public class FsResourceProvider implements ResourceProvider {
                     String relPath = providerRoot.substring(parentPath.length());
                     if (relPath.indexOf('/') < 0) {
                         Resource res = getResource(
-                            parent.getResourceResolver(), providerRoot,
-                            providerFile);
+                                parent.getResourceResolver(), providerRoot,
+                                providerFile);
                         if (res != null) {
                             return Collections.singletonList(res).iterator();
                         }
@@ -220,7 +218,7 @@ public class FsResourceProvider implements ResourceProvider {
         String providerFileName = (String) props.get(PROP_PROVIDER_FILE);
         if (providerFileName == null || providerFileName.length() == 0) {
             throw new IllegalArgumentException(PROP_PROVIDER_FILE
-                + " property must be set");
+                    + " property must be set");
         }
 
         this.providerRoot = providerRoot;
@@ -282,7 +280,7 @@ public class FsResourceProvider implements ResourceProvider {
         // if the provider file does not exist, create an empty new folder
         if (!providerFile.exists() && !providerFile.mkdirs()) {
             throw new IllegalArgumentException(
-                "Cannot create provider file root " + providerFile);
+                    "Cannot create provider file root " + providerFile);
         }
 
         return providerFile;
@@ -313,21 +311,6 @@ public class FsResourceProvider implements ResourceProvider {
             String resourcePath, File file) {
 
         if (file != null) {
-
-            // if the file is a directory, and a repository item exists for
-            // the path, do not return the directory here
-            if (file.isDirectory()) {
-                Session session = resourceResolver.adaptTo(Session.class);
-                if (session != null) {
-                    try {
-                        if (session.itemExists(resourcePath)) {
-                            return null;
-                        }
-                    } catch (RepositoryException re) {
-                        // don't care
-                    }
-                }
-            }
 
             // if the file exists, but is not a directory or no repository entry
             // exists, return it as a resource
