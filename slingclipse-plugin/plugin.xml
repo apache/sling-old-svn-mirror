@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="org.apache.sling.slingclipse.preferences"
+         name="Slingclipse Preferences"
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="Slingclipse"
+            class="org.apache.sling.slingclipse.preferences.SlingclipsePreferencePage"
+            id="org.apache.sling.slingclipse.preferences.defaultPreferences">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="org.apache.sling.slingclipse.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="org.apache.sling.slingclipse.SlingclipseStrartup">
+      </startup>
+   </extension>
+
+</plugin>

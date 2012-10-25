@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false" name="org.apache.sling.slingclipse.http">
+   <implementation class="org.apache.sling.slingclipse.http.impl.RepositoryImpl"/>
+   <service>
+      <provide interface="org.apache.sling.slingclipse.api.Repository"/>
+   </service>
+</scr:component>
