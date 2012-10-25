@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.jcr.jcr-wrapper</artifactId>
     <packaging>bundle</packaging>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.0.0</version>
 
     <name>Apache Sling Wrapper Bundle for the JCR API</name>
     <description>
@@ -39,9 +39,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jcr-wrapper</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/jcr-wrapper</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/jcr-wrapper</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.jcr-wrapper-2.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.jcr-wrapper-2.0.0</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.jcr.jcr-wrapper-2.0.0</url>
     </scm>
 
     <build>
