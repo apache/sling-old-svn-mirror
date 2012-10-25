@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>org.apache.sling.installer.api</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Installer API</name>
@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/installer/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/installer/api</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/installer/api</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.installer.api-1.0.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.installer.api-1.0.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.installer.api-1.0.0</url>
     </scm>
 
 	<build>
