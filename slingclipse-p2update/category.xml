@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.apache.sling.slingclipse.feature_0.0.1.qualifier.jar" id="org.apache.sling.slingclipse.feature" version="0.0.1.qualifier">
+      <category name="slingclipse"/>
+   </feature>
+   <category-def name="slingclipse" label="Slingclipse"/>
+</site>

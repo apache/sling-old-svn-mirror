@@ -2,13 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-plugin
 Bundle-SymbolicName: org.apache.sling.slingclipse;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 0.0.1.qualifier
 Bundle-Activator: org.apache.sling.slingclipse.SlingclipsePlugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.core.resources;bundle-version="3.6.0",
  org.apache.commons.httpclient;bundle-version="3.1.0",
- org.apache.sling.slingclipse.api;bundle-version="1.0.0",
+ org.apache.sling.slingclipse.api;bundle-version="0.0.1",
  org.eclipse.equinox.ds;bundle-version="1.2.1",
  org.eclipse.osgi.services;bundle-version="3.2.100"
 Bundle-ActivationPolicy: lazy
