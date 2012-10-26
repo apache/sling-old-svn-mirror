@@ -142,8 +142,15 @@
             <version>0.6.1</version>
             <scope>provided</scope>
         </dependency>
-        
         <!-- testing -->
+        <!--  using mockito because its a bit more relaxed and makes it easier to maintain
+              the test cases if dependencies change -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.8.2</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

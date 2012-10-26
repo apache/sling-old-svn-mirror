@@ -240,7 +240,6 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
             File.class.getMethod("setWritable", boolean.class).invoke(protectedParent, false);
             File.class.getMethod("setExecutable", boolean.class).invoke(protectedParent, false);
         } catch ( Exception e ) {
-            e.printStackTrace();
             if ( System.getProperty("java.version").startsWith("1.5") ) {
                 return; // cant perform this test on JDKs before 1.5
             }
@@ -273,7 +272,6 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
             File.class.getMethod("setWritable", boolean.class).invoke(loggingParent, false);
             File.class.getMethod("setExecutable", boolean.class).invoke(protectedParent, false);
         } catch ( Exception e ) {
-            e.printStackTrace();
             if ( System.getProperty("java.version").startsWith("1.5") ) {
                 return; // cant perform this test on JDKs before 1.5
             }
