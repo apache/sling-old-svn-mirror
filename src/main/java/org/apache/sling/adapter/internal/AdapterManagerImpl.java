@@ -24,12 +24,10 @@ import static org.apache.sling.api.adapter.AdapterFactory.ADAPTER_CLASSES;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -67,7 +65,7 @@ import org.slf4j.LoggerFactory;
 
 })
 @Reference(name="AdapterFactory", referenceInterface=AdapterFactory.class,
-    cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
+cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
 public class AdapterManagerImpl implements AdapterManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -104,8 +102,8 @@ public class AdapterManagerImpl implements AdapterManager {
      * {@link #getAdapterFactories(Class)} method. It is cleared
      * whenever an adapter factory is registered on unregistered.
      */
-    private final ConcurrentMap<String, Map<String, AdapterFactoryDescriptor>> factoryCache
-                   = new ConcurrentHashMap<String, Map<String, AdapterFactoryDescriptor>>();
+    private final ConcurrentMap<String, Map<String, List<AdapterFactoryDescriptor>>> factoryCache
+    = new ConcurrentHashMap<String, Map<String, List<AdapterFactoryDescriptor>>>();
 
     /**
      * The service tracker for the event admin
@@ -125,18 +123,28 @@ public class AdapterManagerImpl implements AdapterManager {
             final Class<AdapterType> type) {
 
         // get the adapter factories for the type of adaptable object
-        final Map<String, AdapterFactoryDescriptor> factories = getAdapterFactories(adaptable.getClass());
+        final Map<String, List<AdapterFactoryDescriptor>> factories = getAdapterFactories(adaptable.getClass());
 
         // get the factory for the target type
-        final AdapterFactoryDescriptor desc = factories.get(type.getName());
-        final AdapterFactory factory = desc == null ? null : desc.getFactory();
+        final List<AdapterFactoryDescriptor> descList = factories.get(type.getName());
 
-        // have the factory adapt the adaptable if the factory exists
-        if (factory != null) {
-            log.debug("Using adapter factory {} to map {} to {}",
-                    new Object [] { factory, adaptable, type });
+        if (descList != null && descList.size() > 0) {
+            for (AdapterFactoryDescriptor desc : descList) {
+                final AdapterFactory factory = desc == null ? null : desc.getFactory();
 
-            return factory.getAdapter(adaptable, type);
+                // have the factory adapt the adaptable if the factory exists
+                if (factory != null) {
+                    log.debug("Trying adapter factory {} to map {} to {}",
+                            new Object [] { factory, adaptable, type });
+
+                    AdapterType adaptedObject = factory.getAdapter(adaptable, type);
+                    if (adaptedObject != null) {
+                        log.debug("Using adapter factory {} to map {} to {}",
+                                new Object [] { factory, adaptable, type });
+                        return adaptedObject;
+                    }
+                }
+            }
         }
 
         // no factory has been found, so we cannot adapt
@@ -221,7 +229,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * <strong><em>THIS METHOD IS FOR UNIT TESTING ONLY. IT MAY BE REMOVED OR
      * MODIFIED WITHOUT NOTICE.</em></strong>
      */
-    Map<String, Map<String, AdapterFactoryDescriptor>> getFactoryCache() {
+    Map<String, Map<String, List<AdapterFactoryDescriptor>>> getFactoryCache() {
         return factoryCache;
     }
 
@@ -235,12 +243,12 @@ public class AdapterManagerImpl implements AdapterManager {
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
-            || adapters.length == 0) {
+                || adapters.length == 0) {
             return;
         }
 
         final AdapterFactoryDescriptor factoryDesc = new AdapterFactoryDescriptor(context,
-            reference, adapters);
+                reference, adapters);
 
         for (final String adaptable : adaptables) {
             AdapterFactoryDescriptorMap adfMap = null;
@@ -282,7 +290,7 @@ public class AdapterManagerImpl implements AdapterManager {
         final String[] adapters = PropertiesUtil.toStringArray(reference.getProperty(ADAPTER_CLASSES));
 
         if (adaptables == null || adaptables.length == 0 || adapters == null
-            || adapters.length == 0) {
+                || adapters.length == 0) {
             return;
         }
 
@@ -323,14 +331,13 @@ public class AdapterManagerImpl implements AdapterManager {
      *
      * @param clazz The adaptable <code>Class</code> for which to return the
      *            adapter factory map by target class name.
-     * @param cache The cache of already defined adapter factory mappings
      * @return The map of adapter factories by target class name. The map may be
      *         empty if there is no adapter factory for the adaptable
      *         <code>clazz</code>.
      */
-    private Map<String, AdapterFactoryDescriptor> getAdapterFactories(final Class<?> clazz) {
+    private Map<String, List<AdapterFactoryDescriptor>> getAdapterFactories(final Class<?> clazz) {
         final String className = clazz.getName();
-        Map<String, AdapterFactoryDescriptor> entry = this.factoryCache.get(className);
+        Map<String, List<AdapterFactoryDescriptor>> entry = this.factoryCache.get(className);
         if (entry == null) {
             // create entry
             entry = createAdapterFactoryMap(clazz);
@@ -344,8 +351,7 @@ public class AdapterManagerImpl implements AdapterManager {
      * Creates a new target adapter factory map for the given <code>clazz</code>.
      * First all factories defined to support the adaptable class by
      * registration are taken. Next all factories for the implemented interfaces
-     * and finally all base class factories are copied. Later adapter factory
-     * entries do NOT overwrite earlier entries.
+     * and finally all base class factories are copied.
      *
      * @param clazz The adaptable <code>Class</code> for which to build the
      *            adapter factory map by target class name.
@@ -353,8 +359,8 @@ public class AdapterManagerImpl implements AdapterManager {
      *         empty if there is no adapter factory for the adaptable
      *         <code>clazz</code>.
      */
-    private Map<String, AdapterFactoryDescriptor> createAdapterFactoryMap(final Class<?> clazz) {
-        final Map<String, AdapterFactoryDescriptor> afm = new HashMap<String, AdapterFactoryDescriptor>();
+    private Map<String, List<AdapterFactoryDescriptor>> createAdapterFactoryMap(final Class<?> clazz) {
+        final Map<String, List<AdapterFactoryDescriptor>> afm = new HashMap<String, List<AdapterFactoryDescriptor>>();
 
         // AdapterFactories for this class
         AdapterFactoryDescriptorMap afdMap = null;
@@ -362,18 +368,20 @@ public class AdapterManagerImpl implements AdapterManager {
             afdMap = this.descriptors.get(clazz.getName());
         }
         if (afdMap != null) {
-            final Set<AdapterFactoryDescriptor> afdSet;
+            final List<AdapterFactoryDescriptor> afdSet;
             synchronized ( afdMap ) {
-                afdSet = new HashSet<AdapterFactoryDescriptor>(afdMap.values());
+                afdSet = new ArrayList<AdapterFactoryDescriptor>(afdMap.values());
             }
             for (final AdapterFactoryDescriptor afd : afdSet) {
                 final String[] adapters = afd.getAdapters();
                 for (final String adapter : adapters) {
-                    // to handle service ranking, we only add if the map does not
-                    // have a value for this adapter yet
-                    if (!afm.containsKey(adapter)) {
-                        afm.put(adapter, afd);
+                    // to handle service ranking, we add to the end of the list or create a new list
+                    List<AdapterFactoryDescriptor> factoryDescriptors = afm.get(adapter);
+                    if (factoryDescriptors == null) {
+                        factoryDescriptors = new ArrayList<AdapterFactoryDescriptor>();
+                        afm.put(adapter, factoryDescriptors);
                     }
+                    factoryDescriptors.add(afd);
                 }
             }
         }
@@ -405,17 +413,23 @@ public class AdapterManagerImpl implements AdapterManager {
      * @param clazz The adaptable class whose adapter factories are considered
      *            for adding into <code>dest</code>.
      */
-    private void copyAdapterFactories(final Map<String, AdapterFactoryDescriptor> dest,
+    private void copyAdapterFactories(final Map<String, List<AdapterFactoryDescriptor>> dest,
             final Class<?> clazz) {
 
         // get the adapter factories for the adaptable clazz
-        final Map<String, AdapterFactoryDescriptor> scMap = getAdapterFactories(clazz);
+        final Map<String, List<AdapterFactoryDescriptor>> scMap = getAdapterFactories(clazz);
 
-        // for each target class copy the entry to dest if dest does
-        // not contain the target class already
-        for (Map.Entry<String, AdapterFactoryDescriptor> entry : scMap.entrySet()) {
-            if (!dest.containsKey(entry.getKey())) {
-                dest.put(entry.getKey(), entry.getValue());
+        // for each target class copy the entry to dest and put it in the list or create the list
+        for (Map.Entry<String, List<AdapterFactoryDescriptor>> entry : scMap.entrySet()) {
+
+            List<AdapterFactoryDescriptor> factoryDescriptors = dest.get(entry.getKey());
+
+            if (factoryDescriptors == null) {
+                factoryDescriptors = new ArrayList<AdapterFactoryDescriptor>();
+                dest.put(entry.getKey(), factoryDescriptors);
+            }
+            for (AdapterFactoryDescriptor descriptor : entry.getValue()) {
+                factoryDescriptors.add(descriptor);
             }
         }
     }
