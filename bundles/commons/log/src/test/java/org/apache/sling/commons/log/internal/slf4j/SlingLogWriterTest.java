@@ -229,6 +229,54 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
         assertTime("'.'yyyy-MM-dd", "");
         assertTime("'.'yyyy-MM-dd-mm", "'.'yyyy-MM-dd-mm");
     }
+    
+    public void test_create_denied_parent() throws IOException {
+        File baseFile = getBaseFile();
+        File protectedParent = new File(baseFile,"protected");
+        protectedParent.mkdirs();
+        File loggingParent = new File(protectedParent,"logging");
+        protectedParent.setExecutable(false);
+        protectedParent.setWritable(false);
+        try{
+            assertFalse(protectedParent.canWrite());
+            SlingLoggerWriter writer = createLogWriter(loggingParent.getAbsolutePath(), -1, 10);
+            assertNotNull(writer);
+            assertNull(writer.getFile());
+            assertNull(writer.getPath());
+            writer.append("Testing Stdout");
+        } finally {
+            try {
+                protectedParent.setExecutable(true);
+                protectedParent.setWritable(true);
+            } catch ( Exception e ) {
+                // no need.
+            }
+        }
+    }
+
+    public void test_create_denied() throws IOException {
+        File baseFile = getBaseFile();
+        File protectedParent = new File(baseFile,"protected");
+        File loggingParent = new File(protectedParent,"logging");
+        loggingParent.mkdirs();
+        loggingParent.setWritable(false);
+        protectedParent.setExecutable(false);
+        try {
+            assertFalse(loggingParent.canWrite());
+            SlingLoggerWriter writer = createLogWriter(loggingParent.getAbsolutePath(), -1, 10);
+            assertNotNull(writer);
+            assertNull(writer.getFile());
+            assertNull(writer.getPath());
+            writer.append("Testing Stdout");
+        } finally {
+            try {
+                protectedParent.setExecutable(true);
+                protectedParent.setWritable(true);
+            } catch ( Exception e ) {
+                // no need.
+            }
+        }
+    }
 
     private SlingLoggerWriter createLogWriter(String file, int numFiles,
             long size) throws IOException {

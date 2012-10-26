@@ -19,6 +19,7 @@
 package org.apache.sling.commons.log.internal.slf4j;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -350,20 +351,30 @@ class SlingLoggerWriter extends Writer {
     }
 
     private Writer createWriter() throws IOException {
-        if (file == null) {
-            return new OutputStreamWriter(System.out) {
-                @Override
-                public void close() {
-                    // not really !!
-                }
-            };
+        if ( file != null ) {
+            try {
+                // ensure parent path of the file to create
+                file.getParentFile().mkdirs();
+        
+                // open the file in append mode to not overwrite an existing
+                // log file from a previous instance running
+                return new OutputStreamWriter(new FileOutputStream(file, true));
+            } catch ( FileNotFoundException e) {
+                System.out.println("Unable to open "+file.getAbsolutePath()+" due to "+e.getMessage());
+                System.out.println("Defaulting to stdout");
+            } catch ( SecurityException e) {
+                System.out.println("Unable to open "+file.getAbsolutePath()+" due to "+e.getMessage());
+                System.out.println("Defaulting to stdout");
+            }
+            file = null;
+            path = null;
         }
-
-        // ensure parent path of the file to create
-        file.getParentFile().mkdirs();
-
-        // open the file in append mode to not overwrite an existing
-        // log file from a previous instance running
-        return new OutputStreamWriter(new FileOutputStream(file, true));
+        
+        return new OutputStreamWriter(System.out) {
+            @Override
+            public void close() {
+                // not really !!
+            }
+        };        
     }
 }
