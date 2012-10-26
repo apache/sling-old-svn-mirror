@@ -235,8 +235,16 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
         File protectedParent = new File(baseFile,"protected");
         protectedParent.mkdirs();
         File loggingParent = new File(protectedParent,"logging");
-        protectedParent.setExecutable(false);
-        protectedParent.setWritable(false);
+        try {
+            // these methods are JDK 1.6 and later so we have introspect to invoke
+            File.class.getMethod("setWritable", boolean.class).invoke(protectedParent, false);
+            File.class.getMethod("setExecutable", boolean.class).invoke(protectedParent, false);
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            if ( System.getProperty("java.version").startsWith("1.5") ) {
+                return; // cant perform this test on JDKs before 1.5
+            }
+        }
         try{
             assertFalse(protectedParent.canWrite());
             SlingLoggerWriter writer = createLogWriter(loggingParent.getAbsolutePath(), -1, 10);
@@ -246,8 +254,9 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
             writer.append("Testing Stdout");
         } finally {
             try {
-                protectedParent.setExecutable(true);
-                protectedParent.setWritable(true);
+                // these methods are JDK 1.6 and later so we have introspect to invoke
+                File.class.getMethod("setWritable", boolean.class).invoke(loggingParent, true);
+                File.class.getMethod("setExecutable", boolean.class).invoke(protectedParent, true);
             } catch ( Exception e ) {
                 // no need.
             }
@@ -259,8 +268,16 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
         File protectedParent = new File(baseFile,"protected");
         File loggingParent = new File(protectedParent,"logging");
         loggingParent.mkdirs();
-        loggingParent.setWritable(false);
-        protectedParent.setExecutable(false);
+        try {
+            // these methods are JDK 1.6 and later so we have introspect to invoke
+            File.class.getMethod("setWritable", boolean.class).invoke(loggingParent, false);
+            File.class.getMethod("setExecutable", boolean.class).invoke(protectedParent, false);
+        } catch ( Exception e ) {
+            e.printStackTrace();
+            if ( System.getProperty("java.version").startsWith("1.5") ) {
+                return; // cant perform this test on JDKs before 1.5
+            }
+        }
         try {
             assertFalse(loggingParent.canWrite());
             SlingLoggerWriter writer = createLogWriter(loggingParent.getAbsolutePath(), -1, 10);
@@ -270,8 +287,9 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
             writer.append("Testing Stdout");
         } finally {
             try {
-                protectedParent.setExecutable(true);
-                protectedParent.setWritable(true);
+                // these methods are JDK 1.6 and later so we have introspect to invoke
+                File.class.getMethod("setWritable", boolean.class).invoke(loggingParent, true);
+                File.class.getMethod("setExecutable", boolean.class).invoke(protectedParent, true);
             } catch ( Exception e ) {
                 // no need.
             }
