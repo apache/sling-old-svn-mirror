@@ -204,11 +204,7 @@ public class ResourceUtil {
      */
     @Deprecated
     public static Resource getParent(Resource rsrc) {
-        final String parentPath = ResourceUtil.getParent(rsrc.getPath());
-        if (parentPath == null) {
-            return null;
-        }
-        return rsrc.getResourceResolver().getResource(parentPath);
+        return rsrc.getParent();
     }
 
     /**
@@ -485,46 +481,11 @@ public class ResourceUtil {
         if (resource == null || resourceType == null) {
             return false;
         }
-
-        try {
-            return resource.isResourceType(resourceType);
-        } catch (final AbstractMethodError ame) {
-            // this might occur with old pre 2.1.0 resource implementations (see SLING-2457)
-            return internalIsA(resource, resourceType);
-        }
+        return resource.isResourceType(resourceType);
     }
 
     /**
-     * Check if the resource is of the given type. This method first checks the
-     * resource type of the resource, then its super resource type and continues
-     * to go up the resource super type hierarchy.
-     *
-     * @param resource the resource to check
-     * @param resourceType the resource type to check the resource against
-     * @return <code>false</code> if <code>resource</code> is <code>null</code>.
-     *         Otherwise returns the result of calling
-     *         {@link Resource#isResourceType(String)} with the given
-     *         <code>resourceType</code>.
-     */
-    static boolean internalIsA(final Resource resource, final String resourceType) {
-        if (resourceType.equals(resource.getResourceType())) {
-            return true;
-        }
-
-        String superType = findResourceSuperType(resource);
-        while (superType != null) {
-            if (resourceType.equals(superType)) {
-                return true;
-            }
-            superType = getResourceSuperType(resource.getResourceResolver(),
-                    superType);
-        }
-
-        return false;
-    }
-
-    /**
-     * Return an iterator for objecs of the specified type. A new iterator is
+     * Return an iterator for objects of the specified type. A new iterator is
      * returned which tries to adapt the provided resources to the given type
      * (using {@link Resource#adaptTo(Class)}. If a resource in the original
      * iterator is not adaptable to the given class, this object is skipped.
