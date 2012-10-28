@@ -56,15 +56,12 @@ public abstract class AbstractResource
      * calling the {@link ResourceUtil#getParent(String)} method and then to
      * retrieve that resource from the resource resolver.
      */
-    @SuppressWarnings("deprecation")
     public Resource getParent() {
-        //
-        // Implemented calling the deprecated ResourceUtil.getParent method
-        // (which actually has the implementation) to prevent problems if there
-        // are implementations of the pre-2.1.0 Resource interface in the
-        // framework.
-        //
-        return ResourceUtil.getParent(this);
+        final String parentPath = ResourceUtil.getParent(getPath());
+        if (parentPath == null) {
+            return null;
+        }
+        return getResourceResolver().getResource(parentPath);
     }
 
     /**
@@ -107,11 +104,25 @@ public abstract class AbstractResource
      * methods.
      */
     public boolean isResourceType(String resourceType) {
-        //
-        // Implemented calling the ResourceUtil.isA method (which actually has
-        // the implementation) to prevent problems if there are implementations
-        // of the pre-2.1.0 Resource interface in the framework.
-        //
-        return ResourceUtil.internalIsA(this, resourceType);
+        /*
+        * Check if the resource is of the given type. This method first checks the
+        * resource type of the resource, then its super resource type and continues
+        * to go up the resource super type hierarchy.
+        */
+        if ( resourceType == null ) {
+            return false;
+        }
+        if (resourceType.equals(getResourceType())) {
+            return true;
+        }
+        String superType = ResourceUtil.findResourceSuperType(this);
+        while (superType != null) {
+            if (resourceType.equals(superType)) {
+                return true;
+            }
+            superType = ResourceUtil.getResourceSuperType(getResourceResolver(),
+                    superType);
+        }
+        return false; 
     }
 }
