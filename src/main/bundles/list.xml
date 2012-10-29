@@ -190,7 +190,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.jsp.taglib</artifactId>
-            <version>2.1.7-SNAPSHOT</version>
+            <version>2.1.8</version>
         </bundle>
         <bundle>
             <groupId>org.codehaus.groovy</groupId>
