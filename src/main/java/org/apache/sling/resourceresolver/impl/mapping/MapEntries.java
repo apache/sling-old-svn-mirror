@@ -560,12 +560,14 @@ public class MapEntries implements EventHandler {
                         // sling:vanityPath
                         // property (or its parent if the node is called
                         // jcr:content)
-                        final String redirect;
+                        final Resource redirectTarget;
                         if (resource.getName().equals("jcr:content")) {
-                            redirect = resource.getParent().getPath();
+                            redirectTarget = resource.getParent();
                         } else {
-                            redirect = resource.getPath();
+                            redirectTarget = resource;
                         }
+                        final String redirect = redirectTarget.getPath();
+                        final String redirectName = redirectTarget.getName();
 
                         // whether the target is attained by a 302/FOUND or by an
                         // internal redirect is defined by the sling:redirect
@@ -575,12 +577,23 @@ public class MapEntries implements EventHandler {
                                         : -1;
 
                         final String checkPath = result[1];
-                        // 1. entry with exact match
-                        this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect + ".html"));
 
-                        // 2. entry with match supporting selectors and extension
-                        this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false, redirect + "$1"));
+                        if (redirectName.indexOf('.') > -1) {
+                            // 1. entry with exact match
+                            this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect));
 
+                            final int idx = redirectName.lastIndexOf('.');
+                            final String extension = redirectName.substring(idx + 1);
+
+                            // 2. entry with extension
+                            this.addEntry(entryMap, checkPath, new MapEntry(url + "\\." + extension, status, false, redirect));
+                        } else {
+                            // 1. entry with exact match
+                            this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect + ".html"));
+
+                            // 2. entry with match supporting selectors and extension
+                            this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false, redirect + "$1"));
+                        }
                         // 3. keep the path to return
                         targetPaths.add(redirect);
                     }
