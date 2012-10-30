@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ui,
  org.apache.commons.httpclient;bundle-version="3.1.0",
  org.apache.sling.slingclipse.api;bundle-version="0.0.1",
  org.eclipse.equinox.ds;bundle-version="1.2.1",
- org.eclipse.osgi.services;bundle-version="3.2.100"
+ org.eclipse.osgi.services;bundle-version="3.2.100",
+ org.eclipse.ui.ide
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .

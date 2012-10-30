@@ -24,5 +24,22 @@
             class="org.apache.sling.slingclipse.SlingclipseStrartup">
       </startup>
    </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <category
+            id="org.apache.sling.slingclipse.ui.wizards.sampleCategory"
+            name="Sling">
+      </category>
+      <wizard
+            category="org.apache.sling.slingclipse.ui.wizards.sampleCategory"
+            class="org.apache.sling.slingclipse.ui.wizards.ImportWizard"
+            icon="icons/sample.gif"
+            id="org.apache.sling.slingclipse.ui.wizards.ImportWizard"
+            name="Import from Repository">
+         <description>
+            Import a file from the local file system into the workspace.
+         </description>
+      </wizard>
+   </extension>
 
 </plugin>
