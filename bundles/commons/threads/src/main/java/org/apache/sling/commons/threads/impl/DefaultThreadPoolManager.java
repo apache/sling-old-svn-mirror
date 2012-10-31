@@ -318,6 +318,12 @@ public class DefaultThreadPoolManager
 
         private BundleContext bundleContext;
 
+        /**
+         * This lock protects the counter which is volatile so must be
+         * protected.
+         */
+        private Object usagelock = new Object();
+
         public Entry(final String pid, final ThreadPoolConfig config, final String name, final BundleContext bundleContext) {
             this.pid = pid;
             this.config = config;
@@ -337,17 +343,21 @@ public class DefaultThreadPoolManager
         }
 
         public ThreadPoolFacade incUsage() {
-            if ( pool == null ) {
-                pool = new ThreadPoolFacade(new DefaultThreadPool(name, this.config));
+            synchronized (usagelock) {
+                if ( pool == null ) {
+                    pool = new ThreadPoolFacade(new DefaultThreadPool(name, this.config));
+                }
+                this.count++;
+                return pool;
             }
-            this.count++;
-            return pool;
         }
 
         public void decUsage() {
-            this.count--;
-            if ( this.count == 0 ) {
-                this.shutdown();
+            synchronized (usagelock) {
+                this.count--;
+                if ( this.count == 0 ) {
+                    this.shutdown();
+                }
             }
         }
 
