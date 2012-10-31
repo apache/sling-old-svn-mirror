@@ -392,7 +392,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         if ( !foundRoot ) {
             logger.info("Ignoring ResourceProvider(Factory) {} : no configured roots.", provider.getName());
         }
-        logger.debug("bindResourceProvider: Bound {}", debugServiceName);
+        logger.debug("bindResourceProvider: Bound {}, current providers={}", debugServiceName, Arrays.asList(getResourceProviders()) );
     }
 
     /**
@@ -422,7 +422,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
             }
         }
 
-        logger.debug("unbindResourceProvider: Unbound {}", debugServiceName);
+        logger.debug("unbindResourceProvider: Unbound {}, current providers={}", debugServiceName, Arrays.asList(getResourceProviders()) );
     }
 
     private String getDebugServiceName(final ProviderHandler provider) {
