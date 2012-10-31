@@ -27,6 +27,7 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
@@ -41,8 +42,7 @@ public class SlingclipseListener implements IResourceChangeListener {
 		try {
 			rootDelta.accept(buildVisitor());
 		} catch (CoreException e) {
-			// TODO should we do something here in case this fails ?
-			e.printStackTrace();
+			SlingclipsePlugin.getDefault().getLog().log(e.getStatus());
 		}
 	}
 
@@ -52,6 +52,14 @@ public class SlingclipseListener implements IResourceChangeListener {
 			@Override
 			public boolean visit(IResourceDelta delta) throws CoreException { 
 				
+				try {
+					return visitInternal(delta);
+				} catch ( RuntimeException e) {
+					throw new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed visiting resource based on delta " + delta, e));
+				}
+			}
+
+			private boolean visitInternal(IResourceDelta delta) {
 				IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
 				
 				if (!store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey())){
@@ -93,7 +101,6 @@ public class SlingclipseListener implements IResourceChangeListener {
 
 				}
  				return true;
- 				 
 			}
 			 
 		};
