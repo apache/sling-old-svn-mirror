@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl.tree;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -34,6 +35,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Constants;
@@ -178,6 +180,37 @@ public class ResourceProviderEntryTest {
         assertEquals(rootProvider, root.getResource(null, null, "/"));
         assertEquals(first, root.getResource(null, null, "/rootel/html.js"));
         assertEquals(second, root.getResource(null, null, "/rootel/child/html.js"));
+    }
+    
+    @Test public void testRemoveTheOnlyProvider() {
+        final ResourceProviderEntry e = new ResourceProviderEntry("/", null);
+        long counter = 1;
+        
+        for(String path : new String[] { "/foo", "/", "/foo/bar" }) {
+            final ResourceProvider p = new TestResourceProvider(path);
+            final Map<String, Object> props = new HashMap<String, Object>();
+            props.put(Constants.SERVICE_ID, ++counter);
+            
+            e.addResourceProvider(path, new ResourceProviderHandler(p, props));
+            {
+                final Resource r = e.getResource(null, null, path); 
+                assertEquals(p, r);
+                assertFalse(r instanceof SyntheticResource);
+            }
+            
+            e.removeResourceProvider(path, new ResourceProviderHandler(p, props));
+            {
+                final Resource r = e.getResource(null, null, path); 
+                // If our provider is indeed gone, we should get one of the following conditions
+                if(r == null) {
+                    //fine
+                } else if(!p.equals(r.getResourceResolver())) {
+                    //fine
+                } else {
+                    fail("Expecting inactive provider after removing it for " + path); 
+                }
+            }
+        }
     }
 
     protected void assertEquals(ResourceProvider resProvider, Resource res) {

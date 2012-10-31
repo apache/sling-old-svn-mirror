@@ -215,15 +215,25 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
      * Remove the given resource provider from the tree
      */
     protected synchronized boolean removeResourceProvider(final String prefix, final ProviderHandler resourceProvider) {
+        boolean result = false;
         final String[] elements = split(prefix);
         final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
         this.populateProviderPath(entries, elements);
 
-        if (entries.size() > 0 && entries.size() == elements.length) {
+        if(entries.size() == 0) {
+            // might be a root provider, try to remove it on this entry
+            result = this.removeInternalProvider(resourceProvider);
+        } else if (entries.size() > 0 && entries.size() == elements.length) {
             // the last element is a perfect match;
-            return entries.get(entries.size() - 1).removeInternalProvider(resourceProvider);
+            result = entries.get(entries.size() - 1).removeInternalProvider(resourceProvider);
         }
-        return false;
+        
+        if(!result) {
+            // bad news - the provider might be an OSGi service being deactivated,
+            // so this should be taken care of.
+            LOGGER.warn("Unable to remove {} for prefix {}, no matching entry found", resourceProvider, prefix);
+        }
+        return result;
     }
 
     /**
