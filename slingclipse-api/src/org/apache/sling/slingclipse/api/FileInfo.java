@@ -22,6 +22,13 @@ public class FileInfo {
 	private String name;
 	private String relativeLocation;
 	
+	/**
+	 * Constructs a new <tt>FileInfo</tt> object
+	 * 
+	 * @param location the absolute location of the file on the filesystem
+	 * @param relativeLocation the location of the file relative to the repository root 
+	 * @param name the name of the file
+	 */
 	public FileInfo(String location, String relativeLocation,String name) {
 		super();
 		this.location = location;
@@ -39,5 +46,11 @@ public class FileInfo {
 
 	public String getRelativeLocation() {
 		return relativeLocation;
+	}
+
+	@Override
+	public String toString() {
+		return "FileInfo [location=" + location + ", name=" + name
+				+ ", relativeLocation=" + relativeLocation + "]";
 	}	
 }

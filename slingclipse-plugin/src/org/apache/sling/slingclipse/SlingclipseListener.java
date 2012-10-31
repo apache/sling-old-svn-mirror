@@ -21,12 +21,14 @@ import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
+import org.eclipse.core.internal.resources.Resource;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -62,8 +64,9 @@ public class SlingclipseListener implements IResourceChangeListener {
 			private boolean visitInternal(IResourceDelta delta) {
 				IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
 				
+				// since the listener is disabled, instruct it not to recurse for changes
 				if (!store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey())){
-					return true;
+					return false;
 				}
  				
 				if (delta.getFlags() == IResourceDelta.NO_CHANGE
@@ -73,11 +76,16 @@ public class SlingclipseListener implements IResourceChangeListener {
 				}
 				
 				IResource resource = delta.getResource();
- 				String path = resource.getLocation().toString();
 				
- 				if (SlingclipseHelper.isValidSlingProjectPath(path)) {
-					// TODO parent name clarify
-					String parentPath = resource.getParent().getFullPath().toString();
+				// don't process unhandled ( PROJECT, WORKSPACE ) resources but recurse if needed
+				if ( resource.getType() != IResource.FILE && resource.getType() != IResource.FOLDER){
+					return true;
+				}
+				
+ 				IPath path = resource.getLocation();
+ 				
+ 				if (SlingclipseHelper.isValidSlingProjectPath(path.toOSString())) {
+					IPath parentPath = path.removeLastSegments(1);
  
 					RepositoryInfo repositoryInfo = new RepositoryInfo(
 							store.getString(PreferencesMessages.USERNAME
@@ -89,8 +97,8 @@ public class SlingclipseListener implements IResourceChangeListener {
 
 					Repository repository = SlingclipsePlugin.getDefault().getRepository();
 
-					FileInfo fileInfo = new FileInfo(path,SlingclipseHelper.getSlingProjectPath(parentPath),resource.getName());
-
+					FileInfo fileInfo = new FileInfo(path.toOSString(), SlingclipseHelper.getSlingProjectPath(parentPath.toOSString()),resource.getName());
+					
 					repository.setRepositoryInfo(repositoryInfo);
 					
 					if (delta.getKind() == IResourceDelta.REMOVED) {

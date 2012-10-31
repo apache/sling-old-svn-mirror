@@ -26,5 +26,10 @@ public abstract class AbstractRepository implements Repository{
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo){
 		this.repositoryInfo=repositoryInfo;
 	}
- 
+
+
+	@Override
+	public String toString() {
+		return "AbstractRepository [repositoryInfo=" + repositoryInfo + "]";
+	}
 }
