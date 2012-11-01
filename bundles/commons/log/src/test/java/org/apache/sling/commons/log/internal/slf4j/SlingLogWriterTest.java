@@ -245,12 +245,18 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
             }
         }
         try{
-            assertFalse(protectedParent.canWrite());
-            SlingLoggerWriter writer = createLogWriter(loggingParent.getAbsolutePath(), -1, 10);
-            assertNotNull(writer);
-            assertNull(writer.getFile());
-            assertNull(writer.getPath());
-            writer.append("Testing Stdout");
+            if (!protectedParent.canWrite()) {
+                SlingLoggerWriter writer = createLogWriter(
+                        loggingParent.getAbsolutePath(), -1, 10);
+                assertNotNull(writer);
+                assertNull(writer.getFile());
+                assertNull(writer.getPath());
+                writer.append("Testing Stdout");
+            } else {
+                return;
+                // If the folder isn't made unwriteable, the test is invalid
+                // This happens on certain versions of windows when running as an administrative user.
+            }
         } finally {
             try {
                 // these methods are JDK 1.6 and later so we have introspect to invoke
@@ -277,12 +283,18 @@ public class SlingLogWriterTest extends AbstractSlingLogTest {
             }
         }
         try {
-            assertFalse(loggingParent.canWrite());
-            SlingLoggerWriter writer = createLogWriter(loggingParent.getAbsolutePath(), -1, 10);
-            assertNotNull(writer);
-            assertNull(writer.getFile());
-            assertNull(writer.getPath());
-            writer.append("Testing Stdout");
+            if (!loggingParent.canWrite()) {
+                SlingLoggerWriter writer = createLogWriter(
+                        loggingParent.getAbsolutePath(), -1, 10);
+                assertNotNull(writer);
+                assertNull(writer.getFile());
+                assertNull(writer.getPath());
+                writer.append("Testing Stdout");
+            } else {
+                return;
+                // If the folder isn't made unwriteable, the test is invalid
+                // This happens on certain versions of windows when running as an administrative user.
+            }
         } finally {
             try {
                 // these methods are JDK 1.6 and later so we have introspect to invoke
