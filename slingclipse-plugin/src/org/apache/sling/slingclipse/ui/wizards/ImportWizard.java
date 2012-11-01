@@ -16,6 +16,17 @@
  */
 package org.apache.sling.slingclipse.ui.wizards;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.sling.slingclipse.SlingclipsePlugin;
+import org.apache.sling.slingclipse.api.Repository;
+import org.apache.sling.slingclipse.api.RepositoryInfo;
+import org.apache.sling.slingclipse.api.ResponseType;
+import org.apache.sling.slingclipse.helper.SlingclipseHelper;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -26,6 +37,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Renders the import wizard container page for the Slingclipse repository
@@ -47,12 +60,21 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	 * @see org.eclipse.jface.wizard.Wizard#performFinish()
 	 */
 	public boolean performFinish() {
+		
+		try {
+			importFromRepository();
+		} catch ( Exception e) {
+			SlingclipsePlugin.getDefault().getLog().
+			log(new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e)).getStatus());
+		}
+		
 		if (mainPage.isPageComplete()) {
 			Job job = new Job("Import") {
 
 				protected IStatus run(IProgressMonitor monitor) {
 					monitor.setTaskName("Starting import...");
 					monitor.worked(10);
+					
 					// TODO: Actually run the job here
 					try {
 						long numMillisecondsToSleep = 5000; // 5 seconds
@@ -100,6 +122,40 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	public void addPages() {
 		super.addPages();
 		addPage(mainPage);
+	}
+	
+	private void importFromRepository() throws JSONException, IOException{
+		Repository repository = SlingclipsePlugin.getDefault().getRepository();
+		RepositoryInfo repositoryInfo = new RepositoryInfo(
+				mainPage.getUsername(),
+				mainPage.getPassword(),
+				mainPage.getRepositoryUrl());
+		repository.setRepositoryInfo(repositoryInfo);
+		
+		String repositoryPath=mainPage.getRepositoryPath();
+		
+		if (SlingclipseHelper.isFolderPath(repositoryPath)){
+			//handle the folder
+			String children=repository.listChildrenNode(repositoryPath,ResponseType.JSON);
+			//TODO add XML support			
+		}else{
+			//handle the file
+			String  nodeContent= repository.getNodeContent(repositoryPath, ResponseType.JSON);
+
+			JSONObject json = new JSONObject(nodeContent);
+			String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
+			if (Repository.NT_FILE.equals(primaryType)){
+				byte [] node= repository.getNode(repositoryPath);
+				//TODO create file
+			}else{
+				//TODO
+				//handle the case that is not ntfile
+			} 			
+		}
+ 		
+	}
+	
+	private void createFile(String name, byte[] content) throws IOException{				
 	}
 
 }

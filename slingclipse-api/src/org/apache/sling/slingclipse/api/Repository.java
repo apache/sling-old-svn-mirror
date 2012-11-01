@@ -18,10 +18,19 @@ package org.apache.sling.slingclipse.api;
 
 public interface Repository {
 	
+	public static String JCR_PRIMARY_TYPE= "jcr:primaryType";
+	public static String NT_FILE= "nt:file";
+	
 	//TODO change with properties
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo);
 
 	public void addNode(FileInfo fileInfo);
 	
 	public void deleteNode(FileInfo fileInfo);
+ 
+	public String listChildrenNode(String path,ResponseType responseType);
+ 	
+	public String getNodeContent(String path,ResponseType responseType);
+
+	public byte[] getNode(String path);
 }

@@ -41,4 +41,13 @@ public class RepositoryInfo {
 		return url;
 	}
 	
+	public String getHost(){
+		String host=url.substring(7);
+		return host.split(":")[0];
+	}
+	
+	public int getPort(){
+		String host=url.substring(7);
+		return Integer.parseInt(host.split(":")[1]);
+	}	
 }

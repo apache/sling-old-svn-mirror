@@ -18,15 +18,18 @@ package org.apache.sling.slingclipse.http.impl;
 
 import java.io.File;
 
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.slingclipse.api.FileInfo;
+import org.apache.sling.slingclipse.api.ResponseType;
 
 public class RepositoryImpl extends AbstractRepository{
 	
@@ -67,5 +70,67 @@ public class RepositoryImpl extends AbstractRepository{
 		}
 		
 	}
+	
+	@Override
+	public String listChildrenNode(String path,ResponseType responseType) {
+		//TODO handle the response type
+		GetMethod get= new GetMethod(repositoryInfo.getUrl()+path+".1.json");
+		try{
+			httpClient.getParams().setAuthenticationPreemptive(true);
+		    Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword());
+		    //TODO
+		    httpClient.getState().setCredentials(new AuthScope(repositoryInfo.getHost(),repositoryInfo.getPort(), AuthScope.ANY_REALM), defaultcreds);
+			int responseStatus=httpClient.executeMethod(get);
+			//TODO change responseAsString with something like
+			//return EncodingUtil.getString(rawdata, m.getResponseCharSet());
+			return get.getResponseBodyAsString();
+			//TODO handle the response status
+		} catch (Exception e) {
+			return null;
+			//TODO handle the error
+		}finally{
+			get.releaseConnection();
+		}
+	}
 
+	@Override
+	public byte[] getNode(String path) {
+		GetMethod get= new GetMethod(repositoryInfo.getUrl()+path);
+		try{
+			httpClient.getParams().setAuthenticationPreemptive(true);
+		    Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword());
+		    //TODO
+		    httpClient.getState().setCredentials(new AuthScope(repositoryInfo.getHost(),repositoryInfo.getPort(), AuthScope.ANY_REALM), defaultcreds);
+			int responseStatus=httpClient.executeMethod(get);
+			return get.getResponseBody(); 
+			//TODO handle the response status
+		} catch (Exception e) {
+			return null;
+			//TODO handle the error
+		}finally{
+			get.releaseConnection();
+		}
+	}
+	
+	
+	@Override
+	public String getNodeContent(String path,ResponseType responseType) {
+		//TODO handle the response type
+		GetMethod get= new GetMethod(repositoryInfo.getUrl()+path+".json");
+		try{
+			httpClient.getParams().setAuthenticationPreemptive(true);
+		    Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword());
+		    httpClient.getState().setCredentials(new AuthScope(repositoryInfo.getHost(),repositoryInfo.getPort(), AuthScope.ANY_REALM), defaultcreds); 
+			int responseStatus=httpClient.executeMethod(get);
+			//TODO change responseAsString with something like
+			// return EncodingUtil.getString(rawdata, m.getResponseCharSet());
+			return get.getResponseBodyAsString(); 
+			//TODO handle the response status
+		} catch (Exception e) {
+			return null;
+			//TODO handle the error
+		}finally{
+			get.releaseConnection();
+		}
+	}
 }

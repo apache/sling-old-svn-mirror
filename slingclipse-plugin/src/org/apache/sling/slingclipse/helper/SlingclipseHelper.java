@@ -29,5 +29,13 @@ public class SlingclipseHelper {
 		int index= path.indexOf(JCR_ROOT)+JCR_ROOT.length();
         return path.substring(index);
 	}
+	
+	public static boolean isFilePath(String path){
+		return path.indexOf(".")!=-1;
+	}
+	
+	public static boolean isFolderPath(String path){
+		return path.indexOf(".")==-1;
+	}
 
 }
