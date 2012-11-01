@@ -126,6 +126,7 @@ public class DefaultThreadPoolManager
         final String poolName = (name == null ? DEFAULT_THREADPOOL_NAME : name);
         Entry entry = null;
         boolean created = false;
+        ThreadPool threadPool = null;
         synchronized (this.pools) {
             entry = this.pools.get(poolName);
             if ( entry == null ) {
@@ -136,11 +137,12 @@ public class DefaultThreadPoolManager
 
                 this.pools.put(poolName, entry);
             }
+            threadPool = entry.incUsage();
         }
         if (created) {
             entry.registerMBean();
         }
-        return entry.incUsage();
+        return threadPool;
     }
 
     /**
@@ -193,11 +195,13 @@ public class DefaultThreadPoolManager
         final String name = "ThreadPool-" + UUID.randomUUID().toString() +
              (label == null ? "" : " (" + label + ")");
         final Entry entry = new Entry(null, config, name, bundleContext);
+        ThreadPool threadPool = null;
         synchronized ( this.pools ) {
             this.pools.put(name, entry);
+            threadPool = entry.incUsage();
         }
         entry.registerMBean();
-        return entry.incUsage();
+        return threadPool;
     }
 
     /**
@@ -342,22 +346,30 @@ public class DefaultThreadPoolManager
             }
         }
 
+        /**
+         * Increments a usage counter and gets the ThreadPoolFacade inside the Entry.
+         * Note this method is not thread safe and must at all time be protected from
+         * multiple threads accessing it at the same time. The counter is volatile and 
+         * hence not atomic in updates.
+         * @return the thread pool Facade instance after reference counting the usage.
+         */
         public ThreadPoolFacade incUsage() {
-            synchronized (usagelock) {
-                if ( pool == null ) {
-                    pool = new ThreadPoolFacade(new DefaultThreadPool(name, this.config));
-                }
-                this.count++;
-                return pool;
+            if ( pool == null ) {
+                pool = new ThreadPoolFacade(new DefaultThreadPool(name, this.config));
             }
+            this.count++;
+            return pool;
         }
 
+        /**
+         * Decrement the usage counter, and if its zero initiate a shutdown the entry (and the thread pool). 
+         * Note: this method is not thread safe and must at all time be protected from multiple threads
+         * accessing it at the same time. The counter is volatile and hence not atomic in updates.
+         */
         public void decUsage() {
-            synchronized (usagelock) {
-                this.count--;
-                if ( this.count == 0 ) {
-                    this.shutdown();
-                }
+            this.count--;
+            if ( this.count == 0 ) {
+                this.shutdown();
             }
         }
 
