@@ -261,7 +261,7 @@ public class ImportWizardPage extends WizardResourceImportPage {
 		}
 		IPath containerNameField= super.getResourcePath();  
 		if (!containerNameField.toOSString().endsWith(SlingclipseHelper.JCR_ROOT)){
-			setErrorMessage("Please enter a valid Sling project folder (e.g. jcr_content)");
+			setErrorMessage("Please enter a valid Sling project folder (e.g. jcr_root)");
 			return false;
 		}
 		
