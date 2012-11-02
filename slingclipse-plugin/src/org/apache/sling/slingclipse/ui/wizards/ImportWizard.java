@@ -19,6 +19,7 @@ package org.apache.sling.slingclipse.ui.wizards;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -27,6 +28,7 @@ import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.api.ResponseType;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
+import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -34,6 +36,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
@@ -62,12 +65,17 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	 * @see org.eclipse.jface.wizard.Wizard#performFinish()
 	 */
 	public boolean performFinish() {
-		
+		IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
+		boolean autoSync=store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey());
 		try {
+			store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), false);
 			importFromRepository();
 		} catch ( Exception e) {
 			SlingclipsePlugin.getDefault().getLog().
 			log(new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e)).getStatus());
+		}finally{
+			//restore to the original value
+			store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), autoSync);
 		}
 		
 		if (mainPage.isPageComplete()) {
@@ -151,12 +159,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			//TODO create folder
 		}else if(Repository.NT_RESOURCE.equals(primaryType)){
 			//DO NOTHING
-		}else{
-			//TODO create folder plus .content.xml
+		}else{		
+			createFolder(path, destinationPath);
 			String content=repository.getNodeContent(path, ResponseType.JSON);
 			JSONObject jsonContent = new JSONObject(content);
 			jsonContent.append("tagName", Repository.JCR_ROOT);
 			String contentXml = JSONML.toString(jsonContent);		
+			createFile(path+"/.content.xml", contentXml, destinationPath);
 		}
  		
 		for (Iterator<String> keys = json.keys(); keys.hasNext();) {
@@ -173,6 +182,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			createFile(path, node,destinationPath);
 	}
 	
+	private void createFolder(String path ,String destinationPath){
+		File file = new File (destinationPath+path);
+		if (!file.getParentFile().exists()){
+			file.getParentFile().mkdirs();
+		}				
+		if (!file.exists()){
+			file.mkdirs();
+		}			
+	}
 	
 	private void createFile(String path, byte[] content,String destinationPath) throws IOException{		
 		FileOutputStream fop = null;
@@ -190,6 +208,26 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		}finally{
 			if (fop!=null){
 				fop.close();
+			}
+		}
+	}
+	
+	private void createFile(String path, String content,String destinationPath) throws IOException{		
+		FileWriter fileWriter = null;
+		try{
+			File file = new File (destinationPath+path);
+			if (!file.getParentFile().exists()){
+				file.getParentFile().mkdirs();
+			}				
+			if (!file.exists()){
+				file.createNewFile();
+			}			
+            fileWriter = new FileWriter(file);
+            fileWriter.write(content);
+            fileWriter.close();
+		}finally{
+			if (fileWriter!=null){
+				fileWriter.close();
 			}
 		}
 	}
