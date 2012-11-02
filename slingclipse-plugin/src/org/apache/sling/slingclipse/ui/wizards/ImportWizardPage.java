@@ -16,10 +16,13 @@
  */
 package org.apache.sling.slingclipse.ui.wizards;
 
+import java.util.List;
+
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -132,7 +135,7 @@ public class ImportWizardPage extends WizardResourceImportPage {
 		password.setText(store.getString(PreferencesMessages.PASSWORD.getKey()));
 		password.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		password.addModifyListener(modifyListener);
-
+ 		
 		createOptionsGroupButtons(optionsGroup);
 
 	}
@@ -226,6 +229,14 @@ public class ImportWizardPage extends WizardResourceImportPage {
 	public String getUsername() {
 		return user != null ? user.getText() : null;
 	}
+	
+	
+	public String getIntoFolderPath(){ 
+		IPath containerNameField= super.getResourcePath();  
+		String workspacePath=((IResource)selection.getFirstElement()).getWorkspace().getRoot().getLocation().toOSString();
+ 		return workspacePath+"/"+containerNameField.toOSString();
+	}
+	
 
 	public void handleEvent(Event event) {
 		super.handleEvent(event);

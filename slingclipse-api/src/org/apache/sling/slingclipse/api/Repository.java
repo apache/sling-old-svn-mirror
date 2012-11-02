@@ -20,6 +20,10 @@ public interface Repository {
 	
 	public static String JCR_PRIMARY_TYPE= "jcr:primaryType";
 	public static String NT_FILE= "nt:file";
+	public static String NT_FOLDER= "nt:folder";
+	public static String JCR_ROOT= "jcr:root";
+	public static String NT_RESOURCE= "nt:resource";
+	
 	
 	//TODO change with properties
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo);

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.api.Repository;
@@ -38,6 +39,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.json.JSONException;
+import org.json.JSONML;
 import org.json.JSONObject;
 
 /**
@@ -131,31 +133,67 @@ public class ImportWizard extends Wizard implements IImportWizard {
 				mainPage.getPassword(),
 				mainPage.getRepositoryUrl());
 		repository.setRepositoryInfo(repositoryInfo);
-		
+ 
+		String destinationPath= mainPage.getIntoFolderPath();
+				
 		String repositoryPath=mainPage.getRepositoryPath();
-		
-		if (SlingclipseHelper.isFolderPath(repositoryPath)){
-			//handle the folder
-			String children=repository.listChildrenNode(repositoryPath,ResponseType.JSON);
-			//TODO add XML support			
-		}else{
-			//handle the file
-			String  nodeContent= repository.getNodeContent(repositoryPath, ResponseType.JSON);
-
-			JSONObject json = new JSONObject(nodeContent);
-			String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
-			if (Repository.NT_FILE.equals(primaryType)){
-				byte [] node= repository.getNode(repositoryPath);
-				//TODO create file
-			}else{
-				//TODO
-				//handle the case that is not ntfile
-			} 			
-		}
- 		
+ 		crawlChildrenAndImport(repository, repositoryPath,destinationPath);
 	}
 	
-	private void createFile(String name, byte[] content) throws IOException{				
+	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath) throws JSONException, IOException{
+		String children=repository.listChildrenNode(path,ResponseType.JSON); 
+		JSONObject json = new JSONObject(children);
+		String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
+ 
+		if (Repository.NT_FILE.equals(primaryType)){
+			importFile(repository, path,destinationPath);
+		}else if (Repository.NT_FOLDER.equals(primaryType)){
+			//TODO create folder
+		}else if(Repository.NT_RESOURCE.equals(primaryType)){
+			//DO NOTHING
+		}else{
+			//TODO create folder plus .content.xml
+			String content=repository.getNodeContent(path, ResponseType.JSON);
+			JSONObject jsonContent = new JSONObject(content);
+			jsonContent.append("tagName", Repository.JCR_ROOT);
+			String contentXml = JSONML.toString(jsonContent);		
+		}
+ 		
+		for (Iterator<String> keys = json.keys(); keys.hasNext();) {
+			String key = keys.next();
+			JSONObject innerjson=json.optJSONObject(key);
+			if (innerjson!=null){
+				crawlChildrenAndImport(repository, path+"/"+key,destinationPath);
+			}
+		}
+	}	
+	
+	private void importFile(Repository repository,String path,String destinationPath) throws JSONException, IOException{ 
+			byte [] node= repository.getNode(path);
+			createFile(path, node,destinationPath);
 	}
+	
+	
+	private void createFile(String path, byte[] content,String destinationPath) throws IOException{		
+		FileOutputStream fop = null;
+		try{
+			File file = new File (destinationPath+path);
+			if (!file.getParentFile().exists()){
+				file.getParentFile().mkdirs();
+			}				
+			if (!file.exists()){
+				file.createNewFile();
+			}			
+			fop = new FileOutputStream(file);
+			fop.write(content);
+			fop.flush();
+		}finally{
+			if (fop!=null){
+				fop.close();
+			}
+		}
+	}
+	
+	
 
 }
