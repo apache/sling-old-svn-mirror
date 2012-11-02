@@ -35,15 +35,18 @@ public class FSDynamicClassLoader
     private final Set<String> hit = Collections.synchronizedSet(new HashSet<String>());
     private final Set<String> miss = Collections.synchronizedSet(new HashSet<String>());
 
+    private final DynamicClassLoader parentLoader;
+
     public FSDynamicClassLoader(final URL[] urls, final ClassLoader parent) {
         super(urls, parent);
+        parentLoader = (parent instanceof DynamicClassLoader ? (DynamicClassLoader)parent : null);
     }
 
     /**
      * @see org.apache.sling.commons.classloader.DynamicClassLoader#isLive()
      */
     public boolean isLive() {
-        return !isDirty;
+        return !isDirty && (parentLoader == null || parentLoader.isLive());
     }
 
     /**

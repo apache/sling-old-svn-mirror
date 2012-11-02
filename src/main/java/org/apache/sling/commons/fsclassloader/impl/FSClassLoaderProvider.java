@@ -33,7 +33,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.commons.classloader.DynamicClassLoader;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.osgi.service.component.ComponentContext;
 
@@ -60,58 +59,13 @@ public class FSClassLoaderProvider
     @Reference
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
-    private ClassLoader dynamicClassLoader;
-
-    /**
-     * Bind the class load provider.
-     *
-     * @param repositoryClassLoaderProvider the new provider
-     */
-    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
-        if ( this.dynamicClassLoader != null ) {
-            this.ungetClassLoader();
-        }
-        this.getClassLoader(rclp);
-    }
-
-    /**
-     * Unbind the class loader provider.
-     * @param repositoryClassLoaderProvider the old provider
-     */
-    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
-        if ( this.dynamicClassLoaderManager == rclp ) {
-            this.ungetClassLoader();
-        }
-    }
-
-    /**
-     * Get the class loader
-     */
-    private void getClassLoader(final DynamicClassLoaderManager rclp) {
-        this.dynamicClassLoaderManager = rclp;
-        this.dynamicClassLoader = rclp.getDynamicClassLoader();
-    }
-
-    /**
-     * Unget the class loader
-     */
-    private void ungetClassLoader() {
-        this.dynamicClassLoader = null;
-        this.dynamicClassLoaderManager = null;
-    }
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
      */
     public ClassLoader getClassLoader() {
         synchronized ( this ) {
-            // first check parent
-            boolean recreate = loader == null;
-            if ( (this.dynamicClassLoader instanceof DynamicClassLoader) && !((DynamicClassLoader)this.dynamicClassLoader).isLive()) {
-                this.dynamicClassLoader = this.dynamicClassLoaderManager.getDynamicClassLoader();
-                recreate = true;
-            }
-            if ( recreate || !loader.isLive() ) {
-                loader = new FSDynamicClassLoader(new URL[] {this.rootURL}, this.dynamicClassLoader);
+            if ( loader == null || !loader.isLive() ) {
+                loader = new FSDynamicClassLoader(new URL[] {this.rootURL}, this.dynamicClassLoaderManager.getDynamicClassLoader());
             }
             return this.loader;
         }
