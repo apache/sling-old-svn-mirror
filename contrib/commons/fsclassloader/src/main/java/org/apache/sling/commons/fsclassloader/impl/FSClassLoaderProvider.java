@@ -27,71 +27,109 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
-import org.apache.sling.commons.classloader.DynamicClassLoaderProvider;
+import org.apache.sling.commons.classloader.DynamicClassLoader;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.osgi.service.component.ComponentContext;
 
 /**
- * The <code>FSClassLoaderProvider</code> is a dynamic class loader privder
+ * The <code>FSClassLoaderProvider</code> is a dynamic class loader provider
  * which uses the file system to store and read class files from.
  *
  */
 @Component
-@Service
-@Property( name="service.vendor", value="The Apache Software Foundation")
+@Service(value={ClassLoaderWriter.class})
+@Property( name="service.ranking", intValue=100)
 public class FSClassLoaderProvider
-    implements DynamicClassLoaderProvider, ClassLoaderWriter {
+    implements ClassLoaderWriter {
 
     /** File root */
     private File root;
 
-    /** All classloaders */
-    private List<FSDynamicClassLoader> loaders = new ArrayList<FSDynamicClassLoader>();
+    /** File root URL */
+    private URL rootURL;
+
+    /** Current class loader */
+    private FSDynamicClassLoader loader;
+
+    @Reference
+    private DynamicClassLoaderManager dynamicClassLoaderManager;
+
+    private ClassLoader dynamicClassLoader;
 
     /**
-     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#getClassLoader(ClassLoader)
+     * Bind the class load provider.
+     *
+     * @param repositoryClassLoaderProvider the new provider
      */
-    public ClassLoader getClassLoader(final ClassLoader parent) {
-        try {
-            final FSDynamicClassLoader cl = new FSDynamicClassLoader(new URL[] {this.root.toURL()}, parent);
-            synchronized ( this.loaders ) {
-                this.loaders.add(cl);
-            }
-            return cl;
-        } catch (MalformedURLException e) {
-            // this should never happen, but who knows
-            throw new RuntimeException(e);
+    protected void bindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoader != null ) {
+            this.ungetClassLoader();
+        }
+        this.getClassLoader(rclp);
+    }
+
+    /**
+     * Unbind the class loader provider.
+     * @param repositoryClassLoaderProvider the old provider
+     */
+    protected void unbindDynamicClassLoaderManager(final DynamicClassLoaderManager rclp) {
+        if ( this.dynamicClassLoaderManager == rclp ) {
+            this.ungetClassLoader();
         }
     }
 
     /**
-     * @see org.apache.sling.commons.classloader.DynamicClassLoaderProvider#release(java.lang.ClassLoader)
+     * Get the class loader
      */
-    public void release(final ClassLoader classLoader) {
-        synchronized ( this.loaders ) {
-            this.loaders.remove(classLoader);
+    private void getClassLoader(final DynamicClassLoaderManager rclp) {
+        this.dynamicClassLoaderManager = rclp;
+        this.dynamicClassLoader = rclp.getDynamicClassLoader();
+    }
+
+    /**
+     * Unget the class loader
+     */
+    private void ungetClassLoader() {
+        this.dynamicClassLoader = null;
+        this.dynamicClassLoaderManager = null;
+    }
+    /**
+     * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
+     */
+    public ClassLoader getClassLoader() {
+        synchronized ( this ) {
+            // first check parent
+            boolean recreate = loader == null;
+            if ( (this.dynamicClassLoader instanceof DynamicClassLoader) && !((DynamicClassLoader)this.dynamicClassLoader).isLive()) {
+                this.dynamicClassLoader = this.dynamicClassLoaderManager.getDynamicClassLoader();
+                recreate = true;
+            }
+            if ( recreate || !loader.isLive() ) {
+                loader = new FSDynamicClassLoader(new URL[] {this.rootURL}, this.dynamicClassLoader);
+            }
+            return this.loader;
         }
     }
 
-    private void checkClassLoaders(final String filePath) {
-        if ( filePath.endsWith(".class") ) {
-            // remove store directory and .class
-            final String path = filePath.substring(this.root.getAbsolutePath().length() + 1, filePath.length() - 6);
-            // convert to a class name
-            final String className = path.replace(File.separatorChar, '.');
-            synchronized ( this.loaders ) {
-                for(final FSDynamicClassLoader cl : this.loaders ) {
-                    cl.check(className);
-                }
+    private void checkClassLoader(final String filePath) {
+        synchronized ( this ) {
+            final FSDynamicClassLoader currentLoader = this.loader;
+            if ( currentLoader != null && filePath.endsWith(".class") ) {
+                // remove store directory and .class
+                final String path = filePath.substring(this.root.getAbsolutePath().length() + 1, filePath.length() - 6);
+                // convert to a class name
+                final String className = path.replace(File.separatorChar, '.');
+                currentLoader.check(className);
             }
         }
     }
+
     //---------- SCR Integration ----------------------------------------------
 
     /**
@@ -103,7 +141,7 @@ public class FSClassLoaderProvider
         if ( file.exists() ) {
             final boolean result = file.delete();
             if ( result ) {
-                this.checkClassLoaders(file.getAbsolutePath());
+                this.checkClassLoader(file.getAbsolutePath());
             }
         }
         // file does not exist so we return false
@@ -122,7 +160,7 @@ public class FSClassLoaderProvider
         }
         try {
             if ( file.exists() ) {
-                this.checkClassLoaders(path);
+                this.checkClassLoader(path);
             }
             return new FileOutputStream(path);
         } catch (FileNotFoundException e) {
@@ -139,7 +177,8 @@ public class FSClassLoaderProvider
         final File old = new File(oldPath);
         final boolean result = old.renameTo(new File(newPath));
         if ( result ) {
-            this.checkClassLoaders(oldPath);
+            this.checkClassLoader(oldPath);
+            this.checkClassLoader(newPath);
         }
         return result;
     }
@@ -192,11 +231,13 @@ public class FSClassLoaderProvider
      * Activate this component.
      * Create the root directory.
      * @param componentContext
+     * @throws MalformedURLException
      */
-    protected void activate(final ComponentContext componentContext) {
+    protected void activate(final ComponentContext componentContext) throws MalformedURLException {
         // get the file root
         this.root = new File(componentContext.getBundleContext().getDataFile(""), "classes");
         this.root.mkdirs();
+        this.rootURL = this.root.toURI().toURL();
     }
 
     /**
@@ -206,5 +247,6 @@ public class FSClassLoaderProvider
      */
     protected void deactivate(final ComponentContext componentContext) {
         this.root = null;
+        this.rootURL = null;
     }
 }
