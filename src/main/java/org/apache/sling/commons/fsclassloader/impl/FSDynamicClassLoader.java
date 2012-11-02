@@ -49,6 +49,7 @@ public class FSDynamicClassLoader
     /**
      * @see java.lang.ClassLoader#loadClass(java.lang.String)
      */
+    @Override
     public Class<?> loadClass(final String name) throws ClassNotFoundException {
         try {
             final Class<?> c = super.loadClass(name);
@@ -61,6 +62,8 @@ public class FSDynamicClassLoader
     }
 
     public void check(final String className) {
-       this.isDirty = hit.contains(className) || miss.contains(className);
+        if ( !this.isDirty ) {
+            this.isDirty = hit.contains(className) || miss.contains(className);
+        }
     }
 }
