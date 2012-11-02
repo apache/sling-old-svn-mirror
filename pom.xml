@@ -71,7 +71,7 @@
                         <Embed-Dependency>
                             org.apache.felix.configadmin;inline="org/apache/felix/cm/file/ConfigurationHandler.*",
                             org.osgi.compendium;inline="org/osgi/util/tracker/*",
-                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ManifestHeader*.*|org/apache/sling/commons/osgi/PropertiesUtil.*"
+                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/ManifestHeader*.*|org/apache/sling/commons/osgi/PropertiesUtil.*|org/apache/sling/commons/osgi/SortingServiceTracker.*"
                         </Embed-Dependency>
 					</instructions>
 				</configuration>
