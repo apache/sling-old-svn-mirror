@@ -19,6 +19,7 @@ package org.apache.sling.slingclipse.helper;
 public class SlingclipseHelper {
 	
 	public static final String JCR_ROOT= "jcr_root";
+	public static final String CONTENT_XML= ".content.xml";
 	
 	public static boolean isValidSlingProjectPath(String path){
 		//TODO verify only one occurrence of JCR_ROOT.		
