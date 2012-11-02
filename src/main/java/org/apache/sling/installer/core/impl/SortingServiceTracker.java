@@ -33,7 +33,7 @@ public class SortingServiceTracker<T> extends
     public SortingServiceTracker(final BundleContext context,
             final String clazz,
             final RetryHandler listener) {
-        super(context, null);
+        super(context, clazz);
         this.listener = listener;
     }
     
