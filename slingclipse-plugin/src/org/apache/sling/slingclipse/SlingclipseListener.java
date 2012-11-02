@@ -104,7 +104,7 @@ public class SlingclipseListener implements IResourceChangeListener {
 					if (delta.getKind() == IResourceDelta.REMOVED) {
 						repository.deleteNode(fileInfo);
 					} else {
-						repository.addNode(fileInfo);
+						addNode(repository,fileInfo);
 					}
 
 				}
@@ -113,5 +113,13 @@ public class SlingclipseListener implements IResourceChangeListener {
 			 
 		};
 		return result;
+	}
+	
+	private void addNode(Repository repository,FileInfo fileInfo){
+		if (SlingclipseHelper.CONTENT_XML.equals(fileInfo.getName())){
+			//DO NOTHING FOR NOW
+		}else{	
+			repository.addNode(fileInfo);
+		}
 	}
 }
