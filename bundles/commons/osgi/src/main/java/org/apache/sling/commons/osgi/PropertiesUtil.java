@@ -20,7 +20,9 @@ package org.apache.sling.commons.osgi;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The <code>PropertiesUtil</code> is a utility class providing some
@@ -216,4 +218,58 @@ public class PropertiesUtil {
 
         return defaultArray;
     }
+
+    /**
+     * Returns the parameter as a map with string keys and string values.
+     *
+     * The parameter is considered as a collection whose entries are of the form
+     * key=value. The conversion has following rules
+     * <ul>
+     *     <li>Entries are of the form key=value</li>
+     *     <li>key is trimmed</li>
+     *     <li>value is trimmed. If a trimmed value results in an empty string it is treated as null</li>
+     *     <li>Malformed entries like 'foo','foo=' are ignored</li>
+     *     <li>Map entries maintain the input order</li>
+     * </ul>
+     *
+     * Otherwise (if the property is <code>null</code>) a provided default value is
+     * returned.
+     * @param propValue The object to convert.
+     * @param defaultArray The default array converted to map.
+     */
+    public static Map<String, String> toMap(Object propValue, String[] defaultArray) {
+        String[] arrayValue = toStringArray(propValue, defaultArray);
+
+        if (arrayValue == null) {
+            return null;
+        }
+
+        //in property values
+        Map<String, String> result = new LinkedHashMap<String, String>();
+        for (String kv : arrayValue) {
+            int indexOfEqual = kv.indexOf('=');
+            if (indexOfEqual > 0) {
+                String key = trimToNull(kv.substring(0, indexOfEqual));
+                String value = trimToNull(kv.substring(indexOfEqual + 1));
+                if (key != null) {
+                    result.put(key, value);
+                }
+            }
+        }
+        return result;
+    }
+
+    private static String trimToNull(String str)    {
+        String ts = trim(str);
+        return isEmpty(ts) ? null : ts;
+    }
+
+    private static String trim(String str){
+        return str == null ? null : str.trim();
+    }
+
+    private static boolean isEmpty(String str){
+        return str == null || str.length() == 0;
+    }
+
 }
