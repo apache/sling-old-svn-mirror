@@ -53,7 +53,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.commons.osgi;version=2.1.0
+                            org.apache.sling.commons.osgi;version=2.2.0
                         </Export-Package>
                     </instructions>
                 </configuration>
