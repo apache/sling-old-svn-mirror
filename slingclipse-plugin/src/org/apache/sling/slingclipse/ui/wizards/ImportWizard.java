@@ -17,7 +17,6 @@
 package org.apache.sling.slingclipse.ui.wizards;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -65,32 +64,47 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	 * @see org.eclipse.jface.wizard.Wizard#performFinish()
 	 */
 	public boolean performFinish() {
-		IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
-		boolean autoSync=store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey());
-		try {
-			store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), false);
-			importFromRepository();
-		} catch ( Exception e) {
-			SlingclipsePlugin.getDefault().getLog().
-			log(new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e)).getStatus());
-		}finally{
-			//restore to the original value
-			store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), autoSync);
-		}
+		
 		
 		if (mainPage.isPageComplete()) {
+
+			final Repository repository = SlingclipsePlugin.getDefault().getRepository();
+			RepositoryInfo repositoryInfo = new RepositoryInfo(
+					mainPage.getUsername(),
+					mainPage.getPassword(),
+					mainPage.getRepositoryUrl());
+			repository.setRepositoryInfo(repositoryInfo);
+	 
+			final String destinationPath = mainPage.getIntoFolderPath();
+			final String repositoryPath = mainPage.getRepositoryPath();
+			
 			Job job = new Job("Import") {
+				
 
 				protected IStatus run(IProgressMonitor monitor) {
-					monitor.setTaskName("Starting import...");
-					monitor.worked(10);
+					monitor.setTaskName("Loading configuration...");
+					monitor.worked(5);
 					
-					// TODO: Actually run the job here
+					IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
+					boolean autoSync=store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey());
 					try {
-						long numMillisecondsToSleep = 5000; // 5 seconds
-						Thread.sleep(numMillisecondsToSleep);
-					} catch (InterruptedException e) {
+						store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), false);
+
+						// TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm processing)
+						monitor.setTaskName("Importing...");
+						monitor.worked(10);
+				 		crawlChildrenAndImport(repository, repositoryPath,destinationPath);
+						
+						monitor.setTaskName("Import Complete");
+						monitor.worked(100);
+					} catch ( Exception e) {
+						SlingclipsePlugin.getDefault().getLog().
+						log(new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e)).getStatus());
+					}finally{
+						//restore to the original value
+						store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), autoSync);
 					}
+					
 					return Status.OK_STATUS;
 				}
 			};
@@ -134,20 +148,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		addPage(mainPage);
 	}
 	
-	private void importFromRepository() throws JSONException, IOException{
-		Repository repository = SlingclipsePlugin.getDefault().getRepository();
-		RepositoryInfo repositoryInfo = new RepositoryInfo(
-				mainPage.getUsername(),
-				mainPage.getPassword(),
-				mainPage.getRepositoryUrl());
-		repository.setRepositoryInfo(repositoryInfo);
- 
-		String destinationPath= mainPage.getIntoFolderPath();
-				
-		String repositoryPath=mainPage.getRepositoryPath();
- 		crawlChildrenAndImport(repository, repositoryPath,destinationPath);
-	}
-	
+	// TODO: This probably should be pushed into the service layer
 	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath) throws JSONException, IOException{
 		String children=repository.listChildrenNode(path,ResponseType.JSON); 
 		JSONObject json = new JSONObject(children);
