@@ -164,7 +164,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			createFolder(path, destinationPath);
 			String content=repository.getNodeContent(path, ResponseType.JSON);
 			JSONObject jsonContent = new JSONObject(content);
-			jsonContent.append("tagName", Repository.JCR_ROOT);
+			jsonContent.put(SlingclipseHelper.TAG_NAME, Repository.JCR_ROOT);
 			String contentXml = JSONML.toString(jsonContent);		
 			createFile(path+"/"+SlingclipseHelper.CONTENT_XML, contentXml, destinationPath);
 		}

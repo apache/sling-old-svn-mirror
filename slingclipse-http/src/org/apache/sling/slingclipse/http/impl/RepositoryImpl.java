@@ -17,7 +17,7 @@
 package org.apache.sling.slingclipse.http.impl;
 
 import java.io.File;
-
+import java.util.Map;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -30,6 +30,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.ResponseType;
+ 
 
 public class RepositoryImpl extends AbstractRepository{
 	
@@ -133,4 +134,27 @@ public class RepositoryImpl extends AbstractRepository{
 			get.releaseConnection();
 		}
 	}
+	
+	@Override
+	public void updateContentNode(FileInfo fileInfo,Map<String, String> properties) {
+		PostMethod post = new PostMethod(repositoryInfo.getUrl()+fileInfo.getRelativeLocation());
+		try{
+			Part[] parts = new Part[properties.size()];
+			int counter=0;
+			for (Map.Entry <String,String> proerty:properties.entrySet()) {
+				parts[counter]=new StringPart(proerty.getKey(), proerty.getValue());
+				counter++;
+			}
+			post.setRequestEntity(new MultipartRequestEntity(parts,post.getParams()));
+			httpClient.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(repositoryInfo.getUsername(),repositoryInfo.getPassword()));
+			httpClient.getParams().setAuthenticationPreemptive(true);
+			int responseStatus=httpClient.executeMethod(post);
+			//TODO handle the response status	
+		} catch(Exception e){
+			//TODO handle the error
+		}finally{
+			post.releaseConnection();
+		}
+	}
+ 
 }

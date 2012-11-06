@@ -14,30 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.slingclipse.helper;
+package org.apache.sling.slingclipse.api;
 
-public class SlingclipseHelper {
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+
+public enum ProtectedNodes {
 	
-	public static final String TAG_NAME= "tagName";
-	public static final String JCR_ROOT= "jcr_root";
-	public static final String CONTENT_XML= ".content.xml";
-	
-	public static boolean isValidSlingProjectPath(String path){
-		//TODO verify only one occurrence of JCR_ROOT.		
-		return path.indexOf(JCR_ROOT)!= -1;
-	}
-	
-	public static String getSlingProjectPath(String path){
-		int index= path.indexOf(JCR_ROOT)+JCR_ROOT.length();
-        return path.substring(index);
-	}
-	
-	public static boolean isFilePath(String path){
-		return path.indexOf(".")!=-1;
-	}
-	
-	public static boolean isFolderPath(String path){
-		return path.indexOf(".")==-1;
+	JCR_CREATED(Repository.JCR_CREATED),JCR_CREATED_BY(Repository.JCR_CREATED_BY),JCR_PRIMARY_TYPE(Repository.JCR_PRIMARY_TYPE);
+
+	private static final Map<String, ProtectedNodes> nameToValueMap =
+			new HashMap<String, ProtectedNodes>();
+
+	static {
+		for (ProtectedNodes value : EnumSet.allOf(ProtectedNodes.class)) {			 
+			nameToValueMap.put(value.getKey(), value);
+		}
 	}
 
+	public static boolean exists(String key) {
+		return nameToValueMap.containsKey(key);
+	}
+	
+	
+	
+	private final String key;
+
+	private ProtectedNodes(String key) {
+		this.key = key;
+	}
+
+	public String getKey() {
+		return this.key;
+	}
+	
 }

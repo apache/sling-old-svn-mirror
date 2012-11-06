@@ -16,12 +16,21 @@
  */
 package org.apache.sling.slingclipse;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import org.apache.sling.slingclipse.api.ProtectedNodes;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
-import org.eclipse.core.internal.resources.Resource;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -31,6 +40,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.json.JSONException;
+import org.json.JSONML;
+import org.json.JSONObject;
 
 /**
  * @author asanso
@@ -56,12 +68,12 @@ public class SlingclipseListener implements IResourceChangeListener {
 				
 				try {
 					return visitInternal(delta);
-				} catch ( RuntimeException e) {
+				} catch ( Exception e) {
 					throw new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed visiting resource based on delta " + delta, e));
 				}
 			}
 
-			private boolean visitInternal(IResourceDelta delta) {
+			private boolean visitInternal(IResourceDelta delta) throws IOException, JSONException {
 				IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
 				
 				// since the listener is disabled, instruct it not to recurse for changes
@@ -115,11 +127,42 @@ public class SlingclipseListener implements IResourceChangeListener {
 		return result;
 	}
 	
-	private void addNode(Repository repository,FileInfo fileInfo){
-		if (SlingclipseHelper.CONTENT_XML.equals(fileInfo.getName())){
+	private void addNode(Repository repository,FileInfo fileInfo) throws IOException, JSONException{
+		if (SlingclipseHelper.CONTENT_XML.equals(fileInfo.getName())){ 
+			String fileContent = readFile(fileInfo.getLocation());
+			Map <String ,String>properties= getModifiedProperties(fileContent);
+			repository.updateContentNode(fileInfo, properties);
+			 
 			//DO NOTHING FOR NOW
 		}else{	
 			repository.addNode(fileInfo);
 		}
+	}
+	
+	private static String readFile(String path) throws IOException {
+		FileInputStream stream = new FileInputStream(new File(path));
+		try {
+			FileChannel fc = stream.getChannel();
+			MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
+			/* Instead of using default, pass in a decoder. */
+			return Charset.defaultCharset().decode(bb).toString();
+		}
+		finally {
+			stream.close();
+		}
+	}
+	
+	private Map <String ,String>getModifiedProperties(String fileContent) throws JSONException{
+		Map<String ,String> properties= new HashMap<String ,String>();
+		JSONObject json=JSONML.toJSONObject(fileContent);
+		System.out.println(json);
+		json.remove(SlingclipseHelper.TAG_NAME);
+		for (Iterator<String> keys = json.keys(); keys.hasNext();) {
+			String key=keys.next(); 				 
+			if (!ProtectedNodes.exists(key) && !key.contains("xmlns")){
+				properties.put(key, json.optString(key));			
+			}
+		}
+		return properties;
 	}
 }
