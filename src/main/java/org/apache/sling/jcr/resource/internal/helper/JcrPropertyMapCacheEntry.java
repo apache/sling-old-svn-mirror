@@ -67,7 +67,7 @@ public class JcrPropertyMapCacheEntry {
     public JcrPropertyMapCacheEntry(final Property prop)
     throws RepositoryException {
         this.property = prop;
-        if ( prop.getDefinition().isMultiple() ) {
+        if ( prop.isMultiple() ) {
             isMulti = true;
             values = prop.getValues();
         } else {
