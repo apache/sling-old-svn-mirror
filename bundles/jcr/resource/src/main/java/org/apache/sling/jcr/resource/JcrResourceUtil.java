@@ -86,7 +86,7 @@ public class JcrResourceUtil {
     public static Object toJavaObject(Property property)
             throws RepositoryException {
         // multi-value property: return an array of values
-        if (property.getDefinition().isMultiple()) {
+        if (property.isMultiple()) {
             Value[] values = property.getValues();
             Object[] result = new Object[values.length];
             for (int i = 0; i < values.length; i++) {
