@@ -106,4 +106,15 @@ public class JcrResourceConstants {
      */
     public static final String AUTHENTICATION_INFO_SESSION = "user.jcr.session";
 
+    /**
+     * Constant for the sling:Folder node type
+     * @since 2.2
+     */
+    public static final String NT_SLING_FOLDER = "sling:Folder";
+
+    /**
+     * Constant for the sling:OrderedFolder node type
+     * @since 2.2
+     */
+    public static final String NT_SLING_ORDERED_FOLDER = "sling:OrderedFolder";
 }
