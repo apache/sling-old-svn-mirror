@@ -24,6 +24,7 @@ import java.util.Iterator;
 
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.api.Repository;
+import org.apache.sling.slingclipse.api.RepositoryException;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.api.ResponseType;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
@@ -149,8 +150,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	}
 	
 	// TODO: This probably should be pushed into the service layer
-	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath) throws JSONException, IOException{
-		String children=repository.listChildrenNode(path,ResponseType.JSON); 
+	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath) throws JSONException, IOException, RepositoryException{
+		String children=repository.newListChildrenNodeCommand(path,ResponseType.JSON).execute().get(); 
 		JSONObject json = new JSONObject(children);
 		String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
  
@@ -162,7 +163,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			//DO NOTHING
 		}else{		
 			createFolder(path, destinationPath);
-			String content=repository.getNodeContent(path, ResponseType.JSON);
+			String content=repository.newGetNodeContentCommand(path, ResponseType.JSON).execute().get();
 			JSONObject jsonContent = new JSONObject(content);
 			jsonContent.put(SlingclipseHelper.TAG_NAME, Repository.JCR_ROOT);
 			String contentXml = JSONML.toString(jsonContent);		
@@ -178,8 +179,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		}
 	}	
 	
-	private void importFile(Repository repository,String path,String destinationPath) throws JSONException, IOException{ 
-			byte [] node= repository.getNode(path);
+	private void importFile(Repository repository,String path,String destinationPath) throws JSONException, IOException, RepositoryException{ 
+			byte [] node= repository.newGetNodeCommand(path).execute().get();
 			createFile(path, node,destinationPath);
 	}
 	

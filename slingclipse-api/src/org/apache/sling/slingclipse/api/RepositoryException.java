@@ -16,43 +16,27 @@
  */
 package org.apache.sling.slingclipse.api;
 
-public class RepositoryInfo {
-	
-	private String username;
-	private String password;
-	private String url;
-	
-	public RepositoryInfo(String username, String password, String url) {
-		super();
-		this.username = username;
-		this.password = password;
-		this.url = url;
-	}
-	
-	public String getUsername() {
-		return username;
+/**
+ * Signals an error when communicating with a Sling repository
+ */
+public class RepositoryException extends Exception {
+
+	private static final long serialVersionUID = -6613542630470583643L;
+
+	public RepositoryException() {
+
 	}
 
-	public String getPassword() {
-		return password;
+	public RepositoryException(String message) {
+		super(message);
 	}
 
-	public String getUrl() {
-		return url;
-	}
-	
-	public String getHost(){
-		String host=url.substring(7);
-		return host.split(":")[0];
-	}
-	
-	public int getPort(){
-		String host=url.substring(7);
-		return Integer.parseInt(host.split(":")[1]);
+	public RepositoryException(Throwable cause) {
+		super(cause);
 	}
 
-	@Override
-	public String toString() {
-		return "RepositoryInfo [username=" + username + ", url=" + url + "]";
+	public RepositoryException(String message, Throwable cause) {
+		super(message, cause);
 	}
+
 }

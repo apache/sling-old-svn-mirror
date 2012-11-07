@@ -25,10 +25,13 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.ProtectedNodes;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
+import org.apache.sling.slingclipse.api.Result;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.resources.IResource;
@@ -114,7 +117,7 @@ public class SlingclipseListener implements IResourceChangeListener {
 					repository.setRepositoryInfo(repositoryInfo);
 					
 					if (delta.getKind() == IResourceDelta.REMOVED) {
-						repository.deleteNode(fileInfo);
+						executeCommand(repository.newDeleteNodeCommand(fileInfo));
 					} else {
 						addNode(repository,fileInfo);
 					}
@@ -128,15 +131,28 @@ public class SlingclipseListener implements IResourceChangeListener {
 	}
 	
 	private void addNode(Repository repository,FileInfo fileInfo) throws IOException, JSONException{
+		
+		Command<Void> command;
+		
 		if (SlingclipseHelper.CONTENT_XML.equals(fileInfo.getName())){ 
 			String fileContent = readFile(fileInfo.getLocation());
 			Map <String ,String>properties= getModifiedProperties(fileContent);
-			repository.updateContentNode(fileInfo, properties);
-			 
-			//DO NOTHING FOR NOW
-		}else{	
-			repository.addNode(fileInfo);
+			command = repository.newUpdateContentNodeCommand(fileInfo, properties);
+		}else{
+			
+			command = repository.newAddNodeCommand(fileInfo);
 		}
+		
+		executeCommand(command);
+	}
+
+	private <T> Result<T> executeCommand(Command<T> command) {
+		
+		Result<T> result = command.execute();
+		
+		SlingclipsePlugin.getDefault().getTracer().trace("{0} : {1}.", command, result);
+		
+		return result;
 	}
 	
 	private static String readFile(String path) throws IOException {
@@ -155,7 +171,6 @@ public class SlingclipseListener implements IResourceChangeListener {
 	private Map <String ,String>getModifiedProperties(String fileContent) throws JSONException{
 		Map<String ,String> properties= new HashMap<String ,String>();
 		JSONObject json=JSONML.toJSONObject(fileContent);
-		System.out.println(json);
 		json.remove(SlingclipseHelper.TAG_NAME);
 		for (Iterator<String> keys = json.keys(); keys.hasNext();) {
 			String key=keys.next(); 				 

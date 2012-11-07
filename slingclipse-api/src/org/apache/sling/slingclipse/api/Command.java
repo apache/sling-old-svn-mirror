@@ -16,43 +16,7 @@
  */
 package org.apache.sling.slingclipse.api;
 
-public class RepositoryInfo {
-	
-	private String username;
-	private String password;
-	private String url;
-	
-	public RepositoryInfo(String username, String password, String url) {
-		super();
-		this.username = username;
-		this.password = password;
-		this.url = url;
-	}
-	
-	public String getUsername() {
-		return username;
-	}
+public interface Command<T> {
 
-	public String getPassword() {
-		return password;
-	}
-
-	public String getUrl() {
-		return url;
-	}
-	
-	public String getHost(){
-		String host=url.substring(7);
-		return host.split(":")[0];
-	}
-	
-	public int getPort(){
-		String host=url.substring(7);
-		return Integer.parseInt(host.split(":")[1]);
-	}
-
-	@Override
-	public String toString() {
-		return "RepositoryInfo [username=" + username + ", url=" + url + "]";
-	}
+	Result<T> execute();
 }

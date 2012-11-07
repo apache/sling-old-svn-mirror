@@ -41,7 +41,6 @@ public interface Repository {
 	public static String JCR_ACTIVITY= "jcr:activity";
 	public static String JCR_CONFIGURATION= "jcr:configuration";
 	public static String JCR_ACTIVITY_TITLE= "jcr:activityTitle";
-	//public static String JCR_PRIMARY_TYPE= "jcr:primaryType";
 	public static String JCR_MIXIN_TYPES= "jcr:mixinTypes";
 	public static String JCR_NAME= "jcr:name";
 	public static String JCR_AUTO_CREATED= "jcr:autoCreated";
@@ -51,7 +50,6 @@ public interface Repository {
 	public static String JCR_REQUIRED_PRIMARY_TYPES= "jcr:requiredPrimaryTypes";
 	public static String JCR_DEFAULT_PRIMARY_TYPE= "jcr:defaultPrimaryType";
 	public static String JCR_SAME_NAME_SIBLINGS= "jcr:sameNameSiblings";
-	//root
 	public static String JCR_FROZEN_PRIMARY_TYPE= "jcr:frozenPrimaryType";
 	public static String JCR_FROZEN_MIXIN_TYPES= "jcr:frozenMixinTypes";
 	public static String JCR_FROZEN_UUID= "jcr:frozenUuid";
@@ -82,15 +80,15 @@ public interface Repository {
 	//TODO change with properties
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo);
 
-	public void addNode(FileInfo fileInfo);
+	Command<Void> newAddNodeCommand(FileInfo fileInfo);
 	
-	public void updateContentNode(FileInfo fileInfo,Map<String,String> properties);
+	Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo,Map<String,String> properties);
 	
-	public void deleteNode(FileInfo fileInfo);
+	Command<Void> newDeleteNodeCommand(FileInfo fileInfo);
  
-	public String listChildrenNode(String path,ResponseType responseType);
+	Command<String> newListChildrenNodeCommand(String path,ResponseType responseType);
  	
-	public String getNodeContent(String path,ResponseType responseType);
+	Command<String> newGetNodeContentCommand(String path,ResponseType responseType);
 
-	public byte[] getNode(String path);
+	Command<byte[]> newGetNodeCommand(String path);
 }
