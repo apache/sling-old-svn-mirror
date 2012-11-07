@@ -184,6 +184,11 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
                 return null;
             }
 
+            public Iterable<Resource> getChildren(Resource parent) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
             public Iterator<Resource> findResources(String query, String language) {
                 // TODO Auto-generated method stub
                 return null;

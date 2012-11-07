@@ -76,6 +76,10 @@ public class MockResourceResolver implements ResourceResolver {
         return null;
     }
 
+    public Iterable<Resource> getChildren(Resource parent) {
+        return null;
+    }
+
     public String map(String resourcePath) {
         return null;
     }
