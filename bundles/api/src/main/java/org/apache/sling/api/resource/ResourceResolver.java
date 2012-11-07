@@ -356,7 +356,7 @@ public interface ResourceResolver extends Adaptable {
     Iterator<Resource> listChildren(Resource parent);
 
     /**
-     * Returns an <code>Iterator</code> of {@link Resource} objects loaded from
+     * Returns an <code>Iterable</code> of {@link Resource} objects loaded from
      * the children of the given <code>Resource</code>.
      * <p>
      * This specification does not define what the term "child" means. This is
@@ -366,7 +366,7 @@ public interface ResourceResolver extends Adaptable {
      * of the given <code>Resource</code>.
      *
      * @param parent The {@link Resource Resource} whose children are requested.
-     * @return An <code>Iterator</code> of {@link Resource} objects.
+     * @return An <code>Iterable</code> of {@link Resource} objects.
      * @throws NullPointerException If <code>parent</code> is <code>null</code>.
      * @throws org.apache.sling.api.SlingException If any error occurs acquiring
      *             the child resource iterator.
