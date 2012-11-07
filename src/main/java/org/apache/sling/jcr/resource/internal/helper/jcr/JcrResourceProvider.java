@@ -49,6 +49,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.slf4j.Logger;
@@ -257,7 +259,7 @@ public class JcrResourceProvider
     /**
      * @see org.apache.sling.api.resource.QueriableResourceProvider#queryResources(ResourceResolver, java.lang.String, java.lang.String)
      */
-    public Iterator<Map<String, Object>> queryResources(final ResourceResolver resolver, final String query, final String language) {
+    public Iterator<ValueMap> queryResources(final ResourceResolver resolver, final String query, final String language) {
         checkClosed();
 
         final String queryLanguage = isSupportedQueryLanguage(language) ? language : DEFAULT_QUERY_LANGUAGE;
@@ -267,13 +269,13 @@ public class JcrResourceProvider
                 queryLanguage);
             final String[] colNames = result.getColumnNames();
             final RowIterator rows = result.getRows();
-            return new Iterator<Map<String, Object>>() {
+            return new Iterator<ValueMap>() {
                 public boolean hasNext() {
                     return rows.hasNext();
                 };
 
-                public Map<String, Object> next() {
-                    Map<String, Object> row = new HashMap<String, Object>();
+                public ValueMap next() {
+                    final Map<String, Object> row = new HashMap<String, Object>();
                     try {
                         Row jcrRow = rows.nextRow();
                         boolean didPath = false;
@@ -305,7 +307,7 @@ public class JcrResourceProvider
                             "queryResources$next: Problem accessing row values",
                             re);
                     }
-                    return row;
+                    return new ValueMapDecorator(row);
                 }
 
                 public void remove() {
