@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.helper.SortedProviderList;
@@ -198,12 +199,12 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
         });
         return new Iterator<Map<String, Object>>() {
 
-            private Map<String, Object> nextObject = this.seek();
+            private ValueMap nextObject = this.seek();
 
-            private Iterator<Map<String, Object>> nextResourceIter;
+            private Iterator<ValueMap> nextResourceIter;
 
-            private Map<String, Object> seek() {
-                Map<String, Object> result = null;
+            private ValueMap seek() {
+                ValueMap result = null;
                 if ( nextResourceIter == null || !nextResourceIter.hasNext() ) {
                     nextResourceIter = null;
                     while ( i.hasNext() && nextResourceIter == null ) {
@@ -232,11 +233,11 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
             /**
              * @see java.util.Iterator#next()
              */
-            public Map<String, Object> next() {
+            public ValueMap next() {
                 if ( this.nextObject == null ) {
                     throw new NoSuchElementException();
                 }
-                final Map<String, Object> result = this.nextObject;
+                final ValueMap result = this.nextObject;
                 this.nextObject = this.seek();
                 return result;
             }
