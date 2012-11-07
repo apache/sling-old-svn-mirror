@@ -97,6 +97,13 @@ public class ResourceWrapper implements Resource {
     }
 
     /**
+     * @see org.apache.sling.api.resource.Resource#getChildren()
+     */
+    public Iterable<Resource> getChildren() {
+        return getResource().getChildren();
+    }
+
+    /**
      * Returns the value of calling <code>getResourceMetadata</code> on the
      * {@link #getResource() wrapped resource}.
      */

@@ -94,6 +94,18 @@ public abstract class AbstractResource
     }
 
     /**
+     * @see org.apache.sling.api.resource.Resource#getChildren()
+     */
+    public Iterable<Resource> getChildren() {
+        return new Iterable<Resource>() {
+
+            public Iterator<Resource> iterator() {
+                return listChildren();
+            }
+        };
+    }
+
+    /**
      * Returns <code>true</code> if this resource is of the given resource type
      * or if any of the super resource types equals the given resource type.
      * <p>
@@ -123,6 +135,6 @@ public abstract class AbstractResource
             superType = ResourceUtil.getResourceSuperType(getResourceResolver(),
                     superType);
         }
-        return false; 
+        return false;
     }
 }
