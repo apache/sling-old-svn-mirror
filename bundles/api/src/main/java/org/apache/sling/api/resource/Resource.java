@@ -81,6 +81,17 @@ public interface Resource extends Adaptable {
     Iterator<Resource> listChildren();
 
     /**
+     * Returns an iterator of the direct children of this resource.
+     * <p>
+     * This method is a convenience and returns exactly the same resources as
+     * calling <code>getResourceResolver().listChildren(resource)</code>.
+     *
+     * @since 2.2.0
+     * @see ResourceResolver#listChildren(Resource)
+     */
+    Iterable<Resource> getChildren();
+
+    /**
      * Returns the child at the given relative path of this resource or
      * <code>null</code> if no such child exists.
      * <p>

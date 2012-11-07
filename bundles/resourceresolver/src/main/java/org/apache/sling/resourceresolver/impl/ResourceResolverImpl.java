@@ -618,6 +618,18 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 new ResourceIterator(this.context, parent, this.factory.getRootProviderEntry()));
     }
 
+    /**
+     * @see org.apache.sling.api.resource.Resource#getChildren()
+     */
+    public Iterable<Resource> getChildren(final Resource parent) {
+        return new Iterable<Resource>() {
+
+            public Iterator<Resource> iterator() {
+                return listChildren(parent);
+            }
+        };
+    }
+
     // ---------- Querying resources
 
     private static final String DEFAULT_QUERY_LANGUAGE = "xpath";

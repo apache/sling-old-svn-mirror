@@ -181,33 +181,33 @@ public class ResourceProviderEntryTest {
         assertEquals(first, root.getResource(null, null, "/rootel/html.js"));
         assertEquals(second, root.getResource(null, null, "/rootel/child/html.js"));
     }
-    
+
     @Test public void testRemoveTheOnlyProvider() {
         final ResourceProviderEntry e = new ResourceProviderEntry("/", null);
         long counter = 1;
-        
+
         for(String path : new String[] { "/foo", "/", "/foo/bar" }) {
             final ResourceProvider p = new TestResourceProvider(path);
             final Map<String, Object> props = new HashMap<String, Object>();
             props.put(Constants.SERVICE_ID, ++counter);
-            
+
             e.addResourceProvider(path, new ResourceProviderHandler(p, props));
             {
-                final Resource r = e.getResource(null, null, path); 
+                final Resource r = e.getResource(null, null, path);
                 assertEquals(p, r);
                 assertFalse(r instanceof SyntheticResource);
             }
-            
+
             e.removeResourceProvider(path, new ResourceProviderHandler(p, props));
             {
-                final Resource r = e.getResource(null, null, path); 
+                final Resource r = e.getResource(null, null, path);
                 // If our provider is indeed gone, we should get one of the following conditions
                 if(r == null) {
                     //fine
                 } else if(!p.equals(r.getResourceResolver())) {
                     //fine
                 } else {
-                    fail("Expecting inactive provider after removing it for " + path); 
+                    fail("Expecting inactive provider after removing it for " + path);
                 }
             }
         }
@@ -254,6 +254,10 @@ public class ResourceProviderEntryTest {
         }
 
         public Iterator<Resource> listChildren(Resource parent) {
+            return null;
+        }
+
+        public Iterable<Resource> getChildren(Resource parent) {
             return null;
         }
 
@@ -388,6 +392,7 @@ public class ResourceProviderEntryTest {
             return null;
         }
 
+        @Override
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }
