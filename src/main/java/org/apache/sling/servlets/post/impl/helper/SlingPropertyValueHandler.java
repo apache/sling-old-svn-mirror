@@ -17,6 +17,7 @@
 
 package org.apache.sling.servlets.post.impl.helper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -553,14 +554,43 @@ public class SlingPropertyValueHandler {
             }
         } else {
             if (multiValued) {
-                parent.valueMap.put(name, values);
+                parent.valueMap.put(name, toJavaObject(values, type));
                 changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
             } else if (values.length >= 1) {
-                parent.valueMap.put(name, values[0]);
+                parent.valueMap.put(name, toJavaObject(values[0], type));
                 changes.add(Modification.onModified(parent.resource.getPath() + '/' + name));
             }
         }
     }
+
+    /** Converts a value */
+    private static Object toJavaObject(final String value, final int type) {
+        final boolean isEmpty = value == null || value.trim().length() == 0;
+        switch (type) {
+            case PropertyType.DECIMAL:
+                return isEmpty ? BigDecimal.ZERO : new BigDecimal(value);
+            case PropertyType.BOOLEAN:
+                return isEmpty ? Boolean.FALSE : Boolean.valueOf(value);
+            case PropertyType.DOUBLE:
+                return isEmpty ? (double)0.0 : Double.valueOf(value);
+            case PropertyType.LONG:
+                return isEmpty ? 0 : Long.valueOf(value);
+            default: // fallback
+                return value;
+        }
+    }
+
+    /** Converts a value */
+    private static Object toJavaObject(final String values[], final int type) {
+        final Object[] result = new Object[values.length];
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != null ) {
+                result[i] = toJavaObject(values[i], type);
+            }
+        }
+        return result;
+    }
+
 
     /**
      * Defines an auto property behavior
