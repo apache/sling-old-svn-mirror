@@ -23,11 +23,14 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.sling.slingclipse.SlingclipsePlugin;
+import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryException;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.api.ResponseType;
+import org.apache.sling.slingclipse.api.Result;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
+import org.apache.sling.slingclipse.helper.Tracer;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -83,6 +86,9 @@ public class ImportWizard extends Wizard implements IImportWizard {
 				
 
 				protected IStatus run(IProgressMonitor monitor) {
+					
+					Tracer tracer = SlingclipsePlugin.getDefault().getTracer();
+					
 					monitor.setTaskName("Loading configuration...");
 					monitor.worked(5);
 					
@@ -94,7 +100,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 						// TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm processing)
 						monitor.setTaskName("Importing...");
 						monitor.worked(10);
-				 		crawlChildrenAndImport(repository, repositoryPath,destinationPath);
+				 		crawlChildrenAndImport(repository, repositoryPath,destinationPath, tracer);
 						
 						monitor.setTaskName("Import Complete");
 						monitor.worked(100);
@@ -150,20 +156,20 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	}
 	
 	// TODO: This probably should be pushed into the service layer
-	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath) throws JSONException, IOException, RepositoryException{
-		String children=repository.newListChildrenNodeCommand(path,ResponseType.JSON).execute().get(); 
+	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath, Tracer tracer) throws JSONException, IOException, RepositoryException{
+		String children = executeCommand(repository.newListChildrenNodeCommand(path,ResponseType.JSON), tracer); 
 		JSONObject json = new JSONObject(children);
 		String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
  
 		if (Repository.NT_FILE.equals(primaryType)){
-			importFile(repository, path,destinationPath);
+			importFile(repository, path,destinationPath, tracer);
 		}else if (Repository.NT_FOLDER.equals(primaryType)){
 			//TODO create folder
 		}else if(Repository.NT_RESOURCE.equals(primaryType)){
 			//DO NOTHING
 		}else{		
 			createFolder(path, destinationPath);
-			String content=repository.newGetNodeContentCommand(path, ResponseType.JSON).execute().get();
+			String content = executeCommand(repository.newGetNodeContentCommand(path, ResponseType.JSON), tracer);
 			JSONObject jsonContent = new JSONObject(content);
 			jsonContent.put(SlingclipseHelper.TAG_NAME, Repository.JCR_ROOT);
 			String contentXml = JSONML.toString(jsonContent);		
@@ -174,13 +180,22 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			String key = keys.next();
 			JSONObject innerjson=json.optJSONObject(key);
 			if (innerjson!=null){
-				crawlChildrenAndImport(repository, path+"/"+key,destinationPath);
+				crawlChildrenAndImport(repository, path+"/"+key,destinationPath, tracer);
 			}
 		}
+	}
+
+	private <T> T executeCommand(Command<T> command, Tracer tracer) throws RepositoryException {
+		
+		Result<T> result = command.execute();
+		
+		SlingclipsePlugin.getDefault().getTracer().trace("{0} : {1}.", command, result);
+		
+		return result.get();
 	}	
 	
-	private void importFile(Repository repository,String path,String destinationPath) throws JSONException, IOException, RepositoryException{ 
-			byte [] node= repository.newGetNodeCommand(path).execute().get();
+	private void importFile(Repository repository,String path,String destinationPath, Tracer tracer) throws JSONException, IOException, RepositoryException{ 
+			byte [] node= executeCommand(repository.newGetNodeCommand(path), tracer);
 			createFile(path, node,destinationPath);
 	}
 	
