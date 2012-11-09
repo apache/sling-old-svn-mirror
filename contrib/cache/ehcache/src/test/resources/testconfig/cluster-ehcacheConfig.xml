@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+ -->
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="ehcache.xsd">
+
+
+    <diskStore path="${cache-store}"/>
+
+	<!-- the group address and muticast port may need changing, I am assuming 
+		all the cluster hosts are on the same subnet and no forwarding is required. 
+		The group address and port have been changed from the default just incase 
+		there are any other ehcache instances on the same subnet. The hostName must 
+		be customsed -->
+	<cacheManagerPeerProviderFactory
+		class="net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"
+		properties="hostName=${bind-address},
+                        peerDiscovery=automatic,
+                        multicastGroupAddress=230.0.0.2,
+                        multicastGroupPort=4450, timeToLive=1"
+		propertySeparator="," />
+
+	<cacheManagerPeerListenerFactory
+		class="net.sf.ehcache.distribution.RMICacheManagerPeerListenerFactory"
+		properties="hostName=${bind-address},
+                    port=40001,
+                    remoteObjectPort=40002,
+                    socketTimeoutMillis=120000"
+		propertySeparator="," />
+	<!-- Mandatory Default Cache configuration. These settings will be applied 
+		to caches created programmtically using CacheManager.add(String cacheName). 
+		The defaultCache has an implicit name "default" which is a reserved cache 
+		name. -->
+	<defaultCache maxElementsInMemory="10000" eternal="false"
+		timeToIdleSeconds="600" timeToLiveSeconds="600" overflowToDisk="false"
+		diskPersistent="false" memoryStoreEvictionPolicy="LRU" />
+
+    <!--  cluster invalidated -->
+	<cache name="cacheA" maxElementsInMemory="100000"
+		eternal="false" overflowToDisk="false"
+		timeToIdleSeconds="300" timeToLiveSeconds="600"
+		memoryStoreEvictionPolicy="LFU"  >
+		<cacheEventListenerFactory class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+         properties="replicateAsynchronously=true,
+         replicatePuts=false,
+         replicatePutsViaCopy=false,
+         replicateUpdates=false,
+         replicateUpdatesViaCopy=true,
+         replicateRemovals=true,
+         asynchronousReplicationIntervalMillis=500"
+         propertySeparator="," />
+	</cache>
+
+    <!--  small objects, cluster invalidated -->
+	<cache name="cacheB" maxElementsInMemory="100000"
+		eternal="false" overflowToDisk="false"
+		timeToIdleSeconds="300" timeToLiveSeconds="600"
+		memoryStoreEvictionPolicy="LFU"  >
+		<cacheEventListenerFactory class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+         properties="replicateAsynchronously=true,
+         replicatePuts=false,
+         replicatePutsViaCopy=false,
+         replicateUpdates=false,
+         replicateUpdatesViaCopy=true,
+         replicateRemovals=true,
+         asynchronousReplicationIntervalMillis=500"
+         propertySeparator="," />
+	</cache>
+
+    <!--  larger objects, cluster invalidated -->
+	<cache name="cacheC" maxElementsInMemory="50000"
+		eternal="false" overflowToDisk="false"
+		timeToIdleSeconds="300" timeToLiveSeconds="600"
+		memoryStoreEvictionPolicy="LFU"  >
+		<cacheEventListenerFactory class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+         properties="replicateAsynchronously=true,
+         replicatePuts=false,
+         replicatePutsViaCopy=false,
+         replicateUpdates=false,
+         replicateUpdatesViaCopy=false,
+         replicateRemovals=true,
+         asynchronousReplicationIntervalMillis=500"
+         propertySeparator="," />
+	</cache>
+
+    <!--  replicated. -->
+	<cache name="cacheD" maxElementsInMemory="10000"
+		eternal="false" overflowToDisk="false"
+		timeToIdleSeconds="300" timeToLiveSeconds="600"
+		memoryStoreEvictionPolicy="LFU"  >
+		<cacheEventListenerFactory class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+         properties="replicateAsynchronously=true,
+         replicatePuts=true,
+         replicatePutsViaCopy=true,
+         replicateUpdates=true,
+         replicateUpdatesViaCopy=true,
+         replicateRemovals=true,
+         asynchronousReplicationIntervalMillis=500"
+         propertySeparator="," />
+        <bootstrapCacheLoaderFactory
+          class="net.sf.ehcache.distribution.RMIBootstrapCacheLoaderFactory"
+          properties="bootstrapAsynchronously=true, maximumChunkSizeBytes=5000000"
+          propertySeparator="," />
+	</cache>
+
+	<cache name="cacheE" maxElementsInMemory="10000"
+		eternal="false" overflowToDisk="false"
+		timeToIdleSeconds="300" timeToLiveSeconds="600"
+		memoryStoreEvictionPolicy="LFU"  >
+		<cacheEventListenerFactory class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+         properties="replicateAsynchronously=true,
+         replicatePuts=true,
+         replicatePutsViaCopy=true,
+         replicateUpdates=true,
+         replicateUpdatesViaCopy=true,
+         replicateRemovals=true,
+         asynchronousReplicationIntervalMillis=500"
+         propertySeparator="," />
+        <bootstrapCacheLoaderFactory
+          class="net.sf.ehcache.distribution.RMIBootstrapCacheLoaderFactory"
+          properties="bootstrapAsynchronously=true, maximumChunkSizeBytes=5000000"
+          propertySeparator="," />
+	</cache>
+
+    <!--  the Token store must be saved to disk localy, normally will only need 5x number of servers.
+    Fully replicated, synchronously -->
+	<cache name="TokenStore"
+		maxElementsInMemory="10000" maxElementsOnDisk="100000" eternal="true"
+		overflowToDisk="true" diskSpoolBufferSizeMB="20" memoryStoreEvictionPolicy="LFU"
+		diskPersistent="true"  >
+		<cacheEventListenerFactory class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+         properties="replicateAsynchronously=false,
+         replicatePuts=true,
+         replicatePutsViaCopy=true,
+         replicateUpdates=true,
+         replicateUpdatesViaCopy=true,
+         replicateRemovals=true"
+         propertySeparator="," />
+        <bootstrapCacheLoaderFactory
+          class="net.sf.ehcache.distribution.RMIBootstrapCacheLoaderFactory"
+          properties="bootstrapAsynchronously=false, maximumChunkSizeBytes=5000000"
+          propertySeparator="," />
+         
+	</cache>
+
+
+</ehcache>
