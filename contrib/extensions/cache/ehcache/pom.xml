@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/whiteboard/ieb/cache/ehcache</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/whiteboard/ieb/cache/ehcache</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/whiteboard/ieb/cache/ehcache</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/contrib/extensions/cache/ehcache</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/contrib/extensions/cache/ehcache</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/contrib/extensions/cache/ehcache</url>
     </scm>
     
     <properties>

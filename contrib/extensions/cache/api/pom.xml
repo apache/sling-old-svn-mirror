@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/whiteboard/ieb/cache/api</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/whiteboard/ieb/cache/api</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/whiteboard/ieb/cache/api</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/contrib/extensions/cache/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/contrib/extensions/cache/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/contrib/extensions/cache/api</url>
     </scm>
     
 

@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/whiteboard/ieb/cache/container-test</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/whiteboard/ieb/cache/container-test</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/whiteboard/ieb/cache/container-test</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/contrib/extensions/cache/container-test</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/contrib/extensions/cache/container-test</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/contrib/extensions/cache/container-test</url>
     </scm>
     
 
