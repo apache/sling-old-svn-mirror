@@ -97,6 +97,7 @@
           <module>extensions/mongodb</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/rewriter</module>
+          <module>extensions/tenant</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
           <module>jcr/prefs</module>
