@@ -529,6 +529,9 @@ public interface ResourceResolver extends Adaptable {
 
     /**
      * Delete the resource
+     *
+     * Deleting a non existing resource leads to no operation nor exception.
+     *
      * @param resource The resource to delete
      *
      * @throws NullPointerException if the resource parameter is null
