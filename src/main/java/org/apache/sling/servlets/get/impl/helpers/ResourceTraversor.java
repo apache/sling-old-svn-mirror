@@ -17,90 +17,87 @@
 
 package org.apache.sling.servlets.get.impl.helpers;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import org.apache.sling.api.request.RecursionTooDeepException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 
-import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.LinkedList;
-
-import javax.jcr.RepositoryException;
-
 public class ResourceTraversor {
+
+    public static final class Entry {
+        public final Resource resource;
+        public final JSONObject json;
+
+        public Entry(final Resource r, final JSONObject o) {
+            this.resource = r;
+            this.json = o;
+        }
+    }
 
     private long count;
 
     private long maxResources;
 
-    private int maxRecursionLevels;
+    private final int maxRecursionLevels;
 
-    private JSONObject startObject;
+    private final JSONObject startObject;
 
-    private String startingPath;
+    private LinkedList<Entry> currentQueue;
 
-    private LinkedList<Resource> currentQueue;
+    private LinkedList<Entry> nextQueue;
 
-    private LinkedList<Resource> nextQueue;
+    private final Resource startResource;
 
-    private Resource startResource;
-
-    private JsonResourceWriter jsResourceWriter;
-
-    private boolean tidy;
-
-    public ResourceTraversor(int levels, long maxNodes, Resource resource, boolean tidy) throws RepositoryException,
-            JSONException {
-        this.setMaxNodes(maxNodes);
+    public ResourceTraversor(final int levels, final long maxResources, final Resource resource, final boolean tidy)
+    throws JSONException {
+        this.maxResources = maxResources;
         this.maxRecursionLevels = levels;
         this.startResource = resource;
-        this.tidy = tidy;
-        startingPath = resource.getPath();
-        jsResourceWriter = new JsonResourceWriter(null);
-        currentQueue = new LinkedList<Resource>();
-        nextQueue = new LinkedList<Resource>();
-        startObject = adapt(resource);
+        currentQueue = new LinkedList<Entry>();
+        nextQueue = new LinkedList<Entry>();
+        this.startObject = this.adapt(resource);
     }
 
     /**
      * Recursive descent from startResource, collecting JSONObjects into
      * startObject. Throws a RecursionTooDeepException if the maximum number of
-     * nodes is reached on a "deep" traversal (where "deep" === level greateer
+     * nodes is reached on a "deep" traversal (where "deep" === level greater
      * than 1).
      *
-     * @throws RepositoryException
-     * @throws RecursionTooDeepException When the resource has more child nodes
-     *             then allowed.
+     * @return -1 if everything went fine, a positive valuew when the resource
+     *            has more child nodes then allowed.
      * @throws JSONException
      */
-    public void collectResources() throws RepositoryException, RecursionTooDeepException, JSONException {
-        collectChildren(startResource, 0);
+    public int collectResources() throws RecursionTooDeepException, JSONException {
+        return collectChildren(startResource, this.startObject, 0);
     }
 
     /**
      * @param resource
      * @param currentLevel
-     * @throws RecursionTooDeepException
      * @throws JSONException
-     * @throws RepositoryException
      */
-    private void collectChildren(Resource resource, int currentLevel) throws RecursionTooDeepException, JSONException,
-            RepositoryException {
+    private int collectChildren(final Resource resource,
+            final JSONObject jsonObj,
+            int currentLevel)
+    throws JSONException {
 
         if (maxRecursionLevels == -1 || currentLevel < maxRecursionLevels) {
             final Iterator<Resource> children = ResourceUtil.listChildren(resource);
             while (children.hasNext()) {
                 count++;
-                Resource res = children.next();
+                final Resource res = children.next();
                 // SLING-2320: always allow enumeration of one's children;
                 // DOS-limitation is for deeper traversals.
                 if (count > maxResources && maxRecursionLevels != 1) {
-                    throw new RecursionTooDeepException(String.valueOf(currentLevel));
+                    return currentLevel;
                 }
-                collectResource(res, currentLevel);
-                nextQueue.addLast(res);
+                final JSONObject json = collectResource(res, jsonObj);
+                nextQueue.addLast(new Entry(res, json));
             }
         }
 
@@ -108,11 +105,15 @@ public class ResourceTraversor {
             if (currentQueue.isEmpty()) {
                 currentLevel++;
                 currentQueue = nextQueue;
-                nextQueue = new LinkedList<Resource>();
+                nextQueue = new LinkedList<Entry>();
             }
-            Resource nextResource = currentQueue.removeFirst();
-            collectChildren(nextResource, currentLevel);
+            final Entry nextResource = currentQueue.removeFirst();
+            final int maxLevel = collectChildren(nextResource.resource, nextResource.json, currentLevel);
+            if ( maxLevel != -1 ) {
+                return maxLevel;
+            }
         }
+        return -1;
     }
 
     /**
@@ -120,15 +121,13 @@ public class ResourceTraversor {
      *
      * @param resource The resource to add
      * @param level The level where this resource is located.
-     * @throws RepositoryException
      * @throws JSONException
      */
-    protected void collectResource(Resource resource, int level) throws RepositoryException, JSONException {
-
-        if (!resource.getPath().equals(startingPath)) {
-            JSONObject o = adapt(resource);
-            getParentJSONObject(resource, level).put(ResourceUtil.getName(resource), o);
-        }
+    private JSONObject collectResource(Resource resource, final JSONObject parent)
+    throws JSONException {
+        final JSONObject o = adapt(resource);
+        parent.put(ResourceUtil.getName(resource), o);
+        return o;
     }
 
     /**
@@ -138,66 +137,18 @@ public class ResourceTraversor {
      * @return The JSON representation of the Resource
      * @throws JSONException
      */
-    private JSONObject adapt(Resource resource) throws JSONException {
-        // TODO Find a better way to adapt a Resource to a JSONObject.
-        StringWriter writer = new StringWriter();
-        jsResourceWriter.dump(resource, writer, 0, tidy);
-        return new JSONObject(writer.getBuffer().toString());
+    private JSONObject adapt(final Resource resource) throws JSONException {
+        return JsonObjectCreator.create(resource, 0);
     }
 
     /**
-     * Get the JSON Object where this resource should be added in.
-     *
-     * @param resource
-     * @param level
-     * @return
-     * @throws RepositoryException
-     * @throws JSONException
-     */
-    private JSONObject getParentJSONObject(Resource resource, int level) throws RepositoryException, JSONException {
-        String path = resource.getPath();
-        // The root node.
-        if (path.equals(startingPath)) {
-            return startObject;
-        }
-
-        // Some level deeper
-        String pathDiff = path.substring(startingPath.length());
-        String[] names = pathDiff.split("/");
-        JSONObject o = startObject;
-        for (String name : names) {
-            try {
-                o = o.getJSONObject(name);
-            } catch (JSONException e) {
-            }
-        }
-        return o;
-
-    }
-
-    /**
-     * @return The number of nodes this visitor found.
+     * @return The number of resources this visitor found.
      */
     public long getCount() {
         return count;
     }
 
-    /**
-     * @param maxNodes the maxNodes to set
-     */
-    public void setMaxNodes(long maxNodes) {
-        this.maxResources = maxNodes;
-    }
-
-    /**
-     * @return the maxNodes
-     */
-    public long getMaxNodes() {
-        return maxResources;
-    }
-
     public JSONObject getJSONObject() {
         return startObject;
     }
-
 }

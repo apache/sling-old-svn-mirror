@@ -18,14 +18,12 @@ package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 
-import javax.jcr.RepositoryException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RecursionTooDeepException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
@@ -98,18 +96,16 @@ public class JsonRendererServlet extends SlingSafeMethodsServlet {
 
         // We check the tree to see if the nr of nodes isn't bigger than the allowed nr.
         boolean allowDump = true;
-        long allowedLevel = 0;
-        boolean tidy = isTidy(req);
+        int allowedLevel = 0;
+        final boolean tidy = isTidy(req);
         ResourceTraversor traversor = null;
         try {
             traversor = new ResourceTraversor(maxRecursionLevels, maximumResults, r, tidy);
-			traversor.collectResources();
-        } catch (RecursionTooDeepException e) {
-            allowDump = false;
-            allowedLevel = Integer.parseInt(e.getMessage()); // this is to avoid depending on a SNAPSHOT version of the SLing API.
-        } catch (RepositoryException e) {
-            reportException(e);
-        } catch (JSONException e) {
+            allowedLevel = traversor.collectResources();
+            if ( allowedLevel != -1 ) {
+			    allowDump = false;
+            }
+        } catch (final JSONException e) {
             reportException(e);
         }
         try {
