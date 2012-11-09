@@ -18,78 +18,42 @@ package org.apache.sling.servlets.get.impl.helpers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
-import org.apache.sling.commons.json.io.JSONWriter;
+import org.apache.sling.commons.json.JSONObject;
 
 /**
- * Dumps JCR Items as JSON data. The dump methods are threadsafe.
- *
- * Dump can be done on the Resource, property or value level.
+ * Creates a JSONObject from a resource
  *
  */
-public class JsonResourceWriter {
-
-    private static DateFormat calendarFormat;
-
-    private final Set<String> propertyNamesToIgnore;
-
-    /** Used to format date values */
-    public static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
-
-    /** Used to format date values */
-    public static final Locale DATE_FORMAT_LOCALE = Locale.US;
-
-
-    /**
-     * Create a JsonItemWriter
-     *
-     * @param propertyNamesToIgnore if not null, a property having a name from
-     *            this set of values is ignored. TODO we should use a filtering
-     *            interface to make the selection of which Nodes and Properties
-     *            to dump more flexible.
-     */
-    public JsonResourceWriter(Set<String> propertyNamesToIgnore) {
-        this.propertyNamesToIgnore = propertyNamesToIgnore;
-    }
-
-    /** Dump given resource in JSON, optionally recursing into its object */
-    public void dump(Resource resource, Writer w, int maxRecursionLevels)
-            throws JSONException {
-        dump(resource, w, maxRecursionLevels, false);
-    }
+public abstract class JsonObjectCreator {
 
     /**
      * Dump given resource in JSON, optionally recursing into its objects
      * @param tidy if <code>true</code> the json dump is nicely formatted
      */
-    public void dump(Resource resource, Writer w, int maxRecursionLevels, boolean tidy)
+    public static JSONObject create(final Resource resource, final int maxRecursionLevels)
             throws JSONException {
-        JSONWriter jw = new JSONWriter(w);
-        jw.setTidy(tidy);
-        dump(resource, jw, 0, maxRecursionLevels);
+        return create(resource, 0, maxRecursionLevels);
     }
 
 
     /** Dump given resource in JSON, optionally recursing into its objects */
-    protected void dump(Resource resource, JSONWriter w,
-            int currentRecursionLevel, int maxRecursionLevels)
-            throws JSONException {
-
+    private static JSONObject create(final Resource resource,
+            final int currentRecursionLevel,
+            final int maxRecursionLevels)
+    throws JSONException {
         final ValueMap valueMap = resource.adaptTo(ValueMap.class);
 
         @SuppressWarnings("unchecked")
@@ -97,7 +61,7 @@ public class JsonResourceWriter {
                 ? valueMap
                 : resource.adaptTo(Map.class);
 
-        w.object();
+        final JSONObject obj = new JSONObject();
 
         if (propertyMap == null) {
 
@@ -106,16 +70,14 @@ public class JsonResourceWriter {
             if (value != null) {
 
                 // single value property or just plain String resource or...
-                w.key(ResourceUtil.getName(resource));
-                w.value(value);
+                obj.put(ResourceUtil.getName(resource), value);
 
             } else {
 
                 // Try multi-value "property"
                 final String[] values = resource.adaptTo(String[].class);
                 if (values != null) {
-                    w.key(ResourceUtil.getName(resource));
-                    w.value(new JSONArray(Arrays.asList(values)));
+                    obj.put(ResourceUtil.getName(resource), new JSONArray(Arrays.asList(values)));
                 }
 
             }
@@ -130,12 +92,7 @@ public class JsonResourceWriter {
                 @SuppressWarnings("unchecked")
                 final Map.Entry prop = props.next();
 
-                if (propertyNamesToIgnore != null
-                    && propertyNamesToIgnore.contains(prop.getKey())) {
-                    continue;
-                }
-
-                writeProperty(w, valueMap, prop.getKey().toString(),
+                createProperty(obj, valueMap, prop.getKey().toString(),
                     prop.getValue());
             }
         }
@@ -145,86 +102,58 @@ public class JsonResourceWriter {
             final Iterator<Resource> children = ResourceUtil.listChildren(resource);
             while (children.hasNext()) {
                 final Resource n = children.next();
-                dumpSingleResource(n, w, currentRecursionLevel,
+                createSingleResource(n, obj, currentRecursionLevel,
                     maxRecursionLevels);
             }
         }
 
-        w.endObject();
+        return obj;
     }
 
-    /** Dump only a subset of the resource properties */
-    public void dumpProperties(Resource resource, JSONWriter w,
-            List<String> properties)
-            throws JSONException {
+    /** Used to format date values */
+    private static final String ECMA_DATE_FORMAT = "EEE MMM dd yyyy HH:mm:ss 'GMT'Z";
 
-        final ValueMap valueMap = resource.adaptTo(ValueMap.class);
+    /** Used to format date values */
+    private static final Locale DATE_FORMAT_LOCALE = Locale.US;
 
-        @SuppressWarnings("unchecked")
-        final Map propertyMap = (valueMap != null)
-                ? valueMap
-                : resource.adaptTo(Map.class);
+    private static final DateFormat CALENDAR_FORMAT = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
 
-        if (propertyMap == null) {
-
-        	//TODO : not sure if we have to do something in this case ?
-        	return;
-
-        }
-
-        @SuppressWarnings("unchecked")
-        final Iterator<Map.Entry> props = propertyMap.entrySet().iterator();
-
-        // the node's actual properties
-        while (props.hasNext()) {
-            @SuppressWarnings("unchecked")
-            final Map.Entry prop = props.next();
-
-            if (propertyNamesToIgnore != null
-                && propertyNamesToIgnore.contains(prop.getKey())) {
-                continue;
-            }
-
-            if (properties.contains(prop.getKey().toString()))
-                writeProperty(w, valueMap, prop.getKey().toString(),
-                              prop.getValue());
-        }
+    private static synchronized String format(final Calendar date) {
+        return CALENDAR_FORMAT.format(date.getTime());
     }
 
     /** Dump only a value in the correct format */
-    public void dumpValue(JSONWriter w, Object value)
-    throws JSONException {
+    private static Object getValue(final Object value) {
         if ( value instanceof InputStream ) {
             // input stream is already handled
-            w.value(0);
+            return 0;
         } else if ( value instanceof Calendar ) {
-            w.value(format((Calendar)value));
+            return format((Calendar)value);
         } else if ( value instanceof Boolean ) {
-            w.value(((Boolean)value).booleanValue());
+            return value;
         } else if ( value instanceof Long ) {
-            w.value(((Long)value).longValue());
+            return value;
         } else if ( value instanceof Integer ) {
-            w.value(((Integer)value).longValue());
+            return value;
         } else if ( value instanceof Double ) {
-            w.value(((Double)value).doubleValue());
+            return value;
         } else {
-            w.value(value.toString());
+            return value.toString();
         }
     }
 
     /** Dump a single node */
-    protected void dumpSingleResource(Resource n, JSONWriter w,
-            int currentRecursionLevel, int maxRecursionLevels)
+    private static void createSingleResource(final Resource n, final JSONObject parent,
+            final int currentRecursionLevel, final int maxRecursionLevels)
             throws JSONException {
         if (recursionLevelActive(currentRecursionLevel, maxRecursionLevels)) {
-            w.key(ResourceUtil.getName(n));
-            dump(n, w, currentRecursionLevel + 1, maxRecursionLevels);
+            parent.put(ResourceUtil.getName(n), create(n, currentRecursionLevel + 1, maxRecursionLevels));
         }
     }
 
     /** true if the current recursion level is active */
-    protected boolean recursionLevelActive(int currentRecursionLevel,
-            int maxRecursionLevels) {
+    private static boolean recursionLevelActive(final int currentRecursionLevel,
+            final int maxRecursionLevels) {
         return maxRecursionLevels < 0
             || currentRecursionLevel < maxRecursionLevels;
     }
@@ -232,19 +161,17 @@ public class JsonResourceWriter {
     /**
      * Write a single property
      */
-    protected void writeProperty(JSONWriter w,
-                                 ValueMap valueMap,
-                                 String key,
-                                 Object value)
+    private static void createProperty(final JSONObject obj,
+                                 final ValueMap valueMap,
+                                 final String key,
+                                 final Object value)
     throws JSONException {
         Object[] values = null;
         if (value.getClass().isArray()) {
             values = (Object[])value;
             // write out empty array
             if ( values.length == 0 ) {
-                w.key(key);
-                w.array();
-                w.endArray();
+                obj.put(key, new JSONArray());
                 return;
             }
         }
@@ -256,37 +183,33 @@ public class JsonResourceWriter {
             // their name
             // (colon is not allowed as a JCR property name)
             // in the name, and the value should be the size of the binary data
-            w.key(":" + key);
             if (values == null) {
-                writeLength(w, valueMap, -1, key, (InputStream)value);
+                obj.put(":" + key, getLength(valueMap, -1, key, (InputStream)value));
             } else {
-                w.array();
+                final JSONArray result = new JSONArray();
                 for (int i = 0; i < values.length; i++) {
-                    writeLength(w, valueMap, i, key, (InputStream)values[i]);
+                    result.put(getLength(valueMap, i, key, (InputStream)values[i]));
                 }
-                w.endArray();
+                obj.put(":" + key, result);
             }
             return;
         }
-        w.key(key);
 
         if (!value.getClass().isArray()) {
-            dumpValue(w, value);
+            obj.put(key, getValue(value));
         } else {
-            w.array();
+            final JSONArray result = new JSONArray();
             for (Object v : values) {
-                dumpValue(w, v);
+                result.put(getValue(v));
             }
-            w.endArray();
+            obj.put(key, result);
         }
     }
 
-    private void writeLength(JSONWriter w,
-                             ValueMap   valueMap,
-                             int        index,
-                             String     key,
-                             InputStream stream)
-    throws JSONException {
+    private static long getLength(final ValueMap    valueMap,
+                           final int         index,
+                           final String      key,
+                           final InputStream stream) {
         try {
             stream.close();
         } catch (IOException ignore) {}
@@ -301,14 +224,6 @@ public class JsonResourceWriter {
                 }
             }
         }
-        w.value(length);
-    }
-
-
-    public static synchronized String format(Calendar date) {
-        if (calendarFormat == null) {
-            calendarFormat = new SimpleDateFormat(ECMA_DATE_FORMAT, DATE_FORMAT_LOCALE);
-        }
-        return calendarFormat.format(date.getTime());
+        return length;
     }
 }
