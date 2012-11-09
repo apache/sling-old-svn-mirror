@@ -1015,6 +1015,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
      */
     public void delete(final Resource resource)
             throws PersistenceException {
+        // check if the resource is non existing - throws NPE if resource is null as stated in the API
+        if ( ResourceUtil.isNonExistingResource(resource) ) {
+            // nothing to do
+            return;
+        }
         // if resource is null, we get an NPE as stated in the API
         final String path = resource.getPath();
         final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
