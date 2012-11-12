@@ -266,16 +266,14 @@ public class JcrResourceListener implements EventListener {
         }
 
         public void addProperties(final Dictionary<String, Object> properties) {
-            // we're not using the Constants from SlingConstants here to avoid the requirement of the latest
-            // SLING API to be available!!
             if ( addedAttributes != null )  {
-                properties.put("resourceAddedAttributes", addedAttributes.toArray(new String[addedAttributes.size()]));
+                properties.put(SlingConstants.PROPERTY_ADDED_ATTRIBUTES, addedAttributes.toArray(new String[addedAttributes.size()]));
             }
             if ( changedAttributes != null )  {
-                properties.put("resourceChangedAttributes", changedAttributes.toArray(new String[changedAttributes.size()]));
+                properties.put(SlingConstants.PROPERTY_CHANGED_ATTRIBUTES, changedAttributes.toArray(new String[changedAttributes.size()]));
             }
             if ( removedAttributes != null )  {
-                properties.put("resourceRemovedAttributes", removedAttributes.toArray(new String[removedAttributes.size()]));
+                properties.put(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES, removedAttributes.toArray(new String[removedAttributes.size()]));
             }
         }
     }
