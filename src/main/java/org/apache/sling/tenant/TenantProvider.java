@@ -20,8 +20,6 @@ package org.apache.sling.tenant;
 
 import java.util.Iterator;
 
-import org.osgi.framework.InvalidSyntaxException;
-
 /**
  * The <code>TenantProvider</code> defines the service interface of for a sevice
  * which may be asked for {@link Tenant tenant instances}.
@@ -54,7 +52,8 @@ public interface TenantProvider {
      * <code>tenantFilter</code> is not a valid filter string the iterator is
      * empty.
      *
-     * @throws InvalidSyntaxException if filter syntax is invalid
+     * @throws IllegalArgumentException if filter syntax is invalid. A more
+     *      detailed exception may be wrapped by the exception.
      */
-    Iterator<Tenant> getTenants(String tenantFilter) throws InvalidSyntaxException;
+    Iterator<Tenant> getTenants(String tenantFilter);
 }

@@ -188,7 +188,7 @@ public class TenantProviderImpl implements TenantProvider {
         throw new PersistenceException("Cannot create the tenant");
     }
 
-    public Iterator<Tenant> getTenants(String tenantFilter) throws InvalidSyntaxException {
+    public Iterator<Tenant> getTenants(String tenantFilter) {
         if (StringUtils.isBlank(tenantFilter)) {
             return null;
         }
@@ -211,6 +211,8 @@ public class TenantProviderImpl implements TenantProvider {
                     }
                 }
                 return tenantList.iterator();
+            } catch (InvalidSyntaxException e) {
+                throw new IllegalArgumentException(e.getMessage(), e);
             } finally {
                 adminResolver.close();
             }
