@@ -16,10 +16,12 @@
  */
 package org.apache.sling.slingclipse.ui.wizards;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 
 import org.apache.sling.slingclipse.SlingclipsePlugin;
@@ -32,9 +34,17 @@ import org.apache.sling.slingclipse.api.Result;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.helper.Tracer;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
@@ -79,7 +89,10 @@ public class ImportWizard extends Wizard implements IImportWizard {
 					mainPage.getRepositoryUrl());
 			repository.setRepositoryInfo(repositoryInfo);
 	 
-			final String destinationPath = mainPage.getIntoFolderPath();
+			IPath destinationPath = mainPage.getResourcePath();
+			
+			final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
+			final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
 			final String repositoryPath = mainPage.getRepositoryPath();
 			
 			Job job = new Job("Import") {
@@ -100,7 +113,11 @@ public class ImportWizard extends Wizard implements IImportWizard {
 						// TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm processing)
 						monitor.setTaskName("Importing...");
 						monitor.worked(10);
-				 		crawlChildrenAndImport(repository, repositoryPath,destinationPath, tracer);
+
+                        // we create the root node and assume this is a folder
+                        createRoot(project, projectRelativePath, repositoryPath);
+
+				 		crawlChildrenAndImport(repository, repositoryPath, project, projectRelativePath, tracer);
 						
 						monitor.setTaskName("Import Complete");
 						monitor.worked(100);
@@ -114,6 +131,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
 					
 					return Status.OK_STATUS;
 				}
+
+                private void createRoot(final IProject project, final IPath projectRelativePath,
+                        final String repositoryPath) throws CoreException {
+
+                    IPath rootImportPath = projectRelativePath.append(repositoryPath);
+
+                    for (int i = rootImportPath.segmentCount() - 1; i > 0; i--)
+                        createFolder(project, rootImportPath.removeLastSegments(i));
+                }
 			};
 			job.addJobChangeListener(new JobChangeAdapter() {
 				public void done(IJobChangeEvent event) {
@@ -155,32 +181,45 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		addPage(mainPage);
 	}
 	
-	// TODO: This probably should be pushed into the service layer
-	private void crawlChildrenAndImport(Repository repository,String path,String destinationPath, Tracer tracer) throws JSONException, IOException, RepositoryException{
-		String children = executeCommand(repository.newListChildrenNodeCommand(path,ResponseType.JSON), tracer); 
+	/**
+	 * Crawls the repository and recursively imports founds resources
+	 * 
+	 * @param repository the sling repository to import from
+	 * @param path the current path to import from
+	 * @param project the project to create resources in
+	 * @param projectRelativePath the path, relative to the project root, where the resources should be created
+	 * @param tracer 
+	 * @throws JSONException
+	 * @throws RepositoryException
+	 * @throws CoreException
+	 */
+	// TODO: This probably should be pushed into the service layer	
+	private void crawlChildrenAndImport(Repository repository,String path,IProject project, IPath projectRelativePath, Tracer tracer) throws JSONException, RepositoryException, CoreException{
+
+        String children = executeCommand(repository.newListChildrenNodeCommand(path, ResponseType.JSON), tracer);
 		JSONObject json = new JSONObject(children);
 		String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
  
 		if (Repository.NT_FILE.equals(primaryType)){
-			importFile(repository, path,destinationPath, tracer);
+			importFile(repository, path, project, projectRelativePath, tracer);
 		}else if (Repository.NT_FOLDER.equals(primaryType)){
-			//TODO create folder
+			createFolder(project, projectRelativePath.append(path));
 		}else if(Repository.NT_RESOURCE.equals(primaryType)){
 			//DO NOTHING
 		}else{		
-			createFolder(path, destinationPath);
+			createFolder(project, projectRelativePath.append(path));
 			String content = executeCommand(repository.newGetNodeContentCommand(path, ResponseType.JSON), tracer);
 			JSONObject jsonContent = new JSONObject(content);
 			jsonContent.put(SlingclipseHelper.TAG_NAME, Repository.JCR_ROOT);
 			String contentXml = JSONML.toString(jsonContent);		
-			createFile(path+"/"+SlingclipseHelper.CONTENT_XML, contentXml, destinationPath);
+			createFile( project, projectRelativePath.append( path+"/"+SlingclipseHelper.CONTENT_XML), contentXml.getBytes(Charset.forName("UTF-8") /* TODO is this enough? */));
 		}
  		
 		for (Iterator<String> keys = json.keys(); keys.hasNext();) {
 			String key = keys.next();
 			JSONObject innerjson=json.optJSONObject(key);
 			if (innerjson!=null){
-				crawlChildrenAndImport(repository, path+"/"+key,destinationPath, tracer);
+				crawlChildrenAndImport(repository, path+"/"+key, project, projectRelativePath, tracer);
 			}
 		}
 	}
@@ -194,61 +233,30 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		return result.get();
 	}	
 	
-	private void importFile(Repository repository,String path,String destinationPath, Tracer tracer) throws JSONException, IOException, RepositoryException{ 
-			byte [] node= executeCommand(repository.newGetNodeCommand(path), tracer);
-			createFile(path, node,destinationPath);
+	private void importFile(Repository repository,String path,IProject project, IPath destinationPath, Tracer tracer) throws JSONException, RepositoryException, CoreException{ 
+			byte [] node= executeCommand(repository.newGetNodeCommand(path), tracer); 
+			createFile(project, destinationPath.append(path), node );
 	}
 	
-	private void createFolder(String path ,String destinationPath){
-		File file = new File (destinationPath+path);
-		if (!file.getParentFile().exists()){
-			file.getParentFile().mkdirs();
-		}				
-		if (!file.exists()){
-			file.mkdirs();
-		}			
-	}
-	
-	private void createFile(String path, byte[] content,String destinationPath) throws IOException{		
-		FileOutputStream fop = null;
-		try{
-			File file = new File (destinationPath+path);
-			if (!file.getParentFile().exists()){
-				file.getParentFile().mkdirs();
-			}				
-			if (!file.exists()){
-				file.createNewFile();
-			}			
-			fop = new FileOutputStream(file);
-			fop.write(content);
-			fop.flush();
-		}finally{
-			if (fop!=null){
-				fop.close();
-			}
-		}
-	}
-	
-	private void createFile(String path, String content,String destinationPath) throws IOException{		
-		FileWriter fileWriter = null;
-		try{
-			File file = new File (destinationPath+path);
-			if (!file.getParentFile().exists()){
-				file.getParentFile().mkdirs();
-			}				
-			if (!file.exists()){
-				file.createNewFile();
-			}			
-            fileWriter = new FileWriter(file);
-            fileWriter.write(content);
-            fileWriter.close();
-		}finally{
-			if (fileWriter!=null){
-				fileWriter.close();
-			}
-		}
-	}
-	
-	
+	private void createFolder(IProject project, IPath destinationPath) throws CoreException{
 
+		IFolder destinationFolder = project.getFolder(destinationPath);
+		if ( destinationFolder.exists() )
+			return;
+
+		SlingclipsePlugin.getDefault().getTracer().trace("Creating folder {0}", destinationFolder.getFullPath());
+		
+		destinationFolder.create(true, true, null /* TODO progress monitor */);
+	}
+	
+	private void createFile(IProject project, IPath path, byte[] node) throws CoreException {		
+		
+		IFile destinationFile = project.getFile(path);
+		if ( destinationFile.exists() )
+			return;
+
+		SlingclipsePlugin.getDefault().getTracer().trace("Creating file{0}", destinationFile.getFullPath());
+		
+		destinationFile.create(new ByteArrayInputStream(node), true, null /* TODO progress monitor */);
+	}
 }

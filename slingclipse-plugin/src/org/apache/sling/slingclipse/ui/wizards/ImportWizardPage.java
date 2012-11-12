@@ -231,10 +231,8 @@ public class ImportWizardPage extends WizardResourceImportPage {
 	}
 	
 	
-	public String getIntoFolderPath(){ 
-		IPath containerNameField= super.getResourcePath();  
-		String workspacePath=((IResource)selection.getFirstElement()).getWorkspace().getRoot().getLocation().toOSString();
- 		return workspacePath+"/"+containerNameField.toOSString();
+	public IPath getResourcePath(){ 
+		return super.getResourcePath();  
 	}
 	
 
