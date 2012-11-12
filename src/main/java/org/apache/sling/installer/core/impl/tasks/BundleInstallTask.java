@@ -40,6 +40,7 @@ public class BundleInstallTask extends AbstractBundleTask {
     /**
      * @see org.apache.sling.installer.api.tasks.InstallTask#execute(org.apache.sling.installer.api.tasks.InstallationContext)
      */
+    @Override
     public void execute(final InstallationContext ctx) {
         final int startLevel = this.getBundleStartLevel();
         try {
@@ -60,8 +61,9 @@ public class BundleInstallTask extends AbstractBundleTask {
 
             // fragment?
             if ( BundleUtil.isSystemBundleFragment(b) ) {
+                // first install of a system fragment does not need a refresh of the host
+                // so we can just set the state and are done.
                 this.setFinishedState(ResourceState.INSTALLED);
-                ctx.addTaskToCurrentCycle(new SystemBundleUpdateTask(null, this.getTaskSupport()));
             } else {
                 final String fragmentHostHeader = BundleUtil.getFragmentHostHeader(b);
                 if (fragmentHostHeader != null) {
