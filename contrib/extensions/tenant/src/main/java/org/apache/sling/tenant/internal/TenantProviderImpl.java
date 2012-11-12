@@ -251,10 +251,4 @@ public class TenantProviderImpl implements TenantProvider {
 
         return null;
     }
-
-    private void safeClose(ResourceResolver adminResolver) {
-        if (adminResolver != null) {
-            adminResolver.close();
-        }
-    }
 }
