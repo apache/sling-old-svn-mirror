@@ -20,6 +20,7 @@ package org.apache.sling.installer.core.impl.tasks;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 
 import org.apache.sling.installer.api.tasks.InstallationContext;
 import org.apache.sling.installer.api.tasks.ResourceState;
@@ -54,14 +55,8 @@ public class SystemBundleUpdateTask extends AbstractInstallTask {
 
         // restart system bundle
         if ( this.getResource() == null ) {
-            try {
-                systemBundle.update();
-                ctx.log("Updated system bundle.");
-            } catch (final BundleException e) {
-                getLogger().warn("Updating system bundle failed - unable to retry: " + this, e);
-                this.setFinishedState(ResourceState.IGNORED);
-                ctx.asyncTaskFailed(this);
-            }
+            ctx.log("Refreshing system bundle.");
+            this.getBundleRefresher().refreshBundles(ctx, Collections.singletonList(systemBundle), false);
         } else {
             InputStream is = null;
             try {
