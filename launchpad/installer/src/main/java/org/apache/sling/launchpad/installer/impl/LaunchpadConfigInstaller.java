@@ -25,6 +25,7 @@ import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
@@ -41,27 +42,37 @@ public class LaunchpadConfigInstaller {
     /**
      * Resources supplied under this path by
      * LaunchpadContentProvider are considered for installation
+     */
+    private static final String ROOT_PATH = "resources";
+
+    /**
+     * Resources supplied under this path by
+     * LaunchpadContentProvider are considered for installation
      * as configurations
      */
-    private static final String ROOT_CONFIG_PATH = "resources/config";
+    private static final String CONFIG_NAME = "config";
 
     /**
      * Resources supplied under this path by
      * LaunchpadContentProvider are considered for installation
      * as files
      */
-    private static final String ROOT_INSTALL_PATH = "resources/install";
+    private static final String INSTALL_NAME = "install";
+    private static final String INSTALL_PREFIX = "install.";
 
     /** Artifact priority. */
     private static final Integer PRIORITY = new Integer(50);
+    private static final int PRIORITY_BOOST = 5;
 
     /**
      * Check the path for installable artifacts.
      */
     private static boolean checkPath(final LaunchpadContentProvider resourceProvider,
+            final Set<String> activeRunModes,
             final Collection<InstallableResource> installables,
             final String rootPath,
-            final String resourceType) {
+            final String resourceType,
+            final Integer prio) {
         int count = 0;
         final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
         final Iterator<String> configPaths = resourceProvider.getChildren(rootPath);
@@ -73,17 +84,26 @@ public class LaunchpadConfigInstaller {
                 if ( path.endsWith("/") ) {
                     path = path.substring(0, path.length() - 1);
                 }
-                if ( !checkPath(resourceProvider, installables, path, resourceType) ) {
-                    logger.info("Launchpad {} will be installed: {}", resourceType, path);
+                if ( !checkPath(resourceProvider, activeRunModes, installables, path, resourceType, prio) ) {
                     final URL url = resourceProvider.getResource(path);
                     Dictionary<String, Object> dict = null;
                     if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
                         dict = new Hashtable<String, Object>();
-                        dict.put(InstallableResource.INSTALLATION_HINT, hint);
+                        if ( !hint.startsWith(INSTALL_NAME) ) {
+                            dict.put(InstallableResource.INSTALLATION_HINT, hint);
+                        }
                         try {
                             dict.put(InstallableResource.RESOURCE_URI_HINT, url.toURI().toString());
                         } catch (final URISyntaxException e) {
                             // we just ignore this
+                        }
+                    } else {
+                        // if this is a configuration, hint could be run Modes
+                        if ( !hint.equals(CONFIG_NAME) ) {
+                            if ( isActive(hint, activeRunModes) == 0 ) {
+                                logger.debug("Launchpad ignoring {} : {} due to unactivated run mode", resourceType, path);
+                                continue;
+                            }
                         }
                     }
                     long lastModified = -1;
@@ -92,9 +112,10 @@ public class LaunchpadConfigInstaller {
                     } catch (final IOException e) {
                         // we ignore this
                     }
+                    logger.debug("Launchpad {} will be installed: {}", resourceType, path);
                     final String digest = (lastModified > 0 ? String.valueOf(lastModified) : null);
                     final InputStream stream = resourceProvider.getResourceAsStream(path);
-                    installables.add(new InstallableResource(path, stream, dict, digest, resourceType, PRIORITY));
+                    installables.add(new InstallableResource(path, stream, dict, digest, resourceType, prio));
                     count++;
                 }
             }
@@ -102,22 +123,59 @@ public class LaunchpadConfigInstaller {
         return count > 0;
     }
 
+    private static int isActive(final String runModesString, final Set<String> activeRunModes) {
+        final String[] runModes = runModesString.split(".");
+        boolean active = true;
+        for(final String mode : runModes) {
+            if ( !activeRunModes.contains(mode) ) {
+                active = false;
+            }
+        }
+        return active ? runModes.length : 0;
+    }
+
     /**
      * Install artifacts
      */
     public static void install(final OsgiInstaller installer,
-            final LaunchpadContentProvider resourceProvider) {
+            final LaunchpadContentProvider resourceProvider,
+            final Set<String> activeRunModes) {
         final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
-        logger.info("Activating launchpad config installer, configuration path={}, install path={}",
-                ROOT_CONFIG_PATH, ROOT_INSTALL_PATH);
+        logger.info("Activating launchpad config installer, configuration path={}/{}, install path={}/{}",
+                new Object[] {ROOT_PATH, CONFIG_NAME, ROOT_PATH, INSTALL_NAME});
 
         final Collection<InstallableResource> installables = new HashSet<InstallableResource>();
 
-        // configurations
-        checkPath(resourceProvider, installables, ROOT_CONFIG_PATH, InstallableResource.TYPE_PROPERTIES);
-
-        // files
-        checkPath(resourceProvider, installables, ROOT_INSTALL_PATH, InstallableResource.TYPE_FILE);
+        final Iterator<String> configPaths = resourceProvider.getChildren(ROOT_PATH);
+        if ( configPaths != null ) {
+            while ( configPaths.hasNext() ) {
+                String path = configPaths.next();
+                logger.debug("Found launchpad resource {}", path);
+                if ( path.endsWith("/") ) {
+                    path = path.substring(0, path.length() - 1);
+                }
+                final int namePos = path.lastIndexOf('/');
+                String name = path.substring(namePos + 1);
+                if ( name.equals(CONFIG_NAME) ) {
+                    // configurations
+                    checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_PROPERTIES, PRIORITY);
+                } else if ( name.equals(INSTALL_NAME) ) {
+                    // files
+                    checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, PRIORITY);
+                } else if ( name.startsWith(INSTALL_PREFIX) ) {
+                    final int activeModes = isActive(name.substring(INSTALL_PREFIX.length()), activeRunModes);
+                    if ( activeModes > 0 ) {
+                        // files
+                        final int prio = PRIORITY + PRIORITY_BOOST * activeModes;
+                        checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, prio);
+                    } else {
+                        logger.debug("Ignoring path {} due to unactivated run mode", path);
+                    }
+                } else {
+                    logger.debug("Ignoring path {} - not an installation path", path);
+                }
+            }
+        }
 
         final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
         installer.registerResources("launchpad", (toInstall));

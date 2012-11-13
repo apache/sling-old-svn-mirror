@@ -25,6 +25,7 @@ import org.apache.sling.installer.api.OsgiInstaller;
 import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.api.StartupHandler;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -51,6 +52,9 @@ public class ServicesListener {
     /** The listener for the startup handler. */
     private final Listener startupListener;
 
+    /** The listener for the settings service. */
+    private final Listener settingsListener;
+
     /** The registration of the launchpad listener. */
     private ServiceRegistration launchpadListenerReg;
 
@@ -67,9 +71,11 @@ public class ServicesListener {
         this.installerListener = new Listener(OsgiInstaller.class.getName());
         this.providerListener = new Listener(LaunchpadContentProvider.class.getName());
         this.startupListener = new Listener(StartupHandler.class.getName());
+        this.settingsListener = new Listener(SlingSettingsService.class.getName());
         this.startupListener.start();
         this.installerListener.start();
         this.providerListener.start();
+        this.settingsListener.start();
     }
 
     /**
@@ -82,8 +88,8 @@ public class ServicesListener {
         final OsgiInstaller installer = (OsgiInstaller)this.installerListener.getService();
         final LaunchpadContentProvider lcp = (LaunchpadContentProvider)this.providerListener.getService();
         final StartupHandler handler = (StartupHandler)this.startupListener.getService();
-
-        if ( installer != null && lcp != null && handler != null ) {
+        final SlingSettingsService settings = (SlingSettingsService)this.settingsListener.getService();
+        if ( installer != null && lcp != null && handler != null && settings != null ) {
             if ( !this.installed ) {
                 this.installed = true;
                 this.launchpadListener = new LaunchpadListener(handler);
@@ -91,7 +97,7 @@ public class ServicesListener {
                 props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Launchpad Startup Listener");
                 props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
                 this.launchpadListenerReg = this.bundleContext.registerService(InstallationListener.class.getName(), launchpadListener, props);
-                LaunchpadConfigInstaller.install(installer, lcp);
+                LaunchpadConfigInstaller.install(installer, lcp, settings.getRunModes());
             }
         }
     }
@@ -103,6 +109,7 @@ public class ServicesListener {
         this.installerListener.deactivate();
         this.providerListener.deactivate();
         this.startupListener.deactivate();
+        this.settingsListener.deactivate();
         if ( this.launchpadListenerReg != null ) {
             this.launchpadListener.stop();
             this.launchpadListenerReg.unregister();
