@@ -60,9 +60,10 @@ public class PrepareTestWebAppMojo extends PreparePackageMojo {
      */
     private ArtifactHandlerManager artifactHandlerManager;
 
+    @Override
     public void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
         super.executeWithArtifacts();
-        copy(getPrimaryArtifact(), startLevel, getOutputDirectory());
+        copy(getPrimaryArtifact(), startLevel, null, getOutputDirectory());
     }
 
     @Override
