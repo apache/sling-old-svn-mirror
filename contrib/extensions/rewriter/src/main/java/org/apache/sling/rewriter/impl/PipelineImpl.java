@@ -182,11 +182,13 @@ public class PipelineImpl implements Processor {
      */
     public void finished(final boolean errorOccured) throws IOException {
         IOException ioe = null;
-        // if an error occured, we only clean up
+        // if an error occurred, we only clean up
         if ( !errorOccured ) {
             try {
                 this.generator.finished();
-            } catch (SAXException se) {
+            } catch (final IOException localIOE) {
+                ioe = localIOE;
+            } catch (final SAXException se) {
                 if ( se.getCause() != null && se.getCause() instanceof IOException ) {
                     ioe = (IOException)se.getCause();
                 } else {
@@ -195,7 +197,7 @@ public class PipelineImpl implements Processor {
                 }
             }
         }
-        // now dispose component
+        // now dispose components
         if ( this.generator != null ) {
             this.generator.dispose();
         }
@@ -209,6 +211,7 @@ public class PipelineImpl implements Processor {
         if ( this.serializer != null ) {
             this.serializer.dispose();
         }
+        // throw exception
         if ( ioe != null ) {
             throw ioe;
         }
