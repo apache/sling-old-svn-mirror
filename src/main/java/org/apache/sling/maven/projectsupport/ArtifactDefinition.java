@@ -16,7 +16,7 @@
  */
 package org.apache.sling.maven.projectsupport;
 
-import static org.apache.sling.maven.projectsupport.BundleListUtils.*;
+import static org.apache.sling.maven.projectsupport.BundleListUtils.nodeValue;
 
 import org.apache.maven.model.Dependency;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
@@ -46,9 +46,12 @@ public class ArtifactDefinition {
     /** The artifact version */
     private String version;
 
+    /** The artifact run modes */
+    private String runModes;
+
     public ArtifactDefinition() {
     }
-    
+
     public ArtifactDefinition(Bundle bundle, int startLevel) {
         this.groupId = bundle.getGroupId();
         this.artifactId = bundle.getArtifactId();
@@ -56,6 +59,7 @@ public class ArtifactDefinition {
         this.version = bundle.getVersion();
         this.classifier = bundle.getClassifier();
         this.startLevel = startLevel;
+        this.runModes = bundle.getRunModes();
     }
 
     public ArtifactDefinition(Xpp3Dom config) {
@@ -65,6 +69,7 @@ public class ArtifactDefinition {
         this.version = nodeValue(config, "version", null);
         this.classifier = nodeValue(config, "classifier", null);
         this.startLevel = nodeValue(config, "startLevel", 0);
+        this.runModes = nodeValue(config, "runModes", null);
     }
 
     public String getArtifactId() {
@@ -89,6 +94,10 @@ public class ArtifactDefinition {
 
     public String getVersion() {
         return version;
+    }
+
+    public String getRunModes() {
+        return runModes;
     }
 
     public void setArtifactId(String artifactId) {
@@ -119,7 +128,8 @@ public class ArtifactDefinition {
     public String toString() {
         return "ArtifactDefinition [artifactId=" + artifactId + ", classifier="
                 + classifier + ", groupId=" + groupId + ", startLevel="
-                + startLevel + ", type=" + type + ", version=" + version + "]";
+                + startLevel + ", type=" + type + ", version=" + version
+                + ", runModes=" + runModes + "]";
     }
 
     /**
@@ -198,7 +208,7 @@ public class ArtifactDefinition {
         bnd.setStartLevel(startLevel);
         return bnd;
     }
-    
+
     public Dependency toDependency(String scope) {
         Dependency dep = new Dependency();
         dep.setArtifactId(artifactId);
@@ -211,7 +221,7 @@ public class ArtifactDefinition {
         dep.setScope(scope);
         return dep;
     }
-    
+
     public static Dependency toDependency(Bundle bundle, String scope) {
         return new ArtifactDefinition(bundle, 0).toDependency(scope);
     }

@@ -107,6 +107,11 @@
                     <type>int</type>
                     <required>true</required>
                 </field>
+                <field>
+                    <name>runModes</name>
+                    <version>1.0.0</version>
+                    <type>String</type>
+                </field>
             </fields>
         </class>
     </classes>

@@ -81,7 +81,7 @@ public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
             for (Bundle bundle : level.getBundles()) {
                 Artifact artifact = getArtifact(new ArtifactDefinition(bundle,
                         level.getStartLevel()));
-                final String destFileName = getPathForArtifact(level.getStartLevel(), artifact.getFile().getName());
+                final String destFileName = getPathForArtifact(level.getStartLevel(), bundle.getRunModes(), artifact.getFile().getName());
                 try {
                     jarArchiver.addFile(artifact.getFile(), destFileName);
                 } catch (ArchiverException e) {
@@ -168,13 +168,13 @@ public class CreateBundleJarMojo extends AbstractLaunchpadFrameworkMojo {
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(resource.getDirectory());
         if (resource.getIncludes() != null && !resource.getIncludes().isEmpty()) {
-            scanner.setIncludes((String[]) resource.getIncludes().toArray(
+            scanner.setIncludes(resource.getIncludes().toArray(
                     new String[resource.getIncludes().size()]));
         } else {
             scanner.setIncludes(DEFAULT_INCLUDES);
         }
         if (resource.getExcludes() != null && !resource.getExcludes().isEmpty()) {
-            scanner.setExcludes((String[]) resource.getExcludes().toArray(
+            scanner.setExcludes(resource.getExcludes().toArray(
                     new String[resource.getExcludes().size()]));
         }
 
