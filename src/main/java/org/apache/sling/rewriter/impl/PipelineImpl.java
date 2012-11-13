@@ -181,39 +181,36 @@ public class PipelineImpl implements Processor {
      * @see org.apache.sling.rewriter.Processor#finished(boolean)
      */
     public void finished(final boolean errorOccured) throws IOException {
-        IOException ioe = null;
-        // if an error occurred, we only clean up
-        if ( !errorOccured ) {
-            try {
-                this.generator.finished();
-            } catch (final IOException localIOE) {
-                ioe = localIOE;
-            } catch (final SAXException se) {
-                if ( se.getCause() != null && se.getCause() instanceof IOException ) {
-                    ioe = (IOException)se.getCause();
-                } else {
-                    ioe = new IOException("Pipeline exception: " + se.getMessage());
-                    ioe.initCause(se);
+        try {
+            // if an error occurred, we only clean up
+            if ( !errorOccured ) {
+                try {
+                    this.generator.finished();
+                } catch (final SAXException se) {
+                    if ( se.getCause() != null && se.getCause() instanceof IOException ) {
+                        throw (IOException)se.getCause();
+                    } else {
+                        final IOException ioe = new IOException("Pipeline exception: " + se.getMessage());
+                        ioe.initCause(se);
+                        throw ioe;
+                    }
                 }
             }
-        }
-        // now dispose components
-        if ( this.generator != null ) {
-            this.generator.dispose();
-        }
-        if ( this.transformers != null ) {
-            for(final Transformer transformer : this.transformers ) {
-                if ( transformer != null ) {
-                    transformer.dispose();
+        } finally {
+            // dispose components
+            if ( this.generator != null ) {
+                this.generator.dispose();
+            }
+            if ( this.transformers != null ) {
+                for(final Transformer transformer : this.transformers ) {
+                    if ( transformer != null ) {
+                        transformer.dispose();
+                    }
                 }
             }
-        }
-        if ( this.serializer != null ) {
-            this.serializer.dispose();
-        }
-        // throw exception
-        if ( ioe != null ) {
-            throw ioe;
+            if ( this.serializer != null ) {
+                this.serializer.dispose();
+            }
         }
     }
 
