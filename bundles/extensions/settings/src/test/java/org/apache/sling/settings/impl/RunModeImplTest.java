@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.settings.SlingSettingsService;
@@ -43,7 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 public class RunModeImplTest {
 
     private void assertParse(String str, String [] expected) {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock(str));
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock(str, null, null));
         final Set<String> modes = rm.getRunModes();
         final String[] actual = modes.toArray(new String[modes.size()]);
         assertArrayEquals("Parsed runModes match for '" + str + "'", expected, actual);
@@ -57,7 +59,7 @@ public class RunModeImplTest {
     }
 
     @org.junit.Test public void testMatchesNotEmpty() {
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar"));
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, null));
 
         assertTrue("single foo should be active", rm.getRunModes().contains("foo"));
 
@@ -66,12 +68,121 @@ public class RunModeImplTest {
         assertFalse("empty should be not active", rm.getRunModes().contains(""));
     }
 
+    @org.junit.Test public void testOptions() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", "a,b,c|d,e,f", null));
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("a should be active", rm.getRunModes().contains("a"));
+        assertTrue("d should be active", rm.getRunModes().contains("d"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("c should not be active", rm.getRunModes().contains("c"));
+        assertFalse("e should not be active", rm.getRunModes().contains("e"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+    }
+
+    @org.junit.Test public void testOptionsSelected() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", "a,b,c|d,e,f", null));
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("c should be active", rm.getRunModes().contains("c"));
+        assertTrue("e should be active", rm.getRunModes().contains("e"));
+        assertFalse("a should not be active", rm.getRunModes().contains("a"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("d should not be active", rm.getRunModes().contains("d"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+    }
+
+    @org.junit.Test public void testOptionsMultipleSelected() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", "a,b,c|d,e,f", null));
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("a should be active", rm.getRunModes().contains("a"));
+        assertTrue("e should be active", rm.getRunModes().contains("e"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("c should not be active", rm.getRunModes().contains("c"));
+        assertFalse("d should not be active", rm.getRunModes().contains("d"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+    }
+
+    @org.junit.Test public void testInstallOptions() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, "a,b,c|d,e,f"));
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("a should be active", rm.getRunModes().contains("a"));
+        assertTrue("d should be active", rm.getRunModes().contains("d"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("c should not be active", rm.getRunModes().contains("c"));
+        assertFalse("e should not be active", rm.getRunModes().contains("e"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+    }
+
+    @org.junit.Test public void testInstallOptionsSelected() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", null , "a,b,c|d,e,f"));
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("c should be active", rm.getRunModes().contains("c"));
+        assertTrue("e should be active", rm.getRunModes().contains("e"));
+        assertFalse("a should not be active", rm.getRunModes().contains("a"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("d should not be active", rm.getRunModes().contains("d"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+    }
+
+    @org.junit.Test public void testInstallOptionsMultipleSelected() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", null, "a,b,c|d,e,f"));
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("a should be active", rm.getRunModes().contains("a"));
+        assertTrue("e should be active", rm.getRunModes().contains("e"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("c should not be active", rm.getRunModes().contains("c"));
+        assertFalse("d should not be active", rm.getRunModes().contains("d"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+    }
+
+    @org.junit.Test public void testInstallOptionsRestart() {
+        final BundleContextMock bc = new BundleContextMock("foo,bar,c,e,f,a", null, "a,b,c|d,e,f");
+        new SlingSettingsServiceImpl(bc); // first context to simulate install
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
+        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
+        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
+        assertTrue("a should be active", rm.getRunModes().contains("a"));
+        assertTrue("e should be active", rm.getRunModes().contains("e"));
+        assertFalse("b should not be active", rm.getRunModes().contains("b"));
+        assertFalse("c should not be active", rm.getRunModes().contains("c"));
+        assertFalse("d should not be active", rm.getRunModes().contains("d"));
+        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+
+        // and another restart with different run modes
+        bc.update("foo,doo,a,b,c,d,e,f");
+        final SlingSettingsService rm2 = new SlingSettingsServiceImpl(bc);
+        assertTrue("foo should be active", rm2.getRunModes().contains("foo"));
+        assertTrue("doo should be active", rm2.getRunModes().contains("doo"));
+        assertTrue("a should be active", rm2.getRunModes().contains("a"));
+        assertTrue("e should be active", rm2.getRunModes().contains("e"));
+        assertFalse("bar should not be active", rm2.getRunModes().contains("bar"));
+        assertFalse("b should not be active", rm2.getRunModes().contains("b"));
+        assertFalse("c should not be active", rm2.getRunModes().contains("c"));
+        assertFalse("d should not be active", rm2.getRunModes().contains("d"));
+        assertFalse("f should not be active", rm2.getRunModes().contains("f"));
+    }
+
     private static final class BundleContextMock implements BundleContext {
 
-        private final String str;
+        private String runModes;
+        private final String options;
+        private final String installOptions;
 
-        public BundleContextMock(String str) {
-            this.str = str;
+        private final Map<String, File> files = new HashMap<String, File>();
+
+        public BundleContextMock(String runModes, String options, String installOptions) {
+            this.runModes = runModes;
+            this.options = options;
+            this.installOptions = installOptions;
+        }
+
+        public void update(final String rm) {
+            this.runModes = rm;
         }
 
         public void addBundleListener(BundleListener listener) {
@@ -121,17 +232,28 @@ public class RunModeImplTest {
         }
 
         public File getDataFile(String filename) {
-            try {
-                final File f = File.createTempFile("sling", "id");
-                f.deleteOnExit();
-                return f;
-            } catch (IOException ioe) {
-                throw new RuntimeException(ioe);
+            File f = files.get(filename);
+            if ( f == null ) {
+                try {
+                    f = File.createTempFile(filename, "id");
+                    f.deleteOnExit();
+                    files.put(filename, f);
+                } catch (IOException ioe) {
+                    throw new RuntimeException(ioe);
+                }
             }
+            return f;
         }
 
         public String getProperty(String key) {
-            return str;
+            if ( key.equals(SlingSettingsService.RUN_MODES_PROPERTY) ) {
+                return runModes;
+            } else if ( key.equals(SlingSettingsService.RUN_MODE_OPTIONS) ) {
+                return options;
+            } else if ( key.equals(SlingSettingsService.RUN_MODE_INSTALL_OPTIONS) ) {
+                return installOptions;
+            }
+            return null;
         }
 
         public Object getService(ServiceReference reference) {
