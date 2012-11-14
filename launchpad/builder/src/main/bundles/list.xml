@@ -208,7 +208,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.installer</artifactId>
-            <version>1.1.4</version>
+            <version>1.1.5-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
