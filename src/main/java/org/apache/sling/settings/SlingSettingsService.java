@@ -72,6 +72,7 @@ public interface SlingSettingsService {
      * of run mode options
      * The value is a comma separated list of options where each option
      * contains of a set of run modes separated by a | character.
+     * @since 1.2.0
      */
     String RUN_MODE_OPTIONS = "sling.run.mode.options";
 
@@ -80,6 +81,7 @@ public interface SlingSettingsService {
      * of run mode options for installation time.
      * The value is a comma separated list of options where each option
      * contains of a set of run modes separated by a | character.
+     * @since 1.2.0
      */
     String RUN_MODE_INSTALL_OPTIONS = "sling.run.mode.install.options";
 
