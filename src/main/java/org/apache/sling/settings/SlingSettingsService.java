@@ -68,6 +68,22 @@ public interface SlingSettingsService {
     String RUN_MODES_PROPERTY = "sling.run.modes";
 
     /**
+     * The name of the framework property defining the list
+     * of run mode options
+     * The value is a comma separated list of options where each option
+     * contains of a set of run modes separated by a | character.
+     */
+    String RUN_MODE_OPTIONS = "sling.run.mode.options";
+
+    /**
+     * The name of the framework property defining the list
+     * of run mode options for installation time.
+     * The value is a comma separated list of options where each option
+     * contains of a set of run modes separated by a | character.
+     */
+    String RUN_MODE_INSTALL_OPTIONS = "sling.run.mode.install.options";
+
+    /**
      * Utility method to generate an absolute path
      * within Sling Home.
      *

@@ -22,10 +22,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -57,6 +62,9 @@ public class SlingSettingsServiceImpl
     /** The name of the data file holding the sling id. */
     private static final String DATA_FILE = "sling.id.file";
 
+    /** The name of the data file holding install run mode options */
+    private static final String OPTIONS_FILE = "sling.options.file";
+
     /**
      * Create the service and search the Sling home urls and
      * get/create a sling id.
@@ -65,8 +73,8 @@ public class SlingSettingsServiceImpl
      */
     public SlingSettingsServiceImpl(final BundleContext context) {
         this.setupSlingHome(context);
-        this.setupSlingId(context);
-        this.setupRunModes(context);
+        final boolean isInstall = this.setupSlingId(context);
+        this.setupRunModes(context, isInstall);
 
     }
 
@@ -88,7 +96,7 @@ public class SlingSettingsServiceImpl
     /**
      * Get / create sling id
      */
-    private void setupSlingId(final BundleContext context) {
+    private boolean setupSlingId(final BundleContext context) {
         // try to read the id from the id file first
         final File idFile = context.getDataFile(DATA_FILE);
         if ( idFile == null ) {
@@ -101,26 +109,131 @@ public class SlingSettingsServiceImpl
         if (slingId == null) {
             slingId = UUID.randomUUID().toString();
             this.writeSlingId(idFile, this.slingId);
+            return true;
         }
+        return false;
+    }
+
+    private static final class Options implements Serializable {
+        private static final long serialVersionUID = 1L;
+        String[] modes;
+        String   selected;
+    }
+
+    private List<Options> handleOptions(final Set<String> modesSet, final String propOptions) {
+        if ( propOptions != null && propOptions.trim().length() > 0 ) {
+            final List<Options> optionsList = new ArrayList<Options>();
+
+            final String[] options = propOptions.trim().split("\\|");
+            for(final String opt : options) {
+                String selected = null;
+                final String[] modes = opt.trim().split(",");
+                for(int i=0; i<modes.length; i++) {
+                    modes[i] = modes[i].trim();
+                    if ( selected != null ) {
+                        modesSet.remove(modes[i]);
+                    } else {
+                        if ( modesSet.contains(modes[i]) ) {
+                            selected = modes[i];
+                        }
+                    }
+                }
+                if ( selected == null ) {
+                    selected = modes[0];
+                    modesSet.add(modes[0]);
+                }
+                final Options o = new Options();
+                o.selected = selected;
+                o.modes = modes;
+                optionsList.add(o);
+            }
+            return optionsList;
+        }
+        return null;
     }
 
     /**
      * Set up run modes.
      */
-    private void setupRunModes(final BundleContext context) {
+    @SuppressWarnings("unchecked")
+    private void setupRunModes(final BundleContext context,
+            final boolean isInstall) {
+        final Set<String> modesSet = new HashSet<String>();
+
+        // check configuration property first
         final String prop = context.getProperty(RUN_MODES_PROPERTY);
-        if (prop == null || prop.trim().length() == 0) {
-            this.runModes = Collections.emptySet();
-        } else {
-            final Set<String> modesSet = new HashSet<String>();
+        if (prop != null && prop.trim().length() > 0) {
             final String[] modes = prop.split(",");
             for(int i=0; i < modes.length; i++) {
                 modesSet.add(modes[i].trim());
             }
-            // make the set unmodifiable and synced
-            // we propably don't need a synced set as it is read only
-            this.runModes = Collections.synchronizedSet(Collections.unmodifiableSet(modesSet));
-            logger.info("Active run modes {}", this.runModes);
+        }
+
+        // now options
+        this.handleOptions(modesSet, context.getProperty(RUN_MODE_OPTIONS));
+        // now install options
+        if ( isInstall ) {
+            final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
+            if ( optionsList != null ) {
+                final File file = context.getDataFile(OPTIONS_FILE);
+                FileOutputStream fos = null;
+                ObjectOutputStream oos = null;
+                try {
+                    fos = new FileOutputStream(file);
+                    oos = new ObjectOutputStream(fos);
+                    oos.writeObject(optionsList);
+                } catch ( final IOException ioe ) {
+                    throw new RuntimeException("Unable to write to options data file.", ioe);
+                } finally {
+                    if ( oos != null ) {
+                        try { oos.close(); } catch ( final IOException ignore) {}
+                    }
+                    if ( fos != null ) {
+                        try { fos.close(); } catch ( final IOException ignore) {}
+                    }
+                }
+            }
+        } else {
+            final File file = context.getDataFile(OPTIONS_FILE);
+            if ( file.exists() ) {
+                List<Options> optionsList = null;
+                FileInputStream fis = null;
+                ObjectInputStream ois = null;
+                try {
+                    fis = new FileInputStream(file);
+                    ois = new ObjectInputStream(fis);
+
+                    optionsList = (List<Options>) ois.readObject();
+                } catch ( final IOException ioe ) {
+                    throw new RuntimeException("Unable to read from options data file.", ioe);
+                } catch (ClassNotFoundException cnfe) {
+                    throw new RuntimeException("Unable to read from options data file.", cnfe);
+                } finally {
+                    if ( ois != null ) {
+                        try { ois.close(); } catch ( final IOException ignore) {}
+                    }
+                    if ( ois != null ) {
+                        try { ois.close(); } catch ( final IOException ignore) {}
+                    }
+                }
+                if ( optionsList != null ) {
+                    for(final Options o : optionsList) {
+                        for(final String m : o.modes) {
+                            modesSet.remove(m);
+                        }
+                        modesSet.add(o.selected);
+                    }
+                }
+            }
+        }
+
+        // make the set unmodifiable and synced
+        // we probably don't need a synced set as it is read only
+        this.runModes = Collections.synchronizedSet(Collections.unmodifiableSet(modesSet));
+        if ( this.runModes.size() > 0 ) {
+            logger.info("Active run modes: {}", this.runModes);
+        } else {
+            logger.info("No run modes active");
         }
     }
 
@@ -143,7 +256,7 @@ public class SlingSettingsServiceImpl
 
                     return id;
                 }
-            } catch (Throwable t) {
+            } catch (final Throwable t) {
                 logger.error("Failed reading UUID from id file " + idFile
                         + ", creating new id", t);
             } finally {
@@ -169,7 +282,7 @@ public class SlingSettingsServiceImpl
             fout = new FileOutputStream(idFile);
             fout.write(slingId.getBytes("ISO-8859-1"));
             fout.flush();
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             logger.error("Failed writing UUID to id file " + idFile, t);
         } finally {
             if (fout != null) {
