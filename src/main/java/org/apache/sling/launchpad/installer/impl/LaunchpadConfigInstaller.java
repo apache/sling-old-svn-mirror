@@ -101,7 +101,7 @@ public class LaunchpadConfigInstaller {
                         // if this is a configuration, hint could be run Modes
                         if ( !hint.equals(CONFIG_NAME) ) {
                             if ( isActive(hint, activeRunModes) == 0 ) {
-                                logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: ", new Object[] {resourceType, path, hint});
+                                logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: {}", new Object[] {resourceType, path, hint});
                                 continue;
                             }
                         }
@@ -124,13 +124,14 @@ public class LaunchpadConfigInstaller {
     }
 
     private static int isActive(final String runModesString, final Set<String> activeRunModes) {
-        final String[] runModes = runModesString.split(".");
+        final String[] runModes = runModesString.split("\\.");
         boolean active = true;
         for(final String mode : runModes) {
             if ( !activeRunModes.contains(mode) ) {
                 active = false;
             }
         }
+
         return active ? runModes.length : 0;
     }
 
@@ -169,7 +170,7 @@ public class LaunchpadConfigInstaller {
                         final int prio = PRIORITY + PRIORITY_BOOST * activeModes;
                         checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, prio);
                     } else {
-                        logger.debug("Ignoring path {} due to unactivated run mode: ", path, name.substring(INSTALL_PREFIX.length()));
+                        logger.debug("Ignoring path {} due to unactivated run mode: {}", path, name.substring(INSTALL_PREFIX.length()));
                     }
                 } else {
                     logger.debug("Ignoring path {} - not an installation path", path);
