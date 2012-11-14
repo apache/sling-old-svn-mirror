@@ -20,9 +20,12 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.Resource;
@@ -75,7 +78,7 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(singletonValueMap("sling:alias", "alias"));
+        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -105,13 +108,13 @@ public class MapEntriesTest {
         when(result.getParent()).thenReturn(parent);
         when(result.getPath()).thenReturn("/parent/child");
         when(result.getName()).thenReturn("child");
-        when(result.adaptTo(ValueMap.class)).thenReturn(singletonValueMap("sling:alias", "alias"));
+        when(result.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
 
         final Resource secondResult = mock(Resource.class);
         when(secondResult.getParent()).thenReturn(parent);
         when(secondResult.getPath()).thenReturn("/parent/child2");
         when(secondResult.getName()).thenReturn("child2");
-        when(secondResult.adaptTo(ValueMap.class)).thenReturn(singletonValueMap("sling:alias", "alias"));
+        when(secondResult.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:alias", "alias"));
 
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
 
@@ -132,8 +135,68 @@ public class MapEntriesTest {
         assertEquals("child", aliasMap.get("alias"));
     }
 
-    private ValueMap singletonValueMap(String key, String value) {
-        return new ValueMapDecorator(Collections.<String, Object> singletonMap(key, value));
+    @Test
+    public void test_vanity_path_registration() {
+        // specifically making this a weird value because we want to verify that
+        // the configuration value is being used
+        int DEFAULT_VANITY_STATUS = 333333;
+
+        when(resourceResolverFactory.getDefaultVanityPathRedirectStatus()).thenReturn(DEFAULT_VANITY_STATUS);
+
+        final List<Resource> resources = new ArrayList<Resource>();
+
+        Resource justVanityPath = mock(Resource.class);
+        when(justVanityPath.getPath()).thenReturn("/justVanityPath");
+        when(justVanityPath.getName()).thenReturn("justVanityPath");
+        when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
+        resources.add(justVanityPath);
+
+        Resource redirectingVanityPath = mock(Resource.class);
+        when(redirectingVanityPath.getPath()).thenReturn("/redirectingVanityPath");
+        when(redirectingVanityPath.getName()).thenReturn("redirectingVanityPath");
+        when(redirectingVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath", "sling:redirect", true));
+        resources.add(redirectingVanityPath);
+
+        Resource redirectingVanityPath301 = mock(Resource.class);
+        when(redirectingVanityPath301.getPath()).thenReturn("/redirectingVanityPath301");
+        when(redirectingVanityPath301.getName()).thenReturn("redirectingVanityPath301");
+        when(redirectingVanityPath301.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/redirectingVanityPath301", "sling:redirect", true, "sling:redirectStatus", 301));
+        resources.add(redirectingVanityPath301);
+
+        when(resourceResolver.findResources(anyString(), eq("sql"))).thenAnswer(new Answer<Iterator<Resource>>() {
+
+            public Iterator<Resource> answer(InvocationOnMock invocation) throws Throwable {
+                if (invocation.getArguments()[0].toString().contains("sling:vanityPath")) {
+                    return resources.iterator();
+                } else {
+                    return Collections.<Resource> emptySet().iterator();
+                }
+            }
+        });
+
+        mapEntries.doInit();
+
+        List<MapEntry> entries = mapEntries.getResolveMaps();
+        assertEquals(6, entries.size());
+        for (MapEntry entry : entries) {
+            if (entry.getPattern().contains("/target/redirectingVanityPath301")) {
+                assertEquals(301, entry.getStatus());
+                assertFalse(entry.isInternal());
+            } else if (entry.getPattern().contains("/target/redirectingVanityPath")) {
+                assertEquals(DEFAULT_VANITY_STATUS, entry.getStatus());
+                assertFalse(entry.isInternal());
+            } else if (entry.getPattern().contains("/target/justVanityPath")) {
+                assertTrue(entry.isInternal());
+            }
+        }
+    }
+
+    private ValueMap buildValueMap(Object... string) {
+        final Map<String, Object> data = new HashMap<String, Object>();
+        for (int i = 0; i < string.length; i = i + 2) {
+            data.put((String) string[i], string[i+1]);
+        }
+        return new ValueMapDecorator(data);
     }
 
 }

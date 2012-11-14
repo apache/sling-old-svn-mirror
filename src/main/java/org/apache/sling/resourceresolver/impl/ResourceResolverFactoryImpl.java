@@ -161,4 +161,8 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
     public RootResourceProviderEntry getRootProviderEntry() {
         return this.activator.getRootProviderEntry();
     }
+
+    public int getDefaultVanityPathRedirectStatus() {
+        return this.activator.getDefaultVanityPathRedirectStatus();
+    }
 }
