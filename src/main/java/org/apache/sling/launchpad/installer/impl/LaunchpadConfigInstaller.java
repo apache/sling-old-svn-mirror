@@ -101,7 +101,7 @@ public class LaunchpadConfigInstaller {
                         // if this is a configuration, hint could be run Modes
                         if ( !hint.equals(CONFIG_NAME) ) {
                             if ( isActive(hint, activeRunModes) == 0 ) {
-                                logger.debug("Launchpad ignoring {} : {} due to unactivated run mode", resourceType, path);
+                                logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: ", new Object[] {resourceType, path, hint});
                                 continue;
                             }
                         }
@@ -169,12 +169,18 @@ public class LaunchpadConfigInstaller {
                         final int prio = PRIORITY + PRIORITY_BOOST * activeModes;
                         checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, prio);
                     } else {
-                        logger.debug("Ignoring path {} due to unactivated run mode", path);
+                        logger.debug("Ignoring path {} due to unactivated run mode: ", path, name.substring(INSTALL_PREFIX.length());
                     }
                 } else {
                     logger.debug("Ignoring path {} - not an installation path", path);
                 }
             }
+        } else {
+            logger.warn("Run mode dependent installation not supported by launchpad content provider {}", resourceProvider);
+            // revert to old behaviour
+            checkPath(resourceProvider, activeRunModes, installables, ROOT_PATH + '/' + CONFIG_NAME, InstallableResource.TYPE_PROPERTIES, PRIORITY);
+            checkPath(resourceProvider, activeRunModes, installables, ROOT_PATH + '/' + INSTALL_NAME, InstallableResource.TYPE_FILE, PRIORITY);
+
         }
 
         final InstallableResource [] toInstall = installables.toArray(new InstallableResource []{});
