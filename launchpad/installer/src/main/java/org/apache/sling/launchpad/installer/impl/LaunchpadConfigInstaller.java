@@ -169,7 +169,7 @@ public class LaunchpadConfigInstaller {
                         final int prio = PRIORITY + PRIORITY_BOOST * activeModes;
                         checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, prio);
                     } else {
-                        logger.debug("Ignoring path {} due to unactivated run mode: ", path, name.substring(INSTALL_PREFIX.length());
+                        logger.debug("Ignoring path {} due to unactivated run mode: ", path, name.substring(INSTALL_PREFIX.length()));
                     }
                 } else {
                     logger.debug("Ignoring path {} - not an installation path", path);
