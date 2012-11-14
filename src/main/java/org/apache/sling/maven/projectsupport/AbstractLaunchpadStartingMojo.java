@@ -166,6 +166,12 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
                 } catch (NumberFormatException e) {
                     // we ignore this
                 }
+            } else if (path.equals("resources") ) {
+                final Set<String> subDirs = new HashSet<String>();
+                subDirs.add(BUNDLE_PATH_PREFIX);
+                subDirs.add(CONFIG_PATH_PREFIX);
+                subDirs.add("resources/corebundles");
+                return subDirs.iterator();
             }
 
             getLog().warn("un-handlable path " + path);
@@ -328,6 +334,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
         }
     }
 
+    @Override
     protected void initArtifactDefinitions(Properties dependencies) {
         if (jarWebSupport == null) {
             jarWebSupport = new ArtifactDefinition();
