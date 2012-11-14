@@ -119,6 +119,9 @@ public class ResourceResolverFactoryActivator {
     @Property(value = MapEntries.DEFAULT_MAP_ROOT)
     private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
 
+    @Property(intValue = MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS)
+    private static final String PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS = "resource.resolver.default.vanity.redirect.status";
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -155,6 +158,8 @@ public class ResourceResolverFactoryActivator {
 
     /** ComponentContext */
     private ComponentContext componentContext;
+
+    private int defaultVanityPathRedirectStatus;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -201,6 +206,10 @@ public class ResourceResolverFactoryActivator {
 
     public String getMapRoot() {
         return mapRoot;
+    }
+
+    public int getDefaultVanityPathRedirectStatus() {
+        return defaultVanityPathRedirectStatus;
     }
 
     // ---------- SCR Integration ---------------------------------------------
@@ -262,6 +271,8 @@ public class ResourceResolverFactoryActivator {
 
         // the root of the resolver mappings
         mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
+
+        defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS), MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
 
         final BundleContext bc = componentContext.getBundleContext();
 

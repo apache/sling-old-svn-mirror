@@ -77,6 +77,8 @@ public class MapEntries implements EventHandler {
 
     public static final String DEFAULT_MAP_ROOT = "/etc/map";
 
+    public static final int DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS = HttpServletResponse.SC_FOUND;
+
     private static final String JCR_SYSTEM_PREFIX = "/jcr:system/";
 
     static final String ANY_SCHEME_HOST = "[^/]+/[^/]+";
@@ -569,11 +571,11 @@ public class MapEntries implements EventHandler {
                         final String redirect = redirectTarget.getPath();
                         final String redirectName = redirectTarget.getName();
 
-                        // whether the target is attained by a 302/FOUND or by an
-                        // internal redirect is defined by the sling:redirect
+                        // whether the target is attained by a external redirect or
+                        // by an internal redirect is defined by the sling:redirect
                         // property
                         final int status = props.get("sling:redirect", false) ? props.get(
-                                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, HttpServletResponse.SC_FOUND)
+                                        PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, factory.getDefaultVanityPathRedirectStatus())
                                         : -1;
 
                         final String checkPath = result[1];

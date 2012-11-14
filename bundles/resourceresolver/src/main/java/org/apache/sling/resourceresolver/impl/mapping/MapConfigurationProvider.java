@@ -35,4 +35,6 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     Mapping[] getMappings();
 
+    int getDefaultVanityPathRedirectStatus();
+
 }
