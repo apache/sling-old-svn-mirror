@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -339,13 +341,6 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         }
     }
 
-    public void remove(final TaskResource r) {
-        if ( resources.remove(r) ) {
-            LOGGER.debug("Removing unused: {}", r);
-            this.cleanup(r);
-        }
-    }
-
     /**
      * Compact the resource group by removing uninstalled entries
      * @return <code>true</code> if another cycle should be started.
@@ -360,14 +355,24 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             }
             first = false;
         }
-        for(final RegisteredResource r : toDelete) {
-            resources.remove(r);
+        
+        if(!toDelete.isEmpty()) {
+            // Avoid resources.remove(r) as the resource might have
+            // changed since it was added, which causes it to compare()
+            // differently and trip the TreeSet.remove() search.
+            final Set<TaskResource> copy = new HashSet<TaskResource>(resources);
+            for(final RegisteredResource r : toDelete) {
+                copy.remove(r);
+                this.cleanup(r);
+                LOGGER.debug("Removing uninstalled from list: {}", r);
+            }
+            resources.clear();
+            resources.addAll(copy);
             if ( !this.isEmpty() ) {
                 startNewCycle = true;
             }
-            this.cleanup(r);
-            LOGGER.debug("Removing uninstalled from list: {}", r);
         }
+        
         return startNewCycle;
     }
 }
