@@ -144,6 +144,7 @@ public class JcrResourceListener implements EventListener {
             } catch (RepositoryException e) {
                 logger.warn("Unable to remove session listener: " + this, e);
             }
+            this.session.logout();
         }
         if ( this.resourceResolver != null ) {
             this.resourceResolver.close();
