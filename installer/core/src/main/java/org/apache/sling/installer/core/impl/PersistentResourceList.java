@@ -263,16 +263,6 @@ public class PersistentResourceList {
     }
 
     /**
-     * Remove a resource.
-     */
-    public void remove(final TaskResource r) {
-        final EntityResourceList group = this.data.get(r.getEntityId());
-        if ( group != null ) {
-            group.remove(r);
-        }
-    }
-
-    /**
      * Get the resource group for an entity id.
      */
     public EntityResourceList getEntityResourceList(final String entityId) {

@@ -507,7 +507,7 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                         first = false;
                     }
                     for(final TaskResource rr : toRemove) {
-                        this.persistentList.remove(rr);
+                        this.persistentList.remove(rr.getURL());
                     }
                 }
                 if ( registeredResources != null ) {
