@@ -39,6 +39,9 @@ import org.slf4j.LoggerFactory;
  */
 public class LaunchpadConfigInstaller {
 
+    /** Logger */
+    private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+
     /**
      * Resources supplied under this path by
      * LaunchpadContentProvider are considered for installation
@@ -67,24 +70,24 @@ public class LaunchpadConfigInstaller {
     /**
      * Check the path for installable artifacts.
      */
-    private static boolean checkPath(final LaunchpadContentProvider resourceProvider,
-            final Set<String> activeRunModes,
-            final Collection<InstallableResource> installables,
-            final String rootPath,
+    private boolean checkPath(final String rootPath,
             final String resourceType,
             final Integer prio) {
         int count = 0;
-        final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
+
         final Iterator<String> configPaths = resourceProvider.getChildren(rootPath);
         if ( configPaths != null ) {
             final int hintPos = rootPath.lastIndexOf('/');
             final String hint = rootPath.substring(hintPos + 1);
+
             while (configPaths.hasNext()) {
                 String path = configPaths.next();
                 if ( path.endsWith("/") ) {
                     path = path.substring(0, path.length() - 1);
                 }
-                if ( !checkPath(resourceProvider, activeRunModes, installables, path, resourceType, prio) ) {
+                if ( !checkPath(path, resourceType, prio) ) {
+                    count++;
+
                     final URL url = resourceProvider.getResource(path);
                     Dictionary<String, Object> dict = null;
                     if ( InstallableResource.TYPE_FILE.equals(resourceType) ) {
@@ -97,14 +100,9 @@ public class LaunchpadConfigInstaller {
                         } catch (final URISyntaxException e) {
                             // we just ignore this
                         }
-                    } else {
-                        // if this is a configuration, hint could be run Modes
-                        if ( !hint.equals(CONFIG_NAME) ) {
-                            if ( isActive(hint, activeRunModes) == 0 ) {
-                                logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: {}", new Object[] {resourceType, path, hint});
-                                continue;
-                            }
-                        }
+                    } else if ( !hint.equals(CONFIG_NAME) && isActive(hint) == 0 ) {
+                        logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: {}", new Object[] {resourceType, path, hint});
+                        continue;
                     }
                     long lastModified = -1;
                     try {
@@ -116,14 +114,13 @@ public class LaunchpadConfigInstaller {
                     final String digest = (lastModified > 0 ? String.valueOf(lastModified) : null);
                     final InputStream stream = resourceProvider.getResourceAsStream(path);
                     installables.add(new InstallableResource(path, stream, dict, digest, resourceType, prio));
-                    count++;
                 }
             }
         }
         return count > 0;
     }
 
-    private static int isActive(final String runModesString, final Set<String> activeRunModes) {
+    private int isActive(final String runModesString) {
         final String[] runModes = runModesString.split("\\.");
         boolean active = true;
         for(final String mode : runModes) {
@@ -141,11 +138,24 @@ public class LaunchpadConfigInstaller {
     public static void install(final OsgiInstaller installer,
             final LaunchpadContentProvider resourceProvider,
             final Set<String> activeRunModes) {
-        final Logger logger = LoggerFactory.getLogger(LaunchpadConfigInstaller.class);
+        new LaunchpadConfigInstaller(resourceProvider, activeRunModes).install(installer);
+    }
+
+    private final LaunchpadContentProvider resourceProvider;
+
+    private final Set<String> activeRunModes;
+
+    private final Collection<InstallableResource> installables = new HashSet<InstallableResource>();
+
+    private LaunchpadConfigInstaller(final LaunchpadContentProvider resourceProvider,
+            final Set<String> activeRunModes) {
+        this.resourceProvider = resourceProvider;
+        this.activeRunModes = activeRunModes;
+    }
+
+    private void install(final OsgiInstaller installer) {
         logger.info("Activating launchpad config installer, configuration path={}/{}, install path={}/{}",
                 new Object[] {ROOT_PATH, CONFIG_NAME, ROOT_PATH, INSTALL_NAME});
-
-        final Collection<InstallableResource> installables = new HashSet<InstallableResource>();
 
         final Iterator<String> configPaths = resourceProvider.getChildren(ROOT_PATH);
         if ( configPaths != null ) {
@@ -159,16 +169,16 @@ public class LaunchpadConfigInstaller {
                 String name = path.substring(namePos + 1);
                 if ( name.equals(CONFIG_NAME) ) {
                     // configurations
-                    checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_PROPERTIES, PRIORITY);
+                    checkPath(path, InstallableResource.TYPE_PROPERTIES, PRIORITY);
                 } else if ( name.equals(INSTALL_NAME) ) {
                     // files
-                    checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, PRIORITY);
+                    checkPath(path, InstallableResource.TYPE_FILE, PRIORITY);
                 } else if ( name.startsWith(INSTALL_PREFIX) ) {
-                    final int activeModes = isActive(name.substring(INSTALL_PREFIX.length()), activeRunModes);
+                    final int activeModes = isActive(name.substring(INSTALL_PREFIX.length()));
                     if ( activeModes > 0 ) {
                         // files
                         final int prio = PRIORITY + PRIORITY_BOOST * activeModes;
-                        checkPath(resourceProvider, activeRunModes, installables, path, InstallableResource.TYPE_FILE, prio);
+                        checkPath(path, InstallableResource.TYPE_FILE, prio);
                     } else {
                         logger.debug("Ignoring path {} due to unactivated run mode: {}", path, name.substring(INSTALL_PREFIX.length()));
                     }
@@ -178,9 +188,9 @@ public class LaunchpadConfigInstaller {
             }
         } else {
             logger.warn("Run mode dependent installation not supported by launchpad content provider {}", resourceProvider);
-            // revert to old behaviour
-            checkPath(resourceProvider, activeRunModes, installables, ROOT_PATH + '/' + CONFIG_NAME, InstallableResource.TYPE_PROPERTIES, PRIORITY);
-            checkPath(resourceProvider, activeRunModes, installables, ROOT_PATH + '/' + INSTALL_NAME, InstallableResource.TYPE_FILE, PRIORITY);
+            // revert to old behavior
+            checkPath(ROOT_PATH + '/' + CONFIG_NAME, InstallableResource.TYPE_PROPERTIES, PRIORITY);
+            checkPath(ROOT_PATH + '/' + INSTALL_NAME, InstallableResource.TYPE_FILE, PRIORITY);
 
         }
 
