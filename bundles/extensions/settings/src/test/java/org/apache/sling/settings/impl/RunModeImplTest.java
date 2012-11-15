@@ -57,114 +57,95 @@ public class RunModeImplTest {
         assertParse(" foo \t", new String[] { "foo" });
         assertParse(" foo \t,  bar\n", new String[] { "foo", "bar" });
     }
+    
+    private void assertActive(SlingSettingsService s, boolean active, String ...modes) {
+        for(String mode : modes) {
+            if(active) {
+                assertTrue(mode + " should be active", s.getRunModes().contains(mode));
+            } else {
+                assertFalse(mode + " should NOT be active", s.getRunModes().contains(mode));
+            }
+        }
+    }
 
     @org.junit.Test public void testMatchesNotEmpty() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, null));
-
-        assertTrue("single foo should be active", rm.getRunModes().contains("foo"));
-
-        assertFalse("wiz should be not active", rm.getRunModes().contains("wiz"));
-        assertFalse("bah should be not active", rm.getRunModes().contains("bah"));
-        assertFalse("empty should be not active", rm.getRunModes().contains(""));
+        assertActive(rm, true, "foo", "bar");
+        assertActive(rm, false, "wiz", "bah", "");
     }
 
     @org.junit.Test public void testOptions() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", "a,b,c|d,e,f", null));
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("a should be active", rm.getRunModes().contains("a"));
-        assertTrue("d should be active", rm.getRunModes().contains("d"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("c should not be active", rm.getRunModes().contains("c"));
-        assertFalse("e should not be active", rm.getRunModes().contains("e"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        assertActive(rm, true, "foo", "bar", "a", "d");
+        assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testOptionsSelected() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", "a,b,c|d,e,f", null));
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("c should be active", rm.getRunModes().contains("c"));
-        assertTrue("e should be active", rm.getRunModes().contains("e"));
-        assertFalse("a should not be active", rm.getRunModes().contains("a"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("d should not be active", rm.getRunModes().contains("d"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        assertActive(rm, true, "foo", "bar", "c", "e");
+        assertActive(rm, false, "a", "b", "d", "f");
     }
 
     @org.junit.Test public void testOptionsMultipleSelected() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", "a,b,c|d,e,f", null));
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("a should be active", rm.getRunModes().contains("a"));
-        assertTrue("e should be active", rm.getRunModes().contains("e"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("c should not be active", rm.getRunModes().contains("c"));
-        assertFalse("d should not be active", rm.getRunModes().contains("d"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        assertActive(rm, true, "foo", "bar", "a", "e");
+        assertActive(rm, false, "b", "c", "d", "f");
+    }
+
+    @org.junit.Test public void testOptionsMultipleSelected2() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,f,a,d", "a,b,c|d,e,f", null));
+        assertActive(rm, true, "foo", "bar", "a", "d");
+        assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testInstallOptions() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar", null, "a,b,c|d,e,f"));
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("a should be active", rm.getRunModes().contains("a"));
-        assertTrue("d should be active", rm.getRunModes().contains("d"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("c should not be active", rm.getRunModes().contains("c"));
-        assertFalse("e should not be active", rm.getRunModes().contains("e"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        assertActive(rm, true, "foo", "bar", "a", "d");
+        assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testInstallOptionsSelected() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", null , "a,b,c|d,e,f"));
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("c should be active", rm.getRunModes().contains("c"));
-        assertTrue("e should be active", rm.getRunModes().contains("e"));
-        assertFalse("a should not be active", rm.getRunModes().contains("a"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("d should not be active", rm.getRunModes().contains("d"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        assertActive(rm, true, "foo", "bar", "c", "e");
+        assertActive(rm, false, "a", "b", "d", "f");
     }
 
     @org.junit.Test public void testInstallOptionsMultipleSelected() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e,f,a", null, "a,b,c|d,e,f"));
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("a should be active", rm.getRunModes().contains("a"));
-        assertTrue("e should be active", rm.getRunModes().contains("e"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("c should not be active", rm.getRunModes().contains("c"));
-        assertFalse("d should not be active", rm.getRunModes().contains("d"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        assertActive(rm, true, "foo", "bar", "a", "e");
+        assertActive(rm, false, "b", "c", "d", "f");
+    }
+
+    @org.junit.Test public void testInstallOptionsMultipleSelected2() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,d,f,a", null, "a,b,c|d,e,f"));
+        assertActive(rm, true, "foo", "bar", "a", "d");
+        assertActive(rm, false, "b", "c", "e", "f");
     }
 
     @org.junit.Test public void testInstallOptionsRestart() {
         final BundleContextMock bc = new BundleContextMock("foo,bar,c,e,f,a", null, "a,b,c|d,e,f");
-        new SlingSettingsServiceImpl(bc); // first context to simulate install
-        final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
-        assertTrue("foo should be active", rm.getRunModes().contains("foo"));
-        assertTrue("bar should be active", rm.getRunModes().contains("bar"));
-        assertTrue("a should be active", rm.getRunModes().contains("a"));
-        assertTrue("e should be active", rm.getRunModes().contains("e"));
-        assertFalse("b should not be active", rm.getRunModes().contains("b"));
-        assertFalse("c should not be active", rm.getRunModes().contains("c"));
-        assertFalse("d should not be active", rm.getRunModes().contains("d"));
-        assertFalse("f should not be active", rm.getRunModes().contains("f"));
+        
+        {
+            // create first context to simulate install
+            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
+            assertActive(rm, true, "foo", "bar", "a", "e");
+            assertActive(rm, false, "b", "c", "d", "f");
+        }
+        
+        {
+            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
+            assertActive(rm, true, "foo", "bar", "a", "e");
+            assertActive(rm, false, "b", "c", "d", "f");
+        }
 
-        // and another restart with different run modes
-        bc.update("foo,doo,a,b,c,d,e,f");
-        final SlingSettingsService rm2 = new SlingSettingsServiceImpl(bc);
-        assertTrue("foo should be active", rm2.getRunModes().contains("foo"));
-        assertTrue("doo should be active", rm2.getRunModes().contains("doo"));
-        assertTrue("a should be active", rm2.getRunModes().contains("a"));
-        assertTrue("e should be active", rm2.getRunModes().contains("e"));
-        assertFalse("bar should not be active", rm2.getRunModes().contains("bar"));
-        assertFalse("b should not be active", rm2.getRunModes().contains("b"));
-        assertFalse("c should not be active", rm2.getRunModes().contains("c"));
-        assertFalse("d should not be active", rm2.getRunModes().contains("d"));
-        assertFalse("f should not be active", rm2.getRunModes().contains("f"));
+        // simulate restart with different run modes: new ones that are
+        // mentioned in the .options properties are ignored
+        bc.update("foo,doo,a,b,c,d,e,f,waa");
+        {
+            final SlingSettingsService rm = new SlingSettingsServiceImpl(bc);
+            assertActive(rm, true, "foo", "doo", "a", "e", "waa");
+            assertActive(rm, false, "bar", "b", "c", "d", "f");
+        }
     }
 
     private static final class BundleContextMock implements BundleContext {
@@ -257,63 +238,49 @@ public class RunModeImplTest {
         }
 
         public Object getService(ServiceReference reference) {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public ServiceReference getServiceReference(String clazz) {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public ServiceReference[] getServiceReferences(String clazz,
                 String filter) throws InvalidSyntaxException {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public Bundle installBundle(String location, InputStream input)
                 throws BundleException {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public Bundle installBundle(String location) throws BundleException {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @SuppressWarnings("unchecked")
         public ServiceRegistration registerService(String clazz,
                 Object service, Dictionary properties) {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @SuppressWarnings("unchecked")
         public ServiceRegistration registerService(String[] clazzes,
                 Object service, Dictionary properties) {
-            // TODO Auto-generated method stub
             return null;
         }
 
         public void removeBundleListener(BundleListener listener) {
-            // TODO Auto-generated method stub
-
         }
 
         public void removeFrameworkListener(FrameworkListener listener) {
-            // TODO Auto-generated method stub
-
         }
 
         public void removeServiceListener(ServiceListener listener) {
-            // TODO Auto-generated method stub
-
         }
 
         public boolean ungetService(ServiceReference reference) {
-            // TODO Auto-generated method stub
             return false;
         }
     }
