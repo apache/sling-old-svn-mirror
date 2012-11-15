@@ -107,6 +107,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
      */
     private JarArchiver jarArchiver;
 
+    @Override
     public void executeWithArtifacts() throws MojoExecutionException, MojoFailureException {
         copyBaseArtifact();
         copyBundles(getInitializedBundleList(), getOutputDirectory());
@@ -116,6 +117,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
         }
     }
 
+    @Override
     protected void initArtifactDefinitions(Properties dependencies) {
         if (base == null) {
             base = new ArtifactDefinition();
@@ -278,7 +280,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
     }
 
     private Artifact getBaseDependency() {
-        return (Artifact) project.getArtifactMap().get(
+        return project.getArtifactMap().get(
                 base.getGroupId() + ":" + base.getArtifactId());
     }
 
@@ -303,7 +305,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
 
     private void copyConfigurationFiles() throws MojoExecutionException {
         try {
-            FileUtils.copyDirectory(this.getConfigDirectory(), new File(getOutputDirectory(), CONFIG_PATH_PREFIX), null, FileUtils.getDefaultExcludesAsString());
+            copyDirectory(this.getConfigDirectory(), new File(getOutputDirectory(), CONFIG_PATH_PREFIX), null, FileUtils.getDefaultExcludes());
         } catch (IOException e) {
             throw new MojoExecutionException("Unable to copy configuration files", e);
         }
