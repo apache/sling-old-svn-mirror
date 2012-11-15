@@ -178,8 +178,8 @@ public class AttachPartialBundleListMojo extends AbstractBundleListMojo {
         if ( this.checkFile(this.getConfigDirectory()) ) {
             final File configDir = new File(this.configOutputDir, "config");
             configDir.mkdirs();
-            FileUtils.copyDirectory(this.getConfigDirectory(), configDir,
-                    null, FileUtils.getDefaultExcludesAsString());
+            copyDirectory(this.getConfigDirectory(), configDir,
+                    null, FileUtils.getDefaultExcludes());
         }
         final File destFile = new File(this.configOutputDir.getParent(), this.configOutputDir.getName() + ".zip");
         zipArchiver.setDestFile(destFile);

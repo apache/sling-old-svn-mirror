@@ -38,7 +38,6 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.codehaus.plexus.archiver.ArchiverException;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.util.FileUtils;
-import org.codehaus.plexus.util.StringUtils;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
@@ -293,8 +292,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         }
         // copy own config files
         if ( this.overlayConfigDir != null && super.getConfigDirectory().exists() ) {
-            FileUtils.copyDirectory(super.getConfigDirectory(), this.overlayConfigDir,
-                    null, FileUtils.getDefaultExcludesAsString());
+            copyDirectory(super.getConfigDirectory(), this.overlayConfigDir, null, FileUtils.getDefaultExcludes());
         }
     }
 
@@ -337,15 +335,20 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
                         this.tempConfigDir.mkdirs();
                         this.overlayConfigDir = this.tempConfigDir;
                     }
-                    String excludes = FileUtils.getDefaultExcludesAsString();
+                    final String[] defaultExcludes = FileUtils.getDefaultExcludes();
+                    String[] excludes;
                     if ( this.configExcludes != null ) {
-                        excludes = excludes + ',' + StringUtils.join(this.configExcludes, ",");
+                        excludes = new String[defaultExcludes.length + this.configExcludes.length];
+                        System.arraycopy(defaultExcludes, 0, excludes, 0, defaultExcludes.length);
+                        System.arraycopy(this.configExcludes, 0, excludes, defaultExcludes.length, this.configExcludes.length);
+                    } else {
+                        excludes = defaultExcludes;
                     }
-                    String includes = null;
+                    String[] includes = null;
                     if ( this.configIncludes != null ) {
-                        includes = StringUtils.join(this.configIncludes, ",");
+                        includes = this.configIncludes;
                     }
-                    FileUtils.copyDirectory(configDir, this.overlayConfigDir,
+                    copyDirectory(configDir, this.overlayConfigDir,
                                     includes, excludes);
                 }
             } catch (final ArchiverException ae) {

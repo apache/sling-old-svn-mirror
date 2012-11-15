@@ -17,6 +17,8 @@
 package org.apache.sling.maven.projectsupport;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.maven.artifact.Artifact;
@@ -35,6 +37,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
+import org.codehaus.plexus.util.SelectorUtils;
 import org.codehaus.plexus.util.StringUtils;
 
 public abstract class AbstractBundleListMojo extends AbstractMojo {
@@ -218,5 +221,39 @@ public abstract class AbstractBundleListMojo extends AbstractMojo {
                 }
                 return artifact;
             }
+
+    /**
+     * Helper method to copy a whole directory
+     */
+    protected void copyDirectory(final File source, final File target, final String[] includes, final String[] excludes)
+    throws IOException {
+        final String prefix = source.getAbsolutePath() + File.separatorChar;
+        final int prefixLength = prefix.length();
+        org.apache.commons.io.FileUtils.copyDirectory(source, target, new FileFilter() {
+
+            public boolean accept(final File file) {
+                final String path = file.getAbsolutePath().substring(prefixLength).replace(File.separatorChar, '/');
+                if ( includes != null ) {
+                    boolean matched = false;
+                    for(int i = 0; i<includes.length && !matched; i++) {
+                        if ( SelectorUtils.matchPath(includes[i], path)) {
+                            matched = true;
+                        }
+                    }
+                    if ( !matched ) {
+                        return false;
+                    }
+                }
+                if ( excludes != null ) {
+                    for(final String pattern:excludes) {
+                        if ( SelectorUtils.matchPath(pattern, path)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        });
+    }
 
 }
