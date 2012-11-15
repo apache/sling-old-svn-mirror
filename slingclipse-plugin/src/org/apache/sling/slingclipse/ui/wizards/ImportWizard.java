@@ -17,10 +17,6 @@
 package org.apache.sling.slingclipse.ui.wizards;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
@@ -37,18 +33,13 @@ import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -122,8 +113,9 @@ public class ImportWizard extends Wizard implements IImportWizard {
 						monitor.setTaskName("Import Complete");
 						monitor.worked(100);
 					} catch ( Exception e) {
-						SlingclipsePlugin.getDefault().getLog().
-						log(new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e)).getStatus());
+						Status status = new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e);
+						SlingclipsePlugin.getDefault().getLog().log(status);
+						return status;
 					}finally{
 						//restore to the original value
 						store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), autoSync);
@@ -141,15 +133,6 @@ public class ImportWizard extends Wizard implements IImportWizard {
                         createFolder(project, rootImportPath.removeLastSegments(i));
                 }
 			};
-			job.addJobChangeListener(new JobChangeAdapter() {
-				public void done(IJobChangeEvent event) {
-					if (event.getResult().isOK()) {
-						System.out.println("Job Succeeded!");
-					} else {
-						System.err.println("Job Failed!");
-					}
-				}
-			});
 			job.setSystem(false);
 			job.setUser(true);
 			job.schedule();

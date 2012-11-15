@@ -257,6 +257,12 @@ public class ImportWizardPage extends WizardResourceImportPage {
 			setErrorMessage("Please enter valid server information");
 			return false;
 		}
+		
+		if ( !getRepositoryPath().startsWith("/") ) {
+			setErrorMessage("The repository path needs to be absolute");
+			return false;
+		}
+		
 		IPath containerNameField= super.getResourcePath();  
 		if (!containerNameField.toOSString().endsWith(SlingclipseHelper.JCR_ROOT)){
 			setErrorMessage("Please enter a valid Sling project folder (e.g. jcr_root)");
