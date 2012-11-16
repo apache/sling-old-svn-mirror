@@ -88,7 +88,12 @@ public class BundleUpdateTask extends AbstractBundleTask {
                 b.stop();
             }
 
-            // start level handling
+            // update bundle
+            b.update(getResource().getInputStream());
+            ctx.log("Updated bundle {} from resource {}", b, getResource());
+
+            // start level handling - after update to avoid starting the bundle
+            // just before the update
             final StartLevel startLevelService = this.getStartLevel();
             if ( startLevelService != null ) {
                 final int newStartLevel = this.getBundleStartLevel();
@@ -98,8 +103,6 @@ public class BundleUpdateTask extends AbstractBundleTask {
                     ctx.log("Set start level for bundle {} to {}", b, newStartLevel);
                 }
             }
-            b.update(getResource().getInputStream());
-            ctx.log("Updated bundle {} from resource {}", b, getResource());
 
             if (reactivate) {
                 if ( BundleUtil.isSystemBundleFragment(b) ) {
