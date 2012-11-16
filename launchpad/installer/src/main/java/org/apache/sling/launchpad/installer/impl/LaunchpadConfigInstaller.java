@@ -72,7 +72,7 @@ public class LaunchpadConfigInstaller {
      */
     private boolean checkPath(final String rootPath,
             final String resourceType,
-            final Integer prio) {
+            Integer prio) {
         int count = 0;
 
         final Iterator<String> configPaths = resourceProvider.getChildren(rootPath);
@@ -100,9 +100,13 @@ public class LaunchpadConfigInstaller {
                         } catch (final URISyntaxException e) {
                             // we just ignore this
                         }
-                    } else if ( !hint.equals(CONFIG_NAME) && isActive(hint) == 0 ) {
-                        logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: {}", new Object[] {resourceType, path, hint});
-                        continue;
+                    } else if ( !hint.equals(CONFIG_NAME) ) {
+                        final int activeModes = isActive(hint);
+                        if ( activeModes == 0 ) {
+                            logger.debug("Launchpad ignoring {} : {} due to unactivated run mode: {}", new Object[] {resourceType, path, hint});
+                            continue;
+                        }
+                        prio = PRIORITY + PRIORITY_BOOST * activeModes;
                     }
                     long lastModified = -1;
                     try {
