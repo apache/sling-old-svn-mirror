@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
@@ -78,6 +79,7 @@ public class TenantProviderImpl implements TenantProvider {
 
     @Property(
             value = {},
+            unbounded = PropertyUnbounded.ARRAY,
             label = "Tenants Path Matcher",
             description = "Defines tenants path matcher i.e. /content/sample/([^/]+)/*, used while resolving path to tenant")
     private static final String TENANT_PATH_MATCHER = "tenant.path.matcher";
