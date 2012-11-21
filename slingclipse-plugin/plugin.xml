@@ -19,12 +19,6 @@
       </initializer>
    </extension>
    <extension
-         point="org.eclipse.ui.startup">
-      <startup
-            class="org.apache.sling.slingclipse.SlingclipseStrartup">
-      </startup>
-   </extension>
-   <extension
          point="org.eclipse.ui.importWizards">
       <category
             id="org.apache.sling.slingclipse.ui.wizards.sampleCategory"
@@ -40,5 +34,54 @@
             Import a file from the local file system into the workspace.
          </description>
       </wizard>
+   </extension>
+   <extension
+         id="org.apache.sling.slingclipse.SlingProjectNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run class="org.apache.sling.slingclipse.internal.SlingProjectNature"/>
+      </runtime>
+      <builder
+            id="org.apache.sling.slingclipse.SlingProjectBuilder">
+      </builder>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="org.apache.sling.slingclipse.convertToSlingProject"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="org.apache.sling.slingclipse.internal.AddSlingNatureAction"
+               id="org.apache.sling.slingclipse.enableNatureAction"
+               label="Convert to Sling Project"
+               menubarPath="org.eclipse.ui.projectConfigure/additions"
+               style="push">
+         </action>
+         <visibility>
+            <and>
+               <objectState
+                     name="open"
+                     value="true">
+               </objectState>
+               <not>
+                  <objectState
+                        name="nature"
+                        value="org.apache.sling.slingclipse.SlingProjectNature">
+                  </objectState>
+               </not>
+            </and>
+         </visibility>
+      </objectContribution>
+   </extension>
+   <extension
+         id="org.apache.sling.slingclipse.SlingProjectBuilder"
+         name="Sling Project Builder"
+         point="org.eclipse.core.resources.builders">
+      <builder
+            hasNature="true">
+            <run
+                  class="org.apache.sling.slingclipse.internal.SlingProjectBuilder">
+            </run>
+      </builder>
    </extension>
 </plugin>

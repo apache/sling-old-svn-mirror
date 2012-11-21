@@ -33,6 +33,7 @@ import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.api.Result;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
+import org.apache.sling.slingclipse.internal.SlingProjectNature;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -63,7 +64,7 @@ public class SlingclipseListener implements IResourceChangeListener {
 		}
 	}
 
-	protected IResourceDeltaVisitor buildVisitor() {
+    public IResourceDeltaVisitor buildVisitor() {
 		IResourceDeltaVisitor result = new IResourceDeltaVisitor() {
 
 			@Override
@@ -71,12 +72,14 @@ public class SlingclipseListener implements IResourceChangeListener {
 				
 				try {
 					return visitInternal(delta);
+                } catch (CoreException e) {
+                    throw e;
 				} catch ( Exception e) {
 					throw new CoreException(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed visiting resource based on delta " + delta, e));
 				}
 			}
 
-			private boolean visitInternal(IResourceDelta delta) throws IOException, JSONException {
+            private boolean visitInternal(IResourceDelta delta) throws IOException, JSONException, CoreException {
 				IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
 				
 				// since the listener is disabled, instruct it not to recurse for changes
@@ -92,6 +95,10 @@ public class SlingclipseListener implements IResourceChangeListener {
 				
 				IResource resource = delta.getResource();
 				
+                // if the project is not a Sling project skip processing and do not try to recurse
+                if (!resource.getProject().getDescription().hasNature(SlingProjectNature.SLING_NATURE_ID))
+                    return false;
+
 				// don't process unhandled ( PROJECT, WORKSPACE ) resources but recurse if needed
 				if ( resource.getType() != IResource.FILE && resource.getType() != IResource.FOLDER){
 					return true;

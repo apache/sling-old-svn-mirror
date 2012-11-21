@@ -18,8 +18,6 @@ package org.apache.sling.slingclipse;
 
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.helper.Tracer;
-import org.eclipse.core.resources.IResourceChangeListener;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -35,19 +33,10 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	// The shared instance
 	private static SlingclipsePlugin plugin;
 
-	private IResourceChangeListener listener;
-
 	//TODO is fine to be static?
 	private static Repository repository;
 	
 	private Tracer tracer;
-
-	/**
-	 * The constructor
-	 */
-	public SlingclipsePlugin() {
-		listener= new SlingclipseListener();
-	}
 
 	/*
 	 * (non-Javadoc)
@@ -56,7 +45,6 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		ResourcesPlugin.getWorkspace().addResourceChangeListener(listener);
 		tracer = new Tracer();
 		tracer.register(getBundle().getBundleContext());
 	}
@@ -68,7 +56,6 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	public void stop(BundleContext context) throws Exception {
 		plugin = null;
 		super.stop(context);
-		ResourcesPlugin.getWorkspace().removeResourceChangeListener(listener);
 		tracer.unregister();
 	}
 
