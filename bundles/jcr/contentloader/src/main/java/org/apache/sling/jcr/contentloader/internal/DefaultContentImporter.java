@@ -18,7 +18,7 @@
  */
 package org.apache.sling.jcr.contentloader.internal;
 
-import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
+import static javax.jcr.ImportUUIDBehavior.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -166,10 +166,17 @@ public class DefaultContentImporter extends BaseImportLoader implements JcrConte
                     return existingNode;
                 }
             }
+            
+            final int uuidBehavior;
+            if (replace) {
+                uuidBehavior = IMPORT_UUID_COLLISION_REPLACE_EXISTING;
+            } else {
+                uuidBehavior = IMPORT_UUID_CREATE_NEW;
+            }
 
             ins = contentStream;
             Session session = parent.getSession();
-            session.importXML(parent.getPath(), ins, IMPORT_UUID_CREATE_NEW);
+            session.importXML(parent.getPath(), ins, uuidBehavior);
 
             // additionally check whether the expected child node exists
             return (parent.hasNode(nodeName)) ? parent.getNode(nodeName) : null;
