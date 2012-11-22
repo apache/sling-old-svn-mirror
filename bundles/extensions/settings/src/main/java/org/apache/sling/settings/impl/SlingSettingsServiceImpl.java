@@ -74,7 +74,14 @@ public class SlingSettingsServiceImpl
     public SlingSettingsServiceImpl(final BundleContext context) {
         this.setupSlingHome(context);
         final boolean isInstall = this.setupSlingId(context);
-        this.setupRunModes(context, isInstall);
+        
+        // Detect if upgrading from a previous version (where OPTIONS_FILE did not exist),
+        // as in terms of run modes this needs to be handled like an install
+        final File options = context.getDataFile(OPTIONS_FILE);
+        final boolean isUpgrade = !isInstall && !options.exists();
+                
+        logger.info("isInstall={}, isUpgrade={}", isInstall, isUpgrade);
+        this.setupRunModes(context, isInstall, isUpgrade);
 
     }
 
@@ -157,7 +164,7 @@ public class SlingSettingsServiceImpl
      */
     @SuppressWarnings("unchecked")
     private void setupRunModes(final BundleContext context,
-            final boolean isInstall) {
+            final boolean isInstall, final boolean isUpgrade) {
         final Set<String> modesSet = new HashSet<String>();
 
         // check configuration property first
@@ -172,7 +179,7 @@ public class SlingSettingsServiceImpl
         // now options
         this.handleOptions(modesSet, context.getProperty(RUN_MODE_OPTIONS));
         // now install options
-        if ( isInstall ) {
+        if ( isInstall || isUpgrade) {
             final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
             if ( optionsList != null ) {
                 final File file = context.getDataFile(OPTIONS_FILE);
