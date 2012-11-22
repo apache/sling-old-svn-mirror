@@ -212,8 +212,8 @@ public class SlingSettingsServiceImpl
                     if ( ois != null ) {
                         try { ois.close(); } catch ( final IOException ignore) {}
                     }
-                    if ( ois != null ) {
-                        try { ois.close(); } catch ( final IOException ignore) {}
+                    if ( fis != null ) {
+                        try { fis.close(); } catch ( final IOException ignore) {}
                     }
                 }
                 if ( optionsList != null ) {
