@@ -80,6 +80,12 @@ public class RunModeImplTest {
         assertActive(rm, false, "b", "c", "e", "f");
     }
 
+    @org.junit.Test public void testEmptyRunModesWithOptions() {
+        final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("", "a,b,c|d,e,f", null));
+        assertActive(rm, true, "a", "d");
+        assertActive(rm, false, "b", "c", "e", "f");
+    }
+
     @org.junit.Test public void testOptionsSelected() {
         final SlingSettingsService rm = new SlingSettingsServiceImpl(new BundleContextMock("foo,bar,c,e", "a,b,c|d,e,f", null));
         assertActive(rm, true, "foo", "bar", "c", "e");
