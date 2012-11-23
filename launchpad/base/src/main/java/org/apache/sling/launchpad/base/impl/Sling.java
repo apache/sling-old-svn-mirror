@@ -44,6 +44,7 @@ import javax.management.ObjectName;
 import org.apache.felix.framework.Logger;
 import org.apache.felix.framework.util.FelixConstants;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
+import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 import org.osgi.framework.Bundle;
@@ -208,6 +209,7 @@ public class Sling {
 
             // initiate startup handler
             final StartupManager startupManager = new StartupManager(props, logger);
+            props.put(StartupMode.class.getName(), startupManager.getMode().name());
 
             Framework tmpFramework = createFramework(notifiable, logger, props);
             init(tmpFramework);
