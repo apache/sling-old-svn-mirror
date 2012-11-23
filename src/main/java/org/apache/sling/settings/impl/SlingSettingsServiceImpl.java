@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -78,15 +79,24 @@ public class SlingSettingsServiceImpl
         // Detect if upgrading from a previous version (where OPTIONS_FILE did not exist),
         // as in terms of run modes this needs to be handled like an install
         final File options = context.getDataFile(OPTIONS_FILE);
-        final boolean isUpgrade = !isInstall && !options.exists();
+        final boolean isUpdate = !isInstall && !options.exists();
 
-        logger.info("isInstall={}, isUpgrade={}", isInstall, isUpgrade);
-        this.setupRunModes(context, isInstall || isUpgrade);
+        final String startupModeObj = context.getProperty(StartupMode.class.getName());
+        final StartupMode mode;
+        if ( startupModeObj != null ) {
+            mode = StartupMode.valueOf(startupModeObj);
+            logger.debug("Settings: Using startup mode : {}", mode);
+        } else {
+            logger.debug("Settings: Startup mode detection: isInstall={}, isUpdate={}", isInstall, isUpdate);
+            mode = isInstall ? StartupMode.INSTALL : (isUpdate ? StartupMode.UPDATE : StartupMode.RESTART);
+        }
+
+        this.setupRunModes(context, mode);
 
     }
 
     /**
-     * Get sling home and sling home url
+     * Get sling home and sling home URL
      */
     private void setupSlingHome(final BundleContext context) {
         this.slingHome = context.getProperty(SLING_HOME);
@@ -163,7 +173,7 @@ public class SlingSettingsServiceImpl
      */
     @SuppressWarnings("unchecked")
     private void setupRunModes(final BundleContext context,
-            final boolean inspectInstallOptions) {
+            final StartupMode startupMode) {
         final Set<String> modesSet = new HashSet<String>();
 
         // check configuration property first
@@ -175,60 +185,29 @@ public class SlingSettingsServiceImpl
             }
         }
 
-        // now options
+        //  handle configured options
         this.handleOptions(modesSet, context.getProperty(RUN_MODE_OPTIONS));
-        // now install options
-        if ( inspectInstallOptions ) {
-            final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
-            final File file = context.getDataFile(OPTIONS_FILE);
-            FileOutputStream fos = null;
-            ObjectOutputStream oos = null;
-            try {
-                fos = new FileOutputStream(file);
-                oos = new ObjectOutputStream(fos);
-                oos.writeObject(optionsList);
-            } catch ( final IOException ioe ) {
-                throw new RuntimeException("Unable to write to options data file.", ioe);
-            } finally {
-                if ( oos != null ) {
-                    try { oos.close(); } catch ( final IOException ignore) {}
-                }
-                if ( fos != null ) {
-                    try { fos.close(); } catch ( final IOException ignore) {}
-                }
-            }
-        } else {
-            final File file = context.getDataFile(OPTIONS_FILE);
-            if ( file.exists() ) {
-                List<Options> optionsList = null;
-                FileInputStream fis = null;
-                ObjectInputStream ois = null;
-                try {
-                    fis = new FileInputStream(file);
-                    ois = new ObjectInputStream(fis);
 
-                    optionsList = (List<Options>) ois.readObject();
-                } catch ( final IOException ioe ) {
-                    throw new RuntimeException("Unable to read from options data file.", ioe);
-                } catch (ClassNotFoundException cnfe) {
-                    throw new RuntimeException("Unable to read from options data file.", cnfe);
-                } finally {
-                    if ( ois != null ) {
-                        try { ois.close(); } catch ( final IOException ignore) {}
+        // handle configured install options
+        if ( startupMode != StartupMode.INSTALL ) {
+            // read persisted options if restart or update
+            final List<Options> storedOptions = readOptions(context);
+            if ( storedOptions != null ) {
+                for(final Options o : storedOptions) {
+                    for(final String m : o.modes) {
+                        modesSet.remove(m);
                     }
-                    if ( fis != null ) {
-                        try { fis.close(); } catch ( final IOException ignore) {}
-                    }
-                }
-                if ( optionsList != null ) {
-                    for(final Options o : optionsList) {
-                        for(final String m : o.modes) {
-                            modesSet.remove(m);
-                        }
-                        modesSet.add(o.selected);
-                    }
+                    modesSet.add(o.selected);
                 }
             }
+        }
+
+        // now install options
+        if ( startupMode != StartupMode.RESTART ) {
+            // process new install options if install or update
+            final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
+            // and always save new install options
+            writeOptions(context, optionsList);
         }
 
         // make the set unmodifiable and synced
@@ -241,6 +220,53 @@ public class SlingSettingsServiceImpl
         }
     }
 
+
+    private List<Options> readOptions(final BundleContext context) {
+        List<Options> optionsList = null;
+        final File file = context.getDataFile(OPTIONS_FILE);
+        if ( file.exists() ) {
+            FileInputStream fis = null;
+            ObjectInputStream ois = null;
+            try {
+                fis = new FileInputStream(file);
+                ois = new ObjectInputStream(fis);
+
+                optionsList = (List<Options>) ois.readObject();
+            } catch ( final IOException ioe ) {
+                throw new RuntimeException("Unable to read from options data file.", ioe);
+            } catch (ClassNotFoundException cnfe) {
+                throw new RuntimeException("Unable to read from options data file.", cnfe);
+            } finally {
+                if ( ois != null ) {
+                    try { ois.close(); } catch ( final IOException ignore) {}
+                }
+                if ( fis != null ) {
+                    try { fis.close(); } catch ( final IOException ignore) {}
+                }
+            }
+        }
+        return optionsList;
+    }
+
+    private void writeOptions(final BundleContext context, final List<Options> optionsList) {
+        final File file = context.getDataFile(OPTIONS_FILE);
+        FileOutputStream fos = null;
+        ObjectOutputStream oos = null;
+        try {
+            fos = new FileOutputStream(file);
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(optionsList);
+        } catch ( final IOException ioe ) {
+            throw new RuntimeException("Unable to write to options data file.", ioe);
+        } finally {
+            if ( oos != null ) {
+                try { oos.close(); } catch ( final IOException ignore) {}
+            }
+            if ( fos != null ) {
+                try { fos.close(); } catch ( final IOException ignore) {}
+            }
+        }
+    }
 
     /**
      * Read the id from a file.
