@@ -74,14 +74,14 @@ public class SlingSettingsServiceImpl
     public SlingSettingsServiceImpl(final BundleContext context) {
         this.setupSlingHome(context);
         final boolean isInstall = this.setupSlingId(context);
-        
+
         // Detect if upgrading from a previous version (where OPTIONS_FILE did not exist),
         // as in terms of run modes this needs to be handled like an install
         final File options = context.getDataFile(OPTIONS_FILE);
         final boolean isUpgrade = !isInstall && !options.exists();
-                
+
         logger.info("isInstall={}, isUpgrade={}", isInstall, isUpgrade);
-        this.setupRunModes(context, isInstall, isUpgrade);
+        this.setupRunModes(context, isInstall || isUpgrade);
 
     }
 
@@ -128,8 +128,8 @@ public class SlingSettingsServiceImpl
     }
 
     private List<Options> handleOptions(final Set<String> modesSet, final String propOptions) {
+        final List<Options> optionsList = new ArrayList<Options>();
         if ( propOptions != null && propOptions.trim().length() > 0 ) {
-            final List<Options> optionsList = new ArrayList<Options>();
 
             final String[] options = propOptions.trim().split("\\|");
             for(final String opt : options) {
@@ -154,9 +154,8 @@ public class SlingSettingsServiceImpl
                 o.modes = modes;
                 optionsList.add(o);
             }
-            return optionsList;
         }
-        return null;
+        return optionsList;
     }
 
     /**
@@ -164,7 +163,7 @@ public class SlingSettingsServiceImpl
      */
     @SuppressWarnings("unchecked")
     private void setupRunModes(final BundleContext context,
-            final boolean isInstall, final boolean isUpgrade) {
+            final boolean inspectInstallOptions) {
         final Set<String> modesSet = new HashSet<String>();
 
         // check configuration property first
@@ -179,25 +178,23 @@ public class SlingSettingsServiceImpl
         // now options
         this.handleOptions(modesSet, context.getProperty(RUN_MODE_OPTIONS));
         // now install options
-        if ( isInstall || isUpgrade) {
+        if ( inspectInstallOptions ) {
             final List<Options> optionsList = this.handleOptions(modesSet, context.getProperty(RUN_MODE_INSTALL_OPTIONS));
-            if ( optionsList != null ) {
-                final File file = context.getDataFile(OPTIONS_FILE);
-                FileOutputStream fos = null;
-                ObjectOutputStream oos = null;
-                try {
-                    fos = new FileOutputStream(file);
-                    oos = new ObjectOutputStream(fos);
-                    oos.writeObject(optionsList);
-                } catch ( final IOException ioe ) {
-                    throw new RuntimeException("Unable to write to options data file.", ioe);
-                } finally {
-                    if ( oos != null ) {
-                        try { oos.close(); } catch ( final IOException ignore) {}
-                    }
-                    if ( fos != null ) {
-                        try { fos.close(); } catch ( final IOException ignore) {}
-                    }
+            final File file = context.getDataFile(OPTIONS_FILE);
+            FileOutputStream fos = null;
+            ObjectOutputStream oos = null;
+            try {
+                fos = new FileOutputStream(file);
+                oos = new ObjectOutputStream(fos);
+                oos.writeObject(optionsList);
+            } catch ( final IOException ioe ) {
+                throw new RuntimeException("Unable to write to options data file.", ioe);
+            } finally {
+                if ( oos != null ) {
+                    try { oos.close(); } catch ( final IOException ignore) {}
+                }
+                if ( fos != null ) {
+                    try { fos.close(); } catch ( final IOException ignore) {}
                 }
             }
         } else {
