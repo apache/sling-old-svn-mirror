@@ -18,14 +18,8 @@
  */
 package org.apache.sling.settings.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
-import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * This is the bundle activator.
@@ -34,48 +28,23 @@ import org.osgi.framework.ServiceRegistration;
  */
 public class Activator implements BundleActivator {
 
-    /** The service registration */
-    private ServiceRegistration serviceRegistration;
+    /** The service listener */
+    private ServicesListener servicesListener;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext bundleContext) throws Exception {
-        final SlingSettingsService settingsService = new SlingSettingsServiceImpl(bundleContext);
-
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, settingsService.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling Settings Service");
-        props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
-        serviceRegistration = bundleContext.registerService(new String[] {
-                                               SlingSettingsService.class.getName()},
-                                               settingsService, props);
-        SlingPropertiesPrinter.initPlugin(bundleContext);
-        SlingSettingsPrinter.initPlugin(bundleContext, settingsService);
-        try {
-            RunModeCommand.initPlugin(bundleContext, settingsService.getRunModes());
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
-
+        this.servicesListener = new ServicesListener(bundleContext);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) throws Exception {
-        try {
-            RunModeCommand.destroyPlugin();
-        } catch (Throwable ignore) {
-            // we just ignore this
-        }
-        SlingSettingsPrinter.destroyPlugin();
-        SlingPropertiesPrinter.destroyPlugin();
-
-        if ( serviceRegistration != null ) {
-            serviceRegistration.unregister();
-            serviceRegistration = null;
+        if ( this.servicesListener != null ) {
+            this.servicesListener.deactivate();
+            this.servicesListener = null;
         }
     }
 }
