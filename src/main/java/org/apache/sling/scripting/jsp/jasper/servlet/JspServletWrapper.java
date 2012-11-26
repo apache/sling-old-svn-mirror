@@ -150,7 +150,7 @@ public class JspServletWrapper {
                 return ((DynamicClassLoader)theServlet.getClass().getClassLoader()).isLive();
             }
         }
-        return false;
+        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -479,6 +479,9 @@ public class JspServletWrapper {
             }
             if ( theServlet == null ) {
                 synchronized ( this ) {
+                    if ( compileException != null ) {
+                        throw compileException;
+                    }
                     if ( theServlet == null ) {
                         this.prepareServlet(request, response);
                     }
