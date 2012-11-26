@@ -21,19 +21,31 @@ import org.apache.sling.commons.compiler.Options;
 
 /**
  * The <code>JcrJavaCompiler</code> compiles Java source code stored in the
- * repository and writes the generated class files to the repository.
+ * repository and writes the generated class files by using the class loader writer.
  */
 public interface JcrJavaCompiler {
 
     /**
-     * @param srcFiles
-     * @param outputDir - optional
-     * @param errorHandler
-     * @param options - optional
+     * Compile source from the repository.
+     * @param srcFiles The array of path in the repository pointing to the source
+     * @param outputDir - Not supported anymore - the classes are written using the class loader writer
+     * @param options - Optional options
      * @since 2.0
+     * @deprecated
      */
+    @Deprecated
     CompilationResult compile(String[] srcFiles,
                               String   outputDir,
+                              Options options)
+    throws Exception;
+
+    /**
+     * Compile source from the repository.
+     * @param srcFiles The array of path in the repository pointing to the source
+     * @param options - Optional options
+     * @since 2.1
+     */
+    CompilationResult compile(String[] srcFiles,
                               Options options)
     throws Exception;
 }
