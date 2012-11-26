@@ -83,17 +83,24 @@ public class EclipseJavaCompiler implements JavaCompiler {
         } else if ( options.get(Options.KEY_ADDITIONAL_CLASS_LOADER) != null ) {
             final ClassLoader additionalClassLoader = (ClassLoader)options.get(Options.KEY_ADDITIONAL_CLASS_LOADER);
             loader = new ClassLoader(classLoaderWriter.getClassLoader()) {
+                @Override
                 protected Class<?> findClass(String name)
                 throws ClassNotFoundException {
                     return additionalClassLoader.loadClass(name);
                 }
 
+                @Override
                 protected URL findResource(String name) {
                     return additionalClassLoader.getResource(name);
                 }
             };
         } else {
-            loader = classLoaderWriter.getClassLoader();
+            final ClassLoader cl = classLoaderWriter.getClassLoader();
+            if ( cl == null ) {
+                loader = this.classLoaderWriter.getClassLoader();
+            } else {
+                loader = cl;
+            }
         }
         return loader;
     }
