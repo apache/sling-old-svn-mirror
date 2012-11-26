@@ -17,7 +17,6 @@
 package org.apache.sling.jcr.compiler.impl;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -29,8 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.jcr.Item;
-import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -38,7 +35,6 @@ import javax.jcr.Session;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.compiler.CompilationResult;
 import org.apache.sling.commons.compiler.CompilationUnit;
 import org.apache.sling.commons.compiler.CompilerMessage;
@@ -68,6 +64,14 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
                                      final String outputDir,
                                      final Options compilerOptions)
     throws Exception {
+        return compile(srcFiles, compilerOptions);
+    }
+
+    /**
+     * @see org.apache.sling.jcr.compiler.JcrJavaCompiler#compile(java.lang.String[], org.apache.sling.commons.compiler.Options)
+     */
+    public CompilationResult compile(final String[] srcFiles, final Options compilerOptions)
+    throws Exception {
         // make sure we have options
         final Options options = (compilerOptions == null ? new Options() : new Options(compilerOptions));
         // open session
@@ -75,50 +79,10 @@ public class JcrJavaCompilerImpl implements JcrJavaCompiler {
         try {
             session = this.repository.loginAdministrative(null);
 
-            // create class loader write if output dir is specified
-            ClassLoaderWriter classWriter;
-            if ( outputDir == null ) {
-                classWriter = null;
-            } else if (outputDir.startsWith("file://")) {
-                // write class files to local file system;
-                // only subdirectories of the system temp dir
-                // will be accepted
-                File tempDir = new File(System.getProperty("java.io.tmpdir"));
-                File outDir = new File(outputDir.substring("file://".length()));
-                if (!outDir.isAbsolute()) {
-                    outDir = new File(tempDir, outputDir.substring("file://".length()));
-                }
-                if (!outDir.getCanonicalPath().startsWith(tempDir.getCanonicalPath())) {
-                    throw new IOException("illegal outputDir (not a temp dir): " + outputDir);
-                }
-                outDir.mkdir();
-                classWriter = new FileClassWriter(outDir);
-            } else {
-                // write class files to the repository  (default)
-                if (!session.itemExists(outputDir)) {
-                    throw new IOException("outputDir does not exist: " + outputDir);
-                }
-
-                Item item = session.getItem(outputDir);
-                if (item.isNode()) {
-                    Node folder = (Node) item;
-                    if (!folder.isNodeType("nt:folder")) {
-                        throw new IOException("outputDir must be a node of type nt:folder");
-                    }
-                    classWriter = new JcrClassWriter(folder);
-                } else {
-                    throw new IOException("outputDir must be a node of type nt:folder");
-                }
-            }
-
             // create compilation units
             CompilationUnit[] units = new CompilationUnit[srcFiles.length];
             for (int i = 0; i < units.length; i++) {
                 units[i] = createCompileUnit(srcFiles[i], session);
-            }
-
-            if ( classWriter != null ) {
-                options.put(Options.KEY_CLASS_LOADER_WRITER, classWriter);
             }
 
             // and compile
