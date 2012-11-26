@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
@@ -72,24 +73,13 @@ public class SlingSettingsServiceImpl
      * Setup run modes
      * @param context The bundle context
      */
-    public SlingSettingsServiceImpl(final BundleContext context) {
+    public SlingSettingsServiceImpl(final BundleContext context,
+            final StartupHandler handler) {
         this.setupSlingHome(context);
-        final boolean isInstall = this.setupSlingId(context);
+        this.setupSlingId(context);
 
-        // Detect if upgrading from a previous version (where OPTIONS_FILE did not exist),
-        // as in terms of run modes this needs to be handled like an install
-        final File options = context.getDataFile(OPTIONS_FILE);
-        final boolean isUpdate = !isInstall && !options.exists();
-
-        final String startupModeObj = context.getProperty(StartupMode.class.getName());
-        final StartupMode mode;
-        if ( startupModeObj != null ) {
-            mode = StartupMode.valueOf(startupModeObj);
-            logger.debug("Settings: Using startup mode : {}", mode);
-        } else {
-            logger.debug("Settings: Startup mode detection: isInstall={}, isUpdate={}", isInstall, isUpdate);
-            mode = isInstall ? StartupMode.INSTALL : (isUpdate ? StartupMode.UPDATE : StartupMode.RESTART);
-        }
+        final StartupMode mode = handler.getMode();
+        logger.debug("Settings: Using startup mode : {}", mode);
 
         this.setupRunModes(context, mode);
 
@@ -113,7 +103,7 @@ public class SlingSettingsServiceImpl
     /**
      * Get / create sling id
      */
-    private boolean setupSlingId(final BundleContext context) {
+    private void setupSlingId(final BundleContext context) {
         // try to read the id from the id file first
         final File idFile = context.getDataFile(DATA_FILE);
         if ( idFile == null ) {
@@ -126,9 +116,7 @@ public class SlingSettingsServiceImpl
         if (slingId == null) {
             slingId = UUID.randomUUID().toString();
             this.writeSlingId(idFile, this.slingId);
-            return true;
         }
-        return false;
     }
 
     private static final class Options implements Serializable {
