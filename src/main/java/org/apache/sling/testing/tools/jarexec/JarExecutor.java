@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JarExecutor {
     private final File jarToExecute;
-    private final String javaExecutable;
+    private final String jvmFullPath;
     private final int serverPort;
     private final Properties config;
     private Executor executor;
@@ -84,7 +84,8 @@ public class JarExecutor {
         String portStr = config.getProperty(PROP_SERVER_PORT);
         serverPort = portStr == null ? DEFAULT_PORT : Integer.valueOf(portStr);
 
-        javaExecutable = isWindows ? "java.exe" : "java";
+        final String javaExecutable = isWindows ? "java.exe" : "java";
+        jvmFullPath = System.getProperty( "java.home" ) + File.separator + "bin" + File.separator + javaExecutable;
 
         String jarFolderPath = config.getProperty(PROP_JAR_FOLDER);
         jarFolderPath = jarFolderPath == null ? DEFAULT_JAR_FOLDER : jarFolderPath;
@@ -133,7 +134,7 @@ public class JarExecutor {
 
         final String vmOptions = config.getProperty(PROP_VM_OPTIONS);
         executor = new DefaultExecutor();
-        final CommandLine cl = new CommandLine(javaExecutable);
+        final CommandLine cl = new CommandLine(jvmFullPath);
         if (vmOptions != null && vmOptions.length() > 0) {
             cl.addArguments(vmOptions);
         }
