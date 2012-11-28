@@ -184,7 +184,8 @@ public class PersistentResourceList {
         // first check untransformed resource if there are resources with the same url and digest
         for(final RegisteredResource rr : this.untransformedResources ) {
             if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest())) ) {
-                // if we found the resource we can immediately return
+                // if we found the resource we can return after updating
+                ((RegisteredResourceImpl)rr).update(input);
                 return rr;
             }
         }
@@ -192,7 +193,8 @@ public class PersistentResourceList {
         for(final EntityResourceList group : this.data.values()) {
             for(final RegisteredResource rr : group.getResources()) {
                 if ( rr.getURL().equals(input.getURL()) && ( rr.getDigest().equals(input.getDigest()))) {
-                    // if we found the resource we can immediately return
+                    // if we found the resource we can return after updating
+                    ((RegisteredResourceImpl)rr).update(input);
                     return rr;
                 }
             }

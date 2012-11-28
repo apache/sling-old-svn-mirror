@@ -147,6 +147,10 @@ public class RegisteredResourceImpl
                 this.digest = updatedDigest;
             }
         }
+        // update file location
+        if ( this.dataFile != null ) {
+            this.dataFile = FileDataStore.SHARED.getDataFile(this.dataFile.getName());
+        }
     }
 
     /**
@@ -363,6 +367,7 @@ public class RegisteredResourceImpl
     /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override
     public boolean equals(Object obj) {
         if ( obj == this ) {
             return true;
@@ -379,6 +384,7 @@ public class RegisteredResourceImpl
     /**
      * @see java.lang.Object#hashCode()
      */
+    @Override
     public int hashCode() {
         return this.getURL().hashCode();
     }
@@ -535,6 +541,32 @@ public class RegisteredResourceImpl
         }
         if ( tr.getVersion() != null ) {
             this.attributes.put(Constants.BUNDLE_VERSION, tr.getVersion().toString());
+        }
+    }
+
+    /**
+     * Update the resource uri - if provided.
+     */
+    public void update(final InternalResource rsrc) {
+        if ( rsrc.getResourceUri() != null ) {
+            FileDataStore.SHARED.removeFromDigestCache(this.url, this.digest);
+            this.removeDataFile();
+            this.dataUri = rsrc.getResourceUri();
+            if ( this.dictionary != null ) {
+                this.dictionary.put(InstallableResource.RESOURCE_URI_HINT, rsrc.getResourceUri());
+            }
+        } else if ( rsrc.getPrivateCopyOfFile() != null ) {
+            final boolean update = this.dataFile == null || !this.dataFile.getName().equals(rsrc.getPrivateCopyOfFile().getName());
+            if ( update ) {
+                if ( this.dictionary != null ) {
+                    this.dictionary.remove(InstallableResource.RESOURCE_URI_HINT);
+                }
+                if ( this.dataFile != null ) {
+                    this.removeDataFile();
+                }
+                this.dataFile = rsrc.getPrivateCopyOfFile();
+                FileDataStore.SHARED.updateDigestCache(this.url, this.digest);
+            }
         }
     }
 
