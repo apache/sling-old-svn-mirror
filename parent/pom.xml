@@ -292,6 +292,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                     <inherited>true</inherited>
                     <configuration>
                         <outputDirectory>${basedir}/target/classes</outputDirectory>
+                        <obrRepository>NONE</obrRepository>
                         <instructions>
                             <Bundle-Category>sling</Bundle-Category>
                             <Bundle-DocURL>
