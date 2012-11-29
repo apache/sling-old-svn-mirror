@@ -64,6 +64,8 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JCR Tenant Provider implementation.
@@ -83,6 +85,10 @@ import org.osgi.framework.InvalidSyntaxException;
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         policy = ReferencePolicy.DYNAMIC)
 public class TenantProviderImpl implements TenantProvider {
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     /**
      * Root path for tenant
      */
@@ -232,33 +238,38 @@ public class TenantProviderImpl implements TenantProvider {
 
                 if (child != null) {
                     throw new PersistenceException("Tenant already exists with Id " + tenantId);
-                } else {
-                    // create the tenant
-                    Node rootNode = tenantRootRes.adaptTo(Node.class);
-                    Node tenantNode = rootNode.addNode(tenantId);
-                    tenantNode.setProperty(Tenant.PROP_NAME, name);
-                    tenantNode.setProperty(Tenant.PROP_DESCRIPTION, description);
+                }
 
-                    Resource resource = adminResolver.getResource(tenantNode.getPath());
-                    Tenant tenant = new TenantImpl(resource);
-                    PersistableValueMap tenantProps = resource.adaptTo(PersistableValueMap.class);
-                    // call tenant setup handler
-                    for (TenantCustomizer ts : getTenantHandlers()) {
+                // create the tenant
+                Node rootNode = tenantRootRes.adaptTo(Node.class);
+                Node tenantNode = rootNode.addNode(tenantId);
+                tenantNode.setProperty(Tenant.PROP_NAME, name);
+                tenantNode.setProperty(Tenant.PROP_DESCRIPTION, description);
+
+                Resource resource = adminResolver.getResource(tenantNode.getPath());
+                Tenant tenant = new TenantImpl(resource);
+                PersistableValueMap tenantProps = resource.adaptTo(PersistableValueMap.class);
+                // call tenant setup handler
+                for (TenantCustomizer ts : getTenantHandlers()) {
+                    try {
                         Map<String, Object> props = ts.setup(tenant, adminResolver);
                         if (props != null) {
                             tenantProps.putAll(props);
                         }
+                    } catch (Exception e) {
+                        log.info("addTenant: Unexpected problem calling TenantCustomizer " + ts, e);
                     }
-                    // save the properties
-                    tenantProps.save();
-
-                    // save the session
-                    adminSession.save();
-                    // refersh tenant instance, as it copies property from
-                    // resource
-                    tenant = new TenantImpl(resource);
-                    return tenant;
                 }
+                // save the properties
+                tenantProps.save();
+
+                // save the session
+                adminSession.save();
+                // refersh tenant instance, as it copies property from
+                // resource
+                tenant = new TenantImpl(resource);
+                return tenant;
+
             } catch (RepositoryException e) {
                 throw new PersistenceException("Unexpected RepositoryException while adding tenant", e);
             } finally {
@@ -295,7 +306,11 @@ public class TenantProviderImpl implements TenantProvider {
                     Tenant tenant = new TenantImpl(tenantRes);
                     // call tenant setup handler
                     for (TenantCustomizer ts : getTenantHandlers()) {
-                        ts.remove(tenant, adminResolver);
+                        try {
+                            ts.remove(tenant, adminResolver);
+                        } catch (Exception e) {
+                            log.info("removeTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+                        }
                     }
 
                     tenantNode.remove();
