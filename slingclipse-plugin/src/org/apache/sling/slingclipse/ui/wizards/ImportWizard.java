@@ -17,6 +17,7 @@
 package org.apache.sling.slingclipse.ui.wizards;
 
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
@@ -29,6 +30,7 @@ import org.apache.sling.slingclipse.api.ResponseType;
 import org.apache.sling.slingclipse.api.Result;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.helper.Tracer;
+import org.apache.sling.slingclipse.images.SharedImages;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -37,9 +39,9 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -56,73 +58,61 @@ import org.json.JSONObject;
 public class ImportWizard extends Wizard implements IImportWizard {
 	private ImportWizardPage mainPage;
 
-	/**
-	 * Construct a new Import Wizard container instance.
-	 */
-	public ImportWizard() {
-		super();
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see org.eclipse.jface.wizard.Wizard#performFinish()
 	 */
 	public boolean performFinish() {
+	    
+	    if ( !mainPage.isPageComplete() )
+	        return false;
 		
+		final Repository repository = SlingclipsePlugin.getDefault().getRepository();
+		RepositoryInfo repositoryInfo = new RepositoryInfo(
+				mainPage.getUsername(),
+				mainPage.getPassword(),
+				mainPage.getRepositoryUrl());
+		repository.setRepositoryInfo(repositoryInfo);
+ 
+		IPath destinationPath = mainPage.getResourcePath();
 		
-		if (mainPage.isPageComplete()) {
+		final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
+		final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
+		final String repositoryPath = mainPage.getRepositoryPath();
+		
+        try {
+            getContainer().run(false, true, new IRunnableWithProgress() {
 
-			final Repository repository = SlingclipsePlugin.getDefault().getRepository();
-			RepositoryInfo repositoryInfo = new RepositoryInfo(
-					mainPage.getUsername(),
-					mainPage.getPassword(),
-					mainPage.getRepositoryUrl());
-			repository.setRepositoryInfo(repositoryInfo);
-	 
-			IPath destinationPath = mainPage.getResourcePath();
-			
-			final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
-			final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
-			final String repositoryPath = mainPage.getRepositoryPath();
-			
-			Job job = new Job("Import") {
-				
+                @Override
+                public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+                    Tracer tracer = SlingclipsePlugin.getDefault().getTracer();
 
-				protected IStatus run(IProgressMonitor monitor) {
-					
-					Tracer tracer = SlingclipsePlugin.getDefault().getTracer();
-					
-					monitor.setTaskName("Loading configuration...");
-					monitor.worked(5);
-					
-					IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
-					boolean autoSync=store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey());
-					try {
-						store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), false);
+                    monitor = SubMonitor.convert(monitor, "Importing from " + mainPage.getRepositoryUrl() + " ...",
+                            IProgressMonitor.UNKNOWN);
 
-						// TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm processing)
-						monitor.setTaskName("Importing...");
-						monitor.worked(10);
+                    IPreferenceStore store = SlingclipsePlugin.getDefault().getPreferenceStore();
+                    boolean autoSync = store.getBoolean(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey());
+                    try {
+                        store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), false);
+
+                        // TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm
+                        // processing)
+
+                        // TODO: check for cancellation
 
                         // we create the root node and assume this is a folder
                         createRoot(project, projectRelativePath, repositoryPath);
 
-				 		crawlChildrenAndImport(repository, repositoryPath, project, projectRelativePath, tracer);
-						
-						monitor.setTaskName("Import Complete");
-						monitor.worked(100);
-					} catch ( Exception e) {
-						Status status = new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Failed importing repository ", e);
-						SlingclipsePlugin.getDefault().getLog().log(status);
-						return status;
-					}finally{
-						//restore to the original value
-						store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), autoSync);
-					}
-					
-					return Status.OK_STATUS;
-				}
+                        crawlChildrenAndImport(repository, repositoryPath, project, projectRelativePath, tracer);
+                    } catch (Exception e) {
+                        throw new InvocationTargetException(e);
+                    } finally {
+                        monitor.done();
+                        // restore to the original value
+                        store.setValue(PreferencesMessages.REPOSITORY_AUTO_SYNC.getKey(), autoSync);
+                    }
+                }
 
                 private void createRoot(final IProject project, final IPath projectRelativePath,
                         final String repositoryPath) throws CoreException {
@@ -132,14 +122,18 @@ public class ImportWizard extends Wizard implements IImportWizard {
                     for (int i = rootImportPath.segmentCount() - 1; i > 0; i--)
                         createFolder(project, rootImportPath.removeLastSegments(i));
                 }
-			};
-			job.setSystem(false);
-			job.setUser(true);
-			job.schedule();
-			return true;
-		} else {
-			return false;
-		}
+            });
+        } catch (InterruptedException e) {
+            return false;
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            mainPage.setErrorMessage("Import error : " + cause.getMessage()
+                    + " . Please see the error log for details.");
+            SlingclipsePlugin.getDefault().getLog()
+                    .log(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, "Repository import failed", cause));
+            return false;
+        }
+		return true;
 	}
 
 	/*
@@ -150,6 +144,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	 */
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		setWindowTitle("Repositoy Import"); // NON-NLS-1
+        setDefaultPageImageDescriptor(SharedImages.SLING_LOG);
 		setNeedsProgressMonitor(true);
 		mainPage = new ImportWizardPage("Import from Repository", selection); // NON-NLS-1
 	}

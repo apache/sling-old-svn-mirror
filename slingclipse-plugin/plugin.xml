@@ -27,9 +27,9 @@
       <wizard
             category="org.apache.sling.slingclipse.ui.wizards.sampleCategory"
             class="org.apache.sling.slingclipse.ui.wizards.ImportWizard"
-            icon="icons/sample.gif"
+            icon="src/org/apache/sling/slingclipse/images/sling-logo.png"
             id="org.apache.sling.slingclipse.ui.wizards.ImportWizard"
-            name="Import from Repository">
+            name="Import from Sling Repository">
          <description>
             Import a file from the local file system into the workspace.
          </description>

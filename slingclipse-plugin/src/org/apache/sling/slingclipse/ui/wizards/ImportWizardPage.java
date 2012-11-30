@@ -16,13 +16,14 @@
  */
 package org.apache.sling.slingclipse.ui.wizards;
 
-import java.util.List;
-
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.preferences.PreferencesMessages;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceVisitor;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -55,7 +56,9 @@ public class ImportWizardPage extends WizardResourceImportPage {
 				determinePageCompletion();
 				updateWidgetEnablements();
 			}catch(Exception e){
-				//TODO: Log or just ignore?
+                setErrorMessage(e.getMessage());
+                SlingclipsePlugin.getDefault().getLog()
+                        .log(new Status(Status.ERROR, SlingclipsePlugin.PLUGIN_ID, e.getMessage(), e));
 			}
 		}
 	};
@@ -165,12 +168,37 @@ public class ImportWizardPage extends WizardResourceImportPage {
 		path = new Text(container, SWT.BORDER);
 		path.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		path.addModifyListener(modifyListener);
-		
 
-		if (SlingclipseHelper.isValidSlingProjectPath(pathStr)) {
-			path.setText(SlingclipseHelper.getSlingProjectPath(pathStr));
-		}
+        if (SlingclipseHelper.isValidSlingProjectPath(pathStr)) {
+            path.setText(SlingclipseHelper.getSlingProjectPath(pathStr));
+        }
+
+        preselectJcrRootFolderForProject(resource);
 	}
+
+    private void preselectJcrRootFolderForProject(IResource resource) {
+        if (resource.getType() == IResource.PROJECT) {
+            try {
+                resource.accept(new IResourceVisitor() {
+                    public boolean visit(IResource resource) throws CoreException {
+
+                        if (resource.getType() == IResource.FILE)
+                            return false;
+
+                        if (SlingclipseHelper.JCR_ROOT.equals(resource.getName()) && resource.getType() == IResource.FOLDER) {
+                            setContainerFieldValue(resource.getFullPath().toString());
+                            return false;
+                        }
+
+                        return true;
+                    }
+                });
+            } catch (CoreException e) {
+                // best effort
+                SlingclipsePlugin.getDefault().getLog().log(e.getStatus());
+            }
+        }
+    }
 
 	/*
 	 * (non-Javadoc)
@@ -263,9 +291,14 @@ public class ImportWizardPage extends WizardResourceImportPage {
 			return false;
 		}
 		
+        if (getRepositoryPath().toString().endsWith("/")) {
+            setErrorMessage("The repository path must not have a trailing slash");
+            return false;
+        }
+
 		IPath containerNameField= super.getResourcePath();  
 		if (!containerNameField.toOSString().endsWith(SlingclipseHelper.JCR_ROOT)){
-			setErrorMessage("Please enter a valid Sling project folder (e.g. jcr_root)");
+            setErrorMessage("The folder name must be " + SlingclipseHelper.JCR_ROOT);
 			return false;
 		}
 		
