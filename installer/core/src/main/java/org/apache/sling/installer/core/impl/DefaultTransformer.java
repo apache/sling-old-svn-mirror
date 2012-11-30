@@ -86,8 +86,8 @@ public class DefaultTransformer
             try {
                 new Version(headers.version);
             } catch (final IllegalArgumentException iae) {
-                logger.info("Rejecting bundle {} from {} due to invalid version information: {}," +
-                		new Object[] {headers.symbolicName, resource, headers.version});
+                logger.info("Rejecting bundle {} from {} due to invalid version information: {}.", 
+                        new Object[] {headers.symbolicName, resource, headers.version});
                 validVersion = false;
             }
             if ( validVersion ) {
