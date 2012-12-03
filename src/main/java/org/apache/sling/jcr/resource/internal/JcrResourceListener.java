@@ -194,12 +194,7 @@ public class JcrResourceListener implements EventListener {
                     this.updateChangedEvent(changedEvents, nodePath, event, propName);
 
                 } else if ( event.getType() == Event.NODE_ADDED ) {
-                    // check if this is a remove/add operation
-                    if ( removedEvents.remove(eventPath) != null ) {
-                        this.updateChangedEvent(changedEvents, eventPath, event, null);
-                    } else {
-                        addedEvents.put(eventPath, event);
-                    }
+                    addedEvents.put(eventPath, event);
 
                 } else if ( event.getType() == Event.NODE_REMOVED) {
                     // remove is the strongest operation, therefore remove all removed
@@ -215,7 +210,7 @@ public class JcrResourceListener implements EventListener {
         for (final Entry<String, Event> e : removedEvents.entrySet()) {
             // Launch an OSGi event
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_REMOVED,
-                changedEvents.remove(e.getKey()));
+                null);
         }
 
         for (final Entry<String, Event> e : addedEvents.entrySet()) {
@@ -404,11 +399,6 @@ public class JcrResourceListener implements EventListener {
                             logger.debug(
                                 "processOsgiEventQueue: Resource at {} not found, which is not expected for an added or modified node",
                                 path);
-                            sendEvent = false;
-                        }
-                    } else {
-                        // check if the resource is still available - if so the node was not visible!
-                        if ( resource != null ) {
                             sendEvent = false;
                         }
                     }
