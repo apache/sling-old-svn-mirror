@@ -360,15 +360,21 @@ public class MapEntries implements EventHandler {
         // check whether a remove event has an influence on vanity paths
         boolean doInit = true;
         if (SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) && !path.startsWith(this.mapRoot)) {
+            final String checkPath;
+            if ( path.endsWith("/jcr:content") ) {
+                checkPath = path.substring(0, path.length() - 12);
+            } else {
+                checkPath = path;
+            }
             doInit = false;
             for (final String target : this.vanityTargets) {
-                if (target.startsWith(path)) {
+                if (target.startsWith(checkPath)) {
                     doInit = true;
                     break;
                 }
             }
             for (final String target : this.aliasMap.keySet()) {
-                if (target.startsWith(path)) {
+                if (target.startsWith(checkPath)) {
                     doInit = true;
                     break;
                 }
@@ -747,7 +753,7 @@ public class MapEntries implements EventHandler {
                         PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, PROP_REDIRECT_EXTERNAL,
                         ResourceResolverImpl.PROP_REDIRECT_INTERNAL, PROP_REDIRECT_EXTERNAL_STATUS,
                         PROP_REG_EXP, ResourceResolverImpl.PROP_ALIAS };
-        final String[] eventProps = { "resourceAddedAttributes", "resourceChangedAttributes", "resourceRemovedAttributes" };
+        final String[] eventProps = { SlingConstants.PROPERTY_ADDED_ATTRIBUTES, SlingConstants.PROPERTY_CHANGED_ATTRIBUTES, SlingConstants.PROPERTY_REMOVED_ATTRIBUTES };
         final StringBuilder filter = new StringBuilder();
         filter.append("(|");
         for (final String eventProp : eventProps) {
@@ -757,7 +763,7 @@ public class MapEntries implements EventHandler {
             }
             filter.append(")");
         }
-        filter.append("(" + EventConstants.EVENT_TOPIC + "=" + SlingConstants.TOPIC_RESOURCE_REMOVED + ")");
+        filter.append("(").append(EventConstants.EVENT_TOPIC).append("=").append(SlingConstants.TOPIC_RESOURCE_REMOVED).append(")");
         filter.append(")");
 
         return filter.toString();
