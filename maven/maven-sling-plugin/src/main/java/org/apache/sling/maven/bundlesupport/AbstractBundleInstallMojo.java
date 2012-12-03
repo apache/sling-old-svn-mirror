@@ -256,9 +256,11 @@ abstract class AbstractBundleInstallMojo extends AbstractBundlePostMojo {
             throws MojoExecutionException {
 
         // append pseudo path after root URL to not get redirected for nothing
-        PostMethod filePost = new PostMethod(targetURL + "/install");
+        final PostMethod filePost = new PostMethod(targetURL + "/install");
 
         try {
+            // set referrer
+            filePost.setRequestHeader("referer", "about:blank");
 
             List<Part> partList = new ArrayList<Part>();
             partList.add(new StringPart("action", "install"));
