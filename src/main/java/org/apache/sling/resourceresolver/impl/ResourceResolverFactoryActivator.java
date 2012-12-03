@@ -292,7 +292,9 @@ public class ResourceResolverFactoryActivator {
         this.rootProviderEntry.setEventAdmin(null);
         this.resourceDecoratorTracker.close();
 
-        this.unregisterFactory();
+        synchronized ( this ) {
+            this.unregisterFactory();
+        }
     }
 
     private void unregisterFactory() {
