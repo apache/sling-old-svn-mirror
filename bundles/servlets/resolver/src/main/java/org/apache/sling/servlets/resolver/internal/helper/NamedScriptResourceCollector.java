@@ -88,7 +88,7 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
         final ResourceResolver resolver = location.getResourceResolver();
         // if extension is set, we first check for an exact script match
         if ( this.extension != null ) {
-            final String path = location.getPath() + '/' + this.scriptName;
+            final String path = ResourceUtil.normalize(location.getPath() + '/' + this.scriptName);
             if ( this.isPathAllowed(path) ) {
                 final Resource current = resolver.getResource(path);
                 if ( current != null ) {

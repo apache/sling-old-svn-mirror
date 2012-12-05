@@ -364,8 +364,9 @@ public class SlingServletResolver
         // first check whether the type of a resource is the absolute
         // path of a servlet (or script)
         if (scriptName.charAt(0) == '/') {
-            if ( this.isPathAllowed(scriptName) ) {
-                final Resource res = resolver.getResource(scriptName);
+            final String scriptPath = ResourceUtil.normalize(scriptName);
+            if ( this.isPathAllowed(scriptPath) ) {
+                final Resource res = resolver.getResource(scriptPath);
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
@@ -399,8 +400,9 @@ public class SlingServletResolver
         SlingScript script = null;
         if (name.startsWith("/")) {
 
-            if ( this.isPathAllowed(name) ) {
-                final Resource resource = resourceResolver.getResource(name);
+            final String path = ResourceUtil.normalize(name);
+            if ( this.isPathAllowed(path) ) {
+                final Resource resource = resourceResolver.getResource(path);
                 if (resource != null) {
                     script = resource.adaptTo(SlingScript.class);
                 }
@@ -410,7 +412,7 @@ public class SlingServletResolver
             // relative script resolution against search path
             final String[] path = resourceResolver.getSearchPath();
             for (int i = 0; script == null && i < path.length; i++) {
-                final String scriptPath = path[i] + name;
+                final String scriptPath = ResourceUtil.normalize(path[i] + name);
                 if ( this.isPathAllowed(scriptPath) ) {
                     final Resource resource = resourceResolver.getResource(scriptPath);
                     if (resource != null) {
@@ -579,12 +581,12 @@ public class SlingServletResolver
         // first check whether the type of a resource is the absolute
         // path of a servlet (or script)
         if (type.charAt(0) == '/') {
-            if ( this.isPathAllowed(type) ) {
-                String path = type;
+            String scriptPath = ResourceUtil.normalize(type);
+            if ( this.isPathAllowed(scriptPath) ) {
                 if ( workspaceName != null ) {
-                    path = workspaceName + ':' + type;
+                    scriptPath = workspaceName + ':' + type;
                 }
-                final Resource res = resolver.getResource(path);
+                final Resource res = resolver.getResource(scriptPath);
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
