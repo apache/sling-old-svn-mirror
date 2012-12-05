@@ -60,6 +60,27 @@ import org.slf4j.LoggerFactory;
 @Service(value=Filter.class)
 public class ReferrerFilter implements Filter {
 
+    /**
+     * Request header providing the clients user agent information used
+     * by {@link #isBrowserRequest(HttpServletRequest)} to decide whether
+     * a request is probably sent by a browser or not.
+     */
+    private static final String USER_AGENT = "User-Agent";
+
+    /**
+     * String contained in a {@link #USER_AGENT} header indicating a Mozilla
+     * class browser. Examples of such browsers are Firefox (generally Gecko
+     * based browsers), Safari, Chrome (probably generally WebKit based
+     * browsers), and Microsoft IE.
+     */
+    private static final String BROWSER_CLASS_MOZILLA = "Mozilla";
+
+    /**
+     * String contained in a {@link #USER_AGENT} header indicating a Opera class
+     * browser. The only known browser in this class is the Opera browser.
+     */
+    private static final String BROWSER_CLASS_OPERA = "Opera";
+
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -225,8 +246,8 @@ public class ReferrerFilter implements Filter {
         if ( req instanceof HttpServletRequest && res instanceof HttpServletResponse ) {
             final HttpServletRequest request = (HttpServletRequest)req;
 
-            // is this a modification request
-            if ( this.isModification(request) ) {
+            // is this a modification request from a browser
+            if ( this.isBrowserRequest(request) && this.isModification(request) ) {
                 if ( !this.isValidRequest(request) ) {
                     final HttpServletResponse response = (HttpServletResponse)res;
                     // we use 403
@@ -333,6 +354,28 @@ public class ReferrerFilter implements Filter {
      */
     public void destroy() {
         // nothing to do
+    }
+
+    /**
+     * Returns <code>true</code> if the given request can be assumed to be sent
+     * by a client browser such as Firefix, Internet Explorer, etc.
+     * <p>
+     * This method inspects the <code>User-Agent</code> header and returns
+     * <code>true</code> if the header contains the string <i>Mozilla</i> (known
+     * to be contained in Firefox, Internet Explorer, WebKit-based browsers
+     * User-Agent) or <i>Opera</i> (known to be contained in the Opera
+     * User-Agent).
+     *
+     * @param request The request to inspect
+     * @return <code>true</code> if the request is assumed to be sent by a
+     *         browser.
+     */
+    private boolean isBrowserRequest(final HttpServletRequest request) {
+        final String userAgent = request.getHeader(USER_AGENT);
+        if (userAgent != null && (userAgent.contains(BROWSER_CLASS_MOZILLA) || userAgent.contains(BROWSER_CLASS_OPERA))) {
+            return true;
+        }
+        return false;
     }
 
     public class ConfigurationPrinter {
