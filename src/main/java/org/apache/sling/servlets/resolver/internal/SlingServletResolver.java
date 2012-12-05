@@ -28,7 +28,6 @@ import static org.osgi.framework.Constants.SERVICE_PID;
 import static org.osgi.service.component.ComponentConstants.COMPONENT_NAME;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
@@ -50,7 +49,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -66,9 +64,11 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.RequestUtil;
+import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
+import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -888,7 +888,7 @@ public class SlingServletResolver
         // and finally register as event listener
         this.eventHandlerReg = context.getBundleContext().registerService(EventHandler.class.getName(), this,
                 properties);
-        
+
         this.plugin = new ServletResolverWebConsolePlugin(context.getBundleContext());
     }
 
@@ -1138,10 +1138,28 @@ public class SlingServletResolver
      */
     public Resource decorate(final Resource resource) {
         return new ResourceWrapper(resource) {
+            @Override
             public boolean isResourceType(final String type) {
-                return ResourceUtil.isA(new ResourceWrapper(getResource()) {
+                return ResourceUtil.isA(new AbstractResource() {
+
+                    public String getResourceType() {
+                        return resource.getResourceType();
+                    }
+
+                    public String getResourceSuperType() {
+                        return resource.getResourceSuperType();
+                    }
+
                     public ResourceResolver getResourceResolver() {
                         return scriptResolver;
+                    }
+
+                    public ResourceMetadata getResourceMetadata() {
+                        return resource.getResourceMetadata();
+                    }
+
+                    public String getPath() {
+                        return resource.getPath();
                     }
                 }, type);
             }
@@ -1156,7 +1174,7 @@ public class SlingServletResolver
         // this is deprecated, but we just delegate anyway
         return this.decorate(resource);
     }
-    
+
     @SuppressWarnings("serial")
     class ServletResolverWebConsolePlugin extends HttpServlet {
         private static final String PARAMETER_URL = "url";
@@ -1184,12 +1202,12 @@ public class SlingServletResolver
                 service = null;
             }
         }
-        
+
         class DecomposedURL {
             final String extension;
             final String path;
             final String[] selectors;
-            
+
             DecomposedURL(String url) {
                 if (url != null) {
                     final int lastDot = url.lastIndexOf('.');
@@ -1223,7 +1241,7 @@ public class SlingServletResolver
                 }
             }
         }
-        
+
         @Override
         protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
             final String url = request.getParameter(PARAMETER_URL);
@@ -1236,22 +1254,22 @@ public class SlingServletResolver
             ResourceResolver resourceResolver = null;
             try {
                 resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-                
+
                 final PrintWriter pw = response.getWriter();
 
                 pw.print("<form method='get'>");
                 pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
-        
+
                 titleHtml(
                         pw,
                         "Servlet Resolver Test",
                         "To check which servlet is responsible for rendering a response, enter a request path into " +
                                  "the field and click 'Resolve' to resolve it.");
-        
+
                 tr(pw);
                 tdLabel(pw, "URL");
                 tdContent(pw);
-                
+
                 pw.println("<input type='text' name='" + PARAMETER_URL + "' value='" +
                          (url != null ? url : "") + "' class='input' size='50'>");
                 closeTd(pw);
@@ -1339,7 +1357,7 @@ public class SlingServletResolver
         private void closeTd(final PrintWriter pw) {
             pw.print("</td>");
         }
-        
+
         @SuppressWarnings("unused")
         private URL getResource(final String path) {
             if (path.startsWith("/servletresolver/res/ui")) {
@@ -1367,7 +1385,7 @@ public class SlingServletResolver
                 Servlet candidate = candidateResource.adaptTo(Servlet.class);
                 if (candidate != null) {
                     boolean isOptingServlet = false;
-                    
+
                     if (candidate instanceof SlingScript) {
                         pw.println("<li>" + candidateResource.getPath() + "</li>");
                     } else {
