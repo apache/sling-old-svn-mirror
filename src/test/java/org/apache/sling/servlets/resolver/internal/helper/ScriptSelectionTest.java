@@ -143,6 +143,9 @@ public class ScriptSelectionTest extends HelperTestBase {
                 "/apps/foo/bar/html.print.a4.esp",
                 "/apps/foo/bar/html.print.esp",
                 "/apps/foo/bar/print.esp",
+                "/apps/foo/bar/print.html.esp",
+                "/apps/foo/bar/a4.esp",
+                "/apps/foo/bar/a4.html.esp",
                 "/apps/foo/bar/html.esp"
             };
             assertScript("GET", "print.a4", "html", scripts, "/apps/foo/bar/print/a4.esp");
