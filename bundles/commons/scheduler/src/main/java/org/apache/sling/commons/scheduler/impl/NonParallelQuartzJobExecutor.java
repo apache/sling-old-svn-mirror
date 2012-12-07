@@ -20,7 +20,7 @@ import org.quartz.DisallowConcurrentExecution;
 
 
 /**
- * This component is resposible to launch a {@link org.apache.sling.commons.scheduler.Job}
+ * This component is responsible to launch a {@link org.apache.sling.commons.scheduler.Job}
  * or {@link Runnable} in a Quartz Scheduler but non concurrently.
  *
  */
