@@ -162,7 +162,7 @@ public class ResourceWrapper implements Resource {
     @Override
     public String toString() {
         final String className;
-        if ( getClass().getSimpleName() == null ) {
+        if (getClass().getSimpleName().length() == 0) {
             className = getClass().getName();
         } else {
             className = getClass().getSimpleName();
