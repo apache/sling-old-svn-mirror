@@ -40,6 +40,7 @@ import org.apache.sling.jackrabbit.usermanager.CreateUser;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.ModificationType;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -195,7 +196,7 @@ public class CreateUserServlet extends AbstractUserPostServlet implements Create
      */
     @Override
     protected void handleOperation(SlingHttpServletRequest request,
-            HtmlResponse response, List<Modification> changes)
+    		AbstractPostResponse response, List<Modification> changes)
             throws RepositoryException {
       
 

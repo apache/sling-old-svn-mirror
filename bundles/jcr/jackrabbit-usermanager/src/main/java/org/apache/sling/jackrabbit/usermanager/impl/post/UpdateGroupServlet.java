@@ -40,6 +40,7 @@ import org.apache.sling.jackrabbit.usermanager.UpdateGroup;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
@@ -113,7 +114,7 @@ public class UpdateGroupServlet extends AbstractGroupPostServlet
      */
     @Override
     protected void handleOperation(SlingHttpServletRequest request,
-            HtmlResponse htmlResponse, List<Modification> changes)
+    		AbstractPostResponse response, List<Modification> changes)
             throws RepositoryException {
         Resource resource = request.getResource();
         Session session = request.getResourceResolver().adaptTo(Session.class);

@@ -40,6 +40,7 @@ import org.apache.sling.jackrabbit.usermanager.CreateGroup;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
@@ -112,7 +113,7 @@ public class CreateGroupServlet extends AbstractGroupPostServlet implements Crea
      */
     @Override
     protected void handleOperation(SlingHttpServletRequest request,
-            HtmlResponse response, List<Modification> changes)
+    		AbstractPostResponse response, List<Modification> changes)
             throws RepositoryException {
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
