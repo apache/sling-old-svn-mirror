@@ -39,6 +39,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.jackrabbit.accessmanager.DeleteAces;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
@@ -95,7 +96,7 @@ public class DeleteAcesServlet extends AbstractAccessPostServlet implements Dele
 	 */
 	@Override
 	protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse htmlResponse, List<Modification> changes)
+			AbstractPostResponse htmlResponse, List<Modification> changes)
 			throws RepositoryException {
 
 		Session session = request.getResourceResolver().adaptTo(Session.class);

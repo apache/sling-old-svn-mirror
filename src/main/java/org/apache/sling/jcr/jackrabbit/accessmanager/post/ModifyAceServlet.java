@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.servlets.HtmlResponse;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
 import org.apache.sling.jcr.jackrabbit.accessmanager.ModifyAce;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 
 /**
@@ -107,7 +108,7 @@ public class ModifyAceServlet extends AbstractAccessPostServlet implements Modif
 	 */
 	@Override
 	protected void handleOperation(SlingHttpServletRequest request,
-			HtmlResponse htmlResponse, List<Modification> changes)
+			AbstractPostResponse response, List<Modification> changes)
 			throws RepositoryException {
 		Session session = request.getResourceResolver().adaptTo(Session.class);
     	String resourcePath = request.getResource().getPath();
