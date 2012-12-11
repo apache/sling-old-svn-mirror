@@ -42,6 +42,7 @@ import org.apache.sling.commons.osgi.OsgiUtil;
 import org.apache.sling.jackrabbit.usermanager.ChangeUserPassword;
 import org.apache.sling.jackrabbit.usermanager.impl.resource.AuthorizableResourceProvider;
 import org.apache.sling.jcr.base.util.AccessControlUtil;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -150,7 +151,7 @@ public class ChangeUserPasswordServlet extends AbstractUserPostServlet implement
      */
     @Override
     protected void handleOperation(SlingHttpServletRequest request,
-            HtmlResponse htmlResponse, List<Modification> changes)
+    		AbstractPostResponse response, List<Modification> changes)
             throws RepositoryException {
         
         Resource resource = request.getResource();

@@ -30,12 +30,13 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.servlets.HtmlResponse;
+import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.api.wrappers.SlingRequestPaths;
+import org.apache.sling.servlets.post.AbstractPostResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
-import org.apache.sling.servlets.post.impl.helper.JSONResponse;
+import org.apache.sling.servlets.post.JSONResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,20 +65,20 @@ public abstract class AbstractPostServlet extends
             SlingHttpServletResponse httpResponse) throws ServletException,
             IOException {
         // prepare the response
-        HtmlResponse htmlResponse = createHtmlResponse(request);
-        htmlResponse.setReferer(request.getHeader("referer"));
+    	AbstractPostResponse response = createHtmlResponse(request);
+        response.setReferer(request.getHeader("referer"));
 
         // calculate the paths
         String path = getItemPath(request);
-        htmlResponse.setPath(path);
+        response.setPath(path);
 
         // location
-        htmlResponse.setLocation(externalizePath(request, path));
+        response.setLocation(externalizePath(request, path));
 
         // parent location
         path = ResourceUtil.getParent(path);
         if (path != null) {
-            htmlResponse.setParentLocation(externalizePath(request, path));
+            response.setParentLocation(externalizePath(request, path));
         }
 
         Session session = request.getResourceResolver().adaptTo(Session.class);
@@ -85,7 +86,7 @@ public abstract class AbstractPostServlet extends
         final List<Modification> changes = new ArrayList<Modification>();
 
         try {
-            handleOperation(request, htmlResponse, changes);
+            handleOperation(request, response, changes);
 
             // TODO: maybe handle SlingAuthorizablePostProcessor handlers here
 
@@ -93,24 +94,24 @@ public abstract class AbstractPostServlet extends
             for (Modification change : changes) {
                 switch (change.getType()) {
                     case MODIFY:
-                        htmlResponse.onModified(change.getSource());
+                        response.onModified(change.getSource());
                         break;
                     case DELETE:
-                        htmlResponse.onDeleted(change.getSource());
+                        response.onDeleted(change.getSource());
                         break;
                     case MOVE:
-                        htmlResponse.onMoved(change.getSource(),
+                        response.onMoved(change.getSource(),
                             change.getDestination());
                         break;
                     case COPY:
-                        htmlResponse.onCopied(change.getSource(),
+                        response.onCopied(change.getSource(),
                             change.getDestination());
                         break;
                     case CREATE:
-                        htmlResponse.onCreated(change.getSource());
+                        response.onCreated(change.getSource());
                         break;
                     case ORDER:
-                        htmlResponse.onChange("ordered", change.getSource(),
+                        response.onChange("ordered", change.getSource(),
                             change.getDestination());
                         break;
                 }
@@ -120,13 +121,13 @@ public abstract class AbstractPostServlet extends
                 session.save();
             }
         } catch (ResourceNotFoundException rnfe) {
-            htmlResponse.setStatus(HttpServletResponse.SC_NOT_FOUND,
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND,
                 rnfe.getMessage());
         } catch (Throwable throwable) {
             log.debug("Exception while handling POST "
                 + request.getResource().getPath() + " with "
                 + getClass().getName(), throwable);
-            htmlResponse.setError(throwable);
+            response.setError(throwable);
         } finally {
             try {
                 if (session.hasPendingChanges()) {
@@ -139,8 +140,8 @@ public abstract class AbstractPostServlet extends
         }
 
         // check for redirect URL if processing succeeded
-        if (htmlResponse.isSuccessful()) {
-            String redirect = getRedirectUrl(request, htmlResponse);
+        if (response.isSuccessful()) {
+            String redirect = getRedirectUrl(request, response);
             if (redirect != null) {
                 httpResponse.sendRedirect(redirect);
                 return;
@@ -148,7 +149,7 @@ public abstract class AbstractPostServlet extends
         }
 
         // create a html response and send if unsuccessful or no redirect
-        htmlResponse.send(httpResponse, isSetStatus(request));
+        response.send(httpResponse, isSetStatus(request));
     }
 
     /**
@@ -160,7 +161,7 @@ public abstract class AbstractPostServlet extends
      * </ul>
      * or a {@link org.apache.sling.api.servlets.HtmlResponse} otherwise
      */
-    protected HtmlResponse createHtmlResponse(SlingHttpServletRequest req) {
+    protected AbstractPostResponse createHtmlResponse(SlingHttpServletRequest req) {
         if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(req.getResponseContentType())) {
             return new JSONResponse();
         } else {
@@ -172,11 +173,11 @@ public abstract class AbstractPostServlet extends
      * Extending Servlet should implement this operation to do the work
      * 
      * @param request the sling http request to process
-     * @param htmlResponse the response
+     * @param response the response
      * @param changes
      */
     abstract protected void handleOperation(SlingHttpServletRequest request,
-            HtmlResponse htmlResponse, List<Modification> changes)
+    		AbstractPostResponse response, List<Modification> changes)
             throws RepositoryException;
 
     /**
@@ -185,7 +186,7 @@ public abstract class AbstractPostServlet extends
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
-    protected String getRedirectUrl(HttpServletRequest request, HtmlResponse ctx) {
+    protected String getRedirectUrl(HttpServletRequest request, AbstractPostResponse ctx) {
         // redirect param has priority (but see below, magic star)
         String result = request.getParameter(SlingPostConstants.RP_REDIRECT_TO);
         if (result != null && ctx.getPath() != null) {
