@@ -47,7 +47,7 @@ public class StartupManager {
     private static final String OLD_DATA_FILE = "bundle0" + File.separatorChar + "bootstrapinstaller.ser";
 
     /** Name of the mode override property. */
-    private static final String OVERRIDE_RPOP = "org.apache.sling.launchpad.startupmode";
+    private static final String OVERRIDE_PROP = "org.apache.sling.launchpad.startupmode";
 
     /**
      * The {@link Logger} use for logging messages during installation and
@@ -71,14 +71,14 @@ public class StartupManager {
         this.startupDir = DirectoryUtil.getStartupDir(properties);
         this.confDir = DirectoryUtil.getConfigDir(properties);
         // check for override property
-        final String overrideMode = System.getProperty(OVERRIDE_RPOP);
+        final String overrideMode = System.getProperty(OVERRIDE_PROP, properties.get(OVERRIDE_PROP));
         if ( overrideMode != null ) {
             this.mode = StartupMode.valueOf(overrideMode.toUpperCase());
+            this.logger.log(Logger.LOG_INFO, "Override property set. Starting in mode " + this.mode);
         } else {
             this.mode = detectMode(properties.get(Constants.FRAMEWORK_STORAGE));
+            this.logger.log(Logger.LOG_INFO, "Detected startup mode. Starting in mode " + this.mode);
         }
-
-        this.logger.log(Logger.LOG_INFO, "Starting in mode " + this.mode);
 
         this.targetStartLevel = Long.valueOf(properties.get(Constants.FRAMEWORK_BEGINNING_STARTLEVEL));
 
@@ -133,7 +133,7 @@ public class StartupManager {
 
                     final long storedStamp = Long.parseLong(value);
 
-                    logger.log(Logger.LOG_INFO, String.format("Stored timestamp: %s", storedStamp));
+                    logger.log(Logger.LOG_INFO, String.format("Stored startup timestamp: %s", storedStamp));
 
                     return (storedStamp >= selfStamp ? StartupMode.RESTART : StartupMode.UPDATE);
                 }
@@ -170,23 +170,26 @@ public class StartupManager {
     }
 
     /**
-     * Get the timestamp of a class through its url classloader (if possible)
+     * Get the time stamp of a class through its url classloader (if possible)
      */
-    private long getTimeStampOfClass(final Class<?> clazz) {
-        long selfStamp = -1;
+    private long getTimeStampOfClass(final Class<?> clazz, final long selfStamp) {
+        long timeStamp = selfStamp;
         final ClassLoader loader = clazz.getClassLoader();
         if (loader instanceof URLClassLoader) {
             final URLClassLoader urlLoader = (URLClassLoader) loader;
             final URL[] urls = urlLoader.getURLs();
             if (urls.length > 0) {
                 final URL url = urls[0];
-                logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", url));
                 try {
-                    selfStamp = urls[0].openConnection().getLastModified();
+                    final long stamp = urls[0].openConnection().getLastModified();
+                    if ( stamp > selfStamp ) {
+                        logger.log(Logger.LOG_INFO, String.format("Newer timestamp for %s from %s : %s", clazz.getName(), url, selfStamp));
+                        timeStamp = selfStamp;
+                    }
                 } catch (final IOException ignore) {}
             }
         }
-        return selfStamp;
+        return timeStamp;
     }
 
     /**
@@ -202,17 +205,14 @@ public class StartupManager {
      *         if the class loader of this class is not an URLClassLoader or the
      *         class loader has no URL entries. Both situations are not really
      *         expected.
-     * @throws IOException If an error occurrs reading accessing the last
-     *             modification time stampe.
+     * @throws IOException If an error occurs reading accessing the last
+     *             modification time stamp.
      */
     private long getSelfTimestamp() {
 
-        // the timestamp of the launcher jar and the bootstrap jar
-        long selfStamp = this.getTimeStampOfClass(this.getClass());
-        long bootStamp = this.getTimeStampOfClass(LaunchpadContentProvider.class);
-        if ( bootStamp > selfStamp ) {
-            selfStamp = bootStamp;
-        }
+        // the time stamp of the launcher jar and the bootstrap jar
+        long selfStamp = this.getTimeStampOfClass(this.getClass(), -1);
+        selfStamp = this.getTimeStampOfClass(LaunchpadContentProvider.class, selfStamp);
 
         // check whether any bundle is younger than the launcher jar
         final File[] directories = this.startupDir.listFiles(DirectoryUtil.DIRECTORY_FILTER);
@@ -224,8 +224,8 @@ public class StartupManager {
                 if ( jarFiles != null ) {
                     for (final File bundleJar : jarFiles) {
                         if (bundleJar.lastModified() > selfStamp) {
-                            logger.log(Logger.LOG_INFO, String.format("Using timestamp from %s.", bundleJar));
                             selfStamp = bundleJar.lastModified();
+                            logger.log(Logger.LOG_INFO, String.format("Newer timestamp from %s : %s", bundleJar, selfStamp));
                         }
                     }
                 }
@@ -248,7 +248,7 @@ public class StartupManager {
             this.confDir.mkdirs();
             final FileWriter fos = new FileWriter(dataFile);
             try {
-                fos.write(String.valueOf(this.getSelfTimestamp()));
+                fos.write(String.valueOf(System.currentTimeMillis()));
             } finally {
                 try { fos.close(); } catch (final IOException ignore) {}
             }
