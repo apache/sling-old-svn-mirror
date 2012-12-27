@@ -211,7 +211,7 @@ public class ClassLoaderWriterImpl
         return this.repository != null;
     }
 
-    private synchronized ClassLoader getOrCreateClassLoader() {
+    private synchronized RepositoryClassLoader getOrCreateClassLoader() {
         if ( this.repositoryClassLoader == null || !this.repositoryClassLoader.isLive() ) {
 
             // make sure to cleanup any existing class loader
@@ -243,7 +243,7 @@ public class ClassLoaderWriterImpl
                 Item fileItem = session.getItem(path);
                 fileItem.remove();
                 session.save();
-                this.repositoryClassLoader.handleEvent(path);
+                this.getOrCreateClassLoader().handleEvent(path);
                 return true;
             }
         } catch (final RepositoryException re) {
@@ -278,8 +278,8 @@ public class ClassLoaderWriterImpl
             session = this.createSession();
             session.move(oldPath, newPath);
             session.save();
-            this.repositoryClassLoader.handleEvent(oldName);
-            this.repositoryClassLoader.handleEvent(newName);
+            this.getOrCreateClassLoader().handleEvent(oldName);
+            this.getOrCreateClassLoader().handleEvent(newName);
             return true;
         } catch (final RepositoryException re) {
             logger.error("Cannot rename " + oldName + " to " + newName, re);
@@ -390,6 +390,7 @@ public class ClassLoaderWriterImpl
         /**
          * @see java.io.ByteArrayOutputStream#close()
          */
+        @Override
         public void close() throws IOException {
             super.close();
 
@@ -464,7 +465,7 @@ public class ClassLoaderWriterImpl
                 contentNode.setProperty("jcr:mimeType", mimeType);
 
                 session.save();
-                this.repositoryOutputProvider.repositoryClassLoader.handleEvent(fileName);
+                this.repositoryOutputProvider.getOrCreateClassLoader().handleEvent(fileName);
             } catch (final RepositoryException re) {
                 throw (IOException)new IOException("Cannot write file " + fileName + ", reason: " + re.toString()).initCause(re);
             } finally {
