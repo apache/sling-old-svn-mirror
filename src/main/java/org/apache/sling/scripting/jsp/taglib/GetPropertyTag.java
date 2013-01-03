@@ -27,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Tag for retrieving a property from a ValueMap.
- * 
- * @author dklco
  */
 public class GetPropertyTag extends TagSupport {
 

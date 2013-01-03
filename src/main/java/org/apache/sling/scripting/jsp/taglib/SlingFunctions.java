@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Class containing the TagLib Functions for Sling.
- * 
- * @author dklco
  */
 public class SlingFunctions {
 

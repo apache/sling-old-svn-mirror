@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unit Tests for the Class GetPropertyTag.
- * 
- * @author dklco
  * @see org.apache.sling.scripting.jsp.taglib.GetPropertyTag
  */
 public class TestGetPropertyTag {
