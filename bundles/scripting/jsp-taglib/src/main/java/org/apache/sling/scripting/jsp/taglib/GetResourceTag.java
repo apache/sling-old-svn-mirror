@@ -27,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Tag for retrieving a resource based a path.
- * 
- * @author dklco
  */
 public class GetResourceTag extends TagSupport {
 

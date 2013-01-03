@@ -32,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unit Tests for the Class GetResourceTag.
- * 
- * @author dklco
  * @see org.apache.sling.scripting.jsp.taglib.GetResourceTag
  */
 public class TestGetResourceTag {

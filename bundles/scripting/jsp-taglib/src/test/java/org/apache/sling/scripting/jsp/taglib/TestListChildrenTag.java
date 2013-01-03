@@ -32,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unit Tests for the Class ListChildrenTag.
- * 
- * @author dklco
  * @see org.apache.sling.scripting.jsp.taglib.ListChildrenTag
  */
 public class TestListChildrenTag {

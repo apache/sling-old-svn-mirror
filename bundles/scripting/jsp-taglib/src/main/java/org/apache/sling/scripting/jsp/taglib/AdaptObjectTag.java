@@ -27,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Tag for adapting adaptables to classes.
- * 
- * @author dklco
  */
 public class AdaptObjectTag extends TagSupport {
 

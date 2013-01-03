@@ -31,8 +31,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unit Tests for the Class AdaptObject.
- * 
- * @author dklco
  * @see org.apache.sling.scripting.jsp.taglib.AdaptObjectTag
  */
 public class TestAdaptObjectTag {
