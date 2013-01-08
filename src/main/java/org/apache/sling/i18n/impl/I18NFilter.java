@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * The <code>I18NFilter</code> class is a request level filter, which provides
  * the resource bundle for the current request.
  */
-@SlingFilter(generateComponent = false, generateService = true, order = -700, scope = SlingFilterScope.REQUEST)
+@SlingFilter(generateComponent = false, generateService = true, order = -700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
 @Component(immediate = true, metatype = false, specVersion="1.1")
 @Properties({
     @Property(name = "pattern", value="/.*"),
