@@ -105,7 +105,7 @@ public class RequestHistoryConsolePlugin {
     public static final class Plugin extends HttpServlet {
 
         private final RequestInfoMap requests;
-        
+
         private final List<Pattern> storePatterns;
 
         Plugin(int maxRequests, List<Pattern> storePatterns) {
@@ -165,7 +165,7 @@ public class RequestHistoryConsolePlugin {
                             currentRequestIndex);
                         final StringBuilder sb = new StringBuilder();
                         sb.append("<span style='white-space: pre; text-align:right; font-size:80%'>");
-                        sb.append(String.format("%1$#8s", key));
+                        sb.append(String.format("%1$8s", key));
                         sb.append("</span> ");
                         sb.append("<a href='" + LABEL + "?index=" + key + "'>");
                         if (isCurrent) {
@@ -248,7 +248,7 @@ public class RequestHistoryConsolePlugin {
                 pw.println("<tr>");
                 pw.printf(
                     "<th class='ui-widget-header'>Request %s (%s %s) by %s - RequestProgressTracker Info</th>%n",
-                    key, ResponseUtil.escapeXml(info.getMethod()), 
+                    key, ResponseUtil.escapeXml(info.getMethod()),
                     ResponseUtil.escapeXml(info.getPathInfo()), ResponseUtil.escapeXml(info.getUser()));
                 pw.println("</tr>");
                 pw.println("</thead>");
