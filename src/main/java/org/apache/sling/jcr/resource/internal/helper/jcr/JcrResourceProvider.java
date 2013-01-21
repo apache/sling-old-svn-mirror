@@ -432,8 +432,9 @@ public class JcrResourceProvider
         try {
             if ( session.itemExists(path) ) {
                 session.getItem(path).remove();
+            } else {
+                throw new PersistenceException("Unable to delete item at " + path, null, path, null);
             }
-            throw new PersistenceException("Unable to delete item at " + path, null, path, null);
         } catch (final RepositoryException e) {
             throw new PersistenceException("Unable to delete item at " + path, e, path, null);
         }
