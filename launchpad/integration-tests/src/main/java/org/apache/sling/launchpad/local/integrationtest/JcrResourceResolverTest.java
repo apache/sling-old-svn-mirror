@@ -16,7 +16,8 @@
  */
 package org.apache.sling.launchpad.local.integrationtest;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.BufferedReader;
 import java.lang.reflect.Method;
@@ -78,7 +79,8 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
                 throws LoginException {
             super(factory, bundleContext, eventAdmin);
         }
-        
+
+        @Override
         protected void doInit() {
             super.doInit();
         }
@@ -99,6 +101,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
     private String vanity;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         assertTrue(RepositoryUtil.registerNodeType(getSession(),
@@ -133,7 +136,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         rootNode.addMixin("sling:VanityPath");
 
         session.save();
-        
+
         ResourceResolverFactoryActivator activator = new ResourceResolverFactoryActivator();
 
         JcrResourceProviderFactory providerFactory = new JcrResourceProviderFactory();
@@ -201,7 +204,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         };
         final ServiceTracker tracker = mock(ServiceTracker.class);
         when(tracker.getService()).thenReturn(mockEA);
-  
+
         resResolver = resFac.getAdministrativeResourceResolver(null);
   /*
         UserManager userMan = AccessControlUtil.getUserManager(session);
@@ -223,11 +226,11 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         if (rootNode != null) {
             rootNode.remove();
         }
- 
+
         if (mapRoot != null) {
             mapRoot.remove();
         }
-        
+
         session.save();
 
         super.tearDown();
@@ -385,7 +388,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         authInfo.put(ResourceResolverFactory.PASSWORD, "admin".toCharArray());
         authInfo.put("testAttributeString", "AStringValue");
         authInfo.put("testAttributeNumber", 999);
-        
+
         final ResourceResolver resolver0 = resFac.getResourceResolver(authInfo);
 
         final Iterator<String> attrNames0 = resolver0.getAttributeNames();
@@ -410,7 +413,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         creds1.setAttribute("testAttributeString", "AStringValue");
         creds1.setAttribute("testAttributeNumber", 999);
         final Session session1 = getRepository().login(creds1);
-        
+
         final ResourceResolver resolver1 = resFac.getResourceResolver(authInfo);
 
         assertEquals("Expected 2 Session attributes", 2,
@@ -495,7 +498,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         res = resResolver.getResource(path);
         assertNull(res);
     }
- 
+
     public void testResolveResource() throws Exception {
         // existing resource
         HttpServletRequest request = new ResourceResolverTestRequest(rootPath);
@@ -537,7 +540,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(Resource.RESOURCE_TYPE_NON_EXISTING, res.getResourceType());
     }
 
-    
+
 
     public void testResolveResourceExternalRedirect() throws Exception {
         HttpServletRequest request = new ResourceResolverTestRequest("https",
@@ -582,7 +585,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         HttpServletRequest request = new ResourceResolverTestRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
-        
+
         Node toContent = localhost443.addNode("_playground_designground_",
             "sling:Mapping");
         toContent.setProperty("sling:match",
@@ -1019,7 +1022,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         session.save();
 
         mapEntries.doInit();
-        
+
         final Resource res0 = resResolver.resolve(request, "/playground.html");
         assertNotNull(res0);
         assertEquals("/content/virtual/playground.html", res0.getPath());
@@ -1170,7 +1173,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
         content.setProperty("sling:alias", alias);
         session.save();
-        
+
         mapEntries.doInit();
 
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
@@ -1214,7 +1217,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child", "nt:unstructured");
         child.setProperty("sling:alias", alias);
         session.save();
-        
+
         mapEntries.doInit();
 
         res = resResolver.resolve(request, path);
@@ -1355,7 +1358,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         mapped = resResolver.map(child.getPath());
         assertEquals(path, mapped);
 
- 
+
     }
 
     public void testMapURLEscaping() throws Exception {
@@ -2025,14 +2028,14 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
             testUserSession.logout();
         }
     }*/
-      
+
     public void test_resolve_with_sling_alias_multi_value() throws Exception {
 
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", new String[] {
             "kind", "enfant" });
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
@@ -2073,7 +2076,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node grandchild = child.addNode("grandchild");
         grandchild.setProperty("sling:alias", "enkel");
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind/enkel due to alias and no parent due to mapping
@@ -2116,7 +2119,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
@@ -2139,7 +2142,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node grandchild = child.addNode("grandchild");
         grandchild.setProperty("sling:alias", "enkel");
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind/enkel due to alias and no parent due to mapping
@@ -2168,7 +2171,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
@@ -2191,7 +2194,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node grandchild = child.addNode("grandchild");
         grandchild.setProperty("sling:alias", "enkel");
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind/enkel due to alias and no parent due to mapping
@@ -2220,7 +2223,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
         session.save();
-        
+
         mapEntries.doInit();
 
         // expect kind due to alias and no parent due to mapping
@@ -2235,6 +2238,14 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
 
         assertEquals(child.getPath(), resNode.getPath());
     }
+
+    public void test_delete_resource() throws Exception{
+        resResolver.create(resResolver.getResource("/"), "node", null);
+        assertEquals("/node", resResolver.getResource("/node").getPath());
+        resResolver.delete(resResolver.getResource("/node"));
+        resResolver.commit();
+        assertNull(resResolver.getResource("/node"));
+   }
 
     // ---------- internal
 
