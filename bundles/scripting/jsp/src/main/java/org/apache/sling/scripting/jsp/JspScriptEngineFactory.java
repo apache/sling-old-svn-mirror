@@ -52,6 +52,7 @@ import org.apache.sling.scripting.api.AbstractScriptEngineFactory;
 import org.apache.sling.scripting.api.AbstractSlingScriptEngine;
 import org.apache.sling.scripting.jsp.jasper.Options;
 import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext;
+import org.apache.sling.scripting.jsp.jasper.compiler.JspRuntimeContext.JspFactoryHandler;
 import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
@@ -122,7 +123,7 @@ public class JspScriptEngineFactory
     private boolean defaultIsSession;
 
     /** The handler for the jsp factories. */
-    private JspRuntimeContext.JspFactoryHandler jspFactoryHandler;
+    private JspFactoryHandler jspFactoryHandler;
 
     public static final String[] SCRIPT_TYPE = { "jsp", "jspf", "jspx" };
 
@@ -157,6 +158,7 @@ public class JspScriptEngineFactory
     /**
      * @see javax.script.ScriptEngineFactory#getParameter(String)
      */
+    @Override
     public Object getParameter(final String name) {
         if ("THREADING".equals(name)) {
             return "STATELESS";
@@ -167,9 +169,10 @@ public class JspScriptEngineFactory
 
     /**
      * Call the error page
-     * @param bindings
-     * @param scriptHelper
-     * @param context
+     * @param bindings The bindings
+     * @param scriptHelper Script helper service
+     * @param context The script context
+     * @param scriptName The name of the script
      */
     @SuppressWarnings("unchecked")
     private void callErrorPageJsp(final Bindings bindings,
@@ -185,8 +188,17 @@ public class JspScriptEngineFactory
             resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
         }
         final SlingIOProvider io = this.ioProvider;
+        final JspFactoryHandler jspfh = this.jspFactoryHandler;
+
+        // abort if JSP Support is shut down concurrently (SLING-2704)
+        if (io == null || jspfh == null) {
+            logger.warn("callJsp: JSP Script Engine seems to be shut down concurrently; not calling {}",
+                    scriptHelper.getScript().getScriptResource().getPath());
+            return;
+        }
+
         final ResourceResolver oldResolver = io.setRequestResourceResolver(resolver);
-		jspFactoryHandler.incUsage();
+        jspfh.incUsage();
 		try {
 			final JspServletWrapper errorJsp = getJspWrapper(scriptName, slingBindings);
 			errorJsp.service(slingBindings);
@@ -209,13 +221,16 @@ public class JspScriptEngineFactory
             request.removeAttribute("javax.servlet.error.status_code");
             request.removeAttribute("javax.servlet.jsp.jspException");
 		} finally {
-			jspFactoryHandler.decUsage();
+            jspfh.decUsage();
 			io.resetRequestResourceResolver(oldResolver);
 		}
      }
 
     /**
-     * @param scriptHelper
+     * Call a JSP script
+     * @param bindings The bindings
+     * @param scriptHelper Script helper service
+     * @param context The script context
      * @throws SlingServletException
      * @throws SlingIOException
      */
@@ -230,8 +245,17 @@ public class JspScriptEngineFactory
             resolver = scriptHelper.getScript().getScriptResource().getResourceResolver();
         }
         final SlingIOProvider io = this.ioProvider;
+        final JspFactoryHandler jspfh = this.jspFactoryHandler;
+
+        // abort if JSP Support is shut down concurrently (SLING-2704)
+        if (io == null || jspfh == null) {
+            logger.warn("callJsp: JSP Script Engine seems to be shut down concurrently; not calling {}",
+                    scriptHelper.getScript().getScriptResource().getPath());
+            return;
+        }
+
         final ResourceResolver oldResolver = io.setRequestResourceResolver(resolver);
-        jspFactoryHandler.incUsage();
+        jspfh.incUsage();
         try {
             final SlingBindings slingBindings = new SlingBindings();
             slingBindings.putAll(bindings);
@@ -240,7 +264,7 @@ public class JspScriptEngineFactory
             // create a SlingBindings object
             jsp.service(slingBindings);
         } finally {
-            jspFactoryHandler.decUsage();
+            jspfh.decUsage();
             io.resetRequestResourceResolver(oldResolver);
         }
     }
@@ -548,6 +572,7 @@ public class JspScriptEngineFactory
             this.jspRuntimeContext = null;
         }
         final Thread t = new Thread() {
+            @Override
             public void run() {
                 destroyJspRuntimeContext(jrc);
             }
