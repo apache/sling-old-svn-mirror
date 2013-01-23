@@ -299,12 +299,14 @@ public class ResourceResolverFactoryActivator {
 
     private void unregisterFactory() {
         if ( this.factoryRegistration != null ) {
-            this.factoryRegistration.unregister();
+            final ServiceRegistration local = this.factoryRegistration;
             this.factoryRegistration = null;
+            local.unregister();
         }
         if ( this.factory != null ) {
-            this.factory.deactivate();
+            final ResourceResolverFactoryImpl local = this.factory;
             this.factory = null;
+            local.deactivate();
         }
     }
 
