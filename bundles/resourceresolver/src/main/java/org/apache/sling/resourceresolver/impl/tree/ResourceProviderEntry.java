@@ -227,7 +227,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             // the last element is a perfect match;
             result = entries.get(entries.size() - 1).removeInternalProvider(resourceProvider);
         }
-        
+
         if(!result) {
             // bad news - the provider might be an OSGi service being deactivated,
             // so this should be taken care of.
@@ -299,12 +299,16 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                     final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
                     if (resource != null) {
                         if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
-                            LOGGER.debug("Resolved Full {} using {} from {} - continue resolving flag is set!", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            if ( LOGGER.isDebugEnabled() ) {
+                                LOGGER.debug("Resolved Full {} using {} from {} - continue resolving flag is set!", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            }
                             fallbackResource = resource;
                             fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
                             foundFallback = true;
                         } else {
-                            LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            if ( LOGGER.isDebugEnabled() ) {
+                                LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            }
                             return resource;
                         }
                     }
