@@ -107,6 +107,10 @@
   </profiles>
 
   <dependencies>
+    <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.scr.annotations</artifactId>
+    </dependency>
 
 
     <!--  for DavExIntegrationTest -->
