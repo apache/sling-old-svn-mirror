@@ -39,6 +39,9 @@ public interface ValueMap extends Map<String, Object> {
 
     /**
      * Get a named property and convert it into the given type.
+     * This method does not support conversion into a primitive type or an
+     * array of a primitive type. It should return <code>null</code> in this
+     * case.
      *
      * @param name The name of the property
      * @param type The class of the type
@@ -49,6 +52,9 @@ public interface ValueMap extends Map<String, Object> {
 
     /**
      * Get a named property and convert it into the given type.
+     * This method does not support conversion into a primitive type or an
+     * array of a primitive type. It should return the default value in this
+     * case.
      *
      * @param name The name of the property
      * @param defaultValue The default value to use if the named property does
