@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(ResourceProviderEntry.class);
+    private final Logger logger = LoggerFactory.getLogger(ResourceProviderEntry.class);
 
     // the path to resources provided by the resource provider of this
     // entry. this path is relative to the path of the parent resource
@@ -165,7 +165,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
         set.addAll(Arrays.asList(providers));
 
-        LOGGER.debug("Adding provider {} at {} ", provider, path);
+        logger.debug("Adding provider {} at {} ", provider, path);
         set.add(provider);
         providers = conditionalSort(set);
         return providers.length > before;
@@ -181,7 +181,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         final Set<ProviderHandler> set = new HashSet<ProviderHandler>();
         set.addAll(Arrays.asList(providers));
 
-        LOGGER.debug("Removing provider {} at {} ", provider, path);
+        logger.debug("Removing provider {} at {} ", provider, path);
         set.remove(provider);
         providers = conditionalSort(set);
         return providers.length < before;
@@ -231,7 +231,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         if(!result) {
             // bad news - the provider might be an OSGi service being deactivated,
             // so this should be taken care of.
-            LOGGER.warn("Unable to remove {} for prefix {}, no matching entry found", resourceProvider, prefix);
+            logger.warn("Unable to remove {} for prefix {}, no matching entry found", resourceProvider, prefix);
         }
         return result;
     }
@@ -281,7 +281,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         try {
 
             if (fullPath == null || fullPath.length() == 0 || fullPath.charAt(0) != '/') {
-                LOGGER.debug("Not absolute {}", fullPath);
+                logger.debug("Not absolute {}", fullPath);
                 return null; // fullpath must be absolute
             }
             final String[] elements = split(fullPath);
@@ -299,21 +299,21 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
                     final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
                     if (resource != null) {
                         if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
-                            if ( LOGGER.isDebugEnabled() ) {
-                                LOGGER.debug("Resolved Full {} using {} from {} - continue resolving flag is set!", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            if ( logger.isDebugEnabled() ) {
+                                logger.debug("Resolved Full {} using {} from {} - continue resolving flag is set!", new Object[] { fullPath, rp, Arrays.toString(rps) });
                             }
                             fallbackResource = resource;
                             fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
                             foundFallback = true;
                         } else {
-                            if ( LOGGER.isDebugEnabled() ) {
-                                LOGGER.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
+                            if ( logger.isDebugEnabled() ) {
+                                logger.debug("Resolved Full {} using {} from {} ", new Object[] { fullPath, rp, Arrays.toString(rps) });
                             }
                             return resource;
                         }
                     }
                     if ( rp.ownsRoots() && !foundFallback ) {
-                        LOGGER.debug("Resource null {} ", fullPath);
+                        logger.debug("Resource null {} ", fullPath);
                         return fallbackResource;
                     }
                 }
@@ -326,7 +326,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             }
 
             if ( fallbackResource != null ) {
-                LOGGER.debug("Using first found resource {} for {}", fallbackResource, fullPath);
+                logger.debug("Using first found resource {} for {}", fallbackResource, fullPath);
                 return fallbackResource;
             }
 
@@ -336,15 +336,15 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             // and there will be no resource provider at the end
             if (entries.size() > 0 && entries.size() == elements.length) {
                 if (entries.get(entries.size() - 1).getResourceProviders().length == 0) {
-                    LOGGER.debug("Resolved Synthetic {}", fullPath);
+                    logger.debug("Resolved Synthetic {}", fullPath);
                     return new SyntheticResource(resourceResolver, fullPath, ResourceProvider.RESOURCE_TYPE_SYNTHETIC);
                 }
             }
 
-            LOGGER.debug("Resource null {} ", fullPath);
+            logger.debug("Resource null {} ", fullPath);
             return null;
         } catch (final Exception ex) {
-            LOGGER.debug("Failed! ", ex);
+            logger.debug("Failed! ", ex);
             return null;
         }
     }
@@ -360,17 +360,17 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             final Resource resource = rp.getResource(ctx, resourceResolver, fullPath);
             if (resource != null) {
                 if ( resource.getResourceMetadata() != null && resource.getResourceMetadata().get(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING) != null ) {
-                    LOGGER.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);
+                    logger.debug("Resolved Base {} using {} - continue resolving flag is set!", fullPath, rp);
                     fallbackResource = resource;
                     fallbackResource.getResourceMetadata().remove(ResourceMetadata.INTERNAL_CONTINUE_RESOLVING);
                     foundFallback = true;
                 } else {
-                    LOGGER.debug("Resolved Base {} using {} ", fullPath, rp);
+                    logger.debug("Resolved Base {} using {} ", fullPath, rp);
                     return resource;
                 }
             }
             if ( rp.ownsRoots() && !foundFallback ) {
-                LOGGER.debug("Resource null {} ", fullPath);
+                logger.debug("Resource null {} ", fullPath);
                 return fallbackResource;
             }
         }
