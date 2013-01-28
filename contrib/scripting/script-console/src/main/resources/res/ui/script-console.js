@@ -66,7 +66,7 @@ function setLangMode(editor, modeName) {
 
 function setUpLangOptions() {
     var codeLang = $('#codeLang')
-    var options = codeLang.attr('options');
+    var options = codeLang.prop ? codeLang.prop('options') : codeLang.attr('options');
     codeLang.empty()
 
     for(var i in scriptConfig){
