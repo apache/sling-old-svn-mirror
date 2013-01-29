@@ -416,7 +416,9 @@ public class SlingMainServlet extends GenericServlet {
             String[] patterns = OsgiUtil.toStringArray(componentConfig.get(PROP_TRACK_PATTERNS_REQUESTS), new String[0]);
             List<Pattern> compiledPatterns = new ArrayList<Pattern>(patterns.length);
             for (String pattern : patterns) {
-                compiledPatterns.add(Pattern.compile(pattern));
+                if(pattern != null && pattern.trim().length() > 0) {
+                    compiledPatterns.add(Pattern.compile(pattern));
+                }
             }
             RequestHistoryConsolePlugin.initPlugin(bundleContext, maxRequests, compiledPatterns);
         } catch (Throwable t) {
