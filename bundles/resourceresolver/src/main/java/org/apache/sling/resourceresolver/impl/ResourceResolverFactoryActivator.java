@@ -75,6 +75,15 @@ import org.osgi.service.event.EventAdmin;
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC) })
 public class ResourceResolverFactoryActivator {
 
+    private static final class FactoryRegistration {
+
+        /** Registered resource resolver factory. */
+        public volatile ResourceResolverFactoryImpl factory;
+
+        /** Registration .*/
+        public volatile ServiceRegistration factoryRegistration;
+    }
+
     @Property(value = { "/apps", "/libs" })
     public static final String PROP_PATH = "resource.resolver.searchpath";
 
@@ -86,7 +95,7 @@ public class ResourceResolverFactoryActivator {
      * Mangling means that any namespace prefix contained in the path is replaced as per the generic
      * substitution pattern <code>/([^:]+):/_$1_/</code> when calling the <code>map</code> method of
      * the resource resolver. Likewise the <code>resolve</code> methods will unmangle such namespace
-     * prefixes according to the substituation pattern <code>/_([^_]+)_/$1:/</code>.
+     * prefixes according to the substitution pattern <code>/_([^_]+)_/$1:/</code>.
      * <p>
      * This feature is provided since there may be systems out there in the wild which cannot cope
      * with URLs containing colons, even though they are perfectly valid characters in the path part
@@ -105,7 +114,7 @@ public class ResourceResolverFactoryActivator {
     private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providers";
 
     /**
-     * The resolver.virtual property has no default configuration. But the sling
+     * The resolver.virtual property has no default configuration. But the Sling
      * maven plugin and the sling management console cannot handle empty
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
@@ -128,7 +137,7 @@ public class ResourceResolverFactoryActivator {
     /** all mappings */
     private Mapping[] mappings;
 
-    /** The fake urls */
+    /** The fake URLs */
     private BidiMap virtualURLMap;
 
     /** <code>true</code>, if direct mappings from URI to handle are allowed */
@@ -150,18 +159,15 @@ public class ResourceResolverFactoryActivator {
     @Reference
     private EventAdmin eventAdmin;
 
-    /** Registered resource resolver factory. */
-    private ResourceResolverFactoryImpl factory;
-
-    /** Registration .*/
-    private ServiceRegistration factoryRegistration;
-
     /** ComponentContext */
-    private ComponentContext componentContext;
+    private volatile ComponentContext componentContext;
 
     private int defaultVanityPathRedirectStatus;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
+
+    /** Factory registration. */
+    private volatile FactoryRegistration factoryRegistration;
 
     /**
      * Get the resource decorator tracker.
@@ -272,7 +278,8 @@ public class ResourceResolverFactoryActivator {
         // the root of the resolver mappings
         mapRoot = PropertiesUtil.toString(properties.get(PROP_MAP_LOCATION), MapEntries.DEFAULT_MAP_ROOT);
 
-        defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS), MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
+        defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
+                                                                   MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
 
         final BundleContext bc = componentContext.getBundleContext();
 
@@ -283,7 +290,7 @@ public class ResourceResolverFactoryActivator {
     }
 
     /**
-     * Deativates this component (called by SCR to take out of service)
+     * Deactivates this component (called by SCR to take out of service)
      */
     @Deactivate
     protected void deactivate() {
@@ -292,47 +299,82 @@ public class ResourceResolverFactoryActivator {
         this.rootProviderEntry.setEventAdmin(null);
         this.resourceDecoratorTracker.close();
 
-        synchronized ( this ) {
-            this.unregisterFactory();
-        }
+        this.unregisterFactory();
     }
 
+    /**
+     * Unregister the factory (if registered)
+     */
     private void unregisterFactory() {
-        if ( this.factoryRegistration != null ) {
-            final ServiceRegistration local = this.factoryRegistration;
-            this.factoryRegistration = null;
-            local.unregister();
+        FactoryRegistration local = null;
+        synchronized ( this ) {
+            if ( this.factoryRegistration != null ) {
+                local = this.factoryRegistration;
+                this.factoryRegistration = null;
+            }
         }
-        if ( this.factory != null ) {
-            final ResourceResolverFactoryImpl local = this.factory;
-            this.factory = null;
-            local.deactivate();
+        this.unregisterFactory(local);
+    }
+
+    /**
+     * Unregister the provided factory
+     */
+    private void unregisterFactory(final FactoryRegistration local) {
+        if ( local != null ) {
+            if ( local.factoryRegistration != null ) {
+                local.factoryRegistration.unregister();
+            }
+            if ( local.factory != null ) {
+                local.factory.deactivate();
+            }
         }
     }
 
+    /**
+     * Try to register the factory.
+     */
+    private void registerFactory(final ComponentContext localContext) {
+        FactoryRegistration local = null;
+        synchronized ( this ) {
+            if ( this.factoryRegistration == null ) {
+                this.factoryRegistration = new FactoryRegistration();
+                local = this.factoryRegistration;
+            }
+        }
+        if ( local != null ) {
+            // activate and register factory
+            local.factory = new ResourceResolverFactoryImpl(this);
+            local.factory.activate(localContext.getBundleContext());
+            final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
+            serviceProps.put(Constants.SERVICE_VENDOR, localContext.getProperties().get(Constants.SERVICE_VENDOR));
+            serviceProps.put(Constants.SERVICE_DESCRIPTION, localContext.getProperties().get(Constants.SERVICE_DESCRIPTION));
+
+            local.factoryRegistration = localContext.getBundleContext().registerService(ResourceResolverFactory.class.getName(),
+                    local.factory, serviceProps);
+            // check if an unregister happened in between
+            boolean doUnregister = false;
+            synchronized ( this ) {
+                if ( this.factoryRegistration != local ) {
+                    doUnregister = true;
+                }
+            }
+            if ( doUnregister ) {
+                this.unregisterFactory(local);
+            }
+        }
+    }
+
+    /**
+     * Check the preconditions and if it changed, either register factory or unregister
+     */
     private void checkFactoryPreconditions() {
-        if ( this.componentContext != null ) {
+        final ComponentContext localContext = this.componentContext;
+        if ( localContext != null ) {
             final boolean result = this.preconds.checkPreconditions();
             if ( result ) {
-                synchronized ( this ) {
-                    if ( factory == null ) {
-                        // register factory
-                        this.factory = new ResourceResolverFactoryImpl(this);
-                        this.factory.activate(this.componentContext.getBundleContext());
-                        final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
-                        serviceProps.put(Constants.SERVICE_VENDOR, this.componentContext.getProperties().get(Constants.SERVICE_VENDOR));
-                        serviceProps.put(Constants.SERVICE_DESCRIPTION, this.componentContext.getProperties().get(Constants.SERVICE_DESCRIPTION));
-
-                        this.factoryRegistration = this.componentContext.getBundleContext().registerService(ResourceResolverFactory.class.getName(),
-                                        factory, serviceProps);
-                    }
-                }
+                this.registerFactory(localContext);
             } else {
-                synchronized ( this ) {
-                    if ( factory != null ) {
-                        this.unregisterFactory();
-                    }
-                }
+                this.unregisterFactory();
             }
         }
     }
