@@ -17,6 +17,9 @@
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.resolver.errorhandler;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
 
 
@@ -24,10 +27,20 @@ import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
 public class ErrorHandlingTest extends JspTestBase {
 
 	public final static String TEST_ROOT = "/apps";
- 
+
+	public final static String THROW_ERROR_PATH= "servlets/errorhandler/testErrorHandler";
+
+	public final static String THROW_ERROR_PAGE= "testErrorHandler.jsp";
+
 	public static final String ERROR_HANDLER_PATH = "/apps/sling/servlet/errorhandler";
 
 	private static final String NOT_EXISTING_NODE_PATH="/notExisting";
+
+	private static final String SELECTOR_500 =".500";
+
+	private static final String SELECTOR_401 =".401";
+
+	private static final String SELECTOR_THROWABLE =".throwable";
 
 	private String testNodePath;
 
@@ -35,10 +48,17 @@ public class ErrorHandlingTest extends JspTestBase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		scriptPath = TEST_ROOT;
-		testClient.mkdirs(HTTP_BASE_URL, "/apps/sling/servlet/errorhandler");
+		testClient.mkdirs(HTTP_BASE_URL, ERROR_HANDLER_PATH);
+		testClient.mkdirs(HTTP_BASE_URL, TEST_ROOT+"/"+THROW_ERROR_PATH);
 		uploadTestScript("servlets/errorhandler/404.jsp", "sling/servlet/errorhandler/404.jsp");
-		
-		testNodePath = testClient.createNode(HTTP_BASE_URL + TEST_ROOT, null);
+		uploadTestScript("servlets/errorhandler/Throwable.jsp", "sling/servlet/errorhandler/Throwable.jsp");
+		uploadTestScript("servlets/errorhandler/500.jsp", "sling/servlet/errorhandler/500.jsp");
+		uploadTestScript("servlets/errorhandler/401.jsp", "sling/servlet/errorhandler/401.jsp");
+		uploadTestScript(THROW_ERROR_PATH+"/"+THROW_ERROR_PAGE, THROW_ERROR_PATH+"/"+THROW_ERROR_PAGE);
+
+		final Map<String, String> props = new HashMap<String, String>();
+		props.put(SLING_RESOURCE_TYPE, TEST_ROOT+"/"+THROW_ERROR_PATH);
+		testNodePath = testClient.createNode(HTTP_BASE_URL + TEST_ROOT, props);
 	}
 
 	@Override
@@ -51,6 +71,27 @@ public class ErrorHandlingTest extends JspTestBase {
 		final String expected = "No resource found (404) - custom error page";
 		final String url =  testNodePath+NOT_EXISTING_NODE_PATH +".html";	
 		assertContains(getContent(url, CONTENT_TYPE_HTML,null,200), expected);
+	}
+
+	public void test_500_errorhandling() throws IOException{	
+		final String expected = "Internal Server Error (500) - custom error page";
+		final String url =  testNodePath +SELECTOR_500+".html"; 
+		assertContains(getContent(url, CONTENT_TYPE_HTML,null,500), expected);
+		//assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
+	}
+
+	public void test_401_errorhandling() throws IOException{
+		final String expected = "401 Unauthorized - custom error page";
+		final String url =  testNodePath +SELECTOR_401+".html"; 
+		assertContains(getContent(url, CONTENT_TYPE_HTML,null,401), expected);
+		//assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,401), "All good");	
+	}
+
+	public void test_throwable_errorhandling() throws IOException{	
+		final String expected = "Exception thrown - custom error page";
+		final String url =  testNodePath +SELECTOR_THROWABLE+".html";
+		assertContains(getContent(url, CONTENT_TYPE_HTML,null,200), expected);
+		assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
 	}
 
 }
