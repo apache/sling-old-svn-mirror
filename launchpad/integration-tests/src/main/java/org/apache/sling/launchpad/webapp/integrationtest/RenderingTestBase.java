@@ -36,4 +36,10 @@ public abstract class RenderingTestBase extends HttpTestBase {
             fail("Content does not contain '" + expected + "' (content=" + content + ")");
         }
     }
+    
+    protected void assertNotContains(String content, String notExpected) {
+    	if(content.contains(notExpected)) {
+            fail("Content contains '" + notExpected + "' (content=" + content + ")");
+        }
+    }
 }
