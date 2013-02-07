@@ -19,7 +19,6 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.resolver.erro
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
 
 
@@ -55,6 +54,7 @@ public class ErrorHandlingTest extends JspTestBase {
 		uploadTestScript("servlets/errorhandler/500.jsp", "sling/servlet/errorhandler/500.jsp");
 		uploadTestScript("servlets/errorhandler/401.jsp", "sling/servlet/errorhandler/401.jsp");
 		uploadTestScript(THROW_ERROR_PATH+"/"+THROW_ERROR_PAGE, THROW_ERROR_PATH+"/"+THROW_ERROR_PAGE);
+		uploadTestScript(THROW_ERROR_PATH+"/"+"POST.jsp", THROW_ERROR_PATH+"/"+"POST.jsp");
 
 		final Map<String, String> props = new HashMap<String, String>();
 		props.put(SLING_RESOURCE_TYPE, TEST_ROOT+"/"+THROW_ERROR_PATH);
@@ -93,5 +93,12 @@ public class ErrorHandlingTest extends JspTestBase {
 		assertContains(getContent(url, CONTENT_TYPE_HTML,null,200), expected);
 		assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
 	}
+	
+	public void test_500_errorhandling_POST_operation() throws IOException{	
+		final String expected = "Internal Server Error (500) - custom error page";
+		final String url =  testNodePath +SELECTOR_500+".html"; 
+		assertContains(getContent(url, CONTENT_TYPE_HTML,null,500,HTTP_METHOD_POST), expected);
+		//assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
+ 	}
 
 }
