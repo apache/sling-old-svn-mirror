@@ -19,23 +19,9 @@
 -->
 <%@page 
 	session="false"
-	import="java.util.Arrays, org.apache.sling.api.SlingHttpServletRequest" 
 %>
 
-<%	
-final String SELECTOR_401 ="401";
-final String SELECTOR_500 ="500";
-final String SELECTOR_THROWABLE ="throwable";
-final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest)request;
-
-if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELECTOR_401)) {
-	 response.setStatus(401);
-	 response.sendError(401);
-}else if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELECTOR_500)) {
-	response.setStatus(500);
- 	response.sendError(500);
-}else if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELECTOR_THROWABLE)) {
-	throw new Exception("throwable selector was specified");
-}
+<% 
+response.setStatus(500);
+response.sendError(500);
 %>
-All good
