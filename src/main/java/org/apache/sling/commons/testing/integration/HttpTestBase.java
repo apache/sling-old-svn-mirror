@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.TestCase;
@@ -56,6 +55,9 @@ public class HttpTestBase extends TestCase {
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
+    
+    public static final String HTTP_METHOD_GET = "GET";
+    public static final String HTTP_METHOD_POST = "POST";
 
     public static final String CONTENT_TYPE_HTML = "text/html";
     public static final String CONTENT_TYPE_XML = "application/xml";
@@ -335,30 +337,49 @@ public class HttpTestBase extends TestCase {
         return post;
     }
 
-    /** retrieve the contents of given URL and assert its content type */
+    /** retrieve the contents of given URL and assert its content type (default to HTTP GET method)*/
     protected String getContent(String url, String expectedContentType) throws IOException {
         return getContent(url, expectedContentType, null);
     }
 
+    /** retrieve the contents of given URL and assert its content type (default to HTTP GET method)*/
     protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
         return getContent(url, expectedContentType, params, HttpServletResponse.SC_OK);
     }
 
-    /** retrieve the contents of given URL and assert its content type
+    /** retrieve the contents of given URL and assert its content type (default to HTTP GET method)
      * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
      * @throws IOException
      * @throws HttpException */
     protected String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
-        final GetMethod get = new GetMethod(url);
-        if(params != null) {
+    	return getContent(url, expectedContentType, params, expectedStatusCode, HTTP_METHOD_GET);
+    }
+    
+    /** retrieve the contents of given URL and assert its content type
+     * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
+     * @param httMethod supports just GET and POST methods
+     * @throws IOException
+     * @throws HttpException */
+    protected String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode, String httpMethod) throws IOException {
+    	HttpMethodBase method = null;
+    	
+    	if (HTTP_METHOD_GET.equals(httpMethod)){
+    		method= new GetMethod(url);
+    	}else if (HTTP_METHOD_POST.equals(httpMethod)){
+    		method = new PostMethod(url);
+    	}  else{
+    		fail("Http Method not supported in this test suite, method: "+httpMethod);
+    	}
+    	
+    	if(params != null) {
             final NameValuePair [] nvp = new NameValuePair[0];
-            get.setQueryString(params.toArray(nvp));
+            method.setQueryString(params.toArray(nvp));
         }
-        final int status = httpClient.executeMethod(get);
-        final String content = getResponseBodyAsStream(get, 0);
+        final int status = httpClient.executeMethod(method);
+        final String content = getResponseBodyAsStream(method, 0);
         assertEquals("Expected status " + expectedStatusCode + " for " + url + " (content=" + content + ")",
                 expectedStatusCode,status);
-        final Header h = get.getResponseHeader("Content-Type");
+        final Header h = method.getResponseHeader("Content-Type");
         if(expectedContentType == null) {
             if(h!=null) {
                 fail("Expected null Content-Type, got " + h.getValue());
@@ -378,7 +399,9 @@ public class HttpTestBase extends TestCase {
             );
         }
         return content.toString();
+    	
     }
+    
 
     /** upload rendering test script, and return its URL for future deletion */
     protected String uploadTestScript(String scriptPath, String localFilename,String filenameOnServer) throws IOException {
