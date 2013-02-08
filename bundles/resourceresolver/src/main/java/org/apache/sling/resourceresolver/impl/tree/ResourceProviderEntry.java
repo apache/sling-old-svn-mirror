@@ -41,6 +41,13 @@ import org.slf4j.LoggerFactory;
  * The <code>ResourceProviderEntry</code> class represents a node in the tree of
  * resource providers spanned by the root paths of the provider resources.
  * <p>
+ * That means this class has a map of child ResourceProviderEntries, keyed by the child name 
+ * and a list of ProviderHandlers that are mapped to the path that this ResourceProviderEntry represents.
+ * To locate a list of potential ResourceProviders the path is split into elements and then that list used to
+ * walk down the tree of ResourceProviders. eg: for a path /a/b/c/d the list of ProviderHandlers would be accessed
+ * by rootProvider.get("a").get("b").get("c").get("d")  assuming the final get("d") was not null. If it was, then the list
+ * of ProviderHanders would be rootProvider.get("a").get("b").get("c").
+ * <p>
  * This class is comparable to itself to help keep the child entries list sorted by their prefix.
  */
 public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> {
@@ -68,7 +75,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
     /**
      * Creates an instance of this class with the given path relative to the
      * parent resource provider entry, encapsulating the given ResourceProvider,
-     * and a number of inital child entries.
+     * and a number of initial child entries.
      *
      * @param path
      *            The relative path supported by the provider
@@ -187,27 +194,33 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return providers.length < before;
     }
 
-    /**
-     * Adds the given resource provider into the tree for the given prefix.
-     *
-     * @return <code>true</code> if the provider could be entered into the
-     *         subtree below this entry. Otherwise <code>false</code> is
-     *         returned.
-     */
+	/**
+	 * Adds the given resource provider into the tree for the given prefix. This
+	 * will expand the tree of ResourceProviderEntries down the supplied prefix
+	 * and add the provider to a ResourceProviderEntry that represents the last
+	 * element of the path.
+	 * 
+	 * @return <code>true</code> if the provider could be entered into the
+	 *         subtree below this entry. Otherwise <code>false</code> is
+	 *         returned.
+	 */
     protected synchronized boolean addResourceProvider(final String prefix, final ProviderHandler provider) {
         final String[] elements = split(prefix);
         final List<ResourceProviderEntry> entries = new ArrayList<ResourceProviderEntry>();
         this.populateProviderPath(entries, elements);
 
         // add this=root to the start so if the list is empty
-        // we have a position to add to
+        // we have a position to add, this will shift other entries
+        // down the list.
         entries.add(0, this);
+        // the list may not be complete, so add blank entries from the current size to the end of this path.
         for (int i = entries.size() - 1; i < elements.length; i++) {
             final String stubPrefix = elements[i];
             final ResourceProviderEntry rpe2 = new ResourceProviderEntry(stubPrefix, new ProviderHandler[0]);
             entries.get(i).put(stubPrefix, rpe2);
             entries.add(rpe2);
         }
+        // finally add this provider to the last in the list. This might be a new entry, or an existing entry.
         return entries.get(elements.length).addInternalProvider(provider);
     }
 
@@ -248,11 +261,20 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return providerList.toArray(new ProviderHandler[providerList.size()]);
     }
 
-    /**
-     * Get a list of resource provider entries in reverse order.
-     * @param entries List to add the entries to
-     * @param elements The path already split into segments.
-     */
+	/**
+	 * Get a list of resource provider entries navigating down the tree starting
+	 * from this provider until there are no providers left in the tree. Given a
+	 * sequence of path elements a/b/c/d this function will inspect this
+	 * ResourceProviderEntry for a child entry of "a" and if present add it to
+	 * the list, then it will inspect that child entry for a child "b", then
+	 * child "b" for child "c" etc until the list of elements is exhausted or
+	 * the child does not exist.
+	 * 
+	 * @param entries
+	 *            List to add the entries to.
+	 * @param elements
+	 *            The path already split into segments.
+	 */
     private void populateProviderPath(final List<ResourceProviderEntry> entries, final String[] elements) {
         ResourceProviderEntry base = this;
         for (final String element : elements) {
