@@ -51,6 +51,15 @@
         <site.jira.version.id>12313945</site.jira.version.id>
         <site.javadoc.exclude />
         <organization.logo>http://sling.apache.org/site/media.data/logo.png</organization.logo>
+        <!--
+            Java API and class file compliance. This property supports
+            one of two values:
+              - 5: Java 1.5 (default)
+              - 6: Java 6
+            Using anything else causes the set-bundle-required-execution-environment
+            to fail the build with an exception
+        -->
+        <sling.java.version>5</sling.java.version>
     </properties>
 
 
@@ -152,6 +161,7 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>check-memory-task</id>
                         <phase>process-resources</phase>
                         <configuration>
                             <target>
@@ -167,6 +177,34 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                         <goals>
                             <goal>run</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <id>set-bundle-required-execution-environment</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target>
+                                <script language="javascript"> <![CDATA[
+                                    var System = java.lang.System;
+                                    var bree = "J2SE-1.5";
+                                    var slingJavaVersion = System.getProperty("sling.java.version");
+                                    if (!slingJavaVersion) {
+                                        slingJavaVersion = project.getProperty("sling.java.version");
+                                    }
+                                    if (slingJavaVersion == "6") {
+                                        bree = "JavaSE-1.6";
+	                                    System.out.println("Setting Bundle-RequiredExecutionEnvironment=" + bree + " from sling.java.version=" + slingJavaVersion);
+                                    } else if (slingJavaVersion != "5") {
+                                        System.out.println("Unsupported sling.java.version=" + slingJavaVersion + "; must be 5 or 6.");
+                                        throw "sling.java.version must be 5 or 6";
+                                    }
+                                    project.setProperty("sling.bree", bree);
+                                ]]></script>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -225,8 +263,9 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
+                        <source>1.${sling.java.version}</source>
+                        <target>1.${sling.java.version}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
             <plugin>
@@ -308,6 +347,7 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                             </Bundle-DocURL>
                             <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
                             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                            <Bundle-RequiredExecutionEnvironment>${sling.bree}</Bundle-RequiredExecutionEnvironment>
                         </instructions>
                     </configuration>
                 </plugin>
@@ -348,10 +388,31 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
                     <configuration>
                         <signature>
                             <groupId>org.codehaus.mojo.signature</groupId>
-                            <artifactId>java15</artifactId>
+                            <artifactId>java1${sling.java.version}</artifactId>
                             <version>1.0</version>
                         </signature>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                    <dependencies>
+                        <!-- declare dependencies here rather than where needed to
+                             circumvent http://jira.codehaus.org/browse/MANTRUN-51
+                        -->
+                        <dependency>
+                            <groupId>org.apache.ant</groupId>
+                            <artifactId>ant-apache-regexp</artifactId>
+                            <version>1.7.1</version>
+                            <scope>runtime</scope>
+                        </dependency>
+                        <dependency>
+                            <groupId>jakarta-regexp</groupId>
+                            <artifactId>jakarta-regexp</artifactId>
+                            <version>1.4</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
