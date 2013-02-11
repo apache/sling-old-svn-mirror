@@ -157,7 +157,7 @@ public class ResourceResolverFactoryActivator {
 
     /** Event admin. */
     @Reference
-    private EventAdmin eventAdmin;
+    EventAdmin eventAdmin;
 
     /** ComponentContext */
     private volatile ComponentContext componentContext;
