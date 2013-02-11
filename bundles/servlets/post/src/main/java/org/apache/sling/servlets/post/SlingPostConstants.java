@@ -290,6 +290,14 @@ public interface SlingPostConstants {
      * not set or set to any other value.
      */
     public static final String RP_STATUS = RP_PREFIX + "status";
+    
+	/**
+     * Optional request parameter: defines if to enable the error handling 
+     * also for POST request. 
+     * The parameter value is checked to see if it matches the case-insensitive
+     * value true. 
+     */
+    public static final String RP_SEND_ERROR = RP_PREFIX + "sendError";
 
     /**
      * The supported value for the {@link #RP_STATUS} request parameter
