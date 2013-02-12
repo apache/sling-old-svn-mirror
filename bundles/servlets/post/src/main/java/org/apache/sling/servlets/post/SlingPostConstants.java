@@ -296,6 +296,8 @@ public interface SlingPostConstants {
      * also for POST request. 
      * The parameter value is checked to see if it matches the case-insensitive
      * value true. 
+     * 
+     * @since 2.2.0 (Bundle version 2.3.0)
      */
     public static final String RP_SEND_ERROR = RP_PREFIX + "sendError";
 
