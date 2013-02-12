@@ -35,6 +35,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ValueMap;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,9 +58,6 @@ import org.osgi.service.event.EventAdmin;
 // TODO: test external redirect.
 // TODO: Map to URI
 // TODO: Statresource
-// TODO: relative resource.
-// TODO: SLING-864, path with . in it.
-// TODO: search path eg text/html which will search on /apps/text/html and then /libs/text/html
 public class MockedResourceResolverImplTest {
 
     private static final List<Resource> EMPTY_RESOURCE_LIST = new ArrayList<Resource>();
@@ -96,8 +94,17 @@ public class MockedResourceResolverImplTest {
     @Mock
     private ResourceProvider factoryAdministrativeResourceProvider;
 
+    /**
+     * deals with /etc resolution.
+     */
     @Mock
     private ResourceProvider mappingResourceProvider;
+
+    /**
+     * deals with /apps and /libs resolution.
+     */
+    @Mock
+    private ResourceProvider appsResourceProvider;
 
 
     public MockedResourceResolverImplTest() {
@@ -120,8 +127,9 @@ public class MockedResourceResolverImplTest {
                 new String[] { "/single" }));
         
         // setup mapping resources at /etc/map to exercise vanity etc.
-        Resource etcMapResource = buildResource("/etc/map", buildChildResources("/etc/map"));
-        Mockito.when(mappingResourceProvider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq("/etc/map"))).thenReturn(etcMapResource);
+        // hmm, can't provide the resolver since its not up and ready.
+        // mapping almost certainly work properly until this can be setup correctly.
+        Resource etcMapResource = buildMappingResource("/etc/map", mappingResourceProvider, null);
         
         activator.bindResourceProvider(mappingResourceProvider,
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.MapProvider",
@@ -145,6 +153,11 @@ public class MockedResourceResolverImplTest {
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.DummyTestProviderFactory",
                 12L,
                 new String[] { "/factory" } ));
+
+        activator.bindResourceProvider(appsResourceProvider,
+            buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.AppsProvider",
+                13L,
+                new String[] { "/apps", "/libs" }));
 
         // activate the components.
         activator.activate(componentContext);
@@ -172,6 +185,24 @@ public class MockedResourceResolverImplTest {
         ResourceResolverFactory rrf = (ResourceResolverFactory) services.get(ResourceResolverFactory.class.getName());
         Assert.assertTrue(rrf instanceof ResourceResolverFactoryImpl);
         resourceResolverFactory = (ResourceResolverFactoryImpl) rrf;
+    }
+    
+    private Resource buildMappingResource(String path,
+            ResourceProvider provider, ResourceResolver resourceResolver) {
+        List<Resource> localHostAnyList = new ArrayList<Resource>();
+        localHostAnyList.add(buildResource(path+"/http/example.com.80/cgi-bin", EMPTY_RESOURCE_LIST, resourceResolver, provider, "sling:internalRedirect", "/scripts" ));
+        localHostAnyList.add(buildResource(path+"/http/example.com.80/gateway", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "http://gbiv.com"));
+        localHostAnyList.add(buildResource(path+"/http/example.com.80/stories", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "/anecdotes/$1"));
+        
+        List<Resource> mappingChildren = new ArrayList<Resource>();
+        mappingChildren.add(buildResource(path+"/http/example.com.80", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:redirect", "http://www.example.com/"));
+        mappingChildren.add(buildResource(path+"/http/www.example.com.80", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "/example"));
+        mappingChildren.add(buildResource(path+"/http/any_example.com.80", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:match", ".+\\.example\\.com\\.80", "sling:redirect", "http://www.example.com/"));
+        mappingChildren.add(buildResource(path+"/http/localhost_any", localHostAnyList, resourceResolver, provider,"sling:match", "localhost\\.\\d*", "sling:internalRedirect", "/content"));
+        
+        Resource etcMapResource = buildResource(path+"/http", mappingChildren);
+        Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(path))).thenReturn(etcMapResource);
+        return etcMapResource;
     }
 
     @After
@@ -210,7 +241,7 @@ public class MockedResourceResolverImplTest {
      * @return
      */
     private Resource buildResource(String fullpath, Iterable<Resource> children) {
-        return buildResource(fullpath, children, null);
+        return buildResource(fullpath, children, null, null, null);
     }
 
     /**
@@ -220,7 +251,7 @@ public class MockedResourceResolverImplTest {
      * @param resourceResolver
      * @return
      */
-    private Resource buildResource(String fullpath, Iterable<Resource> children, ResourceResolver resourceResolver) {
+    private Resource buildResource(String fullpath, Iterable<Resource> children, ResourceResolver resourceResolver, ResourceProvider provider, String ... properties) {
         Resource resource = Mockito.mock(Resource.class);
         Mockito.when(resource.getName()).thenReturn(getName(fullpath));
         Mockito.when(resource.getPath()).thenReturn(fullpath);
@@ -228,6 +259,27 @@ public class MockedResourceResolverImplTest {
         Mockito.when(resource.getResourceMetadata()).thenReturn(resourceMetadata);
         Mockito.when(resource.listChildren()).thenReturn(children.iterator());
         Mockito.when(resource.getResourceResolver()).thenReturn(resourceResolver);
+
+        // register the resource with the provider
+        if ( provider != null ) {
+            Mockito.when(provider.listChildren(resource)).thenReturn(children.iterator());
+            if ( resourceResolver != null) {
+                Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.eq(fullpath))).thenReturn(resource);
+                Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);                
+            } else {
+                Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(fullpath))).thenReturn(resource);
+                Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);                
+            }
+        }
+        if ( properties != null ) {
+            ValueMap vm = new SimpleValueMapImpl();
+            for ( int i=0; i < properties.length; i+=2) {
+                resourceMetadata.put(properties[i], properties[i+1]);
+                vm.put(properties[i], properties[i+1]);
+            }
+            Mockito.when(resource.adaptTo(Mockito.eq(ValueMap.class))).thenReturn(vm);
+        }
+        
         return resource;
     }
         
@@ -289,26 +341,6 @@ public class MockedResourceResolverImplTest {
     }
 
     /**
-     * Register a resource for testing purposes at a path, with a provider, with children.
-     * @param resourceResolver
-     * @param targetResourceProvider
-     * @param path
-     * @param children
-     * @return
-     */
-    private Resource registerTestResource(ResourceResolver resourceResolver, ResourceProvider targetResourceProvider, String path,  Iterable<Resource> children) {
-        Resource resource = buildResource(path, children, resourceResolver);
-        Mockito.when(
-            targetResourceProvider.getResource(
-                Mockito.any(ResourceResolver.class),
-                Mockito.eq(path))).thenReturn(resource);
-        Mockito.when(targetResourceProvider.listChildren(resource)).thenReturn(children.iterator());
-        return resource;
-    }
-
-
-
-    /**
      * Test getting a resolver.
      * @throws LoginException
      */
@@ -359,10 +391,41 @@ public class MockedResourceResolverImplTest {
     public void testGetResource() throws LoginException {
         ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
         Assert.assertNotNull(resourceResolver);
-        Resource singleResource = registerTestResource(resourceResolver, resourceProvider, "/single/test", EMPTY_RESOURCE_LIST);
+        Resource singleResource = buildResource("/single/test", EMPTY_RESOURCE_LIST, resourceResolver, resourceProvider);
         Resource resource = resourceResolver.getResource("/single/test");
         Assert.assertEquals(singleResource, resource);
     }
+
+    /**
+     * Test getResource where path contains intermediate . verifying fix for SLING-864
+     * @throws LoginException
+     */
+    @Test
+    public void testGetResourceSLING864() throws LoginException {
+        ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
+        Assert.assertNotNull(resourceResolver);
+        Resource singleResource = buildResource("/single/test.with/extra.dots/inthepath", EMPTY_RESOURCE_LIST,resourceResolver, resourceProvider);
+        Resource resource = resourceResolver.getResource("/single/test.with/extra.dots/inthepath");
+        Assert.assertEquals(singleResource, resource);
+    }
+    
+
+    /**
+     * Test search paths
+     * @throws LoginException
+     */
+    @Test
+    public void testRelativeResource() throws LoginException {
+        ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
+        Assert.assertNotNull(resourceResolver);
+        Resource appResource = buildResource("/apps/store/inventory", EMPTY_RESOURCE_LIST, resourceResolver, appsResourceProvider);
+        Resource libResource = buildResource("/libs/store/catalog", EMPTY_RESOURCE_LIST, resourceResolver, appsResourceProvider);
+        Resource testResource = resourceResolver.getResource("store/inventory");
+        Assert.assertEquals(appResource, testResource);
+        testResource = resourceResolver.getResource("store/catalog");
+        Assert.assertEquals(libResource, testResource);
+    }
+
     /**
      * Test getResource for a resource provided by a factory provider.
      * @throws LoginException
@@ -372,7 +435,7 @@ public class MockedResourceResolverImplTest {
         ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
         Assert.assertNotNull(resourceResolver);
 
-        Resource factoryResource = registerTestResource(resourceResolver, factoryResourceProvider, "/factory/test", EMPTY_RESOURCE_LIST);
+        Resource factoryResource = buildResource("/factory/test", EMPTY_RESOURCE_LIST, resourceResolver, factoryResourceProvider);
         Resource resource = resourceResolver.getResource("/factory/test");
         Assert.assertEquals(factoryResource, resource);
     }
@@ -387,10 +450,10 @@ public class MockedResourceResolverImplTest {
     @Test
     public void testMapping() throws LoginException {
         ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
-        registerTestResource(resourceResolver, factoryResourceProvider, "/factory/test", EMPTY_RESOURCE_LIST);
+        buildResource("/factory/test", EMPTY_RESOURCE_LIST, resourceResolver, factoryResourceProvider);
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         Mockito.when(request.getScheme()).thenReturn("http");
-        Mockito.when(request.getServerPort()).thenReturn(8080);
+        Mockito.when(request.getServerPort()).thenReturn(80);
         Mockito.when(request.getServerName()).thenReturn("localhost");
         String path = resourceResolver.map(request,"/factory/test?q=123123");
         Assert.assertEquals("/factory/test?q=123123", path);
@@ -400,7 +463,6 @@ public class MockedResourceResolverImplTest {
         // test path mapping without a request.
         path = resourceResolver.map("/factory/test");
         Assert.assertEquals("/factory/test", path);
-
 
     }
 
@@ -414,7 +476,7 @@ public class MockedResourceResolverImplTest {
     @Test
     public void testListChildren() throws LoginException {
         ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
-        registerTestResource(resourceResolver, resourceProvider, "/single/test/withchildren", buildChildResources("/single/test/withchildren"));
+        buildResource("/single/test/withchildren", buildChildResources("/single/test/withchildren"), resourceResolver, resourceProvider );
 
 
         Resource resource = resourceResolver.getResource("/single/test/withchildren");
@@ -438,7 +500,7 @@ public class MockedResourceResolverImplTest {
     @Test
     public void testResourceResolverListChildren() throws LoginException {
         ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
-        registerTestResource(resourceResolver, resourceProvider, "/single/test/withchildren", buildChildResources("/single/test/withchildren"));
+        buildResource("/single/test/withchildren", buildChildResources("/single/test/withchildren"), resourceResolver, resourceProvider);
 
 
         Resource resource = resourceResolver.getResource("/single/test/withchildren");
@@ -462,7 +524,7 @@ public class MockedResourceResolverImplTest {
     @Test
     public void testResourceResolverGetChildren() throws LoginException {
         ResourceResolver resourceResolver = resourceResolverFactory.getResourceResolver(null);
-        registerTestResource(resourceResolver, resourceProvider, "/single/test/withchildren", buildChildResources("/single/test/withchildren"));
+        buildResource("/single/test/withchildren", buildChildResources("/single/test/withchildren"), resourceResolver, resourceProvider);
 
 
         Resource resource = resourceResolver.getResource("/single/test/withchildren");
