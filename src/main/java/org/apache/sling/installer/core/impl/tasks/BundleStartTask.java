@@ -76,7 +76,7 @@ public class BundleStartTask extends AbstractBundleTask {
             return;
         }
 
-        // and another sanity chheck
+        // and another sanity check
         final Bundle b = this.getBundleContext().getBundle(bundleId);
         if (b == null) {
             this.getLogger().debug("Cannot start bundle, id not found: {}", bundleId);

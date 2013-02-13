@@ -99,6 +99,8 @@ public class PersistentResourceList {
                 logger.debug("Restored unknown resource list: {}", unknownList);
             } catch (final Exception e) {
                 logger.warn("Unable to restore data, starting with empty list (" + e.getMessage() + ")", e);
+                restoredData = null;
+                unknownList = null;
             } finally {
                 if (ois != null) {
                     try {
@@ -116,8 +118,9 @@ public class PersistentResourceList {
 
         // update resource ids
         for(final Map.Entry<String, EntityResourceList> entry : this.data.entrySet()) {
-            entry.getValue().setResourceId(entry.getKey());
-            entry.getValue().setListener(listener);
+            final EntityResourceList erl = entry.getValue();
+            erl.setResourceId(entry.getKey());
+            erl.setListener(listener);
         }
 
         // check for special resources
