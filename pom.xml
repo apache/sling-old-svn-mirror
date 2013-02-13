@@ -47,7 +47,7 @@
     </scm>
 
     <properties>
-        <fragment.activation.version>0.0.0.fragment_activation</fragment.activation.version>
+        <fragment.activation.version>1.1.0</fragment.activation.version>
     </properties>
 
     <build>
