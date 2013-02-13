@@ -185,6 +185,8 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     /** Write back enabled? */
     private boolean writeBack;
 
+    private EventListener moveEventListener;
+
     /** Convert Nodes to InstallableResources */
     static interface NodeConverter {
     	InstallableResource convertNode(Node n, int priority)
@@ -231,6 +233,33 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                         null,
                         null,
                         true); // noLocal
+                // add special observation listener for move events
+                JcrInstaller.this.moveEventListener = new EventListener() {
+
+                    /**
+                     * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
+                     */
+                    public void onEvent(final EventIterator events) {
+                        try {
+                            while (events.hasNext()) {
+                                final Event e = events.nextEvent();
+                                JcrInstaller.this.checkChanges(e.getIdentifier());
+                                JcrInstaller.this.checkChanges(e.getPath());
+                            }
+                        } catch (final RepositoryException re) {
+                            logger.warn("RepositoryException in onEvent", re);
+                        }
+                    }
+                };
+                session.getWorkspace().getObservationManager().addEventListener(
+                        moveEventListener,
+                        Event.NODE_MOVED,
+                        "/",
+                        true, // isDeep
+                        null,
+                        null,
+                        true); // noLocal
+
                 logger.debug("Watching for node events on / to detect removal/add of our root folders");
 
 
@@ -370,9 +399,13 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                     wfc.cleanup(session);
                 }
                 session.getWorkspace().getObservationManager().removeEventListener(this);
+                if ( moveEventListener != null ) {
+                    session.getWorkspace().getObservationManager().removeEventListener(moveEventListener);
+                    moveEventListener = null;
+                }
             }
         } catch (final RepositoryException e) {
-            logger.warn("Exception in deactivate()", e);
+            logger.warn("Exception in stop()", e);
         }
         if ( session != null ) {
             session.logout();
@@ -522,6 +555,18 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
     }
 
     /**
+     * Check for changes in any of the root folders
+     */
+    private void checkChanges(final String path) {
+        for(String root : roots) {
+            if (path.startsWith(root)) {
+                logger.info("Got event for root {}, scheduling scanning of new folders", root);
+                updateFoldersListTimer.scheduleScan();
+            }
+        }
+    }
+
+    /**
      * @see javax.jcr.observation.EventListener#onEvent(javax.jcr.observation.EventIterator)
      */
     public void onEvent(final EventIterator it) {
@@ -532,12 +577,7 @@ public class JcrInstaller implements EventListener, UpdateHandler, ManagedServic
                 final Event e = it.nextEvent();
                 logger.debug("Got event {}", e);
 
-                for(String root : roots) {
-                    if (e.getPath().startsWith(root)) {
-                        logger.info("Got event for root {}, scheduling scanning of new folders", root);
-                        updateFoldersListTimer.scheduleScan();
-                    }
-                }
+                this.checkChanges(e.getPath());
             }
         } catch(RepositoryException re) {
             logger.warn("RepositoryException in onEvent", re);
