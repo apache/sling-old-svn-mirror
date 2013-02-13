@@ -355,8 +355,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             }
             first = false;
         }
-        
-        if(!toDelete.isEmpty()) {
+
+        if (!toDelete.isEmpty()) {
             // Avoid resources.remove(r) as the resource might have
             // changed since it was added, which causes it to compare()
             // differently and trip the TreeSet.remove() search.
@@ -372,7 +372,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 startNewCycle = true;
             }
         }
-        
+
         return startNewCycle;
     }
 }

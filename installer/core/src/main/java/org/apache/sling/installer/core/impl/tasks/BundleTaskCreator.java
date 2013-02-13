@@ -164,7 +164,8 @@ public class BundleTaskCreator
 	            if ( second != null &&
 	                ( second.getState() == ResourceState.IGNORED || second.getState() == ResourceState.INSTALLED || second.getState() == ResourceState.INSTALL ) ) {
                     second.setAttribute(FORCE_INSTALL_VERSION, info.version.toString());
-                    logger.debug("Detected downgrad of bundle {}", symbolicName);
+                    BundleUtil.clearBundleStart(second);
+                    logger.debug("Detected downgrade of bundle {}", symbolicName);
                     result = new ChangeStateTask(resourceList, ResourceState.UNINSTALLED);
 	            } else {
 	                // prevent uninstalling the installer itself!
