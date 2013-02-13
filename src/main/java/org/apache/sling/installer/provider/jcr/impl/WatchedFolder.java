@@ -96,7 +96,7 @@ class WatchedFolder implements EventListener{
     	try {
 	    	session.getWorkspace().getObservationManager().removeEventListener(this);
     	} catch(RepositoryException re) {
-    		log.warn("RepositoryException in cleanup()", re);
+    		log.warn("RepositoryException in stop()", re);
     	}
     }
 
