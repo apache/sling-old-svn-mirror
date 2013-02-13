@@ -50,6 +50,7 @@
 
     <properties>
         <fragment.ws.version>0.0.0.fragment_ws</fragment.ws.version>
+        <jaxws.version>2.1.0</jaxws.version>        
     </properties>
     
     <build>
@@ -87,14 +88,14 @@
 							 javax.jws.soap;version="${fragment.ws.version}",
 							 javax.jws;version="${fragment.ws.version}",
 							 javax.xml.soap;uses:="javax.activation,javax.xml.namespace,org.w3c.dom,javax.xml.transform.dom,javax.xml.transform";version="${fragment.ws.version}",
-							 javax.xml.ws.handler.soap;uses:="javax.xml.ws.handler,javax.xml.namespace,javax.xml.soap,javax.xml.bind";version="${fragment.ws.version}",
-							 javax.xml.ws.handler;uses:="javax.xml.ws,javax.xml.namespace";version="${fragment.ws.version}",
-							 javax.xml.ws.http;uses:="javax.xml.ws";version="${fragment.ws.version}",
-							 javax.xml.ws.soap;uses:="javax.xml.ws.spi,javax.xml.ws,javax.xml.soap";version="${fragment.ws.version}",
-							 javax.xml.ws.spi.http;version="${fragment.ws.version}",
-							 javax.xml.ws.spi;uses:="javax.xml.ws,javax.xml.ws.wsaddressing,javax.xml.transform,org.w3c.dom,javax.xml.namespace,javax.xml.ws.handler,javax.xml.bind";version="${fragment.ws.version}",
-							 javax.xml.ws.wsaddressing;uses:="javax.xml.bind.annotation,javax.xml.namespace,org.w3c.dom,javax.xml.transform,javax.xml.bind,javax.xml.ws,javax.xml.ws.spi";version="${fragment.ws.version}",
-							 javax.xml.ws;uses:="javax.xml.ws.handler,javax.xml.ws.spi,javax.xml.ws.spi.http,javax.xml.transform,org.w3c.dom,javax.xml.bind.annotation,javax.xml.transform.stream,javax.xml.bind,javax.xml.namespace";version="${fragment.ws.version}"
+							 javax.xml.ws.handler.soap;uses:="javax.xml.ws.handler,javax.xml.namespace,javax.xml.soap,javax.xml.bind";version="${jaxws.version}",
+							 javax.xml.ws.handler;uses:="javax.xml.ws,javax.xml.namespace";version="${jaxws.version}",
+							 javax.xml.ws.http;uses:="javax.xml.ws";version="${jaxws.version}",
+							 javax.xml.ws.soap;uses:="javax.xml.ws.spi,javax.xml.ws,javax.xml.soap";version="${jaxws.version}",
+							 javax.xml.ws.spi.http;version="${jaxws.version}",
+							 javax.xml.ws.spi;uses:="javax.xml.ws,javax.xml.ws.wsaddressing,javax.xml.transform,org.w3c.dom,javax.xml.namespace,javax.xml.ws.handler,javax.xml.bind";version="${jaxws.version}",
+							 javax.xml.ws.wsaddressing;uses:="javax.xml.bind.annotation,javax.xml.namespace,org.w3c.dom,javax.xml.transform,javax.xml.bind,javax.xml.ws,javax.xml.ws.spi";version="${jaxws.version}",
+							 javax.xml.ws;uses:="javax.xml.ws.handler,javax.xml.ws.spi,javax.xml.ws.spi.http,javax.xml.transform,org.w3c.dom,javax.xml.bind.annotation,javax.xml.transform.stream,javax.xml.bind,javax.xml.namespace";version="${jaxws.version}"
                             </Export-Package>
                         </manifestEntries>
                     </archive>
