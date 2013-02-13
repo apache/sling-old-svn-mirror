@@ -50,6 +50,8 @@
 
     <properties>
         <fragment.xml.version>0.0.0.fragment_xml</fragment.xml.version>
+        <jaxb.version>2.1.0</jaxb.version>
+        <stax.version>1.0.0</stax.version>
     </properties>
 
     <build>
@@ -84,24 +86,24 @@
                         </manifestFile>
                         <manifestEntries>
                             <Export-Package>
-                                javax.xml.bind.annotation.adapters;uses:="javax.xml.bind";version="${fragment.xml.version}",
-                                javax.xml.bind.annotation;uses:="javax.xml.transform,javax.xml.bind,javax.xml.parsers,javax.xml.transform.dom,org.w3c.dom";version="${fragment.xml.version}",
-                                javax.xml.bind.attachment;uses:="javax.activation";version="${fragment.xml.version}",
-                                javax.xml.bind.helpers;uses:="javax.xml.bind.annotation.adapters,javax.xml.transform.dom,org.w3c.dom,org.xml.sax,javax.xml.bind.attachment,javax.xml.stream,javax.xml.transform,javax.xml.transform.stream,javax.xml.validation,javax.xml.transform.sax,javax.xml.bind,javax.xml.parsers";version="${fragment.xml.version}",
-                                javax.xml.bind.util;uses:="javax.xml.transform.sax,javax.xml.bind,org.xml.sax,org.xml.sax.ext,org.xml.sax.helpers";version="${fragment.xml.version}",
-                                javax.xml.bind;uses:="javax.xml.validation,javax.xml.namespace,javax.xml.datatype,javax.xml.transform,javax.xml.bind.annotation,javax.xml.transform.stream,org.w3c.dom,javax.xml.bind.attachment,javax.xml.stream,javax.xml.bind.annotation.adapters,org.xml.sax";version="${fragment.xml.version}",
+                                javax.xml.bind.annotation.adapters;uses:="javax.xml.bind";version="${jaxb.version}",
+                                javax.xml.bind.annotation;uses:="javax.xml.transform,javax.xml.bind,javax.xml.parsers,javax.xml.transform.dom,org.w3c.dom";version="${jaxb.version}",
+                                javax.xml.bind.attachment;uses:="javax.activation";version="${jaxb.version}",
+                                javax.xml.bind.helpers;uses:="javax.xml.bind.annotation.adapters,javax.xml.transform.dom,org.w3c.dom,org.xml.sax,javax.xml.bind.attachment,javax.xml.stream,javax.xml.transform,javax.xml.transform.stream,javax.xml.validation,javax.xml.transform.sax,javax.xml.bind,javax.xml.parsers";version="${jaxb.version}",
+                                javax.xml.bind.util;uses:="javax.xml.transform.sax,javax.xml.bind,org.xml.sax,org.xml.sax.ext,org.xml.sax.helpers";version="${jaxb.version}",
+                                javax.xml.bind;uses:="javax.xml.validation,javax.xml.namespace,javax.xml.datatype,javax.xml.transform,javax.xml.bind.annotation,javax.xml.transform.stream,org.w3c.dom,javax.xml.bind.attachment,javax.xml.stream,javax.xml.bind.annotation.adapters,org.xml.sax";version="${jaxb.version}",
                                 javax.xml.crypto.dom;uses:="javax.xml.crypto,org.w3c.dom";version="${fragment.xml.version}",
                                 javax.xml.crypto.dsig.dom;uses:="javax.xml.crypto.dsig,javax.xml.crypto,org.w3c.dom,javax.xml.crypto.dom";version="${fragment.xml.version}",
                                 javax.xml.crypto.dsig.keyinfo;uses:="javax.xml.crypto";version="${fragment.xml.version}",
                                 javax.xml.crypto.dsig.spec;uses:="javax.xml.crypto";version="${fragment.xml.version}",
                                 javax.xml.crypto.dsig;uses:="javax.xml.crypto,javax.xml.crypto.dsig.spec,javax.xml.crypto.dsig.keyinfo";version="${fragment.xml.version}",
                                 javax.xml.crypto;uses:="javax.xml.crypto.dsig.keyinfo";version="${fragment.xml.version}",
-                                javax.xml.datatype;uses:="javax.xml.namespace";version="${fragment.xml.version}",
+                                javax.xml.datatype;uses:="javax.xml.namespace";version="${jaxb.version}",
                                 javax.xml.namespace;version="${fragment.xml.version}",
                                 javax.xml.parsers;uses:="javax.xml.validation,org.w3c.dom,org.xml.sax,org.xml.sax.helpers";version="${fragment.xml.version}",
-                                javax.xml.stream.events;uses:="javax.xml.namespace,javax.xml.stream";version="${fragment.xml.version}",
-                                javax.xml.stream.util;uses:="javax.xml.stream,javax.xml.stream.events,javax.xml.namespace";version="${fragment.xml.version}",
-                                javax.xml.stream;uses:="javax.xml.stream.events,javax.xml.namespace,javax.xml.stream.util,javax.xml.transform";version="${fragment.xml.version}",
+                                javax.xml.stream.events;uses:="javax.xml.namespace,javax.xml.stream";version="${stax.version}",
+                                javax.xml.stream.util;uses:="javax.xml.stream,javax.xml.stream.events,javax.xml.namespace";version="${stax.version}",
+                                javax.xml.stream;uses:="javax.xml.stream.events,javax.xml.namespace,javax.xml.stream.util,javax.xml.transform";version="${stax.version}",
                                 javax.xml.transform.dom;uses:="javax.xml.transform,org.w3c.dom";version="${fragment.xml.version}",
                                 javax.xml.transform.sax;uses:="org.xml.sax.ext,javax.xml.transform,org.xml.sax,javax.xml.transform.stream";version="${fragment.xml.version}",
                                 javax.xml.transform.stax;uses:="javax.xml.stream,javax.xml.transform,javax.xml.stream.events";version="${fragment.xml.version}",
@@ -119,6 +121,7 @@
                                 org.w3c.dom.stylesheets;uses:="org.w3c.dom";version="${fragment.xml.version}",
                                 org.w3c.dom.traversal;uses:="org.w3c.dom";version="${fragment.xml.version}",
                                 org.w3c.dom.views;version="${fragment.xml.version}",
+                                org.w3c.dom.xpath;version="${fragment.xml.version}",
                                 org.w3c.dom;version="${fragment.xml.version}",
                                 org.xml.sax.ext;uses:="org.xml.sax,org.xml.sax.helpers";version="${fragment.xml.version}",
                                 org.xml.sax.helpers;uses:="org.xml.sax";version="${fragment.xml.version}",
