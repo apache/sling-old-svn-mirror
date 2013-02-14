@@ -112,12 +112,6 @@ public class ClassLoaderWriterImpl
     private volatile RepositoryClassLoader repositoryClassLoader;
 
     /**
-     * The dynamic class loader used as the parent of the repository
-     * class loader.
-     */
-    private volatile ClassLoader dynamicClassLoader;
-
-    /**
      * Activate this component.
      * @param props The configuration properties
      */
@@ -178,9 +172,9 @@ public class ClassLoaderWriterImpl
             this.repositoryClassLoader = null;
         }
 
-        if (this.dynamicClassLoader != null) {
+        if (this.dynamicClassLoaderManager != null) {
             this.callerBundle.getBundleContext().ungetService(this.dynamicClassLoaderManager);
-            this.dynamicClassLoader = null;
+            this.dynamicClassLoaderManager = null;
         }
     }
 
@@ -219,14 +213,13 @@ public class ClassLoaderWriterImpl
 
             // get the dynamic class loader for the bundle using this
             // class loader writer
-            DynamicClassLoaderManager dclm = (DynamicClassLoaderManager) this.callerBundle.getBundleContext().getService(
+            final DynamicClassLoaderManager dclm = (DynamicClassLoaderManager) this.callerBundle.getBundleContext().getService(
                 this.dynamicClassLoaderManager);
-            this.dynamicClassLoader = dclm.getDynamicClassLoader();
 
             this.repositoryClassLoader = new RepositoryClassLoader(
                     this.classPath,
                     this,
-                    this.dynamicClassLoader);
+                    dclm.getDynamicClassLoader());
         }
         return this.repositoryClassLoader;
     }
