@@ -77,7 +77,6 @@ public class ClassLoaderWriterImpl
     @org.apache.felix.scr.annotations.Property(value=CLASS_PATH_DEFAULT)
     private static final String CLASS_PATH_PROP = "classpath";
 
-
     /** Node type for packages/folders. */
     private static final String NT_FOLDER = "nt:folder";
 
@@ -87,14 +86,15 @@ public class ClassLoaderWriterImpl
     @org.apache.felix.scr.annotations.Property(value=OWNER_DEFAULT)
     private static final String OWNER_PROP = "owner";
 
-    /** The owner of the class loader / jcr user. */
-    private String classLoaderOwner;
 
-    @Reference
-    private SlingRepository repository;
+    /** The owner of the class loader / JCR user. */
+    private String classLoaderOwner;
 
     /** The configured class path. */
     private String classPath;
+
+    @Reference
+    private SlingRepository repository;
 
     @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private MimeTypeService mimeTypeService;
@@ -113,7 +113,8 @@ public class ClassLoaderWriterImpl
 
     /**
      * Activate this component.
-     * @param props The configuration properties
+     * @param componentContext The component context
+     * @param properties The configuration properties
      */
     @Activate
     protected void activate(final ComponentContext componentContext, final Map<String, Object> properties) {
@@ -151,7 +152,7 @@ public class ClassLoaderWriterImpl
     }
 
     /**
-     * Called to handle unbinding the DynamicClassLoaderManager service
+     * Called to handle unbinding of the DynamicClassLoaderManager service
      * reference
      */
     @SuppressWarnings("unused")
@@ -180,7 +181,7 @@ public class ClassLoaderWriterImpl
      * Return a new session.
      */
     public Session createSession() throws RepositoryException {
-        // get an administrative session for potentiall impersonation
+        // get an administrative session for potential impersonation
         final Session admin = this.repository.loginAdministrative(null);
 
         // do use the admin session, if the admin's user id is the same as owner
@@ -280,18 +281,18 @@ public class ClassLoaderWriterImpl
             }
         }
 
-        // fallback to false in case of error or non-existence of oldFileName
+        // fall back to false in case of error or non-existence of oldFileName
         return false;
     }
 
     /**
      * Creates a folder hierarchy in the repository.
-     * We synchronize this method to reduce potential conflics.
+     * We synchronize this method to reduce potential conflicts.
      * Although each write uses its own session it might occur
      * that more than one session tries to create the same path
      * (or parent path) at the same time. By synchronizing this
      * we avoid this situation - however this method is written
-     * in a failsafe manner anyway.
+     * in a fail safe manner anyway.
      */
     private synchronized boolean mkdirs(final Session session, final String path) {
         try {
@@ -511,7 +512,7 @@ public class ClassLoaderWriterImpl
             }
         }
 
-        // fallback to "non-existant" in case of problems
+        // fall back to "non-existent" in case of problems
         return -1;
     }
 
