@@ -168,13 +168,11 @@ public class ClassLoaderWriterImpl
      */
     private void destroyRepositoryClassLoader() {
         if (this.repositoryClassLoader != null) {
+            if ( this.dynamicClassLoaderManager != null ) {
+                this.callerBundle.getBundleContext().ungetService(this.dynamicClassLoaderManager);
+            }
             this.repositoryClassLoader.destroy();
             this.repositoryClassLoader = null;
-        }
-
-        if (this.dynamicClassLoaderManager != null) {
-            this.callerBundle.getBundleContext().ungetService(this.dynamicClassLoaderManager);
-            this.dynamicClassLoaderManager = null;
         }
     }
 
