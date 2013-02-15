@@ -452,6 +452,8 @@
     </profiles>
 
     <dependencies>
+
+      <!-- The integration tests -->
         <dependency>
              <groupId>org.apache.sling</groupId>
              <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
@@ -459,7 +461,7 @@
              <scope>test</scope>
         </dependency>
 
-        <!-- The test services bundles -->
+      <!-- The test services bundles -->
         <dependency>
              <groupId>org.apache.sling</groupId>
              <artifactId>org.apache.sling.launchpad.test-bundles</artifactId>
@@ -467,7 +469,7 @@
              <type>partialbundlelist</type>
         </dependency>
 
-        <!--  The basic Sling WebApp -->
+      <!--  The basic Sling WebApp -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.base</artifactId>
@@ -475,47 +477,11 @@
             <classifier>app</classifier>
         </dependency>
 
-        <!-- JCR Install - needs to be in a profile -->
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bnd</artifactId>
-            <version>0.0.169</version>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- Dependencies for the Test Build and Run -->
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
             <version>2.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Dependencies for the Test Build and Run -->
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.13-SNAPSHOT</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>log4j</groupId>
-                    <artifactId>log4j</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.servlets.post</artifactId>
-            <version>2.1.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -543,8 +509,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
