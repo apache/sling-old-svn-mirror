@@ -45,7 +45,7 @@ public class SlingServerSideTestsBase extends SlingTestBase {
      *  and check (with timeout) that the servlet is ready */
     public SlingServerSideTestsBase() {
         if(!servletNodeCreated) {
-            final SlingClient slingClient = new SlingClient(getServerBaseUrl(), ADMIN, ADMIN);
+            final SlingClient slingClient = new SlingClient(getServerBaseUrl(), getServerUsername(), getServerPassword());
             try {
                 slingClient.createNode(SERVLET_NODE_PATH, "sling:resourceType", "sling/junit/testing");
                 servletNodeCreated = true;
@@ -59,7 +59,8 @@ public class SlingServerSideTestsBase extends SlingTestBase {
         }
         
         if(!servletOk) {
-            final RetryingContentChecker servletChecker = new RetryingContentChecker(getRequestExecutor(), getRequestBuilder()) 
+            final RetryingContentChecker servletChecker = new RetryingContentChecker(getRequestExecutor(), getRequestBuilder(),
+                    getServerUsername(), getServerPassword())
             {
                 @Override
                 public void onTimeout() {

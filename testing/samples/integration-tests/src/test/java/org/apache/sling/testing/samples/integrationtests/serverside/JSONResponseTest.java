@@ -80,7 +80,8 @@ public class JSONResponseTest extends ServerSideTestsBase {
     }
 
     private void testJsonListOfTests() throws Exception {
-        Request r = getRequestBuilder().buildGetRequest(JUNIT_SERVLET_PATH + "/.json");
+        Request r = getRequestBuilder().buildGetRequest(JUNIT_SERVLET_PATH + "/.json")
+                .withCredentials(getServerUsername(), getServerPassword());
         
         // Get list of tests in JSON format
         getRequestExecutor().execute(r)

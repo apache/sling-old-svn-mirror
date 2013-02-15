@@ -46,7 +46,7 @@ public class ServerSideTestsBase extends SlingTestBase {
             if(!junitServletOk) {
                 if(junitServletChecker == null) {
                     junitServletChecker = 
-                        new RetryingContentChecker(getRequestExecutor(), getRequestBuilder()) {
+                        new RetryingContentChecker(getRequestExecutor(), getRequestBuilder(), getServerUsername(), getServerPassword()) {
                         @Override
                         public void onTimeout() {
                             junitServletCheckFailed = true;

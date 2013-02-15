@@ -43,7 +43,7 @@ public class OsgiConsoleTest extends SlingTestBase {
             final String path = "/system/console/" + subpath;
             getRequestExecutor().execute(
                     getRequestBuilder().buildGetRequest(path)
-                    .withCredentials("admin", "admin")
+                    .withCredentials(getServerUsername(), getServerPassword())
             ).assertStatus(200);
         }
     }

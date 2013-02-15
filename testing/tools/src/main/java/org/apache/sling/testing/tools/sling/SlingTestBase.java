@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
  */
 public class SlingTestBase {
     public static final String TEST_SERVER_URL_PROP = "test.server.url";
+    public static final String TEST_SERVER_USERNAME = "test.server.username";
+    public static final String TEST_SERVER_PASSWORD = "test.server.password";
     public static final String SERVER_READY_TIMEOUT_PROP = "server.ready.timeout.seconds";
     public static final String SERVER_READY_PROP_PREFIX = "server.ready.path";
     public static final String KEEP_JAR_RUNNING_PROP = "keepJarRunning";
@@ -51,6 +53,8 @@ public class SlingTestBase {
 
     private static final boolean keepJarRunning = "true".equals(System.getProperty(KEEP_JAR_RUNNING_PROP));
     private final String serverBaseUrl;
+    private final String serverUsername;
+    private final String serverPassword;
     private RequestBuilder builder;
     private DefaultHttpClient httpClient = new DefaultHttpClient();
     private RequestExecutor executor = new RequestExecutor(httpClient);
@@ -93,8 +97,24 @@ public class SlingTestBase {
             serverBaseUrl = "http://" + serverHost + ":" + jarExecutor.getServerPort();
         }
 
+        // Set configured username using "admin" as default credential
+        final String configuredUsername = System.getProperty(TEST_SERVER_USERNAME);
+        if (configuredUsername != null && configuredUsername.trim().length() > 0) {
+            serverUsername = configuredUsername;
+        } else {
+            serverUsername = ADMIN;
+        }
+
+        // Set configured password using "admin" as default credential
+        final String configuredPassword = System.getProperty(TEST_SERVER_PASSWORD);
+        if (configuredPassword != null && configuredPassword.trim().length() > 0) {
+            serverPassword = configuredPassword;
+        } else {
+            serverPassword = ADMIN;
+        }
+
         builder = new RequestBuilder(serverBaseUrl);
-        webconsoleClient = new WebconsoleClient(serverBaseUrl, ADMIN, ADMIN);
+        webconsoleClient = new WebconsoleClient(serverBaseUrl, serverUsername, serverPassword);
         builder = new RequestBuilder(serverBaseUrl);
         bundlesInstaller = new BundlesInstaller(webconsoleClient);
 
@@ -180,6 +200,16 @@ public class SlingTestBase {
         return serverBaseUrl;
     }
 
+    /** Return username configured for execution of HTTP requests */
+    protected String getServerUsername() {
+        return serverUsername;
+    }
+
+    /** Return password configured for execution of HTTP requests */
+    protected String getServerPassword() {
+        return serverPassword;
+    }
+
     /** Optionally block here so that the runnable jar stays up - we can
      *  then run tests against it from another VM.
      */
@@ -235,17 +265,17 @@ public class SlingTestBase {
                 final String path = s[0];
                 final String pattern = (s.length > 0 ? s[1] : "");
                 try {
-                    executor.execute(builder.buildGetRequest(path))
+                    executor.execute(builder.buildGetRequest(path).withCredentials(serverUsername, serverPassword))
                     .assertStatus(200)
                     .assertContentContains(pattern);
                 } catch(AssertionError ae) {
                     errors = true;
-                    log.debug("Request to {}{} failed, will retry ({})",
-                            new Object[] { serverBaseUrl, path, ae});
+                    log.debug("Request to {}@{}{} failed, will retry ({})",
+                            new Object[] { serverUsername, serverBaseUrl, path, ae});
                 } catch(Exception e) {
                     errors = true;
-                    log.debug("Request to {}{} failed, will retry ({})",
-                            new Object[] { serverBaseUrl, path, pattern, e });
+                    log.debug("Request to {}@{}{} failed, will retry ({})",
+                            new Object[] { serverUsername, serverBaseUrl, path, pattern, e });
                 }
             }
 

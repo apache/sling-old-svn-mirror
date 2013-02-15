@@ -25,6 +25,7 @@ import org.apache.sling.commons.json.JSONTokener;
 import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
 import org.apache.sling.testing.tools.http.RequestCustomizer;
 import org.apache.sling.testing.tools.http.RequestExecutor;
+import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.internal.runners.model.EachTestNotifier;
 import org.junit.runner.Description;
@@ -45,6 +46,8 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
     private static final Logger log = LoggerFactory.getLogger(SlingRemoteTestRunner.class);
     private final SlingRemoteTestParameters testParameters;
     private RemoteTestHttpClient testHttpClient;
+    private final String username;
+    private final String password;
     private final Class<?> testClass;
     
     private final List<SlingRemoteTest> children = new LinkedList<SlingRemoteTest>();
@@ -64,6 +67,22 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
             throw new InitializationError(e);
         }
         
+        // Set configured username using "admin" as default credential
+        final String configuredUsername = System.getProperty(SlingTestBase.TEST_SERVER_USERNAME);
+        if (configuredUsername != null && configuredUsername.trim().length() > 0) {
+            username = configuredUsername;
+        } else {
+            username = SlingTestBase.ADMIN;
+        }
+
+        // Set configured password using "admin" as default credential
+        final String configuredPassword = System.getProperty(SlingTestBase.TEST_SERVER_PASSWORD);
+        if (configuredPassword != null && configuredPassword.trim().length() > 0) {
+            password = configuredPassword;
+        } else {
+            password = SlingTestBase.ADMIN;
+        }
+        
         testParameters = (SlingRemoteTestParameters)o;
     }
     
@@ -73,7 +92,7 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
             return;
         }
         
-        testHttpClient = new RemoteTestHttpClient(testParameters.getJunitServletUrl(), true);
+        testHttpClient = new RemoteTestHttpClient(testParameters.getJunitServletUrl(), this.username, this.password, true);
 
         // Let the parameters class customize the request if desired 
         if(testParameters instanceof RequestCustomizer) {
@@ -99,8 +118,8 @@ public class SlingRemoteTestRunner extends ParentRunner<SlingRemoteTest> {
             }
         }
         
-        log.info("Server-side tests executed at {} with path {}", 
-                testParameters.getJunitServletUrl(), testHttpClient.getTestExecutionPath());
+        log.info("Server-side tests executed as {} at {} with path {}",
+                new Object[]{this.username, testParameters.getJunitServletUrl(), testHttpClient.getTestExecutionPath()});
         
         // Optionally check that number of tests is as expected
         if(testParameters instanceof SlingTestsCountChecker) {

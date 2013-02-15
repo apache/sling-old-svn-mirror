@@ -40,6 +40,8 @@ public class SlingRemoteExecutionRule implements MethodRule, RequestCustomizer {
 
    /** Name of the system property that activates remote test execution */
    public static final String SLING_REMOTE_TEST_URL = "sling.remote.test.url";
+   public static final String SLING_REMOTE_TEST_USERNAME = "sling.remote.test.username";
+   public static final String SLING_REMOTE_TEST_PASSWORD = "sling.remote.test.password";
    
    public Statement apply(final Statement base, final FrameworkMethod method, Object target) {
        return new Statement() {
@@ -63,21 +65,24 @@ public class SlingRemoteExecutionRule implements MethodRule, RequestCustomizer {
     */
    private boolean tryRemoteEvaluation(FrameworkMethod method) throws Throwable {
        String remoteUrl = System.getProperty(SLING_REMOTE_TEST_URL);
+       String remoteUsername = System.getProperty(SLING_REMOTE_TEST_USERNAME);
+       String remotePassword = System.getProperty(SLING_REMOTE_TEST_PASSWORD);
+
        if(remoteUrl != null) {
            remoteUrl = remoteUrl.trim();
            if(remoteUrl.length() > 0) {
-               invokeRemote(remoteUrl, method);
+               invokeRemote(remoteUrl, remoteUsername, remotePassword, method);
                return true;
            }
        }
        return false;
    }
 
-   private void invokeRemote(String remoteUrl, FrameworkMethod method) throws Throwable {
+   private void invokeRemote(String remoteUrl, String remoteUsername, String remotePassword, FrameworkMethod method) throws Throwable {
        final String testClassesSelector = method.getMethod().getDeclaringClass().getName();
        final String methodName = method.getMethod().getName();
        
-       final RemoteTestHttpClient testHttpClient = new RemoteTestHttpClient(remoteUrl, false);
+       final RemoteTestHttpClient testHttpClient = new RemoteTestHttpClient(remoteUrl, remoteUsername, remotePassword, false);
        testHttpClient.setRequestCustomizer(this);
        final RequestExecutor executor = testHttpClient.runTests(
                testClassesSelector, methodName, "serialized"
