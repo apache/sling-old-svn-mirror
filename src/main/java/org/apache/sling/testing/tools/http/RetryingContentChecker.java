@@ -25,10 +25,27 @@ import org.apache.sling.testing.tools.sling.SlingTestBase;
 public class RetryingContentChecker {
     private final RequestExecutor executor;
     private final RequestBuilder builder;
+    private final String username;
+    private final String password;
     
     public RetryingContentChecker(RequestExecutor executor, RequestBuilder builder) {
+        this(executor, builder, null, SlingTestBase.ADMIN);
+    }
+
+    public RetryingContentChecker(RequestExecutor executor, RequestBuilder builder, String username, String password) {
         this.executor = executor;
         this.builder = builder;
+        if (username != null) {
+            this.username = username;
+        } else {
+            this.username = SlingTestBase.ADMIN;
+        }
+
+        if (password != null) {
+            this.password = password;
+        } else {
+            this.password = SlingTestBase.ADMIN;
+        }
     }
 
     /** Check specified path for expected status, or timeout */
@@ -40,7 +57,7 @@ public class RetryingContentChecker {
 
             public boolean isTrue() throws Exception {
                 executor.execute(builder.buildGetRequest(path)
-                        .withCredentials(SlingTestBase.ADMIN, SlingTestBase.ADMIN))
+                        .withCredentials(username, password))
                     .assertStatus(expectedStatus);
                 return assertMore(executor);
             }
