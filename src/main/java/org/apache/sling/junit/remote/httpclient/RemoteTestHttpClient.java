@@ -34,18 +34,36 @@ public class RemoteTestHttpClient {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final String junitServletUrl;
+    private final String username;
+    private final String password;
     private StringBuilder subpath;
     private boolean consumeContent;
     private RequestCustomizer requestCustomizer;
     private static final String SLASH = "/";
     private static final String DOT = ".";
-    
+
     public RemoteTestHttpClient(String junitServletUrl, boolean consumeContent) {
+        this(junitServletUrl, null, null, consumeContent);
+    }
+    
+    public RemoteTestHttpClient(String junitServletUrl, String username, String password, boolean consumeContent) {
         if(junitServletUrl == null) {
             throw new IllegalArgumentException("JUnit servlet URL is null, cannot run tests");
         }
         this.junitServletUrl = junitServletUrl;
         this.consumeContent = consumeContent;
+
+        if (username != null) {
+            this.username = username;
+        } else {
+            this.username = SlingTestBase.ADMIN;
+        }
+
+        if (password != null) {
+            this.password = password;
+        } else {
+            this.password = SlingTestBase.ADMIN;
+        }
     }
     
     public void setRequestCustomizer(RequestCustomizer c) {
@@ -87,11 +105,11 @@ public class RemoteTestHttpClient {
         }
         subpath.append(extension);
         
-        log.info("Executing test remotely, path={} JUnit servlet URL={}", 
+        log.info("Executing test remotely, path={} JUnit servlet URL={}",
                 subpath, junitServletUrl);
         final Request r = builder
         .buildPostRequest(subpath.toString())
-        .withCredentials(SlingTestBase.ADMIN, SlingTestBase.ADMIN)
+        .withCredentials(username, password)
         .withCustomizer(requestCustomizer);
         executor.execute(r).assertStatus(200);
 
