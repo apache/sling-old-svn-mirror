@@ -80,7 +80,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.7-SNAPSHOT</version>
+            <version>1.0.8</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -125,7 +125,7 @@
                                 </goals>
                                 <phase>install</phase>
                                 <configuration>
-                                    <bundleFileName>${project.build.directory}/dependency/org.apache.sling.junit.core-0.1.1-SNAPSHOT.jar</bundleFileName>
+                                    <bundleFileName>${project.build.directory}/dependency/org.apache.sling.junit.core-1.0.8.jar</bundleFileName>
                                 </configuration>
                             </execution>
                         </executions>
