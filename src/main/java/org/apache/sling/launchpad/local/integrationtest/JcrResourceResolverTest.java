@@ -263,7 +263,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // same user but different workspace
         final Map<String, Object> anon2Cred = new HashMap<String, Object>();
         final ResourceResolver anon2 = anon0.clone(anon2Cred);
-        final Session anon2Session = anon2.adaptTo(Session.class);
         assertEquals("anonymous", anon2.getUserID());
         anon2.close();
 
@@ -272,7 +271,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         admin1Cred.put(ResourceResolverFactory.USER, "admin");
         admin1Cred.put(ResourceResolverFactory.PASSWORD, "admin".toCharArray());
         final ResourceResolver admin1 = anon0.clone(admin1Cred);
-        final Session admin1Session = admin1.adaptTo(Session.class);
         assertEquals("admin", admin1.getUserID());
         admin1.close();
 
@@ -305,7 +303,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         // same user but different workspace
         final Map<String, Object> admin2Cred = new HashMap<String, Object>();
         final ResourceResolver admin2 = admin0.clone(admin2Cred);
-        final Session admin2Session = admin2.adaptTo(Session.class);
         assertEquals("admin", admin2.getUserID());
         admin2.close();
 
@@ -313,7 +310,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         final Map<String, Object> anon1Cred = new HashMap<String, Object>();
         anon1Cred.put(ResourceResolverFactory.USER, "anonymous");
         final ResourceResolver anon1 = admin0.clone(anon1Cred);
-        final Session anon1Session = anon1.adaptTo(Session.class);
         assertEquals("anonymous", anon1.getUserID());
         anon1.close();
 
