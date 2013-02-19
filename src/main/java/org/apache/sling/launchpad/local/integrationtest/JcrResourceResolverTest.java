@@ -236,63 +236,6 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         super.tearDown();
     }
 
-    @SuppressWarnings("deprecation")
-    public void testBasicAPIAssumptions() throws Exception {
-
-        // null resource is accessing /, which exists of course
-        final Resource res00 = resResolver.resolve((String) null);
-        assertNotNull(res00);
-        assertEquals("Null path is expected to return root", "/",
-            res00.getPath());
-
-        // relative paths are treated as if absolute
-        final String path01 = "relPath/relPath";
-        final Resource res01 = resResolver.resolve(path01);
-        assertNotNull(res01);
-        assertEquals("Expecting absolute path for relative path", "/" + path01,
-            res01.getPath());
-        assertTrue("Resource must be NonExistingResource",
-            res01 instanceof NonExistingResource);
-
-        final String no_resource_path = "/no_resource/at/this/location";
-        final Resource res02 = resResolver.resolve(no_resource_path);
-        assertNotNull(res02);
-        assertEquals("Expecting absolute path for relative path",
-            no_resource_path, res02.getPath());
-        assertTrue("Resource must be NonExistingResource",
-            res01 instanceof NonExistingResource);
-
-        try {
-            resResolver.resolve((HttpServletRequest) null);
-            fail("Expected NullPointerException trying to resolve null request");
-        } catch (NullPointerException npe) {
-            // expected
-        }
-
-        final Resource res0 = resResolver.resolve(null, no_resource_path);
-        assertNotNull("Expecting resource if resolution fails", res0);
-        assertTrue("Resource must be NonExistingResource",
-            res0 instanceof NonExistingResource);
-        assertEquals("Path must be the original path", no_resource_path,
-            res0.getPath());
-
-        final HttpServletRequest req1 = new ResourceResolverTestRequest(
-            no_resource_path);
-        final Resource res1 = resResolver.resolve(req1);
-        assertNotNull("Expecting resource if resolution fails", res1);
-        assertTrue("Resource must be NonExistingResource",
-            res1 instanceof NonExistingResource);
-        assertEquals("Path must be the original path", no_resource_path,
-            res1.getPath());
-
-        final HttpServletRequest req2 = new ResourceResolverTestRequest(null);
-        final Resource res2 = resResolver.resolve(req2);
-        assertNotNull("Expecting resource if resolution fails", res2);
-        assertTrue("Resource must not be NonExistingResource was ",
-            !(res2 instanceof NonExistingResource));
-        assertEquals("Path must be the the root path", "/", res2.getPath());
-    }
-
     public void test_clone_based_on_anonymous() throws Exception {
         final ResourceResolver anon0 = resFac.getResourceResolver((Map<String, Object>) null);
         final Session anon0Session = anon0.adaptTo(Session.class);
