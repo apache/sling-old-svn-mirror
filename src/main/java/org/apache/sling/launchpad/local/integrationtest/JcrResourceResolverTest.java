@@ -2178,13 +2178,7 @@ public class JcrResourceResolverTest extends RepositoryTestBase {
         assertEquals(child.getPath(), resNode.getPath());
     }
 
-    public void test_delete_resource() throws Exception{
-        resResolver.create(resResolver.getResource("/"), "node", null);
-        assertEquals("/node", resResolver.getResource("/node").getPath());
-        resResolver.delete(resResolver.getResource("/node"));
-        resResolver.commit();
-        assertNull(resResolver.getResource("/node"));
-   }
+
 
     // ---------- internal
 
