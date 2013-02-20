@@ -118,8 +118,8 @@ public class PathBasedHolderCache<Type extends PathBasedHolder> {
             }
             final Map<String, List<Type>> defaultByHostMap = cache.get("");
             if ( defaultByHostMap != null ) {
-                result[0] = defaultByHostMap.get(hostname);
-                result[1] = defaultByHostMap.get("");
+                result[2] = defaultByHostMap.get(hostname);
+                result[3] = defaultByHostMap.get("");
             }
             return result;
         } finally {
