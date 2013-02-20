@@ -36,7 +36,7 @@ public class SimpleEventAdmin implements EventAdmin {
         if ( topics == null && handler != null ) {
             throw new IllegalArgumentException("If topics is null, handler must be null as well");
         }
-        if ( topics.length != handler.length ) {
+        if ( topics != null && topics.length != handler.length ) {
             throw new IllegalArgumentException("Topics and handler must have the same size.");
         }
     }
