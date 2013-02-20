@@ -55,10 +55,12 @@ public abstract class AbstractJobEventHandlerTest extends AbstractTest {
         PrivateAccessor.setField(this.jobManager, "configManager", this.configManager);
         PrivateAccessor.setField(this.jobManager, "environment", this.environment);
         PrivateAccessor.setField(this.jobManager, "scheduler", new SimpleScheduler());
+        PrivateAccessor.setField(this.jobManager, "eventAdmin", ea);
         this.handler = new PersistenceHandler();
         PrivateAccessor.setField(this.handler, "environment", this.environment);
         PrivateAccessor.setField(this.handler, "jobManager", this.jobManager);
         PrivateAccessor.setField(this.handler, "lockManager", new LockManager());
+        
 
         // lets set up the bundle context
         final BundleContext bundleContext = this.getMockery().mock(BundleContext.class, "beforeBundleContext" + activateCount);

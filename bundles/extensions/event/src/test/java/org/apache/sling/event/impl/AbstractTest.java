@@ -87,7 +87,7 @@ public abstract class AbstractTest {
             session.save();
         }
         // activate
-        this.activate(null);
+        this.activate(new SimpleEventAdmin(null, null));
     }
 
     protected int activateCount = 1;

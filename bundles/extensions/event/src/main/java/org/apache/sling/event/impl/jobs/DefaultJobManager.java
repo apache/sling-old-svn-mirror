@@ -59,6 +59,7 @@ import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,6 +111,10 @@ public class DefaultJobManager
     /** The scheduler service. */
     @Reference
     private Scheduler scheduler;
+    
+    /** The job manager emits events when queues are added and removed */
+    @Reference
+    private EventAdmin eventAdmin;
 
     /** Lock object for the queues map - we don't want to sync directly on the concurrent map. */
     private final Object queuesLock = new Object();
@@ -228,6 +233,7 @@ public class DefaultJobManager
         while ( i.hasNext() ) {
             final AbstractJobQueue jbq = i.next();
             jbq.close();
+            eventAdmin.sendEvent(new QueueStatusEvent(null, jbq));
         }
         this.queues.clear();
         logger.info("Apache Sling Job Event Handler stopped on instance {}", Environment.APPLICATION_ID);
@@ -269,6 +275,7 @@ public class DefaultJobManager
                         this.baseStatistics.add(jbq);
                         // remove
                         i.remove();
+                        eventAdmin.sendEvent(new QueueStatusEvent(null, jbq));
                     } else {
                         // mark to be removed during next cycle
                         jbq.markForRemoval();
@@ -389,6 +396,7 @@ public class DefaultJobManager
                     return;
                 }
                 queues.put(queueName, queue);
+                eventAdmin.sendEvent(new QueueStatusEvent(queue, null));
                 queue.start();
             }
         }
@@ -817,11 +825,13 @@ public class DefaultJobManager
             queue.close();
             // copy statistics
             this.baseStatistics.add(queue);
+            eventAdmin.sendEvent(new QueueStatusEvent(null, queue));
         } else {
             // notify queue
             queue.rename(queue.getName() + "<outdated>(" + queue.hashCode() + ")");
             // readd with new name
             this.queues.put(queue.getName(), queue);
+            eventAdmin.sendEvent(new QueueStatusEvent(queue, queue));
         }
     }
 
