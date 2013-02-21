@@ -36,6 +36,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.slf4j.LoggerFactory;
 
 public class ParameterSupport {
 
@@ -197,15 +198,19 @@ public class ParameterSupport {
         };
 
         // Parse the request
+        List<?> /* FileItem */items = null;
         try {
-            List<?> /* FileItem */items = upload.parseRequest(rc);
+            items = upload.parseRequest(rc);
+        } catch (FileUploadException fue) {
+            LoggerFactory.getLogger(getClass()).error("parseMultiPartPost: Error parsing request", fue);
+        }
+
+        if (items != null && items.size() > 0) {
             for (Iterator<?> ii = items.iterator(); ii.hasNext();) {
                 FileItem fileItem = (FileItem) ii.next();
                 RequestParameter pp = new MultipartRequestParameter(fileItem);
                 parameters.addParameter(fileItem.getFieldName(), pp);
             }
-        } catch (FileUploadException fue) {
-            // TODO: log
         }
     }
 
