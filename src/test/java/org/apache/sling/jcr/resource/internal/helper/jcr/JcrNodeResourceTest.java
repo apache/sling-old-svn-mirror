@@ -28,6 +28,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 
@@ -116,7 +117,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         jnr = new JcrNodeResource(null, node, null);
         assertEquals(typeName, jnr.getResourceType());
     }
-/*
+
     public void testResourceSuperType() throws Exception {
         String name = "resourceSuperType";
         String typeNodeName = "some_resource_type";
@@ -136,9 +137,9 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         typeNode.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, superTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, node, null);
-        assertEquals(typeName, jnr.getResourceType());
-        assertEquals(superTypeName, ResourceUtil.findResourceSuperType(jnr));
+        jnr = new JcrNodeResource(resourceResolver, typeNode, null);
+        assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
+        assertEquals(superTypeName, jnr.getResourceSuperType());
 
         // overwrite super type with direct property
         String otherSuperTypeName = "othersupertype";
@@ -157,7 +158,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertEquals(typeName, jnr.getResourceType());
         assertNull(jnr.getResourceSuperType());
     }
-*/
+
     public void testAdaptToMap() throws Exception {
 
         String name = "adaptable";
