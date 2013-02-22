@@ -117,8 +117,12 @@ public interface Resource extends Adaptable {
     String getResourceType();
 
     /**
-     * Returns the super type of the type of the resource or <code>null</code>
-     * if the {@link #getResourceType()} has no supertype.
+     * Returns the super type of the resource if the resource defines its
+     * own super type. Otherwise <code>null</code> is returned.
+     * A resource might return a resource super type to overwrite the
+     * resource type hierarchy.
+     * If a client is interested in the effective resource super type
+     * of a resource, it should call {@link ResourceResolver#getResourceSuperType(Resource)}.
      */
     String getResourceSuperType();
 
