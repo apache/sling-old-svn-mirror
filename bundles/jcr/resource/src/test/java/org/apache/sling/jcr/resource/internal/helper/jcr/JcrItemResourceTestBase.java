@@ -25,7 +25,6 @@ import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 
@@ -40,16 +39,16 @@ public class JcrItemResourceTestBase extends RepositoryTestBase {
     protected static final byte[] TEST_DATA = { 'S', 'o', 'm', 'e', ' ', 'T',
         'e', 's', 't' };
 
-    protected ResourceResolver resourceResolver;
-
     protected String rootPath;
 
     protected Node rootNode;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
-        resourceResolver = new MockResourceResolver(getSession());
+        // create the session
+        getSession();
 
         try {
             NamespaceRegistry nsr = session.getWorkspace().getNamespaceRegistry();
@@ -71,7 +70,7 @@ public class JcrItemResourceTestBase extends RepositoryTestBase {
             rootNode.remove();
             getSession().save();
         }
-        
+
         super.tearDown();
     }
 
