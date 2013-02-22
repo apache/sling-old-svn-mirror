@@ -126,7 +126,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, typeName);
         getSession().save();
 
-        Resource jnr = new JcrNodeResource(resourceResolver, node, null);
+        Resource jnr = new JcrNodeResource(null, node, null);
         assertEquals(typeName, jnr.getResourceType());
 
         // default super type is null
@@ -137,7 +137,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         typeNode.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, superTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, typeNode, null);
+        jnr = new JcrNodeResource(null, typeNode, null);
         assertEquals(JcrConstants.NT_UNSTRUCTURED, jnr.getResourceType());
         assertEquals(superTypeName, jnr.getResourceSuperType());
 
@@ -146,7 +146,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.setProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY, otherSuperTypeName);
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, node, null);
+        jnr = new JcrNodeResource(null, node, null);
         assertEquals(typeName, jnr.getResourceType());
         assertEquals(otherSuperTypeName, jnr.getResourceSuperType());
 
@@ -154,7 +154,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         node.getProperty(JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY).remove();
         getSession().save();
 
-        jnr = new JcrNodeResource(resourceResolver, node, null);
+        jnr = new JcrNodeResource(null, node, null);
         assertEquals(typeName, jnr.getResourceType());
         assertNull(jnr.getResourceSuperType());
     }
