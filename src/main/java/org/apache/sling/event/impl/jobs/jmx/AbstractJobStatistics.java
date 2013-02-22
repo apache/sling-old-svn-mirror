@@ -15,13 +15,14 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.event.jobs.jmx;
+package org.apache.sling.event.impl.jobs.jmx;
 
 import java.util.Date;
 
 import javax.management.StandardMBean;
 
 import org.apache.sling.event.jobs.Statistics;
+import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 
 public abstract class AbstractJobStatistics extends StandardMBean implements
         StatisticsMBean {
@@ -30,66 +31,66 @@ public abstract class AbstractJobStatistics extends StandardMBean implements
         super(StatisticsMBean.class, false);
     }
 
-    protected abstract Statistics getAggregateStatistics();
+    protected abstract Statistics getStatistics();
 
     public long getAverageProcessingTime() {
-        return getAggregateStatistics().getAverageProcessingTime();
+        return getStatistics().getAverageProcessingTime();
     }
 
     public long getAverageWaitingTime() {
-        return getAggregateStatistics().getAverageWaitingTime();
+        return getStatistics().getAverageWaitingTime();
     }
 
     public long getLastActivatedJobTime() {
-        return getAggregateStatistics().getLastActivatedJobTime();
+        return getStatistics().getLastActivatedJobTime();
     }
 
     public long getLastFinishedJobTime() {
-        return getAggregateStatistics().getLastFinishedJobTime();
+        return getStatistics().getLastFinishedJobTime();
     }
 
     public long getNumberOfActiveJobs() {
-        return getAggregateStatistics().getNumberOfActiveJobs();
+        return getStatistics().getNumberOfActiveJobs();
     }
 
     public long getNumberOfCancelledJobs() {
-        return getAggregateStatistics().getNumberOfCancelledJobs();
+        return getStatistics().getNumberOfCancelledJobs();
     }
 
     public long getStartTime() {
-        return getAggregateStatistics().getStartTime();
+        return getStatistics().getStartTime();
     }
 
     public long getNumberOfFinishedJobs() {
-        return getAggregateStatistics().getNumberOfFinishedJobs();
+        return getStatistics().getNumberOfFinishedJobs();
     }
 
     public long getNumberOfFailedJobs() {
-        return getAggregateStatistics().getNumberOfFailedJobs();
+        return getStatistics().getNumberOfFailedJobs();
     }
 
     public long getNumberOfProcessedJobs() {
-        return getAggregateStatistics().getNumberOfProcessedJobs();
+        return getStatistics().getNumberOfProcessedJobs();
     }
 
     public long getNumberOfQueuedJobs() {
-        return getAggregateStatistics().getNumberOfQueuedJobs();
+        return getStatistics().getNumberOfQueuedJobs();
     }
 
     public long getNumberOfJobs() {
-        return getAggregateStatistics().getNumberOfJobs();
+        return getStatistics().getNumberOfJobs();
     }
 
     public void reset() {
-        getAggregateStatistics().reset();
+        getStatistics().reset();
     }
 
     public Date getLastActivatedJobDate() {
-        return new Date(getAggregateStatistics().getLastActivatedJobTime());
+        return new Date(getStatistics().getLastActivatedJobTime());
     }
 
     public Date getLastFinishedJobDate() {
-        return new Date(getAggregateStatistics().getLastFinishedJobTime());
+        return new Date(getStatistics().getLastFinishedJobTime());
     }
 
 }

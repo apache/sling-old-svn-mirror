@@ -27,4 +27,6 @@ public interface StatisticsMBean extends Statistics {
 
     Date getLastFinishedJobDate();
 
+    String getName();
+
 }
