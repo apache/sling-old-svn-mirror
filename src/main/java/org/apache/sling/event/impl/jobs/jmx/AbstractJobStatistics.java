@@ -61,6 +61,10 @@ public abstract class AbstractJobStatistics extends StandardMBean implements
         return getStatistics().getStartTime();
     }
 
+    public Date getStartDate() {
+        return new Date(getStartTime());
+    }
+
     public long getNumberOfFinishedJobs() {
         return getStatistics().getNumberOfFinishedJobs();
     }
