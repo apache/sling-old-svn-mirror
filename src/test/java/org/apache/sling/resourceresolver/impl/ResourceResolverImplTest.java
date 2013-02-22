@@ -27,10 +27,12 @@ import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -42,11 +44,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.apache.sling.api.resource.AbstractResource;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -338,7 +342,98 @@ public class ResourceResolverImplTest {
         }
     }
 
-    private static final class ResourceImpl extends AbstractResource {
+    @Test public void test_getResourceSuperType() {
+        // the resource resolver
+        final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
+        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
+                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
+
+                    @Override
+                    public ResourceResolver getAdministrativeResourceResolver(
+                            Map<String, Object> authenticationInfo)
+                            throws LoginException {
+                        return resolvers.get(0);
+                    }
+
+                },
+                new ResourceResolverContext(false, null));
+        resolvers.add(resolver);
+
+        // the resource to test
+        final Resource r = new ResourceImpl() {
+            @Override
+            public String getResourceType() {
+                return "a:b";
+            }
+        };
+        final Resource r2 = new ResourceImpl() {
+            @Override
+            public String getResourceType() {
+                return "a:c";
+            }
+        };
+        final Resource typeResource = new ResourceImpl() {
+            @Override
+            public String getResourceType() {
+                return "x:y";
+            }
+
+            @Override
+            public String getResourceSuperType() {
+                return "t:c";
+            }
+        };
+        resolver.setResource("/a", r);
+        resolver.setResource("/a/b", typeResource);
+
+        assertEquals("t:c", resolver.getResourceSuperType(r.getResourceType()));
+        assertNull(resolver.getResourceSuperType(r2.getResourceType()));
+    }
+
+    @Test public void test_isA() {
+        final Resource typeResource = new ResourceImpl() {
+
+            @Override
+            public String getResourceType() {
+                return "x:y";
+            }
+
+            @Override
+            public String getResourceSuperType() {
+                return "t:c";
+            }
+        };
+        final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
+        final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
+                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
+
+                    @Override
+                    public ResourceResolver getAdministrativeResourceResolver(
+                            Map<String, Object> authenticationInfo)
+                            throws LoginException {
+                        return resolvers.get(0);
+                    }
+
+                },
+                new ResourceResolverContext(false, null));
+        resolvers.add(resolver);
+        final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
+            @Override
+            public String getResourceSuperType() {
+                return "d:e";
+            }
+        };
+        resolver.setResource("/a", r);
+        resolver.setResource("/d/e", typeResource);
+
+        assertTrue(resolver.isResourceType(r, "a:b"));
+        assertTrue(resolver.isResourceType(r, "d:e"));
+        assertFalse(resolver.isResourceType(r, "x:y"));
+        assertTrue(resolver.isResourceType(r, "t:c"));
+        assertFalse(resolver.isResourceType(r, "h:p"));
+    }
+
+    private static class ResourceImpl extends AbstractResource {
 
         public String getPath() {
             return "/some";
@@ -603,6 +698,30 @@ public class ResourceResolverImplTest {
 
         public boolean isUserInRole(String role) {
             return false;
+        }
+    }
+    private static class PathBasedResourceResolverImpl extends ResourceResolverImpl {
+
+        private final Map<String, Resource> resources = new HashMap<String, Resource>();
+
+        public PathBasedResourceResolverImpl(
+                ResourceResolverFactoryImpl factory, ResourceResolverContext ctx) {
+            super(factory, ctx);
+        }
+
+        public void setResource(final String path, final Resource r) {
+            this.resources.put(path, r);
+        }
+
+        @Override
+        public String[] getSearchPath() {
+            return new String[] {""};
+        }
+
+        @Override
+        public Resource getResource(final String path) {
+            final String p = (path.startsWith("/") ? path : "/" + path);
+            return this.resources.get(p);
         }
     }
 }
