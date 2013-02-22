@@ -37,7 +37,6 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.sling.event.impl.jobs.DefaultJobManager;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
@@ -49,6 +48,7 @@ import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
+import org.osgi.service.event.EventHandler;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -57,13 +57,17 @@ import org.slf4j.LoggerFactory;
  * @since 3.0
  */
 @Component
-@Service(value=javax.servlet.Servlet.class)
+@Service(value={javax.servlet.Servlet.class, EventHandler.class})
 @Properties({
     @Property(name="felix.webconsole.label", value="slingevent", propertyPrivate=true),
     @Property(name="felix.webconsole.title", value="Sling Eventing", propertyPrivate=true),
-    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"}, propertyPrivate=true)
+    @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"}, propertyPrivate=true),
+    @Property(name="event.topics",propertyPrivate=true,
+    value={"sling/webconsole/test"})
 })
-public class WebConsolePlugin extends HttpServlet {
+public class WebConsolePlugin extends HttpServlet implements EventHandler {
+
+    private static final String SLING_WEBCONSOLE_TEST_JOB_TOPIC = "sling/webconsole/test";
 
     private static final long serialVersionUID = -6983227434841706385L;
 
@@ -169,9 +173,9 @@ public class WebConsolePlugin extends HttpServlet {
         resp.sendRedirect(redirectTo);
     }
     
-    public Event getTestEvent(String id, String queueName, String parallel, boolean runlocal) {
+    private Event getTestEvent(String id, String queueName, String parallel, boolean runlocal) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(JobUtil.PROPERTY_JOB_TOPIC, "sling/test");
+        props.put(JobUtil.PROPERTY_JOB_TOPIC, SLING_WEBCONSOLE_TEST_JOB_TOPIC);
         if ( id != null ) {
             props.put(JobUtil.PROPERTY_JOB_NAME, id);
         }
@@ -510,5 +514,12 @@ public class WebConsolePlugin extends HttpServlet {
         pw.printf("Ranking : %s%n", c.getRanking());
 
         pw.println();
+    }
+
+    public void handleEvent(Event event) {
+        if ( event != null && SLING_WEBCONSOLE_TEST_JOB_TOPIC.equals(event.getTopic()) ) {
+            JobUtil.acknowledgeJob(event);
+            JobUtil.finishedJob(event);
+        }
     }
 }
