@@ -222,7 +222,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected Configuration waitForConfiguration(String info, String pid, long timeoutMsec, boolean shouldBePresent) throws Exception {
-        if(info == null) {
+        if (info == null) {
             info = "";
         } else {
             info += ": ";
@@ -242,9 +242,9 @@ class OsgiInstallerTestBase implements FrameworkListener {
             sleep(25);
         } while(System.currentTimeMillis() < end);
 
-        if(shouldBePresent && result == null) {
+        if (shouldBePresent && result == null) {
             fail(info + "Configuration not found (" + pid + ")");
-        } else if(!shouldBePresent && result != null) {
+        } else if (!shouldBePresent && result != null) {
             fail(info + "Configuration is still present (" + pid + ")");
         }
         return result;
@@ -337,6 +337,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
         assertEquals("Expected ConfigurationAdmin to be " + (shouldBePresent ? "present" : "absent"),
                 shouldBePresent, isPresent);
     	return result;
+    }
+
+    protected Bundle getConfigAdminBundle() {
+        this.waitForConfigAdmin(true);
+        return this.configAdminTracker.getServiceReference().getBundle();
     }
 
     /**

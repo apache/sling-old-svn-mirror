@@ -59,6 +59,7 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
         serviceRegistration = bundleContext.registerService(ConfigurationListener.class.getName(), this, null);
     }
 
+    @Override
     @After
     public void tearDown() {
         super.tearDown();
@@ -108,43 +109,37 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
 
     @Test
     public void testDeferredConfigInstall() throws Exception {
-
-    	final String cfgName = "org.apache.felix.configadmin";
-    	Bundle configAdmin = null;
-    	// in some cases more than one config admin is installed!
-    	// therefore we just stopp all of them and restart the first one
-    	for(Bundle b : bundleContext.getBundles()) {
-    		if (b.getSymbolicName().equals(cfgName)) {
-    			configAdmin = b;
-    			break;
-    		}
-    	}
-    	assertNotNull(cfgName + " bundle must be found", configAdmin);
+        // get config admin bundle and wait for service
+    	final Bundle configAdmin = this.getConfigAdminBundle();
+    	assertNotNull("ConfigAdmin bundle must be found", configAdmin);
     	waitForConfigAdmin(true);
 
+    	// check that configuration is not available
+        final String cfgPid = getClass().getSimpleName() + ".deferred." + System.currentTimeMillis();
+        assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
+    	// create new configuration object
     	final Dictionary<String, Object> cfgData = new Hashtable<String, Object>();
     	cfgData.put("foo", "bar");
-    	final String cfgPid = getClass().getSimpleName() + ".deferred." + System.currentTimeMillis();
-    	assertNull("Config " + cfgPid + " must not be found before test", findConfiguration(cfgPid));
 
-    	// Config installs must be deferred if ConfigAdmin service is stopped
-        for(Bundle b : bundleContext.getBundles()) {
-            if (b.getSymbolicName().equals(cfgName)) {
-                b.stop();
-            }
-        }
+    	// Configuration installs must be deferred if ConfigAdmin service is stopped
+        configAdmin.stop();
     	waitForConfigAdmin(false);
+    	// add new configuration
         final InstallableResource[] rsrc = getInstallableResource(cfgPid, cfgData);
         installer.updateResources(URL_SCHEME, rsrc, null);
+        // let's wait a little bit and restart configuration admin
         sleep(1000L);
         configAdmin.start();
     	waitForConfigAdmin(true);
         waitForConfiguration("Config must be installed once ConfigurationAdmin restarts",
                 cfgPid, TIMEOUT, true);
 
+        // Configuration uninstalls must be deferred if ConfigAdmin service is stopped
         configAdmin.stop();
         waitForConfigAdmin(false);
+        // remove configuration
         installer.updateResources(URL_SCHEME, null, new String[] {rsrc[0].getId()});
+        // let's wait a little bit and restart configuration admin
         sleep(1000L);
         configAdmin.start();
         waitForConfigAdmin(true);
