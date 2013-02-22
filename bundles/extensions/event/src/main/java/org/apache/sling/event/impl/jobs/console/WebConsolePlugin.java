@@ -24,6 +24,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -35,14 +37,19 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.sling.event.impl.jobs.DefaultJobManager;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a webconsole plugin displaying the active queues, some statistics
@@ -62,6 +69,9 @@ public class WebConsolePlugin extends HttpServlet {
 
     @Reference
     private JobManager jobManager;
+    
+    @Reference
+    private EventAdmin eventAdmin;
 
     @Reference
     private QueueConfigurationManager queueConfigManager;
@@ -133,6 +143,10 @@ public class WebConsolePlugin extends HttpServlet {
                     msg = this.getQueueErrorMessage(req, "reset");
                 }
             }
+        } else if ( "test".equals(cmd) ) {
+            String queueName = req.getParameter(PAR_QUEUE);
+            LoggerFactory.getLogger(this.getClass()).info("Posting event to queue {}", queueName);
+            eventAdmin.postEvent(getTestEvent(null, queueName, null, true));
         } else if ( "restart".equals(cmd) ) {
             this.jobManager.restart();
         } else if ( "dropall".equals(cmd) ) {
@@ -153,6 +167,26 @@ public class WebConsolePlugin extends HttpServlet {
             redirectTo = path + "?message=" + msg;
         }
         resp.sendRedirect(redirectTo);
+    }
+    
+    public Event getTestEvent(String id, String queueName, String parallel, boolean runlocal) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(JobUtil.PROPERTY_JOB_TOPIC, "sling/test");
+        if ( id != null ) {
+            props.put(JobUtil.PROPERTY_JOB_NAME, id);
+        }
+        props.put(JobUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
+        props.put(JobUtil.PROPERTY_JOB_RETRIES, 2);
+        if ( queueName != null ) {
+            props.put(JobUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
+        }
+        if ( parallel != null ) {
+            props.put(JobUtil.PROPERTY_JOB_PARALLEL, parallel);
+        }
+        if ( runlocal ) {
+            props.put(JobUtil.PROPERTY_JOB_RUN_LOCAL, "true");
+        }
+        return new Event(JobUtil.TOPIC_JOB, props); 
     }
 
     @Override
@@ -204,17 +238,19 @@ public class WebConsolePlugin extends HttpServlet {
         boolean isEmpty = true;
         for(final Queue q : this.jobManager.getQueues()) {
             isEmpty = false;
+            String queueName = q.getName();
             pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
             pw.printf("<span style='float: left; margin-left: 1em'>Active JobQueue: %s %s</span>", escape(q.getName()),
                     q.isSuspended() ? "(SUSPENDED)" : "");
-            this.printForm(pw, q, "Reset Stats", "reset");
+            this.printForm(pw, queueName, "Reset Stats", "reset");
             if ( q.isSuspended() ) {
-                this.printForm(pw, q, "Resume", "resume");
+                this.printForm(pw, queueName, "Resume", "resume");
             } else {
-                this.printForm(pw, q, "Suspend", "suspend");
+                this.printForm(pw, queueName, "Suspend", "suspend");
             }
-            this.printForm(pw, q, "Clear Queue", "clear");
-            this.printForm(pw, q, "Drop All", "dropall");
+            this.printForm(pw, queueName, "Test", "test");
+            this.printForm(pw, queueName, "Clear Queue", "clear");
+            this.printForm(pw, queueName, "Drop All", "dropall");
             pw.println("</div>");
             pw.println("<table class='nicetable'><tbody>");
 
@@ -272,6 +308,8 @@ public class WebConsolePlugin extends HttpServlet {
                 escape(c.getName()));
         pw.printf("<button id='edit' class='ui-state-default ui-corner-all' onclick='javascript:window.location=\"%s%s/configMgr/%s\";'>Edit</button>",
                 req.getContextPath(), req.getServletPath(), c.getPid());
+        this.printForm(pw, c.getName(), "Test", "test");
+
         pw.println("</div>");
         pw.println("<table class='nicetable'><tbody>");
         pw.println("<tr><th colspan='2'>Configuration</th></tr>");
@@ -360,12 +398,13 @@ public class WebConsolePlugin extends HttpServlet {
     }
 
     private void printForm(final PrintWriter pw,
-            final Queue q,
+            final String qeueName,
             final String buttonLabel,
             final String cmd) {
         pw.printf("<button class='ui-state-default ui-corner-all' onclick='javascript:eventingsubmit(\"%s\", \"%s\");'>" +
-                "%s</button>", cmd, (q != null ? q.getName() : ""), buttonLabel);
+                "%s</button>", cmd, (qeueName != null ? qeueName : ""), buttonLabel);
     }
+
 
     /** Configuration printer for the web console. */
     public void printConfiguration(final PrintWriter pw, final String mode) {
