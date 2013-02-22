@@ -253,6 +253,22 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
                     // TODO Auto-generated method stub
                     return false;
                 }
+
+                public String getResourceSuperType(Resource resource) {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                public String getResourceSuperType(String resourceType) {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                public boolean isResourceType(Resource resource,
+                        String resourceType) {
+                    // TODO Auto-generated method stub
+                    return false;
+                }
             };
             final ResourceResolverFactory factory = new ResourceResolverFactory() {
 
