@@ -41,17 +41,15 @@ public class ResourceProviderEntryTest {
 
     private ResourceResolver rootResolver;
 
-    private ResourceProvider rootProvider;
-
     private ResourceProviderEntry root;
 
     @Before public void setUp() throws Exception {
         this.rootResolver = Mockito.mock(ResourceResolver.class);
-        this.rootProvider = Mockito.mock(ResourceProvider.class);
-        Mockito.when(this.rootProvider.getResource(Mockito.any(ResourceResolver.class), Mockito.anyString())).thenReturn(new TestResource(this.rootResolver));
+        final ResourceProvider rootProvider = Mockito.mock(ResourceProvider.class);
+        Mockito.when(rootProvider.getResource(Mockito.any(ResourceResolver.class), Mockito.anyString())).thenReturn(new TestResource(this.rootResolver));
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put(Constants.SERVICE_ID, (long)0);
-        root = new ResourceProviderEntry("/", new ResourceProviderHandler[]{ new ResourceProviderHandler(rootProvider, props)});
+        this.root = new ResourceProviderEntry("/", new ResourceProviderHandler[]{ new ResourceProviderHandler(rootProvider, props)});
     }
 
     @Test public void testRootProvider() {
