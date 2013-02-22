@@ -1083,4 +1083,72 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public boolean hasChanges() {
         return this.context.hasChanges(this);
     }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getResourceSuperType(org.apache.sling.api.resource.Resource)
+     */
+    public String getResourceSuperType(final Resource resource) {
+        String resourceSuperType = null;
+        if ( resource != null ) {
+            resourceSuperType = resource.getResourceSuperType();
+            if (resourceSuperType == null) {
+                resourceSuperType = this.getResourceSuperType(resource.getResourceType());
+            }
+        }
+        return resourceSuperType;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#getResourceSuperType(java.lang.String)
+     */
+    public String getResourceSuperType(final String resourceType) {
+        // normalize resource type to a path string
+        final String rtPath = (resourceType == null ? null : ResourceUtil.resourceTypeToPath(resourceType));
+        // get the resource type resource and check its super type
+        String resourceSuperType = null;
+
+        if ( rtPath != null ) {
+            ResourceResolver adminResolver = null;
+            try {
+                adminResolver = this.factory.getAdministrativeResourceResolver(null);
+                final Resource rtResource = adminResolver.getResource(rtPath);
+                if (rtResource != null) {
+                    resourceSuperType = rtResource.getResourceSuperType();
+                }
+            } catch (final LoginException e) {
+                // we simply ignore this and return null
+            } finally {
+                if ( adminResolver != null ) {
+                    adminResolver.close();
+                }
+            }
+        }
+        return resourceSuperType;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#isResourceType(org.apache.sling.api.resource.Resource, java.lang.String)
+     */
+    public boolean isResourceType(final Resource resource, final String resourceType) {
+        boolean result = false;
+        if ( resource != null && resourceType != null ) {
+             // Check if the resource is of the given type. This method first checks the
+             // resource type of the resource, then its super resource type and continues
+             //  to go up the resource super type hierarchy.
+             if (resourceType.equals(resource.getResourceType())) {
+                 result = true;
+             } else {
+                 String superType = this.getResourceSuperType(resource);
+                 while (!result && superType != null) {
+                     if (resourceType.equals(superType)) {
+                         result = true;
+                     } else {
+                         superType = this.getResourceSuperType(superType);
+                     }
+                 }
+             }
+
+        }
+        return result;
+    }
 }

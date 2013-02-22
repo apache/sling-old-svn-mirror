@@ -28,9 +28,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 
 public class JcrNodeResourceTest extends JcrItemResourceTestBase {
@@ -118,7 +116,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         jnr = new JcrNodeResource(null, node, null);
         assertEquals(typeName, jnr.getResourceType());
     }
-
+/*
     public void testResourceSuperType() throws Exception {
         String name = "resourceSuperType";
         String typeNodeName = "some_resource_type";
@@ -159,7 +157,7 @@ public class JcrNodeResourceTest extends JcrItemResourceTestBase {
         assertEquals(typeName, jnr.getResourceType());
         assertNull(jnr.getResourceSuperType());
     }
-
+*/
     public void testAdaptToMap() throws Exception {
 
         String name = "adaptable";

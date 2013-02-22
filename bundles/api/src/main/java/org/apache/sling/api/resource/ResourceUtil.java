@@ -165,13 +165,13 @@ public class ResourceUtil {
      * Utility method returns the ancestor's path at the given <code>level</code>
      * relative to <code>path</code>, which is normalized by {@link #normalize(String)}
      * before resolving the ancestor.
-     * 
+     *
      * <ul>
      * <li><code>level</code> = 0 returns the <code>path</code>.</li>
      * <li><code>level</code> = 1 returns the parent of <code>path</code>, if it exists, <code>null</code> otherwise.</li>
      * <li><code>level</code> = 2 returns the grandparent of <code>path</code>, if it exists, <code>null</code> otherwise.</li>
      * </ul>
-     * 
+     *
      * @param path The path whose ancestor is to be returned.
      * @param level The relative level of the ancestor, relative to <code>path</code>.
      * @return <code>null</code> if <code>path</code> doesn't have an ancestor at the
@@ -414,33 +414,12 @@ public class ResourceUtil {
      *         <code>null</code> if the resource type does not exists or returns
      *         <code>null</code> for its super type.
      * @since 2.0.6
+     * @deprecated Use {@link ResourceResolver#getResourceSuperType(String)}
      */
+    @Deprecated
     public static String getResourceSuperType(
             final ResourceResolver resourceResolver, final String resourceType) {
-        // normalize resource type to a path string
-        final String rtPath = resourceTypeToPath(resourceType);
-        // get the resource type resource and check its super type
-        String resourceSuperType = null;
-        // if the path is absolute, use it directly
-        if (rtPath != null && rtPath.startsWith("/")) {
-            final Resource rtResource = resourceResolver.getResource(rtPath);
-            if (rtResource != null) {
-                resourceSuperType = rtResource.getResourceSuperType();
-            }
-
-        } else {
-            // if the path is relative we use the search paths
-            for (final String searchPath : resourceResolver.getSearchPath()) {
-                final Resource rtResource = resourceResolver.getResource(searchPath
-                        + rtPath);
-                if (rtResource != null
-                        && rtResource.getResourceSuperType() != null) {
-                    resourceSuperType = rtResource.getResourceSuperType();
-                    break;
-                }
-            }
-        }
-        return resourceSuperType;
+        return resourceResolver.getResourceSuperType(resourceType);
     }
 
     /**
@@ -454,14 +433,11 @@ public class ResourceUtil {
      * @return the super type of the <code>resource</code> or <code>null</code>
      *         if no super type could be computed.
      * @since 2.0.6
+     * @deprecated Use {@link ResourceResolver#getResourceSuperType(Resource)}
      */
+    @Deprecated
     public static String findResourceSuperType(final Resource resource) {
-        String resourceSuperType = resource.getResourceSuperType();
-        if (resourceSuperType == null) {
-            resourceSuperType = getResourceSuperType(
-                    resource.getResourceResolver(), resource.getResourceType());
-        }
-        return resourceSuperType;
+        return resource.getResourceResolver().getResourceSuperType(resource);
     }
 
     /**
@@ -476,12 +452,11 @@ public class ResourceUtil {
      *         {@link Resource#isResourceType(String)} with the given
      *         <code>resourceType</code>.
      * @since 2.0.6
+     * @deprecated Use {@link ResourceResolver#isResourceType(Resource, String)}
      */
+    @Deprecated
     public static boolean isA(final Resource resource, final String resourceType) {
-        if (resource == null || resourceType == null) {
-            return false;
-        }
-        return resource.isResourceType(resourceType);
+        return resource.getResourceResolver().isResourceType(resource, resourceType);
     }
 
     /**

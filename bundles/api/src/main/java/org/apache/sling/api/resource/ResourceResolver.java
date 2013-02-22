@@ -538,6 +538,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws UnsupportedOperationException If the resource provider does not allow to
      *                                       delete this resource.
      * @throws PersistenceException If the operation fails.
+     * @since 2.2
      */
     void delete(Resource resource)
     throws PersistenceException;
@@ -554,12 +555,14 @@ public interface ResourceResolver extends Adaptable {
      * @throws UnsupportedOperationException If the resource provider does not allow to
      *                                       create a resource at that location.
      * @throws PersistenceException If the operation fails.
+     * @since 2.2
      */
     Resource create(Resource parent, String name, Map<String, Object> properties)
     throws PersistenceException;
 
     /**
      * Revert all pending changes.
+     * @since 2.2
      */
     void revert();
 
@@ -567,11 +570,57 @@ public interface ResourceResolver extends Adaptable {
      * Persist all pending changes.
      *
      * @throws PersistenceException
+     * @since 2.2
      */
     void commit() throws PersistenceException;
 
     /**
      * Are there any pending changes?
+     * @since 2.2
      */
     boolean hasChanges();
+
+    /**
+     * Returns the super type of the given resource. This method checks first if
+     * the resource itself knows its super type by calling
+     * {@link Resource#getResourceSuperType()}. If that returns
+     * <code>null</code> {@link #getResourceSuperType(String)}
+     * is invoked with the resource type of the resource.
+     *
+     * @param resource The resource to return the resource super type for.
+     * @return The resource super type or <code>null</code>. This
+     *         method also returns <code>null</code> if the
+     *         provided resource is <code>null</code>
+     * @since 2.3
+     */
+    String getResourceSuperType(final Resource resource);
+
+    /**
+     * Returns the super type of the given resource type. This method converts
+     * the resource type to a resource path and checks the corresponding resource.
+     * If the resource exists, the {@link Resource#getResourceSuperType()} method
+     * is called.
+     *
+     * @param resourceType The resource type whose super type is to be returned.
+     * @return the super type of the <code>resourceType</code> or
+     *         <code>null</code> if the resource type does not exist or returns
+     *         <code>null</code> for its super type. It also returns
+     *         <code>null</code> if <code>resourceType> is null.
+     * @since 2.3
+     */
+    public String getResourceSuperType(final String resourceType);
+
+    /**
+     * Returns <code>true</code> if the resource type or any of the resource's
+     * super type(s) equals the given resource type.
+     *
+     * @param resource The resource to check
+     * @param resourceType The resource type to check this resource against.
+     * @return <code>true</code> if the resource type or any of the resource's
+     *         super type(s) equals the given resource type. <code>false</code>
+     *         is also returned if <code>resource</code> or<code>resourceType</code>
+     *         are <code>null</code>.
+     * @since 2.3
+     */
+    boolean isResourceType(final Resource resource, final String resourceType);
 }

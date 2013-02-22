@@ -109,32 +109,9 @@ public abstract class AbstractResource
      * Returns <code>true</code> if this resource is of the given resource type
      * or if any of the super resource types equals the given resource type.
      * <p>
-     * This method is implemented by first checking the resource type then
-     * walking up the resource super type chain using the
-     * {@link ResourceUtil#findResourceSuperType(Resource)} and
-     * {@link ResourceUtil#getResourceSuperType(ResourceResolver, String)}
-     * methods.
+     * This method delegates to {@link ResourceResolver#isResourceType(Resource, String)}
      */
-    public boolean isResourceType(String resourceType) {
-        /*
-        * Check if the resource is of the given type. This method first checks the
-        * resource type of the resource, then its super resource type and continues
-        * to go up the resource super type hierarchy.
-        */
-        if ( resourceType == null ) {
-            return false;
-        }
-        if (resourceType.equals(getResourceType())) {
-            return true;
-        }
-        String superType = ResourceUtil.findResourceSuperType(this);
-        while (superType != null) {
-            if (resourceType.equals(superType)) {
-                return true;
-            }
-            superType = ResourceUtil.getResourceSuperType(getResourceResolver(),
-                    superType);
-        }
-        return false;
+    public boolean isResourceType(final String resourceType) {
+        return this.getResourceResolver().isResourceType(this, resourceType);
     }
 }
