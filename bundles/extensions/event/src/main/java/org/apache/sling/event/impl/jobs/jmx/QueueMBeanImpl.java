@@ -15,11 +15,14 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.event.jobs.jmx;
+package org.apache.sling.event.impl.jobs.jmx;
 
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
 
+/**
+ * An MBean that provides statistics from 
+ */
 public class QueueMBeanImpl extends AbstractJobStatistics {
 
     private Queue queue;
@@ -40,11 +43,15 @@ public class QueueMBeanImpl extends AbstractJobStatistics {
     }
 
     @Override
-    protected Statistics getAggregateStatistics() {
+    protected Statistics getStatistics() {
         if (queue instanceof Statistics) {
             return (Statistics) queue;
         }
         return emptyStatistics;
+    }
+
+    public String getName() {
+        return queue.getName();
     }
 
 }

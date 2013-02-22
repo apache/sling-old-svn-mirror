@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.event.jobs.jmx;
+package org.apache.sling.event.impl.jobs.jmx;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
@@ -24,11 +24,11 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Statistics;
+import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 
-@Component(immediate = true, enabled = false)
-// disabled while dev in progress.
+@Component(immediate = true)
 @Service(value = StatisticsMBean.class)
-@Properties(@Property(name = "jmx.objectname", value = "org.apache.sling.event.AllJobs;type=Statistics"))
+@Properties(@Property(name = "jmx.objectname", value = "org.apache.sling.event.AllJobs:type=Statistics"))
 public class AllJobStatisticsMBean extends AbstractJobStatistics {
     private static final long TTL = 1000L;
     private long agregateStatisticsTTL = 0L;
@@ -39,12 +39,16 @@ public class AllJobStatisticsMBean extends AbstractJobStatistics {
     /**
      * @return the aggregate stats from the job manager.
      */
-    protected Statistics getAggregateStatistics() {
+    protected Statistics getStatistics() {
         if (System.currentTimeMillis() > agregateStatisticsTTL) {
             aggregateStatistics = jobManager.getStatistics();
             agregateStatisticsTTL = System.currentTimeMillis() + TTL;
         }
         return aggregateStatistics;
+    }
+
+    public String getName() {
+        return "All Queues";
     }
 
 }

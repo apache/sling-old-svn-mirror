@@ -23,4 +23,6 @@ package org.apache.sling.event.jobs.jmx;
  */
 public interface QueuesMBean {
 
+    String[] getQueueNames();
+
 }

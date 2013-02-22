@@ -65,7 +65,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.1.4</version>
+            <version>3.1.5-SNAPSHOT</version>
         </bundle>
 
         <bundle>
