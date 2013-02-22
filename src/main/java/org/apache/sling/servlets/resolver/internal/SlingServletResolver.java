@@ -64,16 +64,12 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.RequestUtil;
-import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.api.scripting.SlingScriptResolver;
@@ -109,7 +105,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(name="org.apache.sling.servlets.resolver.SlingServletResolver", metatype=true,
            label="%servletresolver.name", description="%servletresolver.description")
-@Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class, ResourceDecorator.class})
+@Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class})
 @Properties({
     @Property(name="service.description", value="Sling Servlet Resolver and Error Handler"),
     @Property(name="service.vendor", value="The Apache Software Foundation"),
@@ -126,8 +122,7 @@ public class SlingServletResolver
     implements ServletResolver,
                SlingScriptResolver,
                ErrorHandler,
-               EventHandler,
-               ResourceDecorator {
+               EventHandler {
 
     /**
      * The default servlet root is the first search path (which is usally /apps)
@@ -1133,48 +1128,6 @@ public class SlingServletResolver
             this.servlet = s;
             this.registration = sr;
         }
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ResourceDecorator#decorate(org.apache.sling.api.resource.Resource)
-     */
-    public Resource decorate(final Resource resource) {
-        return new ResourceWrapper(resource) {
-            @Override
-            public boolean isResourceType(final String type) {
-                return ResourceUtil.isA(new AbstractResource() {
-
-                    public String getResourceType() {
-                        return resource.getResourceType();
-                    }
-
-                    public String getResourceSuperType() {
-                        return resource.getResourceSuperType();
-                    }
-
-                    public ResourceResolver getResourceResolver() {
-                        return scriptResolver;
-                    }
-
-                    public ResourceMetadata getResourceMetadata() {
-                        return resource.getResourceMetadata();
-                    }
-
-                    public String getPath() {
-                        return resource.getPath();
-                    }
-                }, type);
-            }
-        };
-     }
-
-    /**
-     * @see org.apache.sling.api.resource.ResourceDecorator#decorate(org.apache.sling.api.resource.Resource, javax.servlet.http.HttpServletRequest)
-     */
-    @SuppressWarnings("javadoc")
-    public Resource decorate(final Resource resource, final HttpServletRequest request) {
-        // this is deprecated, but we just delegate anyway
-        return this.decorate(resource);
     }
 
     @SuppressWarnings("serial")
