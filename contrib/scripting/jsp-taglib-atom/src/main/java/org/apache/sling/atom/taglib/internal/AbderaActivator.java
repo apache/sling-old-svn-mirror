@@ -33,27 +33,25 @@ public abstract class AbderaActivator {
     private static final Object LOCK = new Object();
 
     public static Abdera getAbdera() throws JspException {
-        if (ABDERA == null) {
-            synchronized ( LOCK ) {
-                if ( ABDERA == null ) {
-                    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                    final ClassLoader osgiClassloader = AbderaActivator.class.getClassLoader();
-                    Thread.currentThread().setContextClassLoader(osgiClassloader);
+        synchronized ( LOCK ) {
+            if ( ABDERA == null ) {
+                final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                final ClassLoader osgiClassloader = AbderaActivator.class.getClassLoader();
+                Thread.currentThread().setContextClassLoader(osgiClassloader);
 
-                    try {
+                try {
 
-                        final Abdera a = new Abdera();
-                        final Factory f = a.getFactory();
-                        if (f instanceof FOMFactory) {
-                            FOMFactory ff = (FOMFactory) f;
-                            ff.registerExtension(new MediaExtensionFactory());
-                            ff.registerExtension(new OpenSearchExtensionFactory());
-                        }
-                        ABDERA = a;
-
-                    } finally {
-                        Thread.currentThread().setContextClassLoader(classLoader);
+                    final Abdera a = new Abdera();
+                    final Factory f = a.getFactory();
+                    if (f instanceof FOMFactory) {
+                        FOMFactory ff = (FOMFactory) f;
+                        ff.registerExtension(new MediaExtensionFactory());
+                        ff.registerExtension(new OpenSearchExtensionFactory());
                     }
+                    ABDERA = a;
+
+                } finally {
+                    Thread.currentThread().setContextClassLoader(classLoader);
                 }
             }
         }
