@@ -179,6 +179,14 @@ public class SlingFilterChainHelper {
             return 1; // insert after current key
         }
 
+        @Override
+        public int hashCode() {
+            if ( filter == null ) {
+                return 0;
+            }
+            return filter.hashCode();
+        }
+
         public boolean equals(Object obj) {
             if (this == obj) {
                 return true;
