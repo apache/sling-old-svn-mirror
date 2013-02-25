@@ -609,13 +609,13 @@ public class DefaultJobManager
                     if ( value instanceof Comparable ) {
                         @SuppressWarnings({ "unchecked", "rawtypes" })
                         final int result = ((Comparable)value).compareTo(job.event.getProperty(propName));
-                        if ( op == Operation.LESS && result != -1 ) {
+                        if ( op == Operation.LESS && result >= 0 ) {
                             return false;
-                        } else if ( op == Operation.LESS_OR_EQUALS && result == 1 ) {
+                        } else if ( op == Operation.LESS_OR_EQUALS && result > 0 ) {
                             return false;
-                        } else if ( op == Operation.GREATER_OR_EQUALS && result == -1 ) {
+                        } else if ( op == Operation.GREATER_OR_EQUALS && result < 0 ) {
                             return false;
-                        } else if ( op == Operation.GREATER && result != 1 ) {
+                        } else if ( op == Operation.GREATER && result <= 0 ) {
                             return false;
                         }
                     } else {
