@@ -462,6 +462,9 @@ public class MapEntries implements EventHandler {
      * Add an entry to the resolve map.
      */
     private void addEntry(final Map<String, List<MapEntry>> entryMap, final String key, final MapEntry entry) {
+    	if (entry==null){
+    		return;
+    	}
         List<MapEntry> entries = entryMap.get(key);
         if (entries == null) {
             entries = new ArrayList<MapEntry>();
@@ -588,19 +591,19 @@ public class MapEntries implements EventHandler {
 
                         if (redirectName.indexOf('.') > -1) {
                             // 1. entry with exact match
-                            this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect));
+                            this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect));
 
                             final int idx = redirectName.lastIndexOf('.');
                             final String extension = redirectName.substring(idx + 1);
 
                             // 2. entry with extension
-                            this.addEntry(entryMap, checkPath, new MapEntry(url + "\\." + extension, status, false, redirect));
+                            this.addEntry(entryMap, checkPath, getMapEntry(url + "\\." + extension, status, false, redirect));
                         } else {
                             // 1. entry with exact match
-                            this.addEntry(entryMap, checkPath, new MapEntry(url + "$", status, false, redirect + ".html"));
+                            this.addEntry(entryMap, checkPath, getMapEntry(url + "$", status, false, redirect + ".html"));
 
                             // 2. entry with match supporting selectors and extension
-                            this.addEntry(entryMap, checkPath, new MapEntry(url + "(\\..*)", status, false, redirect + "$1"));
+                            this.addEntry(entryMap, checkPath, getMapEntry(url + "(\\..*)", status, false, redirect + "$1"));
                         }
                         // 3. keep the path to return
                         targetPaths.add(redirect);
@@ -666,7 +669,10 @@ public class MapEntries implements EventHandler {
                     // this regular expression must match the whole URL !!
                     final String url = "^" + ANY_SCHEME_HOST + extPath + "$";
                     final String redirect = intPath;
-                    entries.add(new MapEntry(url, -1, false, redirect));
+                    MapEntry mapEntry = getMapEntry(url, -1, false, redirect);
+                    if (mapEntry!=null){
+                    	entries.add(mapEntry);
+                    }
                 }
             }
         }
@@ -691,7 +697,10 @@ public class MapEntries implements EventHandler {
             }
 
             for (final Entry<String, List<String>> entry : map.entrySet()) {
-                entries.add(new MapEntry(ANY_SCHEME_HOST + entry.getKey(), -1, false, entry.getValue().toArray(new String[0])));
+            	MapEntry mapEntry = getMapEntry(ANY_SCHEME_HOST + entry.getKey(), -1, false, entry.getValue().toArray(new String[0]));
+            	if (mapEntry!=null){
+            		entries.add(mapEntry);
+            	}
             }
         }
     }
@@ -731,15 +740,17 @@ public class MapEntries implements EventHandler {
     private void addMapEntry(final Map<String, MapEntry> entries, final String path, final String url, final int status) {
         MapEntry entry = entries.get(path);
         if (entry == null) {
-            entry = new MapEntry(path, status, false, url);
+            entry = getMapEntry(path, status, false, url);
         } else {
             final String[] redir = entry.getRedirect();
             final String[] newRedir = new String[redir.length + 1];
             System.arraycopy(redir, 0, newRedir, 0, redir.length);
             newRedir[redir.length] = url;
-            entry = new MapEntry(entry.getPattern(), entry.getStatus(), false, newRedir);
+            entry = getMapEntry(entry.getPattern(), entry.getStatus(), false, newRedir);
         }
-        entries.put(path, entry);
+        if (entry!=null){
+        	entries.put(path, entry);
+        }
     }
 
     /**
@@ -866,4 +877,18 @@ public class MapEntries implements EventHandler {
             }
         }
     };
+    
+    private MapEntry getMapEntry(String url, final int status, final boolean trailingSlash,
+            final String... redirect){
+    	
+    	MapEntry mapEntry = null;
+    	try{
+    		mapEntry = new MapEntry(url, status, trailingSlash, redirect);
+    	}catch (IllegalArgumentException iae){
+    		//ignore this entry
+    		log.debug("ignored entry due exception ",iae);
+    	}    	
+    	return mapEntry;
+    }
+    
 }
