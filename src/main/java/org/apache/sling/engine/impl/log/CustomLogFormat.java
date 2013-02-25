@@ -157,7 +157,7 @@ class CustomLogFormat {
                 required = false;
             } else if (c >= '0' && c <= '9') {
                 statCodes = this.parseStatusCodes(sr, c);
-            } else if (c == '>' || c == '>') {
+            } else if (c == '>' || c == '<') {
                 // ignore first/last modifiers
             } else {
                 break;
