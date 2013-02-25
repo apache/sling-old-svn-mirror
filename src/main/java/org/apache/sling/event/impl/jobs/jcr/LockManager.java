@@ -134,18 +134,18 @@ public class LockManager implements Runnable, EventListener {
         this.idNodePath = repositoryPath + '/' + Environment.APPLICATION_ID;
 
         // create the background session and register a listener
-        this.backgroundSession = this.environment.createAdminSession();
-        this.updateLastModified();
-        this.backgroundSession.getWorkspace().getObservationManager().addEventListener(this,
-                javax.jcr.observation.Event.PROPERTY_CHANGED
-                |javax.jcr.observation.Event.NODE_ADDED,
-                this.repositoryPath,
-                true,
-                null,
-                null,
-                true);
-        logger.info("Apache Sling Versioning Manager started on instance {}", Environment.APPLICATION_ID);
-        synchronized ( this.backgroundSession ) {
+        synchronized ( this.backgroundLock ) {
+            this.backgroundSession = this.environment.createAdminSession();
+            this.updateLastModified();
+            this.backgroundSession.getWorkspace().getObservationManager().addEventListener(this,
+                    javax.jcr.observation.Event.PROPERTY_CHANGED
+                    |javax.jcr.observation.Event.NODE_ADDED,
+                    this.repositoryPath,
+                    true,
+                    null,
+                    null,
+                    true);
+            logger.info("Apache Sling Versioning Manager started on instance {}", Environment.APPLICATION_ID);
             this.unlock(Environment.APPLICATION_ID);
         }
         this.scanExistingNodes();
@@ -159,8 +159,8 @@ public class LockManager implements Runnable, EventListener {
     @Deactivate
     protected void deactivate() {
         this.running = false;
-        if ( this.backgroundSession != null ) {
-            synchronized ( this.backgroundLock ) {
+        synchronized ( this.backgroundLock ) {
+            if ( this.backgroundSession != null ) {
                 this.logger.debug("Shutting down background session.");
                 try {
                     this.backgroundSession.getWorkspace().getObservationManager().removeEventListener(this);
