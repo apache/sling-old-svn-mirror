@@ -53,7 +53,7 @@ public class ConfigurationServiceFactory implements ServiceFactory {
             Object service) {
         useCount--;
         if (useCount <= 0) {
-            service = null;
+            this.service = null;
         }
     }
 
