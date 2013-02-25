@@ -150,6 +150,13 @@ public class MapEntriesTest {
         when(justVanityPath.getName()).thenReturn("justVanityPath");
         when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         resources.add(justVanityPath);
+        
+        Resource badVanityPath = mock(Resource.class);
+        when(badVanityPath.getPath()).thenReturn("/badVanityPath");
+        when(badVanityPath.getName()).thenReturn("badVanityPath");
+        when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
+        resources.add(badVanityPath);
+                
 
         Resource redirectingVanityPath = mock(Resource.class);
         when(redirectingVanityPath.getPath()).thenReturn("/redirectingVanityPath");

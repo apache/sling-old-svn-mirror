@@ -237,8 +237,13 @@ public class MapEntry implements Comparable<MapEntry> {
         if (!url.startsWith("^")) {
             url = "^".concat(url);
         }
-
-        this.urlPattern = Pattern.compile(url);
+        
+        try {
+        	this.urlPattern = Pattern.compile(url);
+        } catch (Exception e){
+        	throw new IllegalArgumentException("Bad url ",e);
+        }
+        
         this.redirect = redirect;
         this.status = status;
     }
