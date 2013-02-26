@@ -65,6 +65,7 @@ public class SlingAptServlet extends SlingSafeMethodsServlet {
                 HttpServletResponse.SC_BAD_REQUEST,
                 "Resource does not adapt to an InputStream: " + request.getResource()
             );
+            return;
         }
 
         // TODO which encoding to use for input??
