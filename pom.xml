@@ -95,6 +95,7 @@
                         </Bundle-Activator>
                         <Export-Package>
                              org.apache.sling.jcr.jackrabbit.server;version=2.1.0,
+                             org.apache.sling.jcr.jackrabbit.server.jmx;version=1.0.0,
                              org.apache.sling.jcr.jackrabbit.server.security;version=2.0.4-incubator,
                              org.apache.sling.jcr.jackrabbit.server.security.accessmanager;version=2.1.0,
                              org.apache.jackrabbit.core.security.principal;version=2.2.5
