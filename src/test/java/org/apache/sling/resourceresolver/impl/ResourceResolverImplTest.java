@@ -370,8 +370,8 @@ public class ResourceResolverImplTest {
         resolver.setResource("/a", r);
         resolver.setResource("/a/b", typeResource);
 
-        assertEquals("t:c", resolver.getResourceSuperType(r.getResourceType()));
-        assertNull(resolver.getResourceSuperType(r2.getResourceType()));
+        assertEquals("t:c", resolver.getParentSuperType(r.getResourceType()));
+        assertNull(resolver.getParentSuperType(r2.getResourceType()));
     }
 
     @Test public void test_isA() {
