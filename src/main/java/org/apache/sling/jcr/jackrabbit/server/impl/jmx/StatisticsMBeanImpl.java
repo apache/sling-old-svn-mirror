@@ -107,6 +107,9 @@ public class StatisticsMBeanImpl implements DynamicMBean,
     public Object getAttribute(String attribute)
             throws AttributeNotFoundException, MBeanException,
             ReflectionException {
+        if ( statistics == null ) {
+            throw new AttributeNotFoundException("No Statistics Available");
+        }
         try {
             if (attribute.startsWith("PerSecond_")) {
                 return getTimeSeries(attribute.substring("PerSecond_".length()))
@@ -149,6 +152,9 @@ public class StatisticsMBeanImpl implements DynamicMBean,
      * @see javax.management.DynamicMBean#getAttributes(java.lang.String[])
      */
     public AttributeList getAttributes(String[] attributes) {
+        if ( statistics == null ) {
+            return new AttributeList();
+        }
         AttributeList al = new AttributeList();
         Iterator<Entry<Type, TimeSeries>> statIter = statistics.iterator();
         while (statIter.hasNext()) {
@@ -184,6 +190,10 @@ public class StatisticsMBeanImpl implements DynamicMBean,
      * @see javax.management.DynamicMBean#getMBeanInfo()
      */
     public MBeanInfo getMBeanInfo() {
+        if ( statistics == null ) {
+            return new MBeanInfo(this.getClass().getName(),
+                "Repository Statistics Unavailable", null, null, null, null);
+        }
         List<MBeanAttributeInfo> attributesList = new ArrayList<MBeanAttributeInfo>();
         Set<Type> types = new HashSet<Type>();
         Iterator<Entry<Type, TimeSeries>> statIter = statistics.iterator();
@@ -280,6 +290,9 @@ public class StatisticsMBeanImpl implements DynamicMBean,
      * .apache.jackrabbit.api.stats.RepositoryStatistics.Type)
      */
     public TimeSeries getTimeSeries(Type type) {
+        if ( statistics == null ) {
+            throw new IllegalStateException("Repository statistics are not available");
+        }
         return statistics.getTimeSeries(type);
     }
 
