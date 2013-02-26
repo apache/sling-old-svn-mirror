@@ -23,9 +23,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
@@ -37,16 +41,23 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.RepositoryManager;
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
+import org.apache.sling.jcr.jackrabbit.server.impl.jmx.StatisticsMBeanImpl;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AdministrativeCredentials;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AnonCredentials;
+import org.apache.sling.jcr.jackrabbit.server.jmx.RepositoryStatisticsMBean;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.log.LogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingServerRepository</code> TODO
@@ -90,13 +101,17 @@ public class SlingServerRepository extends AbstractSlingRepository
     @Property(value="")
     public static final String REPOSITORY_REGISTRATION_NAME = "name";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SlingServerRepository.class);
+
+    private Map<String, ServiceRegistration> statisticsServices = new ConcurrentHashMap<String, ServiceRegistration>();
+
     //---------- Repository Management ----------------------------------------
 
     @Override
     protected Repository acquireRepository() {
         Repository repository = super.acquireRepository();
         if (repository != null) {
-            return repository;
+            return registerStatistics(repository);
         }
 
         @SuppressWarnings("unchecked")
@@ -162,7 +177,7 @@ public class SlingServerRepository extends AbstractSlingRepository
                 crc = RepositoryConfig.create(homeFile);
             }
 
-            return RepositoryImpl.create(crc);
+            return registerStatistics(RepositoryImpl.create(crc));
 
         } catch (IOException ioe) {
 
@@ -189,9 +204,35 @@ public class SlingServerRepository extends AbstractSlingRepository
         return null;
     }
 
+    private Repository registerStatistics(Repository repository) {
+        if (repository instanceof RepositoryImpl) {
+            try {
+                RepositoryImpl repositoryImpl = (RepositoryImpl) repository;
+                StatisticsMBeanImpl mbean = new StatisticsMBeanImpl(
+                        repositoryImpl);
+                Dictionary<String, Object> properties = new Hashtable<String, Object>();
+                String mbeanName = StatisticsMBeanImpl
+                        .getMBeanName(repositoryImpl);
+                properties.put("jmx.objectname", mbeanName);
+                properties.put(Constants.SERVICE_VENDOR, "Apache");
+                statisticsServices.put(
+                        mbeanName,
+                        getComponentContext().getBundleContext()
+                                .registerService(
+                                        RepositoryStatisticsMBean.class
+                                                .getName(), mbean, properties));
+            } catch (Exception e) {
+                LOGGER.error("Unable to register statistics ", e);
+            }
+        }
+        return repository;
+    }
+
+
     @Override
     protected void disposeRepository(Repository repository) {
         super.disposeRepository(repository);
+        unregisterStatistics(repository);
 
         if (repository instanceof RepositoryImpl) {
 
@@ -209,8 +250,26 @@ public class SlingServerRepository extends AbstractSlingRepository
         }
     }
 
+    private void unregisterStatistics(Repository repository) {
+        if (repository instanceof RepositoryImpl) {
+            String mbeanName = StatisticsMBeanImpl
+                    .getMBeanName((RepositoryImpl) repository);
+            try {
+                ServiceRegistration serviceRegistration = statisticsServices
+                        .get(mbeanName);
+                if (serviceRegistration != null) {
+                    serviceRegistration.unregister();
+                }
+            } catch (Exception e) {
+                LOGGER.warn("Failed to unregister statistics JMX bean {} ",
+                        e.getMessage());
+            }
+            statisticsServices.remove(mbeanName);
+        }
+    }
 
     //---------- Repository Manager Interface Methods -------------------------
+
 
     /**
      * @throws UnsupportedOperationException This method is not supported
