@@ -1092,16 +1092,16 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( resource != null ) {
             resourceSuperType = resource.getResourceSuperType();
             if (resourceSuperType == null) {
-                resourceSuperType = this.getParentSuperType(resource.getResourceType());
+                resourceSuperType = this.getParentResourceType(resource.getResourceType());
             }
         }
         return resourceSuperType;
     }
 
     /**
-     * @see org.apache.sling.api.resource.ResourceResolver#getParentSuperType(java.lang.String)
+     * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(java.lang.String)
      */
-    public String getParentSuperType(final String resourceType) {
+    public String getParentResourceType(final String resourceType) {
         // normalize resource type to a path string
         final String rtPath = (resourceType == null ? null : ResourceUtil.resourceTypeToPath(resourceType));
         // get the resource type resource and check its super type
@@ -1143,7 +1143,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                      if (resourceType.equals(superType)) {
                          result = true;
                      } else {
-                         superType = this.getParentSuperType(superType);
+                         superType = this.getParentResourceType(superType);
                      }
                  }
              }
