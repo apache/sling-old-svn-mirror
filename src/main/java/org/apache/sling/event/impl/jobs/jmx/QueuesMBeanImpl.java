@@ -52,7 +52,7 @@ import org.osgi.service.event.EventHandler;
 @Component(immediate = true)
 @Service(value = { QueuesMBean.class, EventHandler.class })
 @Properties({
-        @Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling.event.Queues:type=Statistics"),
+        @Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames"),
         @Property(name = "event.topics", propertyPrivate = true, value = { QueueStatusEvent.TOPIC }) })
 public class QueuesMBeanImpl extends StandardEmitterMBean implements
         QueuesMBean, EventHandler {
@@ -163,7 +163,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
         ServiceRegistration serviceRegistration = bundleContext
                 .registerService(StatisticsMBean.class.getName(), queueMBean,
                         createProperties(
-                                "jmx.objectname","org.apache.sling.event.queue."+queue.getName()+":type=Statistics",
+                                "jmx.objectname","org.apache.sling:type=queues,name="+queue.getName(),
                                 Constants.SERVICE_DESCRIPTION, "QueueMBean for queue "+queue.getName(),
                                 Constants.SERVICE_VENDOR,"Apache"));
         QueueMBeanHolder queueMBeanHolder = new QueueMBeanHolder(

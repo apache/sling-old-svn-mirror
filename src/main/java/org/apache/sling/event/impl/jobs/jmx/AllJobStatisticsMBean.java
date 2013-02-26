@@ -28,7 +28,7 @@ import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 
 @Component(immediate = true)
 @Service(value = StatisticsMBean.class)
-@Properties(@Property(name = "jmx.objectname", value = "org.apache.sling.event.AllJobs:type=Statistics"))
+@Properties(@Property(name = "jmx.objectname", value = "org.apache.sling:type=queues,name=AllQueues"))
 public class AllJobStatisticsMBean extends AbstractJobStatistics {
     private static final long TTL = 1000L;
     private long agregateStatisticsTTL = 0L;
