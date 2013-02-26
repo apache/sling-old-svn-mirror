@@ -110,7 +110,7 @@ public abstract class JobUtil {
     public static final String TOPIC_JOB = "org/apache/sling/event/job";
 
     /**
-     * This is a unique identifer which can be used to cancel the job.
+     * This is a unique identifier which can be used to cancel the job.
      */
     public static final String JOB_ID = "slingevent:eventId";
 
@@ -121,14 +121,14 @@ public abstract class JobUtil {
     /** Asynchronous notification event when a job is started.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
-     * timestamp of the event (as a Long).
+     * time stamp of the event (as a Long).
      */
     public static final String TOPIC_JOB_STARTED = "org/apache/sling/event/notification/job/START";
 
     /** Asynchronous notification event when a job is finished.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
-     * timestamp of the event (as a Long).
+     * time stamp of the event (as a Long).
      */
     public static final String TOPIC_JOB_FINISHED = "org/apache/sling/event/notification/job/FINISHED";
 
@@ -136,7 +136,7 @@ public abstract class JobUtil {
      * If a job execution fails, it is rescheduled for another try.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
-     * timestamp of the event (as a Long).
+     * time stamp of the event (as a Long).
      */
     public static final String TOPIC_JOB_FAILED = "org/apache/sling/event/notification/job/FAILED";
 
@@ -144,7 +144,7 @@ public abstract class JobUtil {
      * If a job execution is cancelled it is not rescheduled.
      * The property {@link #PROPERTY_NOTIFICATION_JOB} contains the job event and the
      * property {@link org.osgi.service.event.EventConstants#TIMESTAMP} contains the
-     * timestamp of the event (as a Long).
+     * time stamp of the event (as a Long).
      */
     public static final String TOPIC_JOB_CANCELLED = "org/apache/sling/event/notification/job/CANCELLED";
 
@@ -250,6 +250,7 @@ public abstract class JobUtil {
             /**
              * @see java.lang.Runnable#run()
              */
+            @Override
             public void run() {
                 final Thread currentThread = Thread.currentThread();
                 // update priority and name
