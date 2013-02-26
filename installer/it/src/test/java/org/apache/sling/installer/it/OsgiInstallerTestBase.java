@@ -101,9 +101,11 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     /** Tear down everything. */
     public void tearDown() {
-        if (configAdminTracker != null) {
-            configAdminTracker.close();
-            configAdminTracker = null;
+        synchronized (this) {
+            if (configAdminTracker != null) {
+                configAdminTracker.close();
+                configAdminTracker = null;
+            }
         }
     }
 
@@ -314,12 +316,10 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected ConfigurationAdmin waitForConfigAdmin(final boolean shouldBePresent) {
     	ConfigurationAdmin result = null;
-        if (configAdminTracker == null) {
-            synchronized (this) {
-                if (configAdminTracker == null) {
-                    configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
-                    configAdminTracker.open();
-                }
+        synchronized (this) {
+            if (configAdminTracker == null) {
+                configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+                configAdminTracker.open();
             }
         }
 
