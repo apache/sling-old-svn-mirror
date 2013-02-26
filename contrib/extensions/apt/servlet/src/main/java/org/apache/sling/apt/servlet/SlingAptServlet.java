@@ -55,6 +55,10 @@ import org.apache.sling.apt.parser.SlingAptParser;
 })
 public class SlingAptServlet extends SlingSafeMethodsServlet {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 39312431611309023L;
     @Reference
     protected SlingAptParser parser;
 
