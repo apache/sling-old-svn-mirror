@@ -102,8 +102,8 @@ public interface JobManager {
 
     /**
      * Cancel this job.
-     * Cancelling a job might fail if the job is currently in processing.
-     * @param jobId The unique identifer as found in the property {@link JobUtil#JOB_ID}.
+     * Canceling a job might fail if the job is currently in processing.
+     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
      * @return <code>true</code> if the job could be cancelled or does not exist anymore.
      *         <code>false</code> otherwise.
      */
@@ -114,7 +114,7 @@ public interface JobManager {
      * This method acts like {@link #removeJob(String)} with the exception that it waits
      * for a job to finish. The job will be removed when this method returns - however
      * this method blocks until the job is finished!
-     * @param jobId The unique identifer as found in the property {@link JobUtil#JOB_ID}.
+     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
      */
     void forceRemoveJob(String jobId);
 
@@ -127,7 +127,7 @@ public interface JobManager {
 
     /**
      * Is job processing enabled?
-     * It is possible to completly turn off job processing.
+     * It is possible to completely turn off job processing.
      */
     boolean isJobProcessingEnabled();
 }
