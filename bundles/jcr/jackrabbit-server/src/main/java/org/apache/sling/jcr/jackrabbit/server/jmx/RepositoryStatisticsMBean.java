@@ -17,11 +17,12 @@
  */
 package org.apache.sling.jcr.jackrabbit.server.jmx;
 
+import org.apache.jackrabbit.api.stats.RepositoryStatistics;
+
 /**
  * Marker interface to ensure that the OSGi Whiteboard (Aries) registers the
- * bean with JMX. To access the statistics use the RespositoryStatistics from
- * the Jackrabbit API.
+ * bean with JMX, extends RepositoryStatistics.
  */
-public interface RepositoryStatisticsMBean {
+public interface RepositoryStatisticsMBean extends RepositoryStatistics {
 
 }

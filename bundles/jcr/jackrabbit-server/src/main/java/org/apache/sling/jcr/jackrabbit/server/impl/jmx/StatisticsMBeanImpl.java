@@ -18,14 +18,14 @@
 package org.apache.sling.jcr.jackrabbit.server.impl.jmx;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -38,21 +38,16 @@ import javax.management.MBeanInfo;
 import javax.management.NotCompliantMBeanException;
 import javax.management.ReflectionException;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.api.stats.RepositoryStatistics;
 import org.apache.jackrabbit.api.stats.TimeSeries;
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.jackrabbit.server.jmx.RepositoryStatisticsMBean;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,44 +56,36 @@ import org.slf4j.LoggerFactory;
  * available to other components read only.
  */
 @Component(immediate = true)
-@Service(value = { RepositoryStatisticsMBean.class, RepositoryStatistics.class })
+@Service(value = { RepositoryStatisticsMBean.class })
 @Properties(@Property(name = "jmx.objectname", value = "org.apache.sling.Resository:type=Statistics"))
 public class StatisticsMBeanImpl implements DynamicMBean,
-        RepositoryStatisticsMBean, RepositoryStatistics {
+        RepositoryStatisticsMBean {
 
     private static final Logger LOGGER = LoggerFactory
             .getLogger(StatisticsMBeanImpl.class);
-    @Reference
-    public SlingRepository repository;
+
     private RepositoryStatisticsImpl statistics;
 
-    public StatisticsMBeanImpl() throws NotCompliantMBeanException {
-    }
-
-    @Activate
-    public void activate(ComponentContext context) {
+    public StatisticsMBeanImpl(RepositoryImpl repositoryImpl) throws IllegalArgumentException {
         try {
-            Method getRepositoryMethod = AbstractSlingRepository.class
-                    .getDeclaredMethod("getRepository", (Class<?>[]) null);
-            if (!getRepositoryMethod.isAccessible()) {
-                getRepositoryMethod.setAccessible(true);
-            }
-            RepositoryImpl repositoryImpl = (RepositoryImpl) getRepositoryMethod
-                    .invoke(repository, (Object[]) null);
-            Field contextField = RepositoryImpl.class
-                    .getDeclaredField("context");
-            if (!contextField.isAccessible()) {
+            Field contextField = RepositoryImpl.class.getDeclaredField("context");
+            if ( !contextField.isAccessible() ) {
                 contextField.setAccessible(true);
             }
-            RepositoryContext repositoryContext = (RepositoryContext) contextField
-                    .get(repositoryImpl);
-            statistics = repositoryContext.getRepositoryStatistics();
-
-        } catch (Exception e) {
-            LOGGER.error("Unable to retrive repository statistics ", e);
+            RepositoryContext respositoryContext = (RepositoryContext) contextField.get(repositoryImpl);
+            this.statistics = respositoryContext.getRepositoryStatistics();
+        } catch (SecurityException e) {
+            throw new IllegalArgumentException(e);
+        } catch (NoSuchFieldException e) {
+            throw new IllegalArgumentException(e);
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
+    public static String getMBeanName(RepositoryImpl repositoryImpl) {
+        return "org.apache.sling.Resository:type=Statistics,name="+repositoryImpl.getConfig().getSecurityConfig().getAppName();
+    }
     /*
      * (non-Javadoc)
      *
@@ -143,7 +130,7 @@ public class StatisticsMBeanImpl implements DynamicMBean,
         } catch (AttributeNotFoundException e) {
             LOGGER.debug(e.getMessage(), e);
         }
-        return getCounter(attribute);
+        return getTimeSeries(attribute);
     }
 
     /*
@@ -297,26 +284,6 @@ public class StatisticsMBeanImpl implements DynamicMBean,
     }
 
     /* Private Utility methods */
-    /**
-     * @param name
-     *            name of the attribute.
-     * @return the value of the counter
-     * @throws AttributeNotFoundException
-     *             if the attribute doesnt exist.
-     */
-    private long getCounter(String name) throws AttributeNotFoundException {
-        try {
-            AtomicLong ts = statistics.getCounter(Type.valueOf(name));
-            if (ts == null) {
-                throw new AttributeNotFoundException("Attribute " + name
-                        + " doesnt exist");
-            }
-            return ts.get();
-        } catch (Exception e) {
-            throw new AttributeNotFoundException("Attribute " + name
-                    + " doesnt exist");
-        }
-    }
 
     /**
      * @param values
