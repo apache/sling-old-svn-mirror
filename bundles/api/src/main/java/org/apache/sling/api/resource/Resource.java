@@ -122,7 +122,7 @@ public interface Resource extends Adaptable {
      * A resource might return a resource super type to overwrite the
      * resource type hierarchy.
      * If a client is interested in the effective resource super type
-     * of a resource, it should call {@link ResourceResolver#getResourceSuperType(Resource)}.
+     * of a resource, it should call {@link ResourceResolver#getParentResourceType(Resource)}.
      */
     String getResourceSuperType();
 

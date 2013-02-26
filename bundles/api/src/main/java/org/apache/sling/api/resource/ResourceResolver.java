@@ -584,7 +584,7 @@ public interface ResourceResolver extends Adaptable {
      * Returns the super type of the given resource. This method checks first if
      * the resource itself knows its super type by calling
      * {@link Resource#getResourceSuperType()}. If that returns
-     * <code>null</code> {@link #getResourceSuperType(String)}
+     * <code>null</code> {@link #getParentSuperType(String)}
      * is invoked with the resource type of the resource.
      *
      * @param resource The resource to return the resource super type for.
@@ -593,7 +593,7 @@ public interface ResourceResolver extends Adaptable {
      *         provided resource is <code>null</code>
      * @since 2.3
      */
-    String getResourceSuperType(final Resource resource);
+    String getParentResourceType(final Resource resource);
 
     /**
      * Returns the super type of the given resource type. This method converts
@@ -608,7 +608,7 @@ public interface ResourceResolver extends Adaptable {
      *         <code>null</code> if <code>resourceType> is null.
      * @since 2.3
      */
-    public String getResourceSuperType(final String resourceType);
+    public String getParentSuperType(final String resourceType);
 
     /**
      * Returns <code>true</code> if the resource type or any of the resource's

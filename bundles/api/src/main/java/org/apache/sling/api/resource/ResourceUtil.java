@@ -414,12 +414,12 @@ public class ResourceUtil {
      *         <code>null</code> if the resource type does not exists or returns
      *         <code>null</code> for its super type.
      * @since 2.0.6
-     * @deprecated Use {@link ResourceResolver#getResourceSuperType(String)}
+     * @deprecated Use {@link ResourceResolver#getParentSuperType(String)}
      */
     @Deprecated
     public static String getResourceSuperType(
             final ResourceResolver resourceResolver, final String resourceType) {
-        return resourceResolver.getResourceSuperType(resourceType);
+        return resourceResolver.getParentSuperType(resourceType);
     }
 
     /**
@@ -433,11 +433,11 @@ public class ResourceUtil {
      * @return the super type of the <code>resource</code> or <code>null</code>
      *         if no super type could be computed.
      * @since 2.0.6
-     * @deprecated Use {@link ResourceResolver#getResourceSuperType(Resource)}
+     * @deprecated Use {@link ResourceResolver#getParentResourceType(Resource)}
      */
     @Deprecated
     public static String findResourceSuperType(final Resource resource) {
-        return resource.getResourceResolver().getResourceSuperType(resource);
+        return resource.getResourceResolver().getParentResourceType(resource);
     }
 
     /**
