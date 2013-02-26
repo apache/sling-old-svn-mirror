@@ -400,7 +400,7 @@ public class ResourceUtil {
      * the resource type to a resource path by calling
      * {@link #resourceTypeToPath(String)} and uses the
      * <code>resourceResolver</code> to get the corresponding resource. If the
-     * resource exists, the {@link Resource#getResourceSuperType()} metod is
+     * resource exists, the {@link Resource#getResourceSuperType()} method is
      * called.
      *
      * @param resourceResolver The <code>ResourceResolver</code> used to access
@@ -414,12 +414,12 @@ public class ResourceUtil {
      *         <code>null</code> if the resource type does not exists or returns
      *         <code>null</code> for its super type.
      * @since 2.0.6
-     * @deprecated Use {@link ResourceResolver#getParentSuperType(String)}
+     * @deprecated Use {@link ResourceResolver#getParentResourceType(String)}
      */
     @Deprecated
     public static String getResourceSuperType(
             final ResourceResolver resourceResolver, final String resourceType) {
-        return resourceResolver.getParentSuperType(resourceType);
+        return resourceResolver.getParentResourceType(resourceType);
     }
 
     /**
