@@ -84,6 +84,8 @@ public class HttpTestBase extends TestCase {
     /** Means "don't care about Content-Type" in getContent(...) methods */
     public static final String CONTENT_TYPE_DONTCARE = "*";
 
+    private static final Object startupCheckLock = new Object();
+
     /** URLs stored here are deleted in tearDown */
     protected final List<String> urlsToDelete = new LinkedList<String>();
 
@@ -196,17 +198,21 @@ public class HttpTestBase extends TestCase {
      */
     protected void waitForSlingStartup() throws Exception {
         // Use a static flag to make sure this runs only once in our test suite
-        if (slingStartupOk != null) {
-            if(slingStartupOk) {
+        // we must synchronize on this if we don't 2 threads could enter the check concurrently
+        // which would leave to random results.
+        synchronized(startupCheckLock) {
+            if (slingStartupOk != null) {
+                if(slingStartupOk) {
+                    return;
+                }
+                fail("Sling services not available. Already checked in earlier tests.");
+            }
+            if ( System.getProperty(PROPERTY_SKIP_STARTUP_CHECK) != null ) {
+                slingStartupOk = true;
                 return;
             }
-            fail("Sling services not available. Already checked in earlier tests.");
+            slingStartupOk = false;
         }
-        if ( System.getProperty(PROPERTY_SKIP_STARTUP_CHECK) != null ) {
-            slingStartupOk = true;
-            return;
-        }
-        slingStartupOk = false;
 
         System.err.println("Checking if the required Sling services are started (timeout " + READY_TIMEOUT_SECONDS + " seconds)...");
         System.err.println("(base URLs=" + HTTP_BASE_URL + " and " + WEBDAV_BASE_URL + "; servlet context="+ SERVLET_CONTEXT +")");

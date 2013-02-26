@@ -44,13 +44,9 @@ public class RepositoryProvider {
     private RepositoryProvider() {
     }
     
-    public static RepositoryProvider instance() {
+    public synchronized static RepositoryProvider instance() {
         if(INSTANCE == null) {
-            synchronized (RepositoryProvider.class) {
-                if(INSTANCE == null) {
-                    INSTANCE = new RepositoryProvider();
-                }
-            }
+            INSTANCE = new RepositoryProvider();
         }
         return INSTANCE;
     }
@@ -58,18 +54,12 @@ public class RepositoryProvider {
     /** Return a SlingRepository. First call initializes it, and a JVM
     *  shutdown hook is registered to stop it.
     **/
-    public SlingRepository getRepository() throws RepositoryException {
-        if(repository != null) {
-            return repository;
+    public synchronized SlingRepository getRepository() throws RepositoryException {
+        if(repository == null) {
+            RepositoryUtil.startRepository();
+            repository = RepositoryUtil.getRepository();
+            Runtime.getRuntime().addShutdownHook(new ShutdownThread());
         }
-        
-        synchronized (RepositoryTestBase.class) {
-            if(repository == null) {
-                RepositoryUtil.startRepository();
-                repository = RepositoryUtil.getRepository();
-                Runtime.getRuntime().addShutdownHook(new ShutdownThread());
-            }
-            return repository;
-        }
+        return repository;
     }
 }
