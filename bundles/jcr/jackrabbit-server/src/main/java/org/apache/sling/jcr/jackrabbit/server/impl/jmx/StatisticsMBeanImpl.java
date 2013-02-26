@@ -19,9 +19,7 @@ package org.apache.sling.jcr.jackrabbit.server.impl.jmx;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -35,19 +33,13 @@ import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanException;
 import javax.management.MBeanInfo;
-import javax.management.NotCompliantMBeanException;
 import javax.management.ReflectionException;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.api.stats.TimeSeries;
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.sling.jcr.jackrabbit.server.jmx.RepositoryStatisticsMBean;
-import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +47,6 @@ import org.slf4j.LoggerFactory;
  * MBean to expose Repository Statistics and make the repository statistics
  * available to other components read only.
  */
-@Component(immediate = true)
-@Service(value = { RepositoryStatisticsMBean.class })
-@Properties(@Property(name = "jmx.objectname", value = "org.apache.sling.Resository:type=Statistics"))
 public class StatisticsMBeanImpl implements DynamicMBean,
         RepositoryStatisticsMBean {
 
@@ -84,7 +73,7 @@ public class StatisticsMBeanImpl implements DynamicMBean,
     }
 
     public static String getMBeanName(RepositoryImpl repositoryImpl) {
-        return "org.apache.sling.Resository:type=Statistics,name="+repositoryImpl.getConfig().getSecurityConfig().getAppName();
+        return "org.apache.sling:type=Repository,name="+repositoryImpl.getConfig().getSecurityConfig().getAppName();
     }
     /*
      * (non-Javadoc)
