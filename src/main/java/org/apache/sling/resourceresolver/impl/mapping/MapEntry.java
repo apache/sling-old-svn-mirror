@@ -207,8 +207,18 @@ public class MapEntry implements Comparable<MapEntry> {
                                 internalRedirect.length);
                 for (final String redir : internalRedirect) {
                     if (!redir.contains("$")) {
-                        prepEntries.add(new MapEntry(redir.concat(endHook),
-                                        status, trailingSlash, url));
+                    	MapEntry mapEntry = null;
+                    	try{
+                    		mapEntry = new MapEntry(redir.concat(endHook), status, trailingSlash, url);
+                    	}catch (IllegalArgumentException iae){
+                    		//ignore this entry
+                            LoggerFactory
+                            .getLogger(MapEntry.class)
+                    		.debug("ignored entry due exception ",iae);
+                    	}     
+                    	if (mapEntry!=null){
+                    		prepEntries.add(mapEntry);
+                    	}
                     }
                 }
 

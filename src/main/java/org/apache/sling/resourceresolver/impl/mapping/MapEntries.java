@@ -442,7 +442,13 @@ public class MapEntries implements EventHandler {
             }
 
             // add resolution entries for this node
-            final MapEntry childResolveEntry = MapEntry.createResolveEntry(childPath, child, trailingSlash);
+            MapEntry childResolveEntry = null;
+            try{
+            	childResolveEntry=MapEntry.createResolveEntry(childPath, child, trailingSlash);
+            }catch (IllegalArgumentException iae){
+        		//ignore this entry
+        		log.debug("ignored entry due exception ",iae);
+        	} 
             if (childResolveEntry != null) {
                 entries.add(childResolveEntry);
             }
