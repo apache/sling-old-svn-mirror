@@ -178,7 +178,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected Configuration findConfiguration(String pid) throws Exception {
-    	final ConfigurationAdmin ca = getService(ConfigurationAdmin.class);
+    	final ConfigurationAdmin ca = this.waitForConfigAdmin(true);
     	if (ca != null) {
 	    	final Configuration[] cfgs = ca.listConfigurations(null);
 	    	if (cfgs != null) {
