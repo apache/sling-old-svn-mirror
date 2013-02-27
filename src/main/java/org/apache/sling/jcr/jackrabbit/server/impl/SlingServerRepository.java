@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Dictionary;
@@ -34,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.management.DynamicMBean;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -41,16 +41,13 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.RepositoryManager;
-import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractSlingRepository;
 import org.apache.sling.jcr.jackrabbit.server.impl.jmx.StatisticsMBeanImpl;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AdministrativeCredentials;
 import org.apache.sling.jcr.jackrabbit.server.impl.security.AnonCredentials;
-import org.apache.sling.jcr.jackrabbit.server.jmx.RepositoryStatisticsMBean;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -219,7 +216,7 @@ public class SlingServerRepository extends AbstractSlingRepository
                         mbeanName,
                         getComponentContext().getBundleContext()
                                 .registerService(
-                                        RepositoryStatisticsMBean.class
+                                        DynamicMBean.class
                                                 .getName(), mbean, properties));
             } catch (Exception e) {
                 LOGGER.error("Unable to register statistics ", e);
