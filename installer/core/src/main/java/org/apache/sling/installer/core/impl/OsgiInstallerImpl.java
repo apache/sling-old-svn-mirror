@@ -1070,6 +1070,12 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                     return untransformedResources;
                 }
 
+                @Override
+                public String toString() {
+                    return "InstallationState[active resources: " + this.activeResources +
+                            ", installed resources: " + this.installedResources +
+                            ", untransformed resources: " + this.untransformedResources + "]";
+                }
             };
 
             for(final String entityId : this.persistentList.getEntityIds()) {
@@ -1128,6 +1134,20 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
                             public Object getAttribute(final String key) {
                                 return tr.getAttribute(key);
                             }
+
+                            @Override
+                            public String toString() {
+                                return "resource[entityId=" + this.getEntityId() +
+                                        ", scheme=" + this.getScheme() +
+                                        ", url=" + this.getURL() +
+                                        ", type=" + this.getType() +
+                                        ", state=" + this.getState() +
+                                        ", version=" + this.getVersion() +
+                                        ", lastChange=" + this.getLastChange() +
+                                        ", priority=" + this.getPriority() +
+                                        ", digest=" + this.getDigest() +
+                                        "]";
+                            }
                         });
                     }
                     final ResourceGroup rg = new ResourceGroup() {
@@ -1138,6 +1158,11 @@ implements OsgiInstaller, ResourceChangeListener, RetryHandler, InfoProvider, Ru
 
                         public String getAlias() {
                             return alias;
+                        }
+
+                        @Override
+                        public String toString() {
+                            return "group[" + resources + "]";
                         }
                     };
                     if ( group.getActiveResource() != null ) {
