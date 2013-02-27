@@ -35,11 +35,11 @@ import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.ReflectionException;
 
+import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
 import org.apache.jackrabbit.api.stats.TimeSeries;
 import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
-import org.apache.sling.jcr.jackrabbit.server.jmx.RepositoryStatisticsMBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +47,7 @@ import org.slf4j.LoggerFactory;
  * MBean to expose Repository Statistics and make the repository statistics
  * available to other components read only.
  */
-public class StatisticsMBeanImpl implements DynamicMBean,
-        RepositoryStatisticsMBean {
+public class StatisticsMBeanImpl implements DynamicMBean {
 
     private static final Logger LOGGER = LoggerFactory
             .getLogger(StatisticsMBeanImpl.class);
