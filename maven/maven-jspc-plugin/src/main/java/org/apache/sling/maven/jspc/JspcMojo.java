@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.StringTokenizer;
 
 import javax.servlet.ServletContext;
@@ -52,6 +51,7 @@ import org.apache.sling.scripting.jsp.jasper.compiler.TagPluginManager;
 import org.apache.sling.scripting.jsp.jasper.compiler.TldLocationsCache;
 import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 import org.apache.sling.scripting.jsp.jasper.xmlparser.TreeNode;
+import org.codehaus.plexus.util.DirectoryScanner;
 
 /**
  * The <code>JspcMojo</code> is implements the Sling Maven JspC goal
@@ -166,6 +166,18 @@ public class JspcMojo extends AbstractMojo implements Options {
      */
     private String servletPackage;
 
+    /**
+     * Included JSPs, defaults to <code>"**&#47;*.jsp"</code>
+     * @parameter
+     */
+    private String[] includes;
+
+    /**
+     * Excluded JSPs, empty by default
+     * @parameter
+     */
+    private String[] excludes;
+
     private Set<String> jspFileExtensionSet;
 
     private boolean compile = true;
@@ -245,26 +257,15 @@ public class JspcMojo extends AbstractMojo implements Options {
      * specified.
      */
     public void scanFiles(File base) {
-        Stack<File> dirs = new Stack<File>();
-        dirs.push(base);
 
-        while (!dirs.isEmpty()) {
-            File f = dirs.pop();
-            if (f.exists() && f.isDirectory()) {
-                String[] files = f.list();
-                String ext;
-                for (int i = 0; (files != null) && i < files.length; i++) {
-                    File f2 = new File(f, files[i]);
-                    if (f2.isDirectory()) {
-                        dirs.push(f2);
-                    } else {
-                        ext = files[i].substring(files[i].lastIndexOf('.') + 1);
-                        if (getExtensions().contains(ext)) {
-                            pages.add(f2.getAbsolutePath());
-                        }
-                    }
-                }
-            }
+        DirectoryScanner scanner = new DirectoryScanner();
+        scanner.setBasedir(base);
+        scanner.setIncludes(includes);
+        scanner.setExcludes(excludes);
+        scanner.scan();
+
+        for (String included : scanner.getIncludedFiles()) {
+            pages.add(included);
         }
     }
 
@@ -281,6 +282,10 @@ public class JspcMojo extends AbstractMojo implements Options {
         try {
             if (context == null) {
                 initServletContext();
+            }
+
+            if (includes == null) {
+                includes = new String[]{ "**/*.jsp" };
             }
 
             // No explicit pages, we'll process all .jsp in the webapp
