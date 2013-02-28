@@ -292,6 +292,41 @@ public interface SlingPostConstants {
     public static final String RP_STATUS = RP_PREFIX + "status";
 
     /**
+     * Request parameter to identify chunk upload.
+     */
+    public static final String CHUNK_UPLOADID = SlingPostConstants.RP_PREFIX + "chunkUploadId";
+
+    /**
+     * Request parameter to indicate chunk number of upload request
+     */
+    public static final String CHUNK_NUMBER = SlingPostConstants.RP_PREFIX + "chunkNumber";
+
+    /**
+     * Request paramter to indicate last chunk.
+     */
+    public static final String LAST_CHUNK = SlingPostConstants.RP_PREFIX + "lastChunk";
+
+    /**
+     * Tmp storage where chunks would be stored
+     */
+    public static final String CHUNK_UPLOAD_ROOT = "/tmp/sling/chunks";
+
+    /**
+     * Jcr property name indicating total continuous bytes stored in repository
+     */
+    public static final String BYTES_UPLOADED = "bytesUploaded";
+
+    /**
+     * Jcr property name indicating total continuous chunks stored in repository
+     */
+    public static final String CHUNKS_UPLOADED = "chunksUploaded";
+
+    /**
+     * Jcr property name indicating size of chunk stored in repository
+     */
+    public static final String SIZE = "size";
+
+    /**
      * The supported value for the {@link #RP_STATUS} request parameter
      * requesting to report success or failure of request processing using
      * standard HTTP status codes. This value is assumed as the default value

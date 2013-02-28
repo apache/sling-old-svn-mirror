@@ -18,8 +18,18 @@
  */
 package org.apache.sling.servlets.post.impl.operations;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -29,14 +39,18 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 import javax.servlet.ServletContext;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
+import org.apache.sling.servlets.post.HtmlResponse;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -85,6 +99,19 @@ public class ModifyOperation extends AbstractCreateOperation {
 
             final VersioningConfiguration versioningConfiguration = getVersioningConfiguration(request);
 
+            String chunkNumberStr = request.getParameter(SlingPostConstants.CHUNK_NUMBER);
+            String chunkUploadId = request.getParameter(SlingPostConstants.CHUNK_UPLOADID);
+            boolean islastChunk = Boolean.parseBoolean(request.getParameter(SlingPostConstants.LAST_CHUNK));
+            Integer chunkNumber = null;
+            if (chunkNumberStr != null) {
+                chunkNumber = Integer.parseInt(chunkNumberStr);
+                storeChunk(request.getResourceResolver(), chunkUploadId, chunkNumber, islastChunk, reqProperties, response);
+                if (!islastChunk) {
+                    // do not process further unless it is last chunk
+                    return;
+                }
+            }
+
             // do not change order unless you have a very good reason.
 
             // ensure root of new content
@@ -98,7 +125,7 @@ public class ModifyOperation extends AbstractCreateOperation {
             processDeletes(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
 
             // write content from form
-            writeContent(request.getResourceResolver(), reqProperties, changes, versioningConfiguration);
+            writeContent(request.getResourceResolver(), reqProperties, chunkUploadId, chunkNumber, changes, versioningConfiguration);
 
             // order content
             final Resource newResource = request.getResourceResolver().getResource(response.getPath());
@@ -382,6 +409,7 @@ public class ModifyOperation extends AbstractCreateOperation {
      */
     private void writeContent(final ResourceResolver resolver,
             final Map<String, RequestProperty> reqProperties,
+            final String chunkUploadId, final Integer lastChunkNumber,
             final List<Modification> changes,
             final VersioningConfiguration versioningConfiguration)
     throws RepositoryException, PersistenceException {
@@ -406,11 +434,214 @@ public class ModifyOperation extends AbstractCreateOperation {
                 }
 
                 if (prop.isFileUpload()) {
-                    uploadHandler.setFile(parent, prop, changes);
+                    if (chunkUploadId != null) {
+                        InputStream ins = null;
+                        File file = null;
+                        try {
+                            Resource uploadIdRes = resolver.getResource(chunkUploadId);
+                            file = mergeChunks(uploadIdRes.adaptTo(Node.class), lastChunkNumber);
+                            ins = new FileInputStream(file);
+                            uploadHandler.setFile(parent, prop, ins, changes);
+                            Node uploadIdNode = uploadIdRes.adaptTo(Node.class);
+                            uploadIdNode.remove();
+                        } catch (IOException e) {
+                            throw new PersistenceException("fail to process file chunks", e);
+                        } finally {
+                            if (ins != null) {
+                                try {
+                                    ins.close();
+                                } catch (IOException ignore) {
+                                }
+                            }
+                            if (file != null) {
+                                file.delete();
+                            }
+                        }
+
+                    } else {
+                        uploadHandler.setFile(parent, prop, changes);
+                    }
                 } else {
                     propHandler.setProperty(parent, prop);
                 }
             }
         }
+    }
+
+    /**
+     * Store chunks in repository. All chunks would be merge to create node structure in jcr.
+     */
+    private void storeChunk(ResourceResolver resourceResolver, String chunkUploadId, Integer chunkNumber, boolean islastChunk,
+            Map<String, RequestProperty> reqProperties, PostResponse response) throws PersistenceException, RepositoryException {
+        RequestParameter fileParam = null;
+        try {
+
+            if (chunkNumber == null || (chunkNumber == 1 && islastChunk)) {
+                // chunkNumber is null.
+                // upload contains only one chunk. let it be created directly
+                return;
+            }
+            Resource chunkUploadRes = null;
+            if (1 == chunkNumber) {
+                Resource parentResource = resourceResolver.getResource(SlingPostConstants.CHUNK_UPLOAD_ROOT);
+                Map<String, Object> props = new HashMap<String, Object>(5);
+                props.put("jcr:primaryType", JcrResourceConstants.NT_SLING_ORDERED_FOLDER);
+                if (parentResource == null) {
+                    String[] tokens = SlingPostConstants.CHUNK_UPLOAD_ROOT.substring(1).split("/");
+                    parentResource = resourceResolver.getResource("/");
+                    for (String token : tokens) {
+                        Resource tokResource = resourceResolver.getResource(parentResource, token);
+                        if (tokResource == null) {
+                            tokResource = resourceResolver.create(parentResource, token, props);
+                        }
+                        parentResource = tokResource;
+                    }
+                }
+                String uploadId = generateUploadId();
+                props = new HashMap<String, Object>(5);
+                props.put("jcr:primaryType", JcrResourceConstants.NT_SLING_ORDERED_FOLDER);
+                props.put(SlingPostConstants.BYTES_UPLOADED, 0L);
+                props.put(SlingPostConstants.CHUNKS_UPLOADED, 0L);
+                chunkUploadRes = resourceResolver.create(parentResource, uploadId, props);
+                // TODO acl to uploadRes so that other users don't see it.
+            } else {
+                chunkUploadRes = resourceResolver.getResource(chunkUploadId);
+            }
+            Resource chunkNumRes = chunkUploadRes.getChild(Integer.toString(chunkNumber));
+            if (chunkNumRes != null) {
+                resourceResolver.delete(chunkNumRes);
+            }
+            Map<String, Object> props = new HashMap<String, Object>(5);
+            fileParam = getFileReqParameter(reqProperties);
+            props.put(JcrConstants.JCR_DATA, fileParam.getInputStream());
+            props.put(SlingPostConstants.SIZE, fileParam.getSize());
+            props.put("jcr:primaryType", NodeType.NT_UNSTRUCTURED);
+            chunkNumRes = resourceResolver.create(chunkUploadRes, Integer.toString(chunkNumber), props);
+            updateChunkUploadMetadata(chunkUploadRes.adaptTo(Node.class), chunkNumber, fileParam.getSize());
+            if (!islastChunk) {
+                response.setParentLocation(chunkUploadRes.getParent().getPath());
+                response.setLocation(chunkUploadRes.getPath());
+                response.setPath(chunkUploadRes.getParent().getPath());
+            }
+        } catch (IOException ioe) {
+            if (ioe instanceof PersistenceException) {
+                throw (PersistenceException) ioe;
+            } else {
+                throw new PersistenceException("failed to read file parameter: " + fileParam.getFileName(), ioe);
+            }
+        }
+
+    }
+
+    /**
+     * Update chunk node with continuous bytes uploaded size and chunk number.
+     */
+
+    private void updateChunkUploadMetadata(Node chunkUploadNode, Integer chunkNumber, Long chunkSize) throws RepositoryException {
+        long prevChunkNumber = chunkUploadNode.getProperty(SlingPostConstants.CHUNKS_UPLOADED).getLong();
+        if (prevChunkNumber + 1 == chunkNumber) {
+            long size = chunkUploadNode.getProperty(SlingPostConstants.BYTES_UPLOADED).getLong();
+            chunkUploadNode.setProperty(SlingPostConstants.BYTES_UPLOADED, size + chunkSize);
+            chunkUploadNode.setProperty(SlingPostConstants.CHUNKS_UPLOADED, chunkNumber);
+        } else {
+            int count = 1;
+            Long size = new Long(0);
+            while (chunkUploadNode.hasNode(Integer.toString(count))) {
+                Node chunkNumNode = chunkUploadNode.getNode(Integer.toString(count));
+                size += chunkNumNode.getProperty(SlingPostConstants.SIZE).getLong();
+                count++;
+            }
+            chunkUploadNode.setProperty(SlingPostConstants.BYTES_UPLOADED, size);
+            chunkUploadNode.setProperty(SlingPostConstants.CHUNKS_UPLOADED, --count);
+        }
+    }
+
+    /**
+     * Generate an unique uploadId.
+     */
+    private String generateUploadId() {
+        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+        return uuid;
+    }
+
+    /**
+     * Return file parameter from request properties.
+     */
+
+    private RequestParameter getFileReqParameter(final Map<String, RequestProperty> reqProperties) {
+        RequestParameter result = null;
+        for (final RequestProperty prop : reqProperties.values()) {
+            if (prop.hasValues()) {
+                if (!prop.isFileUpload()) {
+                    continue;
+                }
+
+                for (final RequestParameter value : prop.getValues()) {
+
+                    // ignore if a plain form field or empty
+                    if (value.isFormField() || value.getSize() <= 0) {
+                        continue;
+                    }
+                    result = value;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Merge chunks from one to lastChunkNumber into a tmp file.
+     *
+     * @param chunkUploadNode parent node where all chunks are stored.
+     * @param lastChunkNumber
+     * @return merged file
+     * @throws PersistenceException
+     * @throws RepositoryException
+     */
+    private File mergeChunks(final Node chunkUploadNode, final Integer lastChunkNumber) throws PersistenceException, RepositoryException {
+        OutputStream out = null;
+        File file = null;
+        try {
+            file = File.createTempFile("tmp", "mergechunk");
+            out = new BufferedOutputStream(new FileOutputStream(file), 16 * 1024);
+            int count = 1;
+            while (count <= lastChunkNumber) {
+                Node chunkNode = chunkUploadNode.getNode(Integer.toString(count));
+                InputStream ins = null;
+                int i = 0;
+                try {
+                    InputStream in = chunkNode.getProperty(javax.jcr.Property.JCR_DATA).getBinary().getStream();
+                    ins = new BufferedInputStream(in, 16 * 1024);
+                    byte[] buf = new byte[16 * 1024];
+                    while ((i = in.read(buf)) != -1) {
+                        out.write(buf, 0, i);
+                        out.flush();
+                    }
+
+                } finally {
+                    if (ins != null) {
+                        try {
+                            ins.close();
+                        } catch (IOException ignore) {
+
+                        }
+                    }
+                }
+                count++;
+            }
+        } catch (IOException e) {
+            throw new PersistenceException("excepiton occured", e);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignore) {
+
+                }
+            }
+
+        }
+        return file;
     }
 }

@@ -17,6 +17,7 @@
 package org.apache.sling.servlets.post.impl.helper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -107,7 +108,7 @@ public class SlingFileUploadHandler {
      * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    private void setFile(final Resource parentResource, final Node parent, final RequestProperty prop, RequestParameter value, final List<Modification> changes, String name, final String contentType)
+    private void setFile(final Resource parentResource, final Node parent, final RequestProperty prop, InputStream stream, final List<Modification> changes, String name, final String contentType)
             throws RepositoryException, PersistenceException {
         // check type hint. if the type is ok and extends from nt:file,
         // create an nt:file with that type. if it's invalid, drop it and let
@@ -159,13 +160,9 @@ public class SlingFileUploadHandler {
         changes.add(Modification.onModified(
                 res.setProperty(JCR_MIMETYPE, contentType).getPath()
                 ));
-        try {
-            changes.add(Modification.onModified(
-                    res.setProperty(JCR_DATA, value.getInputStream()).getPath()
-                    ));
-        } catch (IOException e) {
-            throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
-        }
+        changes.add(Modification.onModified(
+                res.setProperty(JCR_DATA, stream).getPath()
+                ));
     }
 
     /**
@@ -178,23 +175,18 @@ public class SlingFileUploadHandler {
      * @param prop the assembled property info
      * @throws RepositoryException if an error occurs
      */
-    private void setFile(final Resource parentResource, final RequestProperty prop, final RequestParameter value, final List<Modification> changes, String name, final String contentType)
+    private void setFile(final Resource parentResource, final RequestProperty prop, final InputStream stream, final List<Modification> changes, String name, final String contentType)
             throws PersistenceException, RepositoryException {
         String typeHint = prop.getTypeHint();
         if ( typeHint == null ) {
             typeHint = NT_FILE;
         }
-
         // create properties
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put("sling:resourceType", typeHint);
         props.put(JCR_LASTMODIFIED, Calendar.getInstance());
         props.put(JCR_MIMETYPE, contentType);
-        try {
-            props.put(JCR_DATA, value.getInputStream());
-        } catch (final IOException e) {
-            throw new PersistenceException("Error while retrieving inputstream from parameter value.", e);
-        }
+        props.put(JCR_DATA, stream);
 
         // get or create resource
         Resource result = parentResource.getChild(name);
@@ -261,15 +253,77 @@ public class SlingFileUploadHandler {
                     contentType = MT_APP_OCTET;
                 }
             }
-
             final Node node = parent.adaptTo(Node.class);
-            if ( node == null ) {
-                this.setFile(parent, prop, value, changes, name, contentType);
-            } else {
-                this.setFile(parent, node, prop, value, changes, name, contentType);
+            try {
+                if (node == null) {
+                    this.setFile(parent, prop, value.getInputStream(), changes, name, contentType);
+                } else {
+                    this.setFile(parent, node, prop, value.getInputStream(), changes, name, contentType);
+                }
+            } catch (final IOException e) {
+                throw new PersistenceException("Error while retrieving inputstream from parameter value.", e);
             }
         }
 
+    }
+
+    /**
+     * Uses the file(s) from merged chunks for creation of new nodes. if the parent node
+     *  is a nt:folder a new nt:file is created. otherwise just a nt:resource. if the <code>name</code>
+     *  is '*', the filename of the uploaded file is used.
+     *
+     * @param parent the parent node
+     * @param prop the assembled property info
+     * @throws RepositoryException if an error occurs
+     */
+    public void setFile(Resource parent, RequestProperty prop, InputStream inputstream, List<Modification> changes)
+            throws RepositoryException, PersistenceException {
+        for (final RequestParameter value : prop.getValues()) {
+
+            // ignore if a plain form field or empty
+            if (value.isFormField() || value.getSize() <= 0) {
+                continue;
+            }
+
+            // get node name
+            String name = prop.getName();
+            if (name.equals("*")) {
+                name = value.getFileName();
+                // strip of possible path (some browsers include the entire path)
+                name = name.substring(name.lastIndexOf('/') + 1);
+                name = name.substring(name.lastIndexOf('\\') + 1);
+            }
+            name = Text.escapeIllegalJcrChars(name);
+
+            // get content type
+            String contentType = value.getContentType();
+            if (contentType != null) {
+                int idx = contentType.indexOf(';');
+                if (idx > 0) {
+                    contentType = contentType.substring(0, idx);
+                }
+            }
+            if (contentType == null || contentType.equals(MT_APP_OCTET)) {
+                // try to find a better content type
+                ServletContext ctx = this.servletContext;
+                if (ctx != null) {
+                    contentType = ctx.getMimeType(value.getFileName());
+                }
+                if (contentType == null || contentType.equals(MT_APP_OCTET)) {
+                    contentType = MT_APP_OCTET;
+                }
+            }
+            final Node node = parent.adaptTo(Node.class);
+            try {
+                if (node == null) {
+                    this.setFile(parent, prop, inputstream, changes, name, contentType);
+                } else {
+                    this.setFile(parent, node, prop, inputstream, changes, name, contentType);
+                }
+            } catch (final IOException e) {
+                throw new PersistenceException("Error while retrieving inputstream from parameter value.", e);
+            }
+        }
     }
 
     private Resource getOrCreateChildResource(final Resource parent, final String name,
@@ -306,5 +360,4 @@ public class SlingFileUploadHandler {
         changes.add(Modification.onCreated(result.getPath()));
         return result;
     }
-
 }
