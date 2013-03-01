@@ -43,6 +43,8 @@ public class SlingRequestPathInfo implements RequestPathInfo {
 
     private final String resourcePath;
 
+    private final Resource resource;
+
     private final static String[] NO_SELECTORS = new String[0];
 
     /** break requestPath as required by SlingRequestPathInfo */
@@ -53,7 +55,8 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             throw new NullPointerException("resource");
         }
 
-        resourcePath = r.getResourceMetadata().getResolutionPath();
+        this.resource = r;
+        this.resourcePath = r.getResourceMetadata().getResolutionPath();
 
         // the extra path in the request URI
         String pathToParse = r.getResourceMetadata().getResolutionPathInfo();
@@ -95,8 +98,9 @@ public class SlingRequestPathInfo implements RequestPathInfo {
                 : null;
     }
 
-    private SlingRequestPathInfo(String resourcePath, String selectorString,
-            String extension, String suffix) {
+    private SlingRequestPathInfo(Resource resource, String resourcePath, String selectorString, String extension,
+            String suffix) {
+        this.resource = resource;
         this.resourcePath = resourcePath;
         this.selectorString = selectorString;
         this.selectors = (selectorString != null)
@@ -108,9 +112,8 @@ public class SlingRequestPathInfo implements RequestPathInfo {
 
     public SlingRequestPathInfo merge(RequestPathInfo baseInfo) {
         if (getExtension() == null) {
-            return new SlingRequestPathInfo(getResourcePath(),
-                baseInfo.getSelectorString(), baseInfo.getExtension(),
-                baseInfo.getSuffix());
+            return new SlingRequestPathInfo(getResource(), getResourcePath(), baseInfo.getSelectorString(),
+                baseInfo.getExtension(), baseInfo.getSuffix());
         }
 
         return this;
@@ -155,8 +158,7 @@ public class SlingRequestPathInfo implements RequestPathInfo {
             }
 
             if (needCreate) {
-                return new SlingRequestPathInfo(getResourcePath(), selectors,
-                    getExtension(), suffix);
+                return new SlingRequestPathInfo(getResource(), getResourcePath(), selectors, getExtension(), suffix);
             }
         }
 
@@ -184,6 +186,18 @@ public class SlingRequestPathInfo implements RequestPathInfo {
 
     public String getSuffix() {
         return suffix;
+    }
+
+    public Resource getSuffixResource() {
+        if (this.suffix != null) {
+            return getResource().getResourceResolver().getResource(this.suffix);
+        }
+
+        return null;
+    }
+
+    private Resource getResource() {
+        return resource;
     }
 
     public String getResourcePath() {
