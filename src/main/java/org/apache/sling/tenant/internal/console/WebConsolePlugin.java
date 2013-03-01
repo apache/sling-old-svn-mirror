@@ -21,6 +21,7 @@ package org.apache.sling.tenant.internal.console;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 
@@ -29,7 +30,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.tenant.Tenant;
 import org.apache.sling.tenant.internal.TenantProviderImpl;
 import org.osgi.framework.BundleContext;
@@ -96,11 +96,11 @@ public class WebConsolePlugin extends HttpServlet {
         String msg = null;
         final String cmd = req.getParameter("action");
         if ("create".equals(cmd)) {
-            try {
-                Tenant t = this.createTenant(req);
+            Tenant t = this.createTenant(req);
+            if (t != null) {
                 msg = String.format("Created Tenant %s (%s)", t.getName(), t.getDescription());
-            } catch (PersistenceException pe) {
-                msg = "Cannot create tenant: " + pe.getMessage();
+            } else {
+                msg = "Cannot create tenant";
             }
         } else if ("remove".equals(cmd)) {
             this.removeTenant(req);
@@ -119,9 +119,13 @@ public class WebConsolePlugin extends HttpServlet {
         resp.sendRedirect(redirectTo);
     }
 
-    private void removeTenant(HttpServletRequest request) throws PersistenceException {
-        String tenantId = request.getParameter(REQ_PRM_TENANT_ID);
-        tenantProvider.removeTenant(tenantId);
+    private void removeTenant(HttpServletRequest request) {
+        final String tenantId = request.getParameter(REQ_PRM_TENANT_ID);
+        final Tenant tenant = this.tenantProvider.getTenant(tenantId);
+
+        if (tenant != null) {
+            this.tenantProvider.remove(tenant);
+        }
     }
 
     private void printForm(final PrintWriter pw, final Tenant t, final String buttonLabel, final String cmd) {
@@ -129,12 +133,18 @@ public class WebConsolePlugin extends HttpServlet {
             + "%s</button>", cmd, (t != null ? t.getId() : ""), buttonLabel);
     }
 
-    private Tenant createTenant(HttpServletRequest request) throws PersistenceException {
-        String tenantName = request.getParameter(REQ_PRM_TENANT_NAME);
-        String tenantId = request.getParameter(REQ_PRM_TENANT_ID);
-        String tenantDesc = request.getParameter(REQ_PRM_TENANT_DESC);
+    @SuppressWarnings("serial")
+    private Tenant createTenant(HttpServletRequest request) {
+        final String tenantName = request.getParameter(REQ_PRM_TENANT_NAME);
+        final String tenantId = request.getParameter(REQ_PRM_TENANT_ID);
+        final String tenantDesc = request.getParameter(REQ_PRM_TENANT_DESC);
 
-        return tenantProvider.addTenant(tenantName, tenantId, tenantDesc);
+        return tenantProvider.create(tenantId, new HashMap<String, Object>() {
+            {
+                put(Tenant.PROP_NAME, tenantName);
+                put(Tenant.PROP_DESCRIPTION, tenantDesc);
+            }
+        });
     }
 
     @Override

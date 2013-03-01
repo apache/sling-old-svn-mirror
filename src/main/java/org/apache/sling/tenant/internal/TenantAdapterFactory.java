@@ -18,8 +18,12 @@
  */
 package org.apache.sling.tenant.internal;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jcr.Session;
 
@@ -57,8 +61,15 @@ class TenantAdapterFactory implements AdapterFactory {
 
 	private final ServiceRegistration<?> service;
 
-	TenantAdapterFactory(final BundleContext bundleContext, final TenantProviderImpl tenantProvider) {
+    private final List<Pattern> pathPatterns;
+
+	TenantAdapterFactory(final BundleContext bundleContext, final TenantProviderImpl tenantProvider, final String[] pathMatchers) {
 	    this.tenantProvider = tenantProvider;
+
+        this.pathPatterns = new ArrayList<Pattern>();
+        for (String matcherStr : pathMatchers) {
+            this.pathPatterns.add(Pattern.compile(matcherStr));
+        }
 
 	    Dictionary<String, Object> props = new Hashtable<String, Object>();
 	    props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling JCR Tenant Adapter");
@@ -124,7 +135,7 @@ class TenantAdapterFactory implements AdapterFactory {
 	private <AdapterType> AdapterType getAdapter(String path,
 			Class<AdapterType> type) {
 		if (type == TENANT_CLASS) {
-			Tenant tenant = tenantProvider.resolveTenantByPath(path);
+			Tenant tenant = resolveTenantByPath(path);
 
 			if (tenant != null) {
 				return (AdapterType) tenant;
@@ -134,5 +145,21 @@ class TenantAdapterFactory implements AdapterFactory {
 		log.debug("Unable to adapt to resource of type {}", type.getName());
 		return null;
 	}
+
+    private Tenant resolveTenantByPath(String path) {
+        // find matching path identifier
+        for (Pattern pathPattern : pathPatterns) {
+            Matcher matcher = pathPattern.matcher(path);
+            if (matcher.find()) {
+                // assuming that first group is tenantId in the path, we can
+                // make group number configurable.
+                if (matcher.groupCount() >= 1) {
+                    String tenantId = matcher.group(1);
+                    return this.tenantProvider.getTenant(tenantId);
+                }
+            }
+        }
+        return null;
+    }
 
 }
