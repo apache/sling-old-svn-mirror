@@ -20,6 +20,8 @@ package org.apache.sling.tenant;
 
 import java.util.Iterator;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>Tenant</code> interface represents a tenant which may be used to
  * further customize request and other processing.
@@ -28,13 +30,14 @@ import java.util.Iterator;
  * {@link TenantProvider} interface to be returned for it tenant accessor
  * methods.
  */
+@ProviderType
 public interface Tenant {
 
 	/**
 	 * The name of the {@link #getProperty(String) property} whose string
 	 * representation is used as this tenant's {@link #getName() name} (value is
 	 * "sling.tenant.name").
-	 * 
+	 *
 	 * @see #getName()
 	 * @see #getProperty(String)
 	 */
@@ -44,7 +47,7 @@ public interface Tenant {
 	 * The name of the {@link #getProperty(String) property} whose string
 	 * representation is used as this tenant's {@link #getDescription()
 	 * description} (value is "sling.tenant.description").
-	 * 
+	 *
 	 * @see #getDescription()
 	 * @see #getProperty(String)
 	 */
@@ -58,21 +61,23 @@ public interface Tenant {
 	 */
 	String getId();
 
-	/**
-	 * Returns the name of the tenant. This is a short name for quickly
-	 * identifying this tenant. This name is not required to be globally unique.
-	 * <p>
-	 * The name of the tenant is the string representation of the
-	 * {@link #PROP_NAME} property.
-	 */
-	String getName();
+	    /**
+     * Returns the name of the tenant. This is a short name for quickly
+     * identifying this tenant. This name is not required to be globally unique.
+     * <p>
+     * The name of the tenant is the string representation of the
+     * {@link #PROP_NAME} property or {@code null} if the property is not
+     * defined.
+     */
+    String getName();
 
-	/**
-	 * Returns a human readable description of this tenant.
-	 * <p>
-	 * The description of the tenant is the string representation of the
-	 * {@link #PROP_DESCRIPTION} property.
-	 */
+    /**
+     * Returns a human readable description of this tenant.
+     * <p>
+     * The description of the tenant is the string representation of the
+     * {@link #PROP_DESCRIPTION} property or {@code null} if the property is not
+     * defined.
+     */
 	String getDescription();
 
 	/**
