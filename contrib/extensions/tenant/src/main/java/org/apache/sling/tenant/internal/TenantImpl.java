@@ -32,18 +32,17 @@ import org.apache.sling.tenant.Tenant;
  * A resource backed tenant implementation.
  */
 class TenantImpl implements Tenant {
-    private String id;
+
+    private final String id;
 
     private ValueMap vm;
 
     TenantImpl(Resource resource) {
         this.id = resource.getName();
-        // vm = ResourceUtil.getValueMap(resource);
-        // create local detached value map
-        vm = getLocalValueMap(resource);
+        loadProperties(resource);
     }
 
-    private ValueMap getLocalValueMap(Resource resource) {
+    void loadProperties(Resource resource) {
         ValueMap jcrVM = ResourceUtil.getValueMap(resource);
 
         Map<String, Object> localMap = new HashMap<String, Object>();
@@ -53,7 +52,7 @@ class TenantImpl implements Tenant {
         // decoarate it as value map
         ValueMapDecorator localVM = new ValueMapDecorator(localMap);
 
-        return localVM;
+        this.vm = localVM;
 
     }
 
@@ -62,11 +61,11 @@ class TenantImpl implements Tenant {
     }
 
     public String getName() {
-        return vm.get(Tenant.PROP_NAME, "");
+        return vm.get(Tenant.PROP_NAME, String.class);
     }
 
     public String getDescription() {
-        return vm.get(Tenant.PROP_DESCRIPTION, "");
+        return vm.get(Tenant.PROP_DESCRIPTION, String.class);
     }
 
     public Object getProperty(String name) {
