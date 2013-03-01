@@ -20,6 +20,8 @@ package org.apache.sling.tenant;
 
 import java.util.Iterator;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>TenantProvider</code> defines the service interface of for a sevice
  * which may be asked for {@link Tenant tenant instances}.
@@ -27,6 +29,7 @@ import java.util.Iterator;
  * For now this provider interface provides access to a tenant applying to a
  * particular request as well as to all tenants known to this provider.
  */
+@ProviderType
 public interface TenantProvider {
 
     /**
@@ -38,6 +41,9 @@ public interface TenantProvider {
     /**
      * Returns an iterator of all {@link Tenant tenants} known to this provider.
      * If no tenants are known the iterator is empty.
+     * <p>
+     * This method is equivalent to calling {@link #getTenants(String)} with
+     * {@code null} or an empty string.
      */
     Iterator<Tenant> getTenants();
 
@@ -46,14 +52,17 @@ public interface TenantProvider {
      * <code>tenantFilter</code>.
      * <p>
      * The <code>tenantFilter</code> is a valid OSGi filter string as defined in
-     * Section 3.2.6, Filter Syntax, of the OSGi Core Specification, Release 4.
+     * Section 3.2.6, Filter Syntax, of the OSGi Core Specification, Release 4
+     * or {@code null} to return all tenants.
      * <p>
-     * If no tenants match the <code>tenantFilter</code> or the
-     * <code>tenantFilter</code> is not a valid filter string the iterator is
-     * empty.
+     * Calling this method with an empty string or {@code null} is equivalent to
+     * calling the {@link #getTenants()} method and returns all tenants.
+     * <p>
+     * If no tenants match the <code>tenantFilter</code> the iterator is empty.
+     * {@code null} is never returned.
      *
      * @throws IllegalArgumentException if filter syntax is invalid. A more
-     *      detailed exception may be wrapped by the exception.
+     *             detailed exception may be wrapped by the exception.
      */
     Iterator<Tenant> getTenants(String tenantFilter);
 }

@@ -23,10 +23,13 @@ import java.util.Map;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.tenant.Tenant;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * This is a service interface which services are called by the WebConsole
  * plugin (or admin tool) to complete the Tenant setup.
  */
+@ConsumerType
 public interface TenantCustomizer {
 
     /**
