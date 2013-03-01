@@ -21,19 +21,13 @@ package org.apache.sling.tenant.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -44,18 +38,17 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistableValueMap;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.tenant.Tenant;
+import org.apache.sling.tenant.TenantManager;
 import org.apache.sling.tenant.TenantProvider;
 import org.apache.sling.tenant.internal.console.WebConsolePlugin;
 import org.apache.sling.tenant.spi.TenantCustomizer;
@@ -84,7 +77,7 @@ import org.slf4j.LoggerFactory;
         referenceInterface = TenantCustomizer.class,
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         policy = ReferencePolicy.DYNAMIC)
-public class TenantProviderImpl implements TenantProvider {
+public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -109,10 +102,6 @@ public class TenantProviderImpl implements TenantProvider {
             description = "Defines tenants path matcher i.e. /content/sample/([^/]+)/*, used while resolving path to tenant")
     private static final String TENANT_PATH_MATCHER = "tenant.path.matcher";
 
-    private String[] pathMatchers;
-
-    private List<Pattern> pathPatterns = new ArrayList<Pattern>();
-
     private String tenantRootPath = JCR_TENANT_ROOT;
 
     @Reference
@@ -122,20 +111,10 @@ public class TenantProviderImpl implements TenantProvider {
 
     private WebConsolePlugin plugin;
 
-    private BundleContext bundleContext;
-
     @Activate
     private void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
         this.tenantRootPath = PropertiesUtil.toString(properties.get(TENANT_ROOT), JCR_TENANT_ROOT);
-        this.pathMatchers = PropertiesUtil.toStringArray(properties.get(TENANT_PATH_MATCHER), DEFAULT_PATH_MATCHER);
-        this.bundleContext = bundleContext;
-
-        this.pathPatterns.clear();
-        for (String matcherStr : this.pathMatchers) {
-            this.pathPatterns.add(Pattern.compile(matcherStr));
-        }
-
-        this.adapterFactory = new TenantAdapterFactory(bundleContext, this);
+        this.adapterFactory = new TenantAdapterFactory(bundleContext, this, PropertiesUtil.toStringArray(properties.get(TENANT_PATH_MATCHER), DEFAULT_PATH_MATCHER));
         this.plugin = new WebConsolePlugin(bundleContext, this);
     }
 
@@ -152,10 +131,12 @@ public class TenantProviderImpl implements TenantProvider {
         }
     }
 
+    @SuppressWarnings("unused")
     private synchronized void bindTenantSetup(TenantCustomizer action, Map<String, Object> config) {
         registeredTenantHandlers.put(ServiceUtil.getComparableForServiceRanking(config), action);
     }
 
+    @SuppressWarnings("unused")
     private synchronized void unbindTenantSetup(TenantCustomizer action, Map<String, Object> config) {
         registeredTenantHandlers.remove(ServiceUtil.getComparableForServiceRanking(config));
     }
@@ -164,23 +145,14 @@ public class TenantProviderImpl implements TenantProvider {
         return registeredTenantHandlers.values();
     }
 
-    public Tenant getTenant(String tenantId) {
-        if (StringUtils.isBlank(tenantId)) {
-            return null;
-        }
-
-        final ResourceResolver adminResolver = getAdminResolver();
-        if (adminResolver != null) {
-            try {
-                Resource tenantRootRes = adminResolver.getResource(tenantRootPath);
-
-                Resource tenantRes = tenantRootRes.getChild(tenantId);
-                if (tenantRes != null) {
-                    return new TenantImpl(tenantRes);
+    public Tenant getTenant(final String tenantId) {
+        if (tenantId != null && tenantId.length() > 0) {
+            return call(new ResourceResolverTask<Tenant>() {
+                public Tenant call(ResourceResolver resolver) {
+                    Resource tenantRes = getTenantResource(resolver, tenantId);
+                    return (tenantRes != null) ? new TenantImpl(tenantRes) : null;
                 }
-            } finally {
-                adminResolver.close();
-            }
+            });
         }
 
         // in case of some problem
@@ -188,208 +160,246 @@ public class TenantProviderImpl implements TenantProvider {
     }
 
     public Iterator<Tenant> getTenants() {
-        final ResourceResolver adminResolver = getAdminResolver();
-        if (adminResolver != null) {
-            try {
-                Resource tenantRootRes = adminResolver.getResource(tenantRootPath);
-
-                if (tenantRootRes != null) {
-                    List<Tenant> tenantList = new ArrayList<Tenant>();
-                    Iterator<Resource> tenantResourceList = tenantRootRes.listChildren();
-                    while (tenantResourceList.hasNext()) {
-                        Resource tenantRes = tenantResourceList.next();
-                        tenantList.add(new TenantImpl(tenantRes));
-                    }
-                    return tenantList.iterator();
-                }
-            } finally {
-                adminResolver.close();
-            }
-        }
-
-        // in case of some problem return an empty iterator
-        return Collections.<Tenant> emptyList().iterator();
+        return getTenants(null);
     }
 
-    /**
-     * Creates a new tenant (not exposed as part of the api)
-     *
-     * @param name
-     * @param tenantId
-     * @param description
-     * @return
-     * @throws PersistenceException
-     */
-    public Tenant addTenant(String name, String tenantId, String description) throws PersistenceException {
-        final ResourceResolver adminResolver = getAdminResolver();
-        if (adminResolver != null) {
+    public Iterator<Tenant> getTenants(final String tenantFilter) {
+        final Filter filter;
+        if (tenantFilter != null && tenantFilter.length() > 0) {
             try {
-                Resource tenantRootRes = adminResolver.getResource(tenantRootPath);
-                Session adminSession = adminResolver.adaptTo(Session.class);
-
-                if (tenantRootRes == null) {
-                    // create the root path
-                    JcrUtils.getOrCreateByPath(tenantRootPath, null, adminSession);
-                    tenantRootRes = adminResolver.getResource(tenantRootPath);
-                }
-
-                // check if tenantId already exists
-                Resource child = tenantRootRes.getChild(tenantId);
-
-                if (child != null) {
-                    throw new PersistenceException("Tenant already exists with Id " + tenantId);
-                }
-
-                // create the tenant
-                Node rootNode = tenantRootRes.adaptTo(Node.class);
-                Node tenantNode = rootNode.addNode(tenantId);
-                tenantNode.setProperty(Tenant.PROP_NAME, name);
-                tenantNode.setProperty(Tenant.PROP_DESCRIPTION, description);
-
-                Resource resource = adminResolver.getResource(tenantNode.getPath());
-                Tenant tenant = new TenantImpl(resource);
-                PersistableValueMap tenantProps = resource.adaptTo(PersistableValueMap.class);
-                // call tenant setup handler
-                for (TenantCustomizer ts : getTenantHandlers()) {
-                    try {
-                        Map<String, Object> props = ts.setup(tenant, adminResolver);
-                        if (props != null) {
-                            tenantProps.putAll(props);
-                        }
-                    } catch (Exception e) {
-                        log.info("addTenant: Unexpected problem calling TenantCustomizer " + ts, e);
-                    }
-                }
-                // save the properties
-                tenantProps.save();
-
-                // save the session
-                adminSession.save();
-                // refersh tenant instance, as it copies property from
-                // resource
-                tenant = new TenantImpl(resource);
-                return tenant;
-
-            } catch (RepositoryException e) {
-                throw new PersistenceException("Unexpected RepositoryException while adding tenant", e);
-            } finally {
-                adminResolver.close();
+                filter = FrameworkUtil.createFilter(tenantFilter);
+            } catch (InvalidSyntaxException e) {
+                throw new IllegalArgumentException(e.getMessage(), e);
             }
+        } else {
+            filter = null;
         }
 
-        throw new PersistenceException("Cannot create the tenant");
-    }
-
-    /**
-     * Removes the tenant (not exposed as part of the api)
-     *
-     * @param tenantId tenant identifier
-     * @return
-     * @throws PersistenceException
-     */
-    public void removeTenant(String tenantId) throws PersistenceException {
-        final ResourceResolver adminResolver = getAdminResolver();
-        if (adminResolver != null) {
-            try {
-                Resource tenantRootRes = adminResolver.getResource(tenantRootPath);
-
-                if (tenantRootRes == null) {
-                    // if tenant home is null just return
-                    return;
-                }
-
-                // check if tenantId already exists
-                Resource tenantRes = tenantRootRes.getChild(tenantId);
-
-                if (tenantRes != null) {
-                    Node tenantNode = tenantRes.adaptTo(Node.class);
-                    Tenant tenant = new TenantImpl(tenantRes);
-                    // call tenant setup handler
-                    for (TenantCustomizer ts : getTenantHandlers()) {
-                        try {
-                            ts.remove(tenant, adminResolver);
-                        } catch (Exception e) {
-                            log.info("removeTenant: Unexpected problem calling TenantCustomizer " + ts, e);
-                        }
-                    }
-
-                    tenantNode.remove();
-                    adminResolver.adaptTo(Session.class).save();
-                    return;
-                }
-                // if there was no tenant found, just return
-                return;
-            } catch (RepositoryException e) {
-                throw new PersistenceException("Unexpected RepositoryException while removing tenant", e);
-            } finally {
-                adminResolver.close();
-            }
-        }
-
-        throw new PersistenceException("Cannot remove the tenant");
-    }
-
-    public Iterator<Tenant> getTenants(String tenantFilter) {
-        if (StringUtils.isBlank(tenantFilter)) {
-            return null;
-        }
-
-        final ResourceResolver adminResolver = getAdminResolver();
-        if (adminResolver != null) {
-            try {
-                Resource tenantRootRes = adminResolver.getResource(tenantRootPath);
+        Iterator<Tenant> result = call(new ResourceResolverTask<Iterator<Tenant>>() {
+            public Iterator<Tenant> call(ResourceResolver resolver) {
+                Resource tenantRootRes = resolver.getResource(tenantRootPath);
 
                 List<Tenant> tenantList = new ArrayList<Tenant>();
                 Iterator<Resource> tenantResourceList = tenantRootRes.listChildren();
                 while (tenantResourceList.hasNext()) {
                     Resource tenantRes = tenantResourceList.next();
-                    ValueMap vm = ResourceUtil.getValueMap(tenantRes);
 
-                    Filter filter = FrameworkUtil.createFilter(tenantFilter);
-                    if (filter.matches(vm)) {
+                    if (filter == null || filter.matches(ResourceUtil.getValueMap(tenantRes))) {
                         TenantImpl tenant = new TenantImpl(tenantRes);
                         tenantList.add(tenant);
                     }
                 }
                 return tenantList.iterator();
-            } catch (InvalidSyntaxException e) {
-                throw new IllegalArgumentException(e.getMessage(), e);
-            } finally {
-                adminResolver.close();
             }
+        });
+
+        if (result == null) {
+            // no filter or no resource resolver for calling
+            result = Collections.<Tenant> emptyList().iterator();
         }
 
-        // in case of some problem return an empty iterator
-        return Collections.<Tenant> emptyList().iterator();
+        return result;
     }
 
-    /**
-     * Helper for the {@link JcrTenantAdapterFactory} to resolve any resource
-     * path to a tenant.
-     */
-    Tenant resolveTenantByPath(String path) {
-        // find matching path identifier
-        for (Pattern pathPattern : pathPatterns) {
-            Matcher matcher = pathPattern.matcher(path);
-            if (matcher.find()) {
-                // assuming that first group is tenantId in the path, we can
-                // make group number configurable.
-                if (matcher.groupCount() >= 1) {
-                    String tenantId = matcher.group(1);
-                    return getTenant(tenantId);
+    public Tenant create(final String tenantId, final Map<String, Object> properties) {
+        return call(new ResourceResolverTask<Tenant>() {
+            public Tenant call(ResourceResolver adminResolver) {
+                try {
+                    // create the tenant
+                    Resource tenantRes = createTenantResource(adminResolver, tenantId, properties);
+                    TenantImpl tenant = new TenantImpl(tenantRes);
+                    customizeTenant(tenantRes, tenant);
+                    adminResolver.commit();
+
+                    // refresh tenant instance, as it copies property from
+                    // resource
+                    tenant.loadProperties(tenantRes);
+
+                    return tenant;
+
+                } catch (PersistenceException e) {
+                    log.error("create: Failed creating Tenant {}", tenantId, e);
+                } finally {
+                    adminResolver.close();
+                }
+
+                // no new tenant in case of problems
+                return null;
+            }
+        });
+    }
+
+    public void remove(final Tenant tenant) {
+        call(new ResourceResolverTask<Void>() {
+            public Void call(ResourceResolver resolver) {
+                try {
+                    Resource tenantRes = getTenantResource(resolver, tenant.getId());
+                    if (tenantRes != null) {
+                        // call tenant setup handler
+                        for (TenantCustomizer ts : getTenantHandlers()) {
+                            try {
+                                ts.remove(tenant, resolver);
+                            } catch (Exception e) {
+                                log.info("removeTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+                            }
+                        }
+
+                        resolver.delete(tenantRes);
+                        resolver.commit();
+                    }
+                } catch (PersistenceException e) {
+                    log.error("remove({}): Cannot persist Tenant removal", tenant.getId(), e);
+                }
+
+                return null;
+            }
+        });
+    }
+
+    public void setProperty(final Tenant tenant, final String name, final Object value) {
+        updateProperties(tenant, new PropertiesUpdater() {
+            public void update(ModifiableValueMap properties) {
+                if (value != null) {
+                    properties.put(name, value);
+                } else {
+                    properties.remove(name);
                 }
             }
-        }
-        return null;
+        });
     }
 
-    private ResourceResolver getAdminResolver() {
-        try {
-            return factory.getAdministrativeResourceResolver(null);
-        } catch (LoginException le) {
-            // unexpected, thus ignore
+    public void setProperties(final Tenant tenant, final Map<String, Object> properties) {
+        updateProperties(tenant, new PropertiesUpdater() {
+            public void update(ModifiableValueMap vm) {
+                for (Entry<String, Object> entry : properties.entrySet()) {
+                    if (entry.getValue() != null) {
+                        vm.put(entry.getKey(), entry.getValue());
+                    } else {
+                        vm.remove(entry.getKey());
+                    }
+                }
+            }
+        });
+    }
+
+    public void removeProperties(final Tenant tenant, final String... propertyNames) {
+        updateProperties(tenant, new PropertiesUpdater() {
+            public void update(ModifiableValueMap properties) {
+                for (String name : propertyNames) {
+                    properties.remove(name);
+                }
+            }
+        });
+    }
+
+    @SuppressWarnings("serial")
+    private Resource createTenantResource(final ResourceResolver resolver, final String tenantId,
+            final Map<String, Object> properties) throws PersistenceException {
+
+        // check for duplicate first
+        if (getTenantResource(resolver, tenantId) != null) {
+            throw new PersistenceException("Tenant '" + tenantId + "' already exists");
         }
 
-        return null;
+        Resource tenantRoot = resolver.getResource(tenantRootPath);
+
+        if (tenantRoot == null) {
+            Resource current = resolver.getResource("/");
+            if (current == null) {
+                throw new PersistenceException("Cannot get root Resource");
+            }
+
+            String[] segments = this.tenantRootPath.split("/");
+            for (String segment : segments) {
+                Resource child = current.getChild(segment);
+                if (child == null) {
+                    child = resolver.create(current, segment, new HashMap<String, Object>() {
+                        {
+                            put("jcr:primaryType", "sling:Folder");
+                        }
+                    });
+                }
+            }
+
+            tenantRoot = current;
+        }
+
+        return resolver.create(tenantRoot, tenantId, properties);
+    }
+
+    private Resource getTenantResource(final ResourceResolver resolver, final String tenantId) {
+        return resolver.getResource(tenantRootPath + "/" + tenantId);
+    }
+
+    private void customizeTenant(final Resource tenantRes, final Tenant tenant) {
+
+        // call tenant setup handler
+        Map<String, Object> tenantProps = tenantRes.adaptTo(ModifiableValueMap.class);
+        if (tenantProps == null) {
+            log.warn(
+                "create({}): Cannot get ModifiableValueMap for new tenant; will not store changed properties of TenantCustomizers",
+                tenant.getId());
+            tenantProps = new HashMap<String, Object>();
+        }
+
+        for (TenantCustomizer ts : getTenantHandlers()) {
+            try {
+                Map<String, Object> props = ts.setup(tenant, tenantRes.getResourceResolver());
+                if (props != null) {
+                    tenantProps.putAll(props);
+                }
+            } catch (Exception e) {
+                log.info("addTenant: Unexpected problem calling TenantCustomizer " + ts, e);
+            }
+        }
+    }
+
+    private <T> T call(ResourceResolverTask<T> task) {
+        ResourceResolver resolver = null;
+        T result = null;
+
+        try {
+            resolver = factory.getAdministrativeResourceResolver(null);
+            result = task.call(resolver);
+        } catch (LoginException le) {
+            // unexpected, thus ignore
+        } finally {
+            if (resolver != null) {
+                resolver.close();
+            }
+        }
+
+        return result;
+    }
+
+    private void updateProperties(final Tenant tenant, final PropertiesUpdater updater) {
+        call(new ResourceResolverTask<Void>() {
+            public Void call(ResourceResolver resolver) {
+                try {
+                    Resource tenantRes = getTenantResource(resolver, tenant.getId());
+                    if (tenantRes != null) {
+                        updater.update(tenantRes.adaptTo(ModifiableValueMap.class));
+                        customizeTenant(tenantRes, tenant);
+                        resolver.commit();
+
+                        if (tenant instanceof TenantImpl) {
+                            ((TenantImpl) tenant).loadProperties(tenantRes);
+                        }
+                    }
+                } catch (PersistenceException pe) {
+                    log.error("setProperty({}): Cannot persist Tenant removal", tenant.getId(), pe);
+                }
+
+                return null;
+            }
+        });
+    }
+
+    private static interface ResourceResolverTask<T> {
+        T call(ResourceResolver resolver);
+    }
+
+    private static interface PropertiesUpdater {
+        void update(ModifiableValueMap properties);
     }
 }
