@@ -53,6 +53,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
+import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -386,7 +387,7 @@ public class JcrResourceProvider
     public Resource create(final ResourceResolver resolver, final String path, final Map<String, Object> properties)
     throws PersistenceException {
         // check for node type
-        final Object nodeObj = (properties != null ? properties.get("jcr:primaryType") : null);
+        final Object nodeObj = (properties != null ? properties.get(NodeUtil.NODE_TYPE) : null);
         final String nodeType = (nodeObj != null ? nodeObj.toString() : null);
         try {
             final int lastPos = path.lastIndexOf('/');
@@ -407,8 +408,13 @@ public class JcrResourceProvider
             if ( properties != null ) {
                 // create modifiable map
                 final JcrModifiableValueMap jcrMap = new JcrModifiableValueMap(node, this.dynamicClassLoader);
+                // check mixin types first
+                final Object value = properties.get(NodeUtil.MIXIN_TYPES);
+                if ( value != null ) {
+                    jcrMap.put(NodeUtil.MIXIN_TYPES, value);
+                }
                 for(final Map.Entry<String, Object> entry : properties.entrySet()) {
-                    if ( !"jcr:primaryType".equals(entry.getKey()) ) {
+                    if ( !NodeUtil.NODE_TYPE.equals(entry.getKey()) && !NodeUtil.MIXIN_TYPES.equals(entry.getKey())) {
                         try {
                             jcrMap.put(entry.getKey(), entry.getValue());
                         } catch (final IllegalArgumentException iae) {

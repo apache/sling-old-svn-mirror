@@ -25,16 +25,15 @@ import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.nodetype.NodeType;
 
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.jcr.resource.internal.NodeUtil;
 import org.apache.sling.jcr.resource.internal.helper.JcrPropertyMapCacheEntry;
 
 /**
  * This implementation of the value map allows to change
- * the properies and save them later on.
+ * the properties and save them later on.
  */
 public final class JcrModifiablePropertyMap
     extends JcrPropertyMap
@@ -65,6 +64,7 @@ public final class JcrModifiablePropertyMap
     /**
      * @see java.util.Map#clear()
      */
+    @Override
     public void clear() {
         // we have to read all properties first
         this.readFully();
@@ -79,6 +79,7 @@ public final class JcrModifiablePropertyMap
     /**
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
+    @Override
     public Object put(String aKey, Object value) {
         final String key = checkKey(aKey);
         if ( key.indexOf('/') != -1 ) {
@@ -105,6 +106,7 @@ public final class JcrModifiablePropertyMap
     /**
      * @see java.util.Map#putAll(java.util.Map)
      */
+    @Override
     public void putAll(Map<? extends String, ? extends Object> t) {
         readFully();
         if ( t != null ) {
@@ -120,6 +122,7 @@ public final class JcrModifiablePropertyMap
     /**
      * @see java.util.Map#remove(java.lang.Object)
      */
+    @Override
     public Object remove(Object aKey) {
         final String key = checkKey(aKey.toString());
         readFully();
@@ -144,35 +147,6 @@ public final class JcrModifiablePropertyMap
         this.fullyRead = false;
     }
 
-    /** Property for the mixin node types. */
-    private static final String MIXIN_TYPES = "jcr:mixinTypes";
-
-    /**
-     * Update the mixin node types
-     */
-    private void handleMixinTypes(final Node node, final Value[] mixinTypes) throws RepositoryException {
-        final Set<String> newTypes = new HashSet<String>();
-        if ( mixinTypes != null ) {
-            for(final Value value : mixinTypes ) {
-                newTypes.add(value.getString());
-            }
-        }
-        final Set<String> oldTypes = new HashSet<String>();
-        for(final NodeType mixinType : node.getMixinNodeTypes()) {
-            oldTypes.add(mixinType.getName());
-        }
-        for(final String name : oldTypes) {
-            if ( !newTypes.contains(name) ) {
-                node.removeMixin(name);
-            } else {
-                newTypes.remove(name);
-            }
-        }
-        for(final String name : newTypes) {
-            node.addMixin(name);
-        }
-    }
-
     /**
      * @see org.apache.sling.api.resource.PersistableValueMap#save()
      */
@@ -185,19 +159,19 @@ public final class JcrModifiablePropertyMap
         try {
             final Node node = getNode();
             // check for mixin types
-            if ( this.changedProperties.contains(MIXIN_TYPES) ) {
-                if ( cache.containsKey(MIXIN_TYPES) ) {
-                    final JcrPropertyMapCacheEntry entry = cache.get(MIXIN_TYPES);
-                    handleMixinTypes(node, entry.values);
+            if ( this.changedProperties.contains(NodeUtil.MIXIN_TYPES) ) {
+                if ( cache.containsKey(NodeUtil.MIXIN_TYPES) ) {
+                    final JcrPropertyMapCacheEntry entry = cache.get(NodeUtil.MIXIN_TYPES);
+                    NodeUtil.handleMixinTypes(node, entry.values);
                 } else {
                     // remove all mixin types!
-                    handleMixinTypes(node, null);
+                    NodeUtil.handleMixinTypes(node, null);
                 }
             }
 
             for(final String key : this.changedProperties) {
                 final String name = escapeKeyName(key);
-                if ( !MIXIN_TYPES.equals(name) ) {
+                if ( !NodeUtil.MIXIN_TYPES.equals(name) ) {
                     if ( cache.containsKey(key) ) {
                         final JcrPropertyMapCacheEntry entry = cache.get(key);
                         if ( entry.isMulti ) {
@@ -210,7 +184,7 @@ public final class JcrModifiablePropertyMap
                     }
                 }
             }
-            getNode().getSession().save();
+            node.getSession().save();
             this.reset();
         } catch (final RepositoryException re) {
             throw new PersistenceException("Unable to persist changes.", re, getPath(), null);
