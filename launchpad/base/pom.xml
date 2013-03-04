@@ -91,7 +91,7 @@
                             system.bundle
                         </Bundle-SymbolicName>
                         <Bundle-DocURL>
-                            http://cwiki.apache.org/SLING/the-sling-launchpad.html
+                            http://sling.apache.org/site/the-sling-launchpad.html
                         </Bundle-DocURL>
                         <Private-Package>
                             <!-- External (app, webapp) components -->
