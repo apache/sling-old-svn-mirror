@@ -27,14 +27,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.version.VersionException;
 import javax.servlet.ServletException;
 
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -120,8 +115,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-   throws PathNotFoundException,
-            RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
+    throws RepositoryException {
         final String nodeType = getPrimaryType(reqProperties, path);
         if (nodeType != null) {
             final Resource rsrc = resolver.getResource(path);
@@ -155,8 +149,7 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                     final Map<String, RequestProperty> reqProperties,
                     final List<Modification> changes,
                     final VersioningConfiguration versioningConfiguration)
-    throws PathNotFoundException,
-            RepositoryException, NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException {
+    throws RepositoryException {
         final String[] mixins = getMixinTypes(reqProperties, path);
         if (mixins != null) {
 
