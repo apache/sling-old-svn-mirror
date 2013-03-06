@@ -38,4 +38,3 @@ if(Arrays.asList(slingRequest.getRequestPathInfo().getSelectors()).contains(SELE
 	throw new Exception("throwable selector was specified");
 }
 %>
-All good
