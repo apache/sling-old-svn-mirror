@@ -81,30 +81,26 @@ public class ErrorHandlingTest extends JspTestBase {
 		final String expected = "Internal Server Error (500) - custom error page";
 		final String url =  testNodePath +SELECTOR_500+".html"; 
 		assertContains(getContent(url, CONTENT_TYPE_HTML,null,500), expected);
-		//assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
-	}
+ 	}
 
 	public void test_401_errorhandling() throws IOException{
 		final String expected = "401 Unauthorized - custom error page";
 		final String url =  testNodePath +SELECTOR_401+".html"; 
 		assertContains(getContent(url, CONTENT_TYPE_HTML,null,401), expected);
-		//assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,401), "All good");	
 	}
 
 	public void test_throwable_errorhandling() throws IOException{	
 		final String expected = "Exception thrown - custom error page";
 		final String url =  testNodePath +SELECTOR_THROWABLE+".html";
 		assertContains(getContent(url, CONTENT_TYPE_HTML,null,200), expected);
-		assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
-	}
+ 	}
 	
 	public void test_500_errorhandling_POST_operation() throws IOException{	
 		final String expected = "Internal Server Error (500) - custom error page";
 		final String url =  testNodePath +".html"; 
 		uploadTestScript(THROW_ERROR_PATH+"/"+"POST.jsp", THROW_ERROR_PATH+"/"+"POST.jsp");
 		assertContains(getContent(url, CONTENT_TYPE_HTML,null,500,HTTP_METHOD_POST), expected);
-		//assertNotContains(getContent(url, CONTENT_TYPE_HTML,null,200), "All good");
- 	}
+  	}
 	
 	public void test_errorhandling_POST_operation_SlingPostServlet() throws IOException{
 		final String expected = "Exception thrown - custom error page";
