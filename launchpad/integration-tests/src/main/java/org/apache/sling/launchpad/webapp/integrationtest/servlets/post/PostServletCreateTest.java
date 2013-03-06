@@ -25,7 +25,6 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -169,7 +168,7 @@ public class PostServletCreateTest extends HttpTestBase {
     }
 
     /**
-     * SLING-1091: test create node with an exact node name (no filtering) 
+     * SLING-1091: test create node with an exact node name (no filtering)
      */
     public void testCreateNodeWithExactName() throws IOException {
     	Map<String,String> nodeProperties = new HashMap<String, String>();
@@ -186,8 +185,8 @@ public class PostServletCreateTest extends HttpTestBase {
     }
 
     /**
-     * SLING-1091: test error reporting when attempting to create a node with an 
-     * invalid exact node name. 
+     * SLING-1091: test error reporting when attempting to create a node with an
+     * invalid exact node name.
      */
     public void testCreateNodeWithInvalidExactName() throws IOException {
 		String location = postUrl + SLASH;
@@ -198,12 +197,12 @@ public class PostServletCreateTest extends HttpTestBase {
     }
 
     /**
-     * SLING-1091: test error reporting when attempting to create a node with an 
-     * already used node name. 
+     * SLING-1091: test error reporting when attempting to create a node with an
+     * already used node name.
      */
     public void testCreateNodeWithAlreadyUsedExactName() throws IOException {
         String testNodeName = "alreadyUsedExactNodeName";
-    	
+
     	Map<String,String> nodeProperties = new HashMap<String, String>();
     	nodeProperties.put(SlingPostConstants.RP_NODE_NAME, testNodeName);
         final String location = testClient.createNode(postUrl + SLASH, nodeProperties);
@@ -253,11 +252,10 @@ public class PostServletCreateTest extends HttpTestBase {
         list.add(new NameValuePair("prop", "value"));
         list.add(new NameValuePair("jcr:primaryType", "nt:unstructured"));
 
-        final HttpMethod method = assertPostStatus(childUrl, 500, list,
+        assertPostStatus(childUrl, 500, list,
                 "Response to creating a child under nt:file should fail.");
-        final String body = method.getResponseBodyAsString();
-        assertTrue("Failure should result from a ConstraintViolationException",
-                body.contains("javax.jcr.nodetype.ConstraintViolationException"));
+        // we shouldn't check for a specific exception as that one is implementation specific (see SLING-2763)
+        // a result of 500 is enough.
     }
 
 }
