@@ -16,22 +16,15 @@
  */
 package org.apache.sling.launchpad.testservices.servlets;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.sling.SlingServlet;
 
 /** Example/test Sling Servlet registered with two selectors */
-@Component(immediate=true, metatype=false)
-@Service(value=javax.servlet.Servlet.class)
-@Properties({
-    @Property(name="service.description", value="Selector Test Servlet"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="sling.servlet.resourceTypes", value="sling/servlet/default"),
-    @Property(name="sling.servlet.methods", value={"GET","POST"}),
-    @Property(name="sling.servlet.selectors", value={"TEST_SEL_1","TEST_SEL_2"}),
-    @Property(name="sling.servlet.extensions", value="txt")
-})
+@SlingServlet(
+        resourceTypes="sling/servlet/default",
+        methods={"GET","POST"},
+        selectors={"TEST_SEL_1","TEST_SEL_2"},
+        extensions="txt"
+        )
 @SuppressWarnings("serial")
 public class SelectorServlet extends TestServlet {
 }
