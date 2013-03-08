@@ -67,11 +67,14 @@ public class ResourceDecoratorTracker {
             }
         }
 
+        // make resource metadata read-only
+        result.getResourceMetadata().makeReadOnly();
+
         return result;
     }
 
     /**
-     * Bind a resouce decorator.
+     * Bind a resource decorator.
      */
     public void bindResourceDecorator(final ResourceDecorator decorator,
             final Map<String, Object> props) {

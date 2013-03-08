@@ -18,7 +18,11 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The <code>ResourceMetadata</code> interface defines the API for the
@@ -33,6 +37,9 @@ import java.util.HashMap;
  * <p>
  * Note, that the prefix <em>sling.</em> to key names is reserved for the
  * Sling implementation.
+ *
+ * Once a resource is returned by the {@link ResourceResolver}, the resource
+ * metadata is made read-only and therefore can't be changed by client code!
  */
 public class ResourceMetadata extends HashMap<String, Object> {
 
@@ -118,6 +125,8 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * @since 2.2
      */
     public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
+
+    private boolean isReadOnly = false;
 
     /**
      * Sets the {@link #CHARACTER_ENCODING} property to <code>encoding</code>
@@ -282,5 +291,72 @@ public class ResourceMetadata extends HashMap<String, Object> {
         }
 
         return null;
+    }
+
+    /**
+     * Make this object read-only. All method calls trying to modify this object
+     * result in an exception!
+     */
+    public void makeReadOnly() {
+        this.isReadOnly = true;
+    }
+
+    /**
+     * Check if this object is read only and if so throw an unsupported operation exception.
+     */
+    private void checkReadOnly() {
+        if ( this.isReadOnly ) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    @Override
+    public void clear() {
+        this.checkReadOnly();
+        super.clear();
+    }
+
+    @Override
+    public Set<java.util.Map.Entry<String, Object>> entrySet() {
+        if ( this.isReadOnly ) {
+            // TODO - commons collections?
+            //return new UnmodifiableEntrySet(super.entrySet());
+        }
+        return super.entrySet();
+    }
+
+    @Override
+    public Object put(final String key, final Object value) {
+        this.checkReadOnly();
+        return super.put(key, value);
+    }
+
+    @Override
+    public void putAll(final Map<? extends String, ? extends Object> m) {
+        this.checkReadOnly();
+        super.putAll(m);
+    }
+
+    @Override
+    public Object remove(final Object key) {
+        this.checkReadOnly();
+        return super.remove(key);
+    }
+
+
+    @Override
+    public Set<String> keySet() {
+        if ( this.isReadOnly ) {
+            return Collections.unmodifiableSet(super.keySet());
+        }
+        return super.keySet();
+    }
+
+    @Override
+    public Collection<Object> values() {
+        if ( this.isReadOnly ) {
+            return Collections.unmodifiableCollection(super.values());
+        }
+        return super.values();
     }
 }
