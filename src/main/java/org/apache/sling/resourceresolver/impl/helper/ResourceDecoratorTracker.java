@@ -68,7 +68,7 @@ public class ResourceDecoratorTracker {
         }
 
         // make resource metadata read-only
-        result.getResourceMetadata().makeReadOnly();
+        result.getResourceMetadata().lock();
 
         return result;
     }
