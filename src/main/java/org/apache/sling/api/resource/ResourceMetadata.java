@@ -297,7 +297,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Make this object read-only. All method calls trying to modify this object
      * result in an exception!
      */
-    public void makeReadOnly() {
+    public void lock() {
         this.isReadOnly = true;
     }
 
