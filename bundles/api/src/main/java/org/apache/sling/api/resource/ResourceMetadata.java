@@ -126,18 +126,13 @@ public class ResourceMetadata extends HashMap<String, Object> {
      */
     public static final String INTERNAL_CONTINUE_RESOLVING = ":org.apache.sling.resource.internal.continue.resolving";
 
-
-    /**
-     * This map contains the real metadata.
-     * A call to {@link #makeReadOnly()} makes it read-only
-     */
-    private Map<String, Object> dataMap = new HashMap<String, Object>();
+    private boolean isReadOnly = false;
 
     /**
      * Sets the {@link #CHARACTER_ENCODING} property to <code>encoding</code>
      * if not <code>null</code>.
      */
-    public void setCharacterEncoding(final String encoding) {
+    public void setCharacterEncoding(String encoding) {
         if (encoding != null) {
             put(CHARACTER_ENCODING, encoding);
         }
@@ -161,7 +156,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Sets the {@link #CONTENT_TYPE} property to <code>contentType</code> if
      * not <code>null</code>.
      */
-    public void setContentType(final String contentType) {
+    public void setContentType(String contentType) {
         if (contentType != null) {
             put(CONTENT_TYPE, contentType);
         }
@@ -185,7 +180,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Sets the {@link #CONTENT_LENGTH} property to <code>contentType</code>
      * if not <code>null</code>.
      */
-    public void setContentLength(final long contentLength) {
+    public void setContentLength(long contentLength) {
         if (contentLength > 0) {
             put(CONTENT_LENGTH, contentLength);
         }
@@ -208,7 +203,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Sets the {@link #CREATION_TIME} property to <code>creationTime</code>
      * if not negative.
      */
-    public void setCreationTime(final long creationTime) {
+    public void setCreationTime(long creationTime) {
         if (creationTime >= 0) {
             put(CREATION_TIME, creationTime);
         }
@@ -231,7 +226,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Sets the {@link #MODIFICATION_TIME} property to
      * <code>modificationTime</code> if not negative.
      */
-    public void setModificationTime(final long modificationTime) {
+    public void setModificationTime(long modificationTime) {
         if (modificationTime >= 0) {
             put(MODIFICATION_TIME, modificationTime);
         }
@@ -254,7 +249,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Sets the {@link #RESOLUTION_PATH} property to <code>resolutionPath</code>
      * if not <code>null</code>.
      */
-    public void setResolutionPath(final String resolutionPath) {
+    public void setResolutionPath(String resolutionPath) {
         if (resolutionPath != null) {
             put(RESOLUTION_PATH, resolutionPath);
         }
@@ -278,7 +273,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * Sets the {@link #RESOLUTION_PATH_INFO} property to
      * <code>resolutionPathInfo</code> if not <code>null</code>.
      */
-    public void setResolutionPathInfo(final String resolutionPathInfo) {
+    public void setResolutionPathInfo(String resolutionPathInfo) {
         if (resolutionPathInfo != null) {
             put(RESOLUTION_PATH_INFO, resolutionPathInfo);
         }
@@ -303,71 +298,72 @@ public class ResourceMetadata extends HashMap<String, Object> {
      * result in an exception!
      */
     public void makeReadOnly() {
-        this.dataMap = Collections.unmodifiableMap(this.dataMap);
+        this.isReadOnly = true;
+    }
+
+    /**
+     * Check if this object is read only and if so throw an unsupported operation exception.
+     */
+    private void checkReadOnly() {
+        if ( this.isReadOnly ) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     @Override
     public void clear() {
-        this.dataMap.clear();
-    }
-
-    @Override
-    public boolean containsKey(final Object key) {
-        return this.dataMap.containsKey(key);
-    }
-
-    @Override
-    public boolean containsValue(final Object value) {
-        return this.dataMap.containsValue(value);
-    }
-
-    @Override
-    public Set<java.util.Map.Entry<String, Object>> entrySet() {
-        return this.dataMap.entrySet();
-    }
-
-    @Override
-    public Object get(final Object key) {
-        return this.dataMap.get(key);
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return this.dataMap.isEmpty();
-    }
-
-    @Override
-    public Set<String> keySet() {
-        return this.dataMap.keySet();
+        this.checkReadOnly();
+        super.clear();
     }
 
     @Override
     public Object put(final String key, final Object value) {
-        return this.dataMap.put(key, value);
+        this.checkReadOnly();
+        return super.put(key, value);
     }
 
     @Override
     public void putAll(final Map<? extends String, ? extends Object> m) {
-        this.dataMap.putAll(m);
+        this.checkReadOnly();
+        super.putAll(m);
     }
 
     @Override
     public Object remove(final Object key) {
-        return this.dataMap.remove(key);
+        this.checkReadOnly();
+        return super.remove(key);
+    }
+
+    private Map<String, Object> unmodifiableMap;
+
+    private Map<String, Object> getUnmodifiableMap() {
+        if ( this.unmodifiableMap == null ) {
+            this.unmodifiableMap = Collections.unmodifiableMap(this);
+        }
+        return this.unmodifiableMap;
     }
 
     @Override
-    public int size() {
-        return this.dataMap.size();
+    public Set<java.util.Map.Entry<String, Object>> entrySet() {
+        if ( this.isReadOnly ) {
+            return this.getUnmodifiableMap().entrySet();
+        }
+        return super.entrySet();
+    }
+
+    @Override
+    public Set<String> keySet() {
+        if ( this.isReadOnly ) {
+            return this.getUnmodifiableMap().keySet();
+        }
+        return super.keySet();
     }
 
     @Override
     public Collection<Object> values() {
-        return this.dataMap.values();
-    }
-
-    @Override
-    public String toString() {
-        return "Resource Metadata: " + this.dataMap.toString();
+        if ( this.isReadOnly ) {
+            return this.getUnmodifiableMap().values();
+        }
+        return super.values();
     }
 }
