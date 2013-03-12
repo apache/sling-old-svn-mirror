@@ -306,7 +306,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
      */
     private void checkReadOnly() {
         if ( this.isReadOnly ) {
-            throw new UnsupportedOperationException();
+            throw new UnsupportedOperationException(getClass().getSimpleName() + " is locked");
         }
     }
 
@@ -334,36 +334,37 @@ public class ResourceMetadata extends HashMap<String, Object> {
         return super.remove(key);
     }
 
-    private Map<String, Object> unmodifiableMap;
+    private Set<Map.Entry<String, Object>> lockedEntrySet;
+    private Set<String> lockedKeySet;
+    private Collection<Object> lockedValues;
 
-    private Map<String, Object> getUnmodifiableMap() {
-        if ( this.unmodifiableMap == null ) {
-            this.unmodifiableMap = Collections.unmodifiableMap(this);
+    private void getLockedData() {
+        if(isReadOnly && lockedEntrySet == null) {
+            synchronized (this) {
+                if(isReadOnly && lockedEntrySet == null) {
+                    lockedEntrySet = Collections.unmodifiableSet(super.entrySet());
+                    lockedKeySet = Collections.unmodifiableSet(super.keySet());
+                    lockedValues = Collections.unmodifiableCollection(super.values());
+                }
+            }
         }
-        return this.unmodifiableMap;
     }
-
+    
     @Override
-    public Set<java.util.Map.Entry<String, Object>> entrySet() {
-        if ( this.isReadOnly ) {
-            return this.getUnmodifiableMap().entrySet();
-        }
-        return super.entrySet();
+    public Set<Map.Entry<String, Object>> entrySet() {
+        getLockedData();
+        return lockedEntrySet != null ? lockedEntrySet : super.entrySet();
     }
 
     @Override
     public Set<String> keySet() {
-        if ( this.isReadOnly ) {
-            return this.getUnmodifiableMap().keySet();
-        }
-        return super.keySet();
+        getLockedData();
+        return lockedKeySet != null ? lockedKeySet : super.keySet();
     }
 
     @Override
     public Collection<Object> values() {
-        if ( this.isReadOnly ) {
-            return this.getUnmodifiableMap().values();
-        }
-        return super.values();
+        getLockedData();
+        return lockedValues != null ? lockedValues : super.values();
     }
 }
