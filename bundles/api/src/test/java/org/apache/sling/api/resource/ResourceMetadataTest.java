@@ -81,21 +81,21 @@ public class ResourceMetadataTest {
         }
     }
     
-    @Test(expected=StackOverflowError.class)
+    @Test
     public void testLockedEntrySet() {
         final ResourceMetadata m = new ResourceMetadata();
         m.lock();
         m.entrySet().toString();
     }
     
-    @Test(expected=StackOverflowError.class)
+    @Test
     public void testLockedKeySet() {
         final ResourceMetadata m = new ResourceMetadata();
         m.lock();
         m.keySet().toString();
     }
     
-    @Test(expected=StackOverflowError.class)
+    @Test
     public void testLockedValues() {
         final ResourceMetadata m = new ResourceMetadata();
         m.lock();
