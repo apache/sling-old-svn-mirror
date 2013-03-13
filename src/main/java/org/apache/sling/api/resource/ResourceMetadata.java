@@ -334,7 +334,8 @@ public class ResourceMetadata extends HashMap<String, Object> {
         return super.remove(key);
     }
 
-    private Set<Map.Entry<String, Object>> lockedEntrySet;
+    // volatile for correct double-checked locking in getLockedData()
+    private volatile Set<Map.Entry<String, Object>> lockedEntrySet;
     private Set<String> lockedKeySet;
     private Collection<Object> lockedValues;
 
