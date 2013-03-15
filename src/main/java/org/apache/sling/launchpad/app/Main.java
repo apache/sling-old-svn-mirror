@@ -92,6 +92,18 @@ public class Main {
     private static final String PROP_HOST = "org.apache.felix.http.host";
 
     /**
+     * Name of the configuration property (or system property) indicating
+     * whether the shutdown hook should be installed or not. If this property is
+     * not set or set to {@code true} (case insensitive), the shutdown hook
+     * properly shutting down the framework is installed on startup. Otherwise,
+     * if this property is set to any value other than {@code true} (case
+     * insensitive) the shutdown hook is not installed.
+     * <p>
+     * The respective command line option is {@code -n}.
+     */
+    private static final String PROP_SHUTDOWN_HOOK = "sling.shutdown.hook";
+
+    /**
      * The main entry point to the Sling Launcher Standalone Java Application.
      * This method is generally only called by the Java VM to launch Sling.
      *
@@ -132,6 +144,15 @@ public class Main {
      * bundles.
      */
     private final Map<String, String> commandLineArgs;
+
+    /**
+     * Whether to install the shutdown hook.
+     *
+     * @see #PROP_SHUTDOWN_HOOK
+     * @see #installShutdownHook(Map)
+     * @see #addShutdownHook()
+     */
+    private boolean installShutdownHook;
 
     /**
      * The shutdown hook installed into the Java VM after Sling has been
@@ -184,6 +205,8 @@ public class Main {
         this.commandLineArgs = (args == null)
                 ? new HashMap<String, String>()
                 : args;
+
+        this.installShutdownHook = installShutdownHook(this.commandLineArgs);
 
         // sling.home from the command line or system properties, else default
         String home = getSlingHome(commandLineArgs);
@@ -433,9 +456,8 @@ public class Main {
     }
 
     private void addShutdownHook() {
-        if (this.shutdownHook == null) {
-            this.shutdownHook = new Thread(new ShutdownHook(),
-                "Apache Sling Terminator");
+        if (this.installShutdownHook && this.shutdownHook == null) {
+            this.shutdownHook = new Thread(new ShutdownHook(), "Apache Sling Terminator");
             Runtime.getRuntime().addShutdownHook(this.shutdownHook);
         }
     }
@@ -658,12 +680,22 @@ public class Main {
             System.out.println("    -a address    the interfact to bind to (use 0.0.0.0 for any)");
             System.out.println("    -p port       the port to listen to (default 8080)");
             System.out.println("    -r path       the root servlet context path for the http service (default is /)");
+            System.out.println("    -n            don't install the shutdown hook");
             System.out.println("    -D n=v        sets property n to value v");
             System.out.println("    -h            prints this usage message");
 
             return true;
         }
         return false;
+    }
+
+    private static boolean installShutdownHook(Map<String, String> props) {
+        String prop = props.remove(PROP_SHUTDOWN_HOOK);
+        if (prop == null) {
+            prop = System.getProperty(PROP_SHUTDOWN_HOOK);
+        }
+
+        return (prop == null) ? true : Boolean.valueOf(prop);
     }
 
     // default accessor to enable unit tests wihtout requiring reflection
@@ -754,6 +786,10 @@ public class Main {
                             continue;
                         }
                         props.put(PROP_CONTEXT_PATH, value);
+                        break;
+
+                    case 'n':
+                        props.put(PROP_SHUTDOWN_HOOK, Boolean.FALSE.toString());
                         break;
 
                     case 'D':
