@@ -18,6 +18,8 @@
  */
 package org.apache.sling.launchpad.app;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -338,6 +340,26 @@ public class MainTest extends TestCase {
         assertNull(props2);
     }
 
+    public void test_converCommandLineArgs_n() {
+        Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("n", "n");
+            }
+        });
+        assertNotNull(props);
+        assertEquals(1, props.size());
+        assertEquals(Boolean.FALSE.toString(), props.get("sling.shutdown.hook"));
+
+        Map<String, String> props1 = Main.convertCommandLineArgs(new HashMap<String, String>() {
+            {
+                put("D", "sling.shutdown.hook=" + Boolean.TRUE.toString());
+            }
+        });
+        assertNotNull(props1);
+        assertEquals(1, props1.size());
+        assertEquals(Boolean.TRUE.toString(), props1.get("sling.shutdown.hook"));
+    }
+
     public void test_converCommandLineArgs_D() {
         Map<String, String> props = Main.convertCommandLineArgs(new HashMap<String, String>() {
             {
@@ -364,5 +386,89 @@ public class MainTest extends TestCase {
             }
         });
         assertNull(props1);
+    }
+
+    public void test_installShutdownHook() throws SecurityException, NoSuchMethodException, IllegalArgumentException,
+            IllegalAccessException, InvocationTargetException {
+        final Method m = Main.class.getDeclaredMethod("installShutdownHook", Map.class);
+        m.setAccessible(true);
+
+        final String key = "sling.shutdown.hook";
+        System.getProperties().remove(key);
+
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>()));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "true");
+            }
+        }));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "TRUE");
+            }
+        }));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "false");
+            }
+        }));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "not true");
+            }
+        }));
+
+        System.setProperty(key, "true");
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>()));
+        System.setProperty(key, "TRUE");
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>()));
+        System.setProperty(key, "false");
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>()));
+        System.setProperty(key, "not true");
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>()));
+
+        System.setProperty(key, "true");
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "true");
+            }
+        }));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "TRUE");
+            }
+        }));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "false");
+            }
+        }));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "not true");
+            }
+        }));
+
+        System.setProperty(key, "false");
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "true");
+            }
+        }));
+        TestCase.assertEquals(Boolean.TRUE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "TRUE");
+            }
+        }));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "false");
+            }
+        }));
+        TestCase.assertEquals(Boolean.FALSE, m.invoke(null, new HashMap<String, String>() {
+            {
+                put(key, "not true");
+            }
+        }));
     }
 }
