@@ -16,28 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.accessgate.impl;
+package org.apache.sling.resourceaccesssecurity.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sling.api.resource.ResourceAccessGate;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.commons.osgi.SortingServiceTracker;
-import org.apache.sling.resourceresolver.accessgate.ResourceAccessGateHandler;
-import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAccessGate> {
     
     private List<ResourceAccessGateHandler> resourceAccessGateHandlers = null;
     private ServiceRegistration decoratorRegistration = null;
-    private ResourceAccessGateManagerTracker resAccessGateManagerTracker = null;
     
     /**
      * Constructor
@@ -53,7 +48,6 @@ public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAcc
     public void removedService(ServiceReference reference, Object service) {
         super.removedService(reference, service);
         resourceAccessGateHandlers = null;
-        registerAccessGateResourceDecorator( reference.getBundle().getBundleContext(), size() );
     }
 
     /**
@@ -72,7 +66,6 @@ public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAcc
     public Object addingService(ServiceReference reference) {
         Object returnValue = super.addingService(reference);
         resourceAccessGateHandlers = null;
-        registerAccessGateResourceDecorator( reference.getBundle().getBundleContext(), size() + 1 );
         return returnValue;
     }
     
@@ -91,24 +84,5 @@ public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAcc
         
         return returnValue;
     }
-    
-    private void registerAccessGateResourceDecorator ( BundleContext bundleContext, int nrOfServices ) {
-        if ( decoratorRegistration == null && nrOfServices > 0 ) {
-            synchronized( this ) {
-                resAccessGateManagerTracker = new ResourceAccessGateManagerTracker( bundleContext );
-                resAccessGateManagerTracker.open();
-                decoratorRegistration = bundleContext.registerService( ResourceDecorator.class.getName(), 
-                        new AccessGateResourceDecorator( resAccessGateManagerTracker ), null);
-            }
-        }
-        else if ( decoratorRegistration != null && nrOfServices == 0 )
-        {
-            synchronized( this ) {
-                decoratorRegistration.unregister();
-                resAccessGateManagerTracker.close();
-            }
-            decoratorRegistration = null;
-        }
-    }
-    
+        
 }

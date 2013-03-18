@@ -15,15 +15,15 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.apache.sling.resourceresolver.accessgate;
+ */package org.apache.sling.resourceaccesssecurity.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.sling.api.resource.ResourceAccessGate;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.osgi.framework.ServiceReference;
 
 public class ResourceAccessGateHandler {

@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.accessgate.impl;
+package org.apache.sling.resourceaccesssecurity.impl;
 
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceAccessGate;
 import org.apache.sling.api.resource.ResourceWrapper;
+import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 
 /**
  * The <code>AccessGateResourceWrapper</code> wraps a <code>Resource</code> and 

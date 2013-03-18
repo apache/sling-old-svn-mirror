@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.resource;
+package org.apache.sling.resourceaccesssecurity;
+
+import org.apache.sling.api.resource.AccessSecurityException;
+import org.apache.sling.api.resource.Resource;
 
 
 /**
@@ -128,7 +131,7 @@ public interface ResourceAccessGate {
     public GateResult canUpdateValue( Resource resource, String valueName, String user );
     public GateResult canDeleteValue( Resource resource, String valueName, String user );
 
-    public String sanitizeQuery( String query, String language, String user ) throws AccessGateException;
+    public String sanitizeQuery( String query, String language, String user ) throws AccessSecurityException;
 
     /* for convenience (and performance) */
     public boolean hasReadRestrictions( String user );
