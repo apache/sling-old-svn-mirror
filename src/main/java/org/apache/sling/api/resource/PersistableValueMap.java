@@ -27,7 +27,7 @@ package org.apache.sling.api.resource;
  * you get a new map instance which does not share modified
  * properties with other representations.
  *
- * @deprecated Use the {@äink ModifiableValueMap} instead.
+ * @deprecated Use the {@link ModifiableValueMap} instead.
  */
 @Deprecated
 public interface PersistableValueMap extends ValueMap {
