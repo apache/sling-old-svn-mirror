@@ -114,7 +114,7 @@ public class LaunchpadConfigInstaller {
                     } catch (final IOException e) {
                         // we ignore this
                     }
-                    logger.debug("Launchpad {} will be installed: {}", resourceType, path);
+                    logger.debug("Launchpad {} will be registered: {}", resourceType, path);
                     final String digest = (lastModified > 0 ? String.valueOf(lastModified) : null);
                     final InputStream stream = resourceProvider.getResourceAsStream(path);
                     installables.add(new InstallableResource(path, stream, dict, digest, resourceType, prio));
