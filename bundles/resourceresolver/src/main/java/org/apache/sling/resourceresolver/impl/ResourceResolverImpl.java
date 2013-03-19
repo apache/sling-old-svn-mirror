@@ -863,7 +863,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     private Resource getChildInternal(final Resource parent, final String childName) {
-        Resource child = getResource(parent, childName);
+        final String path;
+        if ( childName.startsWith("/") ) {
+            path = childName;
+        } else {
+            path = parent.getPath() + '/' + childName;
+        }
+        Resource child = getResourceInternal(path);
         if (child != null) {
             final String alias = getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
@@ -881,8 +887,15 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parent.getPath());
         if (aliases != null) {
-            if (aliases.containsKey(childName)) {
-                final Resource aliasedChild = getResource(parent, aliases.get(childName));
+            final String aliasName = aliases.get(childName);
+            if (aliasName != null ) {
+                final String aliasPath;
+                if ( aliasName.startsWith("/") ) {
+                    aliasPath = aliasName;
+                } else {
+                    aliasPath = parent.getPath() + '/' + aliasName;
+                }
+                final Resource aliasedChild = getResourceInternal(aliasPath);
                 logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
                 return aliasedChild;
             }
