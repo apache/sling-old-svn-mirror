@@ -20,8 +20,6 @@ package org.apache.sling.api.wrappers;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -90,22 +88,25 @@ public class ValueMapDecorator implements ValueMap {
 
     /**
      * Converts the object to an array of the given type
-     * @param obj tje object or object array
+     * @param obj the object or object array
      * @param type the component type of the array
      * @return and array of type T
      */
     private <T> T[] convertToArray(Object obj, Class<T> type) {
-        List<T> values = new LinkedList<T>();
         if (obj.getClass().isArray()) {
-            for (Object o: (Object[]) obj) {
-                values.add(convert(o, type));
+            final Object[] array = (Object[]) obj;
+			@SuppressWarnings("unchecked")
+			final T[] result = (T[]) Array.newInstance(type, array.length);
+            for (int i = 0; i < array.length; i++) {
+                result[i] = convert(array[i], type);
             }
+            return result;
         } else {
-            values.add(convert(obj, type));
+            @SuppressWarnings("unchecked")
+            final T[] result = (T[]) Array.newInstance(type, 1);
+            result[0] = convert(obj, type);
+            return result;
         }
-        @SuppressWarnings("unchecked")
-        T[] result = (T[]) Array.newInstance(type, values.size());
-        return values.toArray(result);
     }
 
     /**
