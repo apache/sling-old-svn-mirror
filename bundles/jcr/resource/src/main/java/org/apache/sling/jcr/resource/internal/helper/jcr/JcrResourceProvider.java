@@ -51,6 +51,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 import org.apache.sling.jcr.resource.internal.JcrModifiableValueMap;
 import org.apache.sling.jcr.resource.internal.NodeUtil;
@@ -388,7 +389,30 @@ public class JcrResourceProvider
     throws PersistenceException {
         // check for node type
         final Object nodeObj = (properties != null ? properties.get(NodeUtil.NODE_TYPE) : null);
-        final String nodeType = (nodeObj != null ? nodeObj.toString() : null);
+        // check for sling:resourcetype
+        final String nodeType;
+        if ( nodeObj != null ) {
+            nodeType = nodeObj.toString();
+        } else {
+            final Object rtObj =  (properties != null ? properties.get(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY) : null);
+            boolean isNodeType = false;
+            if ( rtObj != null ) {
+                final String resourceType = rtObj.toString();
+                if ( resourceType.indexOf(':') != -1 && resourceType.indexOf('/') == -1 ) {
+                    try {
+                        this.session.getWorkspace().getNodeTypeManager().getNodeType(resourceType);
+                        isNodeType = true;
+                    } catch (final RepositoryException ignore) {
+                        // we expect this, if this isn't a valid node type, therefore ignoring
+                    }
+                }
+            }
+            if ( isNodeType ) {
+                nodeType = rtObj.toString();
+            } else {
+                nodeType = null;
+            }
+        }
         try {
             final int lastPos = path.lastIndexOf('/');
             final Node parent;
