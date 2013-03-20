@@ -296,6 +296,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
     /**
      * Make this object read-only. All method calls trying to modify this object
      * result in an exception!
+     * @since 2.3
      */
     public void lock() {
         this.isReadOnly = true;
@@ -350,7 +351,7 @@ public class ResourceMetadata extends HashMap<String, Object> {
             }
         }
     }
-    
+
     @Override
     public Set<Map.Entry<String, Object>> entrySet() {
         getLockedData();

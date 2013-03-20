@@ -26,7 +26,7 @@ package org.apache.sling.api.resource;
  */
 public class SyntheticResource extends AbstractResource {
 
-    /** The resoure resolver to which this resource is related */
+    /** The resource resolver to which this resource is related */
     private final ResourceResolver resourceResolver;
 
     /** The path of the synthetic resource */
@@ -35,7 +35,7 @@ public class SyntheticResource extends AbstractResource {
     /** The type this synthetic resource assumes */
     private final String resourceType;
 
-    /** The metadata of this resource just containig the resource path */
+    /** The metadata of this resource just containing the resource path */
     private final ResourceMetadata resourceMetadata;
 
     /**
