@@ -49,7 +49,7 @@ import org.apache.sling.api.adapter.Adaptable;
  * This interface defines two kinds of methods to access resources: The
  * <code>resolve</code> methods and the <code>getResource</code> methods. The
  * difference lies in the algorithm applied to find the requested resource and
- * in the behaviour in case a resource cannot be found:
+ * in the behavior in case a resource cannot be found:
  * <table>
  * <tr>
  * <th>Method Kind</th>
@@ -144,7 +144,7 @@ public interface ResourceResolver extends Adaptable {
      * @return The {@link Resource} addressed by the <code>absPath</code> or a
      *         {@link NonExistingResource} if no such resource can be resolved.
      * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
-     *             thrown if an error occurrs trying to resolve the resource.
+     *             thrown if an error occurs trying to resolve the resource.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @since 2.0.4
@@ -173,7 +173,7 @@ public interface ResourceResolver extends Adaptable {
      * @return The {@link Resource} addressed by the <code>absPath</code> or a
      *         {@link NonExistingResource} if no such resource can be resolved.
      * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
-     *             thrown if an error occurrs trying to resolve the resource.
+     *             thrown if an error occurs trying to resolve the resource.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      */
@@ -198,7 +198,7 @@ public interface ResourceResolver extends Adaptable {
      * @throws NullPointerException If <code>request</code> is <code>null</code>
      *             .
      * @throws org.apache.sling.api.SlingException Or a subclass thereof may be
-     *             thrown if an error occurrs trying to resolve the resource.
+     *             thrown if an error occurs trying to resolve the resource.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
      * @deprecated as of 2.0.4, use {@link #resolve(HttpServletRequest, String)}
@@ -279,7 +279,7 @@ public interface ResourceResolver extends Adaptable {
      *            relative path to a resource.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws org.apache.sling.api.SlingException If an error occurrs trying to
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
      *             load the resource object from the path.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
@@ -307,7 +307,7 @@ public interface ResourceResolver extends Adaptable {
      *            (parent location), which are resolved by this method.
      * @return The <code>Resource</code> object loaded from the path or
      *         <code>null</code> if the path does not resolve to a resource.
-     * @throws org.apache.sling.api.SlingException If an error occurrs trying to
+     * @throws org.apache.sling.api.SlingException If an error occurs trying to
      *             load the resource object from the path or if
      *             <code>base</code> is <code>null</code> and <code>path</code>
      *             is relative.
@@ -382,7 +382,7 @@ public interface ResourceResolver extends Adaptable {
      * <p>
      * The semantic meaning of the query and language depend on the actual
      * implementation and storage used for the resources. For JCR repository
-     * being used as storage, the query and lanuage parameters are used to
+     * being used as storage, the query and language parameters are used to
      * create a JCR <code>Query</code> through the <code>QueryManager</code>.
      * The result returned is then based on the <code>NodeIterator</code>
      * provided by the query result.
@@ -396,7 +396,7 @@ public interface ResourceResolver extends Adaptable {
      *         query.
      * @throws QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator.
-     * @throws org.apache.sling.api.SlingException If an error occurrs querying
+     * @throws org.apache.sling.api.SlingException If an error occurs querying
      *             for the resources.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
@@ -409,7 +409,7 @@ public interface ResourceResolver extends Adaptable {
      * <p>
      * The semantic meaning of the query and language depend on the actual
      * implementation and storage used for the resources. For JCR repository
-     * being used as storage, the query and lanuage parameters are used to
+     * being used as storage, the query and language parameters are used to
      * create a JCR <code>Query</code> through the <code>QueryManager</code>.
      * The result returned is then based on the <code>RowIterator</code>
      * provided by the query result. The map returned for each row is indexed by
@@ -426,7 +426,7 @@ public interface ResourceResolver extends Adaptable {
      *         access to the query result.
      * @throws QuerySyntaxException If the query is not syntactically correct
      *             according to the query language indicator.
-     * @throws org.apache.sling.api.SlingException If an error occurrs querying
+     * @throws org.apache.sling.api.SlingException If an error occurs querying
      *             for the resources.
      * @throws IllegalStateException if this resource resolver has already been
      *             {@link #close() closed}.
@@ -449,12 +449,12 @@ public interface ResourceResolver extends Adaptable {
      * </pre>
      *
      * @param authenticationInfo The map or credential data to overlay the
-     *            orignal credential data with for the creation of a new
+     *            original credential data with for the creation of a new
      *            resource resolver. This may be <code>null</code> in which case
      *            the same credential data is used as was used to create this
      *            instance.
      * @return A new <code>ResourceResolver</code>
-     * @throws LoginException If an error occurrs creating the new
+     * @throws LoginException If an error occurs creating the new
      *             <code>ResourceResolver</code> with the provided credential
      *             data.
      * @throws IllegalStateException if this resource resolver has already been

@@ -80,11 +80,11 @@ public interface ResourceResolverFactory {
      * authenticated and only provide minimal privileges, if any at all.
      *
      * @param authenticationInfo A map of further credential information which
-     *            may be used by the implementation to parametrize how the
+     *            may be used by the implementation to parameterize how the
      *            resource resolver is created. This may be <code>null</code>.
      * @return A {@link ResourceResolver} according to the
      *         <code>authenticationInfo</code>.
-     * @throws LoginException If an error occurrs creating the new
+     * @throws LoginException If an error occurs creating the new
      *             <code>ResourceResolver</code> with the provided credential
      *             data.
      */
@@ -108,12 +108,12 @@ public interface ResourceResolverFactory {
      * through {@link #getResourceResolver(Map)} must be used.</i></b>
      *
      * @param authenticationInfo A map of further credential information which
-     *            may be used by the implementation to parametrize how the
+     *            may be used by the implementation to parameterize how the
      *            resource resolver is created. This may be <code>null</code>.
      * @return A {@link ResourceResolver} with administrative privileges unless
      *         the {@link #USER_IMPERSONATION} was set in the
      *         <code>authenticationInfo</code>.
-     * @throws LoginException If an error occurrs creating the new
+     * @throws LoginException If an error occurs creating the new
      *             <code>ResourceResolver</code> with the provided credential
      *             data.
      */

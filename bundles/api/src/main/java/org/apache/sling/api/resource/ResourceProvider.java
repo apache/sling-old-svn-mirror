@@ -82,9 +82,9 @@ public interface ResourceProvider {
      * <p>
      * This method is called to resolve a resource for the given request.
      * The properties of the request, such as request
-     * parameters, may be use to parametrize the resource resolution. An
-     * example of such parametrization is support for a JSR-311
-     * style resource provider to support the parametrized URL patterns.
+     * parameters, may be use to parameterize the resource resolution. An
+     * example of such parameterization is support for a JSR-311
+     * style resource provider to support the parameterized URL patterns.
      *
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned

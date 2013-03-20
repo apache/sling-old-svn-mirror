@@ -40,7 +40,7 @@ public interface ResourceProviderFactory {
      * A required resource provider factory is accessed directly when a new resource resolver
      * is created. Only if authentication against all required resource provider factories
      * is successful, a resource resolver is created by the resource resolver factory.
-     * Boolean service property, default vaule is <code>false</true>
+     * Boolean service property, default value is <code>false</true>
      */
     String PROPERTY_REQUIRED = "required";
 
@@ -55,11 +55,11 @@ public interface ResourceProviderFactory {
      *
      * @param authenticationInfo
      *            A map of further credential information which may be used by
-     *            the implementation to parametrize how the resource provider is
+     *            the implementation to parameterize how the resource provider is
      *            created. This may be <code>null</code>.
      * @return A {@link ResourceProvider} according to the <code>authenticationInfo</code>.
      * @throws LoginException
-     *             If an error occurrs creating the new <code>ResourceProvider</code> with the
+     *             If an error occurs creating the new <code>ResourceProvider</code> with the
      *             provided credential data.
      */
     ResourceProvider getResourceProvider(Map<String, Object> authenticationInfo) throws LoginException;
@@ -81,12 +81,12 @@ public interface ResourceProviderFactory {
      *
      * @param authenticationInfo
      *            A map of further credential information which may be used by
-     *            the implementation to parametrize how the resource provider is
+     *            the implementation to parameterize how the resource provider is
      *            created. This may be <code>null</code>.
      * @return A {@link ResourceProvider} with administrative privileges unless
      *         the {@link ResourceResolverFactory#USER_IMPERSONATION} was set in the <code>authenticationInfo</code>.
      * @throws LoginException
-     *             If an error occurrs creating the new <code>ResourceResolverFactory</code> with the
+     *             If an error occurs creating the new <code>ResourceResolverFactory</code> with the
      *             provided credential data.
      */
     ResourceProvider getAdministrativeResourceProvider(Map<String, Object> authenticationInfo) throws LoginException;
