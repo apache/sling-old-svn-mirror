@@ -869,7 +869,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         } else {
             path = parent.getPath() + '/' + childName;
         }
-        Resource child = getResourceInternal(path);
+        Resource child = getResourceInternal( ResourceUtil.normalize(path) );
         if (child != null) {
             final String alias = getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
@@ -895,7 +895,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
                 } else {
                     aliasPath = parent.getPath() + '/' + aliasName;
                 }
-                final Resource aliasedChild = getResourceInternal(aliasPath);
+                final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(aliasPath) );
                 logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
                 return aliasedChild;
             }
