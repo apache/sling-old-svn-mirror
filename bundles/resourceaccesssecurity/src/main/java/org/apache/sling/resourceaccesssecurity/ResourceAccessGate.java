@@ -18,8 +18,8 @@
  */
 package org.apache.sling.resourceaccesssecurity;
 
-import org.apache.sling.api.resource.AccessSecurityException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.security.AccessSecurityException;
 
 
 /**

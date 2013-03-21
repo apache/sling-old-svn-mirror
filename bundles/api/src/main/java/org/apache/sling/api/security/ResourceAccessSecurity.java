@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.api.resource;
+package org.apache.sling.api.security;
+
+import org.apache.sling.api.resource.Resource;
 
 
 /**

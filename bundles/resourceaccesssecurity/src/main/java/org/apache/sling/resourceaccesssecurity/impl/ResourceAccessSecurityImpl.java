@@ -27,10 +27,10 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.AccessSecurityException;
+import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceAccessSecurity;
+import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
@@ -38,7 +38,7 @@ import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
 @Component(
-        name = "org.apache.sling.api.resource.ResourceAccessSecurity",
+        name = "org.apache.sling.api.security.ResourceAccessSecurity",
         immediate = true )
 @Service( value={ResourceAccessSecurity.class})
    @Properties({
