@@ -18,19 +18,27 @@
  */
 package org.apache.sling.serviceusermapping;
 
-import org.osgi.framework.Bundle;
-
 import aQute.bnd.annotation.ProviderType;
 
 @ProviderType
 public interface ServiceUserMapper {
 
     /**
+     * Returns the name of the service represented by the {@code bundle} and the
+     * {@code serviceInfo}.
+     *
+     * @param serviceInfo Additional information about the concrete service
+     *            requesting access. This parameter is optional and may be
+     *            {@code null}.
+     * @return The name of the service represented by the bundle along with the
+     *         additional service information.
+     */
+    String getServiceName(String serviceInfo);
+
+    /**
      * Returns the name of a user to the be used to access the Sling Resource
      * tree or the JCR Repository.
      *
-     * @param bundle The bundle implementing the service request access to
-     *            resources.
      * @param serviceInfo Additional information about the concrete service
      *            requesting access. This parameter is optional and may be
      *            {@code null}.
@@ -38,6 +46,6 @@ public interface ServiceUserMapper {
      *         for the service. This may be {@code null} to only grant guest
      *         level (or anonymous level) access to the resources.
      */
-    String getUserForService(Bundle bundle, String serviceInfo);
+    String getUserForService(String serviceInfo);
 
 }
