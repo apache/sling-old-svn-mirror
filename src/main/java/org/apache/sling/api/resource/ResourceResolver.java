@@ -623,4 +623,12 @@ public interface ResourceResolver extends Adaptable {
      * @since 2.3
      */
     boolean isResourceType(final Resource resource, final String resourceType);
+
+    /**
+     * The resolver is updated to reflect the latest state.
+     * Resources which have changes pending are not discarded.
+     * @since 2.3
+     */
+    void refresh();
+
 }
