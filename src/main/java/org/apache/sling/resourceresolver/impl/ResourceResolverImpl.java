@@ -1164,4 +1164,11 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         return result;
     }
+
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#refresh()
+     */
+    public void refresh() {
+        this.context.refresh();
+    }
 }
