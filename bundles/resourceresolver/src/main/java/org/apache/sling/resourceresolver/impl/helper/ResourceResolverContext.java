@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.sling.api.resource.DynamicResourceProvider;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -40,6 +41,9 @@ public class ResourceResolverContext {
 
     /** A set of all dynamic providers (for closing them later on) */
     private final Set<DynamicResourceProvider> dynamicProviders = new HashSet<DynamicResourceProvider>();
+
+    /** A set of all refreshable providers */
+    private final Set<RefreshableResourceProvider> refreshableProviders = new HashSet<RefreshableResourceProvider>();
 
     /** A set of all modifying providers */
     private final Set<ModifyingResourceProvider> modifyingProviders = new HashSet<ModifyingResourceProvider>();
@@ -87,6 +91,9 @@ public class ResourceResolverContext {
         if (provider instanceof ModifyingResourceProvider) {
             this.modifyingProviders.add((ModifyingResourceProvider) provider);
         }
+        if (provider instanceof RefreshableResourceProvider) {
+            this.refreshableProviders.add((RefreshableResourceProvider)provider);
+        }
     }
 
     /**
@@ -121,6 +128,7 @@ public class ResourceResolverContext {
         }
         this.dynamicProviders.clear();
         this.providers.clear();
+        this.refreshableProviders.clear();
     }
 
     /**
@@ -151,5 +159,14 @@ public class ResourceResolverContext {
             }
         }
         return false;
+    }
+
+    /**
+     * Refresh
+     */
+    public void refresh() {
+        for(final RefreshableResourceProvider provider : this.refreshableProviders) {
+            provider.refresh();
+        }
     }
 }

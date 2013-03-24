@@ -45,6 +45,7 @@ import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.QuerySyntaxException;
+import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -70,6 +71,7 @@ public class JcrResourceProvider
                DynamicResourceProvider,
                AttributableResourceProvider,
                QueriableResourceProvider,
+               RefreshableResourceProvider,
                ModifyingResourceProvider {
 
     /** column name for node path */
@@ -502,5 +504,16 @@ public class JcrResourceProvider
             log.warn("Unable to check session for pending changes.", ignore);
         }
         return false;
+    }
+
+    /**
+     * @see org.apache.sling.api.resource.RefreshableResourceProvider#refresh()
+     */
+    public void refresh() {
+        try {
+            this.session.refresh(true);
+        } catch (final RepositoryException ignore) {
+            log.warn("Unable to refresh session.", ignore);
+        }
     }
 }
