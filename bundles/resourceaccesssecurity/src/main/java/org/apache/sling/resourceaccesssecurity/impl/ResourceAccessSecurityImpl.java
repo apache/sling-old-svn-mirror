@@ -89,7 +89,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     @Override
-    public Resource checkReadPermission(Resource resource) {
+    public Resource getReadableResource(Resource resource) {
         Resource returnValue = resource;
         ResourceResolver resResolver = resource.getResourceResolver();
         String user = resResolver.getUserID();
@@ -142,7 +142,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     @Override
-    public boolean canCreate(String absPathName, String user) {
+    public boolean canCreate(String absPathName, ResourceResolver resourceResolver) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -172,13 +172,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     @Override
-    public boolean canCreateValue(Resource resource, String valueName) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean canUpdateValue(Resource resource, String valueName) {
+    public boolean canSetValue(Resource resource, String valueName) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -190,7 +184,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     @Override
-    public String sanitizeQuery(String query, String language, String user)
+    public String transformQuery(String query, String language, ResourceResolver resourceResolver)
             throws AccessSecurityException {
         return query;
     }
