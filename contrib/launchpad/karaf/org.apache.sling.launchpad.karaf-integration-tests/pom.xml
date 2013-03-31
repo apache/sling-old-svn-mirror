@@ -25,25 +25,16 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
     <version>15</version>
-    <relativePath>../../../parent/pom.xml</relativePath>
+    <relativePath>../../../../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>sling-launchpad-karaf-builder</artifactId>
+  <artifactId>org.apache.sling.launchpad.karaf-integration-tests</artifactId>
   <version>0.1.0.BUILD-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Apache Sling Launchpad Karaf Builder</name>
+  <name>Apache Sling Launchpad Karaf - Integration Tests</name>
+  <description>Integration Tests for Apache Sling Launchpad Karaf</description>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/karaf</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/launchpad/karaf</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/trunk/contrib/launchpad/karaf</url>
-  </scm>
-
-  <modules>
-    <module>org.apache.sling.launchpad.karaf</module>
-    <module>org.apache.sling.launchpad.karaf-features</module>
-    <module>org.apache.sling.launchpad.karaf-integration-tests</module>
-  </modules>
+  <!-- TODO use pax-exam-container-karaf for integration tests -->
 
 </project>
