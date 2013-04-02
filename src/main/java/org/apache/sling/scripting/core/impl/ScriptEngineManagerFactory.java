@@ -140,7 +140,7 @@ public class ScriptEngineManagerFactory implements BundleListener {
             BufferedReader reader = new BufferedReader(new InputStreamReader(ins));
             String line;
             while ((line = reader.readLine()) != null) {
-            	if (!line.startsWith("#")){
+                if (!line.startsWith("#") && line.trim().length() > 0) {
 	                try {
 	                    Class<ScriptEngineFactory> clazz = bundle.loadClass(line);
 	                    ScriptEngineFactory spi = clazz.newInstance();
