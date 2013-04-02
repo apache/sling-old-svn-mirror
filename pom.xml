@@ -218,6 +218,7 @@
             <modules>
                 <module>launchpad/test-services</module>
                 <module>launchpad/test-services-war</module>
+                <module>launchpad/test-fragment</module>
                 <module>launchpad/test-bundles</module>
                 <module>launchpad/integration-tests</module>
                 <module>launchpad/testing</module>
