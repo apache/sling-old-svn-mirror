@@ -37,16 +37,13 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
-@Component(
-        name = "org.apache.sling.api.security.ResourceAccessSecurity",
-        immediate = true )
-@Service( value={ResourceAccessSecurity.class})
-   @Properties({
-       @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling ResourceAccessSecurity"),
-       @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation")
-   })
+@Component(name = "org.apache.sling.api.security.ResourceAccessSecurity", immediate = true)
+@Service(value = { ResourceAccessSecurity.class })
+@Properties({
+        @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling ResourceAccessSecurity"),
+        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
 public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
-    
+
     private ResourceAccessGateTracker resourceAccessGateTracker;
 
     // ---------- SCR Integration ---------------------------------------------
@@ -54,9 +51,10 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     /** Activates this component, called by SCR before registering as a service */
     @Activate
     protected void activate(final ComponentContext componentContext) {
-        resourceAccessGateTracker = new ResourceAccessGateTracker( componentContext.getBundleContext() );
+        resourceAccessGateTracker = new ResourceAccessGateTracker(
+                componentContext.getBundleContext());
         resourceAccessGateTracker.open();
-        
+
     }
 
     /**
@@ -66,26 +64,32 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     protected void deactivate() {
         resourceAccessGateTracker.close();
     }
-    
-    private List<ResourceAccessGateHandler> getMatchingResourceAccessGateHandlers ( String path, ResourceAccessGate.Operation operation ) {
-        /* TODO: maybe caching some frequent paths with read operation would be a good idea */
-        List<ResourceAccessGateHandler> returnValue = resourceAccessGateTracker.getResourceAccessGateHandlers();
-        
-        if ( returnValue.size() > 0 ) {
+
+    private List<ResourceAccessGateHandler> getMatchingResourceAccessGateHandlers(
+            String path, ResourceAccessGate.Operation operation) {
+        /*
+         * TODO: maybe caching some frequent paths with read operation would be
+         * a good idea
+         */
+        List<ResourceAccessGateHandler> returnValue = resourceAccessGateTracker
+                .getResourceAccessGateHandlers();
+
+        if (returnValue.size() > 0) {
             returnValue = new ArrayList<ResourceAccessGateHandler>();
-            
-            for (ResourceAccessGateHandler resourceAccessGateHandler : resourceAccessGateTracker.getResourceAccessGateHandlers() ) {
-                if ( resourceAccessGateHandler.matches(path, operation) ) {
+
+            for (ResourceAccessGateHandler resourceAccessGateHandler : resourceAccessGateTracker
+                    .getResourceAccessGateHandlers()) {
+                if (resourceAccessGateHandler.matches(path, operation)) {
                     returnValue.add(resourceAccessGateHandler);
                 }
             }
         }
-        
+
         return returnValue;
     }
-    
-    public boolean areResourceAccessGatesRegistered () {
-        return (resourceAccessGateTracker.size() > 0 );
+
+    public boolean areResourceAccessGatesRegistered() {
+        return (resourceAccessGateTracker.size() > 0);
     }
 
     @Override
@@ -93,56 +97,61 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         Resource returnValue = resource;
         ResourceResolver resResolver = resource.getResourceResolver();
         String user = resResolver.getUserID();
-        
-        List<ResourceAccessGateHandler> accessGateHandlers =
-                getMatchingResourceAccessGateHandlers( resource.getPath(), ResourceAccessGate.Operation.READ );
-        
+
+        List<ResourceAccessGateHandler> accessGateHandlers = getMatchingResourceAccessGateHandlers(
+                resource.getPath(), ResourceAccessGate.Operation.READ);
+
         GateResult finalGateResult = null;
         boolean canReadAllValues = false;
         List<ResourceAccessGate> accessGatesForValues = null;
-        
+
         for (ResourceAccessGateHandler resourceAccessGateHandler : accessGateHandlers) {
-            GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canRead(resource, user);
-            if ( !canReadAllValues && gateResult == GateResult.GRANTED ) {
-                if ( resourceAccessGateHandler.getResourceAccessGate().canReadAllValues(resource, user) ) {
+            GateResult gateResult = resourceAccessGateHandler
+                    .getResourceAccessGate().canRead(resource);
+            if (!canReadAllValues && gateResult == GateResult.GRANTED) {
+                if (resourceAccessGateHandler.getResourceAccessGate()
+                        .canReadAllValues(resource)) {
                     canReadAllValues = true;
                     accessGatesForValues = null;
-                }
-                else {
-                    if ( accessGatesForValues == null ) {
+                } else {
+                    if (accessGatesForValues == null) {
                         accessGatesForValues = new ArrayList<ResourceAccessGate>();
                     }
-                    accessGatesForValues.add( resourceAccessGateHandler.getResourceAccessGate() );
+                    accessGatesForValues.add(resourceAccessGateHandler
+                            .getResourceAccessGate());
                 }
             }
-            if ( finalGateResult == null ) {
+            if (finalGateResult == null) {
+                finalGateResult = gateResult;
+            } else if (finalGateResult == GateResult.DENIED) {
                 finalGateResult = gateResult;
             }
-            else if ( finalGateResult == GateResult.DENIED ){
-                finalGateResult = gateResult;
-            }
-            if ( resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.READ) ) {
+            if (resourceAccessGateHandler
+                    .isFinalOperation(ResourceAccessGate.Operation.READ)) {
                 break;
             }
         }
-        
-        // return NonExistingResource if access is denied or no ResourceAccessGate is present
-        if ( finalGateResult == null || finalGateResult == GateResult.DENIED ) {
-            returnValue = new NonExistingResource( resResolver, resource.getPath() );
-        }
-        else if ( finalGateResult == GateResult.DONTCARE ) {
+
+        // return NonExistingResource if access is denied or no
+        // ResourceAccessGate is present
+        if (finalGateResult == null || finalGateResult == GateResult.DENIED) {
+            returnValue = new NonExistingResource(resResolver,
+                    resource.getPath());
+        } else if (finalGateResult == GateResult.DONTCARE) {
             returnValue = resource;
         }
-        // wrap Resource if read access is not or partly (values) not granted 
-        else if ( !canReadAllValues ) {
-            returnValue = new AccessGateResourceWrapper( resource, accessGatesForValues );
+        // wrap Resource if read access is not or partly (values) not granted
+        else if (!canReadAllValues) {
+            returnValue = new AccessGateResourceWrapper(resource,
+                    accessGatesForValues);
         }
-        
+
         return returnValue;
     }
 
     @Override
-    public boolean canCreate(String absPathName, ResourceResolver resourceResolver) {
+    public boolean canCreate(String absPathName,
+            ResourceResolver resourceResolver) {
         // TODO Auto-generated method stub
         return false;
     }
@@ -184,8 +193,8 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     @Override
-    public String transformQuery(String query, String language, ResourceResolver resourceResolver)
-            throws AccessSecurityException {
+    public String transformQuery(String query, String language,
+            ResourceResolver resourceResolver) throws AccessSecurityException {
         return query;
     }
 

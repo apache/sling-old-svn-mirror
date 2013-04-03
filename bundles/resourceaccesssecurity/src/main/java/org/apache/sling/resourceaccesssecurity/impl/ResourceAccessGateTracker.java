@@ -29,20 +29,22 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAccessGate> {
-    
+public class ResourceAccessGateTracker extends
+        SortingServiceTracker<ResourceAccessGate> {
+
     private List<ResourceAccessGateHandler> resourceAccessGateHandlers = null;
     private ServiceRegistration decoratorRegistration = null;
-    
+
     /**
      * Constructor
      */
-    public ResourceAccessGateTracker(final BundleContext context ) {
+    public ResourceAccessGateTracker(final BundleContext context) {
         super(context, ResourceAccessGate.class.getName());
     }
 
     /**
-     * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     * @see org.osgi.util.tracker.ServiceTracker#removedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
      */
     @Override
     public void removedService(ServiceReference reference, Object service) {
@@ -51,7 +53,8 @@ public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAcc
     }
 
     /**
-     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference, java.lang.Object)
+     * @see org.osgi.util.tracker.ServiceTrackerCustomizer#modifiedService(org.osgi.framework.ServiceReference,
+     *      java.lang.Object)
      */
     @Override
     public void modifiedService(ServiceReference reference, Object service) {
@@ -68,21 +71,22 @@ public class ResourceAccessGateTracker extends SortingServiceTracker<ResourceAcc
         resourceAccessGateHandlers = null;
         return returnValue;
     }
-    
-    public List<ResourceAccessGateHandler> getResourceAccessGateHandlers () {
+
+    public List<ResourceAccessGateHandler> getResourceAccessGateHandlers() {
         List<ResourceAccessGateHandler> returnValue = resourceAccessGateHandlers;
-        
-        if ( returnValue == null )
-        {
+
+        if (returnValue == null) {
             resourceAccessGateHandlers = new ArrayList<ResourceAccessGateHandler>();
             for (ServiceReference serviceReference : getSortedServiceReferences()) {
-                resourceAccessGateHandlers.add( new ResourceAccessGateHandler(serviceReference) );
+                resourceAccessGateHandlers.add(new ResourceAccessGateHandler(
+                        serviceReference));
             }
-            resourceAccessGateHandlers = Collections.unmodifiableList(resourceAccessGateHandlers);
+            resourceAccessGateHandlers = Collections
+                    .unmodifiableList(resourceAccessGateHandlers);
             returnValue = resourceAccessGateHandlers;
         }
-        
+
         return returnValue;
     }
-        
+
 }
