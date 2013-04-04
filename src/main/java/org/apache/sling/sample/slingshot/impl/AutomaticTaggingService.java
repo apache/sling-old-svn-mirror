@@ -26,28 +26,32 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistableValueMap;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.sample.slingshot.Constants;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is a samle for observation which adds tags to new resources.
+ * This is a sample for observation which adds tags to new resources.
  */
 @Component(immediate=true)
 @Service(value=EventHandler.class)
 @Properties({
    @Property(name="service.description",
              value="Apache Sling - Slingshot Tagging Service"),
-   @Property(name="event.topics", value=org.apache.sling.api.SlingConstants.TOPIC_RESOURCE_ADDED)
+   @Property(name=EventConstants.EVENT_TOPIC, value=org.apache.sling.api.SlingConstants.TOPIC_RESOURCE_ADDED)
 })
 public class AutomaticTaggingService
     implements EventHandler {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -55,6 +59,7 @@ public class AutomaticTaggingService
     private final Random random = new Random(System.currentTimeMillis());
 
     private final String MIXIN_TYPE_PROPERTY = "jcr:mixinTypes";
+    private final String MIXIN_TYPE_PHOTO = "slingshot:Photo";
 
     /**
      * @see org.osgi.service.event.EventHandler#handleEvent(org.osgi.service.event.Event)
@@ -67,16 +72,16 @@ public class AutomaticTaggingService
                 resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                 final Resource r = resolver.getResource(path);
                 if ( r != null && r.isResourceType(Constants.RESOURCETYPE_PHOTO) ) {
-                    final PersistableValueMap pvm = r.adaptTo(PersistableValueMap.class);
-                    if ( pvm != null ) {
-                        String[] types = pvm.get(MIXIN_TYPE_PROPERTY, String[].class);
+                    final ModifiableValueMap mvm = r.adaptTo(ModifiableValueMap.class);
+                    if ( mvm != null ) {
+                        String[] types = mvm.get(MIXIN_TYPE_PROPERTY, String[].class);
                         if ( types == null ) {
-                            pvm.put(MIXIN_TYPE_PROPERTY, "slingshot:Photo");
+                            mvm.put(MIXIN_TYPE_PROPERTY, MIXIN_TYPE_PHOTO);
                         } else {
                             String[] newTypes = new String[types.length + 1];
                             System.arraycopy(types, 0, newTypes, 0, types.length);
-                            newTypes[types.length] = "slingshot:Photo";
-                            pvm.put(MIXIN_TYPE_PROPERTY, newTypes);
+                            newTypes[types.length] = MIXIN_TYPE_PHOTO;
+                            mvm.put(MIXIN_TYPE_PROPERTY, newTypes);
                         }
 
                         final int tagsValue = this.random.nextInt(8);
@@ -90,12 +95,12 @@ public class AutomaticTaggingService
                         if ( (tagsValue & 4) == 4 ) {
                             tags.add("Cool");
                         }
-                        pvm.put(Constants.PROPERTY_SLINGSHOT_TAGS, tags.toArray(new String[tags.size()]));
+                        mvm.put(Constants.PROPERTY_SLINGSHOT_TAGS, tags.toArray(new String[tags.size()]));
                         try {
-                            pvm.save();
-                        } catch (PersistenceException e) {
-                            LoggerFactory.getLogger(this.getClass()).info("Ups", e);
+                            resolver.commit();
+                        } catch (final PersistenceException e) {
                             // we just ignore this for now
+                            logger.info("Unable to add tags to photo: " + r.getPath(), e);
                         }
                     }
                 }
