@@ -49,6 +49,10 @@ package org.apache.sling.api.resource;
  *  <li>{@link #clear()}</li>
  * </ul>
  * <p>
+ *
+ * A modifiable value map should value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
+ * to set the resource type of a resource.
+ *
  * @since 2.2
  */
 public interface ModifiableValueMap extends ValueMap {

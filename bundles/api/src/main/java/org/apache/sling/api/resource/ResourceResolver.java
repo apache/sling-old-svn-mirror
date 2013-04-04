@@ -121,6 +121,17 @@ public interface ResourceResolver extends Adaptable {
     String USER_IMPERSONATOR = "user.impersonator";
 
     /**
+     * This is the suggested property to be used for setting the resource type
+     * of a resource during either creation ({@link #create(Resource, String, Map)})
+     * or modifying ({@link ModifiableValueMap}).
+     * However the exact way to set the resource type of a resource is defined
+     * by the underlying resource provider. It should value this property but
+     * is not required to do so.
+     * @since 2.3
+     */
+    String PROPERTY_RESOURCE_TYPE = "sling:resourceType";
+
+    /**
      * Resolves the resource from the given <code>absPath</code> optionally
      * taking <code>HttpServletRequest</code> into account, such as the value of
      * the <code>Host</code> request header. Returns a
