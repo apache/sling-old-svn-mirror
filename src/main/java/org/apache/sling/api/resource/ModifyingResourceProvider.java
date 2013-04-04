@@ -48,6 +48,9 @@ public interface ModifyingResourceProvider extends ResourceProvider {
      * The new resource is put into the transient space of this provider
      * until {@link #commit(ResourceResolver)} is called.
      *
+     * A resource provider should value {@link ResourceResolver#PROPERTY_RESOURCE_TYPE}
+     * to set the resource type of a resource.
+     *
      * @param resolver The current resource resolver.
      * @param path The resource path.
      * @param properties Optional properties
