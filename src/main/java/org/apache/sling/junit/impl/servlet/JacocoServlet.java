@@ -39,39 +39,43 @@ import java.lang.management.ManagementFactory;
 import java.util.Dictionary;
 
 /**
- * SUMMARY:
- * A JaCoCo agent REST Servlet, which exposes code coverage data to HTTP clients by calling
- * {@link IAgent#getExecutionData(boolean)}. A POST method will reset the agent after returning the execution data.
- * A GET method calls the operation without resetting the agent.
- *
- * Requests to this servlet will return 404 if the JaCoCo JVM agent is not attached and registered as an {@link IAgent}
- * MBean.
- *
- * IMPORTANT SECURITY CONSIDERATION:
- * "The ports and connections opened in tcpserver and tcpclient mode and the JMX interface do not provide any
- * authentication mechanism. If you run JaCoCo on production systems make sure that no untrusted sources have access to
- * the TCP server port, or JaCoCo TCP clients only connect to trusted targets. Otherwise internal information of the
- * application might be revealed or DOS attacks are possible." - eclemma.org
- *
- * INSTRUCTIONS:
- * To configure jacoco on a standalone integration test server:
- * 1. extract jacocoagent.jar from org.jacoco:org.jacoco.agent:jar:$VERSION to /path/to/jacocoagent.jar
- * e.g.
- * {@code jar -xf ~/.m2/repository/org/jacoco/org.jacoco.agent/$VERSION/org.jacoco.agent-$VERSION.jar -C /path/to jacocoagent.jar}
- * 2. add the following option to server's java args:
- * {@code -javaagent:/path/to/jacocoagent.jar=dumponexit=false,jmx=true}
- * 3. add additional jacoco option args as necessary (see: http://www.eclemma.org/jacoco/trunk/doc/agent.html)
+ * This servlet exposes JaCoCo code coverage data over HTTP. See {@link #EXPLAIN} for usage information,
+ * which is also available at /system/sling/jacoco after installing this servlet with the default settings.
  */
 @SuppressWarnings("serial")
 @Component(immediate = true, metatype = true)
 public class JacocoServlet extends HttpServlet {
-    private static final String JMX_NAME = "org.jacoco:type=Runtime";
     private static final String PARAM_SESSION_ID = ":sessionId";
-
+    private static final String JMX_NAME = "org.jacoco:type=Runtime";
+    
+    public static final String EXPLAIN = 
+            "This servlet exposes JaCoCo (http://www.eclemma.org/jacoco) code coverage data to HTTP clients by calling "
+            + "JaCoCo's IAgent.getExecutionData(...).\n\n"
+            + "POST requests reset the agent after returning the execution data, whereas GET "
+            + "requests just return the data.\n"
+            + "JaCoCo's session ID can be set via a " + PARAM_SESSION_ID + " request parameter.\n"
+            + "The servlet returns 404 if the IAgent MBean is not available.\n\n"
+            + "Please keep the JaCoCo security considerations in mind before enabling its agent: "
+            + "JaCoCo's tcpserver and tcpclient modes and its JMX interface open ports that do "
+            + "not require any authentication. See the JaCoCo documentation for details.\n\n"
+            + "To activate JaCoCo on a Sling instance, start its JVM with the following option:\n\n"
+            + "-javaagent:/path/to/jacoco-agent.jar,dumponexit=false,jmx=true\n\n"
+            + "The JaCoCo jar is a Maven dependency of this module, so you can get it using "
+            + "mvn dependency:copy-dependencies if you have this module's source code.\n\n"
+            + "With this servlet installed, you can generate a JaCoCo coverage report "
+            + "as follows (for example), from a folder that contains a pom.xml:\n\n"
+            + "  curl http://localhost:8080/system/sling/jacoco/exec > target/jacoco.exec\n"
+            + "  mvn org.jacoco:jacoco-maven-plugin:report\n"
+            + "  open target/site/jacoco/index.html\n\n"
+            ;
+    
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(value="/system/sling/jacoco.exec")
+    @Property(value="/system/sling/jacoco")
     static final String SERVLET_PATH_NAME = "servlet.path";
+
+    /** Requests ending with this subpath send the jacoco data */
+    public static final String EXEC_PATH = "/exec";
 
     /** Non-null if we are registered with HttpService */
     private String servletPath;
@@ -118,13 +122,20 @@ public class JacocoServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        IAgent agent = getAgent();
-        if (agent == null) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        if(EXEC_PATH.equals(req.getPathInfo())) {
+            final IAgent agent = getAgent();
+            if (agent == null) {
+                final String msg = "The Jacoco agent MBean is not available\n\n";
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg + getUsageInfo());
+            } else {
+                sendJacocoData(req, resp, false);
+                resp.setContentType("application/octet-stream");
+            }
         } else {
-            resp.setContentType("application/octet-stream");
-            byte[] data = agent.getExecutionData(false);
-            resp.getOutputStream().write(data);
+            resp.setContentType("text/plain");
+            resp.setCharacterEncoding("UTF-8");
+            resp.getWriter().write(getUsageInfo());
+            resp.getWriter().flush();
         }
     }
 
@@ -137,18 +148,37 @@ public class JacocoServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        IAgent agent = getAgent();
+        sendJacocoData(req, resp, true);
+    }
+    
+    private void sendJacocoData(HttpServletRequest req, HttpServletResponse resp, boolean resetAgent) throws IOException {
+        final IAgent agent = getAgent();
         if (agent == null) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            final String msg = "The Jacoco agent MBean is not available\n\n";
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, msg + getUsageInfo());
         } else {
             resp.setContentType("application/octet-stream");
-            String sessionId = req.getParameter(PARAM_SESSION_ID);
-            byte[] data = agent.getExecutionData(true);
-            if (sessionId != null) {
+            final String sessionId = req.getParameter(PARAM_SESSION_ID);
+            log.info("Getting JaCoCo execution data, resetAgent={}", resetAgent);
+            byte[] data = agent.getExecutionData(resetAgent);
+            if(sessionId != null) {
+                log.info("Setting JaCoCo sessionId={}", sessionId);
                 agent.setSessionId(sessionId);
             }
             resp.getOutputStream().write(data);
+            resp.getOutputStream().flush();
         }
+    }
+    
+    private String getUsageInfo() {
+        return new StringBuilder()
+        .append("This is ")
+        .append(getClass().getName())
+        .append("\n\n")
+        .append("To get the jacoco data, use " + servletPath + EXEC_PATH)
+        .append("\n\n")
+        .append(EXPLAIN)
+        .toString();
     }
 
     /**
