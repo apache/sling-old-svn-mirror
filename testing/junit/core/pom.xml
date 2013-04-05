@@ -70,7 +70,7 @@
                             org.junit.runners.*;version=${junit.version}
                         </_exportcontents>
                         <Private-Package>org.apache.sling.junit.impl.*</Private-Package>
-                        <Embed-Dependency>*;artifactId=junit</Embed-Dependency>
+                        <Embed-Dependency>org.jacoco.agent;inline=org/jacoco/agent/rt/IAgent.class,*;artifactId=junit</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
@@ -112,5 +112,13 @@
             <version>${junit.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jacoco</groupId>
+            <artifactId>org.jacoco.agent</artifactId>
+            <classifier>runtime</classifier>
+            <version>0.6.2.201302030002</version>
+            <scope>provided</scope>
+        </dependency>
+
     </dependencies>
 </project>
