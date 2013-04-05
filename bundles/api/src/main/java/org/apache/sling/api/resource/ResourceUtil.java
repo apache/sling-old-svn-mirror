@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -503,5 +504,83 @@ public class ResourceUtil {
                 return result;
             }
         };
+    }
+
+    /**
+     * Creates or gets the resource at the given path.
+     *
+     * @param resolver The resource resolver to use for creation
+     * @param path     The full path to be created
+     * @param resourceType The optional resource type of the final resource to create
+     * @param intermediateResourceType THe optional resource type of all intermediate resources
+     * @param autoCommit If set to true, a commit is performed after each resource creation.
+     * @since 2.3.0
+     */
+    public static Resource getOrCreateResource(
+                            final ResourceResolver resolver,
+                            final String path,
+                            final String resourceType,
+                            final String intermediateResourceType,
+                            final boolean autoCommit)
+    throws PersistenceException {
+        final Map<String, Object> props;
+        if ( resourceType == null ) {
+            props = null;
+        } else {
+            props = Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)resourceType);
+        }
+        return getOrCreateResource(resolver, path, props, intermediateResourceType, autoCommit);
+    }
+
+    /**
+     * Creates or gets the resource at the given path.
+     *
+     * @param resolver The resource resolver to use for creation
+     * @param path     The full path to be created
+     * @param resourceProperties The optional resource properties of the final resource to create
+     * @param intermediateResourceType THe optional resource type of all intermediate resources
+     * @param autoCommit If set to true, a commit is performed after each resource creation.
+     * @since 2.3.0
+     */
+    public static Resource getOrCreateResource(
+            final ResourceResolver resolver,
+            final String path,
+            final Map<String, Object> resourceProperties,
+            final String intermediateResourceType,
+            final boolean autoCommit)
+    throws PersistenceException {
+        Resource rsrc = resolver.getResource(path);
+        if ( rsrc == null ) {
+            final int lastPos = path.lastIndexOf('/');
+            final String name = path.substring(lastPos + 1);
+
+            final Resource parentResource;
+            if ( lastPos == 0 ) {
+                parentResource = resolver.getResource("/");
+            } else {
+                final String parentPath = path.substring(0, lastPos);
+                parentResource = getOrCreateResource(resolver,
+                        parentPath,
+                        intermediateResourceType,
+                        intermediateResourceType,
+                        autoCommit);
+            }
+            try {
+                rsrc = resolver.create(parentResource, name, resourceProperties);
+                if ( autoCommit ) {
+                    resolver.commit();
+                    resolver.refresh();
+                    rsrc = resolver.getResource(parentResource, name);
+                }
+            } catch ( final PersistenceException pe ) {
+                // try again - maybe someone else did create the resource in the meantime
+                resolver.refresh();
+                rsrc = resolver.getResource(parentResource, name);
+                if ( rsrc == null ) {
+                    throw pe;
+                }
+            }
+        }
+        return rsrc;
     }
 }

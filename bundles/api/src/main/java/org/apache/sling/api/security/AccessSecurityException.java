@@ -18,11 +18,10 @@
  */
 package org.apache.sling.api.security;
 
-
 /**
- * Exception thrown by
- * <code>{@link ResourceAccessGate#sanitizeQuery(String, String, org.apache.sling.auth.core.spi.AuthenticationInfo)}</code>
- * if the query is not allowed or illegal.
+ * Exception thrown by methods of {@link ResourceAccessSecurity} This exception
+ * is used to catch unpredictable situations in methods of
+ * {@link ResourceAccessSecurity}
  */
 public class AccessSecurityException extends Exception {
 
@@ -39,8 +38,9 @@ public class AccessSecurityException extends Exception {
     /**
      * Constructs a new instance of this class with the specified detail
      * message.
-     *
-     * @param message the detail message. The detail message is saved for later
+     * 
+     * @param message
+     *            the detail message. The detail message is saved for later
      *            retrieval by the {@link #getMessage()} method.
      */
     public AccessSecurityException(String message) {
@@ -50,10 +50,12 @@ public class AccessSecurityException extends Exception {
     /**
      * Constructs a new instance of this class with the specified detail message
      * and root cause.
-     *
-     * @param message the detail message. The detail message is saved for later
+     * 
+     * @param message
+     *            the detail message. The detail message is saved for later
      *            retrieval by the {@link #getMessage()} method.
-     * @param rootCause root failure cause
+     * @param rootCause
+     *            root failure cause
      */
     public AccessSecurityException(String message, Throwable rootCause) {
         super(message, rootCause);
@@ -61,8 +63,9 @@ public class AccessSecurityException extends Exception {
 
     /**
      * Constructs a new instance of this class with the specified root cause.
-     *
-     * @param rootCause root failure cause
+     * 
+     * @param rootCause
+     *            root failure cause
      */
     public AccessSecurityException(Throwable rootCause) {
         super(rootCause);
