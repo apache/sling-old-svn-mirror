@@ -28,6 +28,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -596,6 +597,30 @@ public class JcrPropertyMap
 
 		return transformedEntries;
 	}
+
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("JcrPropertyMap [node=");
+        sb.append(this.node);
+        sb.append(", values={");
+        final Iterator<Map.Entry<String, Object>> iter = this.entrySet().iterator();
+        boolean first = true;
+        while ( iter.hasNext() ) {
+            if ( first ) {
+                first = false;
+            } else {
+                sb.append(", ");
+            }
+            final Map.Entry<String, Object> e = iter.next();
+            sb.append(e.getKey());
+            sb.append("=");
+            sb.append(e.getValue());
+        }
+        sb.append("}]");
+        return sb.toString();
+    }
+
 
     /**
      * This is an extended version of the object input stream which uses the
