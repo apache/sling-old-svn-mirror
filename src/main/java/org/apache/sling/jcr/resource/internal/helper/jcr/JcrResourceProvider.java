@@ -83,6 +83,14 @@ public class JcrResourceProvider
     @SuppressWarnings("deprecation")
     private static final String DEFAULT_QUERY_LANGUAGE = Query.XPATH;
 
+    private static final Set<String> IGNORED_PROPERTIES = new HashSet<String>();
+    static {
+        IGNORED_PROPERTIES.add(NodeUtil.MIXIN_TYPES);
+        IGNORED_PROPERTIES.add(NodeUtil.NODE_TYPE);
+        IGNORED_PROPERTIES.add("jcr:created");
+        IGNORED_PROPERTIES.add("jcr:createdBy");
+    }
+
     /** Default logger */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -440,7 +448,7 @@ public class JcrResourceProvider
                     jcrMap.put(NodeUtil.MIXIN_TYPES, value);
                 }
                 for(final Map.Entry<String, Object> entry : properties.entrySet()) {
-                    if ( !NodeUtil.NODE_TYPE.equals(entry.getKey()) && !NodeUtil.MIXIN_TYPES.equals(entry.getKey())) {
+                    if ( !IGNORED_PROPERTIES.contains(entry.getKey()) ) {
                         try {
                             jcrMap.put(entry.getKey(), entry.getValue());
                         } catch (final IllegalArgumentException iae) {
