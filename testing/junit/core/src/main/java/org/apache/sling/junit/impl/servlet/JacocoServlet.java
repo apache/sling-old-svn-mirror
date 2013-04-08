@@ -59,7 +59,7 @@ public class JacocoServlet extends HttpServlet {
             + "JaCoCo's tcpserver and tcpclient modes and its JMX interface open ports that do "
             + "not require any authentication. See the JaCoCo documentation for details.\n\n"
             + "To activate JaCoCo on a Sling instance, start its JVM with the following option:\n\n"
-            + "-javaagent:/path/to/jacocoagent.jar,dumponexit=false,jmx=true\n\n"
+            + "-javaagent:/path/to/jacocoagent.jar=dumponexit=false,jmx=true\n\n"
             + "The jacocoagent.jar file can be extracted from the appropriate maven artifact into the target directory "
             + "using 'mvn process-sources -P extractJacocoAgent' if you have this module's source code.\n\n"
             + "With this servlet installed, you can generate a JaCoCo coverage report "
