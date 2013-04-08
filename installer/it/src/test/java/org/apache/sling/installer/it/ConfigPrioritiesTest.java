@@ -24,21 +24,23 @@ import java.util.Hashtable;
 import org.apache.sling.installer.api.InstallableResource;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.cm.Configuration;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
 
     private final static long TIMEOUT = 5000L;
 
-    @org.ops4j.pax.exam.junit.Configuration
-    public static Option[] configuration() {
+    @org.ops4j.pax.exam.Configuration
+    public Option[] config() {
         return defaultConfiguration();
     }
-
+    
     @Before
     public void setUp() {
         setupInstaller();
@@ -66,6 +68,8 @@ public class ConfigPrioritiesTest extends OsgiInstallerTestBase {
         }
     }
 
+    @Test
+    @Ignore("waiting for foo=b times out")
     public void testOverrideConfig() throws Exception {
         final String pid = getClass().getSimpleName() + "." + System.currentTimeMillis();
         final Dictionary<String, Object> data = new Hashtable<String, Object>();

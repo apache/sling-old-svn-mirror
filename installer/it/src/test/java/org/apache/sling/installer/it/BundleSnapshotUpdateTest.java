@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 
 /** Verify that snapshot bundles are updated even if
@@ -32,14 +32,14 @@ import org.osgi.framework.Bundle;
  *  TODO: digests should be taken into account, i.e. no action
  *  if digest does not change
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class BundleSnapshotUpdateTest extends OsgiInstallerTestBase {
 
-    @org.ops4j.pax.exam.junit.Configuration
-    public static Option[] configuration() {
+    @org.ops4j.pax.exam.Configuration
+    public Option[] config() {
         return defaultConfiguration();
     }
-
+    
     @Before
     public void setUp() {
         setupInstaller();

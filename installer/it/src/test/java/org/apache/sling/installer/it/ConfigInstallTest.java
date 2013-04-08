@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
@@ -39,7 +39,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.cm.ConfigurationEvent;
 import org.osgi.service.cm.ConfigurationListener;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 
 public class ConfigInstallTest extends OsgiInstallerTestBase implements ConfigurationListener {
 
@@ -47,11 +47,11 @@ public class ConfigInstallTest extends OsgiInstallerTestBase implements Configur
     private List<ConfigurationEvent> events = new LinkedList<ConfigurationEvent>();
     private ServiceRegistration serviceRegistration;
 
-    @org.ops4j.pax.exam.junit.Configuration
-    public static Option[] configuration() {
+    @org.ops4j.pax.exam.Configuration
+    public Option[] config() {
         return defaultConfiguration();
     }
-
+    
     @Before
     public void setUp() {
         setupInstaller();
