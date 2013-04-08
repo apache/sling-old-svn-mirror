@@ -18,7 +18,6 @@ package org.apache.sling.installer.it;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -32,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -39,7 +40,6 @@ import javax.inject.Inject;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.options.ProvisionOption;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -309,12 +309,22 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data) {
-        return getInstallableResource(configPid, data, InstallableResource.DEFAULT_PRIORITY);
+        return getInstallableResource(configPid, copy(data), InstallableResource.DEFAULT_PRIORITY);
     }
 
     protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
-        final InstallableResource result = new MockInstallableResource("/" + configPid, data, null, null, priority);
+        final InstallableResource result = new MockInstallableResource("/" + configPid, copy(data), null, null, priority);
         return new InstallableResource[] {result};
+    }
+    
+    protected Dictionary<String, Object> copy(Dictionary<String, Object> data) {
+        final Dictionary<String, Object> copy = new Hashtable<String, Object>();
+        final Enumeration<String> keys = data.keys();
+        while(keys.hasMoreElements()) {
+            final String key = keys.nextElement();
+            copy.put(key, data.get(key));
+        }
+        return copy;
     }
 
     protected ConfigurationAdmin waitForConfigAdmin(final boolean shouldBePresent) {
