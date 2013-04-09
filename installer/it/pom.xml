@@ -451,12 +451,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.installer.api</artifactId>
-            <version>${installer.api.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
