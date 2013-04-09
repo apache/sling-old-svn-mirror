@@ -127,6 +127,10 @@ public class JcrResourceUtil {
             val = fac.createValue((BigDecimal)value);
         } else if (value instanceof Long) {
             val = fac.createValue((Long)value);
+        } else if (value instanceof Short) {
+            val = fac.createValue((Short)value);
+        } else if (value instanceof Integer) {
+            val = fac.createValue((Integer)value);
         } else if (value instanceof Number) {
             val = fac.createValue(((Number)value).doubleValue());
         } else if (value instanceof Boolean) {
