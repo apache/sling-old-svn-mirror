@@ -966,7 +966,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     }
 
     private String mangleNamespaces(String absPath) {
-        if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
+        if (factory.isMangleNamespacePrefixes() && absPath != null && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
             final Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
             final Matcher m = p.matcher(absPath);
 
