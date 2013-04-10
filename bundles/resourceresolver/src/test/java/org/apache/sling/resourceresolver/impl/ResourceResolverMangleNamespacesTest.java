@@ -27,7 +27,6 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -116,7 +115,6 @@ public class ResourceResolverMangleNamespacesTest {
     }
     
     @Test 
-    @Ignore("SLING-2819")
     public void testUrlNoPath() {
         assertEquals("http://withSlash.com/", rr.map("http://withSlash.com/"));
         assertEquals("http://noSlash.com", rr.map("http://noSlash.com"));
@@ -124,7 +122,6 @@ public class ResourceResolverMangleNamespacesTest {
     }
     
     @Test 
-    @Ignore("SLING-2819")
     public void testWeirdCases() {
         assertEquals("http://foo", rr.map("http://foo"));
         assertEquals("http://", rr.map("http://"));
