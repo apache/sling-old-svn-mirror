@@ -22,12 +22,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import org.apache.sling.installer.api.event.InstallationEvent;
 import org.apache.sling.installer.api.event.InstallationListener;
@@ -53,8 +52,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     /** Logger. */
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityResourceList.class);
 
-    /** The set of registered resources for this entity. */
-    private final SortedSet<TaskResource> resources = new TreeSet<TaskResource>();
+    /** The list of registered resources for this entity. */
+    private final List<RegisteredResourceImpl> resources = new ArrayList<RegisteredResourceImpl>();
 
     /** Alias for this id. */
     private String alias;
@@ -98,10 +97,10 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         if ( version < 1 || version > VERSION ) {
             throw new ClassNotFoundException(this.getClass().getName());
         }
-        Util.setField(this, "resources", new TreeSet<RegisteredResource>());
+        Util.setField(this, "resources", new ArrayList<RegisteredResourceImpl>());
         final int size = in.readInt();
         for(int i=0; i < size; i++) {
-            final TaskResource rr = (TaskResource)in.readObject();
+            final RegisteredResourceImpl rr = (RegisteredResourceImpl)in.readObject();
             this.resources.add(rr);
         }
         if ( version > 1 ) {
@@ -122,7 +121,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      */
     public TaskResource getActiveResource() {
         if ( !resources.isEmpty() ) {
-            final TaskResource r = resources.first();
+            Collections.sort(this.resources);
+            final TaskResource r = resources.get(0);
             if ( r.getState() == ResourceState.INSTALL
                     || r.getState() == ResourceState.UNINSTALL ) {
                 return r;
@@ -137,8 +137,9 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     public TaskResource getNextActiveResource() {
         if ( this.getActiveResource() != null ) {
             if ( this.resources.size() > 1 ) {
+                Collections.sort(this.resources);
                 // to get the second item in the set we have to use an iterator!
-                final Iterator<TaskResource> i = this.resources.iterator();
+                final Iterator<RegisteredResourceImpl> i = this.resources.iterator();
                 i.next(); // skip first
                 return i.next();
             }
@@ -150,7 +151,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      */
     public TaskResource getFirstResource() {
         if ( !resources.isEmpty() ) {
-            return resources.first();
+            Collections.sort(this.resources);
+            return resources.get(0);
         }
         return null;
     }
@@ -222,7 +224,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 // make sure that no other resource has state INSTALLED
                 if ( this.resources.size() > 1 ) {
                     // to get the second item in the set we have to use an iterator!
-                    final Iterator<TaskResource> i = this.resources.iterator();
+                    final Iterator<RegisteredResourceImpl> i = this.resources.iterator();
                     i.next(); // skip first
                     while ( i.hasNext() ) {
                         final TaskResource rsrc = i.next();
@@ -242,7 +244,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
                 toActivate.setAttribute(TaskResource.ATTR_INSTALL_INFO, null);
             }
             // remove install info attributes on all other resources in the group
-            final Iterator<TaskResource> tri = this.resources.iterator();
+            final Iterator<RegisteredResourceImpl> tri = this.resources.iterator();
             tri.next(); // skip first
             while ( tri.hasNext() ) {
                 final TaskResource rsrc = tri.next();
@@ -280,21 +282,23 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
         }
     }
 
-    public Collection<TaskResource> getResources() {
+    public Collection<RegisteredResourceImpl> getResources() {
+        Collections.sort(this.resources);
         return resources;
     }
 
-    public void addOrUpdate(final TaskResource r) {
+    public void addOrUpdate(final RegisteredResourceImpl r) {
         LOGGER.debug("Adding new resource: {}", r);
+        Collections.sort(this.resources);
         // If an object with same url is already present, replace with the
         // new one which might have different attributes
         boolean first = true;
         boolean add = true;
-        final Iterator<TaskResource> taskIter = this.resources.iterator();
+        final Iterator<RegisteredResourceImpl> taskIter = this.resources.iterator();
         while ( taskIter.hasNext() ) {
             final TaskResource rr = taskIter.next();
             if ( rr.getURL().equals(r.getURL()) ) {
-                if ( RegisteredResourceImpl.isSameResource((RegisteredResourceImpl)rr, (RegisteredResourceImpl)r) ) {
+                if ( RegisteredResourceImpl.isSameResource((RegisteredResourceImpl)rr, r) ) {
                     if ( !rr.getDigest().equals(r.getDigest()) ) {
                         // same resource but different digest, we need to remove the file
                         LOGGER.debug("Cleanup duplicate resource: {}", r);
@@ -322,7 +326,8 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
     }
 
     public void remove(final String url) {
-        final Iterator<TaskResource> i = resources.iterator();
+        Collections.sort(this.resources);
+        final Iterator<RegisteredResourceImpl> i = resources.iterator();
         boolean first = true;
         while ( i.hasNext() ) {
             final TaskResource r = i.next();
@@ -346,6 +351,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
      * @return <code>true</code> if another cycle should be started.
      */
     public boolean compact() {
+        Collections.sort(this.resources);
         boolean startNewCycle = false;
         final List<TaskResource> toDelete = new ArrayList<TaskResource>();
         boolean first = true;
@@ -360,7 +366,7 @@ public class EntityResourceList implements Serializable, TaskResourceGroup {
             // Avoid resources.remove(r) as the resource might have
             // changed since it was added, which causes it to compare()
             // differently and trip the TreeSet.remove() search.
-            final Set<TaskResource> copy = new HashSet<TaskResource>(resources);
+            final Set<RegisteredResourceImpl> copy = new HashSet<RegisteredResourceImpl>(resources);
             for(final RegisteredResource r : toDelete) {
                 copy.remove(r);
                 this.cleanup(r);

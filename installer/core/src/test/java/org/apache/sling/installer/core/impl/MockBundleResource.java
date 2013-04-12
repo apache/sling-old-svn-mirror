@@ -22,11 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.tasks.ResourceState;
 import org.apache.sling.installer.api.tasks.TaskResource;
+import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
@@ -196,5 +198,27 @@ public class MockBundleResource implements TaskResource, Comparable<MockBundleRe
     public Version getVersion() {
         final String vInfo = (String)this.getAttribute(Constants.BUNDLE_VERSION);
         return (vInfo == null ? null : new Version(vInfo));
+    }
+
+    public RegisteredResourceImpl getRegisteredResourceImpl() throws IOException {
+        final InstallableResource is = new InstallableResource((String)this.attributes.get(Constants.BUNDLE_SYMBOLICNAME),
+                null,
+                new Hashtable<String, Object>(),
+                this.getDigest(),
+                this.getType(),
+                this.getPriority());
+        final InternalResource ir = InternalResource.create(this.getScheme(), is);
+        RegisteredResourceImpl rr = RegisteredResourceImpl.create(ir);
+        for(final Map.Entry<String, Object> e : this.attributes.entrySet()) {
+            rr.setAttribute(e.getKey(), e.getValue());
+        }
+        final TransformationResult tr = new TransformationResult();
+        tr.setId((String)this.attributes.get(Constants.BUNDLE_SYMBOLICNAME));
+        tr.setResourceType(this.getType());
+        tr.setVersion(this.getVersion());
+        rr = (RegisteredResourceImpl)rr.clone(tr);
+        rr.setState(this.getState());
+
+        return rr;
     }
 }
