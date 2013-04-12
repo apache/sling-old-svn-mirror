@@ -36,7 +36,7 @@ import org.apache.sling.engine.impl.request.RequestData;
 /**
  * The <code>CustomLogFormat</code> class implements the support for log format
  * strings similar to the Apache httpd CustomLog configuration.
- * 
+ *
  * @see <a
  *      href="http://sling.apache.org/site/client-request-logging.html">Client
  *      Request Logging</a> for documentation of supported formats.
@@ -57,7 +57,7 @@ class CustomLogFormat {
 
     /**
      * Creates a new instance from of this class parsing the log format pattern.
-     * 
+     *
      * @param pattern The pattern to be parsed.
      */
     CustomLogFormat(String pattern) {
@@ -71,7 +71,7 @@ class CustomLogFormat {
      * Creates a log message from the given <code>request</code> and
      * <code>response</code> objects according to the log format from which this
      * instance has been created.
-     * 
+     *
      * @param request The {@link RequestLoggerRequest} used to extract values
      *            for the log message.
      * @param response The {@link RequestLoggerResponse} used to extract values
@@ -96,7 +96,7 @@ class CustomLogFormat {
      * Returns a string representation of this log format instance. The returned
      * String is actually rebuilt from the parsed format string and may be used
      * to create another instance of this class with the same format string.
-     * 
+     *
      * @return String representation of this instance.
      */
     public String toString() {
@@ -902,15 +902,17 @@ class CustomLogFormat {
         }
 
         protected String getValue(RequestLoggerRequest request) {
-            Cookie cookie = request.getCookie(this.cookieName);
-            return (cookie == null) ? null : escape(cookie.toString());
+            return getValue(request.getCookie(this.cookieName));
         }
 
         protected String getValue(RequestLoggerResponse response) {
-            Cookie cookie = response.getCookie(this.cookieName);
-            return (cookie == null) ? null : escape(cookie.toString());
+            return getValue(response.getCookie(this.cookieName));
+
         }
 
+        private String getValue(final Cookie cookie) {
+            return (cookie == null) ? null : escape(cookie.getValue());
+        }
     }
 
     static class HeaderParameter extends BaseParameter {
