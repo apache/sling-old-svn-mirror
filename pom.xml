@@ -36,6 +36,12 @@
         Support for topology discovery of instances.
     </description>
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/discovery/api</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/discovery/api</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/discovery/api</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
