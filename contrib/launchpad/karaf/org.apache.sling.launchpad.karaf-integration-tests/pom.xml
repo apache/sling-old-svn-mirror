@@ -30,11 +30,58 @@
 
   <artifactId>org.apache.sling.launchpad.karaf-integration-tests</artifactId>
   <version>0.1.0.BUILD-SNAPSHOT</version>
-  <packaging>pom</packaging>
 
   <name>Apache Sling Launchpad Karaf - Integration Tests</name>
   <description>Integration Tests for Apache Sling Launchpad Karaf</description>
 
-  <!-- TODO use pax-exam-container-karaf for integration tests -->
+  <dependencies>
+    <!-- javax -->
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+      <version>2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Apache Sling -->
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.jcr.api</artifactId>
+      <version>2.1.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.6</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- testing -->
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-junit4</artifactId>
+      <version>3.1.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-karaf</artifactId>
+      <version>3.1.0-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.karaf</groupId>
+      <artifactId>apache-karaf</artifactId>
+      <type>tar.gz</type>
+      <version>3.0.0.RC1</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.karaf</groupId>
+          <artifactId>org.apache.karaf.client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
 
 </project>
