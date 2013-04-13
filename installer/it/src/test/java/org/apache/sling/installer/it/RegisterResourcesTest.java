@@ -29,20 +29,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 /** Test the {@link OsgiInstaller.registerResources} method, which lets a client
  *  supply a new list of resources.
  */
 public class RegisterResourcesTest extends OsgiInstallerTestBase {
 
-    @org.ops4j.pax.exam.junit.Configuration
-    public static Option[] configuration() {
+    @org.ops4j.pax.exam.Configuration
+    public Option[] config() {
         return defaultConfiguration();
     }
-
+    
     @Before
     public void setUp() {
         setupInstaller();
@@ -149,8 +149,11 @@ public class RegisterResourcesTest extends OsgiInstallerTestBase {
             assertNull("Bundle testB must be gone", findBundle("osgi-installer-testB"));
             final Bundle b = assertBundle("Bundle needsB must still be present",
                     "osgi-installer-needsB", "1.0", -1);
+            
+            refreshPackages();
             final int state = b.getState();
-            assertFalse("Bundle needsB must be stopped as testB is gone (" + state + ")", Bundle.ACTIVE == state);
+            assertFalse("Bundle needsB must not be active anymore, as testB is gone (" + state + ")", Bundle.ACTIVE == state);
+            
             assertBundle("Testbundle must be back to 1.0 as 1.1 and 1.2 is gone",
                     "osgi-installer-testbundle", "1.0", Bundle.ACTIVE);
             assertBundle("testA bundle should still be present", "osgi-installer-testA", "1.0", Bundle.ACTIVE);

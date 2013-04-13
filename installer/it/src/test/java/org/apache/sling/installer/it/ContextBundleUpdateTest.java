@@ -26,21 +26,21 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.Bundle;
 
 /** Test the second SLING-1106 scenario: if a bundle is updated
  * 	via the BundleContext, the installer should not downgrade it
  * 	back to its own version.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class ContextBundleUpdateTest extends OsgiInstallerTestBase {
 
-    @org.ops4j.pax.exam.junit.Configuration
-    public static Option[] configuration() {
+    @org.ops4j.pax.exam.Configuration
+    public Option[] config() {
         return defaultConfiguration();
     }
-
+    
     @Before
     public void setUp() {
         setupInstaller();

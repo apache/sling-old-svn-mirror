@@ -36,6 +36,7 @@
     
     <properties>
         <junit.version>4.8.2</junit.version>
+        <jacoco.version>0.6.2.201302030002</jacoco.version>
     </properties>
 
     <scm>
@@ -70,12 +71,44 @@
                             org.junit.runners.*;version=${junit.version}
                         </_exportcontents>
                         <Private-Package>org.apache.sling.junit.impl.*</Private-Package>
-                        <Embed-Dependency>org.jacoco.agent;inline=org/jacoco/agent/rt/IAgent.class,*;artifactId=junit</Embed-Dependency>
+                        <Embed-Dependency>org.jacoco.agent;classifier=runtime;inline=org/jacoco/agent/rt/IAgent.class,*;artifactId=junit</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>extractJacocoAgent</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>unpack</goal>
+                                </goals>
+                                <configuration>
+                                    <artifactItems>
+                                        <artifactItem>
+                                            <groupId>org.jacoco</groupId>
+                                            <artifactId>org.jacoco.agent</artifactId>
+                                            <version>${jacoco.version}</version>
+                                            <includes>jacocoagent.jar</includes>
+                                            <outputDirectory>${project.build.directory}</outputDirectory>
+                                        </artifactItem>
+                                    </artifactItems>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -116,7 +149,7 @@
             <groupId>org.jacoco</groupId>
             <artifactId>org.jacoco.agent</artifactId>
             <classifier>runtime</classifier>
-            <version>0.6.2.201302030002</version>
+            <version>${jacoco.version}</version>
             <scope>provided</scope>
         </dependency>
 

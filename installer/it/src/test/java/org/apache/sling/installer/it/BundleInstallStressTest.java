@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.service.log.LogService;
 
 /** Repeatedly install/remove/reinstall semi-random sets
@@ -43,7 +43,7 @@ import org.osgi.service.log.LogService;
  *  system properties, see pom.xml) the test can be turned into a
  *  long-running stress test.
  */
-@RunWith(JUnit4TestRunner.class)
+@RunWith(PaxExam.class)
 public class BundleInstallStressTest extends OsgiInstallerTestBase {
 
 	public static final String PROP_BUNDLES_FOLDER = "osgi.installer.BundleInstallStressTest.bundles.folder";
@@ -70,11 +70,11 @@ public class BundleInstallStressTest extends OsgiInstallerTestBase {
 	private EventsDetector eventsDetector;
 	public static final long MSEC_WITHOUT_EVENTS = 1000L;
 
-    @org.ops4j.pax.exam.junit.Configuration
-    public static Option[] configuration() {
-    	return defaultConfiguration();
+    @org.ops4j.pax.exam.Configuration
+    public Option[] config() {
+        return defaultConfiguration();
     }
-
+    
     @Before
     public void setUp() {
         setupInstaller();

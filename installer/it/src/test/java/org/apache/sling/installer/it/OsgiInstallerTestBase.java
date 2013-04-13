@@ -19,14 +19,11 @@ package org.apache.sling.installer.it;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.felix;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-import static org.ops4j.pax.exam.CoreOptions.waitForFrameworkStartup;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.logProfile;
-import static org.ops4j.pax.exam.container.def.PaxRunnerOptions.vmOption;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,11 +31,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
-import org.ops4j.pax.exam.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -49,6 +49,9 @@ import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.SynchronousBundleListener;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.PackageNamespace;
+import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.osgi.service.log.LogService;
@@ -306,12 +309,22 @@ class OsgiInstallerTestBase implements FrameworkListener {
     }
 
     protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data) {
-        return getInstallableResource(configPid, data, InstallableResource.DEFAULT_PRIORITY);
+        return getInstallableResource(configPid, copy(data), InstallableResource.DEFAULT_PRIORITY);
     }
 
     protected InstallableResource[] getInstallableResource(String configPid, Dictionary<String, Object> data, int priority) {
-        final InstallableResource result = new MockInstallableResource("/" + configPid, data, null, null, priority);
+        final InstallableResource result = new MockInstallableResource("/" + configPid, copy(data), null, null, priority);
         return new InstallableResource[] {result};
+    }
+    
+    protected Dictionary<String, Object> copy(Dictionary<String, Object> data) {
+        final Dictionary<String, Object> copy = new Hashtable<String, Object>();
+        final Enumeration<String> keys = data.keys();
+        while(keys.hasMoreElements()) {
+            final String key = keys.nextElement();
+            copy.put(key, data.get(key));
+        }
+        return copy;
     }
 
     protected ConfigurationAdmin waitForConfigAdmin(final boolean shouldBePresent) {
@@ -359,7 +372,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	log.log(level, msg);
     }
 
-    public static Option[] defaultConfiguration() {
+    protected Option[] defaultConfiguration() {
     	String vmOpt = "-Dosgi.installer.testing";
 
     	// This runs in the VM that runs the build, but the tests run in another one.
@@ -378,14 +391,9 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort;
     	}
 
-        return options(
-                felix(),
-                vmOption(vmOpt),
-                waitForFrameworkStartup(),
-
-                logProfile(),
+    	return options(
+                junitBundles(),
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
-
                 provision(
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.0"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
@@ -397,7 +405,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         		)
         );
     }
-
+    
     protected Object startObservingBundleEvents() {
         final BundleEventListener listener = new BundleEventListener();
         this.bundleContext.addBundleListener(listener);
@@ -453,7 +461,18 @@ class OsgiInstallerTestBase implements FrameworkListener {
             this.bundleContext.removeBundleListener(listener);
         }
     }
-
+    
+    protected boolean isPackageExported(Bundle b, String packageName) {
+        final BundleWiring wiring = b.adapt(BundleWiring.class);
+        assertNotNull("Expecting non-null BundleWiring for bundle " + b, wiring);
+        for(BundleCapability c : wiring.getCapabilities(PackageNamespace.PACKAGE_NAMESPACE)) {
+            if(packageName.equals(c.getAttributes().get(PackageNamespace.PACKAGE_NAMESPACE))) {
+                return true;
+            }
+        }
+        return false;
+    }
+ 
     public void logInstalledBundles() {
         for(Bundle b : bundleContext.getBundles()) {
             log(LogService.LOG_DEBUG, "Installed bundle: " + b.getSymbolicName());

@@ -37,7 +37,6 @@ import java.util.Map;
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.event.InstallationListener;
 import org.apache.sling.installer.api.tasks.RegisteredResource;
-import org.apache.sling.installer.api.tasks.TaskResource;
 import org.apache.sling.installer.api.tasks.TransformationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,7 +202,7 @@ public class PersistentResourceList {
             }
         }
         try {
-            final TaskResource registeredResource = RegisteredResourceImpl.create(input);
+            final RegisteredResourceImpl registeredResource = RegisteredResourceImpl.create(input);
             this.checkInstallable(registeredResource);
             return registeredResource;
         } catch (final IOException ioe) {
@@ -216,7 +215,7 @@ public class PersistentResourceList {
      * Check if the provided installable resource is already installable (has a
      * known resource type)
      */
-    private void checkInstallable(final TaskResource input) {
+    private void checkInstallable(final RegisteredResourceImpl input) {
         if ( !InstallableResource.TYPE_FILE.equals(input.getType())
              && !InstallableResource.TYPE_PROPERTIES.equals(input.getType()) ) {
 
@@ -321,7 +320,7 @@ public class PersistentResourceList {
                             resource, tr.getResourceType());
                     continue;
                 }
-                final TaskResource clone =  ((RegisteredResourceImpl)resource).clone(result[i]);
+                final RegisteredResourceImpl clone =  (RegisteredResourceImpl)((RegisteredResourceImpl)resource).clone(result[i]);
                 this.checkInstallable(clone);
             }
         } catch (final IOException ioe) {

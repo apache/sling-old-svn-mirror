@@ -19,6 +19,7 @@
 package org.apache.sling.installer.core.impl.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class BundleTaskCreatorTest {
 		final SortedSet<InstallTask> tasks = new TreeSet<InstallTask>();
         for(final TaskResource r : sortedResources) {
             final EntityResourceList erl = new EntityResourceList(r.getEntityId(), new MockInstallationListener());
-            erl.addOrUpdate(r);
+            erl.addOrUpdate(((MockBundleResource)r).getRegisteredResourceImpl());
+            assertNotNull(erl.getActiveResource());
   		    tasks.add(btc.createTask(erl));
         }
 		return tasks;
@@ -55,7 +57,7 @@ public class BundleTaskCreatorTest {
 	@Test
 	public void testSingleBundleNew() throws IOException {
 		final TaskResource [] r = {
-				new MockBundleResource(SN, "1.0")
+		        new MockBundleResource(SN, "1.0")
 		};
         final MockBundleTaskCreator c = new MockBundleTaskCreator();
 		final SortedSet<InstallTask> s = getTasks(r, c);
@@ -216,7 +218,7 @@ public class BundleTaskCreatorTest {
             final InstallTask second = i.next();
             assertTrue("Expected a BundleRemoveTask", second instanceof BundleRemoveTask);
             final BundleRemoveTask t = (BundleRemoveTask)second;
-            assertEquals("Remove should be to V1.1", r[1], t.getResource());
+            assertEquals("Remove should be to V1.1", r[1].getEntityId(), t.getResource().getEntityId());
         }
     }
 }

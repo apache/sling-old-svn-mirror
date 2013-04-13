@@ -565,20 +565,25 @@ public class ResourceUtil {
                         intermediateResourceType,
                         autoCommit);
             }
-            try {
-                rsrc = resolver.create(parentResource, name, resourceProperties);
-                if ( autoCommit ) {
+            if ( autoCommit ) {
+                resolver.refresh();
+            }
+            rsrc = resolver.create(parentResource, name, resourceProperties);
+            if ( autoCommit ) {
+                try {
                     resolver.commit();
                     resolver.refresh();
                     rsrc = resolver.getResource(parentResource, name);
-                }
-            } catch ( final PersistenceException pe ) {
-                // try again - maybe someone else did create the resource in the meantime
-                resolver.refresh();
-                rsrc = resolver.getResource(parentResource, name);
-                if ( rsrc == null ) {
-                    throw pe;
-                }
+                } catch ( final PersistenceException pe ) {
+                    // try again - maybe someone else did create the resource in the meantime
+                    // or we ran into Jackrabbit's stale item exception in a clustered environment
+                    resolver.revert();
+                    resolver.refresh();
+                    rsrc = resolver.getResource(parentResource, name);
+                    if ( rsrc == null ) {
+                        rsrc = resolver.create(parentResource, name, resourceProperties);
+                    }
+            }
             }
         }
         return rsrc;
