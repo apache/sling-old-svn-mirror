@@ -111,6 +111,7 @@
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
           <module>launchpad/smx-kernel</module>
+          <module>launchpad/karaf</module>
     </modules>
     <profiles>
         <profile>
