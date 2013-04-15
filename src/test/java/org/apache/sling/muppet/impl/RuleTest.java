@@ -35,8 +35,8 @@ public class RuleTest {
     
     @Test
     public void testWithDefaultEvaluator() {
-        assertEquals("== 5", OK, new Rule(five,"5").execute());
-        assertEquals("> 2", OK, new Rule(five,"> 2").execute());
-        assertEquals("> 12 is false", ERROR, new Rule(five,"> 12").execute());
+        assertEquals("== 5", OK, new Rule(five,"5").evaluate());
+        assertEquals("> 2", OK, new Rule(five,"> 2").evaluate());
+        assertEquals("> 12 is false", ERROR, new Rule(five,"> 12").evaluate());
     }
 }
