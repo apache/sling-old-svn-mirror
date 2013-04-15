@@ -1,4 +1,5 @@
 {
+  "sling:resourceType" : "sling/muppet.rules",
   "expression": "active",
   "ruleName": "bundle.state",
   "namespace": "osgi",

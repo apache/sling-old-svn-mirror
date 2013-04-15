@@ -1,4 +1,5 @@
 {
+  "sling:resourceType" : "sling/muppet.rules",
   "expression": "LOGIN_OK",
   "ruleName": "login",
   "namespace": "sling",
