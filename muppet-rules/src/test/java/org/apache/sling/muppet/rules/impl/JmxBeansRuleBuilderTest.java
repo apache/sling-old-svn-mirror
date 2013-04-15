@@ -33,20 +33,20 @@ public class JmxBeansRuleBuilderTest {
         // Assuming this attribute is present in all JVMs that we use to run tests...
         final Rule r = jmxRuleBuilder.buildRule("jmxbeans", "java.lang:type=ClassLoading", "LoadedClassCount", "> 100");
         assertNotNull("Expecting to get a jmxbean Rule", r);
-        assertEquals(EvaluationResult.Status.OK, r.execute());
+        assertEquals(EvaluationResult.Status.OK, r.evaluate());
     }
     
     @Test
     public void testHashSeparatorInBeanName() {
         final Rule r = jmxRuleBuilder.buildRule("jmxbeans", "java.lang#type=ClassLoading", "LoadedClassCount", "> 100");
         assertNotNull("Expecting to get a jmxbean Rule", r);
-        assertEquals(EvaluationResult.Status.OK, r.execute());
+        assertEquals(EvaluationResult.Status.OK, r.evaluate());
     }
     
     @Test
     public void testNonExistentBean() {
         final Rule r = jmxRuleBuilder.buildRule("jmxbeans", "java.lang:type=DoesNotExist", "LoadedClassCount", "5");
         assertNotNull("Expecting to get a jmxbean Rule", r);
-        assertEquals(EvaluationResult.Status.ERROR, r.execute());
+        assertEquals(EvaluationResult.Status.ERROR, r.evaluate());
     }
 }
