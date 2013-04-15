@@ -1,4 +1,5 @@
 {
+  "sling:resourceType" : "sling/muppet.rules",
   "expression": "ALL_TESTS_PASSED",
   "ruleName": "junit",
   "namespace": "sling",
