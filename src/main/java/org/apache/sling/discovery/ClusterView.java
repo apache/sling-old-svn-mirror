@@ -35,8 +35,12 @@ public interface ClusterView {
     String getId();
 
     /**
-     * Provides the list of InstanceDescriptions ordered by Sling Id.
-     * @return the list of InstanceDescriptions ordered by Sling Id
+     * Provides the list of InstanceDescriptions with a stable ordering.
+     * <p>
+     * Stable ordering implies that unless an instance leaves the cluster
+     * (due to shutdown/crash/network problems) the instance keeps the
+     * relative position in the list.
+     * @return the list of InstanceDescriptions (with a stable ordering)
      */
     List<InstanceDescription> getInstances();
 
@@ -44,6 +48,9 @@ public interface ClusterView {
 	 * Provides the InstanceDescription belonging to the leader instance.
 	 * <p>
 	 * Every ClusterView is guaranteed to have one and only one leader.
+	 * <p>
+	 * The leader is stable: once a leader is elected it stays leader
+	 * unless it leaves the cluster (due to shutdown/crash/network problems)
 	 * @return the InstanceDescription belonging to the leader instance
 	 */
     InstanceDescription getLeader();
