@@ -1,0 +1,7 @@
+{
+  "expression": "active",
+  "ruleName": "bundle.state",
+  "namespace": "osgi",
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "groovy-all"
+}
