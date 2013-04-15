@@ -91,6 +91,7 @@
           <module>extensions/discovery/api</module>
           <module>extensions/dojo</module>
           <module>extensions/dojo-sling</module>
+          <module>extensions/ftpserver</module>
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
           <module>extensions/i18n</module>
