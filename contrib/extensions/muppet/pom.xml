@@ -29,6 +29,7 @@
         <module>muppet-core</module>
         <module>muppet-rules</module>
         <module>muppet-sling</module>
+        <module>sling-demo</module>
         <module>it</module>
     </modules>
 </project>

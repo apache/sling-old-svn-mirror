@@ -1,0 +1,7 @@
+{
+  "expression": "LOGIN_FAILED",
+  "ruleName": "login",
+  "namespace": "sling",
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "admin#foo"
+}

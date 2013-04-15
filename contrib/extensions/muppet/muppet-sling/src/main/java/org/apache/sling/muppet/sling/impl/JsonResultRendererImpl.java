@@ -35,7 +35,8 @@ public class JsonResultRendererImpl implements JsonResultRenderer {
     
     @Override
     public void render(List<EvaluationResult> results, Writer output) throws IOException {
-        // TODO not JSON yet...trouble with animalsniffer and JSON dependency
+        // TODO: trouble with animalsniffer and JSON dependency
+        output.write("TODO: this should be JSON - not implemented yet\n");
         for(EvaluationResult r : results) {
             output.write(r.getStatus().toString());
             output.write(" ");
