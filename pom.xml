@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project 
+    xmlns="http://maven.apache.org/POM/4.0.0" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>10</version>
+        <relativePath />
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>org.apache.sling.muppet.reactor</artifactId>
+    <packaging>pom</packaging>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <name>Muppet Reactor POM</name>
+    <inceptionYear>2011</inceptionYear>
+
+    <prerequisites>
+        <maven>3.0.4</maven>
+    </prerequisites>
+    
+    <modules>
+        <module>muppet-core</module>
+        <module>muppet-rules</module>
+        <module>muppet-sling</module>
+        <module>it</module>
+    </modules>
+</project>
