@@ -1,0 +1,7 @@
+{
+  "expression": "ALL_TESTS_PASSED",
+  "ruleName": "junit",
+  "namespace": "sling",
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "org.apache.sling.muppet.demo.tests.ResourcesExistTest"
+}

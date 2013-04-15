@@ -1,0 +1,7 @@
+{
+  "expression": "LOGIN_OK",
+  "ruleName": "login",
+  "namespace": "sling",
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "admin#admin"
+}
