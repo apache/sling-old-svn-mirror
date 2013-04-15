@@ -23,10 +23,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -133,7 +135,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
 				return clusters.iterator().next();
 			}
         };
-        final List<InstanceDescription> instances = new ArrayList<InstanceDescription>();
+        final Set<InstanceDescription> instances = new HashSet<InstanceDescription>();
         instances.add(myDescription);
 
         final DiscoveryAware[] registeredServices;
@@ -146,7 +148,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
                 }
 
                 public List<InstanceDescription> getInstances() {
-                    return instances;
+                    return new LinkedList<InstanceDescription>(instances);
                 }
 
 				public String getId() {
@@ -163,12 +165,12 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     				return true;
     			}
 
-    			public List<InstanceDescription> getInstances() {
+    			public Set<InstanceDescription> getInstances() {
     				return instances;
     			}
 
-    			public List<InstanceDescription> findInstances(InstanceFilter picker) {
-    				List<InstanceDescription> result = new LinkedList<InstanceDescription>();
+    			public Set<InstanceDescription> findInstances(InstanceFilter picker) {
+    				Set<InstanceDescription> result = new HashSet<InstanceDescription>();
     				for (Iterator<InstanceDescription> it = getTopology().getInstances().iterator(); it.hasNext();) {
     					InstanceDescription instance = it.next();
     					if (picker.accept(instance)) {
@@ -178,8 +180,8 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     				return result;
     			}
 
-    			public List<ClusterView> getClusterViews() {
-    				LinkedList<ClusterView> clusters = new LinkedList<ClusterView>();
+    			public Set<ClusterView> getClusterViews() {
+    				Set<ClusterView> clusters = new HashSet<ClusterView>();
     				clusters.add(clusterView);
     				return clusters;
     			}

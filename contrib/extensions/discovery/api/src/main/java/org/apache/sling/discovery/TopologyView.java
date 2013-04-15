@@ -20,6 +20,7 @@ package org.apache.sling.discovery;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A topology view is a cross-cluster list of instances and clusters
@@ -39,30 +40,34 @@ public interface TopologyView {
 	boolean isCurrent();
 
 	/**
-	 * Provides the InstanceDescription belonging to *this* instance.
-	 * @return the InstanceDescription belonging to *this* instance
+	 * Provides the InstanceDescription belonging to <b>this</b> instance.
+	 * @return the InstanceDescription belonging to <b>this</b> instance
 	 */
 	InstanceDescription getOwnInstance();
 
     /**
-     * Provides the list of InstanceDescriptions ordered by Sling Id.
-     * @return the list of InstanceDescriptions ordered by Sling Id or null if there are no instances
+     * Provides the set of InstanceDescriptions in the entire topology,
+     * without any particular order
+     * @return the set of InstanceDescriptions in the entire topology,
+     * without any particular order
      */
-	List<InstanceDescription> getInstances();
+	Set<InstanceDescription> getInstances();
 
 	/**
-	 * Search the current topology for instances which the provided InstancePicker has accepted.
+	 * Searches through this topology and picks those accepted by the provided
+	 * <code>InstanceFilter</code> - and returns them without any particular order
 	 * @param filter the filter to use
-	 * @return the list of InstanceDescriptions which were accepted by the InstanceFilter
+	 * @return the set of InstanceDescriptions which were accepted by the InstanceFilter,
+	 * without any particular order
 	 */
-	List<InstanceDescription> findInstances(InstanceFilter filter);
+	Set<InstanceDescription> findInstances(InstanceFilter filter);
 
     /**
      * Provides the collection of ClusterViews.
      * <p>
-     * Note that all InstanceDescriptions belong to a ClusterView, even if 
-     * they are only a "cluster of 1" (ie not really a cluster).
-     * @return the collection of ClusterViews
+     * Note that all InstanceDescriptions belong to exactly one ClusterView - 
+     * including InstanceDescriptions that form "a cluster of 1"
+     * @return the set of ClusterViews, without any particular order
      */
-	Collection<ClusterView> getClusterViews();
+	Set<ClusterView> getClusterViews();
 }
