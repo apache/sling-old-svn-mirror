@@ -44,18 +44,18 @@ public class LoginRuleBuilderTest {
     @Test
     public void testAdminLoginSucceeds() {
         final Rule r = builder.buildRule("sling", "login", "admin#admin", "LOGIN_OK");
-        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.OK, r.execute());
+        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.OK, r.evaluate());
     }
     
     @Test
     public void testAdminBadPasswordFails() {
         final Rule r = builder.buildRule("sling", "login", "admin#bad", "OK");
-        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.ERROR, r.execute());
+        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.ERROR, r.evaluate());
     }
     
     @Test
     public void testFooLoginFails() {
         final Rule r = builder.buildRule("sling", "login", "foo#bar", "OK");
-        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.ERROR, r.execute());
+        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.ERROR, r.evaluate());
     }
 }

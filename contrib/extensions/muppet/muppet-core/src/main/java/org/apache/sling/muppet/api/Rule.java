@@ -38,7 +38,7 @@ public class Rule {
         this.evaluator = e;
     }
     
-    public EvaluationResult.Status execute() {
+    public EvaluationResult.Status evaluate() {
         return evaluator.evaluate(attribute, expression);
     }
     

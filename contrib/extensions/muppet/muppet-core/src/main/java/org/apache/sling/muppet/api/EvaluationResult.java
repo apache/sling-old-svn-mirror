@@ -30,7 +30,7 @@ public class EvaluationResult {
     
     public EvaluationResult(Rule r) {
         rule = r;
-        status = r.execute();
+        status = r.evaluate();
     }
     
     public Rule getRule() {
