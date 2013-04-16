@@ -6,6 +6,10 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.scripting.SlingScript;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+
 import static org.apache.sling.muppet.sling.api.RulesResourceParser.NAMESPACE;
 import static org.apache.sling.muppet.sling.api.RulesResourceParser.RULE_NAME;
 import static org.apache.sling.muppet.sling.api.RulesResourceParser.QUALIFIER;
@@ -15,6 +19,7 @@ class MockResource implements Resource {
     private final ResourceResolver resolver;
     private final ValueMap valueMap;
     private final String path;
+    private String scriptCode;
     
     @SuppressWarnings("serial")
     static class PropertiesMap extends HashMap<String, Object> implements ValueMap {
@@ -48,6 +53,13 @@ class MockResource implements Resource {
         valueMap.put(QUALIFIER, qualifier);
         valueMap.put(EXPRESSION, expression);
         resolver.addResource(this);
+        
+        MockitoAnnotations.initMocks(this);
+    }
+    
+    MockResource(MockResolver resolver, String path, String scriptCode) {
+        this(resolver, path, null, null, null, null);
+        this.scriptCode = scriptCode;
     }
     
     @SuppressWarnings("unchecked")
@@ -55,6 +67,10 @@ class MockResource implements Resource {
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> target) {
         if(target == ValueMap.class) {
             return (AdapterType)valueMap;
+        } else if(target == SlingScript.class && scriptCode != null) {
+            final SlingScript mockScript = Mockito.mock(SlingScript.class);
+            Mockito.doReturn(this).when(mockScript).getScriptResource();
+            return (AdapterType)mockScript;
         }
         return null;
     }
