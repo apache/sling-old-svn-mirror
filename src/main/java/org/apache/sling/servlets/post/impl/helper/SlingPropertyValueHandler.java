@@ -87,7 +87,13 @@ public class SlingPropertyValueHandler {
         this.referenceParser = referenceParser;
         this.changes = changes;
     }
-
+    
+    /** Return the AutoType for a given property name 
+     *  @return null if not found
+     * */
+    static AutoType getAutoType(String propertyName) {
+        return AUTO_PROPS.get(propertyName);
+    }
 
     /**
      * Set property on given node, with some automatic values when user provides
@@ -124,7 +130,7 @@ public class SlingPropertyValueHandler {
             // avoid collision with protected properties
             final boolean isNew = (mod.node != null ? mod.node.isNew() : true);
             try {
-                switch (AUTO_PROPS.get(name)) {
+                switch (getAutoType(name)) {
                 case CREATED:
                     if (isNew) {
                         setCurrentDate(mod, name);
