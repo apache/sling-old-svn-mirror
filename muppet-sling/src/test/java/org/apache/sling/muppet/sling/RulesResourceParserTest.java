@@ -91,6 +91,22 @@ public class RulesResourceParserTest {
     }
     
     @Test
+    public void testScriptResource() {
+        final Resource root = new MockResource(resolver, "/foo", "test", "constant", "5", "> 3");
+        new MockResource(resolver, "/foo/script1", "some script");
+        final List<Rule> rules = parser.parseResource(root); 
+        assertEquals(2, rules.size());
+        final String [] expect = {
+                "Rule: test:constant:5 > 3",
+                "Rule: /foo/script1 TEST_PASSED"
+            };
+            final String allText = rules.toString();
+            for(String resText : expect) {
+                assertTrue("Expecting rules list (" + allText + ") to contain " + resText, allText.indexOf(resText) >= 0);
+            }
+    }
+    
+    @Test
     public void testResourceTree() {
         final Resource root = new MockResource(resolver, "/foo", "test", "constant", "5", "> 3");
         new MockResource(resolver, "/foo/1", "test", "constant", "12", "A");

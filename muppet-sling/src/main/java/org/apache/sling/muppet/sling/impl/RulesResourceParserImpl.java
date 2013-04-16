@@ -17,6 +17,7 @@
  */
 package org.apache.sling.muppet.sling.impl;
 
+import org.apache.sling.engine.SlingRequestProcessor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.muppet.api.MuppetFacade;
 import org.apache.sling.muppet.api.Rule;
 import org.apache.sling.muppet.api.RuleBuilder;
@@ -39,6 +41,9 @@ public class RulesResourceParserImpl implements RulesResourceParser {
     @Reference
     private MuppetFacade muppet;
     
+    @Reference
+    private SlingRequestProcessor requestProcessor;
+    
     @Override
     public List<Rule> parseResource(Resource r) {
         final List<Rule> result = new ArrayList<Rule>();
@@ -47,6 +52,29 @@ public class RulesResourceParserImpl implements RulesResourceParser {
     }
     
     private void recursivelyParseResource(List<Rule> list, Resource r) {
+
+        // Add Rule for r if available
+        final Rule rule = resourceToRule(r);
+        if(rule != null) {
+            list.add(rule);
+        }
+        
+        // And recurse into r's children
+        final Iterator<Resource> it = r.getResourceResolver().listChildren(r);
+        while(it.hasNext()) {
+            recursivelyParseResource(list, it.next());
+        }
+    }
+    
+    /** Convert r to a Rule if possible */
+    Rule resourceToRule(Resource r) {
+        // If r adapts to a Sling script, use it to evaluate our Rule
+        final SlingScript script = r.adaptTo(SlingScript.class);
+        if(script != null) {
+            return new Rule(new ScriptSystemAttribute(requestProcessor, script), ScriptSystemAttribute.SUCCESS_STRING);
+        }
+
+        // else convert using available RuleBuilders if suitable
         final ValueMap props = r.adaptTo(ValueMap.class);
         if(props.containsKey(NAMESPACE) && props.containsKey(RULE_NAME)) {
             for(RuleBuilder b : muppet.getRuleBuilders()) {
@@ -57,15 +85,11 @@ public class RulesResourceParserImpl implements RulesResourceParser {
                     props.get(EXPRESSION, String.class)
                 );
                 if(rule != null) {
-                    list.add(rule);
+                    return rule;
                 }
             }
         }
         
-        final Iterator<Resource> it = r.getResourceResolver().listChildren(r);
-        while(it.hasNext()) {
-            recursivelyParseResource(list, it.next());
-        }
-        
+        return null;
     }
 }
