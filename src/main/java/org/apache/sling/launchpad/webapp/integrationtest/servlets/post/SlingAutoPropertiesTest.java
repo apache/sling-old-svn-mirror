@@ -19,6 +19,7 @@ package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,14 +34,13 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
 
     public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
+    private static final AtomicInteger counter = new AtomicInteger();
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
-    }
-
-   public void testPostPathIsUnique() throws IOException {
+        postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + getClass().getSimpleName() + System.currentTimeMillis() + "_" + counter.incrementAndGet();
+        
         assertHttpStatus(postUrl, HttpServletResponse.SC_NOT_FOUND,
                 "Path must not exist before test: " + postUrl);
     }
@@ -99,5 +99,24 @@ public class SlingAutoPropertiesTest extends HttpTestBase {
         assertJavascript("b", content, "out.println(data.createdBy)");
         assertJavascript("c", content, "out.println(data.lastModified)");
         assertJavascript("d", content, "out.println(data.lastModifiedBy)");
+    }
+    
+    public void testSlingFolderCreated() throws IOException {
+        final Map <String, String> props = new HashMap <String, String> ();
+        props.put("a","456");
+        props.put("jcr:created","");
+        props.put("jcr:lastModified","");
+        props.put("jcr:lastModifiedBy","");
+        props.put("jcr:primaryType","sling:Folder");
+        
+        final String createdNodeUrl = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
+        final String content = getContent(createdNodeUrl + ".json", CONTENT_TYPE_JSON);
+
+        assertJavascript("456", content, "out.println(data.a)");
+        assertJavascript("admin", content, "out.println(data['jcr:createdBy'])");
+        assertJavascript("admin", content, "out.println(data['jcr:lastModifiedBy'])");
+        assertJavascript("true", content, "out.println(data['jcr:created'].length > 0)");
+        assertJavascript("true", content, "out.println(data['jcr:lastModified'].length > 0)");
+        assertJavascript("true", content, "out.println(data['jcr:lastModified'] == data['jcr:created'])");
     }
 }
