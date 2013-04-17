@@ -26,11 +26,32 @@ import java.util.Map;
  * <p>
  * Note that all methods are idempotent - they always return the same values
  * on subsequent calls. Rather, on any change new InstanceDescriptions are created.
+ *
+ *
  * @see TopologyView
  */
 public interface InstanceDescription {
 
-	/**
+    /**
+     * Property containing a name for the instance.
+     * The instance should provide this property.
+     */
+    String PROPERTY_NAME = "org.apache.sling.instance.name";
+
+    /**
+     * Property containing a description for the instance.
+     * The instance should provide this property.
+     */
+    String PROPERTY_DESCRIPTION = "org.apache.sling.instance.name";
+
+    /**
+     * Property containing endpoints to connect to the instance. The
+     * value is a comma separated list.
+     * The instance should provide this property.
+     */
+    String PROPERTY_ENDPOINTS = "org.apache.sling.instance.endpoints";
+
+    /**
 	 * Returns the ClusterView of which this instance is part of.
 	 * <p>
 	 * Every instance is part of a ClusterView even if it is standalone.
