@@ -18,8 +18,6 @@
  */
 package org.apache.sling.discovery;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -43,7 +41,7 @@ public interface TopologyView {
 	 * Provides the InstanceDescription belonging to <b>this</b> instance.
 	 * @return the InstanceDescription belonging to <b>this</b> instance
 	 */
-	InstanceDescription getOwnInstance();
+	InstanceDescription getLocalInstance();
 
     /**
      * Provides the set of InstanceDescriptions in the entire topology,
@@ -65,7 +63,7 @@ public interface TopologyView {
     /**
      * Provides the collection of ClusterViews.
      * <p>
-     * Note that all InstanceDescriptions belong to exactly one ClusterView - 
+     * Note that all InstanceDescriptions belong to exactly one ClusterView -
      * including InstanceDescriptions that form "a cluster of 1"
      * @return the set of ClusterViews, without any particular order
      */

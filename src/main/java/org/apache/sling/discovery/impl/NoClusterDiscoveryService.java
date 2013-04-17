@@ -103,7 +103,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
         logger.debug("NoClusterDiscoveryService started.");
         final InstanceDescription myDescription = new InstanceDescription() {
 
-            public boolean isOwn() {
+            public boolean isLocal() {
                 return true;
             }
 
@@ -157,7 +157,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
             };
             this.topologyView = new TopologyView() {
 
-    			public InstanceDescription getOwnInstance() {
+    			public InstanceDescription getLocalInstance() {
     				return myDescription;
     			}
 
