@@ -182,6 +182,7 @@
         <module>testing/junit/core</module>
         <module>testing/junit/scriptable</module>
         <module>testing/junit/remote</module>
+        <module>testing/resourceresolver-mock</module>
         
         <!-- Installer -->
         <module>installer/api</module>
