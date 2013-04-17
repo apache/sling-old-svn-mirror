@@ -46,7 +46,10 @@ public interface PropertyProvider {
 	 * and broadcast to the <code>TopologyView</code> instances.
 	 * <p>
 	 * These properties are non-persistent and disappear after my own instance goes down.
-	 * @return The value of the property or <code>null</code>
+	 *
+	 * @return The value of the property or <code>null</code>. If the property
+	 *         value can't be provided or if the provider does not support this
+	 *         property, it must return <code>null</code>.
 	 */
 	String getProperty(final String name);
 }
