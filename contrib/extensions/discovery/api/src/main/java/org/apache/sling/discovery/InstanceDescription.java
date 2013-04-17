@@ -75,10 +75,10 @@ public interface InstanceDescription {
 	boolean isLeader();
 
 	/**
-	 * Determines whether this InstanceDescription is representing myself, ie my own instance.
-	 * @return whether this InstanceDescription is representing myself, ie my own instance
+	 * Determines whether this InstanceDescription is representing the local instance.
+	 * @return whether this InstanceDescription is representing the local instance.
 	 */
-	boolean isOwn();
+	boolean isLocal();
 
     /**
      * The identifier of the running Sling instance.

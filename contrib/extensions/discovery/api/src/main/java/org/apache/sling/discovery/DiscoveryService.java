@@ -43,7 +43,7 @@ public interface DiscoveryService {
 	 * <p>
 	 * @return the topology that was last discovered by this service. This will never
 	 * be null (ie even if a change in the topology is ongoing at the moment or the
-	 * cluster consists only of the own instance).
+	 * cluster consists only of the local instance).
 	 */
     TopologyView getTopology();
 
