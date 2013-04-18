@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -319,6 +320,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                         }
                     });
                 }
+                current = child;
             }
 
             tenantRoot = current;
