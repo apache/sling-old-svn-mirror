@@ -36,7 +36,8 @@
                         <Sling-Initial-Content>SLING-CONTENT</Sling-Initial-Content>
                         <Import-Package>
                             org.junit.*;resolution:=optional,
-                            *
+                            org.apache.sling.junit.*;resolution:=optional,
+                            *                            
                         </Import-Package>
                         <Private-Package>
                             org.apache.sling.hc.sling.demo.*
