@@ -26,7 +26,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
@@ -39,10 +39,10 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
-public class MuppetOsgiFacadeTest {
+public class OsgiHealthCheckFacadeTest {
     
     @Inject
-    private MuppetFacade facade;
+    private HealthCheckFacade facade;
     
     @Inject
     private BundleContext bundleContext;
@@ -54,15 +54,15 @@ public class MuppetOsgiFacadeTest {
     
     @Test
     public void testFacadePresent() {
-        assertNotNull("Expecting MuppetFacade service to be provided", facade);
+        assertNotNull("Expecting HealthCheckFacade service to be provided", facade);
     }
     
     @Test
     public void testDefaultRules() throws IOException {
         // There should be at least one rule builder, but not a lot
         final String [] rules = { 
-            "muppet:RuleBuilderCount:> 0",
-            "muppet:RuleBuilderCount:> 42"
+            "healthcheck:RuleBuilderCount:> 0",
+            "healthcheck:RuleBuilderCount:> 42"
         };
         final List<EvaluationResult> r = U.evaluateRules(facade, rules);
         
@@ -75,8 +75,8 @@ public class MuppetOsgiFacadeTest {
     @Test
     public void testAddingCustomRule() throws IOException {
         final String [] rules = { 
-            "muppet:RuleBuilderCount:> 0",
-            "muppet:RuleBuilderCount:> 42",
+            "healthcheck:RuleBuilderCount:> 0",
+            "healthcheck:RuleBuilderCount:> 42",
             "test:constant:5",
             "test:constant:12",
         };
