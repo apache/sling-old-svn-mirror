@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
-/** Service facade for Muppet */
-public interface MuppetFacade {
+/** Service facade for the health check tool */
+public interface HealthCheckFacade {
     /** Return a new, empty RulesEngine*/
     RulesEngine getNewRulesEngine();
     
