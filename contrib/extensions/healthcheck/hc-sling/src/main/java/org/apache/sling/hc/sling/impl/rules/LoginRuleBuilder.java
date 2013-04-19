@@ -25,24 +25,25 @@ import javax.jcr.SimpleCredentials;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.slf4j.Logger;
 
-/** Creates {@link Rule} to check if specific credentials allow for
+/** Creates {@link Rule} to check that specific credentials do not allow for
  *  logging in to a {@link SlingRepository}. Can be used to verify 
  *  that default passwords have been disabled on production systems.
- *  Checking for failed logins is the only realistic use case, as
- *  by the credentials will be exposed in plain text in the repository,
- *  which is only ok for default demo passwords of course.   
+ *  Do NOT use any secret credentials when configuring this rule, it is
+ *  only meant to check that well-known demo credentials are disabled on
+ *  production systems.   
  */
 @Component
 @Service(value=RuleBuilder.class)
 public class LoginRuleBuilder implements RuleBuilder {
 
     public static final String NAMESPACE = "sling";
-    public static final String RULE_NAME = "login";
+    public static final String RULE_NAME = "loginfails";
     
     @Reference
     private SlingRepository repository;
@@ -58,26 +59,25 @@ public class LoginRuleBuilder implements RuleBuilder {
         }
         
         @Override
-        public Object getValue() {
-            String result = "???";
+        public Object getValue(Logger logger) {
             final Credentials creds = new SimpleCredentials(username, password.toCharArray());
             Session s = null;
             try {
                 s = repository.login(creds);
-                result = "LOGIN_OK";
+                logger.warn("Login as user [{}] successful, should have failed", username);
             } catch(RepositoryException rex) {
-                result = "LOGIN_FAILED";
+                logger.debug("Login as user [{}] failed as expected", username);
             } finally {
                 if(s != null) {
                     s.logout();
                 }
             }
-            return result;
+            return null;
         }
         
         @Override
         public String toString() {
-            return "Attempt to login as user " + username;
+            return "Expect login as user [" + username + "] to fail";
         }
     }
     

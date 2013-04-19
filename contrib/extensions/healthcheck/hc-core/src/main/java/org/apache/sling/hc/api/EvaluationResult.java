@@ -17,28 +17,65 @@
  */
 package org.apache.sling.hc.api;
 
+import java.util.List;
+
 /** The result of evaluating a {@link Rule} */
 public class EvaluationResult {
     
-    public enum Status {
-        OK,
+    private final Rule rule;
+    private final RuleLogger ruleLogger;
+    
+    /** Log messages at or above this level cause {@link #anythingToReport} to return true */
+    public static final LogLevel MIN_LEVEL_TO_REPORT = LogLevel.INFO;
+    
+    public enum LogLevel {
+        TRACE,
+        DEBUG,
+        INFO,
+        WARN,
         ERROR
     }
     
-    private final Status status;
-    private final Rule rule;
+    public static class LogMessage {
+        private final LogLevel level;
+        private final String message;
+        
+        public LogMessage(LogLevel level, String message) {
+            this.level = level;
+            this.message = message;
+        }
+        
+        public String toString() {
+            return level + ": " + message;
+        }
+        
+        public LogLevel getLevel() {
+            return level;
+        }
+        
+        public String getMessage() {
+            return message;
+        }
+    }
     
-    public EvaluationResult(Rule r) {
+    EvaluationResult(Rule r, RuleLogger logger) {
         rule = r;
-        status = r.evaluate();
+        ruleLogger = logger;
     }
     
     public Rule getRule() {
         return rule;
     }
     
-    public Status getStatus() {
-        return status;
+    /** True if there's anything to report, i.e. if rule execution
+     *  logged any messages at the INFO level or above 
+     */
+    public boolean anythingToReport() {
+        return ruleLogger.getMaxLevel().ordinal() >= MIN_LEVEL_TO_REPORT.ordinal();
     }
-   
+
+    /** Return all log messages */
+    public List<LogMessage> getLogMessages() {
+        return ruleLogger.getMessages();
+    }
 }

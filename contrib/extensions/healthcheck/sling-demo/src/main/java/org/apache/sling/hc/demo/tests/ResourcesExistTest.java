@@ -58,4 +58,9 @@ public class ResourcesExistTest {
     public void checkNonExistentPath() throws Exception {
         assertResource("/NON_EXISTENT/" + System.currentTimeMillis());
     }
+    
+    @Test
+    public void checkAnotherNonExistentPath() throws Exception {
+        assertResource("/ALSO_NON_EXISTENT/" + System.currentTimeMillis());
+    }
 }

@@ -22,6 +22,7 @@ import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
 import org.apache.sling.hc.util.DefaultEvaluator;
+import org.slf4j.Logger;
 
 /** {@link RuleBuilder} that provides a few default Rules. */
 public class DefaultRuleBuilder implements RuleBuilder {
@@ -36,8 +37,10 @@ public class DefaultRuleBuilder implements RuleBuilder {
             return RULE_BUILDER_COUNT;
         }
         @Override
-        public Object getValue() {
-            return new Integer(facade.getRuleBuilders().size());
+        public Object getValue(Logger logger) {
+            final int value = facade.getRuleBuilders().size();
+            logger.debug("Our facade has {} builders", value);
+            return value;
         }
     };
     

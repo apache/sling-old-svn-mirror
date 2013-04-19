@@ -66,8 +66,8 @@ public class U {
         return e.evaluateRules();
     }
     
-    static void assertResult(EvaluationResult rr, EvaluationResult.Status status, String ruleString) {
-        assertEquals("Expecting " + rr.getRule() + " result to match", status, rr.getStatus());
+    static void assertResult(EvaluationResult rr, boolean expectOk, String ruleString) {
+        assertEquals("Expecting " + rr.getRule() + " result to match", expectOk, !rr.anythingToReport());
         assertEquals("Expecting " + rr.getRule() + " string to match", ruleString, rr.getRule().toString());
     }
 }

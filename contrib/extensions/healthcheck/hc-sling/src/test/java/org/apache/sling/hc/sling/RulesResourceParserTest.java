@@ -35,6 +35,7 @@ import org.apache.sling.hc.api.SystemAttribute;
 import org.apache.sling.hc.sling.impl.RulesResourceParserImpl;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 public class RulesResourceParserTest {
     private final RulesResourceParserImpl parser = new RulesResourceParserImpl();
@@ -61,7 +62,7 @@ public class RulesResourceParserTest {
                             return namespace + ":" + ruleName + ":" + qualifier;
                         }
                         @Override
-                        public Object getValue() {
+                        public Object getValue(Logger logger) {
                             return toString();
                         }
                     };
