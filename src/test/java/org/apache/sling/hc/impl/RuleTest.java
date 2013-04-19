@@ -17,26 +17,86 @@
  */
 package org.apache.sling.hc.impl;
 
-import static org.apache.sling.hc.api.EvaluationResult.Status.ERROR;
-import static org.apache.sling.hc.api.EvaluationResult.Status.OK;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.SystemAttribute;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 public class RuleTest {
+    
     final SystemAttribute five = new SystemAttribute() {
         @Override
-        public Object getValue() {
+        public String toString() {
+            return "5";
+        }
+        
+        @Override
+        public Object getValue(Logger logger) {
             return 5;
         }
     };
     
+    final SystemAttribute logErrorAndNull = new SystemAttribute() {
+        @Override
+        public Object getValue(Logger logger) {
+            logger.warn("Something went wrong");
+            return null;
+        }
+    };
+    
+    final SystemAttribute nullAttr = new SystemAttribute() {
+        @Override
+        public Object getValue(Logger logger) {
+            return null;
+        }
+    };
+    
     @Test
-    public void testWithDefaultEvaluator() {
-        assertEquals("== 5", OK, new Rule(five,"5").evaluate());
-        assertEquals("> 2", OK, new Rule(five,"> 2").evaluate());
-        assertEquals("> 12 is false", ERROR, new Rule(five,"> 12").evaluate());
+    public void testToStringWithExpr() {
+        assertEquals("Rule: 5 hello", new Rule(five, "hello").toString());
+    }
+    
+    @Test
+    public void testToStringNoExpr() {
+        assertEquals("Rule: 5", new Rule(five, null).toString());
+    }
+    
+    @Test
+    public void testEqualsFive() {
+        assertFalse(new Rule(five,"5").evaluate().anythingToReport());
+    }
+    
+    @Test
+    public void testGreaterThanTwo() {
+        assertFalse(new Rule(five,"> 2").evaluate().anythingToReport());
+    }
+    
+    @Test
+    public void testGreaterThanTwelve() {
+        assertTrue(new Rule(five,"> 12").evaluate().anythingToReport());
+    }
+    
+    @Test
+    public void testLogAndNullNoExpr() {
+        assertTrue(new Rule(logErrorAndNull,null).evaluate().anythingToReport());
+    }
+    
+    @Test
+    public void testLogAndNullEmptyExpr() {
+        assertTrue(new Rule(logErrorAndNull,"\t\n").evaluate().anythingToReport());
+    }
+    
+    @Test
+    public void testNullNoLog() {
+        assertFalse(new Rule(nullAttr,null).evaluate().anythingToReport());
+    }
+    
+    @Test
+    public void testNullEmptyExpr() {
+        assertFalse(new Rule(nullAttr,"").evaluate().anythingToReport());
     }
 }

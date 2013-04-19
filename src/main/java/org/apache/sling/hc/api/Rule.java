@@ -17,7 +17,10 @@
  */
 package org.apache.sling.hc.api;
 
+import org.apache.sling.hc.impl.RuleLoggerImpl;
 import org.apache.sling.hc.util.DefaultEvaluator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Groups a {@link SystemAttribute}, {@link Evaluator} and
  *  String expression to be able to check that the attribute's
@@ -27,6 +30,7 @@ public class Rule {
     private final SystemAttribute attribute;
     private final Evaluator evaluator;
     private final String expression;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     public Rule(SystemAttribute attr, String expression) {
         this(attr, expression, new DefaultEvaluator());
@@ -38,12 +42,17 @@ public class Rule {
         this.evaluator = e;
     }
     
-    public EvaluationResult.Status evaluate() {
-        return evaluator.evaluate(attribute, expression);
+    /** Evaluate the rule and return the results */
+    public EvaluationResult evaluate() {
+        final RuleLoggerImpl ruleLogger = new RuleLoggerImpl(logger);
+        evaluator.evaluate(attribute, expression, ruleLogger);
+        return new EvaluationResult(this, ruleLogger);
     }
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ": " + attribute + " " + expression;
+        return getClass().getSimpleName() + ": " 
+            + attribute 
+            + (expression == null ? "" : " " + expression);
     }
 }
