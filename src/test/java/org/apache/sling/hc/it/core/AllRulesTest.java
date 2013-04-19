@@ -50,16 +50,19 @@ public class AllRulesTest {
         // There should be at least one rule builder, but not a lot
         final String [] rules = { 
             "osgi:bundle.state:org.apache.sling.hc.core:active",
-            "osgi:bundle.state:some.nonexistenbundle:BUNDLE_NOT_FOUND",
+            "osgi:bundle.state:some.nonexistenbundle:active",
             "jmxbeans:java.lang#type=ClassLoading:LoadedClassCount:> 100",
-            "healthcheck:RuleBuilderCount:between 2 and 10"
+            "healthcheck:RuleBuilderCount:between 2 and 10",
+            "healthcheck:RuleBuilderCount:between 2000 and 10000"
         };
         final List<EvaluationResult> r = U.evaluateRules(facade, rules);
         
-        assertEquals(4, r.size());
+        assertEquals(5, r.size());
         int i=0;
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:org.apache.sling.hc.core active");
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:some.nonexistenbundle BUNDLE_NOT_FOUND");
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: java.lang:type=ClassLoading:LoadedClassCount > 100");
+        U.assertResult(r.get(i++), true, "Rule: bundle.state:org.apache.sling.hc.core active");
+        U.assertResult(r.get(i++), false, "Rule: bundle.state:some.nonexistenbundle active");
+        U.assertResult(r.get(i++), true, "Rule: java.lang:type=ClassLoading:LoadedClassCount > 100");
+        U.assertResult(r.get(i++), true, "Rule: RuleBuilderCount between 2 and 10");
+        U.assertResult(r.get(i++), false, "Rule: RuleBuilderCount between 2000 and 10000");
     }
 }

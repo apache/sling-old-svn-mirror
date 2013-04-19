@@ -49,13 +49,13 @@ public class OsgiRulesTest {
         // There should be at least one rule builder, but not a lot
         final String [] rules = { 
             "osgi:bundle.state:org.apache.sling.hc.core:active",
-            "osgi:bundle.state:some.nonexistenbundle:BUNDLE_NOT_FOUND",
+            "osgi:bundle.state:some.nonexistenbundle:active"
         };
         final List<EvaluationResult> r = U.evaluateRules(facade, rules);
         
         assertEquals(2, r.size());
         int i=0;
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:org.apache.sling.hc.core active");
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:some.nonexistenbundle BUNDLE_NOT_FOUND");
+        U.assertResult(r.get(i++), true, "Rule: bundle.state:org.apache.sling.hc.core active");
+        U.assertResult(r.get(i++), false, "Rule: bundle.state:some.nonexistenbundle active");
     }
 }
