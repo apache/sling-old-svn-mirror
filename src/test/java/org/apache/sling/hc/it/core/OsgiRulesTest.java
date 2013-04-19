@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.it.core;
+package org.apache.sling.hc.it.core;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,8 +24,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.MuppetFacade;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.MuppetFacade;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -48,14 +48,14 @@ public class OsgiRulesTest {
     public void testBundleStateRules() throws IOException {
         // There should be at least one rule builder, but not a lot
         final String [] rules = { 
-            "osgi:bundle.state:org.apache.sling.muppet.core:active",
+            "osgi:bundle.state:org.apache.sling.hc.core:active",
             "osgi:bundle.state:some.nonexistenbundle:BUNDLE_NOT_FOUND",
         };
         final List<EvaluationResult> r = U.evaluateRules(facade, rules);
         
         assertEquals(2, r.size());
         int i=0;
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:org.apache.sling.muppet.core active");
+        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:org.apache.sling.hc.core active");
         U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:some.nonexistenbundle BUNDLE_NOT_FOUND");
     }
 }

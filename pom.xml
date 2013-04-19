@@ -14,11 +14,11 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.muppet.it</artifactId>
+    <artifactId>org.apache.sling.hc.it</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Muppet Integration Tests</name>
+    <name>Sling Health Check Integration Tests</name>
     <inceptionYear>2013</inceptionYear>
 
     <properties>
@@ -35,7 +35,7 @@
                 <configuration>
                     <systemProperties>
                         <org.ops4j.pax.logging.DefaultServiceLog.level>${org.ops4j.pax.logging.DefaultServiceLog.level}</org.ops4j.pax.logging.DefaultServiceLog.level>
-                        <muppet.core.version>${project.version}</muppet.core.version>
+                        <sling.hc.core.version>${project.version}</sling.hc.core.version>
                     </systemProperties>
                 </configuration>
             </plugin>
@@ -53,13 +53,13 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.muppet.core</artifactId>
+            <artifactId>org.apache.sling.hc.core</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.muppet.rules</artifactId>
+            <artifactId>org.apache.sling.hc.rules</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
