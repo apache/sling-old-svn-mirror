@@ -1,4 +1,4 @@
 {
     "jcr:primaryType" : "nt:unstructured",
-    "sling:resourceType" : "sling/muppet.rules"
+    "sling:resourceType" : "sling/healthcheck/rules"
 }

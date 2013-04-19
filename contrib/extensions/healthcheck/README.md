@@ -1,4 +1,4 @@
-muppet-prototype
-================
+Sling Health Check Tool
+=======================
 
-Muppet system state checking/conforming tool prototype
+Sling system state checking/conforming tool prototype.

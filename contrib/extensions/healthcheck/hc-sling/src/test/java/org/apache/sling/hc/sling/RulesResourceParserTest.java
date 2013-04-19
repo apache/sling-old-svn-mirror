@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.RulesEngine;
@@ -41,7 +41,7 @@ public class RulesResourceParserTest {
     private MockResolver resolver;
     private final List<RuleBuilder> builders = new ArrayList<RuleBuilder>();
     
-    private final MuppetFacade facade = new MuppetFacade() {
+    private final HealthCheckFacade facade = new HealthCheckFacade() {
         public RulesEngine getNewRulesEngine() { return null; }
         public List<Rule> parseSimpleTextRules(Reader textRules) throws IOException { return null; }
         public List<RuleBuilder> getRuleBuilders() { return builders; }
@@ -71,7 +71,7 @@ public class RulesResourceParserTest {
             }
         });
         
-        final Field f = parser.getClass().getDeclaredField("muppet");
+        final Field f = parser.getClass().getDeclaredField("healthcheck");
         f.setAccessible(true);
         f.set(parser, facade);
     }

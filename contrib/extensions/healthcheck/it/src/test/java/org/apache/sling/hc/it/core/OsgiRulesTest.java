@@ -25,7 +25,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -36,7 +36,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 public class OsgiRulesTest {
     
     @Inject
-    private MuppetFacade facade;
+    private HealthCheckFacade facade;
     
     @Configuration
     public Option[] config() {

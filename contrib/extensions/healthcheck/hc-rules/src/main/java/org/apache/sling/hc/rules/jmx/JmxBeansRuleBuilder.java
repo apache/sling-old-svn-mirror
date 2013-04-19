@@ -38,7 +38,7 @@ public class JmxBeansRuleBuilder implements RuleBuilder {
         
         JmxBeanAttribute(String beanName, String attributeName) {
             // TODO we have a problem with : in bean names as it's used
-            // as a separator in the Muppet simple text rules format
+            // as a separator in the healthcheck simple text rules format
             // For now, convert to a comma so that bean names can be
             // specified as java.lang#type=ClassLoading
             this.beanName = beanName.replaceAll("#", ":");

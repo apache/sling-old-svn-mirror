@@ -28,7 +28,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.sling.api.RulesResourceParser;
@@ -39,7 +39,7 @@ import org.apache.sling.hc.sling.api.RulesResourceParser;
 public class RulesResourceParserImpl implements RulesResourceParser {
     
     @Reference
-    private MuppetFacade muppet;
+    private HealthCheckFacade healthcheck;
     
     @Reference
     private SlingRequestProcessor requestProcessor;
@@ -77,7 +77,7 @@ public class RulesResourceParserImpl implements RulesResourceParser {
         // else convert using available RuleBuilders if suitable
         final ValueMap props = r.adaptTo(ValueMap.class);
         if(props.containsKey(NAMESPACE) && props.containsKey(RULE_NAME)) {
-            for(RuleBuilder b : muppet.getRuleBuilders()) {
+            for(RuleBuilder b : healthcheck.getRuleBuilders()) {
                 final Rule rule = b.buildRule(
                     props.get(NAMESPACE, String.class), 
                     props.get(RULE_NAME, String.class), 
