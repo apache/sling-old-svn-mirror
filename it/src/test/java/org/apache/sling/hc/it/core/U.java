@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.it.core;
+package org.apache.sling.hc.it.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
@@ -27,30 +27,30 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.MuppetFacade;
-import org.apache.sling.muppet.api.RulesEngine;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.RulesEngine;
 import org.ops4j.pax.exam.Option;
 
 /** Test utilities */
 public class U {
     
     static Option[] config(boolean includeRules) {
-        final String coreVersion = System.getProperty("muppet.core.version");
+        final String coreVersion = System.getProperty("sling.hc.core.version");
 
         if(includeRules) {
             return options(
                     junitBundles(),
                     provision(
-                            mavenBundle("org.apache.sling", "org.apache.sling.muppet.core", coreVersion),
-                            mavenBundle("org.apache.sling", "org.apache.sling.muppet.rules", coreVersion)
+                            mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
+                            mavenBundle("org.apache.sling", "org.apache.sling.hc.rules", coreVersion)
                     )
             );
         } else {
             return options(
                     junitBundles(),
                     provision(
-                            mavenBundle("org.apache.sling", "org.apache.sling.muppet.core", coreVersion)
+                            mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion)
                     )
             );
         }

@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl.rules;
+package org.apache.sling.hc.sling.impl.rules;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -26,9 +26,9 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.api.SystemAttribute;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.api.SystemAttribute;
 
 /** Creates {@link Rule} to check if specific credentials allow for
  *  logging in to a {@link SlingRepository}. Can be used to verify 

@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl;
+package org.apache.sling.hc.sling.impl;
 
 import java.io.IOException;
 
@@ -26,10 +26,10 @@ import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.muppet.api.MuppetFacade;
-import org.apache.sling.muppet.api.RulesEngine;
-import org.apache.sling.muppet.sling.api.JsonResultRenderer;
-import org.apache.sling.muppet.sling.api.RulesResourceParser;
+import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.RulesEngine;
+import org.apache.sling.hc.sling.api.JsonResultRenderer;
+import org.apache.sling.hc.sling.api.RulesResourceParser;
 
 /** Sling Servlet that renders a Resource that contains Muppet rules definitions,
  *  after evaluating the rules.
@@ -37,7 +37,7 @@ import org.apache.sling.muppet.sling.api.RulesResourceParser;
  *  defines the output format. 
  */
 @SuppressWarnings("serial")
-@SlingServlet(extensions="json",resourceTypes="sling/muppet.rules",methods="GET",selectors="muppet")
+@SlingServlet(extensions="json",resourceTypes="sling.hc.rules",methods="GET",selectors="muppet")
 public class MuppetSlingServlet extends SlingSafeMethodsServlet {
 
     @Reference

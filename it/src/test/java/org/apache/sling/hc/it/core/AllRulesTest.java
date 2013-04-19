@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.it.core;
+package org.apache.sling.hc.it.core;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,9 +24,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.MuppetFacade;
-import org.apache.sling.muppet.api.Rule;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -49,7 +49,7 @@ public class AllRulesTest {
     public void testMixOfRules() throws IOException {
         // There should be at least one rule builder, but not a lot
         final String [] rules = { 
-            "osgi:bundle.state:org.apache.sling.muppet.core:active",
+            "osgi:bundle.state:org.apache.sling.hc.core:active",
             "osgi:bundle.state:some.nonexistenbundle:BUNDLE_NOT_FOUND",
             "jmxbeans:java.lang#type=ClassLoading:LoadedClassCount:> 100",
             "muppet:RuleBuilderCount:between 2 and 10"
@@ -58,7 +58,7 @@ public class AllRulesTest {
         
         assertEquals(4, r.size());
         int i=0;
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:org.apache.sling.muppet.core active");
+        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:org.apache.sling.hc.core active");
         U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: bundle.state:some.nonexistenbundle BUNDLE_NOT_FOUND");
         U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: java.lang:type=ClassLoading:LoadedClassCount > 100");
     }

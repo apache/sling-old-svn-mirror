@@ -15,12 +15,12 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.rules.impl;
+package org.apache.sling.hc.rules.impl;
 
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.rules.jmx.JmxBeansRuleBuilder;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.rules.jmx.JmxBeansRuleBuilder;
 import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;

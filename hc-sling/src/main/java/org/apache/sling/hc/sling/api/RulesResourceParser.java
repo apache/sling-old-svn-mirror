@@ -15,12 +15,12 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.api;
+package org.apache.sling.hc.sling.api;
 
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.muppet.api.Rule;
+import org.apache.sling.hc.api.Rule;
 
 /** Parses a Sling Resource into Muppet Rules */
 public interface RulesResourceParser {

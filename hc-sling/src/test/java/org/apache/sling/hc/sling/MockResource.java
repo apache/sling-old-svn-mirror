@@ -1,4 +1,4 @@
-package org.apache.sling.muppet.sling;
+package org.apache.sling.hc.sling;
 
 import java.util.HashMap;
 
@@ -10,10 +10,10 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import static org.apache.sling.muppet.sling.api.RulesResourceParser.NAMESPACE;
-import static org.apache.sling.muppet.sling.api.RulesResourceParser.RULE_NAME;
-import static org.apache.sling.muppet.sling.api.RulesResourceParser.QUALIFIER;
-import static org.apache.sling.muppet.sling.api.RulesResourceParser.EXPRESSION;
+import static org.apache.sling.hc.sling.api.RulesResourceParser.NAMESPACE;
+import static org.apache.sling.hc.sling.api.RulesResourceParser.RULE_NAME;
+import static org.apache.sling.hc.sling.api.RulesResourceParser.QUALIFIER;
+import static org.apache.sling.hc.sling.api.RulesResourceParser.EXPRESSION;
 
 class MockResource implements Resource {
     private final ResourceResolver resolver;

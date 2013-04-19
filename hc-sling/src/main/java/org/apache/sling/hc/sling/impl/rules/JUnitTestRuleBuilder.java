@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl.rules;
+package org.apache.sling.hc.sling.impl.rules;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -31,9 +31,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.junit.Renderer;
 import org.apache.sling.junit.TestSelector;
 import org.apache.sling.junit.TestsManager;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.api.SystemAttribute;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.api.SystemAttribute;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;

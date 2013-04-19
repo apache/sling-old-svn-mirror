@@ -15,13 +15,13 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.rules.osgi;
+package org.apache.sling.hc.rules.osgi;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.rules.jmx.JmxBeansRuleBuilder;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.rules.jmx.JmxBeansRuleBuilder;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;

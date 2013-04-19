@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl;
+package org.apache.sling.hc.sling.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,8 +25,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.engine.SlingRequestProcessor;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.SystemAttribute;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.SystemAttribute;
 
 /** Creates {@link Rule} that executes a Sling script and
  *  returns its output, filtered to omit comments and blank lines 

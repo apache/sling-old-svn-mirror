@@ -14,15 +14,15 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.muppet.rules</artifactId>
+    <artifactId>org.apache.sling.hc.rules</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Muppet Rules</name>
+    <name>Sling Health Check Rules</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        Default Muppet Rules: JVM, JMX etc.
+        Default Sling Health Check Rules: JVM, JMX etc.
     </description>
 
     <build>
@@ -34,10 +34,10 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.sling.muppet.rules.osgi.Activator
+                            org.apache.sling.hc.rules.osgi.Activator
                         </Bundle-Activator>
                         <Private-Package>
-                            org.apache.sling.muppet.rules.*
+                            org.apache.sling.hc.rules.*
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -56,7 +56,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.muppet.core</artifactId>
+            <artifactId>org.apache.sling.hc.core</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

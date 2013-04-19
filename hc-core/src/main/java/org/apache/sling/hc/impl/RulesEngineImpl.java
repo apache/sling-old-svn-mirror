@@ -15,14 +15,14 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.impl;
+package org.apache.sling.hc.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.RulesEngine;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.RulesEngine;
 
 public class RulesEngineImpl implements RulesEngine {
 

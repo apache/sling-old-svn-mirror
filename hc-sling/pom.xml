@@ -14,15 +14,15 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.muppet.sling</artifactId>
+    <artifactId>org.apache.sling.hc.sling</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Sling-specific Muppet Components</name>
+    <name>Sling-specific Sling Health Check Components</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        Muppet servlet and rules for Sling
+        Sling Health Check servlet and rules for Sling
     </description>
 
     <build>
@@ -42,10 +42,10 @@
                             *                            
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.muppet.sling.api
+                            org.apache.sling.hc.sling.api
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.muppet.sling.impl.*
+                            org.apache.sling.hc.sling.impl.*
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -64,7 +64,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.muppet.core</artifactId>
+            <artifactId>org.apache.sling.hc.core</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>

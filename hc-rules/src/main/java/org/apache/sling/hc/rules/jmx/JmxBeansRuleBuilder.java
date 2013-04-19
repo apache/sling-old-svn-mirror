@@ -15,16 +15,16 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.rules.jmx;
+package org.apache.sling.hc.rules.jmx;
 
 import java.lang.management.ManagementFactory;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.api.SystemAttribute;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.api.SystemAttribute;
 
 /** Rules that give access to JMX beans */
 public class JmxBeansRuleBuilder implements RuleBuilder {

@@ -15,10 +15,10 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl;
+package org.apache.sling.hc.sling.impl;
 
-import static org.apache.sling.muppet.api.EvaluationResult.Status.ERROR;
-import static org.apache.sling.muppet.api.EvaluationResult.Status.OK;
+import static org.apache.sling.hc.api.EvaluationResult.Status.ERROR;
+import static org.apache.sling.hc.api.EvaluationResult.Status.OK;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -29,8 +29,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.engine.SlingRequestProcessor;
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.Rule;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.Rule;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
