@@ -39,6 +39,7 @@
                     <instructions>
                         <Import-Package>
                             org.junit.*;resolution:=optional,
+                            org.apache.sling.junit.*;resolution:=optional,
                             *                            
                         </Import-Package>
                         <Export-Package>
