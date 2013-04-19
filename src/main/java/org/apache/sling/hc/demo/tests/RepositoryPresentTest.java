@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
  * limitations under the License.
  */
 
-/** Trivial test used to demonstrate the Muppet junit rules - verify
+/** Trivial test used to demonstrate the health check junit rules - verify
  *  that the SlingRepository is functional.
  */
 @RunWith(SlingAnnotationsTestRunner.class)

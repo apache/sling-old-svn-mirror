@@ -1,8 +1,8 @@
 {
-  "sling:resourceType" : "sling/muppet.rules",
+  "sling:resourceType" : "sling/healthcheck/rules",
   "expression": "ALL_TESTS_PASSED",
   "ruleName": "junit",
   "namespace": "sling",
   "jcr:primaryType": "nt:unstructured",
-  "qualifier": "org.apache.sling.muppet.demo.tests.ResourcesExistTest#checkAppsExist"
+  "qualifier": "org.apache.sling.hc.demo.tests.ResourcesExistTest#checkAppsExist"
 }
