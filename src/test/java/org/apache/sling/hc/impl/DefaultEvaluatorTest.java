@@ -15,15 +15,15 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.impl;
+package org.apache.sling.hc.impl;
 
-import org.apache.sling.muppet.api.Evaluator;
-import org.apache.sling.muppet.api.SystemAttribute;
-import org.apache.sling.muppet.util.DefaultEvaluator;
+import org.apache.sling.hc.api.Evaluator;
+import org.apache.sling.hc.api.SystemAttribute;
+import org.apache.sling.hc.util.DefaultEvaluator;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.apache.sling.muppet.api.EvaluationResult.Status.OK;
-import static org.apache.sling.muppet.api.EvaluationResult.Status.ERROR;
+import static org.apache.sling.hc.api.EvaluationResult.Status.OK;
+import static org.apache.sling.hc.api.EvaluationResult.Status.ERROR;
 
 public class DefaultEvaluatorTest {
     private final Evaluator evaluator = new DefaultEvaluator();

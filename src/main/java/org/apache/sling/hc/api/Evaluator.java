@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.api;
+package org.apache.sling.hc.api;
 
 /** Evaluates a String expression on the current value of a {@link SystemAttribute} */ 
 public interface Evaluator {
