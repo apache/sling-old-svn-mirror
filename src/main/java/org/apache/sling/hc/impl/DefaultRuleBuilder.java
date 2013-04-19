@@ -17,7 +17,7 @@
  */
 package org.apache.sling.hc.impl;
 
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
@@ -26,9 +26,9 @@ import org.apache.sling.hc.util.DefaultEvaluator;
 /** {@link RuleBuilder} that provides a few default Rules. */
 public class DefaultRuleBuilder implements RuleBuilder {
 
-    public static final String NAMESPACE = "muppet";
+    public static final String NAMESPACE = "healthcheck";
     public static final String RULE_BUILDER_COUNT = "RuleBuilderCount";
-    private final MuppetFacade facade;
+    private final HealthCheckFacade facade;
     
     private class RuleBuilderCountAttribute implements SystemAttribute {
         @Override
@@ -41,7 +41,7 @@ public class DefaultRuleBuilder implements RuleBuilder {
         }
     };
     
-    public DefaultRuleBuilder(MuppetFacade facade) {
+    public DefaultRuleBuilder(HealthCheckFacade facade) {
         this.facade = facade;
     }
     

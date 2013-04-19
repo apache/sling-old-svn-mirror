@@ -20,22 +20,22 @@ package org.apache.sling.hc.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
-    private OSGiMuppetFacadeImpl facade;
+    private OSGiHealthCheckFacadeImpl facade;
     private List<ServiceRegistration> regs;
 
     public void start(BundleContext ctx) throws Exception {
         regs = new ArrayList<ServiceRegistration>();
         
-        // Register a MuppetFacade service
-        facade = new OSGiMuppetFacadeImpl(ctx);
-        regs.add(ctx.registerService(MuppetFacade.class.getName(), facade, null));
+        // Register a facade service
+        facade = new OSGiHealthCheckFacadeImpl(ctx);
+        regs.add(ctx.registerService(HealthCheckFacade.class.getName(), facade, null));
         
         // Register our default RuleBuilder
         regs.add(ctx.registerService(RuleBuilder.class.getName(), new DefaultRuleBuilder(facade), null));
