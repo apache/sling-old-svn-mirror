@@ -18,32 +18,48 @@
 package org.apache.sling.hc.util;
 
 import org.apache.sling.hc.api.Evaluator;
-import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.api.SystemAttribute;
-import org.apache.sling.hc.api.EvaluationResult.Status;
+import org.slf4j.Logger;
 
 public class DefaultEvaluator implements Evaluator {
     @Override
-    public Status evaluate(SystemAttribute a, String expression) {
-        final String [] parts = expression.split(" ");
-        boolean matches = false;
+    public void evaluate(SystemAttribute a, String expression, Logger logger) {
         
-        if(expression.startsWith(">") && parts.length == 2) {
-            matches = Integer.valueOf(a.getValue().toString()).intValue() > Integer.valueOf(parts[1]);
-            
-        } else if(expression.startsWith("<") && parts.length == 2) {
-            matches = Integer.valueOf(a.getValue().toString()).intValue() < Integer.valueOf(parts[1]);
-            
-        } else if(parts.length == 4 && "between".equalsIgnoreCase(parts[0]) && "and".equalsIgnoreCase(parts[2]) ) {
-            final int aValue = Integer.valueOf(a.getValue().toString()).intValue();
-            final int lowerBound = Integer.valueOf(parts[1]);
-            final int upperBound = Integer.valueOf(parts[3]);
-            matches = aValue > lowerBound && aValue < upperBound;
-            
-        } else {
-            matches = expression.equals(a.getValue().toString()); 
+        boolean matches = false;
+        final Object oValue = a.getValue(logger);
+        final String stringValue = oValue == null ? "" : oValue.toString();
+        
+        if(expression == null || expression.trim().length() == 0) {
+            // No expression, result will be based on a.getValue() logging only
+            return;
         }
         
-        return matches ? EvaluationResult.Status.OK : EvaluationResult.Status.ERROR;
+        final String [] parts = expression.split(" ");
+        
+        try {
+            if(expression.startsWith(">") && parts.length == 2) {
+                final int value = Integer.valueOf(stringValue).intValue();
+                matches = value > Integer.valueOf(parts[1]);
+                
+            } else if(expression.startsWith("<") && parts.length == 2) {
+                final int value = Integer.valueOf(stringValue).intValue();
+                matches = value < Integer.valueOf(parts[1]);
+                
+            } else if(parts.length == 4 && "between".equalsIgnoreCase(parts[0]) && "and".equalsIgnoreCase(parts[2]) ) {
+                final int value = Integer.valueOf(stringValue).intValue();
+                final int lowerBound = Integer.valueOf(parts[1]);
+                final int upperBound = Integer.valueOf(parts[3]);
+                matches = value > lowerBound && value < upperBound;
+                
+            } else {
+                matches = expression.equals(stringValue); 
+            }
+        } catch(NumberFormatException nfe) {
+            logger.warn("Invalid numeric value [{}] while evaluating {}", oValue, expression);
+        }
+        
+        if(!matches) {
+            logger.warn("Value [{}] does not match expression [{}]", stringValue, expression);
+        }
     }
 }

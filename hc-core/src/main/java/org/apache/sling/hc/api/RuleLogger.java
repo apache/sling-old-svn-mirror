@@ -17,12 +17,24 @@
  */
 package org.apache.sling.hc.api;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 
-/** An attribute of the system that's being checked */
-public interface SystemAttribute {
-    /** Return the value of out attribute, logging any relevant
-     *  info to the supplied logger.
-     */
-    Object getValue(Logger logger);
+/** slf4j Logger that captures log output and provides
+ *  the level of the highest message that was logged.
+ *  Used when evaluating {@link Rule} objects, to find
+ *  out whether anything was logged that needs to be reported.
+ *  
+ *  The convention is that messages above the DEBUG level are
+ *  always reported when evaluating rules, all messages can
+ *  optionally be made available in the rule evaluation results.   
+ */
+public interface RuleLogger extends Logger {
+
+    /** Return the list of messages logged during rule execution */
+    List<EvaluationResult.LogMessage> getMessages();
+    
+    /** Return the highest log level used during execution */
+    EvaluationResult.LogLevel getMaxLevel();
 }

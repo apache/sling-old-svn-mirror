@@ -20,8 +20,8 @@ package org.apache.sling.hc.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RulesEngine;
 
 public class RulesEngineImpl implements RulesEngine {
@@ -42,7 +42,7 @@ public class RulesEngineImpl implements RulesEngine {
     public List<EvaluationResult> evaluateRules() {
         final List<EvaluationResult> result = new ArrayList<EvaluationResult>();
         for(Rule r : rules) {
-            result.add(new EvaluationResult(r));
+            result.add(r.evaluate());
         }
         return result;
     }

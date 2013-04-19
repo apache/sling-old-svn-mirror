@@ -28,15 +28,16 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.junit.Renderer;
-import org.apache.sling.junit.TestSelector;
-import org.apache.sling.junit.TestsManager;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
+import org.apache.sling.junit.Renderer;
+import org.apache.sling.junit.TestSelector;
+import org.apache.sling.junit.TestsManager;
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
+import org.slf4j.Logger;
 
 /** Creates {@link Rule} to execute JUnit tests using the 
  *  org.apache.sling.junit.core services. 
@@ -56,7 +57,12 @@ public class JUnitTestRuleBuilder implements RuleBuilder {
     private static class CustomRunListener extends RunListener {
         
         final List<Failure> failures = new ArrayList<Failure>();
-        int nTests; 
+        int nTests;
+        private final Logger logger;
+        
+        CustomRunListener(Logger logger) {
+            this.logger = logger;
+        }
         
         @Override
         public void testFailure(Failure failure) throws Exception {
@@ -67,6 +73,7 @@ public class JUnitTestRuleBuilder implements RuleBuilder {
         @Override
         public void testFinished(Description description) throws Exception {
             super.testFinished(description);
+            logger.debug("Test executed: {}", description.getDisplayName());
             nTests++;
         }
     }
@@ -139,28 +146,28 @@ public class JUnitTestRuleBuilder implements RuleBuilder {
         }
         
         @Override
-        public Object getValue() {
-            String errorMsg = null;
-            final CustomRunListener listener = new CustomRunListener();
+        public Object getValue(Logger logger) {
+            final CustomRunListener listener = new CustomRunListener(logger);
             final Renderer r = new CustomRenderer(listener, extension);
             final Collection<String> testNames = testsManager.getTestNames(selector);
             if(testNames.isEmpty()) {
-                errorMsg = "No tests found for selector " + selector;
+                logger.error("No tests found for selector {}", selector);
             } else {
                 try {
                     testsManager.executeTests(testNames, r, selector);
                     if(!listener.failures.isEmpty()) {
-                        // TODO need better formatting of this;
-                        errorMsg = "Some tests failed: " + listener.failures;
+                        for(Failure f : listener.failures) {
+                            logger.warn("Test failed: {}, {}", f.getTestHeader(), f);
+                        }
                     } else if(listener.nTests == 0) {
-                        errorMsg = "No tests executed with selector " + selector;
+                        logger.warn("No tests executed with selector {}", selector);
                     }
                 } catch(Exception e) {
-                    errorMsg = "Exception while executing tests: " + e.toString();
+                    logger.error("Exception while executing tests: {}", e.toString());
                 }
             }
             
-            return errorMsg != null ? errorMsg : ALL_PASSED;
+            return null;
         }
     }
     

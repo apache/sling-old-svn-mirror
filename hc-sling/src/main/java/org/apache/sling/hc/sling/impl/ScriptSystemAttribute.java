@@ -27,6 +27,7 @@ import org.apache.sling.api.scripting.SlingScript;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.SystemAttribute;
+import org.slf4j.Logger;
 
 /** Creates {@link Rule} that executes a Sling script and
  *  returns its output, filtered to omit comments and blank lines 
@@ -53,18 +54,31 @@ class ScriptSystemAttribute implements SystemAttribute {
     }
     
     @Override
-    public Object getValue() {
+    public Object getValue(Logger logger) {
         try {
             final HttpRequest req = new HttpRequest(script.getScriptResource().getPath());
             final HttpResponse resp = new HttpResponse();
             requestProcessor.processRequest(req, resp, script.getScriptResource().getResourceResolver());
             if(resp.getStatus() != HttpServletResponse.SC_OK) {
-                return "Unexpected requests status: " + resp.getStatus();
+                final String msg = "Unexpected request status: " + resp.getStatus();
+                logger.error(msg);
+                return msg;
             }
-            return filterContent(resp.getContent());
+            final String result = filterContent(resp.getContent());
+            logger.debug("Script {} outputs [{}]", script.getScriptResource().getPath(), shorten(result));
+            return result;
         } catch(Exception e) {
+            logger.error("Exception during script execution", e);
             return e.toString();
         }
+    }
+    
+    static String shorten(String str) {
+        final int limit = 120;
+        if(str.length() > limit) {
+            return str.substring(limit) + "...";
+        }
+        return str;
     }
     
     static String filterContent(String content) throws IOException {

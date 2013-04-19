@@ -17,8 +17,6 @@
  */
 package org.apache.sling.hc.sling.impl;
 
-import static org.apache.sling.hc.api.EvaluationResult.Status.ERROR;
-import static org.apache.sling.hc.api.EvaluationResult.Status.OK;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -44,7 +42,7 @@ public class ScriptSystemAttributeTest {
         MockitoAnnotations.initMocks(this);
     }
     
-    private void assertResult(String info, final String scriptOutput, EvaluationResult.Status status) {
+    private void assertResult(String info, final String scriptOutput, boolean expectOk) {
         final Answer<?> answer = new Answer<Object>() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -72,27 +70,28 @@ public class ScriptSystemAttributeTest {
         final ScriptSystemAttribute a = new ScriptSystemAttribute(processor, script);
 
         final Rule r = new Rule(a, ScriptSystemAttribute.SUCCESS_STRING);
-        assertEquals("Expecting " + status + " for " + info, status,r.evaluate());
+        final EvaluationResult result = r.evaluate();
+        assertEquals("Expecting anythingToReport=" + !expectOk + " for " + info, !expectOk, result.anythingToReport());
     }
     
     @Test
     public void testEmptyScripts() {
-        assertResult("Empty script -> error", "", ERROR);
+        assertResult("Empty script -> error", "", false);
     }
     
     @Test
     public void testOkScript() {
-        assertResult("TEST_PASSED script -> ok", "TEST_PASSED", OK);
+        assertResult("TEST_PASSED script -> ok", "TEST_PASSED", true);
     }
     
     @Test
     public void testComments() {
-        assertResult("TEST_PASSED script and blank line -> ok", "\n\nTEST_PASSED\n\n", OK);
-        assertResult("TEST_PASSED script and comments -> ok", "\n\n#comment\n\t  # comment 2\nTEST_PASSED\n\n", OK);
+        assertResult("TEST_PASSED script and blank line -> ok", "\n\nTEST_PASSED\n\n", true);
+        assertResult("TEST_PASSED script and comments -> ok", "\n\n#comment\n\t  # comment 2\nTEST_PASSED\n\n", true);
     }
     
     @Test
     public void testDoublePassed() {
-        assertResult("Double TEST_PASSED script -> error", "TEST_PASSED\nTEST_PASSED", ERROR);
+        assertResult("Double TEST_PASSED script -> error", "TEST_PASSED\nTEST_PASSED", false);
     }
 }

@@ -36,11 +36,24 @@ public class JsonResultRendererImpl implements JsonResultRenderer {
     @Override
     public void render(List<EvaluationResult> results, Writer output) throws IOException {
         // TODO: trouble with animalsniffer and JSON dependency
-        output.write("TODO: this should be JSON - not implemented yet\n");
+        output.write("TODO: this should be JSON - not implemented yet\n\n");
         for(EvaluationResult r : results) {
-            output.write(r.getStatus().toString());
-            output.write(" ");
             output.write(r.getRule().toString());
+            output.write("\n");
+            
+            if(!r.anythingToReport()) {
+                output.write("Rule execution successful, nothing to report\n");
+            } else {
+                output.write("*** WARNING *** Rule has info, warnings or errors, see log for report\n");
+            }
+            
+            for(EvaluationResult.LogMessage msg : r.getLogMessages()) {
+                output.write("\t");
+                output.write(msg.getLevel().toString());
+                output.write("\t");
+                output.write(msg.getMessage());
+                output.write("\n");
+            }
             output.write("\n");
         }
         /*

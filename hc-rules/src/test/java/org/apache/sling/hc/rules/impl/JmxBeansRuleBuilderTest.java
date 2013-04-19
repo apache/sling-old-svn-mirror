@@ -17,13 +17,14 @@
  */
 package org.apache.sling.hc.rules.impl;
 
-import org.apache.sling.hc.api.EvaluationResult;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.rules.jmx.JmxBeansRuleBuilder;
 import org.junit.Test;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
 
 public class JmxBeansRuleBuilderTest {
     private final RuleBuilder jmxRuleBuilder = new JmxBeansRuleBuilder();
@@ -33,20 +34,20 @@ public class JmxBeansRuleBuilderTest {
         // Assuming this attribute is present in all JVMs that we use to run tests...
         final Rule r = jmxRuleBuilder.buildRule("jmxbeans", "java.lang:type=ClassLoading", "LoadedClassCount", "> 100");
         assertNotNull("Expecting to get a jmxbean Rule", r);
-        assertEquals(EvaluationResult.Status.OK, r.evaluate());
+        assertFalse(r.evaluate().anythingToReport());
     }
     
     @Test
     public void testHashSeparatorInBeanName() {
         final Rule r = jmxRuleBuilder.buildRule("jmxbeans", "java.lang#type=ClassLoading", "LoadedClassCount", "> 100");
         assertNotNull("Expecting to get a jmxbean Rule", r);
-        assertEquals(EvaluationResult.Status.OK, r.evaluate());
+        assertFalse(r.evaluate().anythingToReport());
     }
     
     @Test
     public void testNonExistentBean() {
         final Rule r = jmxRuleBuilder.buildRule("jmxbeans", "java.lang:type=DoesNotExist", "LoadedClassCount", "5");
         assertNotNull("Expecting to get a jmxbean Rule", r);
-        assertEquals(EvaluationResult.Status.ERROR, r.evaluate());
+        assertTrue(r.evaluate().anythingToReport());
     }
 }

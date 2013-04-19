@@ -1,7 +1,6 @@
 {
   "sling:resourceType" : "sling/healthcheck/rules",
-  "expression": "LOGIN_FAILED",
-  "ruleName": "login",
+  "ruleName": "loginfails",
   "namespace": "sling",
   "jcr:primaryType": "nt:unstructured",
   "qualifier": "admin#foo"

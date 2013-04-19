@@ -17,15 +17,14 @@
  */
 package org.apache.sling.hc.sling;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
 
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
-import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.sling.impl.rules.LoginRuleBuilder;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,19 +42,19 @@ public class LoginRuleBuilderTest {
 
     @Test
     public void testAdminLoginSucceeds() {
-        final Rule r = builder.buildRule("sling", "login", "admin#admin", "LOGIN_OK");
-        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.OK, r.evaluate());
+        final Rule r = builder.buildRule("sling", "loginfails", "admin#admin", "LOGIN_OK");
+        assertTrue("Expecting loginfails rule to fail for admin:admin login", r.evaluate().anythingToReport());
     }
     
     @Test
     public void testAdminBadPasswordFails() {
-        final Rule r = builder.buildRule("sling", "login", "admin#bad", "OK");
-        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.ERROR, r.evaluate());
+        final Rule r = builder.buildRule("sling", "loginfails", "admin#bad", "OK");
+        assertTrue("Expecting admin/bad login to fail", r.evaluate().anythingToReport());
     }
     
     @Test
     public void testFooLoginFails() {
-        final Rule r = builder.buildRule("sling", "login", "foo#bar", "OK");
-        assertEquals("Expecting admin login to succeed", EvaluationResult.Status.ERROR, r.evaluate());
+        final Rule r = builder.buildRule("sling", "loginfails", "foo#bar", "OK");
+        assertTrue("Expecting foo/bar login to fail", r.evaluate().anythingToReport());
     }
 }

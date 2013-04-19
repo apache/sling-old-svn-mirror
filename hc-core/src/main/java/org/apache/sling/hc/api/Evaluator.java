@@ -17,7 +17,9 @@
  */
 package org.apache.sling.hc.api;
 
+import org.slf4j.Logger;
+
 /** Evaluates a String expression on the current value of a {@link SystemAttribute} */ 
 public interface Evaluator {
-    EvaluationResult.Status evaluate(SystemAttribute a, String expression);
+    void evaluate(SystemAttribute a, String expression, Logger logger);
 }

@@ -37,6 +37,7 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.Logger;
 
 @RunWith(PaxExam.class)
 public class OsgiHealthCheckFacadeTest {
@@ -68,8 +69,8 @@ public class OsgiHealthCheckFacadeTest {
         
         assertEquals(2, r.size());
         int i=0;
-        U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: RuleBuilderCount > 0");
-        U.assertResult(r.get(i++), EvaluationResult.Status.ERROR, "Rule: RuleBuilderCount > 42");
+        U.assertResult(r.get(i++), true, "Rule: RuleBuilderCount > 0");
+        U.assertResult(r.get(i++), false, "Rule: RuleBuilderCount > 42");
     }
     
     @Test
@@ -87,7 +88,7 @@ public class OsgiHealthCheckFacadeTest {
                 return "five";
             }
             @Override
-            public Object getValue() {
+            public Object getValue(Logger logger) {
                 return 5;
             }
         };
@@ -109,10 +110,10 @@ public class OsgiHealthCheckFacadeTest {
             final List<EvaluationResult> r = U.evaluateRules(facade, rules);
             assertEquals(4, r.size());
             int i=0;
-            U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: RuleBuilderCount > 0");
-            U.assertResult(r.get(i++), EvaluationResult.Status.ERROR, "Rule: RuleBuilderCount > 42");
-            U.assertResult(r.get(i++), EvaluationResult.Status.OK, "Rule: five 5");
-            U.assertResult(r.get(i++), EvaluationResult.Status.ERROR, "Rule: five 12");
+            U.assertResult(r.get(i++), true, "Rule: RuleBuilderCount > 0");
+            U.assertResult(r.get(i++), false, "Rule: RuleBuilderCount > 42");
+            U.assertResult(r.get(i++), true, "Rule: five 5");
+            U.assertResult(r.get(i++), false, "Rule: five 12");
         } finally {
             reg.unregister();
         }

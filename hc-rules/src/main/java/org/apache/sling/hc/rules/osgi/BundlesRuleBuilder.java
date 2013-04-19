@@ -22,13 +22,13 @@ import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
 
 /** RuleBuilder about OSGi bundles */
 public class BundlesRuleBuilder implements RuleBuilder {
 
     public static final String NAMESPACE = "osgi";
     public static final String BUNDLE_STATE_RULE = "bundle.state";
-    public static final String BUNDLE_NOT_FOUND = "BUNDLE_NOT_FOUND";
     private final BundleContext bundleContext;
     
     static class BundleAttribute implements SystemAttribute {
@@ -46,8 +46,8 @@ public class BundlesRuleBuilder implements RuleBuilder {
         }
         
         @Override
-        public Object getValue() {
-            return attr.getValue();
+        public Object getValue(Logger logger) {
+            return attr.getValue(logger);
         }
     }
     
@@ -93,13 +93,17 @@ public class BundlesRuleBuilder implements RuleBuilder {
             // Get the state of a bundle
             attr = new BundleAttribute(ruleName + ":" + qualifier, new SystemAttribute() {
                 @Override
-                public Object getValue() {
+                public Object getValue(Logger logger) {
+                    String result = null;
                     Bundle b = findBundle(qualifier);
                     if(b == null) {
-                        return BUNDLE_NOT_FOUND;
+                        logger.error("Bundle not found: {}", qualifier);
                     } else {
-                        return bundleStateToString(b.getState());
+                        result = bundleStateToString(b.getState());
+                        logger.debug("Bundle {} found, state={} ({})", 
+                                new Object[] { b.getSymbolicName(), result, b.getState()});
                     }
+                    return result;
                 }
             });
         }

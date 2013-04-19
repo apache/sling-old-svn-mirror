@@ -25,6 +25,7 @@ import javax.management.ObjectName;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
+import org.slf4j.Logger;
 
 /** Rules that give access to JMX beans */
 public class JmxBeansRuleBuilder implements RuleBuilder {
@@ -51,16 +52,17 @@ public class JmxBeansRuleBuilder implements RuleBuilder {
         }
         
         @Override
-        public Object getValue() {
+        public Object getValue(Logger logger) {
             try {
                 final ObjectName objectName = new ObjectName(beanName);
                 if(jmxServer.queryNames(objectName, null).size() == 0) {
-                    return "MBean not found: " + objectName;
+                    logger.error("MBean not found: {}", objectName);
                 }
                 return jmxServer.getAttribute(objectName, attributeName);
             } catch(Exception e) {
-                return "MBean exception: " + e.toString();
+                logger.error("MBean exception", e);
             }
+            return null;
         }
     }
     
