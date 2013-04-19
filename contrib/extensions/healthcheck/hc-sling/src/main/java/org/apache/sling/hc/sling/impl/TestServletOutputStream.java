@@ -1,4 +1,4 @@
-package org.apache.sling.muppet.sling.impl;
+package org.apache.sling.hc.sling.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

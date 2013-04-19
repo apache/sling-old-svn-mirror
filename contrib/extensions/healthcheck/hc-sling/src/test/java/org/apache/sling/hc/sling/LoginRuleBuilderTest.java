@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling;
+package org.apache.sling.hc.sling;
 
 import static org.junit.Assert.assertEquals;
 
@@ -23,9 +23,9 @@ import java.lang.reflect.Field;
 
 import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.sling.impl.rules.LoginRuleBuilder;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.sling.impl.rules.LoginRuleBuilder;
 import org.junit.Before;
 import org.junit.Test;
 

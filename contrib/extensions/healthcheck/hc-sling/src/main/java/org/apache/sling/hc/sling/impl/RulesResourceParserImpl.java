@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl;
+package org.apache.sling.hc.sling.impl;
 
 import org.apache.sling.engine.SlingRequestProcessor;
 import java.util.ArrayList;
@@ -28,10 +28,10 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingScript;
-import org.apache.sling.muppet.api.MuppetFacade;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.sling.api.RulesResourceParser;
+import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.sling.api.RulesResourceParser;
 
 /** Parses a Resource into a list of Rule. See unit tests for details */
 @Component

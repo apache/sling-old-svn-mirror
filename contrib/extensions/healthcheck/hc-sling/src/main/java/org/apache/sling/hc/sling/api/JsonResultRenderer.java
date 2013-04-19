@@ -15,13 +15,13 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.api;
+package org.apache.sling.hc.sling.api;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
-import org.apache.sling.muppet.api.EvaluationResult;
+import org.apache.sling.hc.api.EvaluationResult;
 
 /** Renders a List of EvaluationResult in JSON */
 public interface JsonResultRenderer {

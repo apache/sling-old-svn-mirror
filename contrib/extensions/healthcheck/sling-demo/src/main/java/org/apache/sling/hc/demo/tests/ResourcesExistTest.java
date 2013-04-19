@@ -1,4 +1,4 @@
-package org.apache.sling.muppet.demo.tests;
+package org.apache.sling.hc.demo.tests;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;

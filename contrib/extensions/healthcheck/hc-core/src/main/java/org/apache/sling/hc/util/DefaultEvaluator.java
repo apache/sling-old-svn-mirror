@@ -15,12 +15,12 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.util;
+package org.apache.sling.hc.util;
 
-import org.apache.sling.muppet.api.Evaluator;
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.api.SystemAttribute;
-import org.apache.sling.muppet.api.EvaluationResult.Status;
+import org.apache.sling.hc.api.Evaluator;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.api.SystemAttribute;
+import org.apache.sling.hc.api.EvaluationResult.Status;
 
 public class DefaultEvaluator implements Evaluator {
     @Override

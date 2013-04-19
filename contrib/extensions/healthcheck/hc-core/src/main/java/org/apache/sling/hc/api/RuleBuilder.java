@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.api;
+package org.apache.sling.hc.api;
 
 /** Builds {@link Rule} objects for namespaces and rule names that
  *  match what this builder expects. Used when parsing rule definition

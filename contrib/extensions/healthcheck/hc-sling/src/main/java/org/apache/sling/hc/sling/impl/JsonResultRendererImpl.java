@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling.impl;
+package org.apache.sling.hc.sling.impl;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.muppet.api.EvaluationResult;
-import org.apache.sling.muppet.sling.api.JsonResultRenderer;
+import org.apache.sling.hc.api.EvaluationResult;
+import org.apache.sling.hc.sling.api.JsonResultRenderer;
 
 /** Renders a List of EvaluationResult in JSON. See unit tests
  *  for details.

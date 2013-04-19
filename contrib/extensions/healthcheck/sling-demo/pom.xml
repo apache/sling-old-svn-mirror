@@ -14,15 +14,15 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.muppet.slingdemo</artifactId>
+    <artifactId>org.apache.sling.hc.slingdemo</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Muppet Sling demo content</name>
+    <name>Sling Health Check Sling demo content</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        Sling demo content and tests for Muppet
+        Sling demo content and tests for Sling Health Check
     </description>
 
     <build>
@@ -39,7 +39,7 @@
                             *
                         </Import-Package>
                         <Private-Package>
-                            org.apache.sling.muppet.sling.demo.*
+                            org.apache.sling.hc.sling.demo.*
                         </Private-Package>
                         <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
                     </instructions>

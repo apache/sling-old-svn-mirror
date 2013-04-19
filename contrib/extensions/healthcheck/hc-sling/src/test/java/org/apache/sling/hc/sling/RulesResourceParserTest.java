@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.muppet.sling;
+package org.apache.sling.hc.sling;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,12 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.muppet.api.MuppetFacade;
-import org.apache.sling.muppet.api.Rule;
-import org.apache.sling.muppet.api.RuleBuilder;
-import org.apache.sling.muppet.api.RulesEngine;
-import org.apache.sling.muppet.api.SystemAttribute;
-import org.apache.sling.muppet.sling.impl.RulesResourceParserImpl;
+import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.api.RulesEngine;
+import org.apache.sling.hc.api.SystemAttribute;
+import org.apache.sling.hc.sling.impl.RulesResourceParserImpl;
 import org.junit.Before;
 import org.junit.Test;
 

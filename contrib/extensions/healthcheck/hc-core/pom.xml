@@ -14,15 +14,15 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.muppet.core</artifactId>
+    <artifactId>org.apache.sling.hc.core</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Muppet Core</name>
+    <name>Sling Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        The Muppet core OSGi bundle, can also be used outside of an OSGi environment.
+        The Sling Health Check core OSGi bundle, can also be used outside of an OSGi environment.
     </description>
 
     <build>
@@ -34,14 +34,14 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            org.apache.sling.muppet.impl.Activator
+                            org.apache.sling.hc.impl.Activator
                         </Bundle-Activator>
                         <Export-Package>
-                            org.apache.sling.muppet.api,
-                            org.apache.sling.muppet.util
+                            org.apache.sling.hc.api,
+                            org.apache.sling.hc.util
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.muppet.impl.*
+                            org.apache.sling.hc.impl.*
                         </Private-Package>
                     </instructions>
                 </configuration>
