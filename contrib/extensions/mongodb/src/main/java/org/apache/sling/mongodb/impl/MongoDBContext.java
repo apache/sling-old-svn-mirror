@@ -97,6 +97,7 @@ public class MongoDBContext {
     public void notifyRemoved(final String[] info) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(SlingConstants.PROPERTY_PATH, this.rootWithSlash + info[0] + '/' + info[1]);
+        props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_REMOVED, props);
         this.eventAdmin.postEvent(event);
     }
@@ -104,6 +105,7 @@ public class MongoDBContext {
     public void notifyAddeed(final String[] info) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(SlingConstants.PROPERTY_PATH, this.rootWithSlash + info[0] + '/' + info[1]);
+        props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_ADDED, props);
         this.eventAdmin.postEvent(event);
     }
@@ -111,6 +113,7 @@ public class MongoDBContext {
     public void notifyUpdated(final String[] info) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(SlingConstants.PROPERTY_PATH, this.rootWithSlash + info[0] + '/' + info[1]);
+        props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_CHANGED, props);
         this.eventAdmin.postEvent(event);
     }
