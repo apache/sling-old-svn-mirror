@@ -28,7 +28,7 @@ import java.io.StringReader;
 import java.util.List;
 
 import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.RulesEngine;
 import org.ops4j.pax.exam.Option;
 
@@ -56,7 +56,7 @@ public class U {
         }
     }
     
-    static List<EvaluationResult> evaluateRules(MuppetFacade facade, String [] rules) throws IOException {
+    static List<EvaluationResult> evaluateRules(HealthCheckFacade facade, String [] rules) throws IOException {
         final RulesEngine e = facade.getNewRulesEngine();
         final StringBuilder b = new StringBuilder();
         for(String line : rules) {

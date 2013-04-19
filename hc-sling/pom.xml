@@ -18,7 +18,7 @@
     <packaging>bundle</packaging>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Sling-specific Sling Health Check Components</name>
+    <name>Sling Health Check Sling Components</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>

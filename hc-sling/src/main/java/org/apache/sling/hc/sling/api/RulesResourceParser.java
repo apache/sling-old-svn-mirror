@@ -22,7 +22,7 @@ import java.util.List;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.hc.api.Rule;
 
-/** Parses a Sling Resource into Muppet Rules */
+/** Parses a Sling Resource into healthcheck Rules */
 public interface RulesResourceParser {
     String NAMESPACE = "namespace";
     String RULE_NAME = "ruleName";
