@@ -23,24 +23,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.RulesEngine;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
-/** {@link MuppetFacade} for an OSGi environment, where
+/** {@link HealthCheckFacade} for an OSGi environment, where
  *  {@link RuleBuilder} are provided as OSGi services.
  */
-public class OSGiMuppetFacadeImpl implements MuppetFacade {
+public class OSGiHealthCheckFacadeImpl implements HealthCheckFacade {
 
     private TextRulesParser parser;
     private List<RuleBuilder> ruleBuilders;
     private final ServiceTracker ruleBuilderTracker;
     private int trackingCount;
     
-    public OSGiMuppetFacadeImpl(BundleContext ctx) {
+    public OSGiHealthCheckFacadeImpl(BundleContext ctx) {
         ruleBuilderTracker = new ServiceTracker(ctx, RuleBuilder.class.getName(), null);
         ruleBuilderTracker.open();
     }

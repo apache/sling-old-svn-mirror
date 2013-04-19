@@ -26,22 +26,22 @@ import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.RulesEngine;
 import org.apache.sling.hc.sling.api.JsonResultRenderer;
 import org.apache.sling.hc.sling.api.RulesResourceParser;
 
-/** Sling Servlet that renders a Resource that contains Muppet rules definitions,
- *  after evaluating the rules.
+/** Sling Servlet that renders a Resource that contains health check rules 
+ *  definitions, after evaluating the rules.
  *  {@link RulesResourceParser} defines the resource format, and {@link JsonResultRenderer}
  *  defines the output format. 
  */
 @SuppressWarnings("serial")
-@SlingServlet(extensions="json",resourceTypes="sling.hc.rules",methods="GET",selectors="muppet")
-public class MuppetSlingServlet extends SlingSafeMethodsServlet {
+@SlingServlet(extensions="json",resourceTypes="sling/healthcheck/rules",methods="GET",selectors="healthcheck")
+public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
 
     @Reference
-    private MuppetFacade muppet;
+    private HealthCheckFacade healthcheck;
     
     @Reference
     private RulesResourceParser parser;
@@ -56,7 +56,7 @@ public class MuppetSlingServlet extends SlingSafeMethodsServlet {
         // TODO restrict execution to admin?
         
         // TODO we could cache the engine + rules, not sure if it's worth it...
-        final RulesEngine engine = muppet.getNewRulesEngine();
+        final RulesEngine engine = healthcheck.getNewRulesEngine();
         engine.addRules(parser.parseResource(request.getResource()));
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
