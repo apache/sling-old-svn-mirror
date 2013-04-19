@@ -25,7 +25,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.MuppetFacade;
+import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,7 +38,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 public class AllRulesTest {
     
     @Inject
-    private MuppetFacade facade;
+    private HealthCheckFacade facade;
     
     @Configuration
     public Option[] config() {
@@ -52,7 +52,7 @@ public class AllRulesTest {
             "osgi:bundle.state:org.apache.sling.hc.core:active",
             "osgi:bundle.state:some.nonexistenbundle:BUNDLE_NOT_FOUND",
             "jmxbeans:java.lang#type=ClassLoading:LoadedClassCount:> 100",
-            "muppet:RuleBuilderCount:between 2 and 10"
+            "healthcheck:RuleBuilderCount:between 2 and 10"
         };
         final List<EvaluationResult> r = U.evaluateRules(facade, rules);
         
