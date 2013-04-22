@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * JCR based tenant adapter factory, that adapts <code>ResourceResolver</code>
+ * Resource based tenant adapter factory, that adapts <code>ResourceResolver</code>
  * and <code>Resource</code> to <code>Tenant</code>.
  *
  * It tries to resolve the tenant based on logged in user by looking at the user
@@ -72,7 +72,7 @@ class TenantAdapterFactory implements AdapterFactory {
         }
 
 	    Dictionary<String, Object> props = new Hashtable<String, Object>();
-	    props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling JCR Tenant Adapter");
+	    props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Tenant Adapter");
 	    props.put(AdapterFactory.ADAPTER_CLASSES, new String[]{ TENANT_CLASS.getName() });
 	    props.put(AdapterFactory.ADAPTABLE_CLASSES, new String[] { RESOURCERESOLVER_CLASS
 	            .getName(), RESOURCE_CLASS.getName() });
@@ -113,20 +113,22 @@ class TenantAdapterFactory implements AdapterFactory {
 
 	private <AdapterType> AdapterType getAdapter(Session session,
 			Class<AdapterType> type) {
-		String userID = session.getUserID();
+	    if ( session != null ) {
+    		String userID = session.getUserID();
 
-		JackrabbitSession jrSession = (JackrabbitSession) session;
-		try {
-			Authorizable authorizable = jrSession.getUserManager()
-					.getAuthorizable(userID);
-			String userHome = authorizable.getPath();
+    		JackrabbitSession jrSession = (JackrabbitSession) session;
+    		try {
+    			Authorizable authorizable = jrSession.getUserManager()
+    					.getAuthorizable(userID);
+    			String userHome = authorizable.getPath();
 
-			// tries to get tenant information from user home
-			// i.e. /home/users/tenant1/a/admin
-			return getAdapter(userHome, type);
-		} catch (Exception e) {
-			log.error("can not get user from session", e);
-		}
+    			// tries to get tenant information from user home
+    			// i.e. /home/users/tenant1/a/admin
+    			return getAdapter(userHome, type);
+    		} catch (Exception e) {
+    			log.error("can not get user from session", e);
+    		}
+	    }
 		log.debug("Unable to adapt to resource of type {}", type.getName());
 		return null;
 	}
