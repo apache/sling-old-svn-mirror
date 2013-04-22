@@ -19,14 +19,13 @@
 package org.apache.sling.discovery;
 
 /**
- * The <code>DiscoveryAware</code> service interface may be implemented by
- * components interested in being made aware of the cluster state or changes
- * thereof.
+ * The <code>TopologyEventListener</code> service interface may be implemented by
+ * components interested in being made aware of changes in the topology.
  * <p>
  * Upon registration and whenever changes in the topology occur, this
  * service is informed.
  */
-public interface DiscoveryAware {
+public interface TopologyEventListener {
 
 	/**
 	 * Inform the service about an event in the topology - or in the discovery
@@ -35,7 +34,7 @@ public interface DiscoveryAware {
 	 * The <code>TopologyEvent</code> contains details about what changed.
 	 * The supported event types are:
 	 * <ul>
-	 *  <li><code>TOPOLOGY_INIT</code> sent when the <code>DiscoveryAware</code>
+	 *  <li><code>TOPOLOGY_INIT</code> sent when the <code>TopologyEventListener</code>
 	 *  was first bound to the discovery service - represents the initial state
 	 *  of the topology at that time.</li>
 	 *  <li><code>TOPOLOGY_CHANGING</code> sent when the discovery service

@@ -23,7 +23,7 @@ package org.apache.sling.discovery;
  *
  * This event object might be extended in the future with new event types
  * and methods.
- * @see DiscoveryAware
+ * @see TopologyEventListener
  */
 public class TopologyEvent {
 
