@@ -54,7 +54,12 @@ public class AcceptsMultiple implements TopologyEventAsserter {
     }
 
     public synchronized int getEventCnt(Type type) {
-        return counts.get(type);
+        Integer i = counts.get(type);
+        if (i!=null) {
+            return i;
+        } else {
+            return 0;
+        }
     }
 
 }

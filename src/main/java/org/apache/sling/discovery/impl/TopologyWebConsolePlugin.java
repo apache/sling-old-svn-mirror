@@ -651,6 +651,9 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             addEventLog(event.getType(),
                     "view: " + shortViewInfo(event.getNewView()) + ". "
                             + details);
+        } else if (event.getType() == Type.TOPOLOGY_CHANGING) {
+            addEventLog(event.getType(),
+                    "old view: " + shortViewInfo(event.getOldView()));
         } else {
             if (event.getOldView() == null) {
                 addEventLog(event.getType(),

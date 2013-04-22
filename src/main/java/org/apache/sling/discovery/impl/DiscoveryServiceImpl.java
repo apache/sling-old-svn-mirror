@@ -146,18 +146,18 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
         final TopologyEventListener[] registeredServices;
         synchronized (lock) {
-            activated = true;
             registeredServices = this.eventListeners;
             doUpdateProperties();
 
+            TopologyViewImpl newView = (TopologyViewImpl) getTopology();
+            TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
+                    newView);
+            for (final TopologyEventListener da : registeredServices) {
+                sendTopologyEvent(da, event);
+            }
+            activated = true;
+            oldView = newView;
         }
-        TopologyViewImpl newView = (TopologyViewImpl) getTopology();
-        TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
-                newView);
-        for (final TopologyEventListener da : registeredServices) {
-            da.handleTopologyEvent(event);
-        }
-        oldView = newView;
 
         URL topologyConnectorURL = config.getTopologyConnectorURL();
         if (topologyConnectorURL != null) {
@@ -166,6 +166,15 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         }
 
         logger.debug("DiscoveryServiceImpl activated.");
+    }
+
+    private void sendTopologyEvent(TopologyEventListener da, TopologyEvent event) {
+        logger.debug("sendTopologyEvent: sending topologyEvent "+event+", to "+da);
+        try{
+            da.handleTopologyEvent(event);
+        } catch(Exception e) {
+            logger.warn("sendTopologyEvent: handler threw exception. handler: "+da+", exception: "+e, e);
+        }
     }
 
     /**
@@ -181,23 +190,23 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /**
      * bind a discovery aware
      */
-    protected void bindTopologyEventListener(final TopologyEventListener clusterAware) {
+    protected void bindTopologyEventListener(final TopologyEventListener eventListener) {
 
         logger.debug("bindTopologyEventListener: Binding TopologyEventListener {}",
-                clusterAware);
+                eventListener);
 
         boolean activated = false;
         synchronized (lock) {
             List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
                     Arrays.asList(eventListeners));
-            currentList.add(clusterAware);
+            currentList.add(eventListener);
             this.eventListeners = currentList
                     .toArray(new TopologyEventListener[currentList.size()]);
             activated = this.activated;
         }
 
         if (activated) {
-            clusterAware.handleTopologyEvent(new TopologyEvent(
+            sendTopologyEvent(eventListener, new TopologyEvent(
                     Type.TOPOLOGY_INIT, null, getTopology()));
         }
     }
@@ -417,6 +426,12 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      */
     private void handlePotentialTopologyChange() {
         synchronized (lock) {
+            if (!activated) {
+                // ignore this call then - an early call to issue
+                // a topologyevent before even activated
+                logger.debug("handlePotentialTopologyChange: ignoring early change before activate finished.");
+                return;
+            }
             if (oldView == null) {
                 throw new IllegalStateException("oldView must not be null");
             }
@@ -430,9 +445,20 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             }
 
             oldView.markOld();
-            for (final TopologyEventListener da : eventListeners) {
-                da.handleTopologyEvent(new TopologyEvent(difference, oldView,
-                        newView));
+            if (difference!=Type.TOPOLOGY_CHANGED) {
+                for (final TopologyEventListener da : eventListeners) {
+                    sendTopologyEvent(da, new TopologyEvent(difference, oldView,
+                            newView));
+                }
+            } else {
+                for (final TopologyEventListener da : eventListeners) {
+                    sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
+                            null));
+                }
+                for (final TopologyEventListener da : eventListeners) {
+                    sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGED, oldView,
+                            newView));
+                }
             }
             this.oldView = newView;
         }
