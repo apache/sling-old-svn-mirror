@@ -112,7 +112,6 @@
           <module>scripting/ruby</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
-          <module>launchpad/smx-kernel</module>
     </modules>
     <profiles>
         <profile>

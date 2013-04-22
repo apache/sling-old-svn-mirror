@@ -74,33 +74,3 @@ in the top-level directory of the Sling source code.
   
    Deploy target/org.apache.sling.launchpad-6.war to your favorite application
    server or servlet container.
-
-How to run the Sling launchpad/builder module in Apache Felix Karaf
-----------------------------------------
-
-1) Build Sling using 
-
-	mvn clean install
-	
-in the top-level directory of the Sling source code.
-
-2) Install Apache Felix Karaf. See details in:
-
-        http://felix.apache.org/site/3-installation.html
-
-3) Install the http feature in order to get an HTTP OSGi service available:
-   
-        karaf@root:/> features:install http
-
-4) Install the webconsole feature in order to get the Felix Web Console available:
-   
-        karaf@root:/> features:install webconsole
-
-5) Add the Sling features reposity and install:
-
-        karaf@root:/> features:addUrl mvn:org.apache.sling/org.apache.sling.launchpad/6/xml/features 
-        karaf@root:/> features:install sling
-
-6) Browse Sling in:
-
-        http://localhost:8181
