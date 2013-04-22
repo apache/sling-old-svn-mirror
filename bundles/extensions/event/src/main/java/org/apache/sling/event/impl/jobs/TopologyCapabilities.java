@@ -99,7 +99,7 @@ public class TopologyCapabilities {
         for(final InstanceDescription desc : view.getInstances() ) {
             final String topics = desc.getProperty(JobConsumer.PROPERTY_TOPICS);
             if ( topics != null && topics.length() > 0 ) {
-                this.logger.debug("Capabilities of {} : {}", desc.getSlingId(), topics);
+                this.logger.info("Capabilities of {} : {}", desc.getSlingId(), topics); // TODO debug
                 for(final String topic : topics.split(",") ) {
                     List<InstanceDescription> list = newCaps.get(topic);
                     if ( list == null ) {

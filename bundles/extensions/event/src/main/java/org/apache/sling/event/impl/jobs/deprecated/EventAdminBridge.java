@@ -29,6 +29,8 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
@@ -73,7 +75,7 @@ public class EventAdminBridge
     /** Is the background task still running? */
     private volatile boolean running;
 
-    @Reference
+    @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
     private JobManager jobManager;
 
     /**
@@ -146,20 +148,30 @@ public class EventAdminBridge
                 this.ignoreException(e);
             }
             if ( event != null && this.running ) {
-                final String jobTopic = (String)event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
-                final String jobName = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
-
-                final Map<String, Object> props =  new EventPropertiesMap(event);
-                props.put(JobImpl.PROPERTY_BRIDGED_EVENT, Boolean.TRUE);
-
-                // check for deprecated/unsupported properties
-                for(final String ignoredProp : IGNORED_CONFIG_PROPERTIES) {
-                    if ( props.containsKey(ignoredProp)) {
-                        logger.info("Job {} is using deprecated and ignored property {}", EventUtil.toString(event), ignoredProp);
-                        props.remove(ignoredProp);
+                final JobManager jm = this.jobManager;
+                if ( jm == null ) {
+                    try {
+                        this.writeQueue.put(event);
+                        Thread.sleep(500);
+                    } catch (final InterruptedException ie) {
+                        this.ignoreException(ie);
                     }
+                } else {
+                    final String jobTopic = (String)event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
+                    final String jobName = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
+
+                    final Map<String, Object> props =  new EventPropertiesMap(event);
+                    props.put(JobImpl.PROPERTY_BRIDGED_EVENT, Boolean.TRUE);
+
+                    // check for deprecated/unsupported properties
+                    for(final String ignoredProp : IGNORED_CONFIG_PROPERTIES) {
+                        if ( props.containsKey(ignoredProp)) {
+                            logger.info("Job {} is using deprecated and ignored property {}", EventUtil.toString(event), ignoredProp);
+                            props.remove(ignoredProp);
+                        }
+                    }
+                    this.jobManager.addJob(jobTopic, jobName, props);
                 }
-                this.jobManager.addJob(jobTopic, jobName, props);
             }
         }
     }

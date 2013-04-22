@@ -44,6 +44,7 @@ import org.apache.sling.event.jobs.JobConsumer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
+import org.slf4j.LoggerFactory;
 
 /**
  * This component manages/keeps track of all job consumer services.
@@ -109,6 +110,7 @@ public class JobConsumerManager {
                 this.calculateTopics(enable);
             }
             if ( enable ) {
+                LoggerFactory.getLogger(this.getClass()).info("Registering property provider with: {}", this.topics);
                 this.propagationService = bc.registerService(PropertyProvider.class.getName(),
                         new PropertyProvider() {
 
@@ -121,6 +123,7 @@ public class JobConsumerManager {
                             }
                         }, this.getRegistrationProperties());
             } else {
+                LoggerFactory.getLogger(this.getClass()).info("Unregistering property provider with");
                 this.propagationService.unregister();
                 this.propagationService = null;
             }
@@ -129,6 +132,7 @@ public class JobConsumerManager {
             synchronized ( this.topicToConsumerMap ) {
                 this.calculateTopics(true);
             }
+            LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
             this.propagationService.setProperties(this.getRegistrationProperties());
         }
     }
@@ -210,6 +214,7 @@ public class JobConsumerManager {
                 }
             }
             if ( changed && this.propagationService != null ) {
+                LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
                 this.propagationService.setProperties(this.getRegistrationProperties());
             }
         }
@@ -247,6 +252,7 @@ public class JobConsumerManager {
                 }
             }
             if ( changed && this.propagationService != null ) {
+                LoggerFactory.getLogger(this.getClass()).info("Updating property provider with: {}", this.topics);
                 this.propagationService.setProperties(this.getRegistrationProperties());
             }
         }
