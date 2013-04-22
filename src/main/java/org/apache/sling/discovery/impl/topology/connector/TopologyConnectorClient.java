@@ -20,6 +20,7 @@ package org.apache.sling.discovery.impl.topology.connector;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.commons.httpclient.Credentials;
@@ -29,9 +30,11 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
+import org.apache.sling.discovery.impl.topology.announcement.AnnouncementFilter;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +71,9 @@ public class TopologyConnectorClient implements
 
     /** the information about this server **/
     private final String serverInfo;
+    
+    /** the status code of the last post **/
+    private int lastStatusCode = -1;
 
     TopologyConnectorClient(final ClusterViewService clusterViewService,
             final AnnouncementRegistry announcementRegistry, final Config config,
@@ -119,7 +125,26 @@ public class TopologyConnectorClient implements
             topologyAnnouncement.setServerInfo(serverInfo);
             topologyAnnouncement.setLocalCluster(clusterViewService
                     .getClusterView());
-            announcementRegistry.addAllExcept(topologyAnnouncement, null);
+            announcementRegistry.addAllExcept(topologyAnnouncement, new AnnouncementFilter() {
+                
+                public boolean accept(final String receivingSlingId, final Announcement announcement) {
+                    // filter out announcements that are of old cluster instances
+                    // which I dont really have in my cluster view at the moment
+                    final Iterator<InstanceDescription> it = 
+                            clusterViewService.getClusterView().getInstances().iterator();
+                    while(it.hasNext()) {
+                        final InstanceDescription instance = it.next();
+                        if (instance.getSlingId().equals(receivingSlingId)) {
+                            // then I have the receiving instance in my cluster view
+                            // all fine then
+                            return true;
+                        }
+                    }
+                    // looks like I dont have the receiving instance in my cluster view
+                    // then I should also not propagate that announcement anywhere
+                    return false;
+                }
+            });
             final String p = topologyAnnouncement.asJSON();
 
             logger.debug("ping: topologyAnnouncement json is: " + p);
@@ -127,19 +152,24 @@ public class TopologyConnectorClient implements
             httpClient.executeMethod(method);
             logger.debug("ping: done. code=" + method.getStatusCode() + " - "
                     + method.getStatusText());
-            String responseBody = method.getResponseBodyAsString();
-            logger.debug("ping: response body=" + responseBody);
-            Announcement inheritedAnnouncement = Announcement
-                    .fromJSON(responseBody);
-            inheritedAnnouncement.setInherited(true);
-            if (!announcementRegistry
-                    .registerAnnouncement(inheritedAnnouncement)) {
-                logger.info("ping: connector response is from an instance which I already see in my topology"
-                        + inheritedAnnouncement);
+            lastStatusCode = method.getStatusCode();
+            if (method.getStatusCode()==200) {
+                String responseBody = method.getResponseBodyAsString();
+                logger.debug("ping: response body=" + responseBody);
+                Announcement inheritedAnnouncement = Announcement
+                        .fromJSON(responseBody);
+                inheritedAnnouncement.setInherited(true);
+                if (!announcementRegistry
+                        .registerAnnouncement(inheritedAnnouncement)) {
+                    logger.info("ping: connector response is from an instance which I already see in my topology"
+                            + inheritedAnnouncement);
+                    lastInheritedAnnouncement = null;
+                    return;
+                }
+                lastInheritedAnnouncement = inheritedAnnouncement;
+            } else {
                 lastInheritedAnnouncement = null;
-                return;
             }
-            lastInheritedAnnouncement = inheritedAnnouncement;
         } catch (URIException e) {
             logger.error("ping: Got URIException: " + e, e);
         } catch (IOException e) {
@@ -151,6 +181,10 @@ public class TopologyConnectorClient implements
         }
     }
 
+    public int getStatusCode() {
+        return lastStatusCode;
+    }
+    
     public URL getConnectorUrl() {
         return connectorUrl;
     }

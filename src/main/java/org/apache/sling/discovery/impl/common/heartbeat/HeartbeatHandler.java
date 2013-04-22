@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
+import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
 import org.apache.sling.discovery.impl.cluster.voting.VotingHelper;
 import org.apache.sling.discovery.impl.cluster.voting.VotingView;
 import org.apache.sling.discovery.impl.common.ViewHelper;
@@ -84,6 +85,9 @@ public class HeartbeatHandler implements Runnable {
 
     @Reference
     private Config config;
+    
+    @Reference
+    private VotingHandler votingHandler;
 
     /** the discovery service reference is used to get properties updated before heartbeats are sent **/
     private DiscoveryServiceImpl discoveryService;
@@ -277,6 +281,12 @@ public class HeartbeatHandler implements Runnable {
     private void doCheckView(final ResourceResolver resourceResolver)
             throws RepositoryException {
 
+        if (votingHandler==null) {
+            logger.info("doCheckView: votingHandler is null!");
+        } else {
+            votingHandler.analyzeVotings(resourceResolver);
+        }
+        
         final VotingView winningVoting = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         int numOpenNonWinningVotes = VotingHelper.listOpenNonWinningVotings(

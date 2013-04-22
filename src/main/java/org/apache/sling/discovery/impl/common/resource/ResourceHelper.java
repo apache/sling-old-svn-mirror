@@ -68,7 +68,12 @@ public class ResourceHelper {
 
     /** Compile a stringbuffer containing the properties of a resource - used for logging **/
     public static StringBuffer getPropertiesForLogging(final Resource resource) {
-        final ValueMap valueMap = resource.adaptTo(ValueMap.class);
+        ValueMap valueMap;
+        try{
+            valueMap = resource.adaptTo(ValueMap.class);
+        } catch(RuntimeException re) {
+            return new StringBuffer("non-existing resource: "+resource+" ("+re.getMessage()+")");
+        }
         final Set<Entry<String, Object>> entrySet = valueMap.entrySet();
         final StringBuffer sb = new StringBuffer();
         for (Iterator<Entry<String, Object>> it = entrySet.iterator(); it

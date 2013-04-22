@@ -20,7 +20,6 @@ package org.apache.sling.discovery.impl;
 
 import java.util.Calendar;
 
-import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -37,7 +36,7 @@ import org.osgi.service.component.ComponentContext;
  * allows to conclude when the properties were last read and propagated through
  * the topology
  */
-@Component
+// @Component - disable by default
 @Service(value = { PropertyProvider.class })
 @Properties({ @Property(name = PropertyProvider.PROPERTY_PROPERTIES, value = {
         "infrastructure.slingId", "infrastructure.slingHome",

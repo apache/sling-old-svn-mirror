@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * accordingly
  */
 @Component(immediate = true)
-@Service(value = EventHandler.class)
+@Service(value = {EventHandler.class, VotingHandler.class})
 @Properties({
         @Property(name = Constants.SERVICE_DESCRIPTION, value = "New Voting Event Listener."),
         @Property(name = EventConstants.EVENT_TOPIC, value = {
@@ -129,7 +129,7 @@ public class VotingHandler implements EventHandler {
     /**
      * Analyze any ongoing voting in the repository
      */
-    private void analyzeVotings(final ResourceResolver resourceResolver)
+    public void analyzeVotings(final ResourceResolver resourceResolver)
             throws RepositoryException {
         VotingView winningVote = VotingHelper.getWinningVoting(
                 resourceResolver, config);
@@ -298,7 +298,7 @@ public class VotingHandler implements EventHandler {
                         + retiredView.getPath());
                 session.move(
                         retiredView.getPath(),
-                        config.getPreviousViewPath()
+                        previousViewsResource.getPath()
                                 + "/" + retiredView.getName());
             } else {
                 logger.debug("promote: retiring an erroneously additionally established node "

@@ -23,7 +23,10 @@ package org.apache.sling.discovery.impl.topology.announcement;
  **/
 public interface AnnouncementFilter {
 
-    /** Determine whether the given announcement can be accepte or not **/
-    boolean accept(Announcement announcement);
+    /**
+     * Check if the provided announcement, which was received by the provided
+     * slingId can be accepted or not.
+     **/
+    boolean accept(String receivingSlingId, Announcement announcement);
 
 }

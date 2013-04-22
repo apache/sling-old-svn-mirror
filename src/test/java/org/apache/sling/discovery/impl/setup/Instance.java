@@ -42,7 +42,7 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.discovery.DiscoveryAware;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
@@ -278,11 +278,11 @@ public class Instance {
         }
     }
 
-    public void bindDiscoveryAware(DiscoveryAware discoveryAware)
+    public void bindTopologyEventListener(TopologyEventListener eventListener)
             throws Throwable {
-        PrivateAccessor.invoke(discoveryService, "bindDiscoveryAware",
-                new Class[] { DiscoveryAware.class },
-                new Object[] { discoveryAware });
+        PrivateAccessor.invoke(discoveryService, "bindTopologyEventListener",
+                new Class[] { TopologyEventListener.class },
+                new Object[] { eventListener });
     }
 
 }

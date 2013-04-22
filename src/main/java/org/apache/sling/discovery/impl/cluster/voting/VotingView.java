@@ -127,7 +127,13 @@ public class VotingView extends View {
      * @return
      */
     public boolean isOngoingVoting(final Config config) {
-        final ValueMap properties = getResource().adaptTo(ValueMap.class);
+        ValueMap properties = null;
+        try{
+            properties = getResource().adaptTo(ValueMap.class);
+        } catch(RuntimeException e) {
+            logger.info("isOngoingVoting: could not get properties of "+getResource()+": "+e, e);
+            return false;
+        }
         if (properties == null) {
             // no properties, odd. then it's not a valid voting.
             return false;
@@ -149,7 +155,12 @@ public class VotingView extends View {
      * @return true if there are any no votes on this voting
      */
     public boolean hasNoVotes() {
-        final Iterator<Resource> it = getResource().getChild("members").getChildren()
+        Resource m = getResource().getChild("members");
+        if (m==null) {
+            // the vote is being created. wait.
+            return false;
+        }
+        final Iterator<Resource> it = m.getChildren()
                 .iterator();
         while (it.hasNext()) {
             Resource aMemberRes = it.next();
@@ -248,23 +259,32 @@ public class VotingView extends View {
      */
     public boolean isWinning() {
         final Resource members = getResource().getChild("members");
+        if (members==null) {
+            // the vote is being created. wait.
+            return false;
+        }
         final Iterable<Resource> children = members.getChildren();
         final Iterator<Resource> it = children.iterator();
         boolean isWinning = false;
         while (it.hasNext()) {
             Resource aMemberRes = it.next();
-            ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
-            Boolean initiator = properties.get("initiator", Boolean.class);
-            Boolean vote = properties.get("vote", Boolean.class);
-            if (initiator != null && initiator) {
-                isWinning = true;
-                continue;
+            try{
+                ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
+                Boolean initiator = properties.get("initiator", Boolean.class);
+                Boolean vote = properties.get("vote", Boolean.class);
+                if (initiator != null && initiator) {
+                    isWinning = true;
+                    continue;
+                }
+                if (vote != null && vote) {
+                    isWinning = true;
+                    continue;
+                }
+                return false;
+            } catch(RuntimeException re) {
+                logger.info("isWinning: Could not check vote due to "+re);
+                return false;
             }
-            if (vote != null && vote) {
-                isWinning = true;
-                continue;
-            }
-            return false;
         }
         return isWinning;
     }

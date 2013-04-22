@@ -21,14 +21,14 @@ package org.apache.sling.discovery.impl.cluster.helpers;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.sling.discovery.DiscoveryAware;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
 
-public class AssertingDiscoveryAware implements DiscoveryAware {
+public class AssertingTopologyEventListener implements TopologyEventListener {
     private final List<TopologyEventAsserter> expectedEvents = new LinkedList<TopologyEventAsserter>();
 
-    public AssertingDiscoveryAware() {
+    public AssertingTopologyEventListener() {
     }
 
     private List<TopologyEvent> events_ = new LinkedList<TopologyEvent>();

@@ -28,7 +28,7 @@ import java.util.UUID;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.impl.cluster.helpers.AcceptsMultiple;
-import org.apache.sling.discovery.impl.cluster.helpers.AssertingDiscoveryAware;
+import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.setup.PropertyProviderImpl;
 import org.junit.After;
@@ -175,16 +175,16 @@ public class ClusterTest {
         assertEquals(2, instance2.getClusterViewService().getClusterView()
                 .getInstances().size());
 
-        AssertingDiscoveryAware assertingDiscoveryAware = new AssertingDiscoveryAware();
-        assertingDiscoveryAware.addExpected(Type.TOPOLOGY_INIT);
-        assertEquals(1, assertingDiscoveryAware.getRemainingExpectedCount());
-        instance1.bindDiscoveryAware(assertingDiscoveryAware);
-        assertEquals(0, assertingDiscoveryAware.getRemainingExpectedCount());
+        AssertingTopologyEventListener assertingTopologyEventListener = new AssertingTopologyEventListener();
+        assertingTopologyEventListener.addExpected(Type.TOPOLOGY_INIT);
+        assertEquals(1, assertingTopologyEventListener.getRemainingExpectedCount());
+        instance1.bindTopologyEventListener(assertingTopologyEventListener);
+        assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
 
         // startup instance 3
         AcceptsMultiple acceptsMultiple = new AcceptsMultiple(
                 Type.TOPOLOGY_CHANGING, Type.TOPOLOGY_CHANGED);
-        assertingDiscoveryAware.addExpected(acceptsMultiple);
+        assertingTopologyEventListener.addExpected(acceptsMultiple);
         instance3 = Instance.newClusterInstance("thirdInstance", instance1,
                 false);
         instance1.runHeartbeatOnce();
