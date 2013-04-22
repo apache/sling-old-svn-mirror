@@ -87,8 +87,8 @@ public abstract class JobUtil {
     public static final String PROPERTY_JOB_RETRIES = "event.job.retries";
 
     /**
-     * This property is not supported anymore
-     * @deprecated
+     * The property to set a retry delay. Value is of type Long and specifies milliseconds.
+     * @deprecated - Use the new {@link Job} interface instead.
      */
     @Deprecated
     public static final String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";

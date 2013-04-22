@@ -128,7 +128,6 @@ public class EventAdminBridge
         JobUtil.PROPERTY_JOB_PARALLEL,
         JobUtil.PROPERTY_JOB_RUN_LOCAL,
         JobUtil.PROPERTY_JOB_RETRIES,
-        JobUtil.PROPERTY_JOB_RETRY_DELAY,
         JobUtil.PROPERTY_JOB_QUEUE_NAME,
         JobUtil.PROPERTY_JOB_QUEUE_ORDERED,
         JobUtil.PROPERTY_JOB_PRIORITY

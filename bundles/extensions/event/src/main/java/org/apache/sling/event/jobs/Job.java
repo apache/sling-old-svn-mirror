@@ -103,6 +103,14 @@ public interface Job {
     String PROPERTY_JOB_STARTED_TIME = "event.job.started.time";
 
     /**
+     * The property to set a retry delay. Value is of type Long and specifies milliseconds.
+     * This property can be used to override the retry delay from the queue configuration.
+     * But it should only be used very rarely as the queue configuration should be the one
+     * in charge.
+     */
+    String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
+
+    /**
      * The job topic.
      * @return The job topic
      */
