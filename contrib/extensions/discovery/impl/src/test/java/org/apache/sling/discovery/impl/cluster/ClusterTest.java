@@ -185,6 +185,7 @@ public class ClusterTest {
         AcceptsMultiple acceptsMultiple = new AcceptsMultiple(
                 Type.TOPOLOGY_CHANGING, Type.TOPOLOGY_CHANGED);
         assertingTopologyEventListener.addExpected(acceptsMultiple);
+        assertingTopologyEventListener.addExpected(acceptsMultiple);
         instance3 = Instance.newClusterInstance("thirdInstance", instance1,
                 false);
         instance1.runHeartbeatOnce();
@@ -195,6 +196,7 @@ public class ClusterTest {
         instance2.runHeartbeatOnce();
         instance3.runHeartbeatOnce();
         Thread.sleep(2000);
+        assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGING));
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGED));
     }
 
