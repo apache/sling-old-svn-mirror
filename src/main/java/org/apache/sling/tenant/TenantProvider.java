@@ -23,7 +23,7 @@ import java.util.Iterator;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The <code>TenantProvider</code> defines the service interface of for a sevice
+ * The <code>TenantProvider</code> defines the service interface
  * which may be asked for {@link Tenant tenant instances}.
  * <p>
  * For now this provider interface provides access to a tenant applying to a
