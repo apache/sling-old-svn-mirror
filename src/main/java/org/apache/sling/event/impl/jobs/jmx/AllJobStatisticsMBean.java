@@ -26,10 +26,11 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 
-@Component(immediate = true)
+@Component
 @Service(value = StatisticsMBean.class)
 @Properties(@Property(name = "jmx.objectname", value = "org.apache.sling:type=queues,name=AllQueues"))
 public class AllJobStatisticsMBean extends AbstractJobStatistics {
+
     private static final long TTL = 1000L;
     private long agregateStatisticsTTL = 0L;
     private Statistics aggregateStatistics;
@@ -39,6 +40,7 @@ public class AllJobStatisticsMBean extends AbstractJobStatistics {
     /**
      * @return the aggregate stats from the job manager.
      */
+    @Override
     protected Statistics getStatistics() {
         if (System.currentTimeMillis() > agregateStatisticsTTL) {
             aggregateStatistics = jobManager.getStatistics();
@@ -47,6 +49,7 @@ public class AllJobStatisticsMBean extends AbstractJobStatistics {
         return aggregateStatistics;
     }
 
+    @Override
     public String getName() {
         return "All Queues";
     }

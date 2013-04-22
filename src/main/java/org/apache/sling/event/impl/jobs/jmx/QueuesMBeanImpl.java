@@ -38,7 +38,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.event.impl.jobs.QueueStatusEvent;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
@@ -47,13 +46,14 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 
-@Component(immediate = true)
+@Component(immediate=true)
 @Service(value = { QueuesMBean.class, EventHandler.class })
 @Properties({
         @Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames"),
-        @Property(name = "event.topics", propertyPrivate = true, value = { QueueStatusEvent.TOPIC }) })
+        @Property(name = EventConstants.EVENT_TOPIC, propertyPrivate = true, value = { QueueStatusEvent.TOPIC }) })
 public class QueuesMBeanImpl extends StandardEmitterMBean implements
         QueuesMBean, EventHandler {
 
@@ -96,6 +96,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
 
     }
 
+    @Override
     public void handleEvent(Event event) {
         if (event instanceof QueueStatusEvent) {
             QueueStatusEvent e = (QueueStatusEvent) event;
@@ -186,6 +187,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
         queues.remove(queueMBeanHolder.name);
     }
 
+    @Override
     public String[] getQueueNames() {
         if (names == null) {
             List<String> lnames = new ArrayList<String>(queues.keySet());

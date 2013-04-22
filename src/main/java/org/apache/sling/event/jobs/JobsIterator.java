@@ -27,7 +27,9 @@ import org.osgi.service.event.Event;
  * In addition to an iterator it might return the number of elements
  * in the collection and allows to skip several elements.
  * @since 3.0
+ * @deprecated - Use the new {@link JobManager#findJobs} methods instead.
  */
+@Deprecated
 public interface JobsIterator extends Iterator<Event>, Iterable<Event> {
 
     /**

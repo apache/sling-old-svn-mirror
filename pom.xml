@@ -45,8 +45,13 @@
     <properties>
         <site.jira.version.id>12315369</site.jira.version.id>
         <sling.java.version>6</sling.java.version>
+        <exam.version>2.5.0</exam.version>
+        <url.version>1.4.0</url.version>
+         <bundle.build.name>${basedir}/target</bundle.build.name>
+        <bundle.file.name>${bundle.build.name}/${project.build.finalName}.jar</bundle.file.name>
     </properties>
-
+ 
+ 
     <build>
         <plugins>
             <plugin>
@@ -68,7 +73,7 @@
                         </Import-Package>
                         <Export-Package>
                             org.apache.sling.event;version=2.4.0,
-                            org.apache.sling.event.jobs;version=1.1.0,
+                            org.apache.sling.event.jobs;version=1.2.0,
                             org.apache.sling.event.jobs.jmx;version=1.0.0
                         </Export-Package>
                         <Private-Package>
@@ -87,6 +92,60 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <!-- plain unit tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.12</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/it/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- integration tests run with pax-exam -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>2.12</version>
+                <executions>
+                  <execution>
+                    <goals>
+                      <goal>integration-test</goal>
+                      <goal>verify</goal>
+                    </goals>
+                  </execution>
+                </executions>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>project.bundle.file</name>
+                            <value>${bundle.file.name}</value>
+                        </property>
+                    </systemProperties>
+                    <argLine>
+                        -Xmx1024m -XX:MaxPermSize=368m
+                    </argLine>
+                    <includes>
+                        <include>**/it/*</include>
+                    </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>derby.log</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>jackrabbit</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -103,17 +162,15 @@
         </plugins>
     </reporting>
     <dependencies>
-      <!--  We have to put this test dependency first, to make sure this version is
-            used for testing! -->
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>1.4</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.api</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -122,16 +179,12 @@
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.jcr</groupId>
-            <artifactId>jcr</artifactId>
-            <version>2.0</version>
-            <scope>provided</scope>
+            <version>4.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
@@ -141,8 +194,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.api</artifactId>
-            <version>2.0.6</version>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -182,12 +235,6 @@
         </dependency>
       <!-- Testing -->
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.jcr.resource</artifactId>
-            <version>2.0.6</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
@@ -211,11 +258,68 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
+
+
         <dependency>
-            <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
-            <version>2.2.4</version>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-native</artifactId>
+            <version>${exam.version}</version>
             <scope>test</scope>
         </dependency>
+ 
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+ 
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+ 
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-aether</artifactId>
+            <version>${url.version}</version>
+            <scope>test</scope>
+        </dependency>
+ 
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>3.2.2</version>
+            <scope>test</scope>
+        </dependency>
+ 
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>0.9.20</version>
+            <scope>test</scope>
+        </dependency>
+ 
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>0.9.20</version>
+            <scope>test</scope>
+        </dependency>
+         <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad.api</artifactId>
+            <version>1.1.0</version>
+            <scope>test</scope>
+        </dependency>
+         <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.resourceresolver-mock</artifactId>
+            <version>0.1.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 </project>

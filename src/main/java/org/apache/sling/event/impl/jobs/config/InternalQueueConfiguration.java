@@ -30,18 +30,16 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.event.EventUtil;
-import org.apache.sling.event.impl.jobs.JobEvent;
-import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.impl.support.TopicMatcher;
+import org.apache.sling.event.impl.support.TopicMatcherHelper;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.osgi.framework.Constants;
-import org.osgi.service.event.Event;
 
 @Component(metatype=true,name="org.apache.sling.event.jobs.QueueConfiguration",
         label="%queue.name", description="%queue.description",
         configurationFactory=true,policy=ConfigurationPolicy.REQUIRE)
-@Service(value=InternalQueueConfiguration.class)
+@Service(value={InternalQueueConfiguration.class})
 @Properties({
     @Property(name=ConfigurationConstants.PROP_NAME),
     @Property(name=ConfigurationConstants.PROP_TYPE,
@@ -49,7 +47,8 @@ import org.osgi.service.event.Event;
             options={@PropertyOption(name="UNORDERED",value="Parallel"),
                      @PropertyOption(name="ORDERED",value="Ordered"),
                      @PropertyOption(name="TOPIC_ROUND_ROBIN",value="Topic Round Robin"),
-                     @PropertyOption(name="IGNORE",value="Ignore")}),
+                     @PropertyOption(name="PULL",value="Equal Distribution"),
+                     @PropertyOption(name="DROP",value="Drop")}),
     @Property(name=ConfigurationConstants.PROP_TOPICS,
             unbounded=PropertyUnbounded.ARRAY),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
@@ -62,11 +61,7 @@ import org.osgi.service.event.Event;
             value=ConfigurationConstants.DEFAULT_PRIORITY,
             options={@PropertyOption(name="NORM",value="Norm"),
                      @PropertyOption(name="MIN",value="Min"),
-                     @PropertyOption(name="MAX",value="Max")}),
-    @Property(name=ConfigurationConstants.PROP_RUN_LOCAL,
-            boolValue=ConfigurationConstants.DEFAULT_RUN_LOCAL),
-    @Property(name=ConfigurationConstants.PROP_APP_IDS,
-            unbounded=PropertyUnbounded.ARRAY)
+                     @PropertyOption(name="MAX",value="Max")})
 })
 public class InternalQueueConfiguration
     implements QueueConfiguration {
@@ -83,23 +78,17 @@ public class InternalQueueConfiguration
     /** Retry delay. */
     private long retryDelay;
 
-    /** Local queue? */
-    private boolean runLocal;
-
     /** Thread priority. */
     private JobUtil.JobPriority priority;
 
     /** The maximum number of parallel processes (for non ordered queues) */
     private int maxParallelProcesses;
 
-    /** Optional application ids where this queue is running on. */
-    private String[] applicationIds;
-
     /** The ordering. */
     private int serviceRanking;
 
     /** The matchers for topics. */
-    private Matcher[] matchers;
+    private TopicMatcher[] matchers;
 
     /** The configured topics. */
     private String[] topics;
@@ -130,105 +119,20 @@ public class InternalQueueConfiguration
         this.name = PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_NAME), null);
         this.priority = JobUtil.JobPriority.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
         this.type = Type.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_TYPE), ConfigurationConstants.DEFAULT_TYPE));
-        this.runLocal = PropertiesUtil.toBoolean(params.get(ConfigurationConstants.PROP_RUN_LOCAL), ConfigurationConstants.DEFAULT_RUN_LOCAL);
         this.retries = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_RETRIES), ConfigurationConstants.DEFAULT_RETRIES);
         this.retryDelay = PropertiesUtil.toLong(params.get(ConfigurationConstants.PROP_RETRY_DELAY), ConfigurationConstants.DEFAULT_RETRY_DELAY);
         final int maxParallel = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_MAX_PARALLEL), ConfigurationConstants.DEFAULT_MAX_PARALLEL);
         this.maxParallelProcesses = (maxParallel == -1 ? ConfigurationConstants.NUMBER_OF_PROCESSORS : maxParallel);
-        final String appIds[] = PropertiesUtil.toStringArray(params.get(ConfigurationConstants.PROP_APP_IDS));
-        if ( appIds == null
-             || appIds.length == 0
-             || (appIds.length == 1 && (appIds[0] == null || appIds[0].length() == 0)) ) {
-            this.applicationIds = null;
-        } else {
-            this.applicationIds = appIds;
-        }
         final String[] topicsParam = PropertiesUtil.toStringArray(params.get(ConfigurationConstants.PROP_TOPICS));
-        if ( topicsParam == null
-             || topicsParam.length == 0
-             || (topicsParam.length == 1 && (topicsParam[0] == null || topicsParam[0].length() == 0))) {
-            matchers = null;
+        this.matchers = TopicMatcherHelper.buildMatchers(topicsParam);
+        if ( this.matchers == null ) {
             this.topics = null;
         } else {
-            final Matcher[] newMatchers = new Matcher[topicsParam.length];
-            for(int i=0; i < topicsParam.length; i++) {
-                String value = topicsParam[i];
-                if ( value != null ) {
-                    value = value.trim();
-                }
-                if ( value != null && value.length() > 0 ) {
-                    if ( value.endsWith(".") ) {
-                        newMatchers[i] = new PackageMatcher(value);
-                    } else if ( value.endsWith("*") ) {
-                        newMatchers[i] = new SubPackageMatcher(value);
-                    } else {
-                        newMatchers[i] = new ClassMatcher(value);
-                    }
-                }
-            }
-            matchers = newMatchers;
             this.topics = topicsParam;
         }
         this.serviceRanking = PropertiesUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
         this.pid = (String)params.get(Constants.SERVICE_PID);
         this.valid = this.checkIsValid();
-    }
-
-    public InternalQueueConfiguration(final Event jobEvent) {
-        this.name = (String)jobEvent.getProperty(JobUtil.PROPERTY_JOB_QUEUE_NAME);
-        if ( jobEvent.getProperty(JobUtil.PROPERTY_JOB_QUEUE_ORDERED) != null ) {
-            this.type = Type.ORDERED;
-            this.maxParallelProcesses = 1;
-        } else {
-            this.type = Type.UNORDERED;
-            int maxPar = ConfigurationConstants.DEFAULT_MAX_PARALLEL;
-            final Object value = jobEvent.getProperty(JobUtil.PROPERTY_JOB_PARALLEL);
-            if ( value != null ) {
-                if ( value instanceof Boolean ) {
-                    final boolean result = ((Boolean)value).booleanValue();
-                    if ( !result ) {
-                        maxPar = 1;
-                    }
-                } else if ( value instanceof Number ) {
-                    final int result = ((Number)value).intValue();
-                    if ( result > 1 ) {
-                        maxPar = result;
-                    } else {
-                        maxPar = 1;
-                    }
-                } else {
-                    final String strValue = value.toString();
-                    if ( "no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue) ) {
-                        maxPar = 1;
-                    } else {
-                        // check if this is a number
-                        try {
-                            final int result = Integer.valueOf(strValue).intValue();
-                            if ( result > 1 ) {
-                                maxPar = result;
-                            } else {
-                                maxPar = 1;
-                            }
-                        } catch (NumberFormatException ne) {
-                            // we ignore this
-                        }
-                    }
-                }
-            }
-            if ( maxPar == -1 ) {
-                maxPar = ConfigurationConstants.NUMBER_OF_PROCESSORS;
-            }
-            this.maxParallelProcesses = maxPar;
-        }
-        this.priority = JobUtil.JobPriority.valueOf(ConfigurationConstants.DEFAULT_PRIORITY);
-        this.runLocal = false;
-        this.retries = ConfigurationConstants.DEFAULT_RETRIES;
-        this.retryDelay = ConfigurationConstants.DEFAULT_RETRY_DELAY;
-        this.serviceRanking = 0;
-        this.applicationIds = null;
-        this.matchers = null;
-        this.topics = new String[] {"<Custom:" + jobEvent.getProperty(JobUtil.PROPERTY_JOB_TOPIC) + ">"};
-        this.valid = true;
     }
 
     /**
@@ -238,7 +142,7 @@ public class InternalQueueConfiguration
     private boolean checkIsValid() {
         boolean hasMatchers = false;
         if ( this.matchers != null ) {
-            for(final Matcher m : this.matchers ) {
+            for(final TopicMatcher m : this.matchers ) {
                 if ( m != null ) {
                     hasMatchers = true;
                 }
@@ -267,22 +171,21 @@ public class InternalQueueConfiguration
 
     /**
      * Check if the queue processes the event.
-     * @param event The event
+     * @param topic The topic of the event
+     * @return The queue name or <code>null</code>
      */
-    public boolean match(final JobEvent event) {
-        final String topic = (String)event.event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
+    public String match(final String topic) {
         if ( this.matchers != null ) {
-            for(final Matcher m : this.matchers ) {
+            for(final TopicMatcher m : this.matchers ) {
                 if ( m != null ) {
                     final String rep = m.match(topic);
                     if ( rep != null ) {
-                        event.queueName = this.name.replace("{0}", rep);
-                        return true;
+                        return this.name.replace("{0}", rep);
                     }
                 }
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -293,37 +196,9 @@ public class InternalQueueConfiguration
     }
 
     /**
-     * Checks if the event should be skipped.
-     * This can happen if
-     * - the queue is of type ignore
-     * - the queue is bound to some application id
-     * - the event is a local event generated with a different application id
-     */
-    public boolean isSkipped(final JobEvent event) {
-        if ( this.type == Type.IGNORE ) {
-            return true;
-        }
-        if ( this.applicationIds != null ) {
-            boolean found = false;
-            for(final String id : this.applicationIds) {
-                if ( Environment.APPLICATION_ID.equals(id) ) {
-                    found = true;
-                }
-            }
-            if ( !found ) {
-                return true;
-            }
-        }
-        if ( this.runLocal
-             && !event.event.getProperty(EventUtil.PROPERTY_APPLICATION).equals(Environment.APPLICATION_ID) ) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getRetryDelayInMs()
      */
+    @Override
     public long getRetryDelayInMs() {
         return this.retryDelay;
     }
@@ -331,6 +206,7 @@ public class InternalQueueConfiguration
     /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getMaxRetries()
      */
+    @Override
     public int getMaxRetries() {
         return this.retries;
     }
@@ -338,6 +214,7 @@ public class InternalQueueConfiguration
     /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getType()
      */
+    @Override
     public Type getType() {
         return this.type;
     }
@@ -345,6 +222,7 @@ public class InternalQueueConfiguration
     /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getPriority()
      */
+    @Override
     public JobUtil.JobPriority getPriority() {
         return this.priority;
     }
@@ -352,27 +230,21 @@ public class InternalQueueConfiguration
     /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getMaxParallel()
      */
+    @Override
     public int getMaxParallel() {
         return this.maxParallelProcesses;
     }
 
-    /**
-     * @see org.apache.sling.event.jobs.QueueConfiguration#isLocalQueue()
-     */
+    @Override
+    @Deprecated
     public boolean isLocalQueue() {
-        return this.runLocal;
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.QueueConfiguration#getApplicationIds()
-     */
-    public String[] getApplicationIds() {
-        return this.applicationIds;
+        return false;
     }
 
     /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getTopics()
      */
+    @Override
     public String[] getTopics() {
         return this.topics;
     }
@@ -380,12 +252,19 @@ public class InternalQueueConfiguration
     /**
      * @see org.apache.sling.event.jobs.QueueConfiguration#getRanking()
      */
+    @Override
     public int getRanking() {
         return this.serviceRanking;
     }
 
     public String getPid() {
         return this.pid;
+    }
+
+    @Override
+    @Deprecated
+    public String[] getApplicationIds() {
+        return null;
     }
 
     @Override
@@ -397,80 +276,8 @@ public class InternalQueueConfiguration
             ", maxParallelProcesses=" + this.maxParallelProcesses +
             ", retries=" + this.retries +
             ", retryDelayInMs= " + this.retryDelay +
-            ", applicationIds= " + (this.applicationIds == null ? "[]" : Arrays.toString(this.applicationIds)) +
             ", serviceRanking=" + this.serviceRanking +
             ", pid=" + this.pid +
             ", isValid=" + this.isValid() + "}";
     }
-
-    /**
-     * Internal interface for topic matching
-     */
-    private static interface Matcher {
-        /** Check if the topic matches and return the variable part - null if not matching. */
-        String match(String topic);
-    }
-
-    /** Package matcher - the topic must be in the same package. */
-    private static final class PackageMatcher implements Matcher {
-
-        private final String packageName;
-
-        public PackageMatcher(final String name) {
-            // remove last char and maybe a trailing slash
-            int lastPos = name.length() - 1;
-            if ( lastPos > 0 && name.charAt(lastPos - 1) == '/' ) {
-                lastPos--;
-            }
-            this.packageName = name.substring(0, lastPos);
-        }
-
-        /**
-         * @see org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration.Matcher#match(java.lang.String)
-         */
-        public String match(final String topic) {
-            final int pos = topic.lastIndexOf('/');
-            return pos > -1 && topic.substring(0, pos).equals(packageName) ? topic.substring(pos + 1) : null;
-        }
-    }
-
-    /** Sub package matcher - the topic must be in the same package or a sub package. */
-    private static final class SubPackageMatcher implements Matcher {
-        private final String packageName;
-
-        public SubPackageMatcher(final String name) {
-            // remove last char and maybe a trailing slash
-            int lastPos = name.length() - 1;
-            if ( lastPos > 0 && name.charAt(lastPos - 1) == '/' ) {
-                this.packageName = name.substring(0, lastPos);
-            } else {
-                this.packageName = name.substring(0, lastPos) + '/';
-            }
-        }
-
-        /**
-         * @see org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration.Matcher#match(java.lang.String)
-         */
-        public String match(final String topic) {
-            final int pos = topic.lastIndexOf('/');
-            return pos > -1 && topic.substring(0, pos + 1).startsWith(this.packageName) ? topic.substring(this.packageName.length()) : null;
-        }
-    }
-
-    /** The topic must match exactly. */
-    private static final class ClassMatcher implements Matcher {
-        private final String className;
-
-        public ClassMatcher(final String name) {
-            this.className = name;
-        }
-
-        /**
-         * @see org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration.Matcher#match(java.lang.String)
-         */
-        public String match(String topic) {
-            return this.className.equals(topic) ? "" : null;
-        }
-    }
-
 }
