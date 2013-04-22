@@ -105,6 +105,9 @@ public class JobConsumerManager {
 
         final boolean enable = this.whitelistMatchers != null && this.blacklistMatchers != TopicMatcherHelper.MATCH_ALL;
         if ( wasEnabled != enable ) {
+            synchronized ( this.topicToConsumerMap ) {
+                this.calculateTopics(enable);
+            }
             if ( enable ) {
                 this.propagationService = bc.registerService(PropertyProvider.class.getName(),
                         new PropertyProvider() {
@@ -121,9 +124,12 @@ public class JobConsumerManager {
                 this.propagationService.unregister();
                 this.propagationService = null;
             }
+        } else if ( enable ) {
+            // update properties
             synchronized ( this.topicToConsumerMap ) {
-                this.calculateTopics();
+                this.calculateTopics(true);
             }
+            this.propagationService.setProperties(this.getRegistrationProperties());
         }
     }
 
@@ -200,7 +206,7 @@ public class JobConsumerManager {
                 }
                 this.supportsBridgedEvents = this.topicToConsumerMap.containsKey("/");
                 if ( changed ) {
-                    this.calculateTopics();
+                    this.calculateTopics(this.propagationService != null);
                 }
             }
             if ( changed && this.propagationService != null ) {
@@ -237,7 +243,7 @@ public class JobConsumerManager {
                 }
                 this.supportsBridgedEvents = this.topicToConsumerMap.containsKey("/");
                 if ( changed ) {
-                    this.calculateTopics();
+                    this.calculateTopics(this.propagationService != null);
                 }
             }
             if ( changed && this.propagationService != null ) {
@@ -255,8 +261,8 @@ public class JobConsumerManager {
         return false;
     }
 
-    private void calculateTopics() {
-        if ( this.propagationService != null ) {
+    private void calculateTopics(final boolean enabled) {
+        if ( enabled ) {
             // create a sorted list - this ensures that the property value
             // is always the same for the same topics.
             final List<String> topicList = new ArrayList<String>();
