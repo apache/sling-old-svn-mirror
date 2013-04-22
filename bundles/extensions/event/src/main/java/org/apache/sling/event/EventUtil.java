@@ -165,13 +165,13 @@ public abstract class EventUtil {
     /** The property for the unique event id. */
     public static final String PROPERTY_TIMED_EVENT_ID = "event.timed.id";
 
-    /** The scheduler expression for the timed event. */
+    /** The scheduler cron expression for the timed event. Type must be String. */
     public static final String PROPERTY_TIMED_EVENT_SCHEDULE = "event.timed.scheduler";
 
-    /** The period for the timed event. */
+    /** The period in seconds for the timed event. Type must be Long*/
     public static final String PROPERTY_TIMED_EVENT_PERIOD = "event.timed.period";
 
-    /** The date for the timed event. */
+    /** The date for the timed event. Type must be Date.  */
     public static final String PROPERTY_TIMED_EVENT_DATE = "event.timed.date";
 
     /**

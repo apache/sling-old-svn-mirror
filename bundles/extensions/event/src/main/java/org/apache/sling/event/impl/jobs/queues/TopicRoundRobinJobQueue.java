@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.jobs.JobEvent;
+import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.jobs.JobUtil;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * This queue acts similar to the parallel job queue. Except that
@@ -42,7 +42,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     private final List<String> topics = new ArrayList<String>();
 
     /** The topic map. */
-    private final Map<String, List<JobEvent>> topicMap = new HashMap<String, List<JobEvent>>();
+    private final Map<String, List<JobHandler>> topicMap = new HashMap<String, List<JobHandler>>();
 
     /** Topic index. */
     private int topicIndex;
@@ -54,9 +54,10 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
 
     public TopicRoundRobinJobQueue(final String name,
                            final InternalQueueConfiguration config,
-                           final EnvironmentComponent env,
+                           final JobConsumerManager jobConsumerManager,
+                           final EventAdmin eventAdmin,
                            final Scheduler scheduler) {
-        super(name, config, env, scheduler);
+        super(name, config, jobConsumerManager, eventAdmin, scheduler);
     }
 
     @Override
@@ -74,16 +75,16 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
-    protected void put(final JobEvent event) {
+    protected void put(final JobHandler event) {
         // is this a close?
-        if ( event.event == null ) {
+        if ( event.getJob() == null ) {
             return;
         }
-        final String topic = (String)event.event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
+        final String topic = event.getJob().getTopic();
         synchronized ( this.topicMap ) {
-            List<JobEvent> events = this.topicMap.get(topic);
+            List<JobHandler> events = this.topicMap.get(topic);
             if ( events == null ) {
-                events = new LinkedList<JobEvent>();
+                events = new LinkedList<JobHandler>();
                 this.topicMap.put(topic, events);
                 this.topics.add(topic);
             }
@@ -98,8 +99,8 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
-    protected JobEvent take() {
-        JobEvent e = null;
+    protected JobHandler take() {
+        JobHandler e = null;
         synchronized ( this.topicMap ) {
             if ( this.eventCount == 0 ) {
                 // wait for a new event
@@ -115,7 +116,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
             if ( this.eventCount > 0 ) {
                 while ( e == null ) {
                     final String topic = this.topics.get(this.topicIndex);
-                    final List<JobEvent> events = this.topicMap.get(topic);
+                    final List<JobHandler> events = this.topicMap.get(topic);
                     if ( events.size() > 0 ) {
                         e = events.remove(0);
                     }
@@ -140,6 +141,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     /**
      * @see org.apache.sling.event.jobs.Queue#clear()
      */
+    @Override
     public void clear() {
         synchronized ( this.topicMap ) {
             this.eventCount = 0;
@@ -150,10 +152,10 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
-    protected Collection<JobEvent> removeAllJobs() {
-        final List<JobEvent> events = new ArrayList<JobEvent>();
+    protected Collection<JobHandler> removeAllJobs() {
+        final List<JobHandler> events = new ArrayList<JobHandler>();
         synchronized ( this.topicMap ) {
-            for(final List<JobEvent> l : this.topicMap.values() ) {
+            for(final List<JobHandler> l : this.topicMap.values() ) {
                 events.addAll(l);
             }
             this.eventCount = 0;

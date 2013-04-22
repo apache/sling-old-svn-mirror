@@ -21,10 +21,10 @@ package org.apache.sling.event.impl.jobs.queues;
 import java.util.Date;
 
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.jobs.JobEvent;
+import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.jobs.JobUtil;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * Abstract base class for a parallel processing job queue.
@@ -40,9 +40,10 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
 
     public AbstractParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
-                           final EnvironmentComponent env,
+                           final JobConsumerManager jobConsumerManager,
+                           final EventAdmin eventAdmin,
                            final Scheduler scheduler) {
-        super(name, config, env);
+        super(name, config, jobConsumerManager, eventAdmin);
         this.scheduler = scheduler;
     }
 
@@ -52,7 +53,7 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected JobEvent start(final JobEvent processInfo) {
+    protected JobHandler start(final JobHandler processInfo) {
         // acquire a slot
         this.acquireSlot();
 
@@ -108,24 +109,22 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected void notifyFinished(final JobEvent rescheduleInfo) {
+    protected void notifyFinished(final JobHandler rescheduleInfo) {
         this.freeSlot();
     }
 
     @Override
-    protected JobEvent reschedule(final JobEvent info) {
+    protected JobHandler reschedule(final JobHandler info) {
         // we just sleep for the delay time - if none, we continue and retry
         // this job again
-        long delay = this.configuration.getRetryDelayInMs();
-        if ( info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
-            delay = (Long)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY);
-        }
+        final long delay = this.configuration.getRetryDelayInMs();
         if ( delay > 0 ) {
             final Date fireDate = new Date();
             fireDate.setTime(System.currentTimeMillis() + delay);
 
             final String jobName = "Waiting:" + queueName + ":" + info.hashCode();
             final Runnable t = new Runnable() {
+                @Override
                 public void run() {
                     put(info);
                 }

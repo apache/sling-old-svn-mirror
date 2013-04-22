@@ -21,6 +21,8 @@ package org.apache.sling.event.impl.jobs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
+
 public class StatisticsImplTest {
 
     protected StatisticsImpl stat;

@@ -25,9 +25,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.jobs.JobEvent;
+import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * The default parallel job queue processing the entries FIFO.
@@ -36,17 +37,18 @@ import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 public final class ParallelJobQueue extends AbstractParallelJobQueue {
 
     /** The queue. */
-    private final BlockingQueue<JobEvent> queue = new LinkedBlockingQueue<JobEvent>();
+    private final BlockingQueue<JobHandler> queue = new LinkedBlockingQueue<JobHandler>();
 
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
-                           final EnvironmentComponent env,
+                           final JobConsumerManager jobConsumerManager,
+                           final EventAdmin eventAdmin,
                            final Scheduler scheduler) {
-        super(name, config, env, scheduler);
+        super(name, config, jobConsumerManager, eventAdmin, scheduler);
     }
 
     @Override
-    protected void put(final JobEvent event) {
+    protected void put(final JobHandler event) {
         try {
             this.queue.put(event);
         } catch (final InterruptedException e) {
@@ -56,7 +58,7 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
-    protected JobEvent take() {
+    protected JobHandler take() {
         try {
             return this.queue.take();
         } catch (final InterruptedException e) {
@@ -74,14 +76,15 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     /**
      * @see org.apache.sling.event.jobs.Queue#clear()
      */
+    @Override
     public void clear() {
         this.queue.clear();
         super.clear();
     }
 
     @Override
-    protected Collection<JobEvent> removeAllJobs() {
-        final List<JobEvent> events = new ArrayList<JobEvent>();
+    protected Collection<JobHandler> removeAllJobs() {
+        final List<JobHandler> events = new ArrayList<JobHandler>();
         this.queue.drainTo(events);
         return events;
     }

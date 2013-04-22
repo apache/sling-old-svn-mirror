@@ -27,9 +27,9 @@ public interface QueueConfiguration {
 
     /** The queue type. */
     static enum Type {
-        UNORDERED,          // unordered, parallel prpcessing
-        ORDERED,            // ordered, fifo
-        TOPIC_ROUND_ROBIN,  // unordered, parallel processing, executed based on topic
+        UNORDERED,          // unordered, parallel processing (push)
+        ORDERED,            // ordered, FIFO (push)
+        TOPIC_ROUND_ROBIN,  // unordered, parallel processing, executed based on topic (push)
         IGNORE,             // ignore job, but do not remove
         DROP                // drop job without processing!
     }
@@ -60,15 +60,15 @@ public interface QueueConfiguration {
     int getMaxParallel();
 
     /**
-     * Is this a local running queue (= processing only
-     * jobs started on the same instance.)
+     * @deprecated This information is not used anymore
      */
+    @Deprecated
     boolean isLocalQueue();
 
     /**
-     * Application ids - returns an array of application
-     * ids if this queue is bound to some cluster nodes.
+     * @deprecated This information is not used anymore
      */
+    @Deprecated
     String[] getApplicationIds();
 
     /**

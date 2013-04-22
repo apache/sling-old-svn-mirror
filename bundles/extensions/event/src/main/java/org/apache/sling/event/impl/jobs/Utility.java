@@ -18,16 +18,14 @@
  */
 package org.apache.sling.event.impl.jobs;
 
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
-import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -35,155 +33,36 @@ import org.osgi.service.event.EventConstants;
 
 public abstract class Utility {
 
-    /** Allowed characters for a node name */
-    private static final BitSet ALLOWED_CHARS;
-
-    /** Replacement characters for unallowed characters in a node name */
-    private static final char REPLACEMENT_CHAR = '_';
-
-    // Prepare the ALLOWED_CHARS bitset with bits indicating the unicode
-    // character index of allowed characters. We deliberately only support
-    // a subset of the actually allowed set of characters for nodes ...
-    static {
-        final String allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+#!?$%&()=";
-        final BitSet allowedSet = new BitSet();
-        for (int i = 0; i < allowed.length(); i++) {
-            allowedSet.set(allowed.charAt(i));
-        }
-        ALLOWED_CHARS = allowedSet;
-    }
+    public static final String PROPERTY_LOCK_CREATED = "lock.created";
+    public static final String PROPERTY_LOCK_CREATED_APP = "lock.created.app";
 
     /**
-     * Filter the node name for not allowed characters and replace them.
-     * @param nodeName The suggested node name.
-     * @return The filtered node name.
+     * Check the job topic.
+     * @return <code>null</code> if the topic is correct, otherwise an error description is returned
      */
-    public static String filter(final String nodeName) {
-        final StringBuilder sb  = new StringBuilder(nodeName.length());
-        char lastAdded = 0;
-
-        for(int i=0; i < nodeName.length(); i++) {
-            final char c = nodeName.charAt(i);
-            char toAdd = c;
-
-            if (!ALLOWED_CHARS.get(c)) {
-                if (lastAdded == REPLACEMENT_CHAR) {
-                    // do not add several _ in a row
-                    continue;
+    public static String checkJobTopic(final Object jobTopic) {
+        final String message;
+        if ( jobTopic != null ) {
+            if ( jobTopic instanceof String ) {
+                boolean topicIsCorrect = false;
+                try {
+                    new Event((String)jobTopic, (Dictionary<String, Object>)null);
+                    topicIsCorrect = true;
+                } catch (final IllegalArgumentException iae) {
+                    // we just have to catch it
                 }
-                toAdd = REPLACEMENT_CHAR;
-
-            } else if(i == 0 && Character.isDigit(c)) {
-                sb.append(REPLACEMENT_CHAR);
+                if ( !topicIsCorrect ) {
+                    message = "Discarding job : job has an illegal job topic";
+                } else {
+                    message = null;
+                }
+            } else {
+                message = "Discarding job : job topic is not of type string";
             }
-
-            sb.append(toAdd);
-            lastAdded = toAdd;
+        } else {
+            message = "Discarding job : job topic is missing";
         }
-
-        if (sb.length()==0) {
-            sb.append(REPLACEMENT_CHAR);
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * used for the md5
-     */
-    private static final char[] HEX_TABLE = "0123456789abcdef".toCharArray();
-
-    /**
-     * Calculate an MD5 hash of the string given using 'utf-8' encoding.
-     *
-     * @param data the data to encode
-     * @return a hex encoded string of the md5 digested input
-     */
-    public static String md5(String data) {
-        try {
-            return digest("MD5", data.getBytes("utf-8"));
-        } catch (NoSuchAlgorithmException e) {
-            throw new InternalError("MD5 digest not available???");
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalError("UTF8 digest not available???");
-        }
-    }
-
-    /**
-     * Digest the plain string using the given algorithm.
-     *
-     * @param algorithm The alogrithm for the digest. This algorithm must be
-     *                  supported by the MessageDigest class.
-     * @param data      the data to digest with the given algorithm
-     * @return The digested plain text String represented as Hex digits.
-     * @throws java.security.NoSuchAlgorithmException if the desired algorithm is not supported by
-     *                                  the MessageDigest class.
-     */
-    private static String digest(String algorithm, byte[] data)
-    throws NoSuchAlgorithmException {
-        MessageDigest md = MessageDigest.getInstance(algorithm);
-        byte[] digest = md.digest(data);
-        StringBuilder res = new StringBuilder(digest.length * 2);
-        for (int i = 0; i < digest.length; i++) {
-            byte b = digest[i];
-            res.append(HEX_TABLE[(b >> 4) & 15]);
-            res.append(HEX_TABLE[b & 15]);
-        }
-        return res.toString();
-    }
-
-    /** Counter for jobs without an id.  We don't need to sync the access. */
-    private static long JOB_COUNTER = 0;
-
-    /**
-     * Create a unique node path (folder and name) for the job.
-     */
-    public static String getUniquePath(final String jobTopic, final String jobId) {
-        final String convTopic = jobTopic.replace('/', '.');
-        if ( jobId != null ) {
-            final StringBuilder sb = new StringBuilder("identified/");
-            sb.append(convTopic);
-            sb.append('/');
-            // we create an md from the job id - we use the first 6 bytes to
-            // create sub directories
-            final String md5 = md5(jobId);
-            sb.append(md5.charAt(0));
-            sb.append(md5.charAt(1));
-            sb.append(md5.charAt(2));
-            sb.append('/');
-            sb.append(md5.charAt(3));
-            sb.append(md5.charAt(4));
-            sb.append(md5.charAt(5));
-            sb.append('/');
-            sb.append(filter(jobId));
-            return sb.toString();
-        }
-        final Calendar now = Calendar.getInstance();
-        // create a time based path together with the Sling ID
-        final StringBuilder sb = getAnonPath(now);
-        sb.append('/');
-        sb.append(convTopic);
-        sb.append('_');
-        sb.append(JOB_COUNTER);
-        JOB_COUNTER++;
-        return sb.toString();
-    }
-
-    public static StringBuilder getAnonPath(final Calendar now) {
-        final StringBuilder sb = new StringBuilder("anon/");
-        // create a time based path together with the Sling ID
-        sb.append(Environment.APPLICATION_ID);
-        sb.append('/');
-        sb.append(now.get(Calendar.YEAR));
-        sb.append('/');
-        sb.append(now.get(Calendar.MONTH) + 1);
-        sb.append('/');
-        sb.append(now.get(Calendar.DAY_OF_MONTH));
-        sb.append('/');
-        sb.append(now.get(Calendar.HOUR_OF_DAY));
-        sb.append('/');
-        sb.append(now.get(Calendar.MINUTE));
-        return sb;
+        return message;
     }
 
     /** Event property containing the time for job start and job finished events. */
@@ -192,17 +71,158 @@ public abstract class Utility {
     /**
      * Helper method for sending the notification events.
      */
-    public static void sendNotification(final EnvironmentComponent environment,
-            final String topic,
-            final Event job,
+    public static void sendNotification(final EventAdmin eventAdmin,
+            final String eventTopic,
+            final String jobTopic,
+            final String jobName,
+            final Map<String, Object> jobProperties,
             final Long time) {
-        final EventAdmin localEA = environment.getEventAdmin();
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(JobUtil.PROPERTY_NOTIFICATION_JOB, job);
-        props.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
-        if ( time != null ) {
-            props.put(PROPERTY_TIME, time);
+        if ( eventAdmin != null ) {
+            // create job object
+            final Map<String, Object> jobProps;
+            if ( jobProperties == null ) {
+                jobProps = new HashMap<String, Object>();
+            } else {
+                jobProps = jobProperties;
+            }
+            final Job job = new JobImpl(jobTopic, jobName, "<unknown>", jobProps);
+            sendNotificationInternal(eventAdmin, eventTopic, job, time);
         }
-        localEA.postEvent(new Event(topic, props));
+    }
+
+    /**
+     * Helper method for sending the notification events.
+     */
+    public static void sendNotification(final EventAdmin eventAdmin,
+            final String eventTopic,
+            final Job job,
+            final Long time) {
+        if ( eventAdmin != null ) {
+            // create new copy of job object
+            final Job jobCopy = new JobImpl(job.getTopic(), job.getName(), job.getId(), ((JobImpl)job).getProperties());
+            sendNotificationInternal(eventAdmin, eventTopic, jobCopy, time);
+        }
+    }
+
+    /**
+     * Helper method for sending the notification events.
+     */
+    private static void sendNotificationInternal(final EventAdmin eventAdmin,
+            final String eventTopic,
+            final Job job,
+            final Long time) {
+        final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
+        // add basic job properties
+        eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_ID, job.getId());
+        eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC, job.getTopic());
+        if ( job.getName() != null ) {
+            eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
+        }
+        // copy paylod
+        for(final String name : job.getPropertyNames()) {
+            eventProps.put(name, job.getProperty(name));
+        }
+        // add timestamp
+        eventProps.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
+        // add internal time information
+        if ( time != null ) {
+            eventProps.put(PROPERTY_TIME, time);
+        }
+        // make distributable
+        eventProps.put(EventUtil.PROPERTY_DISTRIBUTE, "true");
+        // compatibility:
+        eventProps.put(JobUtil.PROPERTY_NOTIFICATION_JOB, toEvent(job));
+        eventAdmin.postEvent(new Event(eventTopic, eventProps));
+    }
+
+    /**
+     * Create an event from a job
+     * @param job The job
+     * @return New event object.
+     */
+    public static Event toEvent(final Job job) {
+        final Map<String, Object> eventProps = new HashMap<String, Object>();
+        eventProps.putAll(((JobImpl)job).getProperties());
+        if ( job.getName() != null ) {
+            eventProps.put(JobUtil.PROPERTY_JOB_NAME, job.getName());
+        }
+        eventProps.put(JobUtil.JOB_ID, job.getId());
+        return new Event(job.getTopic(), eventProps);
+    }
+
+    /**
+     * Append properties to the string builder
+     */
+    private static void appendProperties(final StringBuilder sb,
+            final Map<String, Object> properties) {
+        if ( properties != null ) {
+            sb.append(", properties=");
+            boolean first = true;
+            for(final String propName : properties.keySet()) {
+                if ( propName.equals(JobUtil.JOB_ID)
+                    || propName.equals(JobUtil.PROPERTY_JOB_NAME)
+                    || propName.equals(JobUtil.PROPERTY_JOB_TOPIC) ) {
+                   continue;
+                }
+                if ( first ) {
+                    first = false;
+                } else {
+                    sb.append(",");
+                }
+                sb.append(propName);
+                sb.append('=');
+                final Object value = properties.get(propName);
+                // the toString() method of Calendar is very verbose
+                // therefore we do a toString for these objects based
+                // on a date
+                if ( value instanceof Calendar ) {
+                    sb.append(value.getClass().getName());
+                    sb.append('(');
+                    sb.append(((Calendar)value).getTime());
+                    sb.append(')');
+                } else {
+                    sb.append(value);
+                }
+            }
+        }
+
+    }
+    /**
+     * Improved toString method for a job.
+     * This method prints out the job topic and all of the properties.
+     */
+    public static String toString(final String jobTopic,
+            final String name,
+            final Map<String, Object> properties) {
+        final StringBuilder sb = new StringBuilder("Sling Job ");
+        sb.append("[topic=");
+        sb.append(jobTopic);
+        if ( name != null ) {
+            sb.append(", name=");
+            sb.append(name);
+        }
+        appendProperties(sb, properties);
+
+        sb.append("]");
+        return sb.toString();
+    }
+
+    /**
+     * Improved toString method for a job.
+     * This method prints out the job topic and all of the properties.
+     */
+    public static String toString(final Job job) {
+        final StringBuilder sb = new StringBuilder("Sling Job ");
+        sb.append("[topic=");
+        sb.append(job.getTopic());
+        sb.append(", id=");
+        sb.append(job.getId());
+        if ( job.getName() != null ) {
+            sb.append(", name=");
+            sb.append(job.getName());
+        }
+        appendProperties(sb, ((JobImpl)job).getProperties());
+        sb.append("]");
+        return sb.toString();
     }
 }

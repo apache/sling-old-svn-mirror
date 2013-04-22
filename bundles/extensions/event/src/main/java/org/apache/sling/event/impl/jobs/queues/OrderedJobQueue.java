@@ -24,10 +24,10 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.sling.event.impl.EnvironmentComponent;
-import org.apache.sling.event.impl.jobs.JobEvent;
+import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.jobs.JobUtil;
+import org.osgi.service.event.EventAdmin;
 
 /**
  * An ordered job queue is processing the queue FIFO in a serialized
@@ -38,20 +38,21 @@ import org.apache.sling.event.jobs.JobUtil;
 public final class OrderedJobQueue extends AbstractJobQueue {
 
     /** The job event for rescheduling. */
-    private volatile JobEvent jobEvent;
+    private volatile JobHandler jobEvent;
 
     /** Lock and status object for handling the sleep phase. */
     private final SleepLock sleepLock = new SleepLock();
 
     /** The queue. */
-    private final BlockingQueue<JobEvent> queue = new LinkedBlockingQueue<JobEvent>();
+    private final BlockingQueue<JobHandler> queue = new LinkedBlockingQueue<JobHandler>();
 
     private final Object syncLock = new Object();
 
     public OrderedJobQueue(final String name,
                            final InternalQueueConfiguration config,
-                           final EnvironmentComponent env) {
-        super(name, config, env);
+                           final JobConsumerManager jobConsumerManager,
+                           final EventAdmin eventAdmin) {
+        super(name, config, jobConsumerManager, eventAdmin);
     }
 
     @Override
@@ -60,8 +61,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected JobEvent start(final JobEvent processInfo) {
-        JobEvent rescheduleInfo = null;
+    protected JobHandler start(final JobHandler processInfo) {
+        JobHandler rescheduleInfo = null;
 
         // if we are ordered we simply wait for the finish
         synchronized ( this.syncLock ) {
@@ -101,7 +102,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected void put(final JobEvent event) {
+    protected void put(final JobHandler event) {
         try {
             this.queue.put(event);
         } catch (final InterruptedException e) {
@@ -111,7 +112,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected JobEvent take() {
+    protected JobHandler take() {
         try {
             return this.queue.take();
         } catch (final InterruptedException e) {
@@ -127,7 +128,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected void notifyFinished(final JobEvent rescheduleInfo) {
+    protected void notifyFinished(final JobHandler rescheduleInfo) {
         this.jobEvent = rescheduleInfo;
         this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
         synchronized ( this.syncLock ) {
@@ -137,13 +138,10 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected JobEvent reschedule(final JobEvent info) {
+    protected JobHandler reschedule(final JobHandler info) {
         // we just sleep for the delay time - if none, we continue and retry
         // this job again
-        long delay = this.configuration.getRetryDelayInMs();
-        if ( info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY) != null ) {
-            delay = (Long)info.event.getProperty(JobUtil.PROPERTY_JOB_RETRY_DELAY);
-        }
+        final long delay = this.configuration.getRetryDelayInMs();
         if ( delay > 0 ) {
             synchronized ( this.sleepLock ) {
                 this.sleepLock.sleepingSince = System.currentTimeMillis();
@@ -155,7 +153,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                     this.ignoreException(e);
                 }
                 this.sleepLock.sleepingSince = -1;
-                final JobEvent result = this.sleepLock.jobEvent;
+                final JobHandler result = this.sleepLock.jobEvent;
                 this.sleepLock.jobEvent = null;
 
                 if ( result == null ) {
@@ -170,6 +168,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     /**
      * @see org.apache.sling.event.jobs.Queue#clear()
      */
+    @Override
     public void clear() {
         this.queue.clear();
         super.clear();
@@ -184,8 +183,8 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected Collection<JobEvent> removeAllJobs() {
-        final List<JobEvent> events = new ArrayList<JobEvent>();
+    protected Collection<JobHandler> removeAllJobs() {
+        final List<JobHandler> events = new ArrayList<JobHandler>();
         this.queue.drainTo(events);
         return events;
     }
@@ -204,7 +203,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         public volatile long sleepingSince = -1;
 
         /** The job event to be returned after sleeping. */
-        public volatile JobEvent jobEvent;
+        public volatile JobHandler jobEvent;
     }
 }
 

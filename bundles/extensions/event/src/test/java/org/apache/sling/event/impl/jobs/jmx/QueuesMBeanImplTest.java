@@ -22,7 +22,6 @@ import java.util.Dictionary;
 
 import junit.framework.Assert;
 
-import org.apache.sling.event.impl.jobs.QueueStatusEvent;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
@@ -38,7 +37,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 
 public class QueuesMBeanImplTest {
- 
+
     private QueuesMBeanImpl mbean;
     @Mock
     private BundleContext bundleContext;
@@ -53,7 +52,7 @@ public class QueuesMBeanImplTest {
     private ArgumentCaptor<Dictionary> serviceProperties;
     @Mock
     private ServiceRegistration serviceRegistration;
-    
+
     public QueuesMBeanImplTest() {
         MockitoAnnotations.initMocks(this);
     }
@@ -64,13 +63,13 @@ public class QueuesMBeanImplTest {
         Mockito.when(componentContext.getBundleContext()).thenReturn(bundleContext);
         mbean.activate(componentContext);
     }
-    
-    
+
+
     @Test
     public void testAddQueue() {
         addQueue();
     }
-    
+
     public Queue addQueue() {
         Queue queue = Mockito.mock(Queue.class, Mockito.withSettings().extraInterfaces(Statistics.class));
         mockStatistics((Statistics) queue);
@@ -84,7 +83,7 @@ public class QueuesMBeanImplTest {
         testStatistics((StatisticsMBean) serviceObject.getValue());
         return queue;
     }
-    
+
 
     @Test
     public void updateQueue() {
@@ -95,13 +94,13 @@ public class QueuesMBeanImplTest {
         mbean.handleEvent(new QueueStatusEvent(queue,firstQueue));
         Mockito.verify(bundleContext, Mockito.never()).registerService(serviceClass.capture(), serviceObject.capture(), serviceProperties.capture());
     }
-    
+
     @Test
     public void removeQueue() {
         Queue firstQueue = addQueue();
         mbean.handleEvent(new QueueStatusEvent(null,firstQueue));
         Mockito.verify(serviceRegistration, Mockito.only()).unregister();
-        
+
     }
 
     private void mockStatistics(Statistics queue) {
@@ -129,7 +128,7 @@ public class QueuesMBeanImplTest {
         Assert.assertEquals(7, statisticsMbean.getNumberOfQueuedJobs());
         Assert.assertEquals(8, statisticsMbean.getNumberOfJobs());
         Assert.assertEquals(9, statisticsMbean.getLastActivatedJobTime());
-        Assert.assertEquals(new Date(9), statisticsMbean.getLastActivatedJobDate());        
+        Assert.assertEquals(new Date(9), statisticsMbean.getLastActivatedJobDate());
         Assert.assertEquals(10, statisticsMbean.getLastFinishedJobTime());
         Assert.assertEquals(new Date(10), statisticsMbean.getLastFinishedJobDate());
         Assert.assertEquals(11, statisticsMbean.getAverageWaitingTime());
