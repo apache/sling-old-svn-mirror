@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features name="sling-launchpad-karaf" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
+  <feature name="sling-karaf-requirements" version="0.1.0.BUILD-SNAPSHOT">
+    <!-- features (some are part of Karaf's defaults)-->
+    <feature>config</feature>
+    <feature>eventadmin</feature>
+    <feature>scr</feature>
+    <feature>obr</feature>
+    <feature>management</feature>
+    <feature>http</feature>
+    <feature>http-whiteboard</feature>
+    <!--
+      we want vanilla web console, not the one from Karaf
+      (loader constraint violation: when resolving method "org.apache.felix.webconsole.WebConsoleUtil.keyVal(Lorg/json/JSONWriter;Ljava/lang/String;Ljava/lang/Object;)V" the class loader (instance of org/apache/felix/framework/BundleWiringImpl$BundleClassLoaderJava5) of the current class, org/apache/felix/webconsole/plugins/ds/internal/WebConsolePlugin, and the class loader (instance of org/apache/felix/framework/BundleWiringImpl$BundleClassLoaderJava5) for resolved class, org/apache/felix/webconsole/WebConsoleUtil, have different Class objects for the type Writer;Ljava/lang/String;Ljava/lang/Object;)V used in the signature)
+    -->
+    <!-- misc -->
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/json/20090211_1</bundle>
+    <!-- Apache Commons -->
+    <bundle dependency="true">mvn:commons-codec/commons-codec/1.6</bundle>
+    <bundle dependency="true">mvn:commons-collections/commons-collections/3.2.1</bundle>
+    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.2.2</bundle>
+    <bundle dependency="true">mvn:commons-io/commons-io/1.4</bundle>
+    <bundle dependency="true">mvn:commons-lang/commons-lang/2.5</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-math/2.2</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_1</bundle>
+    <!-- Apache Felix Webconsole -->
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole/4.0.0</bundle>
+    <!-- Apache Felix Webconsole Plugins -->
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.ds/1.0.0</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.event/1.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0</bundle>
+  </feature>
+  <feature name="sling-karaf" version="0.1.0.BUILD-SNAPSHOT">
+    <feature>sling-karaf-requirements</feature>
+    <!-- Apache Commons -->
+    <bundle dependency="true">mvn:commons-codec/commons-codec/1.6</bundle>
+    <bundle dependency="true">mvn:commons-collections/commons-collections/3.2.1</bundle>
+    <bundle dependency="true">mvn:commons-fileupload/commons-fileupload/1.2.2</bundle>
+    <bundle dependency="true">mvn:commons-io/commons-io/1.4</bundle>
+    <bundle dependency="true">mvn:commons-lang/commons-lang/2.5</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-math/2.2</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_1</bundle>
+    <!-- Apache Derby -->
+    <bundle dependency="true">mvn:org.apache.derby/derby/10.5.3.0_1</bundle>
+    <!-- Apache Sling -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.adapter/2.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.bundleresource.impl/2.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.2.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.event/3.1.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.fsresource/1.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.2.2</bundle>
+    <!-- Apache Sling Auth -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.openid/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.selector/1.0.4</bundle>
+    <!-- Apache Sling Commons -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.classloader/1.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.json/2.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.mime/2.1.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.3.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.1.0</bundle>
+    <!-- Apache Sling Extensions -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.extensions.groovy/1.0.0-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2</bundle>
+    <!-- Apache Sling Fragments -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.activation/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.transaction/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.ws/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.fragment.xml/1.0.2</bundle>
+    <!-- Apache Sling Installer -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.api/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.console/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.core/3.4.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.factory.configuration/1.0.10</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.file/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.6</bundle>
+    <!-- Apache Sling Launchpad -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.api/1.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.karaf/0.1.0.BUILD-SNAPSHOT</bundle>
+    <!-- Apache Sling JCR -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.1.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.1.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.contentloader/2.1.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.1.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.ocm/2.0.4-incubator</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/0.0.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.1.2</bundle>
+    <!-- Apache Sling JCR Jackrabbit -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.accessmanager/2.1.0</bundle>
+    <!-- org.apache.sling.jcr.jackrabbit.server 2.1.0 is broken, problems with Tika -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.server/2.1.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jackrabbit.usermanager/2.2.0</bundle>
+    <!-- Apache Sling Scripting -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.api/2.1.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.24</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.12</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.0.26</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.1.8</bundle>
+    <!-- Apache Sling Servlets -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.2.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.2.2</bundle>
+    <!-- Apache Jackrabbit -->
+    <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-api/2.4.2</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-jcr-commons/2.4.2</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-jcr-rmi/2.4.2</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-spi/2.4.2</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-spi-commons/2.4.2</bundle>
+    <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-webdav/2.4.2</bundle>
+    <!-- Apache Tika -->
+    <bundle dependency="true">mvn:org.apache.tika/tika-bundle/1.0</bundle>
+    <bundle dependency="true">mvn:org.apache.tika/tika-core/1.0</bundle>
+    <!-- misc -->
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/json/20090211_1</bundle>
+    <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.2</bundle>
+  </feature>
+  <feature name="sling-karaf-demo" version="0.1.0.BUILD-SNAPSHOT">
+    <feature>sling-karaf</feature>
+    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.content/2.0.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.extensions.explorer/1.0.2</bundle>
+  </feature>
+</features>
