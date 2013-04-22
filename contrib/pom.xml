@@ -89,6 +89,7 @@
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
           <module>extensions/discovery/api</module>
+          <module>extensions/discovery/impl</module>
           <module>extensions/dojo</module>
           <module>extensions/dojo-sling</module>
           <module>extensions/ftpserver</module>
