@@ -42,7 +42,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
@@ -179,6 +181,7 @@ public class ReferrerFilter implements Filter {
     /**
      * Activate
      */
+    @Activate
     protected void activate(final ComponentContext ctx) {
         this.allowEmpty = PropertiesUtil.toBoolean(ctx.getProperties().get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
         String[] allowHosts = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_HOSTS));
@@ -208,6 +211,7 @@ public class ReferrerFilter implements Filter {
         this.configPrinterRegistration = registerConfigPrinter(ctx.getBundleContext());
     }
 
+    @Deactivate
     protected void deactivate() {
         this.configPrinterRegistration.unregister();
     }
