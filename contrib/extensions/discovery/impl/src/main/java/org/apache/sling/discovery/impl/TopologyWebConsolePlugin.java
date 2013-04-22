@@ -24,6 +24,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -47,13 +48,12 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.discovery.ClusterView;
-import org.apache.sling.discovery.DiscoveryAware;
-import org.apache.sling.discovery.DiscoveryService;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent;
-import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
@@ -71,10 +71,10 @@ import org.slf4j.LoggerFactory;
  * Simple webconsole which gives an overview of the topology visible by the
  * discovery service
  */
-@Service(value = { DiscoveryAware.class })
+@Service(value = { TopologyEventListener.class })
 @Component(immediate = true)
 @SuppressWarnings("serial")
-public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implements DiscoveryAware {
+public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implements TopologyEventListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -84,9 +84,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /** the url part where topology disconnects are posted to **/
     private static final String DISCONNECT = "/disconnect/";
 
+    /** the url part where topology explicit pings are posted to **/
+    private static final String PING = "/ping/";
+
     /** the truncated log of topology events, filtered by property change types. shown in webconsole **/
     private final List<String> propertyChangeLog = new LinkedList<String>();
-    
+
     /** the truncated log of topology events, shown in webconsole **/
     private final List<String> topologyLog = new LinkedList<String>();
 
@@ -105,8 +108,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     @Reference
     private ConnectorRegistry connectorRegistry;
 
-    @Reference
-    private DiscoveryService discoveryService;
+    private TopologyView currentView;
 
     @Override
     public String getLabel() {
@@ -117,12 +119,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     public String getTitle() {
         return "Topology Management";
     }
-    
+
     @Activate
     @Override
     public void activate(final BundleContext bundleContext) {
         super.activate(bundleContext);
-        logger.info("activate: activating...");
+        logger.debug("activate: activating...");
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(
                 org.osgi.framework.Constants.SERVICE_DESCRIPTION,
@@ -162,7 +164,9 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         final PrintWriter pw = res.getWriter();
 
         if (pathInfo.equals("")) {
-            renderOverview(pw, discoveryService.getTopology());
+            if ( this.currentView != null ) {
+                renderOverview(pw,  currentView);
+            }
         } else {
             StringTokenizer st = new StringTokenizer(pathInfo, "/");
             final String nodeId = st.nextToken();
@@ -175,8 +179,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
      */
     private void renderProperties(final PrintWriter pw, final String nodeId) {
         logger.debug("renderProperties: nodeId=" + nodeId);
-        Set<InstanceDescription> instances = discoveryService.getTopology()
-                .findInstances(new InstanceFilter() {
+        final TopologyView tv = this.currentView;
+        Set<InstanceDescription> instances = ( tv == null ? (Set<InstanceDescription>)Collections.EMPTY_SET :
+
+                tv.findInstances(new InstanceFilter() {
 
                     public boolean accept(InstanceDescription instance) {
                         String slingId = instance.getSlingId();
@@ -184,7 +190,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                                 + slingId);
                         return (slingId.equals(nodeId));
                     }
-                });
+                }));
 
         if (instances != null && instances.size() == 1) {
             InstanceDescription instance = instances.iterator().next();
@@ -307,19 +313,43 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
      * Render a particular cluster (into table rows)
      */
     private void renderCluster(final PrintWriter pw, final ClusterView cluster, final boolean odd) {
-        Collection<Announcement> announcements = null;
+        final Collection<Announcement> announcements = announcementRegistry
+                .listAnnouncements(ListScope.AllInSameCluster);
+
         for (Iterator<InstanceDescription> it = cluster.getInstances()
                 .iterator(); it.hasNext();) {
-            InstanceDescription instanceDescription = it.next();
-            String oddEven = odd ? "odd" : "even";
-            pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
-            boolean isLocal = instanceDescription.isLocal();
+            final InstanceDescription instanceDescription = it.next();
+            final boolean inLocalCluster = clusterViewService.contains(instanceDescription.getSlingId());
+            Announcement parentAnnouncement = null;
+            for (Iterator<Announcement> it2 = announcements.iterator(); it2
+                    .hasNext();) {
+                Announcement announcement = it2.next();
+                for (Iterator<InstanceDescription> it3 = announcement
+                        .listInstances().iterator(); it3.hasNext();) {
+                    InstanceDescription announcedInstance = it3.next();
+                    if (announcedInstance.getSlingId().equals(
+                            instanceDescription.getSlingId())) {
+                        parentAnnouncement = announcement;
+                        break;
+                    }
+                }
+            }
+
+            final String oddEven = odd ? "odd" : "even";
+            
+            if (inLocalCluster || (parentAnnouncement!=null)) {
+                pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
+            } else {
+                pw.println("<tr class=\"" + oddEven + " ui-state-error\">");
+            }
+            final boolean isLocal = instanceDescription.isLocal();
             String slingId = instanceDescription.getSlingId();
             slingId = "<a href=\"/system/console/topology/" + slingId + "\">"
                     + slingId + "</a>";
             if (isLocal) {
                 slingId = "<b>" + slingId + "</b>";
             }
+
             pw.println("<td>" + slingId + "</td>");
             pw.println("<td>"
                     + (instanceDescription.getClusterView() == null ? "null"
@@ -329,29 +359,11 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             pw.println("<td>"
                     + (instanceDescription.isLeader() ? "<b>true</b>" : "false")
                     + "</td>");
-            if (clusterViewService.contains(instanceDescription.getSlingId())) {
+            if (inLocalCluster) {
                 pw.println("<td>local</td>");
                 pw.println("<td>n/a</td>");
             } else {
                 pw.println("<td>remote</td>");
-                if (announcements == null) {
-                    announcements = announcementRegistry
-                            .listAnnouncements(ListScope.AllInSameCluster);
-                }
-                Announcement parentAnnouncement = null;
-                for (Iterator<Announcement> it2 = announcements.iterator(); it2
-                        .hasNext();) {
-                    Announcement announcement = it2.next();
-                    for (Iterator<InstanceDescription> it3 = announcement
-                            .listInstances().iterator(); it3.hasNext();) {
-                        InstanceDescription announcedInstance = it3.next();
-                        if (announcedInstance.getSlingId().equals(
-                                instanceDescription.getSlingId())) {
-                            parentAnnouncement = announcement;
-                            break;
-                        }
-                    }
-                }
                 if (parentAnnouncement != null) {
                     pw.println("<td>" + parentAnnouncement.getOwnerId()
                             + "</td>");
@@ -380,6 +392,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<th class=\"header ui-widget-header\">Origin info</th>");
         pw.println("<th class=\"header ui-widget-header\">Persistent</th>");
         // pw.println("<th class=\"header ui-widget-header\">Fallback connector urls</th>");
+        pw.println("<th class=\"header ui-widget-header\">Trigger a heartbeat</th>");
         pw.println("<th class=\"header ui-widget-header\">Disconnect</th>");
         pw.println("</tr>");
         pw.println("</thead>");
@@ -391,17 +404,41 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 .iterator(); it.hasNext();) {
             TopologyConnectorClientInformation topologyConnectorClient = it
                     .next();
-            String oddEven = odd ? "odd" : "even";
+            final String oddEven = odd ? "odd" : "even";
             odd = !odd;
-            pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
+            final String remoteSlingId = topologyConnectorClient.getRemoteSlingId();
+            final boolean isConnected = topologyConnectorClient.isConnected() && remoteSlingId != null;
+            if (isConnected) {
+                pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
+            } else {
+                pw.println("<tr class=\"" + oddEven + " ui-state-error\">");
+            }
             pw.println("<td>"
                     + topologyConnectorClient.getConnectorUrl().toString()
                     + "</td>");
-            String remoteSlingId = topologyConnectorClient.getRemoteSlingId();
-            if (topologyConnectorClient.isConnected() && remoteSlingId != null) {
+            if (isConnected) {
                 pw.println("<td>" + remoteSlingId + "</td>");
             } else {
-                pw.println("<td><b>not connected</b></td>");
+                final int statusCode = topologyConnectorClient.getStatusCode();
+                final String tooltipText;
+                switch(statusCode) {
+                case 401:
+                    tooltipText = "401: possible setup issue of discovery.impl on target instance";
+                    break;
+                case 404:
+                    tooltipText = "404: possible white list rejection by target instance";
+                    break;
+                case 409:
+                    tooltipText = "409: target instance complains that we're already in the same topology";
+                    break;
+                case -1:
+                    tooltipText = "-1: check error log. possible connection refused.";
+                    break;
+                default:
+                    tooltipText = null;
+                }
+                final String tooltip = tooltipText==null ? "" : (" title=\""+tooltipText+"\"");
+                pw.println("<td"+tooltip+"><b>not connected ("+statusCode+")</b></td>");
             }
             if (topologyConnectorClient.getOriginInfo() == OriginInfo.Config) {
                 pw.println("<td>");
@@ -434,11 +471,22 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             // pw.println("<td>" + fallbackConnectorUrls + "</td>");
             pw.println("<td>");
             final String id = topologyConnectorClient.getId();
-            pw.println("<form id=\"" + id
+            final String pingId = id+"-ping";
+            pw.println("<form id=\"" + pingId
+                    + "\" method=\"post\" action=\"/system/console/topology"
+                    + PING + id + "\">");
+            pw.println("<input type=\"hidden\" name=\"name\" value=\"value\" />");
+            pw.println(" <a onclick=\"document.getElementById('" + pingId
+                    + "').submit();\">click here to ping</a>");
+            pw.println("</form>");
+            pw.println("</td>");
+            final String disconnectId = topologyConnectorClient.getId()+"-disconnect";
+            pw.println("<td>");
+            pw.println("<form id=\"" + disconnectId
                     + "\" method=\"post\" action=\"/system/console/topology"
                     + DISCONNECT + id + "\">");
             pw.println("<input type=\"hidden\" name=\"name\" value=\"value\" />");
-            pw.println(" <a onclick=\"document.getElementById('" + id
+            pw.println(" <a onclick=\"document.getElementById('" + disconnectId
                     + "').submit();\">click here to disconnect</a>");
             pw.println("</form>");
             pw.println("</td>");
@@ -531,6 +579,13 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 logger.error("doPost: 500: " + e);
                 resp.sendRedirect(root);
             }
+        } else if (pathInfo != null && pathInfo.startsWith(PING)) {
+            logger.debug("doPost: " + PING + " called with full info: "
+                    + pathInfo);
+            String id = pathInfo.substring(PING.length());
+            logger.debug("doPost: id=" + id);
+            connectorRegistry.pingOutgoingConnection(id);
+            resp.sendRedirect(root);
         } else if (pathInfo != null && pathInfo.startsWith(DISCONNECT)) {
             logger.debug("doPost: " + DISCONNECT + " called with full info: "
                     + pathInfo);
@@ -548,7 +603,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
      * keep a truncated history of the log events for information purpose (to be shown in the webconsole)
      */
     public void handleTopologyEvent(final TopologyEvent event) {
-
+        this.currentView = event.getNewView();
         if (event.getType() == Type.PROPERTIES_CHANGED) {
 
             Set<InstanceDescription> newInstances = event.getNewView()

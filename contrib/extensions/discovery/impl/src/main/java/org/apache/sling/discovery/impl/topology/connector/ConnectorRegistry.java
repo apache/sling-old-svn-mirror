@@ -43,4 +43,6 @@ public interface ConnectorRegistry {
     /** Unregister an outgoing topology connector identified by the given (connector) id **/
     boolean unregisterOutgoingConnection(String id);
 
+    /** Ping an outgoing topology connector identified by the given (connector) id **/
+    boolean pingOutgoingConnection(String id);
 }

@@ -115,6 +115,19 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
         }
     }
 
+    public boolean pingOutgoingConnection(final String id) {
+        if (id == null || id.length() == 0) {
+            throw new IllegalArgumentException("id must not be null");
+        }
+        synchronized (outgoingClientsMap) {
+            TopologyConnectorClient client = outgoingClientsMap.get(id);
+            if (client != null) {
+                client.ping();
+            }
+            return client != null;
+        }
+    }
+
     public void pingOutgoingConnections() {
         List<TopologyConnectorClient> outgoingTemplatesClone;
         synchronized (outgoingClientsMap) {

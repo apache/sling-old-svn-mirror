@@ -18,7 +18,9 @@
  */
 package org.apache.sling.discovery.impl.topology.announcement;
 
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -77,6 +79,23 @@ public class Announcement {
 
     public Announcement(final String ownerId) {
         this.ownerId = ownerId;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuffer incomingList = new StringBuffer();
+        for (Iterator<Announcement> it = incomings.iterator(); it.hasNext();) {
+            Announcement anIncomingAnnouncement = it.next();
+            if (incomingList.length()!=0) {
+                incomingList.append(", ");
+            }
+            incomingList.append(anIncomingAnnouncement);
+        }
+        return "Announcement[ownerId="+getOwnerId()+
+                ", inherited="+isInherited()+
+                ", created="+new Date(created)+
+                ", originInfo="+getOriginInfo()+
+                ", incomings="+incomingList+"]";
     }
 
     /** set the inherited flag - if true this means this announcement is the response of a topology connect **/

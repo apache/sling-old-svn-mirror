@@ -98,7 +98,7 @@ public class View {
      */
     public boolean matches(final Set<String> view) {
         final Set<String> viewCopy = new HashSet<String>(view);
-        final Resource members = resource.getChild("members");
+        final Resource members = getResource().getChild("members");
         if (members == null) {
             return false;
         }

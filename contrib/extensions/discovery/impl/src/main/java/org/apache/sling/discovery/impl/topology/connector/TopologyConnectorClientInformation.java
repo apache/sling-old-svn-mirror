@@ -34,6 +34,9 @@ public interface TopologyConnectorClientInformation {
     /** the endpoint url where this connector is connecting to **/
     public URL getConnectorUrl();
 
+    /** return the http status code of the last post to the servlet, -1 if no post was ever done **/
+    public int getStatusCode();
+    
     /** whether or not this connector was able to successfully connect **/
     public boolean isConnected();
 

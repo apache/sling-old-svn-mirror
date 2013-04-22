@@ -44,7 +44,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.discovery.ClusterView;
-import org.apache.sling.discovery.DiscoveryAware;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
@@ -78,8 +78,8 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     @Reference
     private SlingSettingsService settingsService;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, referenceInterface = DiscoveryAware.class)
-    private DiscoveryAware[] discoveryAwares = new DiscoveryAware[0];
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC, referenceInterface = TopologyEventListener.class)
+    private TopologyEventListener[] eventListeners = new TopologyEventListener[0];
 
     /**
      * All property providers.
@@ -117,7 +117,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /** the slingId of the local instance **/
     private String slingId;
 
-    /** the old view previously valid and sent to the discoveryawares **/
+    /** the old view previously valid and sent to the TopologyEventListeners **/
     private TopologyViewImpl oldView = null;
 
     /**
@@ -144,17 +144,17 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         heartbeatHandler.initialize(this,
                 clusterViewService.getIsolatedClusterViewId());
 
-        final DiscoveryAware[] registeredServices;
+        final TopologyEventListener[] registeredServices;
         synchronized (lock) {
             activated = true;
-            registeredServices = this.discoveryAwares;
+            registeredServices = this.eventListeners;
             doUpdateProperties();
 
         }
         TopologyViewImpl newView = (TopologyViewImpl) getTopology();
         TopologyEvent event = new TopologyEvent(Type.TOPOLOGY_INIT, null,
                 newView);
-        for (final DiscoveryAware da : registeredServices) {
+        for (final TopologyEventListener da : registeredServices) {
             da.handleTopologyEvent(event);
         }
         oldView = newView;
@@ -181,18 +181,18 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /**
      * bind a discovery aware
      */
-    protected void bindDiscoveryAware(final DiscoveryAware clusterAware) {
+    protected void bindTopologyEventListener(final TopologyEventListener clusterAware) {
 
-        logger.debug("bindDiscoveryAware: Binding DiscoveryAware {}",
+        logger.debug("bindTopologyEventListener: Binding TopologyEventListener {}",
                 clusterAware);
 
         boolean activated = false;
         synchronized (lock) {
-            List<DiscoveryAware> currentList = new ArrayList<DiscoveryAware>(
-                    Arrays.asList(discoveryAwares));
+            List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
+                    Arrays.asList(eventListeners));
             currentList.add(clusterAware);
-            this.discoveryAwares = currentList
-                    .toArray(new DiscoveryAware[currentList.size()]);
+            this.eventListeners = currentList
+                    .toArray(new TopologyEventListener[currentList.size()]);
             activated = this.activated;
         }
 
@@ -205,17 +205,17 @@ public class DiscoveryServiceImpl implements DiscoveryService {
     /**
      * Unbind a discovery aware
      */
-    protected void unbindDiscoveryAware(final DiscoveryAware clusterAware) {
+    protected void unbindTopologyEventListener(final TopologyEventListener clusterAware) {
 
-        logger.debug("unbindDiscoveryAware: Releasing DiscoveryAware {}",
+        logger.debug("unbindTopologyEventListener: Releasing TopologyEventListener {}",
                 clusterAware);
 
         synchronized (lock) {
-            List<DiscoveryAware> currentList = new ArrayList<DiscoveryAware>(
-                    Arrays.asList(discoveryAwares));
+            List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
+                    Arrays.asList(eventListeners));
             currentList.remove(clusterAware);
-            this.discoveryAwares = currentList
-                    .toArray(new DiscoveryAware[currentList.size()]);
+            this.eventListeners = currentList
+                    .toArray(new TopologyEventListener[currentList.size()]);
         }
     }
 
@@ -227,14 +227,14 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("bindPropertyProvider: Binding PropertyProvider {}",
                 propertyProvider);
 
-        final DiscoveryAware[] awares;
+        final TopologyEventListener[] awares;
         synchronized (lock) {
             final ProviderInfo info = new ProviderInfo(propertyProvider, props);
             this.providerInfos.add(info);
             Collections.sort(this.providerInfos);
             this.doUpdateProperties();
             if (activated) {
-                awares = this.discoveryAwares;
+                awares = this.eventListeners;
             } else {
                 awares = null;
             }
@@ -277,13 +277,13 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         logger.debug("unbindPropertyProvider: Releasing PropertyProvider {}",
                 propertyProvider);
 
-        final DiscoveryAware[] awares;
+        final TopologyEventListener[] awares;
         synchronized (lock) {
             final ProviderInfo info = new ProviderInfo(propertyProvider, props);
             this.providerInfos.remove(info);
             this.doUpdateProperties();
             if (activated) {
-                awares = this.discoveryAwares;
+                awares = this.eventListeners;
             } else {
                 awares = null;
             }
@@ -410,7 +410,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
 
     /**
      * Internal handle method which checks if anything in the topology has
-     * changed and informs the DiscoveryAwares if such a change occurred.
+     * changed and informs the TopologyEventListeners if such a change occurred.
      * <p>
      * All changes should go through this method. This method keeps track of
      * oldView/newView as well.
@@ -430,7 +430,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             }
 
             oldView.markOld();
-            for (final DiscoveryAware da : discoveryAwares) {
+            for (final TopologyEventListener da : eventListeners) {
                 da.handleTopologyEvent(new TopologyEvent(difference, oldView,
                         newView));
             }
@@ -514,7 +514,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      * Handle the fact that the topology has likely changed
      */
     public void handleTopologyChanged() {
-        logger.debug("handleTopologyChanged: informing the discoveryawares...");
+        logger.debug("handleTopologyChanged: informing the TopologyEventListeners...");
         handlePotentialTopologyChange();
     }
 

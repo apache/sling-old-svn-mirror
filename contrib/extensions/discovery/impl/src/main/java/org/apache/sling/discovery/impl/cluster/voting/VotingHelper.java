@@ -54,7 +54,7 @@ public class VotingHelper {
         final Resource ongoingVotingsResource = resourceResolver
                 .getResource(ongoingVotingsPath);
         if (ongoingVotingsResource == null) {
-            logger.warn("listOpenNonWinningVotings: no ongoing votings parent resource found");
+            logger.info("listOpenNonWinningVotings: no ongoing votings parent resource found"); // TOOD - is this expected?
             return new ArrayList<VotingView>();
         }
         final Iterable<Resource> children = ongoingVotingsResource.getChildren();
@@ -77,6 +77,10 @@ public class VotingHelper {
             } else {
                 logger.debug("listOpenNonWinningVotings: found an invalid voting: "
                         + aChild
+                        + ", matches live: " + c.matchesLiveView(config)
+                        + ", is ongoing: " + c.isOngoingVoting(config)
+                        + ", has no votes: " + c.hasNoVotes()
+                        + ", is winning: " + c.isWinning()
                         + ", properties="
                         + ResourceHelper.getPropertiesForLogging(aChild));
             }
@@ -97,7 +101,7 @@ public class VotingHelper {
         Resource ongoingVotingsResource = resourceResolver
                 .getResource(ongoingVotingsPath);
         if (ongoingVotingsResource == null) {
-            logger.warn("getWinningVoting: no ongoing votings parent resource found");
+            logger.info("getWinningVoting: no ongoing votings parent resource found"); // TOOD - is this expected?
             return null;
         }
         Iterable<Resource> children = ongoingVotingsResource.getChildren();
@@ -119,7 +123,7 @@ public class VotingHelper {
     }
 
     /**
-     * Returns the voting for which the given slingId has vote yes or was the 
+     * Returns the voting for which the given slingId has vote yes or was the
      * initiator (which is equal to yes).
      * @param slingId the instance for which its yes vote should be looked up
      * @return the voting for which the given slingId has votes yes or was the

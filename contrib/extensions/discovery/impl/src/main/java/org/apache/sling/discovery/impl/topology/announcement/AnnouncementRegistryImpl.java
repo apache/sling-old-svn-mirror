@@ -30,6 +30,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -67,18 +68,14 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             resourceResolver = resourceResolverFactory
                     .getAdministrativeResourceResolver(null);
 
-            final Resource announcementsResource = ResourceHelper
-                    .getOrCreateResource(
-                            resourceResolver,
-                            config.getClusterInstancesPath()
-                                    + "/"
-                                    + settingsService.getSlingId()
-                                    + "/announcements/" + ownerId);
-
-            if (announcementsResource != null) {
-                Node node = announcementsResource.adaptTo(Node.class);
-                node.remove();
-                node.getSession().save();
+            final String path = config.getClusterInstancesPath()
+                    + "/"
+                    + settingsService.getSlingId()
+                    + "/announcements/" + ownerId;
+            final Resource announcementsResource = resourceResolver.getResource(path);
+            if (announcementsResource!=null) {
+                resourceResolver.delete(announcementsResource);
+                resourceResolver.commit();
             }
 
         } catch (LoginException e) {
@@ -87,8 +84,8 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                             + e, e);
             throw new RuntimeException("Could not log in to repository (" + e
                     + ")", e);
-        } catch (RepositoryException e) {
-            logger.error("unregisterAnnouncement: got a RepositoryException: "
+        } catch (PersistenceException e) {
+            logger.error("unregisterAnnouncement: got a PersistenceException: "
                     + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
@@ -273,7 +270,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     .iterator();
             Resource announcementsResource;
             while (it0.hasNext()) {
-                Resource aClusterInstanceResource = it0.next();
+                final Resource aClusterInstanceResource = it0.next();
                 announcementsResource = aClusterInstanceResource
                         .getChild("announcements");
                 if (announcementsResource == null) {
@@ -289,7 +286,11 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     topologyAnnouncement = Announcement.fromJSON(anAnnouncement
                             .adaptTo(ValueMap.class).get(
                                     "topologyAnnouncement", String.class));
-                    if (filter != null && !filter.accept(topologyAnnouncement)) {
+                    if (topologyAnnouncement.hasExpired(config)) {
+                        // dont propagate announcements that have expired
+                        continue;
+                    }
+                    if (filter != null && !filter.accept(aClusterInstanceResource.getName(), topologyAnnouncement)) {
                         continue;
                     }
                     target.addIncomingTopologyAnnouncement(topologyAnnouncement);

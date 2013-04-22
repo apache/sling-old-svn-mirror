@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
 
@@ -74,12 +73,11 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
 
     protected void activate(final ComponentContext context) {
         whitelist.clear();
-        String whitelistStr = config.getTopologyConnectorWhitelist();
-        StringTokenizer st = new StringTokenizer(whitelistStr, ",");
-        while (st.hasMoreTokens()) {
-            String entry = st.nextToken().trim();
-            logger.info("activate: adding whitelist entry: " + entry);
-            whitelist.add(entry);
+        String[] whitelistConfig = config.getTopologyConnectorWhitelist();
+        for (int i = 0; i < whitelistConfig.length; i++) {
+            String aWhitelistEntry = whitelistConfig[i];
+            logger.info("activate: adding whitelist entry: " + aWhitelistEntry);
+            whitelist.add(aWhitelistEntry);
         }
     }
 
@@ -115,21 +113,21 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
                     .getOwnerId())) {
                 logger.info("doPost: rejecting an announcement from an instance that is part of my cluster: "
                         + incomingTopologyAnnouncement);
-                response.sendError(500);
+                response.sendError(409);
                 return;
             }
             if (clusterViewService.containsAny(incomingTopologyAnnouncement
                     .listInstances())) {
                 logger.info("doPost: rejecting an announcement as it contains instance(s) that is/are part of my cluster: "
                         + incomingTopologyAnnouncement);
-                response.sendError(500);
+                response.sendError(409);
                 return;
             }
             if (!announcementRegistry
                     .registerAnnouncement(incomingTopologyAnnouncement)) {
                 logger.info("doPost: rejecting an announcement from an instance that I already see in my topology: "
                         + incomingTopologyAnnouncement);
-                response.sendError(500);
+                response.sendError(409);
                 return;
             }
 
@@ -140,7 +138,7 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             announcementRegistry.addAllExcept(replyAnnouncement,
                     new AnnouncementFilter() {
 
-                        public boolean accept(Announcement announcement) {
+                        public boolean accept(final String receivingSlingId, Announcement announcement) {
                             if (announcement.getPrimaryKey().equals(
                                     incomingTopologyAnnouncement
                                             .getPrimaryKey())) {

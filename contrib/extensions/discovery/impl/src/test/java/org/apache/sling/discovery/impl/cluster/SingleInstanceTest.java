@@ -32,7 +32,7 @@ import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
-import org.apache.sling.discovery.impl.cluster.helpers.AssertingDiscoveryAware;
+import org.apache.sling.discovery.impl.cluster.helpers.AssertingTopologyEventListener;
 import org.apache.sling.discovery.impl.common.resource.EstablishedInstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.setup.Instance;
@@ -117,48 +117,48 @@ public class SingleInstanceTest {
     }
 
     @Test
-    public void testDiscoveryAwares() throws Throwable {
+    public void testTopologyEventListeners() throws Throwable {
         instance.runHeartbeatOnce();
         Thread.sleep(2000);
         instance.runHeartbeatOnce();
         Thread.sleep(2000);
 
-        AssertingDiscoveryAware assertingDiscoveryAware = new AssertingDiscoveryAware();
-        assertingDiscoveryAware.addExpected(Type.TOPOLOGY_INIT);
-        instance.bindDiscoveryAware(assertingDiscoveryAware);
-        assertEquals(0, assertingDiscoveryAware.getRemainingExpectedCount());
+        AssertingTopologyEventListener assertingTopologyEventListener = new AssertingTopologyEventListener();
+        assertingTopologyEventListener.addExpected(Type.TOPOLOGY_INIT);
+        instance.bindTopologyEventListener(assertingTopologyEventListener);
+        assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
 
         final String propertyName = UUID.randomUUID().toString();
         propertyValue = UUID.randomUUID().toString();
         PropertyProviderImpl pp = new PropertyProviderImpl();
         pp.setProperty(propertyName, propertyValue);
 
-        assertingDiscoveryAware.addExpected(Type.PROPERTIES_CHANGED);
+        assertingTopologyEventListener.addExpected(Type.PROPERTIES_CHANGED);
 
-        assertEquals(1, assertingDiscoveryAware.getRemainingExpectedCount());
+        assertEquals(1, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(0, pp.getGetCnt());
         instance.bindPropertyProvider(pp, propertyName);
-        assertEquals(0, assertingDiscoveryAware.getRemainingExpectedCount());
+        assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         // we can only assume that the getProperty was called at least once - it
         // could be called multiple times though..
         assertTrue(pp.getGetCnt() > 0);
 
-        assertingDiscoveryAware.addExpected(Type.PROPERTIES_CHANGED);
+        assertingTopologyEventListener.addExpected(Type.PROPERTIES_CHANGED);
 
-        assertEquals(1, assertingDiscoveryAware.getRemainingExpectedCount());
+        assertEquals(1, assertingTopologyEventListener.getRemainingExpectedCount());
         pp.setGetCnt(0);
         propertyValue = UUID.randomUUID().toString();
         pp.setProperty(propertyName, propertyValue);
         assertEquals(0, pp.getGetCnt());
         instance.runHeartbeatOnce();
         Thread.sleep(2000);
-        assertEquals(0, assertingDiscoveryAware.getRemainingExpectedCount());
+        assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(1, pp.getGetCnt());
 
         // a heartbeat repeat should not result in another call though
         instance.runHeartbeatOnce();
         Thread.sleep(2000);
-        assertEquals(0, assertingDiscoveryAware.getRemainingExpectedCount());
+        assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(2, pp.getGetCnt());
 
     }
@@ -169,9 +169,9 @@ public class SingleInstanceTest {
                 .getClusterView();
         assertNotNull(initialClusterView);
 
-        AssertingDiscoveryAware ada = new AssertingDiscoveryAware();
+        AssertingTopologyEventListener ada = new AssertingTopologyEventListener();
         ada.addExpected(Type.TOPOLOGY_INIT);
-        instance.bindDiscoveryAware(ada);
+        instance.bindTopologyEventListener(ada);
         assertEquals(1, ada.getEvents().size());
         TopologyEvent initEvent = ada.getEvents().remove(0);
         assertNotNull(initEvent);

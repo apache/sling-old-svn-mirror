@@ -43,24 +43,26 @@ public class Config {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     /** node used to keep instance information such as last heartbeat, properties, incoming announcements **/
-    private static final String CLUSTERINSTANCES_NODE = "/clusterInstances";
+    private static final String CLUSTERINSTANCES_NODE = "clusterInstances";
 
     /** node used to keep the currently established view **/
-    private static final String ESTABLISHED_VIEW_NODE = "/establishedView";
+    private static final String ESTABLISHED_VIEW_NODE = "establishedView";
 
     /** node used to keep the previously established view **/
-    private static final String PREVIOUS_VIEW_NODE = "/previousView";
+    private static final String PREVIOUS_VIEW_NODE = "previousView";
 
     /** node used to keep ongoing votings **/
-    private static final String ONGOING_VOTING_NODE = "/ongoingVotings";
+    private static final String ONGOING_VOTING_NODE = "ongoingVotings";
 
     public static final long DEFAULT_HEARTBEAT_TIMEOUT = 20;
-    @Property(label = "Heartbeat timeout (seconds)", description = "Configure the timeout (in seconds) after which an instance is considered dead/crashed, eg 20.")
+    public static final String DEFAULT_HEARTBEAT_TIMEOUT_STR = DEFAULT_HEARTBEAT_TIMEOUT+"";
+    @Property(label = "Heartbeat timeout (seconds)", description = "Configure the timeout (in seconds) after which an instance is considered dead/crashed, eg 20.", value=DEFAULT_HEARTBEAT_TIMEOUT_STR)
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
     private long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
 
     public static final long DEFAULT_HEARTBEAT_INTERVAL = 15;
-    @Property(label = "Heartbeat interval (seconds)", description = "Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology, eg 15.")
+    public static final String DEFAULT_HEARTBEAT_INTERVAL_STR = DEFAULT_HEARTBEAT_INTERVAL+"";
+    @Property(label = "Heartbeat interval (seconds)", description = "Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology, eg 15.", value=DEFAULT_HEARTBEAT_INTERVAL_STR)
     public static final String HEARTBEAT_INTERVAL_KEY = "heartbeatInterval";
     private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 
@@ -68,13 +70,13 @@ public class Config {
     public static final String TOPOLOGY_CONNECTOR_URL_KEY = "topologyConnectorUrl";
     private URL topologyConnectorUrl = null;
 
-    private static final String DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST = "localhost,127.0.0.1";
-    @Property(label = "Topology Connector Whitelist", description = "comma separated list of ips and/or hostnames which are allowed to connect to /libs/sling/topology/connector")
+    private static final String[] DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST = {"localhost","127.0.0.1"};
+    @Property(label = "Topology Connector Whitelist", description = "list of ips and/or hostnames which are allowed to connect to /libs/sling/topology/connector", value={"localhost","127.0.0.1"})
     public static final String TOPOLOGY_CONNECTOR_WHITELIST_KEY = "topologyConnectorWhitelist";
-    private String topologyConnectorWhitelist = DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST;
+    private String[] topologyConnectorWhitelist = DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST;
 
     private static final String DEFAULT_DISCOVERY_RESOURCE_PATH = "/var/discovery/impl";
-    @Property(label = "Discovery Resource Path", description = "Path of resource where to keep discovery information, e.g /var/discovery/impl")
+    @Property(label = "Discovery Resource Path", description = "Path of resource where to keep discovery information, e.g /var/discovery/impl", value=DEFAULT_DISCOVERY_RESOURCE_PATH)
     public static final String DISCOVERY_RESOURCE_PATH_KEY = "discoveryResourcePath";
     private String discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
 
@@ -100,25 +102,27 @@ public class Config {
                 this.heartbeatInterval);
         String topologyConnectorUrlStr = PropertiesUtil.toString(
                 properties.get(TOPOLOGY_CONNECTOR_URL_KEY), null);
-        try {
-            this.topologyConnectorUrl = new URL(topologyConnectorUrlStr);
-            logger.debug("configure: topologyConnectorUrl='{}''",
-                    this.topologyConnectorUrl);
-        } catch (MalformedURLException e) {
-            logger.error("configure: could not set topologyConnectorUrl: " + e,
-                    e);
+        if ( topologyConnectorUrlStr != null && topologyConnectorUrlStr.length() > 0 ) {
+            try {
+                this.topologyConnectorUrl = new URL(topologyConnectorUrlStr);
+                logger.debug("configure: topologyConnectorUrl='{}''",
+                        this.topologyConnectorUrl);
+            } catch (MalformedURLException e) {
+                logger.error("configure: could not set topologyConnectorUrl: " + e,
+                        e);
+            }
         }
-        this.topologyConnectorWhitelist = PropertiesUtil.toString(
+        this.topologyConnectorWhitelist = PropertiesUtil.toStringArray( 
                 properties.get(TOPOLOGY_CONNECTOR_WHITELIST_KEY),
                 DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST);
         logger.debug("configure: topologyConnectorWhitelist='{}''",
                 this.topologyConnectorWhitelist);
-        
+
         this.discoveryResourcePath = PropertiesUtil.toString(
                 properties.get(DISCOVERY_RESOURCE_PATH_KEY),
                 "");
         while(this.discoveryResourcePath.endsWith("/")) {
-            this.discoveryResourcePath = this.discoveryResourcePath.substring(0, 
+            this.discoveryResourcePath = this.discoveryResourcePath.substring(0,
                     this.discoveryResourcePath.length()-1);
         }
         this.discoveryResourcePath = this.discoveryResourcePath + "/";
@@ -128,7 +132,7 @@ public class Config {
         }
         logger.debug("configure: discoveryResourcePath='{}''",
                 this.discoveryResourcePath);
-        
+
         this.leaderElectionRepositoryDescriptor = PropertiesUtil.toString(
                 properties.get(LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY),
                 null);
@@ -168,10 +172,10 @@ public class Config {
      * @return a comma separated list of hostnames and/or ip addresses which are allowed as
      * remote hosts to open connections to the topology connector servlet
      */
-    public String getTopologyConnectorWhitelist() {
+    public String[] getTopologyConnectorWhitelist() {
         return topologyConnectorWhitelist;
     }
-    
+
     /**
      * Returns the resource path where cluster instance informations are stored.
      * @return the resource path where cluster instance informations are stored
@@ -179,7 +183,7 @@ public class Config {
     public String getClusterInstancesPath() {
         return discoveryResourcePath + CLUSTERINSTANCES_NODE;
     }
-    
+
     /**
      * Returns the resource path where the established view is stored.
      * @return the resource path where the established view is stored
@@ -187,7 +191,7 @@ public class Config {
     public String getEstablishedViewPath() {
         return discoveryResourcePath + ESTABLISHED_VIEW_NODE;
     }
-    
+
     /**
      * Returns the resource path where ongoing votings are stored.
      * @return the resource path where ongoing votings are stored
@@ -195,20 +199,20 @@ public class Config {
     public String getOngoingVotingsPath() {
         return discoveryResourcePath + ONGOING_VOTING_NODE;
     }
-    
+
     /**
-     * Returns the resource path where the previous view is stored. 
+     * Returns the resource path where the previous view is stored.
      * @return the resource path where the previous view is stored
      */
     public String getPreviousViewPath() {
         return discoveryResourcePath + PREVIOUS_VIEW_NODE;
     }
-    
+
     /**
      * Returns the repository descriptor key which is to be included in the
-     * cluster leader election - or null. 
+     * cluster leader election - or null.
      * <p>
-     * When set, the value (treated as a boolean) of the repository descriptor 
+     * When set, the value (treated as a boolean) of the repository descriptor
      * is prepended to the leader election id.
      * @return the repository descriptor key which is to be included in the
      * cluster leader election - or null

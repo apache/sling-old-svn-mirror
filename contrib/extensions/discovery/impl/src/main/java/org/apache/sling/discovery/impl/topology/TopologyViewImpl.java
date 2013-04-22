@@ -57,7 +57,7 @@ public class TopologyViewImpl implements TopologyView {
         }
     }
 
-    /** 
+    /**
      * Compare this topology with the given one and determine how they compare
      * @param other the other topology against which to compare
      * @return the type describing how these two compare
@@ -122,17 +122,23 @@ public class TopologyViewImpl implements TopologyView {
         return code;
     }
 
+    /**
+     * @see org.apache.sling.discovery.TopologyView#isCurrent()
+     */
     public boolean isCurrent() {
         return current;
     }
 
-    /** 
+    /**
      * Mark this topology as old
      */
     public void markOld() {
         this.current = false;
     }
 
+    /**
+     * @see org.apache.sling.discovery.TopologyView#getLocalInstance()
+     */
     public InstanceDescription getLocalInstance() {
         for (Iterator<InstanceDescription> it = instances.iterator(); it
                 .hasNext();) {
@@ -144,6 +150,9 @@ public class TopologyViewImpl implements TopologyView {
         return null;
     }
 
+    /**
+     * @see org.apache.sling.discovery.TopologyView#getInstances()
+     */
     public Set<InstanceDescription> getInstances() {
         return Collections.unmodifiableSet(instances);
     }
@@ -152,18 +161,24 @@ public class TopologyViewImpl implements TopologyView {
         if (instances == null) {
             return;
         }
-        for (Iterator<InstanceDescription> it = instances.iterator(); it
+        outerLoop: for (Iterator<InstanceDescription> it = instances.iterator(); it
                 .hasNext();) {
             InstanceDescription instanceDescription = it.next();
-            if (this.instances.contains(instanceDescription)) {
-                logger.error("addInstance: cannot add same instance twice: "
-                        + instanceDescription);
-            } else {
-                this.instances.add(instanceDescription);
+            for (Iterator<InstanceDescription> it2 = this.instances.iterator(); it2.hasNext();) {
+                InstanceDescription existingInstance = it2.next();
+                if (existingInstance.getSlingId().equals(instanceDescription.getSlingId())) {
+                    logger.error("addInstance: cannot add same instance twice: "
+                            + instanceDescription);
+                    continue outerLoop;
+                }
             }
+            this.instances.add(instanceDescription);
         }
     }
 
+    /**
+     * @see org.apache.sling.discovery.TopologyView#findInstances(org.apache.sling.discovery.InstanceFilter)
+     */
     public Set<InstanceDescription> findInstances(final InstanceFilter picker) {
         if (picker == null) {
             throw new IllegalArgumentException("picker must not be null");
@@ -179,6 +194,9 @@ public class TopologyViewImpl implements TopologyView {
         return result;
     }
 
+    /**
+     * @see org.apache.sling.discovery.TopologyView#getClusterViews()
+     */
     public Set<ClusterView> getClusterViews() {
         Set<ClusterView> result = new HashSet<ClusterView>();
         for (Iterator<InstanceDescription> it = instances.iterator(); it
@@ -192,4 +210,9 @@ public class TopologyViewImpl implements TopologyView {
         return new HashSet<ClusterView>(result);
     }
 
+    @Override
+    public String toString() {
+        return "TopologyViewImpl [current=" + current + ", instances="
+                + instances + "]";
+    }
 }
