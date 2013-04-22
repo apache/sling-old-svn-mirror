@@ -55,7 +55,6 @@ public abstract class ResourceHelper {
         JobUtil.JOB_ID,
         JobUtil.PROPERTY_JOB_PARALLEL,
         JobUtil.PROPERTY_JOB_RUN_LOCAL,
-        JobUtil.PROPERTY_JOB_RETRY_DELAY,
         JobUtil.PROPERTY_JOB_QUEUE_ORDERED,
         JobUtil.PROPERTY_NOTIFICATION_JOB,
         JobStatusNotifier.CONTEXT_PROPERTY_NAME
