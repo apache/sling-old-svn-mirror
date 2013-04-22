@@ -39,13 +39,13 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.ClusterView;
-import org.apache.sling.discovery.DiscoveryAware;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
@@ -53,8 +53,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is a simple implementation of the cluster service
- * which can be used for a cluster less installation.
+ * This is a simple implementation of the discovery service
+ * which can be used for a cluster less installation (= single instance).
+ * It is disabled by default and can be enabled through a OSGi configuration.
  */
 @Component(policy = ConfigurationPolicy.REQUIRE, immediate=true)
 @Service(value = {DiscoveryService.class})
@@ -70,10 +71,10 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     private SlingSettingsService settingsService;
 
     /**
-     * All cluster aware instances.
+     * All topology event listeners.
      */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
-    private DiscoveryAware[] clusterAwares = new DiscoveryAware[0];
+    private TopologyEventListener[] listeners = new TopologyEventListener[0];
 
     /**
      * All property providers.
@@ -138,9 +139,9 @@ public class NoClusterDiscoveryService implements DiscoveryService {
         final Set<InstanceDescription> instances = new HashSet<InstanceDescription>();
         instances.add(myDescription);
 
-        final DiscoveryAware[] registeredServices;
+        final TopologyEventListener[] registeredServices;
 		synchronized ( lock ) {
-            registeredServices = this.clusterAwares;
+            registeredServices = this.listeners;
             final ClusterView clusterView = new ClusterView() {
 
                 public InstanceDescription getLeader() {
@@ -188,7 +189,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
 
     		};
         }
-        for(final DiscoveryAware da: registeredServices) {
+        for(final TopologyEventListener da: registeredServices) {
         	da.handleTopologyEvent(new TopologyEvent(Type.TOPOLOGY_INIT, null, topologyView));
         }
     }
@@ -209,7 +210,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
 	private void bindPropertyProvider(final PropertyProvider propertyProvider, final Map<String, Object> props) {
     	logger.debug("bindPropertyProvider: Binding PropertyProvider {}", propertyProvider);
 
-        final DiscoveryAware[] awares;
+        final TopologyEventListener[] awares;
         synchronized (lock) {
             final ProviderInfo info = new ProviderInfo(propertyProvider, props);
             this.providerInfos.add(info);
@@ -218,11 +219,11 @@ public class NoClusterDiscoveryService implements DiscoveryService {
             if ( this.topologyView == null ) {
                 awares = null;
             } else {
-                awares = this.clusterAwares;
+                awares = this.listeners;
             }
         }
         if ( awares != null ) {
-            for(final DiscoveryAware da : awares) {
+            for(final TopologyEventListener da : awares) {
                 da.handleTopologyEvent(new TopologyEvent(Type.PROPERTIES_CHANGED, this.topologyView, this.topologyView));
             }
         }
@@ -256,7 +257,7 @@ public class NoClusterDiscoveryService implements DiscoveryService {
             final boolean inform) {
     	logger.debug("unbindPropertyProvider: Releasing PropertyProvider {}", propertyProvider);
 
-    	final DiscoveryAware[] awares;
+    	final TopologyEventListener[] awares;
         synchronized (lock) {
             final ProviderInfo info = new ProviderInfo(propertyProvider, props);
             this.providerInfos.remove(info);
@@ -264,11 +265,11 @@ public class NoClusterDiscoveryService implements DiscoveryService {
             if ( this.topologyView == null ) {
                 awares = null;
             } else {
-                awares = this.clusterAwares;
+                awares = this.listeners;
             }
         }
         if ( inform && awares != null ) {
-            for(final DiscoveryAware da : awares) {
+            for(final TopologyEventListener da : awares) {
                 da.handleTopologyEvent(new TopologyEvent(Type.PROPERTIES_CHANGED, this.topologyView, this.topologyView));
             }
         }
@@ -286,16 +287,16 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     }
 
     @SuppressWarnings("unused")
-    private void bindDiscoveryAware(final DiscoveryAware clusterAware) {
+    private void bindTopologyEventListener(final TopologyEventListener clusterAware) {
 
-        logger.debug("bindDiscoveryAware: Binding DiscoveryAware {}", clusterAware);
+        logger.debug("bindTopologyEventListener: Binding TopologyEventListener {}", clusterAware);
 
         boolean inform = true;
         synchronized (lock) {
-            List<DiscoveryAware> currentList = new ArrayList<DiscoveryAware>(
-                Arrays.asList(clusterAwares));
+            List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
+                Arrays.asList(listeners));
             currentList.add(clusterAware);
-            this.clusterAwares = currentList.toArray(new DiscoveryAware[currentList.size()]);
+            this.listeners = currentList.toArray(new TopologyEventListener[currentList.size()]);
             if ( this.topologyView == null ) {
                 inform = false;
             }
@@ -307,15 +308,15 @@ public class NoClusterDiscoveryService implements DiscoveryService {
     }
 
     @SuppressWarnings("unused")
-    private void unbindDiscoveryAware(final DiscoveryAware clusterAware) {
+    private void unbindTopologyEventListener(final TopologyEventListener clusterAware) {
 
-        logger.debug("unbindDiscoveryAware: Releasing DiscoveryAware {}", clusterAware);
+        logger.debug("unbindTopologyEventListener: Releasing TopologyEventListener {}", clusterAware);
 
         synchronized (lock) {
-            List<DiscoveryAware> currentList = new ArrayList<DiscoveryAware>(
-                Arrays.asList(clusterAwares));
+            List<TopologyEventListener> currentList = new ArrayList<TopologyEventListener>(
+                Arrays.asList(listeners));
             currentList.remove(clusterAware);
-            this.clusterAwares = currentList.toArray(new DiscoveryAware[currentList.size()]);
+            this.listeners = currentList.toArray(new TopologyEventListener[currentList.size()]);
         }
     }
 

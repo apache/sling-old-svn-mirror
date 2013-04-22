@@ -36,9 +36,9 @@ public interface DiscoveryService {
 	 * has noticed a potential change in the topology and is in the process of
 	 * settling the change in the topology (eg with peers, ie voting).
 	 * <p>
-	 * Note that this call is synchronized with <code>DiscoveryAware.handleTopologyEvent()</code>
-	 * calls: ie if calls to <code>DiscoveryAware.handleTopologyEvent()</code> are currently
-	 * ongoing, then the call to this method will block until all <code>DiscoveryAware</code>s
+	 * Note that this call is synchronized with <code>TopologyEventListener.handleTopologyEvent()</code>
+	 * calls: ie if calls to <code>TopologyEventListener.handleTopologyEvent()</code> are currently
+	 * ongoing, then the call to this method will block until all <code>TopologyEventListener</code>s
 	 * have been called. Be careful not to cause deadlock situations.
 	 * <p>
 	 * @return the topology that was last discovered by this service. This will never

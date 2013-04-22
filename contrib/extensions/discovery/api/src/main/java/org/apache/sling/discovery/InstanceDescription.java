@@ -68,7 +68,7 @@ public interface InstanceDescription {
 	 * Only one instance of a cluster is guaranteed to be the leader at any time.
 	 * This guarantee is provided by this service.
 	 * If the leader goes down, the service elects a new leader and announces it to
-	 * DiscoveryAware listeners.
+	 * TopologyEventListener listeners.
 	 * @return true if this instance is the - only -  leader in this cluster,
 	 * false if it is one of the slaves, or true if it is not at all part of a cluster
 	 */
