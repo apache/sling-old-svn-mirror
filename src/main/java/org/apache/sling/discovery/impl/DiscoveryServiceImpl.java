@@ -44,12 +44,12 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.discovery.ClusterView;
-import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
@@ -69,8 +69,8 @@ import org.slf4j.LoggerFactory;
  * implementation for detecting changes in a cluster and only supports one
  * cluster (of which this instance is part of).
  */
-@Service(value = { DiscoveryService.class, DiscoveryServiceImpl.class })
 @Component(immediate = true)
+@Service(value = { DiscoveryService.class, DiscoveryServiceImpl.class })
 public class DiscoveryServiceImpl implements DiscoveryService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());

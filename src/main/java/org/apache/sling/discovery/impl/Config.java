@@ -20,13 +20,13 @@ package org.apache.sling.discovery.impl;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Dictionary;
+import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,63 +34,68 @@ import org.slf4j.LoggerFactory;
  * Configuration object used as a central config point for the discovery service
  * implementation
  * <p>
- * The properties are described below under 'description'
+ * The properties are described below under.
  */
-@Component(metatype = true, label = "Sling Resource-Based Discovery Service Configuration")
+@Component(metatype = true, label="%config.name", description="%config.description")
 @Service(value = { Config.class })
 public class Config {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /** node used to keep instance information such as last heartbeat, properties, incoming announcements **/
-    private static final String CLUSTERINSTANCES_NODE = "clusterInstances";
+    /** resource used to keep instance information such as last heartbeat, properties, incoming announcements **/
+    private static final String CLUSTERINSTANCES_RESOURCE = "clusterInstances";
 
-    /** node used to keep the currently established view **/
-    private static final String ESTABLISHED_VIEW_NODE = "establishedView";
+    /** resource used to keep the currently established view **/
+    private static final String ESTABLISHED_VIEW_RESOURCE = "establishedView";
 
-    /** node used to keep the previously established view **/
-    private static final String PREVIOUS_VIEW_NODE = "previousView";
+    /** resource used to keep the previously established view **/
+    private static final String PREVIOUS_VIEW_RESOURCE = "previousView";
 
-    /** node used to keep ongoing votings **/
-    private static final String ONGOING_VOTING_NODE = "ongoingVotings";
+    /** resource used to keep ongoing votings **/
+    private static final String ONGOING_VOTING_RESOURCE = "ongoingVotings";
 
+    /** Configure the timeout (in seconds) after which an instance is considered dead/crashed. */
     public static final long DEFAULT_HEARTBEAT_TIMEOUT = 20;
-    public static final String DEFAULT_HEARTBEAT_TIMEOUT_STR = DEFAULT_HEARTBEAT_TIMEOUT+"";
-    @Property(label = "Heartbeat timeout (seconds)", description = "Configure the timeout (in seconds) after which an instance is considered dead/crashed, eg 20.", value=DEFAULT_HEARTBEAT_TIMEOUT_STR)
+    @Property(longValue=DEFAULT_HEARTBEAT_TIMEOUT)
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
     private long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
 
+    /** Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology. */
     public static final long DEFAULT_HEARTBEAT_INTERVAL = 15;
-    public static final String DEFAULT_HEARTBEAT_INTERVAL_STR = DEFAULT_HEARTBEAT_INTERVAL+"";
-    @Property(label = "Heartbeat interval (seconds)", description = "Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology, eg 15.", value=DEFAULT_HEARTBEAT_INTERVAL_STR)
+    @Property(longValue=DEFAULT_HEARTBEAT_INTERVAL)
     public static final String HEARTBEAT_INTERVAL_KEY = "heartbeatInterval";
     private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 
-    @Property(label = "Topology Connector URL", description = "URL where to join a topology, eg http://localhost:4502/libs/sling/topology/connector")
+    /** URL where to join a topology, eg http://localhost:4502/libs/sling/topology/connector */
+    @Property
     public static final String TOPOLOGY_CONNECTOR_URL_KEY = "topologyConnectorUrl";
-    private URL topologyConnectorUrl = null;
+    private URL topologyConnectorUrl;
 
+    /** list of ips and/or hostnames which are allowed to connect to /libs/sling/topology/connector */
     private static final String[] DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST = {"localhost","127.0.0.1"};
-    @Property(label = "Topology Connector Whitelist", description = "list of ips and/or hostnames which are allowed to connect to /libs/sling/topology/connector", value={"localhost","127.0.0.1"})
+    @Property(value={"localhost","127.0.0.1"})
     public static final String TOPOLOGY_CONNECTOR_WHITELIST_KEY = "topologyConnectorWhitelist";
     private String[] topologyConnectorWhitelist = DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST;
 
+    /** Path of resource where to keep discovery information, e.g /var/discovery/impl */
     private static final String DEFAULT_DISCOVERY_RESOURCE_PATH = "/var/discovery/impl";
-    @Property(label = "Discovery Resource Path", description = "Path of resource where to keep discovery information, e.g /var/discovery/impl", value=DEFAULT_DISCOVERY_RESOURCE_PATH)
+    @Property(value=DEFAULT_DISCOVERY_RESOURCE_PATH, propertyPrivate=true)
     public static final String DISCOVERY_RESOURCE_PATH_KEY = "discoveryResourcePath";
     private String discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
 
-    @Property(label = "Repository Descriptor Name", description = "Name of the repository descriptor to be taken into account for leader election: " +
-    		"those instances have preference to become leader which have the corresponding descriptor value of 'false'")
+    /** Name of the repository descriptor to be taken into account for leader election:
+        those instances have preference to become leader which have the corresponding descriptor value of 'false' */
+    @Property
     public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
-    private String leaderElectionRepositoryDescriptor = null;
+    private String leaderElectionRepositoryDescriptor ;
 
-    protected void activate(final ComponentContext componentContext) {
+    @Activate
+    protected void activate(final Map<String, Object> properties) {
         logger.debug("activate: config activated.");
-        configure(componentContext.getProperties());
+        configure(properties);
     }
 
-    protected void configure(final Dictionary<?, ?> properties) {
+    protected void configure(final Map<String, Object> properties) {
         this.heartbeatTimeout = PropertiesUtil.toLong(
                 properties.get(HEARTBEAT_TIMEOUT_KEY),
                 DEFAULT_HEARTBEAT_TIMEOUT);
@@ -112,7 +117,7 @@ public class Config {
                         e);
             }
         }
-        this.topologyConnectorWhitelist = PropertiesUtil.toStringArray( 
+        this.topologyConnectorWhitelist = PropertiesUtil.toStringArray(
                 properties.get(TOPOLOGY_CONNECTOR_WHITELIST_KEY),
                 DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST);
         logger.debug("configure: topologyConnectorWhitelist='{}''",
@@ -181,7 +186,7 @@ public class Config {
      * @return the resource path where cluster instance informations are stored
      */
     public String getClusterInstancesPath() {
-        return discoveryResourcePath + CLUSTERINSTANCES_NODE;
+        return discoveryResourcePath + CLUSTERINSTANCES_RESOURCE;
     }
 
     /**
@@ -189,7 +194,7 @@ public class Config {
      * @return the resource path where the established view is stored
      */
     public String getEstablishedViewPath() {
-        return discoveryResourcePath + ESTABLISHED_VIEW_NODE;
+        return discoveryResourcePath + ESTABLISHED_VIEW_RESOURCE;
     }
 
     /**
@@ -197,7 +202,7 @@ public class Config {
      * @return the resource path where ongoing votings are stored
      */
     public String getOngoingVotingsPath() {
-        return discoveryResourcePath + ONGOING_VOTING_NODE;
+        return discoveryResourcePath + ONGOING_VOTING_RESOURCE;
     }
 
     /**
@@ -205,7 +210,7 @@ public class Config {
      * @return the resource path where the previous view is stored
      */
     public String getPreviousViewPath() {
-        return discoveryResourcePath + PREVIOUS_VIEW_NODE;
+        return discoveryResourcePath + PREVIOUS_VIEW_RESOURCE;
     }
 
     /**

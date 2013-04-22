@@ -48,11 +48,11 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
 import org.apache.felix.webconsole.WebConsoleConstants;
 import org.apache.sling.discovery.ClusterView;
-import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
@@ -71,8 +71,8 @@ import org.slf4j.LoggerFactory;
  * Simple webconsole which gives an overview of the topology visible by the
  * discovery service
  */
-@Service(value = { TopologyEventListener.class })
 @Component(immediate = true)
+@Service(value = { TopologyEventListener.class })
 @SuppressWarnings("serial")
 public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implements TopologyEventListener {
 
@@ -336,7 +336,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             }
 
             final String oddEven = odd ? "odd" : "even";
-            
+
             if (inLocalCluster || (parentAnnouncement!=null)) {
                 pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
             } else {
