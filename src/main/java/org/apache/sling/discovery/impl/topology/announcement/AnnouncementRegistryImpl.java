@@ -43,7 +43,7 @@ import org.apache.sling.settings.SlingSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true, label = "Internal Topology Announcement Registry")
+@Component
 @Service(value = AnnouncementRegistry.class)
 public class AnnouncementRegistryImpl implements AnnouncementRegistry {
 

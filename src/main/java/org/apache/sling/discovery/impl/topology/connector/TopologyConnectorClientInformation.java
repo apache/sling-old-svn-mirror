@@ -25,30 +25,27 @@ import java.net.URL;
  */
 public interface TopologyConnectorClientInformation {
 
-    public static enum OriginInfo {
+    enum OriginInfo {
         Config, // this connector was created via config
         WebConsole, // this connector was created via the wbconsole
         Programmatically // this connector was created programmatically
     }
 
     /** the endpoint url where this connector is connecting to **/
-    public URL getConnectorUrl();
+    URL getConnectorUrl();
 
     /** return the http status code of the last post to the servlet, -1 if no post was ever done **/
-    public int getStatusCode();
-    
+    int getStatusCode();
+
     /** whether or not this connector was able to successfully connect **/
-    public boolean isConnected();
+    boolean isConnected();
 
     /** the sling id of the remote end **/
-    public String getRemoteSlingId();
-
-    // public List<String> listFallbackConnectorUrls();
+    String getRemoteSlingId();
 
     /** the unique id of this connector **/
-    public String getId();
+    String getId();
 
     /** the information about how this connector was created **/
-    public OriginInfo getOriginInfo();
-
+    OriginInfo getOriginInfo();
 }
