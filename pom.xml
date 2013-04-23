@@ -38,6 +38,12 @@
         <site.javadoc.exclude>**.impl.**</site.javadoc.exclude>
     </properties>    
 
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/javax.activation</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/javax.activation</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/javax.activation</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
