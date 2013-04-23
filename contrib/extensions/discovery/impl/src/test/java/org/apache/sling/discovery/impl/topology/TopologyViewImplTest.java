@@ -23,13 +23,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import junitx.util.PrivateAccessor;
+
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.InstanceFilter;
 import org.apache.sling.discovery.TopologyEvent.Type;
+import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
 import org.junit.Test;
 
@@ -92,6 +96,19 @@ public class TopologyViewImplTest {
         p.remove("a");
         p.put("a", "B");
         assertNull(newView.compareTopology(oldView));
+        
+        // now change the properties of the first instance but modify the second instance' cluster
+        Iterator<InstanceDescription> it = newView.getInstances().iterator();
+        DefaultInstanceDescriptionImpl firstInstance = (DefaultInstanceDescriptionImpl) it.next();
+        assertNotNull(firstInstance);
+        DefaultInstanceDescriptionImpl secondInstance = (DefaultInstanceDescriptionImpl) it.next();
+        assertNotNull(secondInstance);
+        TopologyTestHelper.getWriteableProperties(
+                firstInstance).put("c", "d");
+        DefaultClusterViewImpl cluster = new DefaultClusterViewImpl(UUID.randomUUID().toString());
+        PrivateAccessor.setField(secondInstance, "clusterView", null);
+        cluster.addInstanceDescription(secondInstance);
+        assertEquals(Type.TOPOLOGY_CHANGED, newView.compareTopology(oldView));
     }
 
     @Test

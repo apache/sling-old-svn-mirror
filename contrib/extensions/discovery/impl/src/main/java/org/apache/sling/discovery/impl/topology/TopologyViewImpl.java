@@ -70,6 +70,7 @@ public class TopologyViewImpl implements TopologyView {
         if (this.instances.size() != other.instances.size()) {
             return Type.TOPOLOGY_CHANGED;
         }
+        boolean propertiesChanged = false;
         for (Iterator<InstanceDescription> it = instances.iterator(); it
                 .hasNext();) {
             InstanceDescription instance = it.next();
@@ -92,10 +93,14 @@ public class TopologyViewImpl implements TopologyView {
             }
             if (!instance.getProperties().equals(
                     matchingInstance.getProperties())) {
-                return Type.PROPERTIES_CHANGED;
+                propertiesChanged = true;
             }
         }
-        return null;
+        if (propertiesChanged) {
+            return Type.PROPERTIES_CHANGED;
+        } else {
+            return null;
+        }
     }
 
     @Override
