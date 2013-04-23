@@ -28,7 +28,7 @@
         
     <artifactId>org.apache.sling.javax.activation</artifactId>
     <packaging>bundle</packaging>
-    <version>0.1.0</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <name>Apache Sling javax.activation bundle</name>
     <description>The Apache Sling javax.activation bundle contributes an OSGi-compatible activation bundle.</description>
@@ -85,10 +85,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.javax.activation-0.1.0</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.javax.activation-0.1.0</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.javax.activation-0.1.0</url>
-  </scm>
 </project>
