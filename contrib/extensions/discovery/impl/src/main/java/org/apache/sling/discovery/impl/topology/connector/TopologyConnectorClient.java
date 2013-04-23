@@ -154,7 +154,7 @@ public class TopologyConnectorClient implements
                     + method.getStatusText());
             lastStatusCode = method.getStatusCode();
             if (method.getStatusCode()==200) {
-                String responseBody = method.getResponseBodyAsString();
+                String responseBody = method.getResponseBodyAsString(16*1024*1024); // limiting to 16MB, should be way enough
                 logger.debug("ping: response body=" + responseBody);
                 Announcement inheritedAnnouncement = Announcement
                         .fromJSON(responseBody);
