@@ -30,18 +30,17 @@ public class TopologyEvent {
 
     public static enum Type {
         /**
-         * Inform the service about the initial topology state and is only sent
-         * once at bind-time.
-         * <p>
-         * This event type will be the first one a TopologyEventListener
-         * receives.
+         * Informs the service about the initial topology state - this is only 
+         * sent once at bind-time and is the first one a TopologyEventListener
+         * receives (after the implementation bundle was activated).
          */
         TOPOLOGY_INIT,
 
         /**
-         * Inform the service about the fact that a state change was detected in
-         * the topology/cluster and that a voting amongst the members about a
-         * new, valid topology/cluster view has just started.
+         * Informs the service about the fact that a state change was detected in
+         * the topology/cluster and that the new state is in the process of
+         * being discovered. Once the discovery is finished, a TOPOLOGY_CHANGED
+         * is sent with the new topology view.
          * <p>
          * An implementation must always send a TOPOLOGY_CHANGING before a
          * TOPOLOGY_CHANGED.
@@ -49,16 +48,16 @@ public class TopologyEvent {
         TOPOLOGY_CHANGING,
 
         /**
-         * Inform the service about a state change in the topology.
+         * Informs the service about a state change in the topology.
          * <p>
          * A state change includes:
          * <ul>
          * <li>A joining or leaving instance</li>
          * <li>A restart of an instance - or more precisely: when the
          * corresponding implementation bundle is deactivated/activated</li>
-         * <li>A cluster structure changed: either its members or the cluster
-         * view id. The cluster view id changes when an instance joins, leaves
-         * or was restarted (the bundle deactivated/activated)</li>
+         * <li>A cluster structure - either its members or the cluster
+         * view id - changed. The cluster view id changes when an instance joins, 
+         * leaves or was restarted (its bundle deactivated/activated)</li>
          * </ul>
          * <p>
          * Note that tha TOPOLOGY_CHANGED can also include changes in the
