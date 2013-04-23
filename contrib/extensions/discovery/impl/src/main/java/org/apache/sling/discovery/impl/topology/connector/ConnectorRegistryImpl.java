@@ -39,7 +39,7 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true, label = "Internal Topology Connector Registry")
+@Component
 @Service(value = ConnectorRegistry.class)
 public class ConnectorRegistryImpl implements ConnectorRegistry {
 

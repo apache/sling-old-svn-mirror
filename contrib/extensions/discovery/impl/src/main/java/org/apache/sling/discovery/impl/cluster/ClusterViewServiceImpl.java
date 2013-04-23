@@ -48,8 +48,8 @@ import org.slf4j.LoggerFactory;
  * This class is a reader only - it accesses the repository to read the
  * currently established view
  */
-@Service
 @Component
+@Service(value = ClusterViewService.class)
 public class ClusterViewServiceImpl implements ClusterViewService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -62,7 +62,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
 
     @Reference
     private Config config;
-    
+
     /** the cluster view representing the isolated mode - ie only my own instance in one cluster. used at bootstrap **/
     private ClusterView isolatedClusterView;
 

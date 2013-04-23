@@ -59,8 +59,8 @@ import org.slf4j.LoggerFactory;
  * Local heartbeats are stored in the repository. Remote heartbeats are POSTs to
  * remote TopologyConnectorServlets.
  */
-@Service(value = { HeartbeatHandler.class })
 @Component
+@Service(value = { HeartbeatHandler.class })
 public class HeartbeatHandler implements Runnable {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -85,7 +85,7 @@ public class HeartbeatHandler implements Runnable {
 
     @Reference
     private Config config;
-    
+
     @Reference
     private VotingHandler votingHandler;
 
@@ -117,7 +117,7 @@ public class HeartbeatHandler implements Runnable {
     protected void deactivate() {
         scheduler.removeJob(NAME);
     }
-    
+
     /**
      * The initialize method is called by the DiscoveryServiceImpl.activate
      * as we require the discoveryService (and the discoveryService has
@@ -140,7 +140,7 @@ public class HeartbeatHandler implements Runnable {
             logger.error("activate: Could not start heartbeat runner: " + e, e);
         }
     }
-    
+
     public void run() {
         // issue a heartbeat
         issueHeartbeat();
@@ -211,12 +211,12 @@ public class HeartbeatHandler implements Runnable {
                         + maxLongLength + "d", System.currentTimeMillis());
 
                 String prefix = "0";
-                
+
                 String leaderElectionRepositoryDescriptor = config.getLeaderElectionRepositoryDescriptor();
                 if (leaderElectionRepositoryDescriptor!=null && leaderElectionRepositoryDescriptor.length()!=0) {
                     // when this property is configured, check the value of the repository descriptor
                     // and if that value is set, include it in the leader election id
-                    
+
                     final Session session = resourceResolver.adaptTo(Session.class);
                     if ( session != null ) {
                         String value = session.getRepository()
@@ -248,7 +248,7 @@ public class HeartbeatHandler implements Runnable {
         }
     }
 
-    /** Check whether the established view matches the reality, ie matches the 
+    /** Check whether the established view matches the reality, ie matches the
      * heartbeats
      */
     private void checkView() {
@@ -286,7 +286,7 @@ public class HeartbeatHandler implements Runnable {
         } else {
             votingHandler.analyzeVotings(resourceResolver);
         }
-        
+
         final VotingView winningVoting = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         int numOpenNonWinningVotes = VotingHelper.listOpenNonWinningVotings(

@@ -29,7 +29,7 @@ import org.apache.sling.discovery.InstanceDescription;
  */
 public interface AnnouncementRegistry {
 
-    public static enum ListScope {
+    enum ListScope {
         OnlyInherited, // lists only announcements that were inherited from a
                        // TopologyConnectorServlet by a client
         AllLocally, // lists all announcements that were received by the local
