@@ -60,7 +60,7 @@ public class TopologyEvent {
          * leaves or was restarted (its bundle deactivated/activated)</li>
          * </ul>
          * <p>
-         * Note that tha TOPOLOGY_CHANGED can also include changes in the
+         * Note that a TOPOLOGY_CHANGED can also include changes in the
          * properties!
          */
         TOPOLOGY_CHANGED,
