@@ -78,6 +78,9 @@ public class Announcement {
     private String serverInfo;
 
     public Announcement(final String ownerId) {
+        if (ownerId==null || ownerId.length()==0) {
+            throw new IllegalArgumentException("ownerId must not be null or empty");
+        }
         this.ownerId = ownerId;
     }
     
