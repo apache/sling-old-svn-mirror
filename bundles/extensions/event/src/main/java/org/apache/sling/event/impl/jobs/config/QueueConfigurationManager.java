@@ -18,6 +18,10 @@
  */
 package org.apache.sling.event.impl.jobs.config;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -87,13 +91,13 @@ public class QueueConfigurationManager {
                     if ( trackedConfigs == null || trackedConfigs.length == 0 ) {
                         configurations = new InternalQueueConfiguration[0];
                     } else {
-                        configurations = new InternalQueueConfiguration[trackedConfigs.length];
-                        int i = 0;
+                        final List<InternalQueueConfiguration> configs = new ArrayList<InternalQueueConfiguration>();
                         for(final Object entry : trackedConfigs) {
                             final InternalQueueConfiguration config = (InternalQueueConfiguration)entry;
-                            configurations[i] = config;
-                            i++;
+                            configs.add(config);
                         }
+                        Collections.sort(configs);
+                        configurations = configs.toArray(new InternalQueueConfiguration[configs.size()]);
                     }
                     this.orderedConfigs = configurations;
                     this.lastTrackerCount = count;

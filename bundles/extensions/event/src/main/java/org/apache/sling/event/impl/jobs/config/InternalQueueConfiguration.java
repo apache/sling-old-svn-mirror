@@ -61,10 +61,12 @@ import org.osgi.framework.Constants;
             value=ConfigurationConstants.DEFAULT_PRIORITY,
             options={@PropertyOption(name="NORM",value="Norm"),
                      @PropertyOption(name="MIN",value="Min"),
-                     @PropertyOption(name="MAX",value="Max")})
+                     @PropertyOption(name="MAX",value="Max")}),
+    @Property(name=Constants.SERVICE_RANKING, intValue=0,
+              label="%queue.ranking.name", description="%queue.ranking.description")
 })
 public class InternalQueueConfiguration
-    implements QueueConfiguration {
+    implements QueueConfiguration, Comparable<InternalQueueConfiguration> {
 
     /** The name of the queue. */
     private String name;
@@ -280,4 +282,15 @@ public class InternalQueueConfiguration
             ", pid=" + this.pid +
             ", isValid=" + this.isValid() + "}";
     }
+
+    @Override
+    public int compareTo(final InternalQueueConfiguration other) {
+        if ( this.serviceRanking < other.serviceRanking ) {
+            return 1;
+        } else if ( this.serviceRanking > other.serviceRanking ) {
+            return -1;
+        }
+        return 0;
+    }
+
 }
