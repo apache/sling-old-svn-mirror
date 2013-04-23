@@ -172,8 +172,12 @@ public abstract class AbstractJobQueue
         // continue queue processing to stop the queue
         this.put(new JobHandler(null, null));
 
-        this.processsingJobsLists.clear();
-        this.startedJobsLists.clear();
+        synchronized ( this.processsingJobsLists ) {
+            this.processsingJobsLists.clear();
+        }
+        synchronized ( this.startedJobsLists ) {
+            this.startedJobsLists.clear();
+        }
         this.logger.info("Stopped job queue {}", this.queueName);
     }
 
