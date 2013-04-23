@@ -62,7 +62,7 @@ import org.osgi.framework.Constants;
             options={@PropertyOption(name="NORM",value="Norm"),
                      @PropertyOption(name="MIN",value="Min"),
                      @PropertyOption(name="MAX",value="Max")}),
-    @Property(name=Constants.SERVICE_RANKING, intValue=0,
+    @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
               label="%queue.ranking.name", description="%queue.ranking.description")
 })
 public class InternalQueueConfiguration
