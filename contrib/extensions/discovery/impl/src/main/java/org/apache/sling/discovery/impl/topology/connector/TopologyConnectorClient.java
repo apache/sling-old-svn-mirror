@@ -171,11 +171,11 @@ public class TopologyConnectorClient implements
                 lastInheritedAnnouncement = null;
             }
         } catch (URIException e) {
-            logger.error("ping: Got URIException: " + e, e);
+            logger.warn("ping: Got URIException: " + e);
         } catch (IOException e) {
-            logger.error("ping: got IOException: " + e, e);
+            logger.warn("ping: got IOException: " + e);
         } catch (JSONException e) {
-            logger.error("ping: got JSONException: " + e, e);
+            logger.warn("ping: got JSONException: " + e);
         } catch (RuntimeException re) {
             logger.error("ping: got RuntimeException: " + re, re);
         }
@@ -241,9 +241,9 @@ public class TopologyConnectorClient implements
             logger.debug("disconnect: done. code=" + method.getStatusCode()
                     + " - " + method.getStatusText());
         } catch (URIException e) {
-            logger.error("disconnect: Got URIException: " + e, e);
+            logger.warn("disconnect: Got URIException: " + e);
         } catch (IOException e) {
-            logger.error("disconnect: got IOException: " + e, e);
+            logger.warn("disconnect: got IOException: " + e);
         } catch (RuntimeException re) {
             logger.error("disconnect: got RuntimeException: " + re, re);
         }
