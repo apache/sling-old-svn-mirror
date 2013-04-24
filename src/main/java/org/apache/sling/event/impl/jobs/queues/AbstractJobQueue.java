@@ -37,10 +37,11 @@ import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobConsumer;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
@@ -262,40 +263,48 @@ public abstract class AbstractJobQueue
         return ack != null;
     }
 
-    private boolean handleReschedule(final JobHandler jobEvent, final boolean shouldReschedule) {
-        boolean reschedule = shouldReschedule;
-        if ( shouldReschedule ) {
-            // check if we exceeded the number of retries
-            int retries = (Integer) jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
-            int retryCount = (Integer)jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
-
-            retryCount++;
-            if ( retries != -1 && retryCount > retries ) {
-                reschedule = false;
-            }
-            if ( reschedule ) {
-                // update event with retry count and retries
-                jobEvent.getJob().retry();
+    private boolean handleReschedule(final JobHandler jobEvent, final JobConsumer.JobResult result) {
+        boolean reschedule = false;
+        switch ( result ) {
+            case OK : // job is finished
                 if ( this.logger.isDebugEnabled() ) {
-                    this.logger.debug("Failed job {}", Utility.toString(jobEvent.getJob()));
+                    this.logger.debug("Finished job {}", Utility.toString(jobEvent.getJob()));
                 }
-                this.failedJob();
-                jobEvent.queued = System.currentTimeMillis();
-                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FAILED, jobEvent.getJob(), null);
-            } else {
+                final long processingTime = System.currentTimeMillis() - jobEvent.started;
+                this.finishedJob(processingTime);
+                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, jobEvent.getJob(), processingTime);
+                break;
+            case FAILED : // check if we exceeded the number of retries
+                int retries = (Integer) jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
+                int retryCount = (Integer)jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
+
+                retryCount++;
+                if ( retries != -1 && retryCount > retries ) {
+                    reschedule = false;
+                    if ( this.logger.isDebugEnabled() ) {
+                        this.logger.debug("Cancelled job {}", Utility.toString(jobEvent.getJob()));
+                    }
+                    this.cancelledJob();
+                    Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.getJob(), null);
+                } else {
+                    reschedule = true;
+                    // update event with retry count and retries
+                    jobEvent.getJob().retry();
+                    if ( this.logger.isDebugEnabled() ) {
+                        this.logger.debug("Failed job {}", Utility.toString(jobEvent.getJob()));
+                    }
+                    this.failedJob();
+                    jobEvent.queued = System.currentTimeMillis();
+                    Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FAILED, jobEvent.getJob(), null);
+                }
+                break;
+            case CANCEL : // consumer cancelled the job
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", Utility.toString(jobEvent.getJob()));
                 }
                 this.cancelledJob();
                 Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.getJob(), null);
-            }
-        } else {
-            if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Finished job {}", Utility.toString(jobEvent.getJob()));
-            }
-            final long processingTime = System.currentTimeMillis() - jobEvent.started;
-            this.finishedJob(processingTime);
-            Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, jobEvent.getJob(), processingTime);
+                break;
         }
 
         return reschedule;
@@ -307,18 +316,12 @@ public abstract class AbstractJobQueue
     @Override
     public boolean finishedJob(final Event job, final boolean shouldReschedule) {
         final String location = (String)job.getProperty(JobUtil.JOB_ID);
-        return this.finishedJob(location, shouldReschedule);
+        return this.finishedJob(location, shouldReschedule ? JobResult.FAILED : JobResult.OK);
     }
 
-    private boolean finishedJob(final String jobId, final boolean shouldReschedule) {
+    private boolean finishedJob(final String jobId, final JobConsumer.JobResult result) {
         if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Received finish for job {}, shouldReschedule={}", jobId, shouldReschedule);
-        }
-        if ( !this.running ) {
-            if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Queue is not running anymore. Discarding finish for {}", jobId);
-            }
-            return false;
+            this.logger.debug("Received finish for job {}, result={}", jobId, result);
         }
         // let's remove the event from our processing list
         // this is just a sanity check, as usually the job should have been
@@ -327,11 +330,19 @@ public abstract class AbstractJobQueue
             this.startedJobsLists.remove(jobId);
         }
 
-        // get job event
+        // get job handler
         final JobHandler info;
         synchronized ( this.processsingJobsLists ) {
             info = this.processsingJobsLists.remove(jobId);
         }
+
+        if ( !this.running ) {
+            if ( this.logger.isDebugEnabled() ) {
+                this.logger.debug("Queue is not running anymore. Discarding finish for {}", jobId);
+            }
+            return false;
+        }
+
         if ( info == null ) {
             if ( this.logger.isDebugEnabled() ) {
                 this.logger.debug("This job has never been started by this queue: {}", jobId);
@@ -340,7 +351,7 @@ public abstract class AbstractJobQueue
         }
 
         // handle the reschedule, a new job might be returned with updated reschedule info!
-        final boolean reschedule = this.handleReschedule(info, shouldReschedule);
+        final boolean reschedule = this.handleReschedule(info, result);
 
         // if this is set after the synchronized block we have an error
         final boolean finishSuccessful;
@@ -502,22 +513,18 @@ public abstract class AbstractJobQueue
                                                     break;
                                     }
                                 }
-                                boolean result = false;
+                                JobConsumer.JobResult result = JobConsumer.JobResult.CANCEL;
                                 try {
                                     result = consumer.process(info.getJob());
                                 } catch (final Throwable t) { //NOSONAR
                                     logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(info.getJob()), t);
                                     // we don't reschedule if an exception occurs
-                                    result = true;
+                                    result = JobConsumer.JobResult.CANCEL;
                                 } finally {
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
                                     if ( notifyResult ) {
-                                        if ( result ) {
-                                            finishedJob(info.getJob().getId(), false);
-                                        } else {
-                                            finishedJob(info.getJob().getId(), true);
-                                        }
+                                        finishedJob(info.getJob().getId(), result);
                                     }
                                 }
                             }

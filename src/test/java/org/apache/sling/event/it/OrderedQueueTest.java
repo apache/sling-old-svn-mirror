@@ -31,11 +31,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobConsumer;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,9 +80,9 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(final Job job) {
+                    public JobResult process(final Job job) {
                         cb.block();
-                        return true;
+                        return JobResult.OK;
                     }
                 });
 
@@ -93,17 +93,17 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(final Job job) {
+                    public JobResult process(final Job job) {
                         if ( parallelCount.incrementAndGet() > 1 ) {
                             parallelCount.decrementAndGet();
-                            return false;
+                            return JobResult.FAILED;
                         }
                         final String topic = job.getTopic();
                         if ( topic.endsWith("sub1") ) {
                             final int i = (Integer)job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
                             if ( i == 0 ) {
                                 parallelCount.decrementAndGet();
-                                return false;
+                                return JobResult.FAILED;
                             }
                         }
                         try {
@@ -112,7 +112,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                             // ignore
                         }
                         parallelCount.decrementAndGet();
-                        return true;
+                        return JobResult.OK;
                     }
                 });
         final ServiceRegistration ehReg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,

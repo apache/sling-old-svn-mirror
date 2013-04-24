@@ -40,7 +40,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
-import org.apache.sling.event.jobs.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;

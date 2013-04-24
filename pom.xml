@@ -74,6 +74,7 @@
                         <Export-Package>
                             org.apache.sling.event;version=2.4.0,
                             org.apache.sling.event.jobs;version=1.2.0,
+                            org.apache.sling.event.jobs.consumer;version=1.0.0,
                             org.apache.sling.event.jobs.jmx;version=1.0.0
                         </Export-Package>
                         <Private-Package>

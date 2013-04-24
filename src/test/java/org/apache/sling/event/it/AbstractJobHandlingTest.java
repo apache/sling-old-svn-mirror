@@ -31,8 +31,8 @@ import java.util.Hashtable;
 import javax.inject.Inject;
 
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
-import org.apache.sling.event.jobs.JobConsumer;
 import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.ops4j.pax.exam.CoreOptions;
