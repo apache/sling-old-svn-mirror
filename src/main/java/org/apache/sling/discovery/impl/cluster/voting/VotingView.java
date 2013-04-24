@@ -127,27 +127,50 @@ public class VotingView extends View {
      * @return
      */
     public boolean isOngoingVoting(final Config config) {
+        final long votingStart = getVotingStartTime();
+        if (votingStart==-1) {
+            return false;
+        }
+        final long now = System.currentTimeMillis();
+        final long diff = now - votingStart;
+        return diff < 1000 * config.getHeartbeatTimeout();
+    }
+
+    /**
+     * Checks whether this voting has timed out - that is, whether
+     * there is a valid votingStart set and whether that has timed out
+     */
+    public boolean isTimedoutVoting(final Config config) {
+        final long votingStart = getVotingStartTime();
+        if (votingStart==-1) {
+            return false;
+        }
+        final long now = System.currentTimeMillis();
+        final long diff = now - votingStart;
+        return diff > 1000 * config.getHeartbeatTimeout();
+    }
+
+    /** Get the value of the votingStart property - or -1 if anything goes wrong reading that **/
+    private long getVotingStartTime() {
         ValueMap properties = null;
         try{
             properties = getResource().adaptTo(ValueMap.class);
         } catch(RuntimeException e) {
-            logger.info("isOngoingVoting: could not get properties of "+getResource()+": "+e, e);
-            return false;
+            logger.info("getVotingStartTime: could not get properties of "+getResource()+". Likely in creation: "+e, e);
+            return -1;
         }
         if (properties == null) {
             // no properties, odd. then it's not a valid voting.
-            return false;
+            return -1;
         }
         final Date votingStartDate = properties.get("votingStart", Date.class);
         if (votingStartDate == null) {
-            logger.debug("isOngoingVoting: got a voting without votingStart. Likely in creation: "
+            logger.debug("getVotingStartTime: got a voting without votingStart. Likely in creation: "
                     + getResource());
-            return false;
+            return -1;
         }
         final long votingStart = votingStartDate.getTime();
-        final long now = System.currentTimeMillis();
-        final long diff = now - votingStart;
-        return diff < 1000 * config.getHeartbeatTimeout();
+        return votingStart;
     }
 
     /**

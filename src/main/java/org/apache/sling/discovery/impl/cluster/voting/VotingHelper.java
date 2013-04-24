@@ -91,6 +91,41 @@ public class VotingHelper {
     }
 
     /**
+     * List all the votings that have timed out
+     * @return the list of matching votings
+     */
+    public static List<VotingView> listTimedoutVotings(
+            final ResourceResolver resourceResolver, final Config config) {
+        final String ongoingVotingsPath = config.getOngoingVotingsPath();
+        final Resource ongoingVotingsResource = resourceResolver
+                .getResource(ongoingVotingsPath);
+        if (ongoingVotingsResource == null) {
+            logger.info("listTimedoutVotings: no ongoing votings parent resource found"); // TOOD - is this expected?
+            return new ArrayList<VotingView>();
+        }
+        final Iterable<Resource> children = ongoingVotingsResource.getChildren();
+        final Iterator<Resource> it = children.iterator();
+        final List<VotingView> result = new LinkedList<VotingView>();
+        if (!it.hasNext()) {
+            return result;
+        }
+        while (it.hasNext()) {
+            Resource aChild = it.next();
+            VotingView c = new VotingView(aChild);
+            if (c.isTimedoutVoting(config)) {
+                logger.debug("listTimedoutVotings: found a timed-out voting: "
+                        + aChild
+                        + ", properties="
+                        + ResourceHelper.getPropertiesForLogging(aChild));
+                result.add(c);
+            }
+        }
+        logger.debug("listTimedoutVotings: votings found: "
+                + result.size());
+        return result;
+    }
+
+    /**
      * Return the still valid (ongoing) and winning (received a yes vote
      * from everybody) voting
      * @return the valid and winning voting
