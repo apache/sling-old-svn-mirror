@@ -21,6 +21,8 @@ package org.apache.sling.event.jobs;
 import java.util.Calendar;
 import java.util.Set;
 
+import org.apache.sling.event.jobs.consumer.JobConsumer;
+
 /**
  * A job
  *

@@ -38,9 +38,9 @@ import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobConsumer;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
@@ -214,8 +214,8 @@ public class EventAdminBridge
     }
 
     @Override
-    public boolean process(final Job job) {
-        // this is never been called, but we throw anyway!
-        throw new UnsupportedOperationException();
+    public JobResult process(final Job job) {
+        // this is never been called, but we return something anyway
+        return JobResult.CANCEL;
     }
 }

@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.event.jobs;
+package org.apache.sling.event.jobs.consumer;
+
+import org.apache.sling.event.jobs.Job;
+
 
 
 /**
@@ -45,6 +48,11 @@ package org.apache.sling.event.jobs;
  */
 public interface JobConsumer {
 
+    enum JobResult {
+        OK,
+        FAILED,
+        CANCEL
+    }
     /**
      * Service registration property defining the jobs this consumer is able to process.
      * The value is either a string or an array of strings.
@@ -53,12 +61,18 @@ public interface JobConsumer {
 
     /**
      * Execute the job.
-     * If the job fails with throwing an exception/throwable, the process will not be rescheduled.
-     * However in this case the job will be treated as run successfully.
+     *
+     * If the job has been processed successfully, {@link #JobResult.OK} should be returned.
+     * If the job has not been processed completely, but might be rescheduled {@link #JobResult.FAILED}
+     * should be returned.
+     * If the job processing failed and should not be rescheduled, {@link #JobResult.CANCEL} should
+     * be returned.
+     *
+     * If the processing fails with throwing an exception/throwable, the process will not be rescheduled
+     * and treated like the method would have returned {@link #JobResult.CANCEL}.
      *
      * @param job The job
-     * @return True if the job could be finished (either successful or by an error).
-     *         Return false if the job should be rescheduled.
+     * @return The job result
      */
-    boolean process(Job job);
+    JobResult process(Job job);
 }

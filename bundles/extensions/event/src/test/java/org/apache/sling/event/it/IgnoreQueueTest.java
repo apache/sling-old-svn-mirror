@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobConsumer;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.QueueConfiguration;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.ExamReactorStrategy;
@@ -71,9 +71,9 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(Job job) {
+                    public JobResult process(Job job) {
                         count.incrementAndGet();
-                        return true;
+                        return JobResult.OK;
                     }
                 });
 

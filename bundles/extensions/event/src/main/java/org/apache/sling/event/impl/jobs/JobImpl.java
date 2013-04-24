@@ -25,8 +25,8 @@ import java.util.Set;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil.JobPriority;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.Queue;
 
 /**

@@ -23,6 +23,7 @@ import java.util.Calendar;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.slf4j.LoggerFactory;
 

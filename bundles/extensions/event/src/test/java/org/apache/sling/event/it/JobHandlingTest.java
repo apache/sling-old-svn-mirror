@@ -37,11 +37,11 @@ import javax.inject.Inject;
 import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobConsumer;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobProcessor;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -181,9 +181,9 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(Job job) {
+                    public JobResult process(Job job) {
                         cb.block();
-                        return true;
+                        return JobResult.OK;
                     }
                 });
         try {
@@ -208,10 +208,10 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(Job job) {
+                    public JobResult process(Job job) {
                         cb.block();
                         cb2.block();
-                        return false;
+                        return JobResult.FAILED;
                     }
                 });
         try {
@@ -248,10 +248,10 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(Job job) {
+                    public JobResult process(Job job) {
                         cb.block();
                         sleep(1000);
-                        return false;
+                        return JobResult.FAILED;
                     }
                 });
         try {
@@ -283,7 +283,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                     int retryCount;
 
                     @Override
-                    public boolean process(Job job) {
+                    public JobResult process(Job job) {
                         int retry = 0;
                         if ( job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT) != null ) {
                             retry = (Integer)job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
@@ -293,7 +293,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                         }
                         retryCount++;
                         cb.block();
-                        return false;
+                        return JobResult.FAILED;
                     }
                 });
         try {
@@ -330,15 +330,15 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 new JobConsumer() {
 
                     @Override
-                    public boolean process(Job job) {
+                    public JobResult process(Job job) {
                         // events 1 and 4 finish the first time
                         final String id = job.getName();
                         if ( "1".equals(id) || "4".equals(id) ) {
-                            return true;
+                            return JobResult.OK;
 
                         // 5 fails always
                         } else if ( "5".equals(id) ) {
-                            return false;
+                            return JobResult.FAILED;
                         } else {
                             int retry = 0;
                             if ( job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT) != null ) {
@@ -347,21 +347,21 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                             // 2 fails the first time
                             if ( "2".equals(id) ) {
                                 if ( retry == 0 ) {
-                                    return false;
+                                    return JobResult.FAILED;
                                 } else {
-                                    return true;
+                                    return JobResult.OK;
                                 }
                             }
                             // 3 fails the first and second time
                             if ( "3".equals(id) ) {
                                 if ( retry == 0 || retry == 1 ) {
-                                    return false;
+                                    return JobResult.FAILED;
                                 } else {
-                                    return true;
+                                    return JobResult.OK;
                                 }
                             }
                         }
-                        return false;
+                        return JobResult.FAILED;
                     }
                 });
         final ServiceRegistration eh1Reg = this.registerEventHandler(JobUtil.TOPIC_JOB_CANCELLED,

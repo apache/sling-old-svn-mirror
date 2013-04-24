@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.jobs;
 
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 
 /**
