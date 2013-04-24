@@ -242,6 +242,20 @@ public class VotingHandler implements EventHandler {
         logger.debug("analyzeVotings: all done now. I've voted yes for "
                 + lowestVoting);
     }
+    
+    public void cleanupTimedoutVotings(final ResourceResolver resourceResolver) {
+        List<VotingView> timedoutVotings = VotingHelper
+                .listTimedoutVotings(resourceResolver,
+                        config);
+        Iterator<VotingView> it = timedoutVotings.iterator();
+        while (it.hasNext()) {
+            VotingView timedoutVotingRes = it.next();
+            if (timedoutVotingRes!=null) {
+                logger.info("cleanupTimedoutVotings: removing a timed out voting: "+timedoutVotingRes);
+                timedoutVotingRes.remove();
+            }
+        }
+    }
 
     /**
      * Promote a particular voting to be the new established view

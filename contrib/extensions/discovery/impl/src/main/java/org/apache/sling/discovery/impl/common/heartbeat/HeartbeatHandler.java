@@ -280,6 +280,11 @@ public class HeartbeatHandler implements Runnable {
             logger.info("doCheckView: votingHandler is null!");
         } else {
             votingHandler.analyzeVotings(resourceResolver);
+            try{
+                votingHandler.cleanupTimedoutVotings(resourceResolver);
+            } catch(Exception e) {
+                logger.warn("doCheckView: Exception occurred while cleaning up votings: "+e, e);
+            }
         }
 
         final VotingView winningVoting = VotingHelper.getWinningVoting(
