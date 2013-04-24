@@ -100,6 +100,25 @@ public class Announcement {
                 ", originInfo="+getOriginInfo()+
                 ", incomings="+incomingList+"]";
     }
+    
+    /** check whether this is a valid announcement, containing the minimal information **/
+    public boolean isValid() {
+        if (ownerId==null || ownerId.length()==0) {
+            return false;
+        }
+        if (localCluster==null) {
+            return false;
+        }
+        try{
+            List<InstanceDescription> instances = localCluster.getInstances();
+            if (instances==null || instances.size()==0) {
+                return false;
+            }
+        } catch(Exception ise) {
+            return false;
+        }
+        return true;
+    }
 
     /** set the inherited flag - if true this means this announcement is the response of a topology connect **/
     public void setInherited(final boolean inherited) {

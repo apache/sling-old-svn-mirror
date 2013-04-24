@@ -23,12 +23,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.version.VersionException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
@@ -201,7 +205,17 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public void delete(Resource resource) throws PersistenceException {
-        throw new UnsupportedOperationException("Not implemented");
+        if (resources.contains(resource)) {
+            resources.remove(resource);
+            Node node = resource.adaptTo(Node.class);
+            try {
+                node.remove();
+            } catch (RepositoryException e) {
+                throw new PersistenceException("RepositoryException: "+e, e);
+            }
+        } else {
+            throw new UnsupportedOperationException("Not implemented");
+        }
     }
 
     public Resource create(Resource parent, String name,
