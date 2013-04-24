@@ -43,9 +43,12 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Task for loading stored jobs from the repository.
+ * Task for loading stored jobs from the resource tree.
  *
- * TODO - we need better synching - especially something for loadJob(String)
+ * This component starts a background thread.
+ * The thread is only active when a stable topology view is available.
+ * Whenever the component gets activated, it loads all jobs from the
+ * resource tree. New incoming jobs are handled via a queue.
  */
 public class BackgroundLoader implements Runnable {
 
@@ -61,6 +64,7 @@ public class BackgroundLoader implements Runnable {
     /** Is this still active? */
     private final AtomicBoolean active = new AtomicBoolean(false);
 
+    /** Is this currently running? */
     private volatile boolean running = false;
 
     /** Job Manager implementation. */
@@ -78,6 +82,7 @@ public class BackgroundLoader implements Runnable {
     /** A local queue for handling new jobs. */
     private final BlockingQueue<String> actionQueue = new LinkedBlockingQueue<String>();
 
+    /** Change count to detect the initial start. */
     private long changeCount = 0;
 
     /**
@@ -129,10 +134,11 @@ public class BackgroundLoader implements Runnable {
         synchronized ( this.loadLock ) {
             this.changeCount++;
             this.running = true;
-            this.loadLock.notify();
             // make sure to clear out old information
             this.actionQueue.clear();
             this.unloadedJobs.clear();
+
+            this.loadLock.notify();
         }
     }
 
@@ -325,6 +331,9 @@ public class BackgroundLoader implements Runnable {
         return false;
     }
 
+    /**
+     * Check if the component is currently running and active
+     */
     private boolean isRunning() {
         return this.active.get() && this.running;
     }
@@ -344,10 +353,10 @@ public class BackgroundLoader implements Runnable {
 
                 @Override
                 public void run() {
-                    synchronized ( loadLock ) {
-                        if ( isRunning() ) {
-                            final Iterator<String> iter = copyUnloadedJobs.iterator();
-                            while ( iter.hasNext() ) {
+                    final Iterator<String> iter = copyUnloadedJobs.iterator();
+                    while ( iter.hasNext() ) {
+                        synchronized ( loadLock ) {
+                            if ( isRunning() ) {
                                 try {
                                     actionQueue.put(iter.next());
                                 } catch (InterruptedException e) {
@@ -363,11 +372,18 @@ public class BackgroundLoader implements Runnable {
         }
     }
 
+    /**
+     * Add a path to the load job queue if the instance is running.
+     */
     public void loadJob(final String path) {
-        try {
-            this.actionQueue.put(path);
-        } catch (final InterruptedException e) {
-            this.ignoreException(e);
+        synchronized ( loadLock ) {
+            if ( isRunning() ) {
+                try {
+                    this.actionQueue.put(path);
+                } catch (final InterruptedException e) {
+                    this.ignoreException(e);
+                }
+            }
         }
     }
 }
