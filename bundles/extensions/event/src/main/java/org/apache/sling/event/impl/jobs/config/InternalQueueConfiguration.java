@@ -63,7 +63,8 @@ import org.osgi.framework.Constants;
                      @PropertyOption(name="MIN",value="Min"),
                      @PropertyOption(name="MAX",value="Max")}),
     @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
-              label="%queue.ranking.name", description="%queue.ranking.description")
+              label="%queue.ranking.name", description="%queue.ranking.description"),
+    @Property(name=ConfigurationConstants.PROP_WAIT_FOR_ASYNC, boolValue=true)
 })
 public class InternalQueueConfiguration
     implements QueueConfiguration, Comparable<InternalQueueConfiguration> {
@@ -97,6 +98,9 @@ public class InternalQueueConfiguration
 
     /** Valid flag. */
     private boolean valid = false;
+
+    /** Wait for async flag. */
+    private boolean waitForAsync = true;
 
     private String pid;
 
@@ -133,6 +137,7 @@ public class InternalQueueConfiguration
             this.topics = topicsParam;
         }
         this.serviceRanking = PropertiesUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
+        this.waitForAsync = PropertiesUtil.toBoolean(params.get(ConfigurationConstants.PROP_WAIT_FOR_ASYNC), true);
         this.pid = (String)params.get(Constants.SERVICE_PID);
         this.valid = this.checkIsValid();
     }
@@ -267,6 +272,14 @@ public class InternalQueueConfiguration
     @Deprecated
     public String[] getApplicationIds() {
         return null;
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.QueueConfiguration#waitForAsyncJobConsumers()
+     */
+    @Override
+    public boolean waitForAsyncJobConsumers() {
+        return this.waitForAsync;
     }
 
     @Override
