@@ -550,6 +550,11 @@ public class MaintenanceTask {
         }
     }
 
+    /**
+     * Reassign a job to a different target
+     * @param job The job
+     * @param targetId New target or <code>null</code> if unknown
+     */
     public void reassignJob(final JobImpl job, final String targetId) {
         ResourceResolver resolver = null;
         try {
@@ -574,7 +579,6 @@ public class MaintenanceTask {
                     resolver.commit();
                 } catch ( final PersistenceException pe ) {
                     this.ignoreException(pe);
-                    resolver.refresh();
                 }
             }
         } catch (final LoginException ignore) {

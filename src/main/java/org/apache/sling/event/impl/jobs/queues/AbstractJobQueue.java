@@ -26,11 +26,13 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
+import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
@@ -305,6 +307,8 @@ public abstract class AbstractJobQueue
                 this.cancelledJob();
                 Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.getJob(), null);
                 break;
+            case ASYNC: // nothing to do here
+                break;
         }
 
         return reschedule;
@@ -462,32 +466,33 @@ public abstract class AbstractJobQueue
     /**
      * Process a job
      */
-    protected boolean executeJob(final JobHandler info) {
-        final JobConsumer consumer = this.jobConsumerManager.getConsumer(info.getJob().getTopic());
+    protected boolean executeJob(final JobHandler handler) {
+        final JobImpl job = handler.getJob();
+        final JobConsumer consumer = this.jobConsumerManager.getConsumer(job.getTopic());
 
-        if ( (consumer != null || (info.getJob().isBridgedEvent() && this.jobConsumerManager.supportsBridgedEvents())) ) {
-            if ( info.start() ) {
+        if ( (consumer != null || (job.isBridgedEvent() && this.jobConsumerManager.supportsBridgedEvents())) ) {
+            if ( handler.start() ) {
                 if ( logger.isDebugEnabled() ) {
-                    logger.debug("Starting job {}", Utility.toString(info.getJob()));
+                    logger.debug("Starting job {}", Utility.toString(job));
                 }
                 try {
-                    info.started = System.currentTimeMillis();
+                    handler.started = System.currentTimeMillis();
                     // let's add the event to our processing list
                     synchronized ( this.startedJobsLists ) {
-                        this.startedJobsLists.put(info.getJob().getId(), info);
+                        this.startedJobsLists.put(job.getId(), handler);
                     }
 
                     if ( consumer != null ) {
                         // first check for a notifier context to send an acknowledge
                         boolean notify = true;
-                        if ( !this.sendAcknowledge(info.getJob().getId()) ) {
+                        if ( !this.sendAcknowledge(job.getId()) ) {
                             // if we don't get an ack, someone else is already processing this job.
                             // we process but do not notify the job event handler.
-                            logger.info("Someone else is already processing job {}.", Utility.toString(info.getJob()));
+                            logger.info("Someone else is already processing job {}.", Utility.toString(job));
                             notify = false;
                         }
 
-                        final JobUtil.JobPriority priority = (JobUtil.JobPriority) info.getJob().getProperty(Job.PROPERTY_JOB_PRIORITY);
+                        final JobUtil.JobPriority priority = job.getJobPriority();
                         final boolean notifyResult = notify;
 
                         final Runnable task = new Runnable() {
@@ -502,7 +507,7 @@ public abstract class AbstractJobQueue
                                 final String oldName = currentThread.getName();
                                 final int oldPriority = currentThread.getPriority();
 
-                                currentThread.setName(oldName + "-" + info.getJob().getProperty(Job.PROPERTY_JOB_QUEUE_NAME) + "(" + info.getJob().getTopic() + ")");
+                                currentThread.setName(oldName + "-" + job.getQueueName() + "(" + job.getTopic() + ")");
                                 if ( priority != null ) {
                                     switch ( priority ) {
                                         case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
@@ -514,17 +519,63 @@ public abstract class AbstractJobQueue
                                     }
                                 }
                                 JobConsumer.JobResult result = JobConsumer.JobResult.CANCEL;
+                                final Object asyncLock = new Object();
+                                final AtomicBoolean asnycDone = new AtomicBoolean(false);
+                                final JobConsumer.AsyncHandler asyncHandler =
+                                        new JobConsumer.AsyncHandler() {
+
+                                            private void check(final JobConsumer.JobResult result) {
+                                                synchronized ( asyncLock ) {
+                                                    if ( !asnycDone.get() ) {
+                                                        asnycDone.set(true);
+                                                        finishedJob(job.getId(), result);
+                                                    } else {
+                                                        throw new IllegalStateException("Job is already marked as processed");
+                                                    }
+                                                    asyncLock.notify();
+                                                }
+                                            }
+
+                                            @Override
+                                            public void ok() {
+                                                this.check(JobConsumer.JobResult.OK);
+                                                finishedJob(job.getId(), JobConsumer.JobResult.OK);
+                                            }
+
+                                            @Override
+                                            public void failed() {
+                                                this.check(JobConsumer.JobResult.FAILED);
+                                            }
+
+                                            @Override
+                                            public void cancel() {
+                                                this.check(JobConsumer.JobResult.CANCEL);
+                                            }
+                                        };
+                                job.setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
                                 try {
-                                    result = consumer.process(info.getJob());
+                                    result = consumer.process(job);
                                 } catch (final Throwable t) { //NOSONAR
-                                    logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(info.getJob()), t);
+                                    logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
                                     // we don't reschedule if an exception occurs
                                     result = JobConsumer.JobResult.CANCEL;
                                 } finally {
+                                    job.setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, null);
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
-                                    if ( notifyResult ) {
-                                        finishedJob(info.getJob().getId(), result);
+                                    if ( notifyResult && result != JobConsumer.JobResult.ASYNC ) {
+                                        finishedJob(job.getId(), result);
+                                    }
+                                }
+                                if ( result == JobConsumer.JobResult.ASYNC ) {
+                                    synchronized ( asyncLock ) {
+                                        while ( !asnycDone.get() ) {
+                                            try {
+                                                asyncLock.wait();
+                                            } catch (final InterruptedException e) {
+                                                ignoreException(e);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -542,7 +593,7 @@ public abstract class AbstractJobQueue
                         }
 
                     } else {
-                        final Event jobEvent = this.getJobEvent(info);
+                        final Event jobEvent = this.getJobEvent(handler);
                         // we need async delivery, otherwise we might create a deadlock
                         // as this method runs inside a synchronized block and the finishedJob
                         // method as well!
@@ -556,11 +607,11 @@ public abstract class AbstractJobQueue
                 }
             } else {
                 if ( logger.isDebugEnabled() ) {
-                    logger.debug("Discarding removed job {}", Utility.toString(info.getJob()));
+                    logger.debug("Discarding removed job {}", Utility.toString(job));
                 }
             }
         } else {
-            info.reassign();
+            handler.reassign();
         }
         this.decQueued();
         return false;
