@@ -24,10 +24,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -35,6 +31,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -81,8 +79,7 @@ public class VotingHandler implements EventHandler {
     /** the sling id of the local instance **/
     private String slingId;
 
-    protected void activate(final ComponentContext context)
-            throws RepositoryException {
+    protected void activate(final ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
         logger = LoggerFactory.getLogger(this.getClass().getCanonicalName()
                 + "." + slingId);
@@ -115,9 +112,9 @@ public class VotingHandler implements EventHandler {
         }
         try {
             analyzeVotings(resourceResolver);
-        } catch (RepositoryException e) {
+        } catch (PersistenceException e) {
             logger.error(
-                    "handleEvent: got a RepositoryException during votings analysis: "
+                    "handleEvent: got a PersistenceException during votings analysis: "
                             + e, e);
         } finally {
             if (resourceResolver != null) {
@@ -129,8 +126,7 @@ public class VotingHandler implements EventHandler {
     /**
      * Analyze any ongoing voting in the repository
      */
-    public void analyzeVotings(final ResourceResolver resourceResolver)
-            throws RepositoryException {
+    public void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
         VotingView winningVote = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         if (winningVote != null) {
@@ -251,7 +247,7 @@ public class VotingHandler implements EventHandler {
      * Promote a particular voting to be the new established view
      */
     private void promote(final ResourceResolver resourceResolver,
-            final Resource winningVoteResource) throws RepositoryException {
+            final Resource winningVoteResource) throws PersistenceException {
         final Resource previousViewsResource = ResourceHelper
                 .getOrCreateResource(
                         resourceResolver,
@@ -274,14 +270,11 @@ public class VotingHandler implements EventHandler {
         logger.debug("promote: winningVoteResource="
                 + winningVoteResource.getPath());
 
-        final Session session = establishedViewsResource.adaptTo(Node.class)
-                .getSession();
-
         // step 1: remove any nodes under previousViews
         final Iterator<Resource> it1 = previousViewsResource.getChildren().iterator();
         while (it1.hasNext()) {
             Resource previousView = it1.next();
-            previousView.adaptTo(Node.class).remove();
+            resourceResolver.delete(previousView);
         }
 
         // step 2: retire the existing established view.
@@ -296,14 +289,13 @@ public class VotingHandler implements EventHandler {
                 first = !first;
                 logger.debug("promote: moving the old established view to previous views: "
                         + retiredView.getPath());
-                session.move(
-                        retiredView.getPath(),
+                ResourceHelper.moveResource(retiredView, 
                         previousViewsResource.getPath()
                                 + "/" + retiredView.getName());
             } else {
                 logger.debug("promote: retiring an erroneously additionally established node "
                         + retiredView.getPath());
-                retiredView.adaptTo(Node.class).remove();
+                resourceResolver.delete(retiredView);
             }
         }
 
@@ -327,19 +319,17 @@ public class VotingHandler implements EventHandler {
         }
         logger.debug("promote: leader is " + leaderid
                 + " - with leaderElectionId=" + leaderElectionId);
-        winningVoteResource.adaptTo(Node.class).setProperty("leaderId",
-                leaderid);
-        winningVoteResource.adaptTo(Node.class).setProperty("leaderElectionId",
-                leaderElectionId);
-        winningVoteResource.adaptTo(Node.class).setProperty("promotedAt",
-                Calendar.getInstance());
+        ModifiableValueMap winningVoteMap = winningVoteResource.adaptTo(ModifiableValueMap.class);
+        winningVoteMap.put("leaderId", leaderid);
+        winningVoteMap.put("leaderElectionId", leaderElectionId);
+        winningVoteMap.put("promotedAt", Calendar.getInstance());
 
         // 3b: move the result under /established
         final String newEstablishedViewPath = establishedViewsResource.getPath()
                 + "/" + winningVoteResource.getName();
         logger.debug("promote: promote to new established node "
                 + newEstablishedViewPath);
-        session.move(winningVoteResource.getPath(), newEstablishedViewPath);
+        ResourceHelper.moveResource(winningVoteResource, newEstablishedViewPath);
 
         // step 4: delete all ongoing votings...
         final Iterable<Resource> ongoingVotingsChildren = ongoingVotingsResource
@@ -348,7 +338,7 @@ public class VotingHandler implements EventHandler {
             Iterator<Resource> it4 = ongoingVotingsChildren.iterator();
             while (it4.hasNext()) {
                 Resource anOngoingVoting = it4.next();
-                anOngoingVoting.adaptTo(Node.class).remove();
+                resourceResolver.delete(anOngoingVoting);
             }
         }
 
@@ -372,10 +362,10 @@ public class VotingHandler implements EventHandler {
             }
             logger.warn("promote: cleaning up a duplicate ongoingVotingPath: "
                     + resource.getPath());
-            resource.adaptTo(Node.class).remove();
+            resourceResolver.delete(resource);
         }
 
         logger.debug("promote: done with promotiong. saving.");
-        session.save();
+        resourceResolver.commit();
     }
 }

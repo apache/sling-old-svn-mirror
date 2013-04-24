@@ -22,17 +22,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.version.VersionException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
@@ -115,7 +112,11 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public Resource getResource(Resource base, String path) {
-        return getResource(base.getPath() + "/" + path);
+        if (base.getPath().equals("/")) {
+            return getResource("/" + path);
+        } else {
+            return getResource(base.getPath() + "/" + path);
+        }
     }
 
     public String[] getSearchPath() {
@@ -220,7 +221,34 @@ public class MockedResourceResolver implements ResourceResolver {
 
     public Resource create(Resource parent, String name,
             Map<String, Object> properties) throws PersistenceException {
-        throw new UnsupportedOperationException("Not implemented");
+        final Node parentNode = parent.adaptTo(Node.class);
+        try {
+            final Node child;
+            if (properties!=null && properties.containsKey("jcr:primaryType")) {
+                child = parentNode.addNode(name, (String) properties.get("jcr:primaryType"));
+            } else {
+                child = parentNode.addNode(name);
+            }
+            if (properties!=null) {
+                final Iterator<Entry<String, Object>> it = properties.entrySet().iterator();
+                while(it.hasNext()) {
+                    final Entry<String, Object> entry = it.next();
+                    if (entry.getKey().equals("jcr:primaryType")) {
+                        continue;
+                    }
+                    if (entry.getValue() instanceof String) {
+                        child.setProperty(entry.getKey(), (String)entry.getValue());
+                    } else if (entry.getValue() instanceof Boolean) {
+                        child.setProperty(entry.getKey(), (Boolean)entry.getValue());
+                    } else {
+                        throw new UnsupportedOperationException("Not implemented");
+                    }
+                }
+            }
+            return getResource(parent, name);
+        } catch (RepositoryException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void revert() {

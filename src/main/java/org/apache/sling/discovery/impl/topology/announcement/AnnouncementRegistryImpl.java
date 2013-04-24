@@ -22,10 +22,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -163,14 +159,15 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 }
             }
 
-            resourceResolver.adaptTo(Session.class).save();
+            resourceResolver.commit();
+            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
             throw new RuntimeException("Could not log in to repository (" + e
                     + ")", e);
-        } catch (RepositoryException e) {
-            logger.error("handleEvent: got a RepositoryException: " + e, e);
+        } catch (PersistenceException e) {
+            logger.error("handleEvent: got a PersistenceException: " + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
         } catch (JSONException e) {
@@ -236,17 +233,17 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                                     + settingsService.getSlingId()
                                     + "/announcements");
 
-            final Node node = announcementsResource.adaptTo(Node.class);
             topologyAnnouncement.persistTo(announcementsResource);
-            node.getSession().save();
+            resourceResolver.commit();
+            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "registerAnnouncement: could not log in administratively: "
                             + e, e);
             throw new RuntimeException("Could not log in to repository (" + e
                     + ")", e);
-        } catch (RepositoryException e) {
-            logger.error("registerAnnouncement: got a RepositoryException: "
+        } catch (PersistenceException e) {
+            logger.error("registerAnnouncement: got a PersistenceException: "
                     + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
@@ -256,7 +253,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     + ")", e);
         } finally {
             if (resourceResolver != null) {
-                resourceResolver.close();
+                resourceResolver.refresh();
             }
         }
         return true;
@@ -303,16 +300,15 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     target.addIncomingTopologyAnnouncement(topologyAnnouncement);
                 }
             }
-
-            Node node = clusterInstancesResource.adaptTo(Node.class);
-            node.getSession().save();
+            resourceResolver.commit();
+            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
             throw new RuntimeException("Could not log in to repository (" + e
                     + ")", e);
-        } catch (RepositoryException e) {
-            logger.error("handleEvent: got a RepositoryException: " + e, e);
+        } catch (PersistenceException e) {
+            logger.error("handleEvent: got a PersistenceException: " + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
         } catch (JSONException e) {
@@ -340,7 +336,6 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                                     + settingsService.getSlingId()
                                     + "/announcements");
 
-            Node node = announcementsResource.adaptTo(Node.class);
             final Iterator<Resource> it = announcementsResource.getChildren()
                     .iterator();
             Announcement topologyAnnouncement;
@@ -354,7 +349,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 if (topologyAnnouncement.hasExpired(config)) {
                     logger.info("checkExpiredAnnouncements: topology announcement has expired: "
                             + anAnnouncement);
-                    anAnnouncement.adaptTo(Node.class).remove();
+                    resourceResolver.delete(anAnnouncement);
                 } else {
                     logger.debug("checkExpiredAnnouncements: topology announcement still valid: "
                             + anAnnouncement);
@@ -362,14 +357,15 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 }
             }
 
-            node.getSession().save();
+            resourceResolver.commit();
+            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
             throw new RuntimeException("Could not log in to repository (" + e
                     + ")", e);
-        } catch (RepositoryException e) {
-            logger.error("handleEvent: got a RepositoryException: " + e, e);
+        } catch (PersistenceException e) {
+            logger.error("handleEvent: got a PersistenceException: " + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
         } catch (JSONException e) {

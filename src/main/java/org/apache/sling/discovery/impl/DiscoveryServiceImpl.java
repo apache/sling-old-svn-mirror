@@ -28,11 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
+import java.util.Set;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -40,6 +36,8 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
@@ -336,40 +334,41 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                             resourceResolver,
                             config.getClusterInstancesPath()
                                     + "/" + slingId + "/properties");
-
-            Node node = myInstance.adaptTo(Node.class);
-
-            PropertyIterator pit = node.getProperties();
-            while (pit.hasNext()) {
-                Property p = pit.nextProperty();
-                if (newProps.containsKey(p.getName())) {
+            
+            final ModifiableValueMap myInstanceMap = myInstance.adaptTo(ModifiableValueMap.class);
+            final Set<String> keys = myInstanceMap.keySet();
+            final Iterator<String> it1 = keys.iterator();
+            while(it1.hasNext()) {
+                final String key = it1.next();
+                if (newProps.containsKey(key)) {
                     // perfect
                     continue;
-                } else if (p.getName().equals("jcr:primaryType")) {
+                } else if (key.equals("jcr:primaryType")) {
                     // ignore
                     continue;
                 } else {
                     // remove
-                    p.remove();
+                    it1.remove();
                 }
             }
 
-            for (Iterator<Entry<String, String>> it = newProps.entrySet()
-                    .iterator(); it.hasNext();) {
-                Entry<String, String> entry = it.next();
+            for (Iterator<Entry<String, String>> it2 = newProps.entrySet()
+                    .iterator(); it2.hasNext();) {
+                Entry<String, String> entry = it2.next();
                 logger.debug("doUpdateProperties: " + entry.getKey() + "="
                         + entry.getValue());
-                node.setProperty(entry.getKey(), entry.getValue());
+                myInstanceMap.put(entry.getKey(), entry.getValue());
             }
 
-            node.getSession().save();
+            resourceResolver.commit();
+            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
             throw new RuntimeException("Could not log in to repository (" + e
                     + ")", e);
-        } catch (RepositoryException e) {
-            logger.error("handleEvent: got a RepositoryException: " + e, e);
+        } catch (PersistenceException e) {
+            logger.error("handleEvent: got a PersistenceException: " + e, e);
             throw new RuntimeException(
                     "Exception while talking to repository (" + e + ")", e);
         } finally {

@@ -22,11 +22,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.discovery.impl.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,23 +116,13 @@ public class View {
      * Delete this view from the repository
      */
     public void remove() {
-        final Node myNode = getResource().adaptTo(Node.class);
-        Session session = null;
-        try {
-            session = myNode.getSession();
-            myNode.remove();
-            session.save();
-            session = null;
-        } catch (RepositoryException e) {
-            logger.error("remove: Could not remove node: " + e, e);
-        } finally {
-            if (session != null) {
-                try {
-                    session.refresh(false);
-                } catch (RepositoryException e1) {
-                    logger.error("remove: Could not refresh session: " + e1, e1);
-                }
-            }
+        final ResourceResolver resourceResolver = getResource().getResourceResolver();
+        try{
+            resourceResolver.delete(getResource());
+            resourceResolver.commit();
+        } catch(PersistenceException pe) {
+            logger.error("remove: Could not remove node: " + pe, pe);
+            resourceResolver.refresh();
         }
     }
 
