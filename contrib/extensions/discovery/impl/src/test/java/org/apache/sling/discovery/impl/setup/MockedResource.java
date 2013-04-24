@@ -18,7 +18,12 @@
  */
 package org.apache.sling.discovery.impl.setup;
 
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -27,6 +32,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
@@ -108,8 +114,116 @@ public class MockedResource extends SyntheticResource {
                 ValueMap valueMap = new ValueMapDecorator(map);
                 return (AdapterType) valueMap;
             } catch (Exception e) {
-                throw new RuntimeException("Exception occurred: " + e, e);
+                e.printStackTrace();
+                return null;
             }
+        } else if (type.equals(ModifiableValueMap.class)) {
+            return (AdapterType) new ModifiableValueMap() {
+                
+                public Collection<Object> values() {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public int size() {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public Object remove(Object arg0) {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public void putAll(Map<? extends String, ? extends Object> arg0) {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public Object put(String arg0, Object arg1) {
+                    Session session = getSession();
+                    try{
+                        final Node node = session.getNode(getPath());
+                        Object result = null;
+                        if (node.hasProperty(arg0)) {
+                            final Property previous = node.getProperty(arg0);
+                            if (previous==null) {
+                                // null
+                            } else if (previous.getType() == PropertyType.STRING) {
+                                result = previous.getString();
+                            } else if (previous.getType() == PropertyType.DATE) {
+                                result = previous.getDate();
+                            } else if (previous.getType() == PropertyType.BOOLEAN) {
+                                result = previous.getBoolean();
+                            } else {
+                                throw new UnsupportedOperationException();
+                            }
+                        }
+                        if (arg1 instanceof String) {
+                            node.setProperty(arg0, (String)arg1);
+                        } else if (arg1 instanceof Calendar) {
+                            node.setProperty(arg0, (Calendar)arg1);
+                        } else if (arg1 instanceof Boolean) {
+                            node.setProperty(arg0, (Boolean)arg1);
+                        } else {
+                            throw new UnsupportedOperationException();
+                        }
+                        return result;
+                    } catch(RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                
+                public Set<String> keySet() {
+                    Session session = getSession();
+                    try {
+                        final Node node = session.getNode(getPath());
+                        final PropertyIterator pi = node.getProperties();
+                        final Set<String> result = new HashSet<String>();
+                        while(pi.hasNext()) {
+                            final Property p = pi.nextProperty();
+                            result.add(p.getName());
+                        }
+                        return result;
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                
+                public boolean isEmpty() {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public Object get(Object arg0) {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public Set<Entry<String, Object>> entrySet() {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public boolean containsValue(Object arg0) {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public boolean containsKey(Object arg0) {
+                    Session session = getSession();
+                    try{
+                        final Node node = session.getNode(getPath());
+                        return node.hasProperty(String.valueOf(arg0));
+                    } catch(RepositoryException re) {
+                        throw new RuntimeException(re);
+                    }
+                }
+                
+                public void clear() {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public <T> T get(String name, T defaultValue) {
+                    throw new UnsupportedOperationException();
+                }
+                
+                public <T> T get(String name, Class<T> type) {
+                    throw new UnsupportedOperationException();
+                }
+            };
         } else {
             return super.adaptTo(type);
         }

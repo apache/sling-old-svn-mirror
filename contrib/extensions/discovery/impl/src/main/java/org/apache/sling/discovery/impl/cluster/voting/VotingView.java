@@ -20,14 +20,13 @@ package org.apache.sling.discovery.impl.cluster.voting;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -59,29 +58,30 @@ public class VotingView extends View {
      */
     public static VotingView newVoting(final ResourceResolver resourceResolver,
             final Config config,
-            final String newViewId, String initiatorId, final Set<String> liveInstances)
-            throws RepositoryException {
+            final String newViewId, String initiatorId, final Set<String> liveInstances) throws PersistenceException {
         final Resource votingResource = ResourceHelper.createResource(
                 resourceResolver, config.getOngoingVotingsPath() + "/"
                         + newViewId);
-        final Node node = votingResource.adaptTo(Node.class);
-        node.setProperty("votingStart", Calendar.getInstance());
-        final Node membersNode = node.addNode("members");
+        final ModifiableValueMap votingMap = votingResource.adaptTo(ModifiableValueMap.class);
+        votingMap.put("votingStart", Calendar.getInstance());
+        final Resource membersResource = resourceResolver.create(votingResource, "members", null);
         final Iterator<String> it = liveInstances.iterator();
         while (it.hasNext()) {
             String memberId = it.next();
-            Node newMember = membersNode.addNode(memberId);
+            Map<String, Object> properties = new HashMap<String, Object>();
             if (memberId.equals(initiatorId)) {
-                newMember.setProperty("initiator", true);
+                properties.put("initiator", true);
             }
             Resource instanceResource = ResourceHelper.getOrCreateResource(
                     resourceResolver, config.getClusterInstancesPath() + "/"
                             + memberId);
             String leaderElectionId = instanceResource.adaptTo(ValueMap.class)
                     .get("leaderElectionId", String.class);
-            newMember.setProperty("leaderElectionId", leaderElectionId);
+            properties.put("leaderElectionId", leaderElectionId);
+            
+            resourceResolver.create(membersResource, memberId, properties);
         }
-        node.getSession().save();
+        resourceResolver.commit();
         return new VotingView(votingResource);
     }
 
@@ -228,27 +228,17 @@ public class VotingView extends View {
                     + ", resource=" + getResource());
             return;
         }
-        final Node memberNode = memberResource.adaptTo(Node.class);
-        Session session = null;
+        final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
+        
+        if (vote == null) {
+            memberMap.remove("vote");
+        } else {
+            memberMap.put("vote", vote);
+        }
         try {
-            session = memberNode.getSession();
-            if (vote == null) {
-                memberNode.setProperty("vote", (Value) null);
-            } else {
-                memberNode.setProperty("vote", vote);
-            }
-            session.save();
-        } catch (RepositoryException re) {
-            logger.error("RepositoryException while voting: " + re, re);
-            if (session != null) {
-                try {
-                    session.refresh(false);
-                } catch (RepositoryException e) {
-                    logger.error(
-                            "RepositoryException after trying to refresh session after another RepositoryException. "
-                                    + re, re);
-                }
-            }
+            getResource().getResourceResolver().commit();
+        } catch (PersistenceException e) {
+            logger.error("vote: PersistenceException while voting: "+e, e);
         }
     }
 

@@ -18,7 +18,6 @@
  */
 package org.apache.sling.discovery.impl.topology.announcement;
 
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
@@ -337,15 +336,17 @@ public class Announcement {
      * under which a node with the primary key is created
      **/
     public void persistTo(Resource announcementsResource)
-            throws RepositoryException, JSONException {
-        Node node = announcementsResource.adaptTo(Node.class);
-        if (node.hasNode(getPrimaryKey())) {
-            node = node.getNode(getPrimaryKey());
+            throws PersistenceException, JSONException {
+        Resource announcementChildResource = announcementsResource.getChild(getPrimaryKey());
+        if (announcementChildResource==null) {
+            final ResourceResolver resourceResolver = announcementsResource.getResourceResolver();
+            Map<String, Object> properties = new HashMap<String, Object>();
+            properties.put("topologyAnnouncement", asJSON());
+            resourceResolver.create(announcementsResource, getPrimaryKey(), properties);
         } else {
-            node = node.addNode(getPrimaryKey());
+            final ModifiableValueMap announcementChildMap = announcementChildResource.adaptTo(ModifiableValueMap.class);
+            announcementChildMap.put("topologyAnnouncement", asJSON());
         }
-
-        node.setProperty("topologyAnnouncement", asJSON());
     }
 
     /** 

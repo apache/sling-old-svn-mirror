@@ -18,8 +18,6 @@
  */
 package org.apache.sling.discovery.impl.topology;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -72,8 +70,7 @@ public class TopologyChangeHandler implements EventHandler {
     /** the sling id of the local instance **/
     private String slingId;
 
-    protected void activate(final ComponentContext context)
-            throws RepositoryException {
+    protected void activate(final ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
         logger.debug("activated. slingid=" + slingId + ", discoveryservice="
                 + discoveryService);

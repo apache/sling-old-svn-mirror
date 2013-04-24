@@ -23,8 +23,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -33,6 +31,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -102,8 +101,7 @@ public class HeartbeatHandler implements Runnable {
     private boolean resetLeaderElectionId = false;
 
     @Activate
-    protected void activate(ComponentContext context)
-            throws RepositoryException {
+    protected void activate(ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
         // on activate the resetLeaderElectionId is set to true to ensure that
         // the 'leaderElectionId' property is reset on next heartbeat issuance.
@@ -203,9 +201,9 @@ public class HeartbeatHandler implements Runnable {
 
             final Resource resource = ResourceHelper.getOrCreateResource(
                     resourceResolver, myClusterNodePath);
-            final Node node = resource.adaptTo(Node.class);
-            node.setProperty("lastHeartbeat", Calendar.getInstance());
-            if (resetLeaderElectionId || !node.hasProperty("leaderElectionId")) {
+            final ModifiableValueMap resourceMap = resource.adaptTo(ModifiableValueMap.class);
+            resourceMap.put("lastHeartbeat", Calendar.getInstance());
+            if (resetLeaderElectionId || !resourceMap.containsKey("leaderElectionId")) {
                 int maxLongLength = String.valueOf(Long.MAX_VALUE).length();
                 String currentTimeMillisStr = String.format("%0"
                         + maxLongLength + "d", System.currentTimeMillis());
@@ -226,7 +224,7 @@ public class HeartbeatHandler implements Runnable {
                         }
                     }
                 }
-                node.setProperty("leaderElectionId", prefix + "_"
+                resourceMap.put("leaderElectionId", prefix + "_"
                         + currentTimeMillisStr + "_" + slingId);
                 resetLeaderElectionId = false;
             }
@@ -237,9 +235,6 @@ public class HeartbeatHandler implements Runnable {
                     + e, e);
         } catch (PersistenceException e) {
             logger.error("issueHeartbeat: Got a PersistenceException: "
-                    + myClusterNodePath + " " + e, e);
-        } catch (RepositoryException e) {
-            logger.error("issueHeartbeat: Got a RepositoryExceptionnnn: "
                     + myClusterNodePath + " " + e, e);
         } finally {
             if (resourceResolver != null) {
@@ -266,9 +261,9 @@ public class HeartbeatHandler implements Runnable {
         } catch (LoginException e) {
             logger.error("checkView: could not log in administratively: " + e,
                     e);
-        } catch (RepositoryException e) {
+        } catch (PersistenceException e) {
             logger.error(
-                    "checkView: encountered a repository exception during view check: "
+                    "checkView: encountered a persistence exception during view check: "
                             + e, e);
         } finally {
             if (resourceResolver != null) {
@@ -277,9 +272,9 @@ public class HeartbeatHandler implements Runnable {
         }
     }
 
-    /** do the established-against-heartbeat view check using the given resourceResolver. **/
-    private void doCheckView(final ResourceResolver resourceResolver)
-            throws RepositoryException {
+    /** do the established-against-heartbeat view check using the given resourceResolver. 
+     */
+    private void doCheckView(final ResourceResolver resourceResolver) throws PersistenceException {
 
         if (votingHandler==null) {
             logger.info("doCheckView: votingHandler is null!");
