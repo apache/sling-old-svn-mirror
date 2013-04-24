@@ -19,6 +19,9 @@
 package org.apache.sling.event.jobs.consumer;
 
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
+
+import aQute.bnd.annotation.ProviderType;
 
 
 
@@ -44,32 +47,56 @@ import org.apache.sling.event.jobs.Job;
  *   with the highest service ranking is used. If the ranking is equal, the one with
  *   the lowest service ID is used.
  *
- * @since 1.2
+ * @since 1.0
  */
+@ProviderType
 public interface JobConsumer {
 
     enum JobResult {
         OK,
         FAILED,
-        CANCEL
+        CANCEL,
+        ASYNC
     }
+
+    /** Job property containing an asynchronous handler. */
+    String PROPERTY_JOB_ASYNC_HANDLER = ":sling:jobs:asynchandler";
+
+    /**
+     * If the consumer decides to process the job asynchronously, this handler
+     * interface can be used to notify finished processing. The asynchronous
+     * handler can be retried using the property name {@link #PROPERTY_JOB_ASYNC_HANDLER}.
+     */
+    interface AsyncHandler {
+
+        void failed();
+
+        void ok();
+
+        void cancel();
+    }
+
     /**
      * Service registration property defining the jobs this consumer is able to process.
      * The value is either a string or an array of strings.
      */
     String PROPERTY_TOPICS = "job.topics";
 
+
     /**
      * Execute the job.
      *
-     * If the job has been processed successfully, {@link #JobResult.OK} should be returned.
-     * If the job has not been processed completely, but might be rescheduled {@link #JobResult.FAILED}
+     * If the job has been processed successfully, {@link JobResult.OK} should be returned.
+     * If the job has not been processed completely, but might be rescheduled {@link JobResult.FAILED}
      * should be returned.
-     * If the job processing failed and should not be rescheduled, {@link #JobResult.CANCEL} should
+     * If the job processing failed and should not be rescheduled, {@link JobResult.CANCEL} should
      * be returned.
      *
+     * If the consumer decides to process the job asynchronously it should return {@link JobResult.ASYNC}
+     * and notify the job manager by using the {@link AsyncHandler} interface.
+     *
      * If the processing fails with throwing an exception/throwable, the process will not be rescheduled
-     * and treated like the method would have returned {@link #JobResult.CANCEL}.
+     * and treated like the method would have returned {@link JobResult.CANCEL}.
      *
      * @param job The job
      * @return The job result

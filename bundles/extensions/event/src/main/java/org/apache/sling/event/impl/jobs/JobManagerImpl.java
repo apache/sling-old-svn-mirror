@@ -66,16 +66,16 @@ import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
 import org.apache.sling.event.impl.jobs.stats.TopicStatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobUtil.JobPriority;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -272,7 +272,8 @@ public class JobManagerImpl
      * Process a new job
      * This method first searches the corresponding queue - if such a queue
      * does not exist yet, it is created and started.
-     * @param handler The job handler
+     *
+     * @param job The job
      */
     void process(final JobImpl job) {
         final JobHandler handler = new JobHandler(job, this);
@@ -514,7 +515,6 @@ public class JobManagerImpl
     }
 
     private long stopProcessing() {
-        long changeCount = 0;
         this.backgroundLoader.stop();
 
         // let's rename/close all queues and clear them
@@ -527,6 +527,7 @@ public class JobManagerImpl
         }
 
         // deactivate old capabilities - this stops all background processes
+        long changeCount = 0;
         if ( this.topologyCapabilities != null ) {
             changeCount = this.topologyCapabilities.getChangeCount() + 1;
             this.topologyCapabilities.deactivate();

@@ -25,8 +25,8 @@ import java.util.Set;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.Queue;
 
 /**
@@ -209,10 +209,21 @@ public class JobImpl implements Job {
         return (String)this.getProperty(Job.PROPERTY_JOB_CREATED_INSTANCE);
     }
 
+    /**
+     * Update information about the queue.
+     */
     public void updateQueue(final Queue queue) {
         this.properties.put(Job.PROPERTY_JOB_QUEUE_NAME, queue.getName());
         this.properties.put(Job.PROPERTY_JOB_RETRIES, queue.getConfiguration().getMaxRetries());
         this.properties.put(Job.PROPERTY_JOB_PRIORITY, queue.getConfiguration().getPriority());
+    }
+
+    public void setProperty(final String name, final Object value) {
+        if ( value == null ) {
+            this.properties.remove(name);
+        } else {
+            this.properties.put(name, value);
+        }
     }
 
     @Override
