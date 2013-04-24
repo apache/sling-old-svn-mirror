@@ -86,6 +86,9 @@ public class TopologyChangeHandler implements EventHandler {
      */
     public void handleEvent(final Event event) {
         final String resourcePath = (String) event.getProperty("path");
+        if (config==null) {
+            return;
+        }
         final String establishedViewPath = config.getEstablishedViewPath();
         final String clusterInstancesPath = config.getClusterInstancesPath();
         if (resourcePath == null) {

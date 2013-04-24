@@ -186,6 +186,13 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     }
 
     public boolean registerAnnouncement(final Announcement topologyAnnouncement) {
+        if (topologyAnnouncement==null) {
+            throw new IllegalArgumentException("topologyAnnouncement must not be null");
+        }
+        if (!topologyAnnouncement.isValid()) {
+            logger.warn("topologyAnnouncement is not valid");
+            return false;
+        }
         if (resourceResolverFactory == null) {
             logger.error("registerAnnouncement: resourceResolverFactory is null");
             return false;
