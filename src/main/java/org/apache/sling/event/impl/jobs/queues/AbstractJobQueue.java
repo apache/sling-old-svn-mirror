@@ -320,10 +320,12 @@ public abstract class AbstractJobQueue
     @Override
     public boolean finishedJob(final Event job, final boolean shouldReschedule) {
         final String location = (String)job.getProperty(JobUtil.JOB_ID);
-        return this.finishedJob(location, shouldReschedule ? JobResult.FAILED : JobResult.OK);
+        return this.finishedJob(location, shouldReschedule ? JobResult.FAILED : JobResult.OK, false);
     }
 
-    private boolean finishedJob(final String jobId, final JobConsumer.JobResult result) {
+    private boolean finishedJob(final String jobId,
+                                final JobConsumer.JobResult result,
+                                final boolean isAsync) {
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Received finish for job {}, result={}", jobId, result);
         }
@@ -341,9 +343,7 @@ public abstract class AbstractJobQueue
         }
 
         if ( !this.running ) {
-            if ( this.logger.isDebugEnabled() ) {
-                this.logger.debug("Queue is not running anymore. Discarding finish for {}", jobId);
-            }
+            this.logger.warn("Queue is not running anymore. Discarding finish for {}", jobId);
             return false;
         }
 
@@ -367,12 +367,23 @@ public abstract class AbstractJobQueue
             finishSuccessful = info.reschedule();
         }
 
-        if ( !finishSuccessful || !reschedule ) {
-            checkForNotify(null);
-            return false;
+        if ( !isAsync || this.configuration.waitForAsyncJobConsumers() ) {
+            if ( !finishSuccessful || !reschedule ) {
+                checkForNotify(null);
+                return false;
+            }
+            checkForNotify(info);
+            return true;
+        } else {
+            // async result
+            if ( finishSuccessful && reschedule ) {
+                final JobHandler reprocessHandler = this.reschedule(info);
+                if ( reprocessHandler != null ) {
+                    this.put(reprocessHandler);
+                }
+            }
+            return true;
         }
-        checkForNotify(info);
-        return true;
     }
 
     private void checkForNotify(final JobHandler info) {
@@ -464,7 +475,7 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * Process a job
+     * Execute a job
      */
     protected boolean executeJob(final JobHandler handler) {
         final JobImpl job = handler.getJob();
@@ -520,15 +531,15 @@ public abstract class AbstractJobQueue
                                 }
                                 JobConsumer.JobResult result = JobConsumer.JobResult.CANCEL;
                                 final Object asyncLock = new Object();
-                                final AtomicBoolean asnycDone = new AtomicBoolean(false);
+                                final AtomicBoolean asyncDone = new AtomicBoolean(false);
                                 final JobConsumer.AsyncHandler asyncHandler =
                                         new JobConsumer.AsyncHandler() {
 
                                             private void check(final JobConsumer.JobResult result) {
                                                 synchronized ( asyncLock ) {
-                                                    if ( !asnycDone.get() ) {
-                                                        asnycDone.set(true);
-                                                        finishedJob(job.getId(), result);
+                                                    if ( !asyncDone.get() ) {
+                                                        asyncDone.set(true);
+                                                        finishedJob(job.getId(), result, true);
                                                     } else {
                                                         throw new IllegalStateException("Job is already marked as processed");
                                                     }
@@ -539,7 +550,6 @@ public abstract class AbstractJobQueue
                                             @Override
                                             public void ok() {
                                                 this.check(JobConsumer.JobResult.OK);
-                                                finishedJob(job.getId(), JobConsumer.JobResult.OK);
                                             }
 
                                             @Override
@@ -564,18 +574,22 @@ public abstract class AbstractJobQueue
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
                                     if ( notifyResult && result != JobConsumer.JobResult.ASYNC ) {
-                                        finishedJob(job.getId(), result);
+                                        finishedJob(job.getId(), result, false);
                                     }
                                 }
                                 if ( result == JobConsumer.JobResult.ASYNC ) {
-                                    synchronized ( asyncLock ) {
-                                        while ( !asnycDone.get() ) {
-                                            try {
-                                                asyncLock.wait();
-                                            } catch (final InterruptedException e) {
-                                                ignoreException(e);
+                                    if ( configuration.waitForAsyncJobConsumers() ) {
+                                        synchronized ( asyncLock ) {
+                                            while ( !asyncDone.get() ) {
+                                                try {
+                                                    asyncLock.wait();
+                                                } catch (final InterruptedException e) {
+                                                    ignoreException(e);
+                                                }
                                             }
                                         }
+                                    } else {
+                                        notifyFinished(null);
                                     }
                                 }
                             }

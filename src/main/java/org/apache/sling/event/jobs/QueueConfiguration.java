@@ -80,4 +80,10 @@ public interface QueueConfiguration {
      * Get the ranking of this configuration.
      */
     int getRanking();
+
+    /**
+     * Wait for async job consumers
+     * @since 1.2
+     */
+    boolean waitForAsyncJobConsumers();
 }
