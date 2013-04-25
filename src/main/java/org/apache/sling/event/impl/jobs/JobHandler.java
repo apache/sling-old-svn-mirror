@@ -75,6 +75,6 @@ public class JobHandler {
 
     @Override
     public String toString() {
-        return "JobEvent(" + this.job.getId() + ")";
+        return "JobHandler(" + this.job.getId() + ")";
     }
 }
