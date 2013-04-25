@@ -239,11 +239,7 @@ public abstract class AbstractJobQueue
      */
     @Override
     public boolean sendAcknowledge(final Event job) {
-        final String location = (String)job.getProperty(JobUtil.JOB_ID);
-        return this.sendAcknowledge(location);
-    }
-
-    private boolean sendAcknowledge(final String jobId) {
+        final String jobId = (String)job.getProperty(JobUtil.JOB_ID);
         final JobHandler ack;
         synchronized ( this.startedJobsLists ) {
             ack = this.startedJobsLists.remove(jobId);
@@ -397,6 +393,7 @@ public abstract class AbstractJobQueue
     protected boolean canBeMarkedForRemoval() {
         return this.isEmpty() && !this.isWaiting &&!this.isSuspended();
     }
+
     /**
      * Mark this queue for removal.
      */
@@ -488,23 +485,14 @@ public abstract class AbstractJobQueue
                 }
                 try {
                     handler.started = System.currentTimeMillis();
-                    // let's add the event to our processing list
-                    synchronized ( this.startedJobsLists ) {
-                        this.startedJobsLists.put(job.getId(), handler);
-                    }
 
                     if ( consumer != null ) {
-                        // first check for a notifier context to send an acknowledge
-                        boolean notify = true;
-                        if ( !this.sendAcknowledge(job.getId()) ) {
-                            // if we don't get an ack, someone else is already processing this job.
-                            // we process but do not notify the job event handler.
-                            logger.info("Someone else is already processing job {}.", Utility.toString(job));
-                            notify = false;
+                        final long queueTime = handler.started - handler.queued;
+                        this.addActive(queueTime);
+                        Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_STARTED, job, queueTime);
+                        synchronized ( this.processsingJobsLists ) {
+                            this.processsingJobsLists.put(job.getId(), handler);
                         }
-
-                        final JobUtil.JobPriority priority = job.getJobPriority();
-                        final boolean notifyResult = notify;
 
                         final Runnable task = new Runnable() {
 
@@ -519,8 +507,8 @@ public abstract class AbstractJobQueue
                                 final int oldPriority = currentThread.getPriority();
 
                                 currentThread.setName(oldName + "-" + job.getQueueName() + "(" + job.getTopic() + ")");
-                                if ( priority != null ) {
-                                    switch ( priority ) {
+                                if ( job.getJobPriority() != null ) {
+                                    switch ( job.getJobPriority() ) {
                                         case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
                                                     break;
                                         case MIN  : currentThread.setPriority(Thread.MIN_PRIORITY);
@@ -573,7 +561,7 @@ public abstract class AbstractJobQueue
                                     job.setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, null);
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
-                                    if ( notifyResult && result != JobConsumer.JobResult.ASYNC ) {
+                                    if ( result != JobConsumer.JobResult.ASYNC ) {
                                         finishedJob(job.getId(), result, false);
                                     }
                                 }
@@ -607,6 +595,10 @@ public abstract class AbstractJobQueue
                         }
 
                     } else {
+                        // let's add the event to our processing list
+                        synchronized ( this.startedJobsLists ) {
+                            this.startedJobsLists.put(job.getId(), handler);
+                        }
                         final Event jobEvent = this.getJobEvent(handler);
                         // we need async delivery, otherwise we might create a deadlock
                         // as this method runs inside a synchronized block and the finishedJob
@@ -672,11 +664,6 @@ public abstract class AbstractJobQueue
         this.logger.info("Queue reconfiguration: old queue {} is renamed to {}.", this.queueName, name);
         this.queueName = name;
     }
-
-    /**
-     * Reschedule a job.
-     */
-    protected abstract JobHandler reschedule(final JobHandler info);
 
     /**
      * @see org.apache.sling.event.jobs.Queue#getStatistics()
@@ -769,6 +756,11 @@ public abstract class AbstractJobQueue
         // not supported for now
         return null;
     }
+
+    /**
+     * Reschedule a job.
+     */
+    protected abstract JobHandler reschedule(final JobHandler info);
 
     /**
      * Put another job into the queue.

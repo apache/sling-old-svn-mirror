@@ -20,9 +20,11 @@ package org.apache.sling.event.impl.jobs.queues;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
@@ -38,14 +40,20 @@ import org.osgi.service.event.EventAdmin;
  */
 public final class OrderedJobQueue extends AbstractJobQueue {
 
-    /** The job event for rescheduling. */
-    private volatile JobHandler jobEvent;
+    /** The job handler for rescheduling. */
+    private volatile JobHandler jobHandler;
 
     /** Lock and status object for handling the sleep phase. */
     private final SleepLock sleepLock = new SleepLock();
 
-    /** The queue. */
-    private final BlockingQueue<JobHandler> queue = new LinkedBlockingQueue<JobHandler>();
+    /** The queue - we use a set which is sorted by job creation date. */
+    private final Set<JobHandler> queue = new TreeSet<JobHandler>(new Comparator<JobHandler>() {
+
+        @Override
+        public int compare(final JobHandler o1, final JobHandler o2) {
+            return o1.getJob().getCreated().compareTo(o2.getJob().getCreated());
+        }
+    });
 
     private final Object syncLock = new Object();
 
@@ -62,12 +70,12 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected JobHandler start(final JobHandler processInfo) {
-        JobHandler rescheduleInfo = null;
+    protected JobHandler start(final JobHandler handler) {
+        JobHandler rescheduleHandler = null;
 
         // if we are ordered we simply wait for the finish
         synchronized ( this.syncLock ) {
-            if ( this.executeJob(processInfo) ) {
+            if ( this.executeJob(handler) ) {
                 this.isWaiting = true;
                 this.logger.debug("Job queue {} is waiting for finish.", this.queueName);
                 while ( this.isWaiting ) {
@@ -78,18 +86,18 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                     }
                 }
                 this.logger.debug("Job queue {} is continuing.", this.queueName);
-                rescheduleInfo = this.jobEvent;
-                this.jobEvent = null;
+                rescheduleHandler = this.jobHandler;
+                this.jobHandler = null;
             }
         }
-        return rescheduleInfo;
+        return rescheduleHandler;
     }
 
     private void wakeUp(final boolean discardJob) {
         synchronized ( this.sleepLock ) {
             if ( this.sleepLock.sleepingSince != -1 ) {
                 if ( discardJob ) {
-                    this.sleepLock.jobEvent = null;
+                    this.sleepLock.jobHandler = null;
                 }
                 this.sleepLock.notify();
             }
@@ -103,34 +111,41 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected void put(final JobHandler event) {
-        try {
-            this.queue.put(event);
-        } catch (final InterruptedException e) {
-            // this should never happen
-            this.ignoreException(e);
+    protected void put(final JobHandler handler) {
+        synchronized ( this.queue ) {
+            this.queue.add(handler);
+            this.queue.notify();
         }
     }
 
     @Override
     protected JobHandler take() {
-        try {
-            return this.queue.take();
-        } catch (final InterruptedException e) {
-            // this should never happen
-            this.ignoreException(e);
+        synchronized ( this.queue ) {
+            while ( this.queue.isEmpty() ) {
+                try {
+                    this.queue.wait();
+                } catch (final InterruptedException e) {
+                    this.ignoreException(e);
+                }
+            }
+            // get the first element and remove it
+            final Iterator<JobHandler> i = this.queue.iterator();
+            final JobHandler result = i.next();
+            i.remove();
+            return result;
         }
-        return null;
     }
 
     @Override
     protected boolean isEmpty() {
-        return this.queue.isEmpty();
+        synchronized ( this.queue ) {
+            return this.queue.isEmpty();
+        }
     }
 
     @Override
-    protected void notifyFinished(final JobHandler rescheduleInfo) {
-        this.jobEvent = rescheduleInfo;
+    protected void notifyFinished(final JobHandler rescheduleHandler) {
+        this.jobHandler = rescheduleHandler;
         this.logger.debug("Notifying job queue {} to continue processing.", this.queueName);
         synchronized ( this.syncLock ) {
             this.isWaiting = false;
@@ -139,17 +154,17 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected JobHandler reschedule(final JobHandler info) {
+    protected JobHandler reschedule(final JobHandler handler) {
         // we just sleep for the delay time - if none, we continue and retry
         // this job again
         long delay = this.configuration.getRetryDelayInMs();
-        if ( info.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY) != null ) {
-            delay = info.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY, Long.class);
+        if ( handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY) != null ) {
+            delay = handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY, Long.class);
         }
         if ( delay > 0 ) {
             synchronized ( this.sleepLock ) {
                 this.sleepLock.sleepingSince = System.currentTimeMillis();
-                this.sleepLock.jobEvent = info;
+                this.sleepLock.jobHandler = handler;
                 this.logger.debug("Job queue {} is sleeping for {}ms.", this.queueName, delay);
                 try {
                     this.sleepLock.wait(delay);
@@ -157,16 +172,16 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                     this.ignoreException(e);
                 }
                 this.sleepLock.sleepingSince = -1;
-                final JobHandler result = this.sleepLock.jobEvent;
-                this.sleepLock.jobEvent = null;
+                final JobHandler result = this.sleepLock.jobHandler;
+                this.sleepLock.jobHandler = null;
 
                 if ( result == null ) {
-                    info.remove();
+                    handler.remove();
                 }
                 return result;
             }
         }
-        return info;
+        return handler;
     }
 
     /**
@@ -174,7 +189,9 @@ public final class OrderedJobQueue extends AbstractJobQueue {
      */
     @Override
     public void clear() {
-        this.queue.clear();
+        synchronized ( this.queue ) {
+            this.queue.clear();
+        }
         super.clear();
     }
 
@@ -182,14 +199,17 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     public synchronized void removeAll() {
         // remove all remaining jobs first
         super.removeAll();
-        this.jobEvent = null;
+        this.jobHandler = null;
         this.wakeUp(true);
     }
 
     @Override
     protected Collection<JobHandler> removeAllJobs() {
         final List<JobHandler> events = new ArrayList<JobHandler>();
-        this.queue.drainTo(events);
+        synchronized ( this.queue ) {
+            events.addAll(this.queue);
+            this.queue.clear();
+        }
         return events;
     }
 
@@ -207,7 +227,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
         public volatile long sleepingSince = -1;
 
         /** The job event to be returned after sleeping. */
-        public volatile JobHandler jobEvent;
+        public volatile JobHandler jobHandler;
     }
 }
 
