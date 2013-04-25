@@ -55,8 +55,6 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
     private static final String QUEUE_NAME = "cltest";
     private static final String TOPIC = "sling/cltest";
 
-    private String queueConfPid;
-
     @Override
     @Before
     public void setup() throws IOException {
@@ -69,8 +67,6 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.UNORDERED.name());
         orderedProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC);
         orderedConfig.update(orderedProps);
-
-        this.queueConfPid = orderedConfig.getPid();
 
         this.sleep(1000L);
     }
@@ -126,7 +122,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             // no jobs queued, none processed and no available
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
             assertEquals(1, count.get());
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1).size());
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
 
             final String jobTopic = (String)finishedEvents.get(0).getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC);
             assertNotNull(jobTopic);
@@ -167,7 +163,6 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             // dao is an invisible class for the dynamic class loader as it is not public
             // therefore scheduling this job should fail!
             final DataObject dao = new DataObject();
-            dao.message = "Hello World";
 
             // we start a single job
             final Map<String, Object> props = new HashMap<String, Object>();
@@ -180,7 +175,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
             assertEquals(0, count.get());
             assertEquals(0, finishedEvents.size());
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1).size());
+            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
             assertEquals(0, jobManager.getStatistics().getNumberOfActiveJobs());
 
@@ -191,6 +186,6 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
     }
 
     private static final class DataObject implements Serializable {
-        public String message;
+        private static final long serialVersionUID = 1L;
     }
 }
