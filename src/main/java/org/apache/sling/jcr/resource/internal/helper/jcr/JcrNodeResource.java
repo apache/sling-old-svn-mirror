@@ -118,6 +118,7 @@ public class JcrNodeResource extends JcrItemResource {
         return resourceSuperType;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <Type> Type adaptTo(Class<Type> type) {
         if (type == Node.class || type == Item.class) {
@@ -168,6 +169,7 @@ public class JcrNodeResource extends JcrItemResource {
         return super.adaptTo(type);
     }
 
+    @Override
     public String toString() {
         return getClass().getSimpleName()
         	+ ", type=" + getResourceType()
