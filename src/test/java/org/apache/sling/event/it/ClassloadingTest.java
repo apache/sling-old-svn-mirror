@@ -121,6 +121,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                 // we wait a little bit
                 Thread.sleep(100);
             }
+            Thread.sleep(100);
 
             // no jobs queued, none processed and no available
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
