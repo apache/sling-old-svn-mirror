@@ -548,6 +548,14 @@ public class JcrPropertyMap
         } else if (Property.class == type) {
             return (T) entry.property;
 
+        } else if (ObjectInputStream.class == type) {
+            if ( jcrValue.getType() == PropertyType.BINARY ) {
+                try {
+                    return (T) new ObjectInputStream(jcrValue.getBinary().getStream(), this.dynamicClassLoader);
+                } catch (IOException ioe) {
+                    // ignore and use fallback
+                }
+            }
         } else if (Serializable.class.isAssignableFrom(type)
                 && jcrValue.getType() == PropertyType.BINARY) {
             ObjectInputStream ois = null;
