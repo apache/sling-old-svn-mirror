@@ -260,7 +260,7 @@ public class JcrPropertyMap
             final String name = prop.getName();
             String key = null;
             if ( name.indexOf("_x") != -1 ) {
-                // for compatiblity with older versions we use the (wrong)
+                // for compatibility with older versions we use the (wrong)
                 // ISO9075 path encoding
                 key = ISO9075.decode(name);
                 if ( key.equals(name) ) {
@@ -352,7 +352,7 @@ public class JcrPropertyMap
         }
 
         try {
-            // for compatiblity with older versions we use the (wrong) ISO9075 path
+            // for compatibility with older versions we use the (wrong) ISO9075 path
             // encoding
             final String oldKey = ISO9075.encodePath(name);
             if (node.hasProperty(oldKey)) {
