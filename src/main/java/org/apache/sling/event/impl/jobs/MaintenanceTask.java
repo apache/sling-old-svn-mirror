@@ -18,6 +18,8 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -655,6 +657,31 @@ public class MaintenanceTask {
         final ResourceResolver resolver = jobResource.getResourceResolver();
 
         final ValueMap vm = ResourceUtil.getValueMap(jobResource);
+        // check for binary properties
+        Map<String, Object> binaryProperties = new HashMap<String, Object>();
+        final ObjectInputStream ois = vm.get("slingevent:properties", ObjectInputStream.class);
+        if ( ois != null ) {
+            try {
+                int length = ois.readInt();
+                for(int i=0;i<length;i++) {
+                    final String key = (String)ois.readObject();
+                    final Object value = ois.readObject();
+                    binaryProperties.put(key, value);
+                }
+            } catch (final ClassNotFoundException cnfe) {
+                throw new PersistenceException("Class not found.", cnfe);
+            } catch (final java.io.InvalidClassException ice) {
+                throw new PersistenceException("Invalid class.", ice);
+            } catch (final IOException ioe) {
+                throw new PersistenceException("Unable to deserialize job properties.", ioe);
+            } finally {
+                try {
+                    ois.close();
+                } catch (final IOException ioe) {
+                    this.ignoreException(ioe);
+                }
+            }
+        }
         final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
 
         properties.put(JobImpl.PROPERTY_BRIDGED_EVENT, true);
@@ -663,6 +690,9 @@ public class MaintenanceTask {
 
         properties.remove(Job.PROPERTY_JOB_QUEUE_NAME);
         properties.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
+        // and binary properties
+        properties.putAll(binaryProperties);
+        properties.remove("slingevent:properties");
 
         if ( !properties.containsKey(Job.PROPERTY_JOB_RETRIES) ) {
             properties.put(Job.PROPERTY_JOB_RETRIES, 10); // we put a dummy value here; this gets updated by the queue
