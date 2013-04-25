@@ -30,9 +30,8 @@ import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.inject.Inject;
 
 import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
@@ -50,7 +49,6 @@ import org.ops4j.pax.exam.junit.JUnit4TestRunner;
 import org.ops4j.pax.exam.spi.reactors.AllConfinedStagedReactorFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
 
 @RunWith(JUnit4TestRunner.class)
@@ -58,9 +56,6 @@ import org.osgi.service.event.EventHandler;
 public class JobHandlingTest extends AbstractJobHandlingTest {
 
     public static final String TOPIC = "sling/test";
-
-    @Inject
-    protected EventAdmin eventAdmin;
 
     @Override
     @Before
@@ -219,7 +214,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             jobManager.addJob(TOPIC, "myid2", null);
             cb.block();
 
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1).size());
+            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
             // job is currently waiting, therefore cancel fails
             final Event e1 = jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid2"));
             assertNotNull(e1);
@@ -232,7 +227,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             final Event e2 = jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid2"));
             assertNotNull(e2);
             assertTrue(jobManager.removeJob((String)e2.getProperty(JobUtil.JOB_ID)));
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1).size());
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
         } finally {
             jcReg.unregister();
         }
@@ -259,13 +254,13 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             jobManager.addJob(TOPIC, "myid3", null);
             cb.block();
 
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1).size());
+            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
             // job is currently sleeping, but force cancel always waits!
             final Event e = jobManager.findJob("sling/test", Collections.singletonMap(JobUtil.PROPERTY_JOB_NAME, (Object)"myid3"));
             assertNotNull(e);
             jobManager.forceRemoveJob((String)e.getProperty(JobUtil.JOB_ID));
             // the job is now removed
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1).size());
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
         } finally {
             jcReg.unregister();
         }

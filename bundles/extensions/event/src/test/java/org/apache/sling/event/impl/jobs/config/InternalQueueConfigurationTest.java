@@ -24,21 +24,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Dictionary;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
-
-import org.apache.sling.event.jobs.JobUtil;
-import org.osgi.service.event.Event;
 
 public class InternalQueueConfigurationTest {
 
-    private Event getJobEvent(final String topic) {
-        final Dictionary<String, Object> dict = new Hashtable<String, Object>();
-        dict.put(JobUtil.PROPERTY_JOB_TOPIC, topic);
-        return new Event(topic, dict);
-    }
     @org.junit.Test public void testMaxParallel() {
         final Map<String, Object> p = new HashMap<String, Object>();
         p.put(ConfigurationConstants.PROP_MAX_PARALLEL, -1);
@@ -54,12 +44,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        assertNotNull(c.match(getJobEvent("a/b").getTopic()));
-        assertNotNull(c.match(getJobEvent("a/c").getTopic()));
-        assertNull(c.match(getJobEvent("a").getTopic()));
-        assertNull(c.match(getJobEvent("a/b/c").getTopic()));
-        assertNull(c.match(getJobEvent("t").getTopic()));
-        assertNull(c.match(getJobEvent("t/x").getTopic()));
+        assertNotNull(c.match("a/b"));
+        assertNotNull(c.match("a/c"));
+        assertNull(c.match("a"));
+        assertNull(c.match("a/b/c"));
+        assertNull(c.match("t"));
+        assertNull(c.match("t/x"));
     }
 
     @org.junit.Test public void testTopicMatchersStar() {
@@ -69,12 +59,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        assertNotNull(c.match(getJobEvent("a/b").getTopic()));
-        assertNotNull(c.match(getJobEvent("a/c").getTopic()));
-        assertNull(c.match(getJobEvent("a").getTopic()));
-        assertNotNull(c.match(getJobEvent("a/b/c").getTopic()));
-        assertNull(c.match(getJobEvent("t").getTopic()));
-        assertNull(c.match(getJobEvent("t/x").getTopic()));
+        assertNotNull(c.match("a/b"));
+        assertNotNull(c.match("a/c"));
+        assertNull(c.match("a"));
+        assertNotNull(c.match("a/b/c"));
+        assertNull(c.match("t"));
+        assertNull(c.match("t/x"));
     }
 
     @org.junit.Test public void testTopicMatchers() {
@@ -84,12 +74,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        assertNull(c.match(getJobEvent("a/b").getTopic()));
-        assertNull(c.match(getJobEvent("a/c").getTopic()));
-        assertNotNull(c.match(getJobEvent("a").getTopic()));
-        assertNull(c.match(getJobEvent("a/b/c").getTopic()));
-        assertNull(c.match(getJobEvent("t").getTopic()));
-        assertNull(c.match(getJobEvent("t/x").getTopic()));
+        assertNull(c.match("a/b"));
+        assertNull(c.match("a/c"));
+        assertNotNull(c.match("a"));
+        assertNull(c.match("a/b/c"));
+        assertNull(c.match("t"));
+        assertNull(c.match("t/x"));
     }
 
     @org.junit.Test public void testTopicMatcherAndReplacement() {
@@ -99,12 +89,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        final Event b = getJobEvent("a/b");
-        assertNotNull(c.match(b.getTopic()));
-        assertEquals("test-queue-b", c.match(b.getTopic()));
-        final Event d = getJobEvent("a/d");
-        assertNotNull(c.match(d.getTopic()));
-        assertEquals("test-queue-d", c.match(d.getTopic()));
+        final String b = "a/b";
+        assertNotNull(c.match(b));
+        assertEquals("test-queue-b", c.match(b));
+        final String d = "a/d";
+        assertNotNull(c.match(d));
+        assertEquals("test-queue-d", c.match(d));
     }
 
     @org.junit.Test public void testTopicMatchersDotAndSlash() {
@@ -114,12 +104,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        assertNotNull(c.match(getJobEvent("a/b").getTopic()));
-        assertNotNull(c.match(getJobEvent("a/c").getTopic()));
-        assertNull(c.match(getJobEvent("a").getTopic()));
-        assertNull(c.match(getJobEvent("a/b/c").getTopic()));
-        assertNull(c.match(getJobEvent("t").getTopic()));
-        assertNull(c.match(getJobEvent("t/x").getTopic()));
+        assertNotNull(c.match("a/b"));
+        assertNotNull(c.match("a/c"));
+        assertNull(c.match("a"));
+        assertNull(c.match("a/b/c"));
+        assertNull(c.match("t"));
+        assertNull(c.match("t/x"));
     }
 
     @org.junit.Test public void testTopicMatchersStarAndSlash() {
@@ -129,12 +119,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        assertNotNull(c.match(getJobEvent("a/b").getTopic()));
-        assertNotNull(c.match(getJobEvent("a/c").getTopic()));
-        assertNull(c.match(getJobEvent("a").getTopic()));
-        assertNotNull(c.match(getJobEvent("a/b/c").getTopic()));
-        assertNull(c.match(getJobEvent("t").getTopic()));
-        assertNull(c.match(getJobEvent("t/x").getTopic()));
+        assertNotNull(c.match("a/b"));
+        assertNotNull(c.match("a/c"));
+        assertNull(c.match("a"));
+        assertNotNull(c.match("a/b/c"));
+        assertNull(c.match("t"));
+        assertNull(c.match("t/x"));
     }
 
     @org.junit.Test public void testTopicMatcherAndReplacementAndSlash() {
@@ -144,12 +134,12 @@ public class InternalQueueConfigurationTest {
 
         InternalQueueConfiguration c = InternalQueueConfiguration.fromConfiguration(p);
         assertTrue(c.isValid());
-        final Event b = getJobEvent("a/b");
-        assertNotNull(c.match(b.getTopic()));
-        assertEquals("test-queue-b", c.match(b.getTopic()));
-        final Event d = getJobEvent("a/d");
-        assertNotNull(c.match(d.getTopic()));
-        assertEquals("test-queue-d", c.match(d.getTopic()));
+        final String b = "a/b";
+        assertNotNull(c.match(b));
+        assertEquals("test-queue-b", c.match(b));
+        final String d = "a/d";
+        assertNotNull(c.match(d));
+        assertEquals("test-queue-d", c.match(d));
     }
 
     @org.junit.Test public void testNoTopicMatchers() {

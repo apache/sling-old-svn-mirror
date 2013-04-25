@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
@@ -87,7 +88,7 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
             sleep(200);
 
             // we wait until NUM_JOBS have been processed by the JobManager
-            while ( jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1).size() < NUM_JOBS ) {
+            while ( jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size() < NUM_JOBS ) {
                 sleep(200);
              }
 
@@ -95,10 +96,11 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
             assertEquals(0, jobManager.getStatistics().getNumberOfProcessedJobs());
             assertEquals(0, count.get());
-            assertEquals(NUM_JOBS, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1).size());
+            assertEquals(NUM_JOBS, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
 
             // let'see if restarting helps with a new queue config
             final org.osgi.service.cm.Configuration cf = this.configAdmin.getConfiguration(this.queueConfPid, null);
+            @SuppressWarnings("unchecked")
             final Dictionary<String, Object> orderedProps = cf.getProperties();
 
             orderedProps.put(ConfigurationConstants.PROP_TYPE, QueueConfiguration.Type.UNORDERED.name());
@@ -113,7 +115,7 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
             assertEquals(NUM_JOBS, jobManager.getStatistics().getNumberOfProcessedJobs());
             assertEquals(NUM_JOBS, count.get());
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1).size());
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
         } finally {
             jcReg.unregister();
         }
