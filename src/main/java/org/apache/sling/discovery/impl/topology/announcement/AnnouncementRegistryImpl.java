@@ -113,8 +113,10 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 Announcement topologyAnnouncement;
                 while (it.hasNext()) {
                     Resource anAnnouncement = it.next();
-                    logger.debug("listIncomingAnnouncements: anAnnouncement="
-                            + anAnnouncement);
+                	if (logger.isDebugEnabled()) {
+	                    logger.debug("listIncomingAnnouncements: anAnnouncement="
+	                            + anAnnouncement);
+                	}
                     topologyAnnouncement = Announcement.fromJSON(anAnnouncement
                             .adaptTo(ValueMap.class).get(
                                     "topologyAnnouncement", String.class));
@@ -160,7 +162,6 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             }
 
             resourceResolver.commit();
-            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
@@ -179,6 +180,9 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 resourceResolver.close();
             }
         }
+    	if (logger.isDebugEnabled()) {
+    		logger.debug("listAnnouncements: result: "+incomingAnnouncements.size());
+    	}
         return incomingAnnouncements;
     }
 
@@ -235,7 +239,6 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
 
             topologyAnnouncement.persistTo(announcementsResource);
             resourceResolver.commit();
-            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "registerAnnouncement: could not log in administratively: "
@@ -253,7 +256,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     + ")", e);
         } finally {
             if (resourceResolver != null) {
-                resourceResolver.refresh();
+                resourceResolver.close();
             }
         }
         return true;
@@ -284,8 +287,10 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                         .iterator();
                 while (it.hasNext()) {
                     Resource anAnnouncement = it.next();
-                    logger.debug("addAllExcept: anAnnouncement="
-                            + anAnnouncement);
+                	if (logger.isDebugEnabled()) {
+	                    logger.debug("addAllExcept: anAnnouncement="
+	                            + anAnnouncement);
+                	}
                     Announcement topologyAnnouncement;
                     topologyAnnouncement = Announcement.fromJSON(anAnnouncement
                             .adaptTo(ValueMap.class).get(
@@ -301,7 +306,6 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 }
             }
             resourceResolver.commit();
-            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
@@ -341,8 +345,10 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             Announcement topologyAnnouncement;
             while (it.hasNext()) {
                 Resource anAnnouncement = it.next();
-                logger.debug("checkExpiredAnnouncements: anAnnouncement="
-                        + anAnnouncement);
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("checkExpiredAnnouncements: anAnnouncement="
+	                        + anAnnouncement);
+            	}
                 topologyAnnouncement = Announcement.fromJSON(anAnnouncement
                         .adaptTo(ValueMap.class).get("topologyAnnouncement",
                                 String.class));
@@ -351,14 +357,15 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                             + anAnnouncement);
                     resourceResolver.delete(anAnnouncement);
                 } else {
-                    logger.debug("checkExpiredAnnouncements: topology announcement still valid: "
-                            + anAnnouncement);
+                	if (logger.isDebugEnabled()) {
+	                    logger.debug("checkExpiredAnnouncements: topology announcement still valid: "
+	                            + anAnnouncement);
+                	}
 
                 }
             }
 
             resourceResolver.commit();
-            resourceResolver = null;
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);

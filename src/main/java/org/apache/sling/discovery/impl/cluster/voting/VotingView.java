@@ -165,8 +165,10 @@ public class VotingView extends View {
         }
         final Date votingStartDate = properties.get("votingStart", Date.class);
         if (votingStartDate == null) {
-            logger.debug("getVotingStartTime: got a voting without votingStart. Likely in creation: "
-                    + getResource());
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("getVotingStartTime: got a voting without votingStart. Likely in creation: "
+	                    + getResource());
+        	}
             return -1;
         }
         final long votingStart = votingStartDate.getTime();
@@ -243,7 +245,9 @@ public class VotingView extends View {
      * @param vote true for a yes-vote, false for a no-vote
      */
     public void vote(final String slingId, final Boolean vote) {
-        logger.debug("vote: slingId=" + slingId + ", vote=" + vote);
+    	if (logger.isDebugEnabled()) {
+    		logger.debug("vote: slingId=" + slingId + ", vote=" + vote);
+    	}
         final Resource memberResource = getResource().getChild("members").getChild(
                 slingId);
         if (memberResource == null) {

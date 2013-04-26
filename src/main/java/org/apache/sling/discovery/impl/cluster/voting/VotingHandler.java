@@ -131,12 +131,16 @@ public class VotingHandler implements EventHandler {
                 resourceResolver, config);
         if (winningVote != null) {
             if (winningVote.isInitiatedBy(slingId)) {
-                logger.debug("analyzeVotings: my voting was winning. I'll mark it as established then! "
-                        + winningVote);
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("analyzeVotings: my voting was winning. I'll mark it as established then! "
+	                        + winningVote);
+            	}
                 promote(resourceResolver, winningVote.getResource());
             } else {
-                logger.debug("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
-                        + winningVote);
+            	if (logger.isDebugEnabled()) {
+            		logger.debug("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
+            				+ winningVote);
+            	}
             }
         }
 
@@ -166,16 +170,20 @@ public class VotingHandler implements EventHandler {
                 it.remove();
             } else if (ongoingVotingRes.isInitiatedBy(slingId)
                     && ongoingVotingRes.hasNoVotes()) {
-                logger.debug("analyzeVotings: there were no votes for my voting, so I have to remove it: "
-                        + ongoingVotingRes);
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("analyzeVotings: there were no votes for my voting, so I have to remove it: "
+	                        + ongoingVotingRes);
+            	}
                 ongoingVotingRes.remove();
                 it.remove();
             }
         }
 
         if (winningVote != null) {
-            logger.debug("analyzeVotings: done with vote-handling. there was a winner: "
-                    + winningVote);
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("analyzeVotings: done with vote-handling. there was a winner: "
+	                    + winningVote);
+        	}
             return;
         }
 
@@ -186,12 +194,16 @@ public class VotingHandler implements EventHandler {
         if (ongoingVotings.size() == 1) {
             VotingView votingResource = ongoingVotings.get(0);
             if (votingResource.isInitiatedBy(slingId)) {
-                logger.debug("analyzeVotings: only one voting found, and it is mine. I dont have to vote therefore: "
-                        + votingResource);
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("analyzeVotings: only one voting found, and it is mine. I dont have to vote therefore: "
+	                        + votingResource);
+            	}
                 return;
             } // else:
-            logger.debug("analyzeVotings: only one voting found for which I did not yet vote - and it is not mine. I'll vote yes then: "
-                    + votingResource);
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("analyzeVotings: only one voting found for which I did not yet vote - and it is not mine. I'll vote yes then: "
+	                    + votingResource);
+        	}
             votingResource.vote(slingId, true);
         }
 
@@ -223,12 +235,16 @@ public class VotingHandler implements EventHandler {
         if (myYesVoteResource != null && lowestVoting.equals(myYesVoteResource)) {
             // all fine. then I've voted for the lowest viewId - which is
             // the whole idea
-            logger.debug("analyzeVotings: my voted for view is currently already the lowest id. which is good. I dont have to change any voting. "
-                    + myYesVoteResource);
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("analyzeVotings: my voted for view is currently already the lowest id. which is good. I dont have to change any voting. "
+	                    + myYesVoteResource);
+        	}
         } else if (myYesVoteResource == null) {
             // I've not voted yet - so I should vote for the lowestVoting
-            logger.debug("analyzeVotings: I apparently have not yet voted. So I shall vote now for the lowest id which is: "
-                    + lowestVoting);
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("analyzeVotings: I apparently have not yet voted. So I shall vote now for the lowest id which is: "
+	                    + lowestVoting);
+        	}
             lowestVoting.vote(slingId, true);
         } else {
             // otherwise I've already voted, but not for the lowest. which
@@ -239,8 +255,10 @@ public class VotingHandler implements EventHandler {
             myYesVoteResource.vote(slingId, null);
             lowestVoting.vote(slingId, true);
         }
-        logger.debug("analyzeVotings: all done now. I've voted yes for "
-                + lowestVoting);
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("analyzeVotings: all done now. I've voted yes for "
+	                + lowestVoting);
+    	}
     }
     
     public void cleanupTimedoutVotings(final ResourceResolver resourceResolver) {
@@ -275,14 +293,16 @@ public class VotingHandler implements EventHandler {
                         resourceResolver,
                         config.getOngoingVotingsPath());
 
-        logger.debug("promote: previousViewsResource="
-                + previousViewsResource.getPath());
-        logger.debug("promote: establishedViewsResource="
-                + establishedViewsResource.getPath());
-        logger.debug("promote: ongoingVotingsResource="
-                + ongoingVotingsResource.getPath());
-        logger.debug("promote: winningVoteResource="
-                + winningVoteResource.getPath());
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("promote: previousViewsResource="
+	                + previousViewsResource.getPath());
+	        logger.debug("promote: establishedViewsResource="
+	                + establishedViewsResource.getPath());
+	        logger.debug("promote: ongoingVotingsResource="
+	                + ongoingVotingsResource.getPath());
+	        logger.debug("promote: winningVoteResource="
+	                + winningVoteResource.getPath());
+    	}
 
         // step 1: remove any nodes under previousViews
         final Iterator<Resource> it1 = previousViewsResource.getChildren().iterator();
@@ -301,14 +321,18 @@ public class VotingHandler implements EventHandler {
             Resource retiredView = it.next();
             if (first) {
                 first = !first;
-                logger.debug("promote: moving the old established view to previous views: "
-                        + retiredView.getPath());
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("promote: moving the old established view to previous views: "
+	                        + retiredView.getPath());
+            	}
                 ResourceHelper.moveResource(retiredView, 
                         previousViewsResource.getPath()
                                 + "/" + retiredView.getName());
             } else {
-                logger.debug("promote: retiring an erroneously additionally established node "
-                        + retiredView.getPath());
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("promote: retiring an erroneously additionally established node "
+	                        + retiredView.getPath());
+            	}
                 resourceResolver.delete(retiredView);
             }
         }
@@ -331,8 +355,10 @@ public class VotingHandler implements EventHandler {
                 leaderid = aMember.getName();
             }
         }
-        logger.debug("promote: leader is " + leaderid
-                + " - with leaderElectionId=" + leaderElectionId);
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("promote: leader is " + leaderid
+	                + " - with leaderElectionId=" + leaderElectionId);
+    	}
         ModifiableValueMap winningVoteMap = winningVoteResource.adaptTo(ModifiableValueMap.class);
         winningVoteMap.put("leaderId", leaderid);
         winningVoteMap.put("leaderElectionId", leaderElectionId);
@@ -341,8 +367,10 @@ public class VotingHandler implements EventHandler {
         // 3b: move the result under /established
         final String newEstablishedViewPath = establishedViewsResource.getPath()
                 + "/" + winningVoteResource.getName();
-        logger.debug("promote: promote to new established node "
-                + newEstablishedViewPath);
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("promote: promote to new established node "
+	                + newEstablishedViewPath);
+    	}
         ResourceHelper.moveResource(winningVoteResource, newEstablishedViewPath);
 
         // step 4: delete all ongoing votings...

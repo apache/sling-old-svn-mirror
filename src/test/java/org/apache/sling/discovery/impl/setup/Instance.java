@@ -39,11 +39,14 @@ import javax.jcr.observation.ObservationManager;
 import junitx.util.PrivateAccessor;
 
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.discovery.TopologyEventListener;
+import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.commons.scheduler.impl.QuartzScheduler;
+import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager;
 import org.apache.sling.discovery.PropertyProvider;
+import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
@@ -84,6 +87,26 @@ public class Instance {
     private ResourceResolver resourceResolver;
 
     private int serviceId = 999;
+    
+    private static Scheduler singletonScheduler = null;
+    
+    private static Scheduler getSingletonScheduler() throws Exception {
+    	if (singletonScheduler!=null) {
+    		return singletonScheduler;
+    	}
+        final Scheduler newscheduler = new QuartzScheduler();
+        final ThreadPoolManager tpm = new DefaultThreadPoolManager(null, null);
+        try {
+        	PrivateAccessor.invoke(newscheduler, "bindThreadPoolManager",
+        			new Class[] { ThreadPoolManager.class },
+        			new Object[] { tpm });
+        } catch (Throwable e1) {
+        	org.junit.Assert.fail(e1.toString());
+        }
+        OSGiMock.activate(newscheduler);
+        singletonScheduler = newscheduler;
+        return singletonScheduler;
+    }
 
     private Instance(String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo)
@@ -97,10 +120,15 @@ public class Instance {
         Config config = new Config() {
             @Override
             public long getHeartbeatTimeout() {
-                return 20000;
+                return 20;
+            }
+            
+            @Override
+            public int getMinEventDelay() {
+            	return 1;
             }
         };
-
+        
         clusterViewService = OSGiFactory.createClusterViewServiceImpl(slingId,
                 resourceResolverFactory, config);
         announcementRegistry = OSGiFactory.createITopologyAnnouncementRegistry(
@@ -111,11 +139,11 @@ public class Instance {
                 resourceResolverFactory, slingId, announcementRegistry,
                 connectorRegistry, config,
                 resourceResolverFactory.getAdministrativeResourceResolver(null)
-                        .adaptTo(Repository.class));
-
-        discoveryService = OSGiFactory.createDiscoverService(slingId,
+                        .adaptTo(Repository.class), getSingletonScheduler());
+        
+		discoveryService = OSGiFactory.createDiscoverService(slingId,
                 heartbeatHandler, clusterViewService, announcementRegistry,
-                resourceResolverFactory, config);
+                resourceResolverFactory, config, connectorRegistry, getSingletonScheduler());
 
         votingHandler = OSGiFactory.createVotingHandler(slingId,
                 resourceResolverFactory, config);
@@ -272,10 +300,11 @@ public class Instance {
         }
     }
 
-    public void stop() throws LoginException {
+    public void stop() throws Exception {
         if (resourceResolver != null) {
             resourceResolver.close();
         }
+        osgiMock.deactivateAll();
     }
 
     public void bindTopologyEventListener(TopologyEventListener eventListener)

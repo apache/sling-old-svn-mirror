@@ -138,6 +138,7 @@ public class SingleInstanceTest {
         assertEquals(1, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(0, pp.getGetCnt());
         instance.bindPropertyProvider(pp, propertyName);
+        Thread.sleep(1500);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         // we can only assume that the getProperty was called at least once - it
         // could be called multiple times though..
@@ -153,13 +154,13 @@ public class SingleInstanceTest {
         instance.runHeartbeatOnce();
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
-        assertEquals(1, pp.getGetCnt());
+        assertEquals(2, pp.getGetCnt());
 
         // a heartbeat repeat should not result in another call though
         instance.runHeartbeatOnce();
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
-        assertEquals(2, pp.getGetCnt());
+        assertEquals(3, pp.getGetCnt());
 
     }
 

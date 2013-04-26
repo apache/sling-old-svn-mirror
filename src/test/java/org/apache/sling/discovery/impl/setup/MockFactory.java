@@ -22,6 +22,7 @@ import java.util.Dictionary;
 import java.util.Properties;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.settings.SlingSettingsService;
 import org.hamcrest.Description;
 import org.jmock.Expectations;

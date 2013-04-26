@@ -29,7 +29,6 @@ import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.setup.MockFactory;
 import org.apache.sling.discovery.impl.setup.OSGiFactory;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation.OriginInfo;
 import org.junit.Test;
 
 public class ConnectorRegistryTest {
@@ -51,44 +50,37 @@ public class ConnectorRegistryTest {
         ConnectorRegistry c = OSGiFactory.createConnectorRegistry(
                 announcementRegistry, config);
 
-        final URL url = new URL("http://localhost:1234");
+        final URL url = new URL("http://localhost:1234/connector");
         final ClusterViewService cvs = i.getClusterViewService();
         try {
-            c.registerOutgoingConnection(cvs, url, null);
+            c.registerOutgoingConnector(null, url);
             fail("should have complained");
         } catch (IllegalArgumentException e) {
             // ok
         }
         try {
-            c.registerOutgoingConnection(null, url, OriginInfo.Programmatically);
-            fail("should have complained");
-        } catch (IllegalArgumentException e) {
-            // ok
-        }
-        try {
-            c.registerOutgoingConnection(cvs, null, OriginInfo.Config);
+            c.registerOutgoingConnector(cvs, null);
             fail("should have complained");
         } catch (IllegalArgumentException e) {
             // ok
         }
         TopologyConnectorClientInformation client = c
-                .registerOutgoingConnection(cvs, url, OriginInfo.WebConsole);
+                .registerOutgoingConnector(cvs, url);
         try {
             // should not be able to register same url twice
-            client = c.registerOutgoingConnection(cvs, url,
-                    OriginInfo.Programmatically);
+            client = c.registerOutgoingConnector(cvs, url);
             fail("should have complained");
         } catch (IllegalStateException e) {
             // ok
         }
 
         try {
-            c.unregisterOutgoingConnection(null);
+            c.unregisterOutgoingConnector(null);
             fail("should have complained");
         } catch (IllegalArgumentException e) {
             // ok
         }
 
-        c.unregisterOutgoingConnection(client.getId());
+        c.unregisterOutgoingConnector(client.getId());
     }
 }
