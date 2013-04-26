@@ -559,7 +559,6 @@ public abstract class AbstractJobQueue
                                     // we don't reschedule if an exception occurs
                                     result = JobConsumer.JobResult.CANCEL;
                                 } finally {
-                                    job.setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, null);
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
                                     if ( result != JobConsumer.JobResult.ASYNC ) {
