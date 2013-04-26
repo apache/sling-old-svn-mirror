@@ -70,8 +70,14 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
 
     @Override
     public String toString() {
+    	final String clusterInfo;
+    	if (clusterView==null) {
+    		clusterInfo = "";
+    	} else {
+    		clusterInfo = ", clusterViewId="+clusterView.getId();
+    	}
         return "an InstanceDescription[slindId=" + slingId + ", isLeader="
-                + isLeader + ", isOwn=" + isLocal + "]";
+                + isLeader + ", isOwn=" + isLocal + clusterInfo + "]";
     }
 
     @Override
