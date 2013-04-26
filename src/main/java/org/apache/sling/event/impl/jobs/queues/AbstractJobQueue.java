@@ -363,7 +363,7 @@ public abstract class AbstractJobQueue
             finishSuccessful = info.reschedule();
         }
 
-        if ( !isAsync || this.configuration.waitForAsyncJobConsumers() ) {
+        if ( !isAsync ) {
             if ( !finishSuccessful || !reschedule ) {
                 checkForNotify(null);
                 return false;
@@ -518,10 +518,11 @@ public abstract class AbstractJobQueue
                                     }
                                 }
                                 JobConsumer.JobResult result = JobConsumer.JobResult.CANCEL;
-                                final Object asyncLock = new Object();
-                                final AtomicBoolean asyncDone = new AtomicBoolean(false);
                                 final JobConsumer.AsyncHandler asyncHandler =
                                         new JobConsumer.AsyncHandler() {
+
+                                            final Object asyncLock = new Object();
+                                            final AtomicBoolean asyncDone = new AtomicBoolean(false);
 
                                             private void check(final JobConsumer.JobResult result) {
                                                 synchronized ( asyncLock ) {
@@ -566,19 +567,7 @@ public abstract class AbstractJobQueue
                                     }
                                 }
                                 if ( result == JobConsumer.JobResult.ASYNC ) {
-                                    if ( configuration.waitForAsyncJobConsumers() ) {
-                                        synchronized ( asyncLock ) {
-                                            while ( !asyncDone.get() ) {
-                                                try {
-                                                    asyncLock.wait();
-                                                } catch (final InterruptedException e) {
-                                                    ignoreException(e);
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        notifyFinished(null);
-                                    }
+                                    notifyFinished(null);
                                 }
                             }
 

@@ -38,5 +38,4 @@ public abstract class ConfigurationConstants {
     public static final String PROP_RETRIES = "queue.retries";
     public static final String PROP_RETRY_DELAY = "queue.retrydelay";
     public static final String PROP_PRIORITY = "queue.priority";
-    public static final String PROP_WAIT_FOR_ASYNC = "queue.waitforasync";
 }
