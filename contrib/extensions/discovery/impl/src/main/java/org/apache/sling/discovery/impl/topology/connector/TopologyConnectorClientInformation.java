@@ -25,12 +25,6 @@ import java.net.URL;
  */
 public interface TopologyConnectorClientInformation {
 
-    enum OriginInfo {
-        Config, // this connector was created via config
-        WebConsole, // this connector was created via the wbconsole
-        Programmatically // this connector was created programmatically
-    }
-
     /** the endpoint url where this connector is connecting to **/
     URL getConnectorUrl();
 
@@ -40,12 +34,13 @@ public interface TopologyConnectorClientInformation {
     /** whether or not this connector was able to successfully connect **/
     boolean isConnected();
 
+    /** whether or not the counterpart of this connector has detected a loop in the topology connectors **/
+    boolean representsLoop();
+    
     /** the sling id of the remote end **/
     String getRemoteSlingId();
 
     /** the unique id of this connector **/
     String getId();
 
-    /** the information about how this connector was created **/
-    OriginInfo getOriginInfo();
 }

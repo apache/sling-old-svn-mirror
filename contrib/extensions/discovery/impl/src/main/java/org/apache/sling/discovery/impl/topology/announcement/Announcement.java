@@ -39,7 +39,6 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
-import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation.OriginInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +53,17 @@ public class Announcement {
 
     private final static Logger logger = LoggerFactory
             .getLogger(Announcement.class);
+    
+    /** the protocol version this announcement currently represents. Mismatching protocol versions are
+     * used to detect incompatible topology connectors
+     */
+    private final static int PROTOCOL_VERSION = 1;
 
     /** the sling id of the owner of this announcement. the owner is where this announcement comes from **/
     private final String ownerId;
+    
+    /** announcement protocol version **/
+    private final int protocolVersion;
     
     /** the local cluster view **/
     private ClusterView localCluster;
@@ -70,17 +77,22 @@ public class Announcement {
     /** whether or not this annoucement was inherited (response of a connect) or incoming (the connect) **/
     private boolean inherited = false;
 
-    /** some information about where the corresponding topology connector came from **/
-    private OriginInfo originInfo = null;
-
     /** some information about the server where this announcement came from **/
     private String serverInfo;
+    
+    /** whether or not this announcement represents a loop detected in the topology connectors **/
+    private boolean loop = false;
 
     public Announcement(final String ownerId) {
+        this(ownerId, PROTOCOL_VERSION);
+    }
+    
+    public Announcement(final String ownerId, int protocolVersion) {
         if (ownerId==null || ownerId.length()==0) {
             throw new IllegalArgumentException("ownerId must not be null or empty");
         }
         this.ownerId = ownerId;
+        this.protocolVersion = protocolVersion;
     }
     
     @Override
@@ -94,15 +106,27 @@ public class Announcement {
             incomingList.append(anIncomingAnnouncement);
         }
         return "Announcement[ownerId="+getOwnerId()+
+                ", protocolVersion="+protocolVersion+
                 ", inherited="+isInherited()+
                 ", created="+new Date(created)+
-                ", originInfo="+getOriginInfo()+
+                ", loop="+loop+
                 ", incomings="+incomingList+"]";
     }
     
+    /** check whether this is announcement contains the valid protocol version **/
+    public boolean isCorrectVersion() {
+        return (protocolVersion==PROTOCOL_VERSION);
+    }
+
     /** check whether this is a valid announcement, containing the minimal information **/
     public boolean isValid() {
         if (ownerId==null || ownerId.length()==0) {
+            return false;
+        }
+        if (loop) {
+            return true;
+        }
+        if (!isCorrectVersion()) {
             return false;
         }
         if (localCluster==null) {
@@ -128,15 +152,20 @@ public class Announcement {
     public boolean isInherited() {
         return inherited;
     }
-
-    /** sets the information where the corresponding topology connector came from **/
-    public void setOriginInfo(final OriginInfo originInfo) {
-        this.originInfo = originInfo;
+    
+    /** Sets the loop falg - set true when this announcement should represent a loop detected in the topology connectors **/
+    public void setLoop(final boolean loop) {
+        this.loop = loop;
     }
-
-    /** where the corresponding topology connector came from **/
-    public OriginInfo getOriginInfo() {
-        return originInfo;
+    
+    /** Returns the loop flag - set when this announcement represents a loop detected in the topology connectors **/
+    public boolean isLoop() {
+        return loop;
+    }
+    
+    /** Returns the protocolVersion of this announcement **/
+    public int getProtocolVersion() {
+        return protocolVersion;
     }
 
     /** sets the information about the server where this announcement came from **/
@@ -169,15 +198,18 @@ public class Announcement {
     public JSONObject asJSONObject() throws JSONException {
         JSONObject announcement = new JSONObject();
         announcement.put("ownerId", ownerId);
+        announcement.put("protocolVersion", protocolVersion);
         announcement.put("created", created);
         announcement.put("inherited", inherited);
-        if (originInfo != null) {
-            announcement.put("originInfo", originInfo.toString());
+        if (loop) {
+            announcement.put("loop", loop);
         }
         if (serverInfo != null) {
             announcement.put("serverInfo", serverInfo);
         }
-        announcement.put("localClusterView", asJSON(localCluster));
+        if (localCluster!=null) {
+            announcement.put("localClusterView", asJSON(localCluster));
+        }
         JSONArray incomingAnnouncements = new JSONArray();
         for (Iterator<Announcement> it = incomings.iterator(); it.hasNext();) {
             Announcement incoming = it.next();
@@ -192,26 +224,27 @@ public class Announcement {
             throws JSONException {
         JSONObject announcement = new JSONObject(topologyAnnouncementJSON);
         final String ownerId = announcement.getString("ownerId");
+        final int protocolVersion;
+        if (!announcement.has("protocolVersion")) {
+            protocolVersion = -1;
+        } else {
+            protocolVersion = announcement.getInt("protocolVersion");
+        }
+        final Announcement result = new Announcement(ownerId, protocolVersion);
+        if (announcement.has("loop") && announcement.getBoolean("loop")) {
+            result.setLoop(true);
+            return result;
+        }
         final String localClusterViewJSON = announcement
                 .getString("localClusterView");
         final ClusterView localClusterView = asClusterView(localClusterViewJSON);
         final JSONArray subAnnouncements = announcement
                 .getJSONArray("topologyAnnouncements");
 
-        final Announcement result = new Announcement(ownerId);
         final Long created = announcement.getLong("created");
         if (announcement.has("inherited")) {
             final Boolean inherited = announcement.getBoolean("inherited");
             result.inherited = inherited;
-        }
-        if (announcement.has("originInfo")) {
-            String originInfoStr = announcement.getString("originInfo");
-            try {
-                result.originInfo = OriginInfo.valueOf(originInfoStr);
-            } catch (Exception e) {
-                logger.warn("Could not translate " + originInfoStr
-                        + " into OriginInfo enumeration: " + e, e);
-            }
         }
         if (announcement.has("serverInfo")) {
             String serverInfo = announcement.getString("serverInfo");

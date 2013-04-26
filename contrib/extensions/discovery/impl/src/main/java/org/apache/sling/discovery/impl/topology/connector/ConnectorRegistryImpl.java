@@ -28,13 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation.OriginInfo;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,13 +58,24 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
     /** the local port is added to the announcement as the serverInfo object **/
     private String port = "";
 
-    protected void activate(ComponentContext cc) {
+    @Activate
+    protected void activate(final ComponentContext cc) {
         port = cc.getBundleContext().getProperty("org.osgi.service.http.port");
     }
-
-    public TopologyConnectorClientInformation registerOutgoingConnection(
-            final ClusterViewService clusterViewService, final URL connectorUrl,
-            final OriginInfo originInfo) {
+    
+    @Deactivate
+    protected void deactivate() {
+        synchronized (outgoingClientsMap) {
+            for (Iterator<TopologyConnectorClient> it = outgoingClientsMap.values().iterator(); it.hasNext();) {
+                final TopologyConnectorClient client = it.next();
+                client.disconnect();
+                it.remove();
+            }
+        }
+    }
+    
+    public TopologyConnectorClientInformation registerOutgoingConnector(
+            final ClusterViewService clusterViewService, final URL connectorUrl) {
         if (announcementRegistry == null) {
             logger.error("registerOutgoingConnection: announcementRegistry is null");
             return null;
@@ -86,7 +98,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
                 serverInfo = "localhost:" + port;
             }
             client = new TopologyConnectorClient(clusterViewService,
-                    announcementRegistry, config, connectorUrl, originInfo,
+                    announcementRegistry, config, connectorUrl,
                     serverInfo);
             outgoingClientsMap.put(client.getId(), client);
         }
@@ -94,7 +106,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
         return client;
     }
 
-    public Collection<TopologyConnectorClientInformation> listOutgoingConnections() {
+    public Collection<TopologyConnectorClientInformation> listOutgoingConnectors() {
         final List<TopologyConnectorClientInformation> result = new ArrayList<TopologyConnectorClientInformation>();
         synchronized (outgoingClientsMap) {
             result.addAll(outgoingClientsMap.values());
@@ -102,7 +114,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
         return result;
     }
 
-    public boolean unregisterOutgoingConnection(final String id) {
+    public boolean unregisterOutgoingConnector(final String id) {
         if (id == null || id.length() == 0) {
             throw new IllegalArgumentException("id must not be null");
         }
@@ -115,20 +127,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
         }
     }
 
-    public boolean pingOutgoingConnection(final String id) {
-        if (id == null || id.length() == 0) {
-            throw new IllegalArgumentException("id must not be null");
-        }
-        synchronized (outgoingClientsMap) {
-            TopologyConnectorClient client = outgoingClientsMap.get(id);
-            if (client != null) {
-                client.ping();
-            }
-            return client != null;
-        }
-    }
-
-    public void pingOutgoingConnections() {
+    public void pingOutgoingConnectors() {
         List<TopologyConnectorClient> outgoingTemplatesClone;
         synchronized (outgoingClientsMap) {
             outgoingTemplatesClone = new ArrayList<TopologyConnectorClient>(

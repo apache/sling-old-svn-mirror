@@ -72,8 +72,10 @@ public class TopologyChangeHandler implements EventHandler {
 
     protected void activate(final ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
-        logger.debug("activated. slingid=" + slingId + ", discoveryservice="
-                + discoveryService);
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("activated. slingid=" + slingId + ", discoveryservice="
+	                + discoveryService);
+    	}
     }
 
     /**
@@ -96,8 +98,10 @@ public class TopologyChangeHandler implements EventHandler {
         // properties: path, resourceChangedAttributes, resourceType,
         // event.topics
         if (resourcePath.startsWith(establishedViewPath)) {
-            logger.debug("handlEvent: establishedViewPath resourcePath="
-                    + resourcePath + ", event=" + event);
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("handleEvent: establishedViewPath resourcePath="
+	                    + resourcePath + ", event=" + event);
+        	}
             handleTopologyChanged();
         } else if (resourcePath.startsWith(clusterInstancesPath)) {
 
@@ -113,8 +117,10 @@ public class TopologyChangeHandler implements EventHandler {
                     return;
                 }
             }
-            logger.debug("handlEvent: clusterInstancesPath (heartbeat or properties) resourcePath="
-                    + resourcePath + ", event=" + event);
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("handleEvent: clusterInstancesPath (announcement or properties) resourcePath="
+	                    + resourcePath + ", event=" + event);
+        	}
             handleTopologyChanged();
         } else {
             // not of my business

@@ -100,6 +100,9 @@ public class HeartbeatHandler implements Runnable {
     /** whether or not to reset the leaderElectionId at next heartbeat time **/
     private boolean resetLeaderElectionId = false;
 
+    /** lock object for synchronizing the run method **/
+    private final Object lock = new Object();
+    
     @Activate
     protected void activate(ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
@@ -129,7 +132,9 @@ public class HeartbeatHandler implements Runnable {
             final String initialVotingId) {
         this.discoveryService = discoveryService;
         this.nextVotingId = initialVotingId;
-        issueHeartbeat();
+        synchronized(lock) {
+            issueHeartbeat();
+        }
 
         try {
             scheduler.addPeriodicJob(NAME, this,
@@ -140,11 +145,13 @@ public class HeartbeatHandler implements Runnable {
     }
 
     public void run() {
-        // issue a heartbeat
-        issueHeartbeat();
-
-        // check the view
-        checkView();
+        synchronized(lock) {
+            // issue a heartbeat
+            issueHeartbeat();
+    
+            // check the view
+            checkView();
+        }
     }
 
     /** Get or create a ResourceResolver **/
@@ -159,6 +166,16 @@ public class HeartbeatHandler implements Runnable {
     /** Calcualte the local cluster instance path **/
     private String getLocalClusterNodePath() {
         return config.getClusterInstancesPath() + "/" + slingId;
+    }
+
+    /** Trigger the issuance of the next heartbeat asap instead of at next heartbeat interval **/
+    public void triggerHeartbeat() {
+        try {
+            // then fire a job immediately
+            scheduler.fireJob(this, null);
+        } catch (Exception e) {
+            logger.info("triggerHeartbeat: Could not trigger heartbeat: " + e);
+        }
     }
 
     /**
@@ -185,7 +202,7 @@ public class HeartbeatHandler implements Runnable {
             logger.error("issueRemoteHeartbeats: connectorRegistry is null");
             return;
         }
-        connectorRegistry.pingOutgoingConnections();
+        connectorRegistry.pingOutgoingConnectors();
     }
 
     /** Issue a cluster local heartbeat (into the repository) **/
@@ -294,9 +311,11 @@ public class HeartbeatHandler implements Runnable {
         if (winningVoting != null || (numOpenNonWinningVotes > 0)) {
             // then there are votings pending and I shall wait for them to
             // settle
-            logger.debug("doCheckView: "
-                    + numOpenNonWinningVotes
-                    + " ongoing votings, no one winning yet - I shall wait for them to settle.");
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("doCheckView: "
+	                    + numOpenNonWinningVotes
+	                    + " ongoing votings, no one winning yet - I shall wait for them to settle.");
+        	}
             return;
         }
 
@@ -312,12 +331,14 @@ public class HeartbeatHandler implements Runnable {
             logger.debug("doCheckView: no pending nor winning votes. view is fine. we're all happy.");
             return;
         }
-        logger.debug("doCheckView: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
-        Iterator<String> it = liveInstances.iterator();
-        while (it.hasNext()) {
-            logger.debug("doCheckView: one of the live instances is: "
-                    + it.next());
-        }
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("doCheckView: no pending nor winning votes. But: view does not match established or no established yet. Initiating a new voting");
+	        Iterator<String> it = liveInstances.iterator();
+	        while (it.hasNext()) {
+	            logger.debug("doCheckView: one of the live instances is: "
+	                    + it.next());
+	        }
+    	}
 
         // we seem to be the first to realize that the currently established
         // view doesnt match

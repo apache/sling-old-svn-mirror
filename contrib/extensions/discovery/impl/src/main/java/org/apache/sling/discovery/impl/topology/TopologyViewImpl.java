@@ -68,6 +68,7 @@ public class TopologyViewImpl implements TopologyView {
             throw new IllegalArgumentException("other must not be null");
         }
         if (this.instances.size() != other.instances.size()) {
+        	logger.debug("compareTopology: different number of instances");
             return Type.TOPOLOGY_CHANGED;
         }
         boolean propertiesChanged = false;
@@ -85,10 +86,14 @@ public class TopologyViewImpl implements TopologyView {
                 }
             }
             if (matchingInstance == null) {
+            	if (logger.isDebugEnabled()) {
+	            	logger.debug("compareTopology: no matching instance found for "+instance);
+            	}
                 return Type.TOPOLOGY_CHANGED;
             }
             if (!instance.getClusterView().getId()
                     .equals(matchingInstance.getClusterView().getId())) {
+            	logger.debug("compareTopology: cluster view id does not match");
                 return Type.TOPOLOGY_CHANGED;
             }
             if (!instance.getProperties().equals(

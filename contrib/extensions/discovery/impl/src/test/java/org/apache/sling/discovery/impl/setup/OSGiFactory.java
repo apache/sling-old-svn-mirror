@@ -23,6 +23,7 @@ import javax.jcr.Repository;
 import junitx.util.PrivateAccessor;
 
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.DiscoveryServiceImpl;
 import org.apache.sling.discovery.impl.cluster.ClusterViewServiceImpl;
@@ -52,7 +53,7 @@ public class OSGiFactory {
     public static HeartbeatHandler createHeartbeatHandler(
             ResourceResolverFactory resourceResolverFactory, String slingId,
             AnnouncementRegistry topologyService,
-            ConnectorRegistry connectorRegistry, Config config, Repository repository)
+            ConnectorRegistry connectorRegistry, Config config, Repository repository, Scheduler scheduler)
             throws Exception {
         HeartbeatHandler heartbeatHandler = new HeartbeatHandler();
         PrivateAccessor.setField(heartbeatHandler, "resourceResolverFactory",
@@ -64,6 +65,7 @@ public class OSGiFactory {
         PrivateAccessor.setField(heartbeatHandler, "connectorRegistry",
                 connectorRegistry);
         PrivateAccessor.setField(heartbeatHandler, "config", config);
+        PrivateAccessor.setField(heartbeatHandler, "scheduler", scheduler);
 
         return heartbeatHandler;
     }
@@ -72,7 +74,8 @@ public class OSGiFactory {
             HeartbeatHandler heartbeatHandler,
             ClusterViewServiceImpl clusterViewService,
             AnnouncementRegistry topologyRegistry,
-            ResourceResolverFactory resourceResolverFactory, Config config)
+            ResourceResolverFactory resourceResolverFactory, Config config, 
+            ConnectorRegistry connectorRegistry, Scheduler scheduler)
             throws Exception {
         DiscoveryServiceImpl discoveryService = new DiscoveryServiceImpl();
         PrivateAccessor.setField(discoveryService, "settingsService",
@@ -86,6 +89,10 @@ public class OSGiFactory {
         PrivateAccessor.setField(discoveryService, "resourceResolverFactory",
                 resourceResolverFactory);
         PrivateAccessor.setField(discoveryService, "config", config);
+        PrivateAccessor.setField(discoveryService, "connectorRegistry",
+        		connectorRegistry);
+        PrivateAccessor.setField(discoveryService, "scheduler",
+        		scheduler);
 
         return discoveryService;
     }

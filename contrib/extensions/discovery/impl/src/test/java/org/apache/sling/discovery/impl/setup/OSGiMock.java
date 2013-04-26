@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.impl.setup;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -53,18 +54,48 @@ public class OSGiMock {
         Iterator it = services.iterator(); it.hasNext();) {
             Object aService = it.next();
 
-            Method[] methods = aService.getClass().getDeclaredMethods();
-            for (int i = 0; i < methods.length; i++) {
-                Method method = methods[i];
-                if (method.getName().equals("activate")) {
-                    method.setAccessible(true);
-                    if ( method.getParameterTypes().length == 0 ) {
-                        method.invoke(aService, null);
-                    } else {
-                        method.invoke(aService, MockFactory.mockComponentContext());
-                    }
-                }
-            }
+            activate(aService);
         }
     }
+
+	public static void activate(Object aService) throws IllegalAccessException,
+			InvocationTargetException {
+		Method[] methods = aService.getClass().getDeclaredMethods();
+		for (int i = 0; i < methods.length; i++) {
+		    Method method = methods[i];
+		    if (method.getName().equals("activate")) {
+		        method.setAccessible(true);
+		        if ( method.getParameterTypes().length == 0 ) {
+		            method.invoke(aService, null);
+		        } else {
+		            method.invoke(aService, MockFactory.mockComponentContext());
+		        }
+		    }
+		}
+	}
+
+	public void deactivateAll() throws Exception {
+        for (@SuppressWarnings("rawtypes")
+        Iterator it = services.iterator(); it.hasNext();) {
+            Object aService = it.next();
+
+            deactivate(aService);
+        }
+	}
+
+	public static void deactivate(Object aService) throws IllegalAccessException,
+			InvocationTargetException {
+		Method[] methods = aService.getClass().getDeclaredMethods();
+		for (int i = 0; i < methods.length; i++) {
+		    Method method = methods[i];
+		    if (method.getName().equals("deactivate")) {
+		        method.setAccessible(true);
+		        if ( method.getParameterTypes().length == 0 ) {
+		            method.invoke(aService, null);
+		        } else {
+		            method.invoke(aService, MockFactory.mockComponentContext());
+		        }
+		    }
+		}
+	}
 }

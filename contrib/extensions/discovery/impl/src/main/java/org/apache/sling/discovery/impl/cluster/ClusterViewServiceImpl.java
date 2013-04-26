@@ -97,6 +97,9 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     }
 
     public String getSlingId() {
+    	if (settingsService==null) {
+    		return null;
+    	}
         return settingsService.getSlingId();
     }
 
@@ -126,6 +129,10 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     }
 
     public ClusterView getClusterView() {
+    	if (resourceResolverFactory==null) {
+    		logger.warn("getClusterView: no resourceResolverFactory set at the moment.");
+    		return null;
+    	}
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory

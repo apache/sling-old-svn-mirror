@@ -69,24 +69,30 @@ public class VotingHelper {
             if (c.matchesLiveView(config)
                     && c.isOngoingVoting(config) && !c.hasNoVotes()
                     && !c.isWinning()) {
-                logger.debug("listOpenNonWinningVotings: found a valid voting: "
-                        + aChild
-                        + ", properties="
-                        + ResourceHelper.getPropertiesForLogging(aChild));
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("listOpenNonWinningVotings: found a valid voting: "
+	                        + aChild
+	                        + ", properties="
+	                        + ResourceHelper.getPropertiesForLogging(aChild));
+            	}
                 result.add(c);
             } else {
-                logger.debug("listOpenNonWinningVotings: found an invalid voting: "
-                        + aChild
-                        + ", matches live: " + c.matchesLiveView(config)
-                        + ", is ongoing: " + c.isOngoingVoting(config)
-                        + ", has no votes: " + c.hasNoVotes()
-                        + ", is winning: " + c.isWinning()
-                        + ", properties="
-                        + ResourceHelper.getPropertiesForLogging(aChild));
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("listOpenNonWinningVotings: found an invalid voting: "
+	                        + aChild
+	                        + ", matches live: " + c.matchesLiveView(config)
+	                        + ", is ongoing: " + c.isOngoingVoting(config)
+	                        + ", has no votes: " + c.hasNoVotes()
+	                        + ", is winning: " + c.isWinning()
+	                        + ", properties="
+	                        + ResourceHelper.getPropertiesForLogging(aChild));
+            	}
             }
         }
-        logger.debug("listOpenNonWinningVotings: votings found: "
-                + result.size());
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("listOpenNonWinningVotings: votings found: "
+	                + result.size());
+    	}
         return result;
     }
 
@@ -113,15 +119,19 @@ public class VotingHelper {
             Resource aChild = it.next();
             VotingView c = new VotingView(aChild);
             if (c.isTimedoutVoting(config)) {
-                logger.debug("listTimedoutVotings: found a timed-out voting: "
-                        + aChild
-                        + ", properties="
-                        + ResourceHelper.getPropertiesForLogging(aChild));
+            	if (logger.isDebugEnabled()) {
+	                logger.debug("listTimedoutVotings: found a timed-out voting: "
+	                        + aChild
+	                        + ", properties="
+	                        + ResourceHelper.getPropertiesForLogging(aChild));
+            	}
                 result.add(c);
             }
         }
-        logger.debug("listTimedoutVotings: votings found: "
-                + result.size());
+    	if (logger.isDebugEnabled()) {
+	        logger.debug("listTimedoutVotings: votings found: "
+	                + result.size());
+    	}
         return result;
     }
 
@@ -146,7 +156,9 @@ public class VotingHelper {
             Resource aChild = it.next();
             VotingView c = new VotingView(aChild);
             if (c.isOngoingVoting(config) && c.isWinning()) {
-                logger.debug("getWinningVoting: a winning voting: " + c);
+            	if (logger.isDebugEnabled()) {
+            		logger.debug("getWinningVoting: a winning voting: " + c);
+            	}
                 result.add(c);
             }
         }

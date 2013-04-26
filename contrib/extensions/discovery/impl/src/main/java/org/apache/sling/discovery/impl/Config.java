@@ -20,6 +20,8 @@ package org.apache.sling.discovery.impl;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -66,10 +68,16 @@ public class Config {
     public static final String HEARTBEAT_INTERVAL_KEY = "heartbeatInterval";
     private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 
-    /** URL where to join a topology, eg http://localhost:4502/libs/sling/topology/connector */
-    @Property
-    public static final String TOPOLOGY_CONNECTOR_URL_KEY = "topologyConnectorUrl";
-    private URL topologyConnectorUrl;
+    /** Configure the time (in seconds) which must be passed at minimum between sending TOPOLOGY_CHANGING/_CHANGED (avoid flooding). */
+    public static final int DEFAULT_MIN_EVENT_DELAY = 3;
+    @Property(intValue=DEFAULT_MIN_EVENT_DELAY)
+    public static final String MIN_EVENT_DELAY_KEY = "minEventDelay";
+    private int minEventDelay = DEFAULT_MIN_EVENT_DELAY;
+
+    /** URLs where to join a topology, eg http://localhost:4502/libs/sling/topology/connector */
+    @Property(cardinality=1024)
+    public static final String TOPOLOGY_CONNECTOR_URLS_KEY = "topologyConnectorUrls";
+    private URL[] topologyConnectorUrls = {null};
 
     /** list of ips and/or hostnames which are allowed to connect to /libs/sling/topology/connector */
     private static final String[] DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST = {"localhost","127.0.0.1"};
@@ -77,8 +85,8 @@ public class Config {
     public static final String TOPOLOGY_CONNECTOR_WHITELIST_KEY = "topologyConnectorWhitelist";
     private String[] topologyConnectorWhitelist = DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST;
 
-    /** Path of resource where to keep discovery information, e.g /var/discovery/impl */
-    private static final String DEFAULT_DISCOVERY_RESOURCE_PATH = "/var/discovery/impl";
+    /** Path of resource where to keep discovery information, e.g /var/discovery/impl/ */
+    private static final String DEFAULT_DISCOVERY_RESOURCE_PATH = "/var/discovery/impl/";
     @Property(value=DEFAULT_DISCOVERY_RESOURCE_PATH, propertyPrivate=true)
     public static final String DISCOVERY_RESOURCE_PATH_KEY = "discoveryResourcePath";
     private String discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
@@ -91,7 +99,7 @@ public class Config {
 
     @Activate
     protected void activate(final Map<String, Object> properties) {
-        logger.debug("activate: config activated.");
+		logger.debug("activate: config activated.");
         configure(properties);
     }
 
@@ -99,28 +107,54 @@ public class Config {
         this.heartbeatTimeout = PropertiesUtil.toLong(
                 properties.get(HEARTBEAT_TIMEOUT_KEY),
                 DEFAULT_HEARTBEAT_TIMEOUT);
-        logger.debug("configure: heartbeatTimeout='{}''", this.heartbeatTimeout);
+        logger.debug("configure: heartbeatTimeout='{}'", this.heartbeatTimeout);
+
         this.heartbeatInterval = PropertiesUtil.toLong(
                 properties.get(HEARTBEAT_INTERVAL_KEY),
                 DEFAULT_HEARTBEAT_INTERVAL);
-        logger.debug("configure: heartbeatInterval='{}''",
+        logger.debug("configure: heartbeatInterval='{}'",
                 this.heartbeatInterval);
-        String topologyConnectorUrlStr = PropertiesUtil.toString(
-                properties.get(TOPOLOGY_CONNECTOR_URL_KEY), null);
-        if ( topologyConnectorUrlStr != null && topologyConnectorUrlStr.length() > 0 ) {
-            try {
-                this.topologyConnectorUrl = new URL(topologyConnectorUrlStr);
-                logger.debug("configure: topologyConnectorUrl='{}''",
-                        this.topologyConnectorUrl);
-            } catch (MalformedURLException e) {
-                logger.error("configure: could not set topologyConnectorUrl: " + e,
-                        e);
+
+        this.minEventDelay = PropertiesUtil.toInteger(
+                properties.get(MIN_EVENT_DELAY_KEY),
+                DEFAULT_MIN_EVENT_DELAY);
+        logger.debug("configure: minEventDelay='{}'",
+                this.minEventDelay);
+        
+        String[] topologyConnectorUrlsStr = PropertiesUtil.toStringArray(
+                properties.get(TOPOLOGY_CONNECTOR_URLS_KEY), null);
+        if (topologyConnectorUrlsStr!=null && topologyConnectorUrlsStr.length > 0) {
+            List<URL> urls = new LinkedList<URL>();
+            for (int i = 0; i < topologyConnectorUrlsStr.length; i++) {
+                String anUrlStr = topologyConnectorUrlsStr[i];
+                try {
+                	if (anUrlStr!=null && anUrlStr.length()>0) {
+	                    URL url = new URL(anUrlStr);
+	                    logger.debug("configure: a topologyConnectorbUrl='{}'",
+	                            url);
+	                    urls.add(url);
+                	}
+                } catch (MalformedURLException e) {
+                    logger.error("configure: could not set a topologyConnectorUrl: " + e,
+                            e);
+                }
             }
+            if (urls.size()>0) {
+                this.topologyConnectorUrls = urls.toArray(new URL[urls.size()]);
+                logger.debug("configure: number of topologyConnectorUrls='{}''",
+                        urls.size());
+            } else {
+                this.topologyConnectorUrls = null;
+                logger.debug("configure: no (valid) topologyConnectorUrls configured");
+            }
+        } else {
+            this.topologyConnectorUrls = null;
+            logger.debug("configure: no (valid) topologyConnectorUrls configured");
         }
         this.topologyConnectorWhitelist = PropertiesUtil.toStringArray(
                 properties.get(TOPOLOGY_CONNECTOR_WHITELIST_KEY),
                 DEFAULT_TOPOLOGY_CONNECTOR_WHITELIST);
-        logger.debug("configure: topologyConnectorWhitelist='{}''",
+        logger.debug("configure: topologyConnectorWhitelist='{}'",
                 this.topologyConnectorWhitelist);
 
         this.discoveryResourcePath = PropertiesUtil.toString(
@@ -135,13 +169,13 @@ public class Config {
             // if the path is empty, or /, then use the default
             this.discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
         }
-        logger.debug("configure: discoveryResourcePath='{}''",
+        logger.debug("configure: discoveryResourcePath='{}'",
                 this.discoveryResourcePath);
 
         this.leaderElectionRepositoryDescriptor = PropertiesUtil.toString(
                 properties.get(LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY),
                 null);
-        logger.debug("configure: leaderElectionRepositoryDescriptor='{}''",
+        logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
     }
 
@@ -160,15 +194,23 @@ public class Config {
     public long getHeartbeatInterval() {
         return heartbeatInterval;
     }
+    
+    /**
+     * Returns the minimum time (in seconds) between sending TOPOLOGY_CHANGING/_CHANGED events - to avoid flooding
+     * @return the minimum time (in seconds) between sending TOPOLOGY_CHANGING/_CHANGED events - to avoid flooding
+     */
+    public int getMinEventDelay() {
+        return minEventDelay;
+    }
 
     /**
-     * Returns the URL to which to open a topology connector - or null if no topology connector
+     * Returns the URLs to which to open a topology connector - or null/empty if no topology connector
      * is configured (default is null)
-     * @return the URL to which to open a topology connector - or null if no topology connector
+     * @return the URLs to which to open a topology connector - or null/empty if no topology connector
      * is configured
      */
-    public URL getTopologyConnectorURL() {
-        return topologyConnectorUrl;
+    public URL[] getTopologyConnectorURLs() {
+        return topologyConnectorUrls;
     }
 
     /**

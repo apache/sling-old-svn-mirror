@@ -23,12 +23,16 @@ import java.net.URL;
 import java.util.Iterator;
 import java.util.UUID;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
@@ -66,9 +70,6 @@ public class TopologyConnectorClient implements
     /** the last inherited announcement **/
     private Announcement lastInheritedAnnouncement;
 
-    /** the information as to where this connector came from **/
-    private final OriginInfo originInfo;
-
     /** the information about this server **/
     private final String serverInfo;
     
@@ -77,7 +78,7 @@ public class TopologyConnectorClient implements
 
     TopologyConnectorClient(final ClusterViewService clusterViewService,
             final AnnouncementRegistry announcementRegistry, final Config config,
-            final URL connectorUrl, final OriginInfo originInfo, final String serverInfo) {
+            final URL connectorUrl, final String serverInfo) {
         if (clusterViewService == null) {
             throw new IllegalArgumentException(
                     "clusterViewService must not be null");
@@ -92,24 +93,22 @@ public class TopologyConnectorClient implements
         if (connectorUrl == null) {
             throw new IllegalArgumentException("connectorUrl must not be null");
         }
-        if (originInfo == null) {
-            throw new IllegalArgumentException("originInfo must not be null");
-        }
         this.clusterViewService = clusterViewService;
         this.announcementRegistry = announcementRegistry;
         this.config = config;
         this.connectorUrl = connectorUrl;
-        this.originInfo = originInfo;
         this.serverInfo = serverInfo;
         this.id = UUID.randomUUID();
     }
 
     /** ping the server and pass the announcements between the two **/
     void ping() {
-        logger.debug("ping: connectorUrl=" + connectorUrl);
+        final String uri = connectorUrl.toString()+"."+clusterViewService.getSlingId()+".json";
+    	if (logger.isDebugEnabled()) {
+    		logger.debug("ping: connectorUrl=" + connectorUrl + ", complete uri=" + uri);
+    	}
         HttpClient httpClient = new HttpClient();
-        PostMethod method = new PostMethod(connectorUrl.toString());
-
+        PutMethod method = new PutMethod(uri);
         try {
             String userInfo = connectorUrl.getUserInfo();
             if (userInfo != null) {
@@ -121,7 +120,6 @@ public class TopologyConnectorClient implements
 
             Announcement topologyAnnouncement = new Announcement(
                     clusterViewService.getSlingId());
-            topologyAnnouncement.setOriginInfo(originInfo);
             topologyAnnouncement.setServerInfo(serverInfo);
             topologyAnnouncement.setLocalCluster(clusterViewService
                     .getClusterView());
@@ -147,37 +145,60 @@ public class TopologyConnectorClient implements
             });
             final String p = topologyAnnouncement.asJSON();
 
-            logger.debug("ping: topologyAnnouncement json is: " + p);
-            method.addParameter("topologyAnnouncement", p);
+        	if (logger.isDebugEnabled()) {
+        		logger.debug("ping: topologyAnnouncement json is: " + p);
+        	}
+            method.setRequestEntity(new StringRequestEntity(p, "application/json", "UTF-8"));
             httpClient.executeMethod(method);
-            logger.debug("ping: done. code=" + method.getStatusCode() + " - "
-                    + method.getStatusText());
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("ping: done. code=" + method.getStatusCode() + " - "
+	                    + method.getStatusText());
+        	}
             lastStatusCode = method.getStatusCode();
-            if (method.getStatusCode()==200) {
+            if (method.getStatusCode()==HttpServletResponse.SC_OK) {
                 String responseBody = method.getResponseBodyAsString(16*1024*1024); // limiting to 16MB, should be way enough
-                logger.debug("ping: response body=" + responseBody);
-                Announcement inheritedAnnouncement = Announcement
-                        .fromJSON(responseBody);
-                inheritedAnnouncement.setInherited(true);
-                if (!announcementRegistry
-                        .registerAnnouncement(inheritedAnnouncement)) {
-                    logger.info("ping: connector response is from an instance which I already see in my topology"
-                            + inheritedAnnouncement);
+            	if (logger.isDebugEnabled()) {
+            		logger.debug("ping: response body=" + responseBody);
+            	}
+                if (responseBody!=null && responseBody.length()>0) {
+                    Announcement inheritedAnnouncement = Announcement
+                            .fromJSON(responseBody);
+                    if (inheritedAnnouncement.isLoop()) {
+                    	if (logger.isDebugEnabled()) {
+	                        logger.debug("ping: connector response indicated a loop detected. not registering this announcement from "+
+	                                    inheritedAnnouncement.getOwnerId());
+                    	}
+                    } else {
+                        inheritedAnnouncement.setInherited(true);
+                        if (!announcementRegistry
+                                .registerAnnouncement(inheritedAnnouncement)) {
+                        	if (logger.isDebugEnabled()) {
+	                            logger.debug("ping: connector response is from an instance which I already see in my topology"
+	                                    + inheritedAnnouncement);
+                        	}
+                            lastInheritedAnnouncement = null;
+                            return;
+                        }
+                    }
+                    lastInheritedAnnouncement = inheritedAnnouncement;
+                } else {
                     lastInheritedAnnouncement = null;
-                    return;
                 }
-                lastInheritedAnnouncement = inheritedAnnouncement;
             } else {
                 lastInheritedAnnouncement = null;
             }
         } catch (URIException e) {
             logger.warn("ping: Got URIException: " + e);
+            lastInheritedAnnouncement = null;
         } catch (IOException e) {
             logger.warn("ping: got IOException: " + e);
+            lastInheritedAnnouncement = null;
         } catch (JSONException e) {
             logger.warn("ping: got JSONException: " + e);
+            lastInheritedAnnouncement = null;
         } catch (RuntimeException re) {
-            logger.error("ping: got RuntimeException: " + re, re);
+            logger.warn("ping: got RuntimeException: " + re, re);
+            lastInheritedAnnouncement = null;
         }
     }
 
@@ -187,6 +208,14 @@ public class TopologyConnectorClient implements
     
     public URL getConnectorUrl() {
         return connectorUrl;
+    }
+    
+    public boolean representsLoop() {
+        if (lastInheritedAnnouncement == null) {
+            return false;
+        } else {
+            return lastInheritedAnnouncement.isLoop();
+        }
     }
 
     public boolean isConnected() {
@@ -205,17 +234,16 @@ public class TopologyConnectorClient implements
         }
     }
 
-    public OriginInfo getOriginInfo() {
-        return originInfo;
-    }
-
     public String getId() {
         return id.toString();
     }
 
     /** Disconnect this connector **/
     public void disconnect() {
-        logger.debug("disconnect: connectorUrl=" + connectorUrl);
+        final String uri = connectorUrl.toString()+"."+clusterViewService.getSlingId()+".json";
+    	if (logger.isDebugEnabled()) {
+    		logger.debug("disconnect: connectorUrl=" + connectorUrl + ", complete uri="+uri);
+    	}
 
         if (lastInheritedAnnouncement != null) {
             announcementRegistry
@@ -224,7 +252,7 @@ public class TopologyConnectorClient implements
         }
 
         HttpClient httpClient = new HttpClient();
-        PostMethod method = new PostMethod(connectorUrl.toString());
+        DeleteMethod method = new DeleteMethod(uri);
 
         try {
             String userInfo = connectorUrl.getUserInfo();
@@ -235,11 +263,13 @@ public class TopologyConnectorClient implements
                                 .getURI().getPort()), c);
             }
 
-            method.addParameter("topologyDisconnect",
-                    clusterViewService.getSlingId());
             httpClient.executeMethod(method);
-            logger.debug("disconnect: done. code=" + method.getStatusCode()
-                    + " - " + method.getStatusText());
+        	if (logger.isDebugEnabled()) {
+	            logger.debug("disconnect: done. code=" + method.getStatusCode()
+	                    + " - " + method.getStatusText());
+        	}
+            // ignoring the actual statuscode though as there's little we can
+            // do about it after this point
         } catch (URIException e) {
             logger.warn("disconnect: Got URIException: " + e);
         } catch (IOException e) {
