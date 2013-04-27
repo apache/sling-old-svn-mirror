@@ -55,7 +55,7 @@ import aQute.bnd.annotation.component.Deactivate;
 @Component(immediate=true)
 @Service(value={EventHandler.class})
 @Properties({
-    @Property(name=EventConstants.EVENT_TOPIC, value=SlingConstants.TOPIC_RESOURCE_ADDED, propertyPrivate=true),
+    @Property(name=EventConstants.EVENT_TOPIC, value=SlingConstants.TOPIC_RESOURCE_ADDED, propertyPrivate=true)
 })
 public class DistributedEventSender
     implements EventHandler {
