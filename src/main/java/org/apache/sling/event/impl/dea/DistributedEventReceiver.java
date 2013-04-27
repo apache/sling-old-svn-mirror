@@ -70,7 +70,7 @@ import aQute.bnd.annotation.component.Deactivate;
     @Property(name=EventConstants.EVENT_TOPIC, value="*", propertyPrivate=true),
     @Property(name=EventConstants.EVENT_FILTER, value="(event.distribute=*)", propertyPrivate=true),
     @Property(name="scheduler.period", longValue=1800, propertyPrivate=true),
-    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
+    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true)
 })
 public class DistributedEventReceiver
     implements EventHandler, Runnable, TopologyEventListener {

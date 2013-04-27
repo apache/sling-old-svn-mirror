@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
     @Property(name=ConfigurationConstants.PROP_RETRY_DELAY,
             longValue=ConfigurationConstants.DEFAULT_RETRY_DELAY),
     @Property(name=ConfigurationConstants.PROP_MAX_PARALLEL,
-            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL),
+            intValue=ConfigurationConstants.DEFAULT_MAX_PARALLEL)
 })
 public class MainQueueConfiguration {
 
