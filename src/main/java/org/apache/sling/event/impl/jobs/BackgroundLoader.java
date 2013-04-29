@@ -82,8 +82,8 @@ public class BackgroundLoader implements Runnable {
     /** A local queue for handling new jobs. */
     private final BlockingQueue<String> actionQueue = new LinkedBlockingQueue<String>();
 
-    /** Change count to detect the initial start. */
-    private long changeCount = 0;
+    /** Boolean to detect the initial start. */
+    private boolean firstRun = true ;
 
     /**
      * Create and activate the loader.
@@ -132,7 +132,6 @@ public class BackgroundLoader implements Runnable {
      */
     public void start() {
         synchronized ( this.loadLock ) {
-            this.changeCount++;
             this.running = true;
             // make sure to clear out old information
             this.actionQueue.clear();
@@ -200,7 +199,10 @@ public class BackgroundLoader implements Runnable {
             if ( this.isRunning() ) {
                 this.loadJobsInTheBackground(startTime);
             }
-
+            // if we're still running we can clear the first run flag
+            if ( this.isRunning() ) {
+                this.firstRun = false;
+            }
             // and finally process the action queue
             while ( this.isRunning() ) {
                 String path = null;
@@ -301,14 +303,14 @@ public class BackgroundLoader implements Runnable {
             final JobImpl job = this.jobManager.readJob(jobResource);
             if ( job != null ) {
                 // check if the job is currently running
-                if ( this.changeCount == 1 || job.getProcessingStarted() == null ) {
-                    // reset started time
+                if ( this.firstRun  || job.getProcessingStarted() == null ) {
+                    // reset started time and increase retry count
                     if ( job.getProcessingStarted() != null && this.isRunning() ) {
-                        job.getProperties().remove(Job.PROPERTY_JOB_STARTED_TIME);
-                        // make sure to clear the started time
+                        job.retry();
                         try {
                             final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
                             mvm.remove(Job.PROPERTY_JOB_STARTED_TIME);
+                            mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getRetryCount());
                             jobResource.getResourceResolver().commit();
                         } catch ( final PersistenceException ignore) {
                             this.ignoreException(ignore);
