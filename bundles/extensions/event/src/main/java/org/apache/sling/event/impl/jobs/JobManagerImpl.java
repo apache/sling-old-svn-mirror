@@ -45,7 +45,6 @@ import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
@@ -482,32 +481,37 @@ public class JobManagerImpl
     JobImpl readJob(final Resource resource) {
         JobImpl job = null;
         if ( resource != null ) {
-            final ValueMap vm = ResourceUtil.getValueMap(resource);
+            try {
+                final ValueMap vm = ResourceHelper.getValueMap(resource);
 
-            final String errorMessage = Utility.checkJobTopic(vm.get(JobUtil.PROPERTY_JOB_TOPIC));
-            if ( errorMessage == null ) {
-                final String topic = vm.get(JobUtil.PROPERTY_JOB_TOPIC, String.class);
-                final Map<String, Object> jobProperties = ResourceHelper.cloneValueMap(vm);
+                final String errorMessage = Utility.checkJobTopic(vm.get(JobUtil.PROPERTY_JOB_TOPIC));
+                if ( errorMessage == null ) {
+                    final String topic = vm.get(JobUtil.PROPERTY_JOB_TOPIC, String.class);
+                    final Map<String, Object> jobProperties = ResourceHelper.cloneValueMap(vm);
 
-                jobProperties.put(JobImpl.PROPERTY_RESOURCE_PATH, resource.getPath());
-                // convert to integers (JCR supports only long...)
-                jobProperties.put(Job.PROPERTY_JOB_RETRIES, vm.get(Job.PROPERTY_JOB_RETRIES, Integer.class));
-                jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
-                jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, String.class)));
+                    jobProperties.put(JobImpl.PROPERTY_RESOURCE_PATH, resource.getPath());
+                    // convert to integers (JCR supports only long...)
+                    jobProperties.put(Job.PROPERTY_JOB_RETRIES, vm.get(Job.PROPERTY_JOB_RETRIES, Integer.class));
+                    jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
+                    jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, String.class)));
 
-                job = new JobImpl(topic,
-                        (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
-                        (String)jobProperties.get(JobUtil.JOB_ID),
-                        jobProperties);
-            } else {
-                logger.warn(errorMessage + " : {}", vm);
-                // remove the job as the topic is invalid anyway
-                try {
-                    resource.getResourceResolver().delete(resource);
-                    resource.getResourceResolver().commit();
-                } catch ( final PersistenceException ignore) {
-                    this.ignoreException(ignore);
+                    job = new JobImpl(topic,
+                            (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
+                            (String)jobProperties.get(JobUtil.JOB_ID),
+                            jobProperties);
+                } else {
+                    logger.warn(errorMessage + " : {}", vm);
+                    // remove the job as the topic is invalid anyway
+                    try {
+                        resource.getResourceResolver().delete(resource);
+                        resource.getResourceResolver().commit();
+                    } catch ( final PersistenceException ignore) {
+                        this.ignoreException(ignore);
+                    }
                 }
+            } catch (final InstantiationException ie) {
+                // something happened with the resource in the meantime
+                this.ignoreException(ie);
             }
 
         }
