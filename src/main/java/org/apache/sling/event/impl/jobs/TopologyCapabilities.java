@@ -60,22 +60,40 @@ public class TopologyCapabilities {
     /** All instances. */
     private final Map<String, String> allInstances;
 
-    private static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
+    /** Instance comparator. */
+    private final InstanceDescriptionComparator instanceComparator;
+
+    public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
+
+        private final String localClusterId;
+
+        public InstanceDescriptionComparator(final String clusterId) {
+            this.localClusterId = clusterId;
+        }
 
         @Override
         public int compare(final InstanceDescription o1, final InstanceDescription o2) {
             if ( o1.getSlingId().equals(o2.getSlingId()) ) {
                 return 0;
             }
-            if ( o1.isLeader() ) {
+            final boolean o1IsLocalCluster = localClusterId.equals(o1.getClusterView().getId());
+            final boolean o2IsLocalCluster = localClusterId.equals(o2.getClusterView().getId());
+            if ( o1IsLocalCluster && !o2IsLocalCluster ) {
                 return -1;
-            } else if ( o2.isLeader() ) {
+            }
+            if ( !o1IsLocalCluster && o2IsLocalCluster ) {
                 return 1;
+            }
+            if ( o1IsLocalCluster ) {
+                if ( o1.isLeader() && !o2.isLeader() ) {
+                    return -1;
+                } else if ( o2.isLeader() && !o1.isLeader() ) {
+                    return 1;
+                }
             }
             return o1.getSlingId().compareTo(o2.getSlingId());
         }
     }
-    private static final InstanceDescriptionComparator COMPARATOR = new InstanceDescriptionComparator();
 
     public static Map<String, String> getAllInstancesMap(final TopologyView view) {
         final Map<String, String> allInstances = new TreeMap<String, String>();
@@ -92,6 +110,7 @@ public class TopologyCapabilities {
     }
 
     public TopologyCapabilities(final TopologyView view, final long changeCount) {
+        this.instanceComparator = new InstanceDescriptionComparator(view.getLocalInstance().getClusterView().getId());
         this.changeCount = changeCount;
         this.isLeader = view.getLocalInstance().isLeader();
         this.allInstances = getAllInstancesMap(view);
@@ -107,7 +126,7 @@ public class TopologyCapabilities {
                         newCaps.put(topic, list);
                     }
                     list.add(desc);
-                    Collections.sort(list, COMPARATOR);
+                    Collections.sort(list, this.instanceComparator);
                 }
             }
         }
@@ -166,7 +185,7 @@ public class TopologyCapabilities {
         if ( bridgedTargets != null ) {
             potentialTargets.addAll(bridgedTargets);
         }
-        Collections.sort(potentialTargets, COMPARATOR);
+        Collections.sort(potentialTargets, this.instanceComparator);
 
         return potentialTargets;
     }
@@ -180,7 +199,7 @@ public class TopologyCapabilities {
 
         if ( potentialTargets != null && potentialTargets.size() > 0 ) {
             if ( queueInfo.queueConfiguration.getType() == QueueConfiguration.Type.ORDERED ) {
-                // for ordered queues we always pick the first as we have to pick the same target
+                // for ordered queues we always pick the first as we have to pick the same target on each cluster view
                 // on all instances (TODO - we could try to do some round robin of the whole queue)
                 return potentialTargets.get(0).getSlingId();
             }
