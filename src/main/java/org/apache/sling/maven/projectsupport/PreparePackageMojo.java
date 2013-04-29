@@ -304,12 +304,14 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
     }
 
     private void copyConfigurationFiles() throws MojoExecutionException {
-        try {
-            copyDirectory(this.getConfigDirectory(), new File(getOutputDirectory(), CONFIG_PATH_PREFIX), null, FileUtils.getDefaultExcludes());
-        } catch (IOException e) {
-            throw new MojoExecutionException("Unable to copy configuration files", e);
+        final File configDir = this.getConfigDirectory();
+        if (configDir.exists() ) {
+            try {
+                copyDirectory(configDir, new File(getOutputDirectory(), CONFIG_PATH_PREFIX), null, FileUtils.getDefaultExcludes());
+            } catch (IOException e) {
+                throw new MojoExecutionException("Unable to copy configuration files", e);
+            }
         }
-
     }
 
     private void unpack(File source, File destination)
