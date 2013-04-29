@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobUtil;
@@ -114,29 +113,34 @@ public class DistributedEventSender
      * @return The event object or <code>null</code>
      */
     private Event readEvent(final Resource eventResource) {
-        final ValueMap vm = ResourceUtil.getValueMap(eventResource);
-        final String topic = vm.get(EventConstants.EVENT_TOPIC, String.class);
-        final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
-        // only send event if there are no read errors, otherwise discard it
-        if ( properties.get(ResourceHelper.PROPERTY_MARKER_READ_ERROR) == null ) {
-            properties.remove(EventConstants.EVENT_TOPIC);
+        try {
+            final ValueMap vm = ResourceHelper.getValueMap(eventResource);
+            final String topic = vm.get(EventConstants.EVENT_TOPIC, String.class);
+            final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
+            // only send event if there are no read errors, otherwise discard it
+            if ( properties.get(ResourceHelper.PROPERTY_MARKER_READ_ERROR) == null ) {
+                properties.remove(EventConstants.EVENT_TOPIC);
 
-            try {
-                // special handling for job notification jobs for compatibility
-                if ( topic.startsWith("org/apache/sling/event/notification/job/") ) {
-                    final String jobTopic = (String)properties.get(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC);
-                    if ( jobTopic != null) {
-                        final Event jobEvent = new Event(jobTopic, properties);
-                        properties.put(JobUtil.PROPERTY_NOTIFICATION_JOB, jobEvent);
+                try {
+                    // special handling for job notification jobs for compatibility
+                    if ( topic.startsWith("org/apache/sling/event/notification/job/") ) {
+                        final String jobTopic = (String)properties.get(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC);
+                        if ( jobTopic != null) {
+                            final Event jobEvent = new Event(jobTopic, properties);
+                            properties.put(JobUtil.PROPERTY_NOTIFICATION_JOB, jobEvent);
+                        }
                     }
+                    final Event event = new Event(topic, properties);
+                    return event;
+                } catch (final IllegalArgumentException iae) {
+                    // this exception occurs if the topic is not correct (it should never happen,
+                    // but you never know)
+                    logger.error("Unable to read event: " + iae.getMessage(), iae);
                 }
-                final Event event = new Event(topic, properties);
-                return event;
-            } catch (final IllegalArgumentException iae) {
-                // this exception occurs if the topic is not correct (it should never happen,
-                // but you never know)
-                logger.error("Unable to read event: " + iae.getMessage(), iae);
             }
+        } catch (final InstantiationException ie) {
+            // something happened with the resource in the meanitime
+            this.ignoreException(ie);
         }
         return null;
     }

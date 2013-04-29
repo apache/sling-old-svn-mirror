@@ -529,29 +529,34 @@ public class TimedEventSender
      */
     private ReadResult readEvent(final Resource eventResource) {
         if ( eventResource != null ) {
-            final ValueMap vm = ResourceUtil.getValueMap(eventResource);
-            final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
-            String topic = (String)properties.get(EventConstants.EVENT_TOPIC);
-            if ( topic == null ) {
-                topic = (String)properties.remove("slingevent:topic");
-            }
-            final ReadResult result = new ReadResult();
-            if ( topic == null ) {
-                logger.warn("Resource at {} does not look like a timed event: {}", eventResource.getPath(), properties);
-                result.hasReadErrors = true;
-                return result;
-            }
-            result.hasReadErrors = properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR) != null;
-            properties.remove(EventConstants.EVENT_TOPIC);
-            properties.put(TimedEventStatusProvider.PROPERTY_EVENT_ID, topic.replace('/', '.') + '/' + eventResource.getName());
-
             try {
-                result.event = new Event(topic, properties);
-                return result;
-            } catch (final IllegalArgumentException iae) {
-                // this exception occurs if the topic is not correct (it should never happen,
-                // but you never know)
-                logger.error("Unable to read event: " + iae.getMessage(), iae);
+                final ValueMap vm = ResourceHelper.getValueMap(eventResource);
+                final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
+                String topic = (String)properties.get(EventConstants.EVENT_TOPIC);
+                if ( topic == null ) {
+                    topic = (String)properties.remove("slingevent:topic");
+                }
+                final ReadResult result = new ReadResult();
+                if ( topic == null ) {
+                    logger.warn("Resource at {} does not look like a timed event: {}", eventResource.getPath(), properties);
+                    result.hasReadErrors = true;
+                    return result;
+                }
+                result.hasReadErrors = properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR) != null;
+                properties.remove(EventConstants.EVENT_TOPIC);
+                properties.put(TimedEventStatusProvider.PROPERTY_EVENT_ID, topic.replace('/', '.') + '/' + eventResource.getName());
+
+                try {
+                    result.event = new Event(topic, properties);
+                    return result;
+                } catch (final IllegalArgumentException iae) {
+                    // this exception occurs if the topic is not correct (it should never happen,
+                    // but you never know)
+                    logger.error("Unable to read event: " + iae.getMessage(), iae);
+                }
+            } catch (final InstantiationException ie) {
+                // something happened with the resource in the meanitime
+                this.ignoreException(ie);
             }
         }
         return null;

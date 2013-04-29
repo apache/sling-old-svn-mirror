@@ -127,23 +127,40 @@ public abstract class ResourceHelper {
 
     public static final String PROPERTY_MARKER_READ_ERROR = ResourceHelper.class.getName() + "/ReadError";
 
-    public static Map<String, Object> cloneValueMap(final ValueMap vm) {
+    public static Map<String, Object> cloneValueMap(final ValueMap vm) throws InstantiationException {
         boolean hasReadError = false;
-        final Map<String, Object> result = new HashMap<String, Object>(vm);
-        for(final Map.Entry<String, Object> entry : result.entrySet()) {
-            if ( entry.getValue() instanceof InputStream ) {
-                final Object value = vm.get(entry.getKey(), Serializable.class);
-                if ( value != null ) {
-                    entry.setValue(value);
-                } else {
-                    hasReadError = true;
+        try {
+            final Map<String, Object> result = new HashMap<String, Object>(vm);
+            for(final Map.Entry<String, Object> entry : result.entrySet()) {
+                if ( entry.getValue() instanceof InputStream ) {
+                    final Object value = vm.get(entry.getKey(), Serializable.class);
+                    if ( value != null ) {
+                        entry.setValue(value);
+                    } else {
+                        hasReadError = true;
+                    }
                 }
             }
+            if ( hasReadError ) {
+                result.put(PROPERTY_MARKER_READ_ERROR, Boolean.TRUE);
+            }
+            return result;
+        } catch ( final IllegalArgumentException iae) {
+            // the JCR implementation might throw an IAE if something goes wrong
+            throw (InstantiationException)new InstantiationException(iae.getMessage()).initCause(iae);
         }
-        if ( hasReadError ) {
-            result.put(PROPERTY_MARKER_READ_ERROR, Boolean.TRUE);
+    }
+
+    public static ValueMap getValueMap(final Resource resource) throws InstantiationException {
+        final ValueMap vm = ResourceUtil.getValueMap(resource);
+        // trigger full loading
+        try {
+            vm.size();
+        } catch ( final IllegalArgumentException iae) {
+            // the JCR implementation might throw an IAE if something goes wrong
+            throw (InstantiationException)new InstantiationException(iae.getMessage()).initCause(iae);
         }
-        return result;
+        return vm;
     }
 
     public static void getOrCreateBasePath(final ResourceResolver resolver,
