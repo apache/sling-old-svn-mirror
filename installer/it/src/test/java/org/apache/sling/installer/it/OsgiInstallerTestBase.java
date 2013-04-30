@@ -24,6 +24,7 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,6 +40,7 @@ import javax.inject.Inject;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -391,8 +393,13 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort;
     	}
 
+    	String localRepo = System.getProperty("maven.repo.local", "");
+
     	return options(
                 junitBundles(),
+                when( localRepo.length() > 0 ).useOptions(
+                        systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+                ),
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
                 provision(
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.0"),
