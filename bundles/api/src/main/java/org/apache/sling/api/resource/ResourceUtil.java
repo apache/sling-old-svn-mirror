@@ -574,7 +574,17 @@ public class ResourceUtil {
             if ( autoCommit ) {
                 resolver.refresh();
             }
-            rsrc = resolver.create(parentResource, name, resourceProperties);
+            try {
+                rsrc = resolver.create(parentResource, name, resourceProperties);
+            } catch ( final PersistenceException pe ) {
+                // this could be thrown because someone else tried to create this
+                // node concurrently
+                resolver.refresh();
+                rsrc = resolver.getResource(parentResource, name);
+                if ( rsrc == null ) {
+                    throw pe;
+                }
+            }
             if ( autoCommit ) {
                 try {
                     resolver.commit();
