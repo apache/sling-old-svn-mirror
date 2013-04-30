@@ -275,7 +275,10 @@ public class JcrNodeResource extends JcrItemResource {
 
                 // continue our stuff with the jcr:content node
                 // which might be nt:resource, which we support below
-                node = node.getNode(JCR_CONTENT);
+                // if the node is new, the content node might not exist yet
+                if ( !node.isNew() || node.hasNode(JCR_CONTENT) ) {
+                    node = node.getNode(JCR_CONTENT);
+                }
             }
 
             // check stuff for nt:resource (or similar) nodes
