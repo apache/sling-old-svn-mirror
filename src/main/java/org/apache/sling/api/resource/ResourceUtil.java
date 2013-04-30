@@ -438,6 +438,9 @@ public class ResourceUtil {
      */
     @Deprecated
     public static String findResourceSuperType(final Resource resource) {
+        if ( resource == null ) {
+            return null;
+        }
         return resource.getResourceResolver().getParentResourceType(resource);
     }
 
@@ -457,6 +460,9 @@ public class ResourceUtil {
      */
     @Deprecated
     public static boolean isA(final Resource resource, final String resourceType) {
+        if ( resource == null ) {
+            return false;
+        }
         return resource.getResourceResolver().isResourceType(resource, resourceType);
     }
 
