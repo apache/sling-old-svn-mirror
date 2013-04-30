@@ -31,7 +31,9 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
@@ -87,12 +89,47 @@ public class SlingPropertyValueHandler {
         this.referenceParser = referenceParser;
         this.changes = changes;
     }
-    
-    /** Return the AutoType for a given property name 
+
+    /** Return the AutoType for a given property name
      *  @return null if not found
      * */
     static AutoType getAutoType(String propertyName) {
         return AUTO_PROPS.get(propertyName);
+    }
+
+    private PropertyDefinition searchPropertyDefinition(final NodeType nodeType, final String name) {
+        if ( nodeType.getPropertyDefinitions() != null ) {
+            for(final PropertyDefinition pd : nodeType.getPropertyDefinitions()) {
+                if ( pd.getName().equals(name) ) {
+                    return pd;
+                }
+            }
+        }
+        final NodeTypeIterator nti = nodeType.getSubtypes();
+        while ( nti.hasNext() ) {
+            final NodeType st = nti.nextNodeType();
+            PropertyDefinition result = searchPropertyDefinition(st, name);
+            if ( result != null ) {
+                return result;
+            }
+        }
+        return null;
+    }
+
+    private PropertyDefinition searchPropertyDefinition(final Node node, final String name)
+    throws RepositoryException {
+        PropertyDefinition result = searchPropertyDefinition(node.getPrimaryNodeType(), name);
+        if ( result == null ) {
+            if ( node.getMixinNodeTypes() != null ) {
+                for(final NodeType mt : node.getMixinNodeTypes()) {
+                    result = this.searchPropertyDefinition(mt, name);
+                    if ( result != null ) {
+                        return result;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -127,10 +164,19 @@ public class SlingPropertyValueHandler {
             setPropertyAsIs(mod, prop);
 
         } else if (AUTO_PROPS.containsKey(name)) {
+            // check if this is a JCR resource and check node type
+            if ( mod.node != null ) {
+                final PropertyDefinition pd = this.searchPropertyDefinition(mod.node, name);
+                if ( pd != null ) {
+                    if ( pd.isAutoCreated() || pd.isProtected() ) {
+                        return;
+                    }
+                }
+            }
+
             // avoid collision with protected properties
             final boolean isNew = (mod.node != null ? mod.node.isNew() : true);
-            try {
-                switch (getAutoType(name)) {
+            switch (getAutoType(name)) {
                 case CREATED:
                     if (isNew) {
                         setCurrentDate(mod, name);
@@ -147,8 +193,6 @@ public class SlingPropertyValueHandler {
                 case MODIFIED_BY:
                     setCurrentUser(mod, name);
                     break;
-                }
-            } catch (ConstraintViolationException e) {
             }
         } else {
             // no magic field, set value as provided
