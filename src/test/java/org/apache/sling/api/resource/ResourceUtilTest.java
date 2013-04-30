@@ -405,4 +405,12 @@ public class ResourceUtilTest {
         assertEquals("/", ResourceUtil.getParent("/b/c/d", 3));
         assertEquals("/", ResourceUtil.getParent("/b///", 1));
     }
+
+    @Test public void testIsA() {
+        assertFalse(ResourceUtil.isA(null, "something"));
+    }
+
+    @Test public void testFindResourceSuperType() {
+        assertNull(ResourceUtil.findResourceSuperType(null));
+    }
 }
