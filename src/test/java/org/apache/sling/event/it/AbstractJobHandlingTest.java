@@ -22,6 +22,8 @@ package org.apache.sling.event.it;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +70,12 @@ public abstract class AbstractJobHandlingTest {
                 + BUNDLE_JAR_SYS_PROP + " system property" );
         }
 
+        String localRepo = System.getProperty("maven.repo.local", "");
+
         return options(
+                when( localRepo.length() > 0 ).useOptions(
+                        systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+                ),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"),
