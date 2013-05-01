@@ -35,8 +35,7 @@ public class OsgiConsoleTest extends SlingTestBase {
                 "licenses",
                 "logs",
                 "memoryusage",
-                "services",
-                "shell"
+                "services"
         };
         
         for(String subpath : subpaths) {
