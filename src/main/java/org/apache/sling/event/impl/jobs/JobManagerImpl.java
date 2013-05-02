@@ -384,8 +384,10 @@ public class JobManagerImpl
             // update mbeans
             eventAdmin.sendEvent(new QueueStatusEvent(null, queue));
         } else {
-            // notify queue
-            queue.rename(queue.getName() + "<outdated>(" + queue.hashCode() + ")");
+            if ( !queue.getName().contains("<outdated>") ) {
+                // notify queue
+                queue.rename(queue.getName() + "<outdated>(" + queue.hashCode() + ")");
+            }
             // readd with new name
             this.queues.put(queue.getName(), queue);
             // update mbeans
