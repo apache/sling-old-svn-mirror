@@ -111,6 +111,8 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
                 this.sleep(100);
             }
 
+            sleep(1500); // sleep to get fresh statistics
+
             // no jobs queued, but processed and not available
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
             assertEquals(NUM_JOBS, jobManager.getStatistics().getNumberOfProcessedJobs());

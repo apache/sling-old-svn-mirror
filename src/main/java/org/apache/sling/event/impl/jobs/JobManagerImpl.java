@@ -581,14 +581,14 @@ public class JobManagerImpl
 
     /**
      * Return our internal statistics object.
-     * We recalculate this every 5sec (if requested)
+     * We recalculate this every 1.5sec (if requested)
      *
      * @see org.apache.sling.event.jobs.JobManager#getStatistics()
      */
     @Override
     public synchronized Statistics getStatistics() {
         final long now = System.currentTimeMillis();
-        if ( this.lastUpdatedStatistics + 5000 < now ) {
+        if ( this.lastUpdatedStatistics + 1500 < now ) {
             this.copyFrom(this.baseStatistics);
             for(final AbstractJobQueue jq : this.queues.values() ) {
                 this.add(jq);
