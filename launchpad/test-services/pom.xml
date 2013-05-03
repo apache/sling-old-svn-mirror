@@ -66,7 +66,10 @@
                         <Sling-Nodetypes>
                             SLING-INF/nodetypes/test.cnd
                         </Sling-Nodetypes>
-                        <Sling-Initial-Content>SLING-INF/content;path:=/sling-test</Sling-Initial-Content>
+                        <Sling-Initial-Content>
+                            SLING-INF/content;path:=/sling-test;overwrite=true;uninstall=true,
+                            SLING-INF/install;path:=/apps/sling-test/install;overwrite=true;uninstall=true
+                        </Sling-Initial-Content>
                         <Sling-Bundle-Resources>
                         	/sling-test/sling/from-bundle;path:=/SLING-INF/res/sling-test/sling/from-bundle,
                         	/system;path:=/SLING-INF/res/sling-test/sling/SLING-1733
