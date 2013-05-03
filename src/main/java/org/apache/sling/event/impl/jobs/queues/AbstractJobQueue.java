@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.EventUtil;
@@ -99,6 +100,9 @@ public abstract class AbstractJobQueue
     /** Suspend lock. */
     private final Object suspendLock = new Object();
 
+    /** Async counter. */
+    private final AtomicInteger asyncCounter = new AtomicInteger();
+
     /**
      * Start this queue
      * @param name The queue name
@@ -123,7 +127,10 @@ public abstract class AbstractJobQueue
     @Override
     public String getStateInfo() {
         synchronized ( this.suspendLock ) {
-            return "isWaiting=" + this.isWaiting + ", markedForRemoval=" + this.markedForRemoval + ", suspendedSince=" + this.suspendedSince;
+            return "isWaiting=" + this.isWaiting +
+                    ", markedForRemoval=" + this.markedForRemoval +
+                    ", suspendedSince=" + this.suspendedSince +
+                    ", asyncJobs=" + this.asyncCounter.get();
         }
     }
 
@@ -391,7 +398,7 @@ public abstract class AbstractJobQueue
     }
 
     protected boolean canBeMarkedForRemoval() {
-        return this.isEmpty() && !this.isWaiting &&!this.isSuspended();
+        return this.isEmpty() && !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0;
     }
 
     /**
@@ -529,10 +536,10 @@ public abstract class AbstractJobQueue
                                                     if ( !asyncDone.get() ) {
                                                         asyncDone.set(true);
                                                         finishedJob(job.getId(), result, true);
+                                                        asyncCounter.decrementAndGet();
                                                     } else {
                                                         throw new IllegalStateException("Job is already marked as processed");
                                                     }
-                                                    asyncLock.notify();
                                                 }
                                             }
 
@@ -566,6 +573,7 @@ public abstract class AbstractJobQueue
                                     }
                                 }
                                 if ( result == JobConsumer.JobResult.ASYNC ) {
+                                    asyncCounter.incrementAndGet();
                                     notifyFinished(null);
                                 }
                             }
