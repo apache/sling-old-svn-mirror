@@ -1,0 +1,6 @@
+{
+  "jcr:primaryType": "sling:OsgiConfig",
+  "config.comment": "setup the JSP engine for running tests - this comes from the test-services bundle's initial content",
+  "jasper.development": "true",
+  "jasper.modificationTestInterval": "0"
+}
