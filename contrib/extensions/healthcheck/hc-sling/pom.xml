@@ -9,8 +9,8 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>15</version>
-        <relativePath>15</relativePath>
+        <version>16</version>
+        <relativePath>16</relativePath>
     </parent>
 
     <groupId>org.apache.sling</groupId>
