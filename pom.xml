@@ -168,6 +168,8 @@
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
+        <module>extensions/discovery/api</module>
+        <module>extensions/discovery/impl</module>
         <module>bundles/extensions/event</module>
         <module>bundles/extensions/fsresource</module>
         <module>bundles/extensions/javax.activation</module>
