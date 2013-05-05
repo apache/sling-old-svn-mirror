@@ -43,6 +43,7 @@ import org.apache.sling.event.impl.support.TopicMatcherHelper;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +83,8 @@ public class JobConsumerManager {
 
     private volatile long changeCount;
 
+    private BundleContext bundleContext;
+
     private Dictionary<String, Object> getRegistrationProperties() {
         final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
         serviceProps.put(PropertyProvider.PROPERTY_PROPERTIES, JobConsumer.PROPERTY_TOPICS);
@@ -95,6 +98,7 @@ public class JobConsumerManager {
 
     @Activate
     protected void activate(final BundleContext bc, final Map<String, Object> props) {
+        this.bundleContext = bc;
         this.modified(bc, props);
     }
 
@@ -143,6 +147,10 @@ public class JobConsumerManager {
             this.propagationService.unregister();
             this.propagationService = null;
         }
+        this.bundleContext = null;
+        synchronized ( this.topicToConsumerMap ) {
+            this.topicToConsumerMap.clear();
+        }
     }
 
     /**
@@ -154,14 +162,14 @@ public class JobConsumerManager {
         synchronized ( this.topicToConsumerMap ) {
             final List<ConsumerInfo> consumers = this.topicToConsumerMap.get(topic);
             if ( consumers != null ) {
-                return consumers.get(0).consumer;
+                return consumers.get(0).getConsumer();
             }
             final int pos = topic.lastIndexOf('/');
             if ( pos > 0 ) {
                 final String category = topic.substring(0, pos + 1).concat("*");
                 final List<ConsumerInfo> categoryConsumers = this.topicToConsumerMap.get(category);
                 if ( categoryConsumers != null ) {
-                    return categoryConsumers.get(0).consumer;
+                    return categoryConsumers.get(0).getConsumer();
                 }
             }
         }
@@ -184,13 +192,12 @@ public class JobConsumerManager {
 
     /**
      * Bind a new consumer
-     * @param consumer The new consumer.
-     * @param properties The service properties.
+     * @param serviceReference The service reference to the consumer.
      */
-    protected void bindJobConsumer(final JobConsumer consumer, final Map<String, Object> properties) {
-        final String[] topics = PropertiesUtil.toStringArray(properties.get(JobConsumer.PROPERTY_TOPICS));
+    protected void bindJobConsumer(final ServiceReference serviceReference) {
+        final String[] topics = PropertiesUtil.toStringArray(serviceReference.getProperty(JobConsumer.PROPERTY_TOPICS));
         if ( topics != null && topics.length > 0 ) {
-            final ConsumerInfo info = new ConsumerInfo(consumer, properties);
+            final ConsumerInfo info = new ConsumerInfo(this.bundleContext, serviceReference);
             boolean changed = false;
             synchronized ( this.topicToConsumerMap ) {
                 for(final String t : topics) {
@@ -222,13 +229,12 @@ public class JobConsumerManager {
 
     /**
      * Unbind a consumer
-     * @param consumer The old consumer.
-     * @param properties The service properties.
+     * @param serviceReference The service reference to the consumer.
      */
-    protected void unbindJobConsumer(final JobConsumer consumer, final Map<String, Object> properties) {
-        final String[] topics = PropertiesUtil.toStringArray(properties.get(JobConsumer.PROPERTY_TOPICS));
+    protected void unbindJobConsumer(final ServiceReference serviceReference) {
+        final String[] topics = PropertiesUtil.toStringArray(serviceReference.getProperty(JobConsumer.PROPERTY_TOPICS));
         if ( topics != null && topics.length > 0 ) {
-            final ConsumerInfo info = new ConsumerInfo(consumer, properties);
+            final ConsumerInfo info = new ConsumerInfo(this.bundleContext, serviceReference);
             boolean changed = false;
             synchronized ( this.topicToConsumerMap ) {
                 for(final String t : topics) {
@@ -304,19 +310,22 @@ public class JobConsumerManager {
      */
     private final static class ConsumerInfo implements Comparable<ConsumerInfo> {
 
-        public final JobConsumer consumer;
+        public final ServiceReference serviceReference;
+        private JobConsumer consumer;
         public final int ranking;
         public final long serviceId;
+        private final BundleContext bundleContext;
 
-        public ConsumerInfo(final JobConsumer consumer, final Map<String, Object> properties) {
-            this.consumer = consumer;
-            final Object sr = properties.get(Constants.SERVICE_RANKING);
+        public ConsumerInfo(final BundleContext bc, final ServiceReference serviceReference) {
+            this.serviceReference = serviceReference;
+            this.bundleContext = bc;
+            final Object sr = serviceReference.getProperty(Constants.SERVICE_RANKING);
             if ( sr == null || !(sr instanceof Integer)) {
                 this.ranking = 0;
             } else {
                 this.ranking = (Integer)sr;
             }
-            this.serviceId = (Long)properties.get(Constants.SERVICE_ID);
+            this.serviceId = (Long)serviceReference.getProperty(Constants.SERVICE_ID);
         }
 
         @Override
@@ -340,7 +349,14 @@ public class JobConsumerManager {
 
         @Override
         public int hashCode() {
-            return consumer.hashCode();
+            return serviceReference.hashCode();
+        }
+
+        public JobConsumer getConsumer() {
+            if ( consumer == null ) {
+                consumer = (JobConsumer) this.bundleContext.getService(this.serviceReference);
+            }
+            return consumer;
         }
     }
 }

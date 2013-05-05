@@ -29,8 +29,6 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.EventUtil;
@@ -75,7 +73,7 @@ public class EventAdminBridge
     /** Is the background task still running? */
     private volatile boolean running;
 
-    @Reference(policy=ReferencePolicy.DYNAMIC, cardinality=ReferenceCardinality.OPTIONAL_UNARY)
+    @Reference
     private JobManager jobManager;
 
     /**
