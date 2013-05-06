@@ -495,14 +495,13 @@ public class JobManagerImpl
                     // convert to integers (JCR supports only long...)
                     jobProperties.put(Job.PROPERTY_JOB_RETRIES, vm.get(Job.PROPERTY_JOB_RETRIES, Integer.class));
                     jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
-                    jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, String.class)));
+                    jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, JobPriority.NORM.name())));
 
                     job = new JobImpl(topic,
                             (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
                             (String)jobProperties.get(JobUtil.JOB_ID),
                             jobProperties);
                 } else {
-                    logger.warn(errorMessage + " : {}", vm);
                     // remove the job as the topic is invalid anyway
                     try {
                         resource.getResourceResolver().delete(resource);
@@ -544,7 +543,7 @@ public class JobManagerImpl
 
     private void startProcessing(final long changeCount, final TopologyView view) {
         // create new capabilities and update view
-        this.topologyCapabilities = new TopologyCapabilities(view, changeCount);
+        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration.disableDistribution(), changeCount);
 
         this.backgroundLoader.start();
     }

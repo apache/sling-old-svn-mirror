@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
+import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.slf4j.Logger;
@@ -48,6 +49,9 @@ public class TopologyCapabilities {
     /** Round robin map. */
     private final Map<String, Integer> roundRobinMap = new HashMap<String, Integer>();
 
+    /** Instance map. */
+    private final Map<String, InstanceDescription> instanceMap = new HashMap<String, InstanceDescription>();
+
     /** Is this the leader of the cluster? */
     private final boolean isLeader;
 
@@ -63,9 +67,13 @@ public class TopologyCapabilities {
     /** Instance comparator. */
     private final InstanceDescriptionComparator instanceComparator;
 
+    /** Disable distribution flag. */
+    private final boolean disableDistribution;
+
     public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
 
         private final String localClusterId;
+
 
         public InstanceDescriptionComparator(final String clusterId) {
             this.localClusterId = clusterId;
@@ -109,7 +117,8 @@ public class TopologyCapabilities {
         return allInstances;
     }
 
-    public TopologyCapabilities(final TopologyView view, final long changeCount) {
+    public TopologyCapabilities(final TopologyView view, final boolean disableDistribution, final long changeCount) {
+        this.disableDistribution = disableDistribution;
         this.instanceComparator = new InstanceDescriptionComparator(view.getLocalInstance().getClusterView().getId());
         this.changeCount = changeCount;
         this.isLeader = view.getLocalInstance().isLeader();
@@ -129,6 +138,7 @@ public class TopologyCapabilities {
                     Collections.sort(list, this.instanceComparator);
                 }
             }
+            this.instanceMap.put(desc.getSlingId(), desc);
         }
         this.instanceCapabilities = newCaps;
     }
@@ -196,12 +206,40 @@ public class TopologyCapabilities {
     public String detectTarget(final String jobTopic, final Map<String, Object> jobProperties,
             final QueueInfo queueInfo) {
         final List<InstanceDescription> potentialTargets = this.getPotentialTargets(jobTopic, jobProperties);
+        logger.debug("Potential targets for {} : {}", jobTopic, potentialTargets);
+        String createdOn = null;
+        if ( jobProperties != null ) {
+            createdOn = (String) jobProperties.get(org.apache.sling.event.jobs.Job.PROPERTY_JOB_CREATED_INSTANCE);
+        }
+        if ( createdOn == null ) {
+            createdOn = Environment.APPLICATION_ID;
+        }
+        final InstanceDescription createdOnInstance = this.instanceMap.get(createdOn);
 
         if ( potentialTargets != null && potentialTargets.size() > 0 ) {
+            if ( createdOnInstance != null ) {
+                // create a list with local targets first.
+                final List<InstanceDescription> localTargets = new ArrayList<InstanceDescription>();
+                for(final InstanceDescription desc : potentialTargets) {
+                    if ( desc.getClusterView().getId().equals(createdOnInstance.getClusterView().getId()) ) {
+                        if ( !this.disableDistribution || desc.isLeader() ) {
+                            localTargets.add(desc);
+                        }
+                    }
+                }
+                if ( localTargets != null ) {
+                    potentialTargets.clear();
+                    potentialTargets.addAll(localTargets);
+                    logger.debug("Potential targets filtered for {} : {}", jobTopic, potentialTargets);
+                }
+            }
             if ( queueInfo.queueConfiguration.getType() == QueueConfiguration.Type.ORDERED ) {
                 // for ordered queues we always pick the first as we have to pick the same target on each cluster view
                 // on all instances (TODO - we could try to do some round robin of the whole queue)
-                return potentialTargets.get(0).getSlingId();
+                final String result = potentialTargets.get(0).getSlingId();
+                logger.debug("Target for {} : {}", jobTopic, result);
+
+                return result;
             }
             // TODO - this is a simple round robin which is not based on the actual load
             //        of the instances
@@ -213,7 +251,9 @@ public class TopologyCapabilities {
                 index = 0;
             }
             this.roundRobinMap.put(jobTopic, index + 1);
-            return potentialTargets.get(index).getSlingId();
+            final String result = potentialTargets.get(index).getSlingId();
+            logger.debug("Target for {} : {}", jobTopic, result);
+            return result;
         }
 
         return null;
