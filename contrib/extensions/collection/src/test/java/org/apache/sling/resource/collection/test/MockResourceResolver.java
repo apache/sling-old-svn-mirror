@@ -40,7 +40,7 @@ public class MockResourceResolver implements ResourceResolver {
 
     private Map<String, Collection<Resource>> children = new LinkedHashMap<String, Collection<Resource>>();
 
-    public void addResource(Resource resource) {
+    void addResource(Resource resource) {
         this.resources.put(resource.getPath(), resource);
     }
 
