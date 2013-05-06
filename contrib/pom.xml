@@ -88,6 +88,7 @@
           <module>commons/html</module>
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
+          <module>extensions/collection</module>
           <module>extensions/dojo</module>
           <module>extensions/dojo-sling</module>
           <module>extensions/ftpserver</module>
