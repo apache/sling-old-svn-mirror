@@ -553,15 +553,15 @@ public class JobManagerImpl
      */
     @Override
     public void handleTopologyEvent(final TopologyEvent event) {
-//        if ( this.logger.isDebugEnabled() ) { // TODO
-            this.logger.info("Received topology event {}", event);
-//        }
+        if ( this.logger.isDebugEnabled() ) {
+            this.logger.debug("Received topology event {}", event);
+        }
 
         // check if there is a change of properties which doesn't affect us
         if ( event.getType() == Type.PROPERTIES_CHANGED ) {
             final Map<String, String> newAllInstances = TopologyCapabilities.getAllInstancesMap(event.getNewView());
             if ( this.topologyCapabilities != null && this.topologyCapabilities.isSame(newAllInstances) ) {
-                logger.info("No changes in capabilities."); // TODO - debug
+                logger.debug("No changes in capabilities.");
                 return;
             }
         }
