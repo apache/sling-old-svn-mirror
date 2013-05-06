@@ -25,13 +25,14 @@ import java.util.Map;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.resource.collection.ResourceCollection;
 import org.apache.sling.resource.collection.ResourceCollectionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * 
  * Implements <code>ResourceCollectionManger</code> interface. And provides
  * create, delete, get apis for ResourceCollection.
  *
@@ -54,11 +55,11 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
     	if (resource != null) {
     		if (resource.isResourceType(ResourceCollection.RESOURCE_TYPE)) {
                 return new ResourceCollectionImpl(resource);
-            }
+            } 
     	} else {
     		throw new IllegalArgumentException("resource can not be null");
     	}
-
+    	
     	return null;
     }
 
@@ -75,7 +76,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
      */
     public ResourceCollection createCollection(Resource parentResource, String name,
             Map<String, Object> properties) throws PersistenceException {
-
+        
         if (parentResource != null) {
         	String fullPath = parentResource.getPath() + name;
 
@@ -83,16 +84,21 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
                 throw new IllegalArgumentException("invalid path, " + fullPath
                     + "resource already exists");
             }
-
+            
             if (properties == null) {
                 properties = new HashMap<String, Object>();
             }
 
-            // make sure correct resource type is used
-            properties.put(
-                    ResourceResolver.PROPERTY_RESOURCE_TYPE,
+            if (properties.get(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY) != null
+                && !ResourceCollection.RESOURCE_TYPE.equals(properties.get(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY))) {
+                properties.put(
+                    JcrResourceConstants.SLING_RESOURCE_SUPER_TYPE_PROPERTY,
                     ResourceCollection.RESOURCE_TYPE);
-
+            } else {
+                properties.put(
+                    JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
+                    ResourceCollection.RESOURCE_TYPE);
+            }
             Resource collectionRes = resolver.create(parentResource, name, properties);
             resolver.create(collectionRes, "members", null);
             log.debug("collection  {} created", fullPath);
@@ -108,7 +114,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
 
     /**
      * {@inheritDoc}
-     *
+     * 
      * @throws PersistenceException
      */
     public boolean deleteCollection(Resource resource)
@@ -121,7 +127,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
     		throw new IllegalArgumentException("resource can not be null");
     	}
     }
-
+    
     /**
      * {@inheritDoc}
      */
