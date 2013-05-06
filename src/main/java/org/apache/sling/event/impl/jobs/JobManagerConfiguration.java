@@ -43,6 +43,12 @@ public class JobManagerConfiguration {
     /** The background loader waits this time of seconds after startup before loading events from the repository. (in secs) */
     public static final String CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
 
+    /** Default for disabling the distribution. */
+    public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
+
+    /** Configuration switch for distributing the jobs. */
+    public static final String PROPERTY_DISABLE_DISTRIBUTION = "job.consumermanager.disableDistribution";
+
     /** The jobs base path with a slash. */
     private String jobsBasePathWithSlash;
 
@@ -70,7 +76,10 @@ public class JobManagerConfiguration {
 
     private long backgroundLoadDelay;
 
+    private boolean disabledDistribution;
+
     public JobManagerConfiguration(final Map<String, Object> props) {
+        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
         this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH),
                             DEFAULT_REPOSITORY_PATH) + '/';
 
@@ -198,5 +207,9 @@ public class JobManagerConfiguration {
 
     public String getPreviousVersionIdentifiedPath() {
         return this.previousVersionIdentifiedPath;
+    }
+
+    public boolean disableDistribution() {
+        return this.disabledDistribution;
     }
 }
