@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.dea;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -118,7 +119,9 @@ public class DistributedEventSender
             final String topic = vm.get(EventConstants.EVENT_TOPIC, String.class);
             final Map<String, Object> properties = ResourceHelper.cloneValueMap(vm);
             // only send event if there are no read errors, otherwise discard it
-            if ( properties.get(ResourceHelper.PROPERTY_MARKER_READ_ERROR) == null ) {
+            @SuppressWarnings("unchecked")
+            final List<Exception> readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
+            if ( readErrorList == null ) {
                 properties.remove(EventConstants.EVENT_TOPIC);
 
                 try {
@@ -136,6 +139,10 @@ public class DistributedEventSender
                     // this exception occurs if the topic is not correct (it should never happen,
                     // but you never know)
                     logger.error("Unable to read event: " + iae.getMessage(), iae);
+                }
+            } else {
+                for(final Exception e : readErrorList) {
+                    logger.warn("Unable to read distributed event from " + eventResource.getPath(), e);
                 }
             }
         } catch (final InstantiationException ie) {

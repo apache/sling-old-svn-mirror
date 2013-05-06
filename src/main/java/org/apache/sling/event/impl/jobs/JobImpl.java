@@ -19,6 +19,7 @@
 package org.apache.sling.event.impl.jobs;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,7 +53,7 @@ public class JobImpl implements Job {
 
     private final boolean isBridgedEvent;
 
-    private final boolean hasReadError;
+    private final List<Exception> readErrorList;
 
     /**
      * Create a new job instance
@@ -62,6 +63,7 @@ public class JobImpl implements Job {
      * @param jobId The unique (internal) job id
      * @param properties Non-null map of properties, at least containing {@link #PROPERTY_RESOURCE_PATH}
      */
+    @SuppressWarnings("unchecked")
     public JobImpl(final String topic,
                    final String name,
                    final String jobId,
@@ -71,7 +73,7 @@ public class JobImpl implements Job {
         this.jobId = jobId;
         this.path = (String)properties.remove(PROPERTY_RESOURCE_PATH);
         this.isBridgedEvent = properties.remove(PROPERTY_BRIDGED_EVENT) != null;
-        this.hasReadError = properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR) != null;
+        this.readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
 
         this.properties = new ValueMapDecorator(properties);
     }
@@ -94,7 +96,7 @@ public class JobImpl implements Job {
      * Did we have read errors?
      */
     public boolean hasReadErrors() {
-        return this.hasReadError;
+        return this.readErrorList != null;
     }
 
     /**

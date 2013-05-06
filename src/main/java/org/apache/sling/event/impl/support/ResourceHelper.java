@@ -18,10 +18,14 @@
  */
 package org.apache.sling.event.impl.support;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.sling.api.resource.PersistenceException;
@@ -125,10 +129,10 @@ public abstract class ResourceHelper {
         return sb.toString();
     }
 
-    public static final String PROPERTY_MARKER_READ_ERROR = ResourceHelper.class.getName() + "/ReadError";
+    public static final String PROPERTY_MARKER_READ_ERROR_LIST = ResourceHelper.class.getName() + "/ReadErrorList";
 
     public static Map<String, Object> cloneValueMap(final ValueMap vm) throws InstantiationException {
-        boolean hasReadError = false;
+        List<Exception> hasReadError = null;
         try {
             final Map<String, Object> result = new HashMap<String, Object>(vm);
             for(final Map.Entry<String, Object> entry : result.entrySet()) {
@@ -137,12 +141,36 @@ public abstract class ResourceHelper {
                     if ( value != null ) {
                         entry.setValue(value);
                     } else {
-                        hasReadError = true;
+                        if ( hasReadError == null ) {
+                            hasReadError = new ArrayList<Exception>();
+                        }
+                        final int count = hasReadError.size();
+                        // let's find out which class might be missing
+                        ObjectInputStream ois = null;
+                        try {
+                            ois = new ObjectInputStream((InputStream)entry.getValue());
+                            ois.readObject();
+                        } catch (final ClassNotFoundException cnfe) {
+                             hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'", cnfe));
+                        } catch (final IOException ioe) {
+                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'", ioe));
+                        } finally {
+                            if ( ois != null ) {
+                                try {
+                                    ois.close();
+                                } catch (IOException ignore) {
+                                    // ignore
+                                }
+                            }
+                        }
+                        if ( hasReadError.size() == count ) {
+                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
+                        }
                     }
                 }
             }
-            if ( hasReadError ) {
-                result.put(PROPERTY_MARKER_READ_ERROR, Boolean.TRUE);
+            if ( hasReadError != null ) {
+                result.put(PROPERTY_MARKER_READ_ERROR_LIST, hasReadError);
             }
             return result;
         } catch ( final IllegalArgumentException iae) {
