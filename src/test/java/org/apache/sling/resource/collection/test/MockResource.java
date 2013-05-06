@@ -43,6 +43,7 @@ public class MockResource extends SyntheticResource {
             String resourceType, String resourceSuperType) {
         super(resourceResolver, path, resourceType);
 
+        ((MockResourceResolver)resourceResolver).addResource(this);
         setResourceType(resourceType);
         setResourceSuperType(resourceSuperType);
     }

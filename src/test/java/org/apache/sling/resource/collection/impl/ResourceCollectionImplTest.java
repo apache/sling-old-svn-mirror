@@ -1,6 +1,5 @@
 package org.apache.sling.resource.collection.impl;
 
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -20,33 +19,25 @@ import org.junit.Test;
 
 public class ResourceCollectionImplTest {
 	private ResourceResolver resResolver;
+    private ResourceCollectionManager rcm;
 
 	@Before
 	public void setUp() throws Exception {
 		resResolver = new MockResourceResolver();
-		//create some root resource
-		Resource resource = new MockResource(resResolver, "/", "type");
-		
-		((MockResourceResolver) resResolver).addResource(resource);
+		rcm = new ResourceCollectionManagerImpl(resResolver);
+		// need a root resource
+		new MockResource(resResolver, "/", "type");
 	}
 	
 	@Test
 	public void testAddResource() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
 		        
-        ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
-        
-        Resource resource = new MockResource(resResolver, "/res1", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
-        collection.add(resource);
-        resource = new MockResource(resResolver, "/res2", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
+        final ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
+        collection.add(new MockResource(resResolver, "/res1", "type"));
+        final Resource resource = new MockResource(resResolver, "/res2", "type");
         collection.add(resource);
         
         Assert.assertEquals(true, collection.contains(resource));
-        
         Assert.assertEquals(true, collection.contains(resource));
         Assert.assertNotNull(resResolver.getResource("/test1"));
         Assert.assertEquals(ResourceCollection.RESOURCE_TYPE, resResolver.getResource("/test1").getResourceType());
@@ -54,17 +45,9 @@ public class ResourceCollectionImplTest {
 	
 	@Test
 	public void testCreateCollection() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
-		        
-        ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
-        
-        Resource resource = new MockResource(resResolver, "/res1", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
-        collection.add(resource, null);
-        resource = new MockResource(resResolver, "/res2", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
+        final ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
+        collection.add(new MockResource(resResolver, "/res1", "type"), null);
+        final Resource resource = new MockResource(resResolver, "/res2", "type");
         collection.add(resource, null);
         
         Assert.assertEquals(true, collection.contains(resource));
@@ -74,17 +57,9 @@ public class ResourceCollectionImplTest {
 	
 	@Test
 	public void testGetCollection() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
-		        
         ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
-        
-        Resource resource = new MockResource(resResolver, "/res1", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
-        collection.add(resource, null);
-        resource = new MockResource(resResolver, "/res2", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
+        collection.add(new MockResource(resResolver, "/res1", "type"), null);
+        final Resource resource = new MockResource(resResolver, "/res2", "type");
         collection.add(resource, null);
         
         collection = rcm.getCollection(resResolver.getResource(collection.getPath()));
@@ -96,23 +71,14 @@ public class ResourceCollectionImplTest {
 	
 	@Test
 	public void testListCollection() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
-        
-        ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "collection1");
-        
-        Resource resource = new MockResource(resResolver, "/res1", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
+        final ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "collection1");
+        collection.add(new MockResource(resResolver, "/res1", "type"), null);
+        final Resource resource = new MockResource(resResolver, "/res2", "type");
         
         collection.add(resource, null);
-        resource = new MockResource(resResolver, "/res2", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
-        collection.add(resource, null);
-        
         Assert.assertEquals(true, collection.contains(resource));
         
-        Iterator<Resource> resources = collection.getResources();
-        
+        final Iterator<Resource> resources = collection.getResources();
         int numOfRes = 0;
         while (resources.hasNext()) {
         	resources.next();
@@ -124,20 +90,15 @@ public class ResourceCollectionImplTest {
 	
 	@Test
 	public void testCreateCollectionWithProperties() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
-		Map<String, Object> props = new HashMap<String, Object>();
+		final Map<String, Object> props = new HashMap<String, Object>();
 		props.put(JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY, "some/type");
 		props.put("creator", "slingdev");
         
-        ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "collection3", props);
-        
-        Resource resource = new MockResource(resResolver, "/res1", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
+        final ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "collection3", props);
+        final Resource resource = new MockResource(resResolver, "/res1", "type");
         collection.add(resource, null);
         
-        
-        Resource collectionRes = resResolver.getResource("/collection3");
+        final Resource collectionRes = resResolver.getResource("/collection3");
         Assert.assertNotNull(collectionRes);
         
         Assert.assertEquals(true, collection.contains(resource));
@@ -150,19 +111,15 @@ public class ResourceCollectionImplTest {
 	
 	@Test
 	public void testAddResourceWithProperties() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
-		Map<String, Object> props = new HashMap<String, Object>();
+		final Map<String, Object> props = new HashMap<String, Object>();
 		props.put("creator", "slingdev");
         
-        ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "collection3");
+        final ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "collection3");
         
-        Resource resource = new MockResource(resResolver, "/res1", "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
-        
+        final Resource resource = new MockResource(resResolver, "/res1", "type");
         collection.add(resource, props);
         
-        
-        Resource collectionRes = resResolver.getResource("/collection3");
+        final Resource collectionRes = resResolver.getResource("/collection3");
         Assert.assertNotNull(collectionRes);
         
         Assert.assertEquals(true, collection.contains(resource));
@@ -178,17 +135,12 @@ public class ResourceCollectionImplTest {
 	
 	@Test
 	public void testOrdering() throws Exception {
-		ResourceCollectionManager rcm = new ResourceCollectionManagerImpl(resResolver);
-        
-        ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
+        final ResourceCollection collection = rcm.createCollection(resResolver.getResource("/"), "test1");
         String[] resPaths = {"/res1", "/res2"};
-        Resource resource = new MockResource(resResolver, resPaths[0], "type");
-        ((MockResourceResolver) resResolver).addResource(resource);
+        final Resource resource = new MockResource(resResolver, resPaths[0], "type");
         
         collection.add(resource, null);
-        Resource resource2 = new MockResource(resResolver, resPaths[1], "type");
-        ((MockResourceResolver) resResolver).addResource(resource2);
-        
+        final Resource resource2 = new MockResource(resResolver, resPaths[1], "type");
         collection.add(resource2, null);
         
         Assert.assertEquals(true, collection.contains(resource2));
