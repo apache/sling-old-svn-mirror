@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package org.apache.sling.resource.collection;
 
 import java.util.Map;
@@ -28,9 +27,9 @@ import org.apache.sling.api.resource.ResourceResolver;
 
 /**
  * The <code>ResourceCollectionManager<code> defines the API to get, create and delete
- * resource collection {@link org.apache.sling.resource.collection.ResourceCollection}.
+ * resource collections {@link org.apache.sling.resource.collection.ResourceCollection}.
  * 
- * A ResourceCollectionManager instance can be retrieved by adapting ResourceResolver. 
+ * A ResourceCollectionManager instance can be retrieved by adapting a {@link ResourceResolver}. 
  */
 public interface ResourceCollectionManager {
     

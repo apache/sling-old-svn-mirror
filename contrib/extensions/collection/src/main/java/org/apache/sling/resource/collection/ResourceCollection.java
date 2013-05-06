@@ -17,7 +17,6 @@
  * under the License.
  */
 
-
 package org.apache.sling.resource.collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -27,10 +26,13 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 
 /**
- * ResourceCollection is an ordered collection of resources. Actual resources are not stored inside the collection.
+ * ResourceCollection is an ordered collection of {@link Resource}. 
+ * The collection does not store the actual Resources, it only points to
+ * them. 
  * 
- * Each entry in a collection is represented as a resource, which contain a reference to original resource
- * and it can have additional properties i.e. creationDate.
+ * Each entry in the collection is represented by a Resource which contains a 
+ * reference to original resource. That reference Resource can have additional 
+ * properties (creationDate, etc.)
  */
 public interface ResourceCollection {
     
@@ -75,7 +77,6 @@ public interface ResourceCollection {
      *         false otherwise
      */
     boolean contains(Resource resource);
-    
     
     /**
      * Creates a new entry in the collection at the last position and add a reference to resource 
