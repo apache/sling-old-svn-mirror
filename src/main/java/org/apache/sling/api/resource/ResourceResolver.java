@@ -494,7 +494,8 @@ public interface ResourceResolver extends Adaptable {
      * Close this resource resolver. This method should be called by clients
      * when the resource resolver is not used anymore. Once this method has been
      * called, the resource resolver is considered unusable and will throw
-     * exceptions if still used.
+     * exceptions if still used - with the exception of this method, which
+     * can be called several times with no ill effects.
      *
      * @since 2.1
      */
