@@ -497,6 +497,13 @@ public class JobManagerImpl
                     jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
                     jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, JobPriority.NORM.name())));
 
+                    @SuppressWarnings("unchecked")
+                    final List<Exception> readErrorList = (List<Exception>) jobProperties.get(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
+                    if ( readErrorList != null ) {
+                        for(final Exception e : readErrorList) {
+                            logger.warn("Unable to read job from " + resource.getPath(), e);
+                        }
+                    }
                     job = new JobImpl(topic,
                             (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
                             (String)jobProperties.get(JobUtil.JOB_ID),

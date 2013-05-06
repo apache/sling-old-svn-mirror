@@ -542,7 +542,14 @@ public class TimedEventSender
                     result.hasReadErrors = true;
                     return result;
                 }
-                result.hasReadErrors = properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR) != null;
+                @SuppressWarnings("unchecked")
+                final List<Exception> readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
+                result.hasReadErrors = readErrorList != null;
+                if ( readErrorList != null ) {
+                    for(final Exception e : readErrorList) {
+                        logger.warn("Unable to read timed event job from " + eventResource.getPath(), e);
+                    }
+                }
                 properties.remove(EventConstants.EVENT_TOPIC);
                 properties.put(TimedEventStatusProvider.PROPERTY_EVENT_ID, topic.replace('/', '.') + '/' + eventResource.getName());
 
