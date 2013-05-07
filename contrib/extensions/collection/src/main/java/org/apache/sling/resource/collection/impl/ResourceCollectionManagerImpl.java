@@ -26,6 +26,7 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.resource.collection.ResourceCollection;
 import org.apache.sling.resource.collection.ResourceCollectionManager;
@@ -37,7 +38,8 @@ import org.slf4j.LoggerFactory;
  * Implements <code>ResourceCollectionManger</code> interface. And provides
  * create, delete, get apis for ResourceCollection.
  *
- * A ResourceCollectionManager instance can be retrieved by adapting ResourceResolver.
+ * This service can be retrieved by looking it up from the
+ * service registry or by adapting a {@link ResourceResolver}.
  */
 @Component
 @Service(value=ResourceCollectionManager.class)
