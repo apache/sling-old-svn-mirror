@@ -66,12 +66,6 @@ public class ResourceCollectionImpl implements
 
     private final Resource membersResource;
 
-    private static final String REF_PROPERTY = "sling:resource";
-
-    private static final String MEMBERS_NODE_NAME = "members";
-    
-    private static final String REFERENCES_PROP = "sling:references";
-
     /**
      * Creates a new collection from the given resource
      * 
@@ -80,7 +74,7 @@ public class ResourceCollectionImpl implements
     public ResourceCollectionImpl(Resource resource) {
         this.resource = resource;
         resolver = resource.getResourceResolver();
-        membersResource = resource.getChild(MEMBERS_NODE_NAME);
+        membersResource = resource.getChild(ResourceCollectionConstants.MEMBERS_NODE_NAME);
     }
     
     /**
@@ -103,15 +97,15 @@ public class ResourceCollectionImpl implements
     public boolean add(Resource res, Map<String, Object> properties) throws PersistenceException {
         if (res != null && !contains(res)) {
         	ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
-        	String[] order = vm.get(REFERENCES_PROP, new String[]{});
+        	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
         	
         	order = (String[]) ArrayUtils.add(order, res.getPath());
-        	vm.put(REFERENCES_PROP, order);
+        	vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
         	
         	if (properties == null) {
         		properties = new HashMap<String, Object>();
         	}
-            properties.put(REF_PROPERTY, res.getPath());
+            properties.put(ResourceCollectionConstants.REF_PROPERTY, res.getPath());
             resolver.create(
                 membersResource,
                 ResourceCollectionUtil.createUniqueChildName(membersResource,
@@ -130,13 +124,13 @@ public class ResourceCollectionImpl implements
     public boolean add(Resource res) throws PersistenceException {
         if (res != null && !contains(res)) {
         	ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
-        	String[] order = vm.get(REFERENCES_PROP, new String[]{});
+        	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
         	
         	order = (String[]) ArrayUtils.add(order, res.getPath());
-        	vm.put(REFERENCES_PROP, order);
+        	vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
         	
         	Map<String, Object> properties = new HashMap<String, Object>();
-        	properties.put(REF_PROPERTY, res.getPath());
+        	properties.put(ResourceCollectionConstants.REF_PROPERTY, res.getPath());
             resolver.create(
                 membersResource,
                 ResourceCollectionUtil.createUniqueChildName(membersResource,
@@ -157,7 +151,7 @@ public class ResourceCollectionImpl implements
     public Iterator<Resource> getResources() {
     	
     	ValueMap vm = membersResource.adaptTo(ValueMap.class);
-    	String[] references = vm.get(REFERENCES_PROP, new String[]{});
+    	String[] references = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
     	List<Resource> resources = new ArrayList<Resource>();
     	
         for (String path:references) {
@@ -186,7 +180,7 @@ public class ResourceCollectionImpl implements
     public boolean contains(Resource res) {
     	if (res != null) {
     		ValueMap vm = membersResource.adaptTo(ValueMap.class);
-        	String[] order = vm.get(REFERENCES_PROP, new String[]{});
+        	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
         	
         	int index = ArrayUtils.indexOf(order, res.getPath(), 0);
         	
@@ -208,12 +202,12 @@ public class ResourceCollectionImpl implements
         resolver.delete(tobeRemovedRes);
         //remove from order array
         ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
-    	String[] order = vm.get(REFERENCES_PROP, new String[]{});
+    	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
     	
     	int index = ArrayUtils.indexOf(order, res.getPath(), 0);
     	
     	order = (String[]) ArrayUtils.remove(order, index);
-    	vm.put(REFERENCES_PROP, order);
+    	vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
     	
     	return true;
     }
@@ -234,13 +228,13 @@ public class ResourceCollectionImpl implements
             String resName = res.getName();
             if (membersResource.getChild(resName) != null
                 && (res.getPath()).equals(ResourceUtil.getValueMap(
-                    membersResource.getChild(resName)).get(REF_PROPERTY, "")))
+                    membersResource.getChild(resName)).get(ResourceCollectionConstants.REF_PROPERTY, "")))
                 return membersResource.getChild(resName);
             // handle multiple res with same name but different paths
             Iterator<Resource> children = membersResource.listChildren();
             while (children.hasNext()) {
                 Resource r = children.next();
-                if (ResourceUtil.getValueMap(r).get(REF_PROPERTY, "").equals(
+                if (ResourceUtil.getValueMap(r).get(ResourceCollectionConstants.REF_PROPERTY, "").equals(
                     res.getPath())) return r;
             }
         }
@@ -252,7 +246,7 @@ public class ResourceCollectionImpl implements
 			throw new IllegalArgumentException("Source Resource can not be null");
 		}
 		ModifiableValueMap vm = membersResource.adaptTo(ModifiableValueMap.class);
-    	String[] order = vm.get(REFERENCES_PROP, new String[]{});
+    	String[] order = vm.get(ResourceCollectionConstants.REFERENCES_PROP, new String[]{});
     	String srcPath = srcResource.getPath();
 		int srcIndex = ArrayUtils.indexOf(order, srcPath);
     	if (srcIndex < 0) {
@@ -268,7 +262,7 @@ public class ResourceCollectionImpl implements
 			String destPath = destResource.getPath();
 			
 			if (destPath.equals(srcPath)) {
-				String message = MessageFormat.format("Collection ordering failed, as source {} and destination {} can not be same", 
+				String message = MessageFormat.format("Collection ordering failed, as source {0} and destination {1} can not be same", 
 	    				srcPath, destPath);
 				log.error(message);
 				throw new IllegalArgumentException(message);
@@ -289,7 +283,7 @@ public class ResourceCollectionImpl implements
 			order = (String[]) ArrayUtils.add(order, destIndex, srcPath);
 		}
 		
-		vm.put(REFERENCES_PROP, order);
+		vm.put(ResourceCollectionConstants.REFERENCES_PROP, order);
 	}
 
 	public ModifiableValueMap getProperties(Resource resource) {
@@ -297,7 +291,7 @@ public class ResourceCollectionImpl implements
         while (entries.hasNext()) {
         	Resource entry = entries.next();
         	String path = ResourceUtil.getValueMap(entry).get(
-                    REF_PROPERTY, "");
+        			ResourceCollectionConstants.REF_PROPERTY, "");
             
             if (resource.getPath().equals(path)) {
             	return entry.adaptTo(ModifiableValueMap.class);

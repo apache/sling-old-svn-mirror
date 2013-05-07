@@ -78,7 +78,7 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
             Map<String, Object> properties) throws PersistenceException {
         
         if (parentResource != null) {
-        	String fullPath = parentResource.getPath() + name;
+        	String fullPath = parentResource.getPath() + "/" + name;
 
             if (resolver.getResource(fullPath) != null) {
                 throw new IllegalArgumentException("invalid path, " + fullPath
@@ -100,11 +100,10 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
                     ResourceCollection.RESOURCE_TYPE);
             }
             Resource collectionRes = resolver.create(parentResource, name, properties);
-            resolver.create(collectionRes, "members", null);
+            resolver.create(collectionRes, ResourceCollectionConstants.MEMBERS_NODE_NAME, null);
             log.debug("collection  {} created", fullPath);
 
-            return new ResourceCollectionImpl(
-                resolver.getResource(collectionRes.getPath()));
+            return new ResourceCollectionImpl(collectionRes);
         } else {
             log.error("parent resource can not be null");
             throw new IllegalArgumentException("parent resource can not be null ");
