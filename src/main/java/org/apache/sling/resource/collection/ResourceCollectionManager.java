@@ -29,7 +29,8 @@ import org.apache.sling.api.resource.ResourceResolver;
  * The <code>ResourceCollectionManager<code> defines the API to get, create and delete
  * resource collections {@link org.apache.sling.resource.collection.ResourceCollection}.
  *
- * A ResourceCollectionManager instance can be retrieved by adapting a {@link ResourceResolver}.
+ * The ResourceCollectionManager service can be retrieved by looking it up from the
+ * service registry or by adapting a {@link ResourceResolver}.
  */
 public interface ResourceCollectionManager {
 
