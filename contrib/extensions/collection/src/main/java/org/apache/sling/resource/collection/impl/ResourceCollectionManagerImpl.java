@@ -22,9 +22,10 @@ package org.apache.sling.resource.collection.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.resource.collection.ResourceCollection;
 import org.apache.sling.resource.collection.ResourceCollectionManager;
@@ -32,21 +33,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
+ *
  * Implements <code>ResourceCollectionManger</code> interface. And provides
  * create, delete, get apis for ResourceCollection.
  *
  * A ResourceCollectionManager instance can be retrieved by adapting ResourceResolver.
  */
+@Component
+@Service(value=ResourceCollectionManager.class)
 public class ResourceCollectionManagerImpl implements ResourceCollectionManager {
 
-    private static final Logger log = LoggerFactory.getLogger(ResourceCollectionManager.class);
-
-    private final ResourceResolver resolver;
-
-    public ResourceCollectionManagerImpl(ResourceResolver resolver) {
-        this.resolver = resolver;
-    }
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
      * {@inheritDoc}
@@ -55,11 +52,11 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
     	if (resource != null) {
     		if (resource.isResourceType(ResourceCollection.RESOURCE_TYPE)) {
                 return new ResourceCollectionImpl(resource);
-            } 
+            }
     	} else {
     		throw new IllegalArgumentException("resource can not be null");
     	}
-    	
+
     	return null;
     }
 
@@ -76,15 +73,15 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
      */
     public ResourceCollection createCollection(Resource parentResource, String name,
             Map<String, Object> properties) throws PersistenceException {
-        
+
         if (parentResource != null) {
         	String fullPath = parentResource.getPath() + "/" + name;
 
-            if (resolver.getResource(fullPath) != null) {
+            if (parentResource.getResourceResolver().getResource(fullPath) != null) {
                 throw new IllegalArgumentException("invalid path, " + fullPath
                     + "resource already exists");
             }
-            
+
             if (properties == null) {
                 properties = new HashMap<String, Object>();
             }
@@ -99,8 +96,8 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
                     JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY,
                     ResourceCollection.RESOURCE_TYPE);
             }
-            Resource collectionRes = resolver.create(parentResource, name, properties);
-            resolver.create(collectionRes, ResourceCollectionConstants.MEMBERS_NODE_NAME, null);
+            Resource collectionRes = parentResource.getResourceResolver().create(parentResource, name, properties);
+            parentResource.getResourceResolver().create(collectionRes, ResourceCollectionConstants.MEMBERS_NODE_NAME, null);
             log.debug("collection  {} created", fullPath);
 
             return new ResourceCollectionImpl(collectionRes);
@@ -113,25 +110,17 @@ public class ResourceCollectionManagerImpl implements ResourceCollectionManager 
 
     /**
      * {@inheritDoc}
-     * 
+     *
      * @throws PersistenceException
      */
     public boolean deleteCollection(Resource resource)
             throws PersistenceException {
     	if (resource != null) {
 	        log.debug("collection  {} deleted", resource.getPath());
-	        resolver.delete(resource);
+	        resource.getResourceResolver().delete(resource);
 	        return true;
     	} else {
     		throw new IllegalArgumentException("resource can not be null");
     	}
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-	public ResourceResolver getResourceResolver() {
-		return resolver;
-	}
-
 }

@@ -21,6 +21,7 @@ package org.apache.sling.resource.collection.impl;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.Resource;
@@ -34,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * AdapterFactory that adapts Resources to: {@link ResourceCollection}
  * And ResourceResolver to: {@link ResourceCollectionManager)
  */
-@Component(metatype = false)
+@Component
 @Service
 @Property(name = "service.description", value = "Collection Adapter Factory")
 public class ResourceCollectionAdapterFactory implements AdapterFactory {
@@ -56,6 +57,9 @@ public class ResourceCollectionAdapterFactory implements AdapterFactory {
         Resource.class.getName(), ResourceResolver.class.getName()
 
     };
+
+    @Reference
+    private ResourceCollectionManager collectionManager;
 
     // ---------- AdapterFactory -----------------------------------------------
 
@@ -93,7 +97,7 @@ public class ResourceCollectionAdapterFactory implements AdapterFactory {
     private <AdapterType> AdapterType getAdapter(ResourceResolver resolver,
             Class<AdapterType> type) {
         if (COLLECTION_MGR_CLASS == type) {
-            return (AdapterType) new ResourceCollectionManagerImpl(resolver);
+            return (AdapterType) collectionManager;
         } else {
             log.warn("Unable to adapt resolver to requested type {}",
                 type.getName());

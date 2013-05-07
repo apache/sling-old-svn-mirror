@@ -28,65 +28,60 @@ import org.apache.sling.api.resource.ResourceResolver;
 /**
  * The <code>ResourceCollectionManager<code> defines the API to get, create and delete
  * resource collections {@link org.apache.sling.resource.collection.ResourceCollection}.
- * 
- * A ResourceCollectionManager instance can be retrieved by adapting a {@link ResourceResolver}. 
+ *
+ * A ResourceCollectionManager instance can be retrieved by adapting a {@link ResourceResolver}.
  */
 public interface ResourceCollectionManager {
-    
+
     /**
-     * This method returns a resource collection for the given <code>resource</code> 
+     * This method returns a resource collection for the given <code>resource</code>
      * that represents a {@link ResourceCollection}.
-     *  
+     *
      * It returns null if given resource is not a collection
-     * 
+     *
      * @param resource resource that represents a collection
      * @return The {@link org.apache.sling.resource.collection.ResourceCollection} representing the collection.
-     *      
+     *
      */
     ResourceCollection getCollection(Resource resource);
-    
-    
+
+
     /**
-     * This method creates a resource collection with a given name under the <code>parentResource</code>. 
+     * This method creates a resource collection with a given name under the <code>parentResource</code>.
      * The changes are transient and have to be saved by resourceResolver.commit()
-     * 
+     *
      * @param parentResource parent resource where collection needs to be created.
      * @param name The name for collection.
      *
      * @return The {@link org.apache.sling.resource.collection.ResourceCollection} representing the created collection.
-     * 
+     *
      * @throws {@link PersistenceException} if the operation fails
      */
     ResourceCollection createCollection(Resource parentResource, String name) throws PersistenceException;
-    
+
     /**
      * This method creates a resource collection with a given name under the <code>parentResource</code>.
      * The changes are transient and have to be saved by resourceResolver.commit()
-     * 
+     *
      * @param parentResource parent resource where collection needs to be created.
      * @param name The name for collection.
      * @param properties The additional data for resource collection
      *
      * @return The {@link org.apache.sling.resource.collection.ResourceCollection} representing the created collection.
-     * 
+     *
      * @throws {@link PersistenceException} if the operation fails
      */
     ResourceCollection createCollection(Resource parentResource, String name, Map<String,Object> properties) throws PersistenceException;
-    
+
     /**
-     * Removes the {@link org.apache.sling.resource.collection.ResourceCollection} corresponding to the collection represented by 
+     * Removes the {@link org.apache.sling.resource.collection.ResourceCollection} corresponding to the collection represented by
      * <code>resource</code>.
      * The changes are transient and have to be saved by resourceResolver.commit()
-     * 
+     *
      * @param resource resource representing a collection to be deleted.
      * @return <code>true</code> if the collection was successfully removed.
-     * 
+     *
      * @throws {@link PersistenceException} if the operation fails
      */
     boolean deleteCollection(Resource resource) throws PersistenceException;
-    
-    /**
-     * Returns the {@link ResourceResolver} from which this has been retrieved/adapted.
-     */
-    ResourceResolver getResourceResolver();
 }
