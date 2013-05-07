@@ -78,5 +78,10 @@
         </plugins>
     </reporting>
     
-    <dependencies/>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+    </dependencies>
 </project>
