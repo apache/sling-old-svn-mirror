@@ -227,7 +227,7 @@ public class TopologyCapabilities {
                         }
                     }
                 }
-                if ( localTargets != null ) {
+                if ( localTargets.size() > 0 ) {
                     potentialTargets.clear();
                     potentialTargets.addAll(localTargets);
                     logger.debug("Potential targets filtered for {} : {}", jobTopic, potentialTargets);
