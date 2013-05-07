@@ -42,7 +42,7 @@ public class ResourceCollectionImplTest {
 	@Before
 	public void setUp() throws Exception {
 		resResolver = new MockResourceResolverFactory().getAdministrativeResourceResolver(null);
-		rcm = new ResourceCollectionManagerImpl(resResolver);
+		rcm = new ResourceCollectionManagerImpl();
 	}
 
 	@Test
@@ -76,14 +76,14 @@ public class ResourceCollectionImplTest {
         Assert.assertNotNull(resResolver.getResource("/test1"));
         Assert.assertEquals(ResourceCollection.RESOURCE_TYPE, resResolver.getResource("/test1").getResourceType());
 	}
-	
+
 	@Test
 	public void testCheckPath() throws Exception {
 		final Resource rootResource = resResolver.create(resResolver.getResource("/"), "root",
                 Collections.singletonMap(ResourceResolver.PROPERTY_RESOURCE_TYPE, (Object)"type"));
-		
+
         final ResourceCollection collection = rcm.createCollection(rootResource, "test1");
-        
+
 
         Assert.assertEquals(rootResource.getPath() + "/" + "test1", collection.getPath());
  	}
@@ -198,12 +198,12 @@ public class ResourceCollectionImplTest {
         	Assert.assertEquals(resPaths[numOfRes], entry.getPath());
         	numOfRes ++;
         }
-        
+
         try {
         	collection.orderBefore(resource, resource);
         	Assert.fail("should have thrown IllegalArgument");
         } catch (IllegalArgumentException e) {
-        	
+
         }
 
         //change the order
