@@ -51,6 +51,15 @@ public final class OrderedJobQueue extends AbstractJobQueue {
 
         @Override
         public int compare(final JobHandler o1, final JobHandler o2) {
+            if ( o1.getJob() == null ) {
+                if ( o2.getJob() == null ) {
+                    return 0;
+                }
+                return -1;
+            }
+            if ( o2.getJob() == null ) {
+                return 1;
+            }
             return o1.getJob().getCreated().compareTo(o2.getJob().getCreated());
         }
     });
