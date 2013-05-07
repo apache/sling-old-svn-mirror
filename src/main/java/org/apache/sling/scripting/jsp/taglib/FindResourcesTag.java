@@ -16,6 +16,8 @@
  */
 package org.apache.sling.scripting.jsp.taglib;
 
+import java.util.Iterator;
+
 import javax.servlet.jsp.tagext.TagSupport;
 
 import org.apache.sling.api.resource.Resource;
@@ -26,76 +28,65 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tag for retrieving resources based on either an absolute path or a relative
- * path and a base resource.
+ * Tag for searching for resources using the given query formulated in the given
+ * language.
  */
-public class GetResourceTag extends TagSupport {
+public class FindResourcesTag extends TagSupport {
 
 	/** The Constant log. */
 	private static final Logger log = LoggerFactory
-			.getLogger(GetResourceTag.class);
-
+			.getLogger(FindResourcesTag.class);
+	
 	/** The Constant serialVersionUID. */
-	private static final long serialVersionUID = -1945089681840552408L;
-
-	/** The base. */
-	private Resource base;
-
-	/** The path. */
-	private String path;
-
+	private static final long serialVersionUID = 8717969268407440925L;
+	
+	/** The query. */
+	private String query;
+	
+	/** The language. */
+	private String language;
+	
 	/** The var. */
 	private String var;
-
-	@Override
-	public int doEndTag() {
-		log.trace("doEndTag");
-
-		ResourceResolver resolver = getResourceResolver();
-		Resource resource = null;
-		if (path.startsWith("/")) {
-			log.debug("Retrieving resource at absolute path: {}", path);
-			resource = resolver.getResource(path);
-		} else {
-			if (base != null) {
-				log.debug(
-						"Retrieving resource at relative path: {} to resource {}",
-						path, base.getPath());
-				resource = resolver.getResource(base, path);
-			} else {
-				log.warn(
-						"Unable to retrieve resource at relative path {}, no base resource specified",
-						path);
-			}
-		}
-
-		log.debug("Saving {} to variable {}", resource, var);
-		pageContext.setAttribute(var, resource);
-
-		return EVAL_PAGE;
-	}
-
-	/**
-	 * Gets the base resource.
-	 * 
-	 * @return the base resource
-	 */
-	public Resource getBase() {
-		return base;
-	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
 	 */
+	@Override
+	public int doEndTag() {
+		log.trace("doEndTag");
+
+		log.debug("Finding resources using query: {} of language {}", query,
+				language);
+
+		ResourceResolver resolver = getResourceResolver();
+		final Iterator<Resource> resources = resolver.findResources(query,
+				language);
+		
+		log.debug("Saving resources to variable {}", var);
+		pageContext.setAttribute(var, resources);
+
+		return EVAL_PAGE;
+	}
+
 	/**
-	 * Get the path of the resource to retrieve.
-	 * 
-	 * @return the path
+	 * Gets the language.
+	 *
+	 * @return the language
 	 */
-	public String getPath() {
-		return path;
+	public String getLanguage() {
+		return language;
+	}
+
+	/**
+	 * Gets the query.
+	 *
+	 * @return the query
+	 */
+	public String getQuery() {
+		return query;
 	}
 
 	/**
@@ -122,23 +113,21 @@ public class GetResourceTag extends TagSupport {
 	}
 
 	/**
-	 * Sets the base resource.
-	 * 
-	 * @param base
-	 *            the new base resource
+	 * Sets the language.
+	 *
+	 * @param language the new language
 	 */
-	public void setBase(Resource base) {
-		this.base = base;
+	public void setLanguage(String language) {
+		this.language = language;
 	}
 
 	/**
-	 * Set the path of the resource to retrieve.
-	 * 
-	 * @param path
-	 *            the path
+	 * Sets the query.
+	 *
+	 * @param query the new query
 	 */
-	public void setPath(String path) {
-		this.path = path;
+	public void setQuery(String query) {
+		this.query = query;
 	}
 
 	/**

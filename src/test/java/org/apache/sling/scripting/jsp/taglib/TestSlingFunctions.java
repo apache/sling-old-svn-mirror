@@ -20,16 +20,23 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.testing.sling.MockResource;
 import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+/**
+ * Unit Tests for the Class SlingFunctions.
+ * @see org.apache.sling.scripting.jsp.taglib.SlingFunctions
+ */
 public class TestSlingFunctions {
 
 	private static final Logger log = LoggerFactory
@@ -45,7 +52,18 @@ public class TestSlingFunctions {
 	public void init() {
 		log.info("init");
 
-		resolver = new MockResourceResolver();
+		resolver = new MockResourceResolver(){
+			@Override
+		    public Iterator<Resource> findResources(String query, String language) {
+				if (query.equals("query") && language.equals("language")) {
+					List<Resource> resources = new ArrayList<Resource>();
+					resources.add(resource);
+					return resources.iterator();
+				} else {
+					return null;
+				}
+		    }
+		};
 		resource = new MockResource(resolver, TEST_PATH, "test");
 		resolver.addResource(resource);
 		MockResource child1 = new MockResource(resolver, TEST_PATH + "/child1",
@@ -64,6 +82,43 @@ public class TestSlingFunctions {
 		Resource resource = SlingFunctions.getResource(resolver, TEST_PATH);
 		assertNotNull(resource);
 		assertEquals(TEST_PATH, resource.getPath());
+
+		log.info("Tests successful!");
+	}
+	
+
+	@Test
+	public void testFindResources() throws ClassNotFoundException {
+		log.info("testFindResources");
+
+		Iterator<Resource> resources = SlingFunctions.findResources(resolver, "query", "language");
+		assertNotNull(resources);
+		assertTrue(resources.hasNext());
+		assertEquals(resource, resources.next());
+
+		log.info("Tests successful!");
+	}
+
+	@Test
+	public void testAdaptTo() throws ClassNotFoundException {
+		log.info("testAdaptTo");
+
+		Adaptable adaptable = SlingFunctions.getResource(resolver, TEST_PATH);
+		Object adapted = SlingFunctions.adaptTo(adaptable,
+				ValueMap.class.getCanonicalName());
+		assertNotNull(adapted);
+		assertTrue(adapted instanceof ValueMap);
+
+		log.info("Tests successful!");
+	}
+
+	@Test
+	public void testGetRelativeResource() {
+		log.info("testGetRelativeResource");
+		Resource parent = SlingFunctions.getResource(resolver, TEST_PATH);
+		Resource child = SlingFunctions.getRelativeResource(parent, "child1");
+		assertNotNull(child);
+		assertEquals(TEST_PATH + "/child1", child.getPath());
 
 		log.info("Tests successful!");
 	}
