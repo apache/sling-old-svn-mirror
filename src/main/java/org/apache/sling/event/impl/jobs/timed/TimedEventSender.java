@@ -313,16 +313,10 @@ public class TimedEventSender
                     localScheduler.addPeriodicJob(scheduleInfo.jobId, this, config, scheduleInfo.period, false);
                 } else {
                     // then it must be date
-                    if ( scheduleInfo.date.getTime() <= System.currentTimeMillis() ) {
-                        // obsolete date, remove it
-                        this.removeEvent(scheduleInfo);
-                        return true;
-                    } else {
-                        if ( this.logger.isDebugEnabled() ) {
-                            this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with date " + scheduleInfo.date);
-                        }
-                        localScheduler.fireJobAt(scheduleInfo.jobId, this, config, scheduleInfo.date);
+                    if ( this.logger.isDebugEnabled() ) {
+                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with date " + scheduleInfo.date);
                     }
+                    localScheduler.fireJobAt(scheduleInfo.jobId, this, config, scheduleInfo.date);
                 }
                 this.startedSchedulerJobs.add(scheduleInfo.jobId);
                 return true;
