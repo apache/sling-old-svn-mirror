@@ -18,6 +18,7 @@ package org.apache.sling.scripting.jsp.taglib;
 
 import java.util.Iterator;
 
+import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.slf4j.Logger;
@@ -35,15 +36,112 @@ public class SlingFunctions {
 			.getLogger(SlingFunctions.class);
 
 	/**
+	 * Adapt the adaptable to the adapter class.
+	 * 
+	 * @param adaptable
+	 *            the adaptable instance
+	 * @param adapter
+	 *            the class to which to adapt the adaptable
+	 * @return the adapted class instance
+	 */
+	public static Object adaptTo(Adaptable adaptable, String adapter)
+			throws ClassNotFoundException {
+		log.trace("adaptTo");
+		Object adapted = null;
+
+		if (adaptable != null) {
+			log.debug("Adapting {} to class {}", adaptable, adapter);
+			try {
+				Class<?> adapterClass = loadClass(adapter);
+				adapted = adaptable.adaptTo(adapterClass);
+			} catch (ClassNotFoundException e) {
+				log.error("Could not load class " + adapter, e);
+			}
+		} else {
+			log.warn("Null adaptable specified");
+		}
+		return adapted;
+	}
+
+	/**
+	 * Searches for resources using the given query formulated in the given
+	 * language.
+	 * 
+	 * @param resourceResolver
+	 * @param query
+	 *            The query string to use to find the resources.
+	 * @param language
+	 *            The language in which the query is formulated.
+	 * @return An Iterator of Resource objects matching the query.
+	 */
+	public static Iterator<Resource> findResources(
+			ResourceResolver resourceResolver, String query, String language) {
+		log.trace("findResources");
+
+		Iterator<Resource> resources = null;
+		if (resourceResolver != null) {
+			log.debug("Finding resources with query {} of type {}", query,
+					language);
+			resources = resourceResolver.findResources(query, language);
+		} else {
+			log.warn("Null resolver specified");
+		}
+		return resources;
+	}
+
+	/**
+	 * Loads the Class for the name from the current thread's classload.
+	 * 
+	 * @param className
+	 *            The name of the class to load
+	 * @return the class
+	 * @throws ClassNotFoundException
+	 *             a class with the specified name could not be found
+	 */
+	private static Class<?> loadClass(String className)
+			throws ClassNotFoundException {
+		return Thread.currentThread().getContextClassLoader()
+				.loadClass(className);
+	}
+
+	/**
+	 * Gets the resource at the relative path to the provided resource.
+	 * 
+	 * @param base
+	 *            the resource relative to which to find the path
+	 * @param path
+	 *            the relative path at which to find the resource
+	 * @return the resource
+	 */
+	public static Resource getRelativeResource(Resource base, String path) {
+		log.trace("getRelativeResource");
+
+		Resource relative = null;
+		if (base != null) {
+			log.debug("Getting relative resource of {} at path {}",
+					base.getPath(), path);
+			relative = base.getResourceResolver().getResource(base, path);
+		} else {
+			log.warn("Null base resource specified");
+		}
+
+		return relative;
+	}
+
+	/**
 	 * Method allow for the retrieval of resources.
 	 * 
 	 * @param resolver
 	 *            the current resource resolver
 	 * @param path
 	 *            the path of the resource to retrieve
-	 * @return
+	 * @return the resource at the path or null
 	 */
-	public static final Resource getResource(ResourceResolver resolver, String path) {
+	public static final Resource getResource(ResourceResolver resolver,
+			String path) {
+		log.trace("getResource");
+
+		log.debug("Getting resource at path {}", path);
 		return resolver.getResource(path);
 	}
 
@@ -58,10 +156,14 @@ public class SlingFunctions {
 	 */
 	public static final Iterator<Resource> listChildResources(Resource resource) {
 		log.trace("listChildren");
+		
+		Iterator<Resource> children = null;
 		if (resource != null) {
-			return resource.listChildren();
+			log.debug("Listing children at path {}", resource.getPath());
+			children = resource.listChildren();
 		} else {
-			return null;
+			log.warn("Null resource specified");
 		}
+		return children;
 	}
 }
