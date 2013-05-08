@@ -22,8 +22,8 @@ See http://sling.apache.org for more information.
 Getting started
 ---------------
 
-You need a Java 5 (or higher) JDK and Maven 2 (http://maven.apache.org/,
-version 2.2.1 or higher) to build Sling.
+You need a Java 5 (or higher) JDK and Maven 3 (http://maven.apache.org/,
+version 3.0.4 or higher) to build Sling.
 
 Sling depends on artifacts and plugins available only in the Incubator Maven
 repository at Apache. You can make this repository available to Maven by
