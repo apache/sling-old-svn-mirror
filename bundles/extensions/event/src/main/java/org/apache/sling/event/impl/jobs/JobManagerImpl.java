@@ -486,8 +486,10 @@ public class JobManagerImpl
             try {
                 final ValueMap vm = ResourceHelper.getValueMap(resource);
 
+                // check job topic and job id
                 final String errorMessage = Utility.checkJobTopic(vm.get(JobUtil.PROPERTY_JOB_TOPIC));
-                if ( errorMessage == null ) {
+                final String jobId = vm.get(JobUtil.JOB_ID, String.class);
+                if ( errorMessage == null && jobId != null ) {
                     final String topic = vm.get(JobUtil.PROPERTY_JOB_TOPIC, String.class);
                     final Map<String, Object> jobProperties = ResourceHelper.cloneValueMap(vm);
 
@@ -506,9 +508,15 @@ public class JobManagerImpl
                     }
                     job = new JobImpl(topic,
                             (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
-                            (String)jobProperties.get(JobUtil.JOB_ID),
+                            jobId,
                             jobProperties);
                 } else {
+                    if ( errorMessage != null ) {
+                        logger.warn(errorMessage + " : " + resource.getPath());
+                    }
+                    if ( jobId == null ) {
+                        logger.warn("Discarding job - no job id found : " + resource.getPath());
+                    }
                     // remove the job as the topic is invalid anyway
                     try {
                         resource.getResourceResolver().delete(resource);
