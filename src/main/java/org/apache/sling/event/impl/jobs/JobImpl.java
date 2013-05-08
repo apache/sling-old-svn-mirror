@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.Queue;
 
@@ -76,6 +77,7 @@ public class JobImpl implements Job {
         this.readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
 
         this.properties = new ValueMapDecorator(properties);
+        this.properties.put(JobUtil.NOTIFICATION_PROPERTY_JOB_ID, jobId);
     }
 
     /**
