@@ -10,8 +10,8 @@
 	OF ANY KIND, either express or implied. See the License for the specific 
 	language governing permissions and limitations under the License. -->
 <taglib xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
-	version="2.0">
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+	version="2.1">
 
 	<description>A supporting tab library for Apache Sling</description>
 	<tlib-version>1.3</tlib-version>
@@ -20,50 +20,32 @@
 
 	<function>
 		<name>adaptTo</name>
-		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions
-		</function-class>
-		<function-signature>java.lang.Object
-			adaptTo(org.apache.sling.api.adapter.Adaptable, java.lang.String)
-		</function-signature>
+		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+		<function-signature>java.lang.Object adaptTo(org.apache.sling.api.adapter.Adaptable, java.lang.String)</function-signature>
 	</function>
 
 	<function>
 		<name>findResources</name>
-		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions
-		</function-class>
-		<function-signature>java.util.Iterator
-			findResources(org.apache.sling.api.resource.ResourceResolver,
-			java.lang.String, java.lang.String)
-		</function-signature>
+		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+		<function-signature>java.util.Iterator findResources(org.apache.sling.api.resource.ResourceResolver, java.lang.String, java.lang.String)</function-signature>
 	</function>
 
 	<function>
 		<name>getRelativeResource</name>
-		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions
-		</function-class>
-		<function-signature>org.apache.sling.api.resource.Resource
-			getRelativeResource(org.apache.sling.api.resource.Resource,
-			java.lang.String)
-		</function-signature>
+		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+		<function-signature>org.apache.sling.api.resource.Resource getRelativeResource(org.apache.sling.api.resource.Resource,java.lang.String)</function-signature>
 	</function>
 
 	<function>
 		<name>getResource</name>
-		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions
-		</function-class>
-		<function-signature>org.apache.sling.api.resource.Resource
-			getResource(org.apache.sling.api.resource.ResourceResolver,
-			java.lang.String)
-		</function-signature>
+		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+		<function-signature>org.apache.sling.api.resource.Resource getResource(org.apache.sling.api.resource.ResourceResolver,java.lang.String)</function-signature>
 	</function>
 
 	<function>
 		<name>listChildResources</name>
-		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions
-		</function-class>
-		<function-signature>java.util.Iterator
-			listChildResources(org.apache.sling.api.resource.Resource)
-		</function-signature>
+		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+		<function-signature>java.util.Iterator listChildResources(org.apache.sling.api.resource.Resource)</function-signature>
 	</function>
 
 	<tag>
@@ -363,10 +345,8 @@
 			<description>
 				The path to the script object to include in the current
 				request processing. By default, the current resource
-				is used for
-				script resolving. This behaviour can
-				be changed by specifying either
-				resource, resourceType
+				is used for script resolving. This behaviour can
+				be changed by specifying either resource, resourceType
 				or ignoreResourceTypeHierarchy.
 			</description>
 			<name>script</name>
@@ -377,10 +357,8 @@
 			<description>
 				The resource object to include in the current request
 				processing. This attribute is optional. If it is
-				specified,
-				resourceType should not be used. If both
-				are used, resource takes
-				precedence.
+				specified, resourceType should not be used. If both
+				are used, resource takes precedence.
 			</description>
 			<name>resource</name>
 			<required>false</required>
@@ -391,8 +369,7 @@
 			<description>
 				The resource type of a resource to include. This
 				attribute is optional. If it is specified, resource
-				should not be
-				used. If bot are used, resource
+				should not be used. If bot are used, resource
 				takes precedence.
 			</description>
 			<name>resourceType</name>
@@ -592,8 +569,7 @@
 		<attribute>
 			<description>
 				The default value to return if no value exists for the
-				key.
-				If specified, this takes precedence over returnClass.
+				key. If specified, this takes precedence over returnClass.
 			</description>
 			<name>defaultValue</name>
 			<required>false</required>
@@ -609,3 +585,4 @@
 		</attribute>
 	</tag>
 </taglib>
+
