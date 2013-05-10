@@ -153,19 +153,19 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
         if (pathInfo.equals("")) {
             if ( this.currentView != null ) {
-                renderOverview(pw,  currentView);
+                renderOverview(pw,  req.getContextPath(), currentView);
             }
         } else {
             StringTokenizer st = new StringTokenizer(pathInfo, "/");
             final String nodeId = st.nextToken();
-            renderProperties(pw, nodeId);
+            renderProperties(pw, req.getContextPath(), nodeId);
         }
     }
 
     /**
      * Render the properties page of a particular instance
      */
-    private void renderProperties(final PrintWriter pw, final String nodeId) {
+    private void renderProperties(final PrintWriter pw, final String contextPath, final String nodeId) {
     	if (logger.isDebugEnabled()) {
     		logger.debug("renderProperties: nodeId=" + nodeId);
     	}
@@ -178,8 +178,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     public boolean accept(InstanceDescription instance) {
                         String slingId = instance.getSlingId();
                     	if (logger.isDebugEnabled()) {
-	                        logger.debug("renderProperties/picks: slingId="
-	                                + slingId);
+	                        logger.debug("renderProperties/picks: slingId={}", slingId);
                     	}
                         return (slingId.equals(nodeId));
                     }
@@ -218,10 +217,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * Render the overview of the entire topology
      */
-    private void renderOverview(final PrintWriter pw, final TopologyView topology) {
+    private void renderOverview(final PrintWriter pw, final String contextPath, final TopologyView topology) {
         pw.println("<p class=\"statline ui-state-highlight\">Configuration</p>");
         pw.println("<br/>");
-        pw.println("<a href=\"/system/console/configMgr/org.apache.sling.discovery.impl.Config\">Configure Discovery Service</a>");
+        pw.print("<a href=\"");
+        pw.print(contextPath);
+        pw.println("/system/console/configMgr/org.apache.sling.discovery.impl.Config\">Configure Discovery Service</a>");
         pw.println("<br/>");
         pw.println("<br/>");
         final String changing;
@@ -250,7 +251,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<ClusterView> clusters = topology.getClusterViews();
         ClusterView myCluster = topology.getLocalInstance().getClusterView();
         boolean odd = true;
-        renderCluster(pw, myCluster, odd);
+        renderCluster(pw, contextPath, myCluster, odd);
 
         for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
             ClusterView clusterView = it.next();
@@ -259,7 +260,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 continue;
             }
             odd = !odd;
-            renderCluster(pw, clusterView, odd);
+            renderCluster(pw, contextPath, clusterView, odd);
         }
 
         pw.println("</tbody>");
@@ -295,7 +296,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * Render a particular cluster (into table rows)
      */
-    private void renderCluster(final PrintWriter pw, final ClusterView cluster, final boolean odd) {
+    private void renderCluster(final PrintWriter pw, final String contextPath, final ClusterView cluster, final boolean odd) {
         final Collection<Announcement> announcements = announcementRegistry
                 .listAnnouncements(ListScope.AllInSameCluster);
 
@@ -326,14 +327,22 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<tr class=\"" + oddEven + " ui-state-error\">");
             }
             final boolean isLocal = instanceDescription.isLocal();
-            String slingId = instanceDescription.getSlingId();
-            slingId = "<a href=\"/system/console/topology/" + slingId + "\">"
-                    + slingId + "</a>";
-            if (isLocal) {
-                slingId = "<b>" + slingId + "</b>";
+            final String slingId = instanceDescription.getSlingId();
+            pw.print("<td>");
+            if ( isLocal) {
+                pw.print("<b>");
             }
-
-            pw.println("<td>" + slingId + "</td>");
+            pw.print("<a href=\"");
+            pw.print(contextPath);
+            pw.print("/system/console/topology/");
+            pw.print(slingId);
+            pw.print("\">");
+            pw.print(slingId);
+            pw.print("</a>");
+            if ( isLocal) {
+                pw.print("</b>");
+            }
+            pw.println("</td>");
             pw.println("<td>"
                     + (instanceDescription.getClusterView() == null ? "null"
                             : instanceDescription.getClusterView().getId())
@@ -407,7 +416,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 final String tooltipText;
                 switch(statusCode) {
                 case HttpServletResponse.SC_UNAUTHORIZED:
-                    tooltipText = HttpServletResponse.SC_UNAUTHORIZED + 
+                    tooltipText = HttpServletResponse.SC_UNAUTHORIZED +
                         ": possible setup issue of discovery.impl on target instance";
                     break;
                 case HttpServletResponse.SC_NOT_FOUND:
