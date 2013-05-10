@@ -31,7 +31,6 @@ import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.jobs.QueueConfiguration;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +38,8 @@ import org.slf4j.LoggerFactory;
  * The capabilities of a topology.
  */
 public class TopologyCapabilities {
+
+    public static final String PROPERTY_TOPICS = "org.apache.sling.event.jobs.consumer.topics";
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -107,7 +108,7 @@ public class TopologyCapabilities {
         final Map<String, String> allInstances = new TreeMap<String, String>();
 
         for(final InstanceDescription desc : view.getInstances() ) {
-            final String topics = desc.getProperty(JobConsumer.PROPERTY_TOPICS);
+            final String topics = desc.getProperty(PROPERTY_TOPICS);
             if ( topics != null && topics.length() > 0 ) {
                 allInstances.put(desc.getSlingId(), topics);
             } else {
@@ -125,7 +126,7 @@ public class TopologyCapabilities {
         this.allInstances = getAllInstancesMap(view);
         final Map<String, List<InstanceDescription>> newCaps = new HashMap<String, List<InstanceDescription>>();
         for(final InstanceDescription desc : view.getInstances() ) {
-            final String topics = desc.getProperty(JobConsumer.PROPERTY_TOPICS);
+            final String topics = desc.getProperty(PROPERTY_TOPICS);
             if ( topics != null && topics.length() > 0 ) {
                 this.logger.debug("Capabilities of {} : {}", desc.getSlingId(), topics);
                 for(final String topic : topics.split(",") ) {

@@ -87,7 +87,7 @@ public class JobConsumerManager {
 
     private Dictionary<String, Object> getRegistrationProperties() {
         final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
-        serviceProps.put(PropertyProvider.PROPERTY_PROPERTIES, JobConsumer.PROPERTY_TOPICS);
+        serviceProps.put(PropertyProvider.PROPERTY_PROPERTIES, TopologyCapabilities.PROPERTY_TOPICS);
         // we add a changing property to the service registration
         // to make sure a modification event is really sent
         synchronized ( this ) {
@@ -120,7 +120,7 @@ public class JobConsumerManager {
 
                             @Override
                             public String getProperty(final String name) {
-                                if ( JobConsumer.PROPERTY_TOPICS.equals(name) ) {
+                                if ( TopologyCapabilities.PROPERTY_TOPICS.equals(name) ) {
                                     return topics;
                                 }
                                 return null;
