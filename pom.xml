@@ -955,6 +955,18 @@ on 64bit platforms: MAVEN_OPTS="-Xmx512M -XX:MaxPermSize=512M", see SLING-1782
         </dependencies>
     </dependencyManagement>
 
+    <dependencies>
+        <!-- OSGi support annotations -->
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+        </dependency>
+    </dependencies>
+
     <distributionManagement>
         <site>
             <id>apache.sling.site</id>
