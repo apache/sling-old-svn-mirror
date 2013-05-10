@@ -24,9 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,6 +41,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.felix.webconsole.AbstractWebConsolePlugin;
@@ -60,7 +61,6 @@ import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistr
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,10 +68,20 @@ import org.slf4j.LoggerFactory;
  * Simple webconsole which gives an overview of the topology visible by the
  * discovery service
  */
-@Component(immediate = true)
-@Service(value = { TopologyEventListener.class })
+@Component
+@Service(value = { TopologyEventListener.class, Servlet.class })
+@Properties({
+    @Property(name=org.osgi.framework.Constants.SERVICE_DESCRIPTION,
+            value="Apache Sling Web Console Plugin to display Background servlets and ExecutionEngine status"),
+    @Property(name=WebConsoleConstants.PLUGIN_LABEL, value=TopologyWebConsolePlugin.LABEL),
+    @Property(name=WebConsoleConstants.PLUGIN_TITLE, value=TopologyWebConsolePlugin.TITLE),
+    @Property(name="felix.webconsole.configprinter.modes", value={"zip"})
+})
 @SuppressWarnings("serial")
 public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implements TopologyEventListener {
+
+    public static final String LABEL = "topology";
+    public static final String TITLE = "Topology Management";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -83,9 +93,6 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     /** the date format used in the truncated log of topology events **/
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    /** the service registry where this webconsole is registered. used for deactivate/unregister **/
-    private ServiceRegistration serviceRegistration;
 
     @Reference
     private ClusterViewService clusterViewService;
@@ -100,41 +107,24 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
     @Override
     public String getLabel() {
-        return "topology";
+        return LABEL;
     }
 
     @Override
     public String getTitle() {
-        return "Topology Management";
+        return TITLE;
     }
 
     @Activate
     @Override
     public void activate(final BundleContext bundleContext) {
         super.activate(bundleContext);
-        logger.debug("activate: activating...");
-        Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(
-                org.osgi.framework.Constants.SERVICE_DESCRIPTION,
-                "MEEEE Web Console Plugin to display Background servlets and ExecutionEngine status");
-        props.put(org.osgi.framework.Constants.SERVICE_VENDOR,
-                "The Apache Software Foundation");
-        props.put(org.osgi.framework.Constants.SERVICE_PID, getClass()
-                .getName());
-        props.put(WebConsoleConstants.PLUGIN_LABEL, getLabel());
-
-        serviceRegistration = bundleContext.registerService(
-                WebConsoleConstants.SERVICE_NAME, this, props);
     }
 
     @Deactivate
     @Override
     public void deactivate() {
         super.deactivate();
-        if (serviceRegistration != null) {
-            serviceRegistration.unregister();
-            serviceRegistration = null;
-        }
     }
 
     @Override
@@ -678,5 +668,203 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         }
 
         return sb;
+    }
+
+    public void printConfiguration( final PrintWriter pw ) {
+        final TopologyView topology = this.currentView;
+
+        pw.println(TITLE);
+        pw.println("---------------------------------------");
+        pw.println();
+        if ( topology == null ) {
+            pw.println("No topology available yet!");
+            return;
+        }
+        pw.print("Topology");
+        if (!topology.isCurrent()) {
+            pw.print(" changing!");
+        }
+        pw.println();
+        pw.println();
+
+        final Set<ClusterView> clusters = topology.getClusterViews();
+        final ClusterView myCluster = topology.getLocalInstance().getClusterView();
+        printCluster(pw, myCluster);
+
+        for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
+            ClusterView clusterView = it.next();
+            if (clusterView.equals(myCluster)) {
+                // skip - I already rendered that
+                continue;
+            }
+            printCluster(pw, clusterView);
+        }
+
+        pw.println();
+        pw.println();
+
+        final Collection<Announcement> incomingConnections = announcementRegistry.listAnnouncements(ListScope.OnlyInherited);
+        if ( incomingConnections.size() > 0 ) {
+            pw.println("Incoming topology connectors");
+            pw.println("---------------------------------------");
+
+            for(final Announcement incomingAnnouncement : incomingConnections) {
+                pw.print("Owner Sling Id : ");
+                pw.print(incomingAnnouncement.getOwnerId());
+                pw.println();
+                if (incomingAnnouncement.getServerInfo() != null) {
+                    pw.print("Server Info : ");
+                    pw.print(incomingAnnouncement.getServerInfo());
+                    pw.println();
+                }
+
+                pw.println();
+            }
+            pw.println();
+            pw.println();
+        }
+
+        final Collection<TopologyConnectorClientInformation> outgoingConnections = connectorRegistry.listOutgoingConnectors();
+        if ( outgoingConnections.size() > 0 ) {
+            pw.println("Outgoing topology connectors");
+            pw.println("---------------------------------------");
+
+            for(final TopologyConnectorClientInformation topologyConnectorClient : outgoingConnections) {
+                final String remoteSlingId = topologyConnectorClient.getRemoteSlingId();
+                final boolean isConnected = topologyConnectorClient.isConnected() && remoteSlingId != null;
+                pw.print("Connector URL : ");
+                pw.print(topologyConnectorClient.getConnectorUrl());
+                pw.println();
+
+                if (isConnected && !topologyConnectorClient.representsLoop()) {
+                    pw.print("Connected to Sling Id : ");
+                    pw.println(remoteSlingId);
+                    pw.println("Connector status : ok, in use");
+                } else if (isConnected && topologyConnectorClient.representsLoop()) {
+                    pw.print("Connected to Sling Id : ");
+                    pw.println(remoteSlingId);
+                    pw.println("Connector status : ok, unused (loop or duplicate): standby");
+                } else {
+                    final int statusCode = topologyConnectorClient.getStatusCode();
+                    final String tooltipText;
+                    switch(statusCode) {
+                        case HttpServletResponse.SC_UNAUTHORIZED:
+                            tooltipText = HttpServletResponse.SC_UNAUTHORIZED +
+                                ": possible setup issue of discovery.impl on target instance";
+                            break;
+                        case HttpServletResponse.SC_NOT_FOUND:
+                            tooltipText = HttpServletResponse.SC_NOT_FOUND +
+                                ": possible white list rejection by target instance";
+                            break;
+                        case -1:
+                            tooltipText = "-1: check error log. possible connection refused.";
+                            break;
+                        default:
+                            tooltipText = null;
+                    }
+                    pw.print("Connected to Sling Id : not connected");
+                    if ( tooltipText != null ) {
+                        pw.print(" (");
+                        pw.print(tooltipText);
+                        pw.print(")");
+                    }
+                    pw.println();
+                    pw.println("Connector status : not ok");
+                }
+                pw.println();
+            }
+            pw.println();
+            pw.println();
+        }
+
+        if ( topologyLog.size() > 0 ) {
+            pw.println("Topology Change History");
+            pw.println("---------------------------------------");
+            for(final String aLogEntry : topologyLog) {
+                pw.println(aLogEntry);
+            }
+            pw.println();
+            pw.println();
+        }
+
+        if ( propertyChangeLog.size() > 0 ) {
+            pw.println("Property Change History");
+            pw.println("---------------------------------------");
+            for(final String aLogEntry : propertyChangeLog) {
+                pw.println(aLogEntry);
+            }
+            pw.println();
+        }
+    }
+
+    /**
+     * Render a particular cluster
+     */
+    private void printCluster(final PrintWriter pw, final ClusterView cluster) {
+        final Collection<Announcement> announcements = announcementRegistry.listAnnouncements(ListScope.AllInSameCluster);
+
+        for(final InstanceDescription instanceDescription : cluster.getInstances() ) {
+            final boolean inLocalCluster = clusterViewService.contains(instanceDescription.getSlingId());
+            Announcement parentAnnouncement = null;
+            for (Iterator<Announcement> it2 = announcements.iterator(); it2
+                    .hasNext();) {
+                Announcement announcement = it2.next();
+                for (Iterator<InstanceDescription> it3 = announcement
+                        .listInstances().iterator(); it3.hasNext();) {
+                    InstanceDescription announcedInstance = it3.next();
+                    if (announcedInstance.getSlingId().equals(
+                            instanceDescription.getSlingId())) {
+                        parentAnnouncement = announcement;
+                        break;
+                    }
+                }
+            }
+
+            final boolean isLocal = instanceDescription.isLocal();
+            final String slingId = instanceDescription.getSlingId();
+
+            pw.print("Sling ID : ");
+            pw.print(slingId);
+            pw.println();
+            pw.print("Cluster View ID : ");
+            pw.print(instanceDescription.getClusterView() == null ? "null"
+                            : instanceDescription.getClusterView().getId());
+            pw.println();
+            pw.print("Local instance : ");
+            pw.print(isLocal);
+            pw.println();
+            pw.print("Leader instance : ");
+            pw.print(instanceDescription.isLeader());
+            pw.println();
+            pw.print("In local cluster : ");
+            if (inLocalCluster) {
+                pw.print("local");
+            } else {
+                pw.print("remote");
+            }
+            pw.println();
+            pw.print("Announced by : ");
+            if (inLocalCluster) {
+                pw.print("n/a");
+            } else {
+                if (parentAnnouncement != null) {
+                    pw.print(parentAnnouncement.getOwnerId());
+                } else {
+                    pw.print("(changing)");
+                }
+            }
+            pw.println();
+
+            pw.println("Properties:");
+            for(final Map.Entry<String, String> entry : instanceDescription.getProperties().entrySet()) {
+                pw.print("- ");
+                pw.print(entry.getKey());
+                pw.print(" : ");
+                pw.print(entry.getValue());
+                pw.println();
+            }
+            pw.println();
+            pw.println();
+        }
     }
 }
