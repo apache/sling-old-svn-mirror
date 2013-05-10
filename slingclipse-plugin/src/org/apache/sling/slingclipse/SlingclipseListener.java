@@ -119,7 +119,7 @@ public class SlingclipseListener implements IResourceChangeListener {
 
 					Repository repository = SlingclipsePlugin.getDefault().getRepository();
 
-					FileInfo fileInfo = new FileInfo(path.toOSString(), SlingclipseHelper.getSlingProjectPath(parentPath.toOSString()),resource.getName());
+					FileInfo fileInfo = new FileInfo(path.toOSString(), SlingclipseHelper.getSlingProjectPath(parentPath.toPortableString()),resource.getName());
 					
 					repository.setRepositoryInfo(repositoryInfo);
 					
