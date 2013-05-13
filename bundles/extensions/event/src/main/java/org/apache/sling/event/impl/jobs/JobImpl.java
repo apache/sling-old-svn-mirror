@@ -73,7 +73,7 @@ public class JobImpl implements Job {
         this.name = name;
         this.jobId = jobId;
         this.path = (String)properties.remove(PROPERTY_RESOURCE_PATH);
-        this.isBridgedEvent = properties.remove(PROPERTY_BRIDGED_EVENT) != null;
+        this.isBridgedEvent = properties.get(PROPERTY_BRIDGED_EVENT) != null;
         this.readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
 
         this.properties = new ValueMapDecorator(properties);
