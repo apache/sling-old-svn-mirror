@@ -64,6 +64,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getStartTime()
      */
+    @Override
     public synchronized long getStartTime() {
         return startTime;
     }
@@ -71,6 +72,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfProcessedJobs()
      */
+    @Override
     public synchronized long getNumberOfProcessedJobs() {
         return getNumberOfCancelledJobs() + getNumberOfFailedJobs() + getNumberOfFinishedJobs();
     }
@@ -78,6 +80,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfActiveJobs()
      */
+    @Override
     public synchronized long getNumberOfActiveJobs() {
         return activeJobs;
     }
@@ -85,6 +88,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfQueuedJobs()
      */
+    @Override
     public synchronized long getNumberOfQueuedJobs() {
         return queuedJobs;
     }
@@ -92,6 +96,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfJobs()
      */
+    @Override
     public synchronized long getNumberOfJobs() {
         return activeJobs + queuedJobs;
     }
@@ -99,6 +104,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getAverageWaitingTime()
      */
+    @Override
     public synchronized long getAverageWaitingTime() {
         return averageWaitingTime;
     }
@@ -106,6 +112,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getAverageProcessingTime()
      */
+    @Override
     public synchronized long getAverageProcessingTime() {
         return averageProcessingTime;
     }
@@ -113,6 +120,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfFinishedJobs()
      */
+    @Override
     public synchronized long getNumberOfFinishedJobs() {
         return finishedJobs;
     }
@@ -120,6 +128,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfCancelledJobs()
      */
+    @Override
     public synchronized long getNumberOfCancelledJobs() {
         return cancelledJobs;
     }
@@ -127,6 +136,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getNumberOfFailedJobs()
      */
+    @Override
     public synchronized long getNumberOfFailedJobs() {
         return failedJobs;
     }
@@ -134,6 +144,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getLastActivatedJobTime()
      */
+    @Override
     public synchronized long getLastActivatedJobTime() {
         return this.lastActivated;
     }
@@ -141,6 +152,7 @@ public class StatisticsImpl implements Statistics {
     /**
      * @see org.apache.sling.event.jobs.Statistics#getLastFinishedJobTime()
      */
+    @Override
     public synchronized long getLastFinishedJobTime() {
         return this.lastFinished;
     }
@@ -241,27 +253,56 @@ public class StatisticsImpl implements Statistics {
     /**
      * Create a new statistics object with exactly the same values.
      */
-    public synchronized void copyFrom(final StatisticsImpl other) {
+    public void copyFrom(final StatisticsImpl other) {
+        final long localQueuedJobs;
+        final long localLastActivated;
+        final long localLastFinished;
+        final long localAverageWaitingTime;
+        final long localAverageProcessingTime;
+        final long localWaitingTime;
+        final long localProcessingTime;
+        final long localWaitingCount;
+        final long localProcessingCount;
+        final long localFinishedJobs;
+        final long localFailedJobs;
+        final long localCancelledJobs;
+        final long localActiveJobs;
         synchronized ( other ) {
-            this.queuedJobs = other.queuedJobs;
-            this.lastActivated = other.lastActivated;
-            this.lastFinished = other.lastFinished;
-            this.averageWaitingTime = other.averageWaitingTime;
-            this.averageProcessingTime = other.averageProcessingTime;
-            this.waitingTime = other.waitingTime;
-            this.processingTime = other.processingTime;
-            this.waitingCount = other.waitingCount;
-            this.processingCount = other.processingCount;
-            this.finishedJobs = other.finishedJobs;
-            this.failedJobs = other.failedJobs;
-            this.cancelledJobs = other.cancelledJobs;
-            this.activeJobs = other.activeJobs;
+            localQueuedJobs = other.queuedJobs;
+            localLastActivated = other.lastActivated;
+            localLastFinished = other.lastFinished;
+            localAverageWaitingTime = other.averageWaitingTime;
+            localAverageProcessingTime = other.averageProcessingTime;
+            localWaitingTime = other.waitingTime;
+            localProcessingTime = other.processingTime;
+            localWaitingCount = other.waitingCount;
+            localProcessingCount = other.processingCount;
+            localFinishedJobs = other.finishedJobs;
+            localFailedJobs = other.failedJobs;
+            localCancelledJobs = other.cancelledJobs;
+            localActiveJobs = other.activeJobs;
+        }
+        synchronized ( this ) {
+            this.queuedJobs = localQueuedJobs;
+            this.lastActivated = localLastActivated;
+            this.lastFinished = localLastFinished;
+            this.averageWaitingTime = localAverageWaitingTime;
+            this.averageProcessingTime = localAverageProcessingTime;
+            this.waitingTime = localWaitingTime;
+            this.processingTime = localProcessingTime;
+            this.waitingCount = localWaitingCount;
+            this.processingCount = localProcessingCount;
+            this.finishedJobs = localFinishedJobs;
+            this.failedJobs = localFailedJobs;
+            this.cancelledJobs = localCancelledJobs;
+            this.activeJobs = localActiveJobs;
         }
     }
 
     /**
      * @see org.apache.sling.event.jobs.Statistics#reset()
      */
+    @Override
     public synchronized void reset() {
         this.startTime = System.currentTimeMillis();
         this.lastActivated = -1;
