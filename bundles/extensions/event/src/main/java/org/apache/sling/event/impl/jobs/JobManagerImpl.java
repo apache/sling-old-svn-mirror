@@ -149,9 +149,6 @@ public class JobManagerImpl
     /** Current statistics. */
     private final StatisticsImpl baseStatistics = new StatisticsImpl();
 
-    /** Last update for current statistics. */
-    private long lastUpdatedStatistics;
-
     /** Statistics per topic. */
     private final ConcurrentMap<String, TopicStatistics> topicStatistics = new ConcurrentHashMap<String, TopicStatistics>();
 
@@ -406,7 +403,6 @@ public class JobManagerImpl
             jq.reset();
         }
         this.topicStatistics.clear();
-        this.lastUpdatedStatistics = 0;
     }
 
     /**
@@ -597,19 +593,16 @@ public class JobManagerImpl
 
     /**
      * Return our internal statistics object.
-     * We recalculate this every 1.5sec (if requested)
      *
      * @see org.apache.sling.event.jobs.JobManager#getStatistics()
      */
     @Override
     public synchronized Statistics getStatistics() {
-        final long now = System.currentTimeMillis();
-        if ( this.lastUpdatedStatistics + 1500 < now ) {
-            this.copyFrom(this.baseStatistics);
-            for(final AbstractJobQueue jq : this.queues.values() ) {
-                this.add(jq);
-            }
+        this.copyFrom(this.baseStatistics);
+        for(final AbstractJobQueue jq : this.queues.values() ) {
+            this.add(jq);
         }
+
         return this;
     }
 
