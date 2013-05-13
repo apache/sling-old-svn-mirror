@@ -37,7 +37,7 @@ public class TestAdaptObjectTag {
 
 	private static final Logger log = LoggerFactory
 			.getLogger(TestAdaptObjectTag.class);
-	private AdaptObjectTag adaptObjectTag;
+	private AdaptToTag adaptToTag;
 	private MockResource resource;
 	private MockPageContext pageContext;
 	private static final String VAR_KEY = "properties";
@@ -49,14 +49,14 @@ public class TestAdaptObjectTag {
 	@Before
 	public void init() {
 		log.info("init");
-		adaptObjectTag = new AdaptObjectTag() {
+		adaptToTag = new AdaptToTag() {
 			protected ClassLoader getClassLoader() {
 				return TestAdaptObjectTag.class.getClassLoader();
 			}
 		};
 
 		pageContext = new MockPageContext();
-		adaptObjectTag.setPageContext(pageContext);
+		adaptToTag.setPageContext(pageContext);
 
 		ResourceResolver resolver = new MockResourceResolver();
 		resource = new MockResource(resolver, "/", "test");
@@ -71,10 +71,10 @@ public class TestAdaptObjectTag {
 		log.info("testAdaptObject");
 
 		log.info("Setting up tests");
-		adaptObjectTag.setAdaptable(resource);
-		adaptObjectTag.setAdaptTo(ValueMap.class.getCanonicalName());
-		adaptObjectTag.setVar(VAR_KEY);
-		adaptObjectTag.doEndTag();
+		adaptToTag.setAdaptable(resource);
+		adaptToTag.setAdaptTo(ValueMap.class.getCanonicalName());
+		adaptToTag.setVar(VAR_KEY);
+		adaptToTag.doEndTag();
 
 		log.info("Checking result");
 		Object result = pageContext.getAttribute(VAR_KEY);
@@ -93,10 +93,10 @@ public class TestAdaptObjectTag {
 		log.info("testMissingClass");
 
 		log.info("Setting up tests");
-		adaptObjectTag.setAdaptable(resource);
-		adaptObjectTag.setAdaptTo("com.bad.class");
-		adaptObjectTag.setVar(VAR_KEY);
-		adaptObjectTag.doEndTag();
+		adaptToTag.setAdaptable(resource);
+		adaptToTag.setAdaptTo("com.bad.class");
+		adaptToTag.setVar(VAR_KEY);
+		adaptToTag.doEndTag();
 
 		log.info("Checking result");
 		Object result = pageContext.getAttribute(VAR_KEY);

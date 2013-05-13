@@ -43,9 +43,9 @@
 	</function>
 
 	<function>
-		<name>listChildResources</name>
+		<name>listChildren</name>
 		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
-		<function-signature>java.util.Iterator listChildResources(org.apache.sling.api.resource.Resource)</function-signature>
+		<function-signature>java.util.Iterator listChildren(org.apache.sling.api.resource.Resource)</function-signature>
 	</function>
 
 	<tag>
@@ -77,8 +77,7 @@
 		<attribute>
 			<description>
 				Controls if the component hierarchy should be ignored
-				for script
-				resolution. If true, only the search paths are respected.
+				for script resolution. If true, only the search paths are respected.
 			</description>
 			<name>ignoreComponentHierarchy</name>
 			<required>false</required>
@@ -108,8 +107,7 @@
 			<description>
 				The resource object to include in the current request
 				processing. Either resource or path must be specified. If
-				both are
-				specified, the resource takes precedences.
+				both are specified, the resource takes precedences.
 			</description>
 			<name>resource</name>
 			<required>false</required>
@@ -119,14 +117,10 @@
 		<attribute>
 			<description>
 				The path to the resource object to include in the
-				current
-				request processing. If this path is relative it is
-				appended to
-				the path of the current resource whose
-				script is including the given
-				resource. Either resource
-				or path must be specified. If both are
-				specified, the
+				current request processing. If this path is relative it is
+				appended to the path of the current resource whose
+				script is including the given resource. Either resource
+				or path must be specified. If both are specified, the
 				resource takes precedences.
 			</description>
 			<name>path</name>
@@ -136,19 +130,13 @@
 		<attribute>
 			<description>
 				The resource type of a resource to include. If the
-				resource
-				to be included is specified with the path attribute,
-				which
-				cannot be resolved to a resource, the tag may
-				create a synthetic
-				resource object out of the path and
-				this resource type. If the
-				resource type is set the path
-				must be the exact path to a resource
-				object. That is,
+				resource to be included is specified with the path attribute,
+				which cannot be resolved to a resource, the tag may
+				create a synthetic resource object out of the path and
+				this resource type. If the resource type is set the path
+				must be the exact path to a resource object. That is,
 				adding parameters, selectors and extensions to the
-				path
-				is not supported if the resource type is set.
+				path is not supported if the resource type is set.
 			</description>
 			<name>resourceType</name>
 			<required>false</required>
@@ -166,8 +154,7 @@
 		<attribute>
 			<description>
 				When dispatching, add the value provided by this option
-				to the
-				selectors.
+				to the selectors.
 			</description>
 			<name>addSelectors</name>
 			<required>false</required>
@@ -198,8 +185,7 @@
 			<description>
 				The resource object to forward the request to. Either
 				resource or path must be specified. If both are
-				specified, the
-				resource takes precedences.
+				specified, the resource takes precedences.
 			</description>
 			<name>resource</name>
 			<required>false</required>
@@ -210,12 +196,9 @@
 			<description>
 				The path to the resource object to forward the request
 				to. If this path is relative it is appended to the path
-				of the
-				current resource whose script is forwarding the
-				given resource.
-				Either resource or path must be specified.
-				If both are specified, the
-				resource takes precedences.
+				of the current resource whose script is forwarding the
+				given resource. Either resource or path must be specified.
+				If both are specified, the resource takes precedences.
 			</description>
 			<name>path</name>
 			<required>false</required>
@@ -224,19 +207,13 @@
 		<attribute>
 			<description>
 				The resource type of a resource to forward. If the
-				resource
-				to be forwarded is specified with the path attribute,
-				which
-				cannot be resolved to a resource, the tag may
-				create a synthetic
-				resource object out of the path and
-				this resource type. If the
-				resource type is set the path
-				must be the exact path to a resource
-				object. That is,
+				resource to be forwarded is specified with the path attribute,
+				which cannot be resolved to a resource, the tag may
+				create a synthetic resource object out of the path and
+				this resource type. If the resource type is set the path
+				must be the exact path to a resource object. That is,
 				adding parameters, selectors and extensions to the
-				path
-				is not supported if the resource type is set.
+				path is not supported if the resource type is set.
 			</description>
 			<name>resourceType</name>
 			<required>false</required>
@@ -254,8 +231,7 @@
 		<attribute>
 			<description>
 				When dispatching, add the value provided by this option
-				to the
-				selectors.
+				to the selectors.
 			</description>
 			<name>addSelectors</name>
 			<required>false</required>
@@ -324,8 +300,7 @@
 	<tag>
 		<description>
 			Evaluates a script invocation and includes the result
-			in
-			the current page.
+			in the current page.
 		</description>
 		<name>eval</name>
 		<tag-class>
@@ -392,9 +367,9 @@
 		<description>
 			Adapts adaptables to objects of other types.
 		</description>
-		<name>adapt</name>
+		<name>adaptTo</name>
 		<tag-class>
-			org.apache.sling.scripting.jsp.taglib.AdaptObjectTag
+			org.apache.sling.scripting.jsp.taglib.AdaptToTag
 		</tag-class>
 		<body-content>empty</body-content>
 		<attribute>
@@ -457,8 +432,7 @@
 	<tag>
 		<description>
 			Tag for searching for resources using the given query
-			formulated in the
-			given language.
+			formulated in the given language.
 		</description>
 		<name>findResources</name>
 		<tag-class>
@@ -534,8 +508,7 @@
 	<tag>
 		<description>
 			Retrieves the value from the ValueMap, allowing for a
-			default value or
-			coercing the return value.
+			default value or coercing the return value.
 		</description>
 		<name>getProperty</name>
 		<tag-class>

@@ -154,7 +154,7 @@ public class SlingFunctions {
 	 * @return the children of the resource
 	 * @see org.apache.sling.api.resource.Resource#listChildren()
 	 */
-	public static final Iterator<Resource> listChildResources(Resource resource) {
+	public static final Iterator<Resource> listChildren(Resource resource) {
 		log.trace("listChildren");
 		
 		Iterator<Resource> children = null;

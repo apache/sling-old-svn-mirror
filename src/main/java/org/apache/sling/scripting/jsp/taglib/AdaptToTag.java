@@ -28,10 +28,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Tag for adapting adaptables to classes.
  */
-public class AdaptObjectTag extends TagSupport {
+public class AdaptToTag extends TagSupport {
 
 	private static final Logger log = LoggerFactory
-			.getLogger(AdaptObjectTag.class);
+			.getLogger(AdaptToTag.class);
 	private static final long serialVersionUID = -1945089681840552408L;
 	private Adaptable adaptable;
 	private String adaptTo;

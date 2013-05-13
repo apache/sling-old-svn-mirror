@@ -33,8 +33,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * Unit Tests for the Class SlingFunctions.
+ * 
  * @see org.apache.sling.scripting.jsp.taglib.SlingFunctions
  */
 public class TestSlingFunctions {
@@ -52,9 +54,10 @@ public class TestSlingFunctions {
 	public void init() {
 		log.info("init");
 
-		resolver = new MockResourceResolver(){
+		resolver = new MockResourceResolver() {
 			@Override
-		    public Iterator<Resource> findResources(String query, String language) {
+			public Iterator<Resource> findResources(String query,
+					String language) {
 				if (query.equals("query") && language.equals("language")) {
 					List<Resource> resources = new ArrayList<Resource>();
 					resources.add(resource);
@@ -62,7 +65,7 @@ public class TestSlingFunctions {
 				} else {
 					return null;
 				}
-		    }
+			}
 		};
 		resource = new MockResource(resolver, TEST_PATH, "test");
 		resolver.addResource(resource);
@@ -85,13 +88,13 @@ public class TestSlingFunctions {
 
 		log.info("Tests successful!");
 	}
-	
 
 	@Test
 	public void testFindResources() throws ClassNotFoundException {
 		log.info("testFindResources");
 
-		Iterator<Resource> resources = SlingFunctions.findResources(resolver, "query", "language");
+		Iterator<Resource> resources = SlingFunctions.findResources(resolver,
+				"query", "language");
 		assertNotNull(resources);
 		assertTrue(resources.hasNext());
 		assertEquals(resource, resources.next());
@@ -126,8 +129,7 @@ public class TestSlingFunctions {
 	@Test
 	public void testListChildResources() {
 		log.info("testListChildResources");
-		Iterator<Resource> children = SlingFunctions
-				.listChildResources(resource);
+		Iterator<Resource> children = SlingFunctions.listChildren(resource);
 		assertNotNull(children);
 		assertTrue(children.hasNext());
 
