@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -38,7 +39,6 @@ import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.discovery.impl.common.resource.EstablishedClusterView;
 import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.settings.SlingSettingsService;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,8 @@ public class ClusterViewServiceImpl implements ClusterViewService {
         return isolatedClusterViewId;
     }
 
-    protected void activate(final ComponentContext context) {
+    @Activate
+    protected void activate() {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
