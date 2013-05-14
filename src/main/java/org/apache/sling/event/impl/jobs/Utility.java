@@ -52,15 +52,15 @@ public abstract class Utility {
                     // we just have to catch it
                 }
                 if ( !topicIsCorrect ) {
-                    message = "Discarding job : job has an illegal job topic";
+                    message = "Discarding job - job has an illegal job topic";
                 } else {
                     message = null;
                 }
             } else {
-                message = "Discarding job : job topic is not of type string";
+                message = "Discarding job - job topic is not of type string";
             }
         } else {
-            message = "Discarding job : job topic is missing";
+            message = "Discarding job - job topic is missing";
         }
         return message;
     }
