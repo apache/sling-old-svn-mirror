@@ -69,6 +69,11 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.discovery.support</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.impl</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </bundle>
