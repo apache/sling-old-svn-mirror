@@ -143,7 +143,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
         if (pathInfo.equals("")) {
             if ( this.currentView != null ) {
-                renderOverview(pw,  req.getContextPath(), currentView);
+                renderOverview(pw,  currentView);
             }
         } else {
             StringTokenizer st = new StringTokenizer(pathInfo, "/");
@@ -207,12 +207,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * Render the overview of the entire topology
      */
-    private void renderOverview(final PrintWriter pw, final String contextPath, final TopologyView topology) {
+    private void renderOverview(final PrintWriter pw, final TopologyView topology) {
         pw.println("<p class=\"statline ui-state-highlight\">Configuration</p>");
         pw.println("<br/>");
-        pw.print("<a href=\"");
-        pw.print(contextPath);
-        pw.println("/system/console/configMgr/org.apache.sling.discovery.impl.Config\">Configure Discovery Service</a>");
+        pw.print("<a href=\"${appRoot}/configMgr/org.apache.sling.discovery.impl.Config\">Configure Discovery Service</a>");
         pw.println("<br/>");
         pw.println("<br/>");
         final String changing;
@@ -241,7 +239,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<ClusterView> clusters = topology.getClusterViews();
         ClusterView myCluster = topology.getLocalInstance().getClusterView();
         boolean odd = true;
-        renderCluster(pw, contextPath, myCluster, odd);
+        renderCluster(pw, myCluster, odd);
 
         for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
             ClusterView clusterView = it.next();
@@ -250,7 +248,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 continue;
             }
             odd = !odd;
-            renderCluster(pw, contextPath, clusterView, odd);
+            renderCluster(pw, clusterView, odd);
         }
 
         pw.println("</tbody>");
@@ -286,7 +284,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * Render a particular cluster (into table rows)
      */
-    private void renderCluster(final PrintWriter pw, final String contextPath, final ClusterView cluster, final boolean odd) {
+    private void renderCluster(final PrintWriter pw, final ClusterView cluster, final boolean odd) {
         final Collection<Announcement> announcements = announcementRegistry
                 .listAnnouncements(ListScope.AllInSameCluster);
 
@@ -323,8 +321,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.print("<b>");
             }
             pw.print("<a href=\"");
-            pw.print(contextPath);
-            pw.print("/system/console/topology/");
+            pw.print(this.getLabel());
+            pw.print('/');
             pw.print(slingId);
             pw.print("\">");
             pw.print(slingId);
