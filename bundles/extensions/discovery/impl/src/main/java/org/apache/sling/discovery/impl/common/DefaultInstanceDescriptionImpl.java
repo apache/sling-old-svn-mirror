@@ -35,16 +35,16 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
 
     /** the cluster view of which this instance is part of **/
     private ClusterView clusterView;
-    
+
     /** whether this instance is the leader in the cluster **/
     private boolean isLeader;
-    
+
     /** whether this instance is the local/own one **/
     private boolean isLocal;
-    
+
     /** the sling id of this instance **/
     private String slingId;
-    
+
     /** the properties of this instance **/
     private Map<String, String> properties;
 
@@ -77,7 +77,7 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
     		clusterInfo = ", clusterViewId="+clusterView.getId();
     	}
         return "an InstanceDescription[slindId=" + slingId + ", isLeader="
-                + isLeader + ", isOwn=" + isLocal + clusterInfo + "]";
+                + isLeader + ", isOwn=" + isLocal + clusterInfo + ", properties=" + this.properties + "]";
     }
 
     @Override
@@ -164,5 +164,4 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
         }
         this.properties = properties;
     }
-
 }

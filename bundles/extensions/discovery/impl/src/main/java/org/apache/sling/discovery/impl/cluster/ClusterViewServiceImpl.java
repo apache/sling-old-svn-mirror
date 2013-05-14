@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -63,20 +62,14 @@ public class ClusterViewServiceImpl implements ClusterViewService {
     @Reference
     private Config config;
 
-    /** the cluster view representing the isolated mode - ie only my own instance in one cluster. used at bootstrap **/
-    private ClusterView isolatedClusterView;
-
-    /** the cluster view id of the isolatedClusterView **/
+    /** the cluster view id of the isolated cluster view */
     private String isolatedClusterViewId = UUID.randomUUID().toString();
-
-    private IsolatedInstanceDescription ownInstance;
 
     public String getIsolatedClusterViewId() {
         return isolatedClusterViewId;
     }
 
-    @Activate
-    protected void activate() {
+    private ClusterView getIsolatedClusterView() {
         ResourceResolver resourceResolver = null;
         try {
             resourceResolver = resourceResolverFactory
@@ -84,9 +77,9 @@ public class ClusterViewServiceImpl implements ClusterViewService {
             Resource instanceResource = resourceResolver
                     .getResource(config.getClusterInstancesPath() + "/"
                             + getSlingId());
-            ownInstance = new IsolatedInstanceDescription(instanceResource,
+            IsolatedInstanceDescription ownInstance = new IsolatedInstanceDescription(instanceResource,
                     isolatedClusterViewId, getSlingId());
-            isolatedClusterView = ownInstance.getClusterView();
+            return ownInstance.getClusterView();
         } catch (LoginException e) {
             logger.error("Could not do a login: " + e, e);
             throw new RuntimeException("Could not do a login", e);
@@ -142,11 +135,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
             View view = ViewHelper.getEstablishedView(resourceResolver, config);
             if (view == null) {
                 logger.debug("getEstablishedView: no view established at the moment. isolated mode");
-                Resource instanceResource = resourceResolver
-                        .getResource(config.getClusterInstancesPath() + "/"
-                                + getSlingId());
-                ownInstance.readProperties(instanceResource);
-                return isolatedClusterView;
+                return getIsolatedClusterView();
             }
 
             EstablishedClusterView clusterViewImpl = new EstablishedClusterView(
@@ -163,11 +152,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 return clusterViewImpl;
             } else {
                 logger.error("getEstablishedView: the existing established view does not incude the local instance yet! Assming isolated mode.");
-                Resource instanceResource = resourceResolver
-                        .getResource(config.getClusterInstancesPath() + "/"
-                                + getSlingId());
-                ownInstance.readProperties(instanceResource);
-                return isolatedClusterView;
+                return getIsolatedClusterView();
             }
         } catch (LoginException e) {
             logger.error(

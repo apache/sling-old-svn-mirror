@@ -174,8 +174,8 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 	try{
                 		logger.info("activate: registering outgoing topology connector to "+aURL);
                 		connectorRegistry.registerOutgoingConnector(clusterViewService, aURL);
-                	} catch(Exception e) {
-                		logger.info("activate: could not register url: "+aURL+" due to: "+e);
+                	} catch (final Exception e) {
+                		logger.info("activate: could not register url: "+aURL+" due to: "+e, e);
                 	}
                 }
             }
@@ -392,17 +392,16 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      * @see DiscoveryService#getTopology()
      */
     public TopologyView getTopology() {
-        TopologyViewImpl topology = new TopologyViewImpl();
-
         if (clusterViewService == null) {
             throw new IllegalStateException(
                     "DiscoveryService not yet initialized with IClusterViewService");
         }
+        // create a new topology view
+        final TopologyViewImpl topology = new TopologyViewImpl();
 
-        ClusterView localClusterView = clusterViewService.getClusterView();
+        final ClusterView localClusterView = clusterViewService.getClusterView();
 
-        List<InstanceDescription> localInstances = localClusterView
-                .getInstances();
+        final List<InstanceDescription> localInstances = localClusterView.getInstances();
         topology.addInstances(localInstances);
 
         Collection<InstanceDescription> attachedInstances = announcementRegistry
@@ -452,7 +451,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         Type difference = newView.compareTopology(oldView);
         if (difference == null) {
             // then dont send any event then
-            logger.debug("handlePotentialTopologyChange: identical views. not informing listeners.");
+            logger.debug("handlePotentialTopologyChange: identical views. not informing listeners");
             return;
         } else {
             if (logger.isDebugEnabled()) {
