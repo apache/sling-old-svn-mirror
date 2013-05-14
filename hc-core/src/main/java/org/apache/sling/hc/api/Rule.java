@@ -49,16 +49,17 @@ public class Rule {
     
     /** Replace the tags of this rule by supplied ones.
      *  Tags are lowercased before being set */
-    public void setTags(String ...newTags) {
+    public Rule setTags(String ...newTags) {
         tags = new HashSet<String>();
         for(String tag : newTags) {
             tags.add(tag.toLowerCase());
         }
+        return this;
     }
     
     /** Return this rule's tags */
     public Set<String> getTags() {
-        return tags; 
+        return Collections.unmodifiableSet(tags); 
     }
     
     /** True if this rule has given tags */

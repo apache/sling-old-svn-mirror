@@ -17,24 +17,7 @@
  */
 package org.apache.sling.hc.api;
 
-import java.util.List;
-
-/** An engine that stores and evaluates a list of 
- *  {@link Rule}.
- */
-public interface RulesEngine {
-    /** Add a rule to this engine */
-    void addRule(Rule r);
-    
-    /** Add a list of rules to this engine */
-    void addRules(List<Rule> rules);
-    
-    /** Evaluate all the current rules.
-     *  TODO: we should use tags on rules to group
-     *  them in sets (performance, configuration etc.)
-     */
-    List<EvaluationResult> evaluateRules();
-    
-    /** Evaluate all rules that the supplied RuleFilter accepts */
-    List<EvaluationResult> evaluateRules(RuleFilter filter);
+/** A filter that accepts or rejects a {@link Rule} */
+public interface RuleFilter {
+    boolean accept(Rule r);
 }
