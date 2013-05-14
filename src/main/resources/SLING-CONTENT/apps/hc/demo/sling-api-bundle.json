@@ -4,5 +4,6 @@
   "ruleName": "bundle.state",
   "namespace": "osgi",
   "jcr:primaryType": "nt:unstructured",
-  "qualifier": "org.apache.sling.api"
+  "qualifier": "org.apache.sling.api",
+  "tags" : ["bundles","sling"]
 }
