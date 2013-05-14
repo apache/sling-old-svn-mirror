@@ -21,10 +21,8 @@ import java.io.PrintWriter;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -32,6 +30,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -104,8 +103,8 @@ public class ReferrerFilter implements Filter {
     /** Do we allow empty referrer? */
     private boolean allowEmpty;
 
-    /** Allowed referrers */
-    private URL[] allowedReferrers;
+    /** Allowed referrers patterns */
+    private Pattern[] allowedReferrers;
 
     /** Methods to be filtered. */
     private String[] filterMethods;
@@ -128,54 +127,53 @@ public class ReferrerFilter implements Filter {
                     final InetAddress ia = ias.nextElement();
                     final String address = ia.getHostAddress().trim().toLowerCase();
                     if ( ia instanceof Inet4Address ) {
-                        referrers.add("http://" + address + ":0");
-                        referrers.add("https://" + address + ":0");
+                        referrers.add("http://" + address + ":.*");
+                        referrers.add("https://" + address + ":.*");
                     }
                     if ( ia instanceof Inet6Address ) {
-                        referrers.add("http://[" + address + "]" + ":0");
-                        referrers.add("https://[" + address + "]" + ":0");
+                        referrers.add("http://[" + address + "]" + ":.*");
+                        referrers.add("https://[" + address + "]" + ":.*");
                     }
                 }
             }
         } catch ( final SocketException se) {
             logger.error("Unable to detect network interfaces", se);
         }
-        referrers.add("http://localhost" + ":0");
-        referrers.add("http://127.0.0.1" + ":0");
-        referrers.add("http://[::1]" + ":0");
-        referrers.add("https://localhost" + ":0");
-        referrers.add("https://127.0.0.1" + ":0");
-        referrers.add("https://[::1]" + ":0");
+        referrers.add("http://localhost" + ":.*");
+        referrers.add("http://127.0.0.1" + ":.*");
+        referrers.add("http://[::1]" + ":.*");
+        referrers.add("https://localhost" + ":.*");
+        referrers.add("https://127.0.0.1" + ":.*");
+        referrers.add("https://[::1]" + ":.*");
 
         return referrers;
     }
 
-    private void add(final List<URL> urls, final String ref) {
+    private void add(final List<Pattern> patterns, final String ref) {
         try {
-            final URL u  = new URL(ref);
-            urls.add(u);
-        } catch (final MalformedURLException mue) {
-            logger.warn("Unable to create URL from " + ref + " : " + mue.getMessage());
+            final Pattern pattern  = Pattern.compile(ref);
+            patterns.add(pattern);
+        } catch (final RuntimeException re) {
+            logger.warn("Unable to create URL pattern from " + ref + " : " + re.getMessage());
         }
     }
 
     /**
-     * Create URLs out of the referrer list
+     * Create url Patterns out of the referrer list
      */
-    private URL[] createReferrerUrls(final Set<String> referrers) {
-        final List<URL> urls = new ArrayList<URL>();
-
+    private Pattern[] createReferrerPatterns(final Set<String> referrers) {
+        final List<Pattern> patterns = new ArrayList<Pattern>();
         for(final String ref : referrers) {
             final int pos = ref.indexOf("://");
             // valid url?
             if ( pos != -1 ) {
-                this.add(urls, ref);
+                this.add(patterns, ref);
             } else {
-                this.add(urls, "http://" + ref + ":0");
-                this.add(urls, "https://" + ref + ":0");
+                this.add(patterns, "http://" + ref + ":.*");
+                this.add(patterns, "https://" + ref + ":.*");
             }
         }
-        return urls.toArray(new URL[urls.size()]);
+        return patterns.toArray(new Pattern[patterns.size()]);
     }
 
     /**
@@ -198,7 +196,7 @@ public class ReferrerFilter implements Filter {
                 allowedReferrers.add(host);
             }
         }
-        this.allowedReferrers = this.createReferrerUrls(allowedReferrers);
+        this.allowedReferrers = this.createReferrerPatterns(allowedReferrers);
         this.filterMethods = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_METHODS));
         if ( this.filterMethods != null && this.filterMethods.length == 1 && (this.filterMethods[0] == null || this.filterMethods[0].trim().length() == 0) ) {
             this.filterMethods = null;
@@ -267,6 +265,9 @@ public class ReferrerFilter implements Filter {
         public String host;
         public String scheme;
         public int port;
+        public String toURI() {
+            return scheme + "://" + host + ":" + port;
+        }
     }
 
     HostInfo getHost(final String referrer) {
@@ -331,12 +332,11 @@ public class ReferrerFilter implements Filter {
         }
 
         boolean valid = false;
-        for(final URL ref : this.allowedReferrers) {
-            if ( info.host.equals(ref.getHost()) && info.scheme.equals(ref.getProtocol()) ) {
-                if ( ref.getPort() == 0 || info.port == ref.getPort() ) {
-                    valid = true;
-                    break;
-                }
+        for(final Pattern ref : this.allowedReferrers) {
+            String url = info.toURI();
+            if (ref.matcher(url).matches()) {
+                valid = true;
+                break;
             }
         }
         if ( !valid) {
@@ -391,8 +391,8 @@ public class ReferrerFilter implements Filter {
         public void printConfiguration(final PrintWriter pw) {
             pw.println("Current Apache Sling Referrer Filter Allowed Referrers:");
             pw.println();
-            for (final URL url : allowedReferrers) {
-                pw.println(url.toString());
+            for (final Pattern pattern : allowedReferrers) {
+                pw.println(pattern.toString());
             }
         }
 
