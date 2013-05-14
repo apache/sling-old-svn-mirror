@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
+import org.apache.sling.hc.api.RuleFilter;
 import org.apache.sling.hc.api.SystemAttribute;
 import org.apache.sling.hc.util.DefaultEvaluator;
 import org.junit.Test;
@@ -99,5 +100,33 @@ public class RulesEngineTest {
         assertResult(result.get(i++), false, "test_constant_5_42");
         assertResult(result.get(i++), false, "test_invert_12_-1");
         assertResult(result.get(i++), true, "test_invert_12_-12");
+    }
+    
+    @Test
+    public void testRuleFilter() throws IOException {
+        final String rules =
+            "test:constant:5:5\n"
+            + "test:constant:5: > 2\n"
+            + "test:constant:5: < 12\n"
+            + "test:constant:5: between 4 and 6\n"
+            + "test:constant:5: between 12 and 21\n"
+            + "test:constant:5:42\n"
+            + "test:invert:12:-1\n"
+            + "test:invert:12:-12\n"
+        ;
+        
+        final TextRulesParser p = new TextRulesParser();
+        p.addBuilder(new TestBuilder());
+        
+        final RulesEngineImpl e = new RulesEngineImpl();
+        e.addRules(p.parse(new StringReader(rules)));
+        
+        final RuleFilter f = new RuleFilter() {
+            public boolean accept(Rule r) {
+                return r.toString().contains("12");
+            }
+        };
+        final List<EvaluationResult> result = e.evaluateRules(f);
+        assertEquals("Expecting only 4 rules according to RuleFilter", 4, result.size());
     }
 }
