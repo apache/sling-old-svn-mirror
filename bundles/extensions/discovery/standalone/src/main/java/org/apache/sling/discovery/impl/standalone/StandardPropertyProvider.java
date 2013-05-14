@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.impl;
+package org.apache.sling.discovery.impl.standalone;
 
 import java.util.ArrayList;
 import java.util.Collection;

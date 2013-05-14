@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.discovery.impl;
+package org.apache.sling.discovery.impl.standalone;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -57,7 +56,7 @@ import org.slf4j.LoggerFactory;
  * which can be used for a cluster less installation (= single instance).
  * It is disabled by default and can be enabled through a OSGi configuration.
  */
-@Component(policy = ConfigurationPolicy.REQUIRE, immediate=true)
+@Component(immediate=true)
 @Service(value = {DiscoveryService.class})
 public class NoClusterDiscoveryService implements DiscoveryService {
 
