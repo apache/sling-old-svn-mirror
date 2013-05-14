@@ -78,12 +78,22 @@ public class RulesResourceParserImpl implements RulesResourceParser {
         final ValueMap props = r.adaptTo(ValueMap.class);
         if(props.containsKey(NAMESPACE) && props.containsKey(RULE_NAME)) {
             for(RuleBuilder b : healthcheck.getRuleBuilders()) {
+                // basic properties
                 final Rule rule = b.buildRule(
                     props.get(NAMESPACE, String.class), 
                     props.get(RULE_NAME, String.class), 
                     props.get(QUALIFIER, String.class), 
                     props.get(EXPRESSION, String.class)
                 );
+                
+                // tags, if any
+                if(rule != null && props.containsKey(TAGS)) {
+                    final String [] tags = props.get(TAGS, String[].class);
+                    if(tags != null && tags.length > 0) {
+                        rule.setTags(tags);
+                    }
+                }
+                
                 if(rule != null) {
                     return rule;
                 }

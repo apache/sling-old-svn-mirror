@@ -3,5 +3,6 @@
   "ruleName": "loginfails",
   "namespace": "sling",
   "jcr:primaryType": "nt:unstructured",
-  "qualifier": "admin#admin"
+  "qualifier": "admin#admin",
+  "tags" : [ "admin", "security" ]
 }

@@ -18,6 +18,8 @@
 package org.apache.sling.hc.sling.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.ServletException;
 
@@ -30,6 +32,9 @@ import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.RulesEngine;
 import org.apache.sling.hc.sling.api.JsonResultRenderer;
 import org.apache.sling.hc.sling.api.RulesResourceParser;
+import org.apache.sling.hc.util.TaggedRuleFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Sling Servlet that renders a Resource that contains health check rules 
  *  definitions, after evaluating the rules.
@@ -37,9 +42,17 @@ import org.apache.sling.hc.sling.api.RulesResourceParser;
  *  defines the output format. 
  */
 @SuppressWarnings("serial")
-@SlingServlet(extensions="json",resourceTypes="sling/healthcheck/rules",methods="GET",selectors="healthcheck")
+@SlingServlet(
+        extensions="json",
+        resourceTypes="sling/healthcheck/rules",
+        methods="GET",
+        selectors=SlingHealthCheckServlet.HC_SELECTOR)
 public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
 
+    public static final String HC_SELECTOR = "healthcheck";
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     @Reference
     private HealthCheckFacade healthcheck;
     
@@ -60,7 +73,20 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
         engine.addRules(parser.parseResource(request.getResource()));
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        renderer.render(engine.evaluateRules(), response.getWriter());
+        final TaggedRuleFilter filter = new TaggedRuleFilter(getRuleTagsFromRequest(request));
+        log.info("Executing rules found under {} with {}", request.getResource().getPath(), filter);
+        renderer.render(engine.evaluateRules(filter), response.getWriter());
         response.getWriter().flush();
+    }
+    
+    static String [] getRuleTagsFromRequest(SlingHttpServletRequest r) {
+        // Get request selectors and remove this servlet's selector
+        final List<String> result = new ArrayList<String>();
+        for(String tag : r.getRequestPathInfo().getSelectors()) {
+            if(!HC_SELECTOR.equals(tag)) {
+                result.add(tag);
+            }
+        }
+        return result.toArray(new String[] {});
     }
 }

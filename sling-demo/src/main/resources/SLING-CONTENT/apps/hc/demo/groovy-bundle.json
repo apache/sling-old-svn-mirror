@@ -4,5 +4,6 @@
   "ruleName": "bundle.state",
   "namespace": "osgi",
   "jcr:primaryType": "nt:unstructured",
-  "qualifier": "groovy-all"
+  "qualifier": "groovy-all",
+  "tags" : ["groovy","bundles"]
 }
