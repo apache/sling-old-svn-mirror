@@ -28,6 +28,7 @@ public interface RulesResourceParser {
     String RULE_NAME = "ruleName";
     String QUALIFIER = "qualifier";
     String EXPRESSION = "expression";
+    String TAGS = "tags";
     
     List<Rule> parseResource(Resource r);
 }

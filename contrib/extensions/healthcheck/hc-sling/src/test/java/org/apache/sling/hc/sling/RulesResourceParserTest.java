@@ -92,6 +92,19 @@ public class RulesResourceParserTest {
     }
     
     @Test
+    public void testResourceWithTags() {
+        final MockResource r = new MockResource(resolver, "/", "test", "constant", "5", "> 3");
+        r.setTags(new String [] { "foo", "bar" });
+        final List<Rule> rules = parser.parseResource(r); 
+        assertEquals(1, rules.size());
+        final Rule rule = rules.get(0);
+        assertEquals("Rule: test:constant:5 > 3", rule.toString());
+        assertEquals(2, rule.getTags().size());
+        assertTrue(rule.hasTag("foo"));
+        assertTrue(rule.hasTag("bar"));
+    }
+    
+    @Test
     public void testScriptResource() {
         final Resource root = new MockResource(resolver, "/foo", "test", "constant", "5", "> 3");
         new MockResource(resolver, "/foo/script1", "some script");

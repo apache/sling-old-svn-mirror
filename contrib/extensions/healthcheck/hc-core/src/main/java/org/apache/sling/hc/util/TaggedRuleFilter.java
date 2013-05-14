@@ -17,6 +17,8 @@
  */
 package org.apache.sling.hc.util;
 
+import java.util.Arrays;
+
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleFilter;
 
@@ -41,5 +43,10 @@ public class TaggedRuleFilter implements RuleFilter {
             }
         }
         return true;
+    }
+    
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + ", tags=" + Arrays.asList(tags);
     }
 }
