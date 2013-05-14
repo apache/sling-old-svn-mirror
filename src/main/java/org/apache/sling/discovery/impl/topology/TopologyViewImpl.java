@@ -72,14 +72,12 @@ public class TopologyViewImpl implements TopologyView {
             return Type.TOPOLOGY_CHANGED;
         }
         boolean propertiesChanged = false;
-        for (Iterator<InstanceDescription> it = instances.iterator(); it
-                .hasNext();) {
-            InstanceDescription instance = it.next();
+        for(final InstanceDescription instance : this.instances) {
 
-            Iterator<InstanceDescription> it2 = other.instances.iterator();
+            final Iterator<InstanceDescription> it2 = other.instances.iterator();
             InstanceDescription matchingInstance = null;
             while (it2.hasNext()) {
-                InstanceDescription otherInstance = it2.next();
+                final InstanceDescription otherInstance = it2.next();
                 if (instance.getSlingId().equals(otherInstance.getSlingId())) {
                     matchingInstance = otherInstance;
                     break;
@@ -87,7 +85,7 @@ public class TopologyViewImpl implements TopologyView {
             }
             if (matchingInstance == null) {
             	if (logger.isDebugEnabled()) {
-	            	logger.debug("compareTopology: no matching instance found for "+instance);
+	            	logger.debug("compareTopology: no matching instance found for {}", instance);
             	}
                 return Type.TOPOLOGY_CHANGED;
             }

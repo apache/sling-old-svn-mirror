@@ -44,7 +44,7 @@ public class EstablishedInstanceDescription extends
     /**
      * Read the properties from the repository
      */
-    public void readProperties(final Resource res) {
+    private void readProperties(final Resource res) {
         final Map<String, String> props = new HashMap<String, String>();
         if (res != null) {
             final Resource propertiesChild = res.getChild("properties");
