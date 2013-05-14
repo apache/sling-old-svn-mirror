@@ -17,6 +17,10 @@
  */
 package org.apache.sling.hc.api;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.sling.hc.impl.RuleLoggerImpl;
 import org.apache.sling.hc.util.DefaultEvaluator;
 import org.slf4j.Logger;
@@ -31,6 +35,7 @@ public class Rule {
     private final Evaluator evaluator;
     private final String expression;
     private final Logger logger = LoggerFactory.getLogger(getClass());
+    private Set<String> tags = Collections.<String>emptySet();
     
     public Rule(SystemAttribute attr, String expression) {
         this(attr, expression, new DefaultEvaluator());
@@ -40,6 +45,25 @@ public class Rule {
         this.attribute = attr;
         this.expression = expression;
         this.evaluator = e;
+    }
+    
+    /** Replace the tags of this rule by supplied ones.
+     *  Tags are lowercased before being set */
+    public void setTags(String ...newTags) {
+        tags = new HashSet<String>();
+        for(String tag : newTags) {
+            tags.add(tag.toLowerCase());
+        }
+    }
+    
+    /** Return this rule's tags */
+    public Set<String> getTags() {
+        return tags; 
+    }
+    
+    /** True if this rule has given tags */
+    public boolean hasTag(String tag) {
+        return getTags().contains(tag);
     }
     
     /** Evaluate the rule and return the results */
