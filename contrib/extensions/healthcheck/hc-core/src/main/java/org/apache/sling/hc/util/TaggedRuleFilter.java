@@ -15,26 +15,31 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.api;
+package org.apache.sling.hc.util;
 
-import java.util.List;
+import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleFilter;
 
-/** An engine that stores and evaluates a list of 
- *  {@link Rule}.
- */
-public interface RulesEngine {
-    /** Add a rule to this engine */
-    void addRule(Rule r);
+/** {@link RulerFilter} that accepts {@link Rule} that have certain tags */
+public class TaggedRuleFilter implements RuleFilter {
+    private String [] tags;
     
-    /** Add a list of rules to this engine */
-    void addRules(List<Rule> rules);
-    
-    /** Evaluate all the current rules.
-     *  TODO: we should use tags on rules to group
-     *  them in sets (performance, configuration etc.)
+    /** Create a RuleFilter that selects Rules
+     *  having all supplied tags (lowercased)
      */
-    List<EvaluationResult> evaluateRules();
+    public TaggedRuleFilter(String ...tags) {
+        this.tags = tags;
+        for(int i=0 ; i < tags.length; i++) {
+            tags[i] = tags[i].toLowerCase();
+        }
+    }
     
-    /** Evaluate all rules that the supplied RuleFilter accepts */
-    List<EvaluationResult> evaluateRules(RuleFilter filter);
+    public boolean accept(Rule r) {
+        for(String tag : tags) {
+            if(!r.hasTag(tag)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

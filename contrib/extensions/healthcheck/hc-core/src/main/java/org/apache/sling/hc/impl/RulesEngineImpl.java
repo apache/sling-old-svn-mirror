@@ -22,10 +22,13 @@ import java.util.List;
 
 import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.api.Rule;
+import org.apache.sling.hc.api.RuleFilter;
 import org.apache.sling.hc.api.RulesEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RulesEngineImpl implements RulesEngine {
-
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final List<Rule> rules = new ArrayList<Rule>();
     
     @Override
@@ -40,8 +43,17 @@ public class RulesEngineImpl implements RulesEngine {
 
     @Override
     public List<EvaluationResult> evaluateRules() {
+        return evaluateRules(null);
+    }
+    
+    @Override
+    public List<EvaluationResult> evaluateRules(RuleFilter filter) {
         final List<EvaluationResult> result = new ArrayList<EvaluationResult>();
         for(Rule r : rules) {
+            if(filter != null && !filter.accept(r)) {
+                log.debug("Rule {} rejected by {}", r, filter);
+                continue;
+            }
             result.add(r.evaluate());
         }
         return result;
