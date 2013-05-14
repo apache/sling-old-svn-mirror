@@ -508,10 +508,9 @@ public class JobManagerImpl
                             jobProperties);
                 } else {
                     if ( errorMessage != null ) {
-                        logger.warn(errorMessage + " : " + resource.getPath());
-                    }
-                    if ( jobId == null ) {
-                        logger.warn("Discarding job - no job id found : " + resource.getPath());
+                        logger.warn("{} : {}", errorMessage, resource.getPath());
+                    } else if ( jobId == null ) {
+                        logger.warn("Discarding job - no job id found : {}", resource.getPath());
                     }
                     // remove the job as the topic is invalid anyway
                     try {
@@ -773,6 +772,11 @@ public class JobManagerImpl
      */
     @Override
     public Job addJob(final String topic, final String name, final Map<String, Object> properties) {
+        final String errorMessage = Utility.checkJobTopic(topic);
+        if ( errorMessage != null ) {
+            logger.warn("{}", errorMessage);
+            return null;
+        }
         Job result = this.addJobInteral(topic, name, properties);
         if ( result == null && name != null ) {
             result = this.getJobByName(name);
@@ -1272,6 +1276,9 @@ public class JobManagerImpl
 
         // create path and resource
         properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_JOB);
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Storing new job {} at {}", properties, path);
+        }
         ResourceHelper.getOrCreateResource(resolver,
                 path,
                 properties);

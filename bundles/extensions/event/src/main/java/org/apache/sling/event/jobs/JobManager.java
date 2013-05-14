@@ -146,10 +146,13 @@ public interface JobManager {
 
     /**
      * Add a new job
-     * @param topic The job topic,
+     *
+     * If the topic is missing or illegal, no job is created and <code>null</code> is returned.
+     *
+     * @param topic The required job topic.
      * @param name  Optional unique job name
      * @param properties Optional job properties
-     * @return The new job
+     * @return The new job - or <code>null</code> if the job could not be created.
      * @since 1.2
      */
     Job addJob(String topic, String name, Map<String, Object> properties);
