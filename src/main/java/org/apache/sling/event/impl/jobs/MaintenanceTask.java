@@ -365,6 +365,10 @@ public class MaintenanceTask {
                 final StringBuilder buf = new StringBuilder(64);
 
                 buf.append("//element(*)[@");
+                buf.append(ISO9075.encode(ResourceResolver.PROPERTY_RESOURCE_TYPE));
+                buf.append(" = '");
+                buf.append(Utility.RESOURCE_TYPE_LOCK);
+                buf.append("' and @");
                 buf.append(ISO9075.encode(Utility.PROPERTY_LOCK_CREATED));
                 buf.append(" < xs:dateTime('");
                 buf.append(ISO8601.format(startDate));

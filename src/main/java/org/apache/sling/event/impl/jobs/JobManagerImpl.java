@@ -1144,6 +1144,8 @@ public class JobManagerImpl
                     final Map<String, Object> props = new HashMap<String, Object>();
                     props.put(Utility.PROPERTY_LOCK_CREATED, Calendar.getInstance());
                     props.put(Utility.PROPERTY_LOCK_CREATED_APP, Environment.APPLICATION_ID);
+                    props.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, Utility.RESOURCE_TYPE_LOCK);
+
                     lockResource = ResourceHelper.getOrCreateResource(resolver,
                             path,
                             props);
