@@ -60,7 +60,7 @@ public class TopologyCapabilities {
     private volatile boolean active = true;
 
     /** Change count. */
-    private final long changeCount;
+    private final long changeCount = System.currentTimeMillis();
 
     /** All instances. */
     private final Map<String, String> allInstances;
@@ -118,10 +118,9 @@ public class TopologyCapabilities {
         return allInstances;
     }
 
-    public TopologyCapabilities(final TopologyView view, final boolean disableDistribution, final long changeCount) {
+    public TopologyCapabilities(final TopologyView view, final boolean disableDistribution) {
         this.disableDistribution = disableDistribution;
         this.instanceComparator = new InstanceDescriptionComparator(view.getLocalInstance().getClusterView().getId());
-        this.changeCount = changeCount;
         this.isLeader = view.getLocalInstance().isLeader();
         this.allInstances = getAllInstancesMap(view);
         final Map<String, List<InstanceDescription>> newCaps = new HashMap<String, List<InstanceDescription>>();

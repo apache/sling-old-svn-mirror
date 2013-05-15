@@ -529,7 +529,7 @@ public class JobManagerImpl
         return job;
     }
 
-    private long stopProcessing() {
+    private void stopProcessing() {
         this.backgroundLoader.stop();
 
         // let's rename/close all queues and clear them
@@ -542,18 +542,15 @@ public class JobManagerImpl
         }
 
         // deactivate old capabilities - this stops all background processes
-        long changeCount = 0;
         if ( this.topologyCapabilities != null ) {
-            changeCount = this.topologyCapabilities.getChangeCount() + 1;
             this.topologyCapabilities.deactivate();
         }
         this.topologyCapabilities = null;
-        return changeCount;
     }
 
-    private void startProcessing(final long changeCount, final TopologyView view) {
+    private void startProcessing(final TopologyView view) {
         // create new capabilities and update view
-        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration.disableDistribution(), changeCount);
+        this.topologyCapabilities = new TopologyCapabilities(view, this.configuration.disableDistribution());
 
         this.backgroundLoader.start();
     }
@@ -581,10 +578,9 @@ public class JobManagerImpl
             || event.getType() == Type.TOPOLOGY_CHANGED
             || event.getType() == Type.PROPERTIES_CHANGED ) {
 
-            // change count for new capabilities
-            final long changeCount = this.stopProcessing();
+            this.stopProcessing();
 
-            this.startProcessing(changeCount, event.getNewView());
+            this.startProcessing(event.getNewView());
         }
     }
 

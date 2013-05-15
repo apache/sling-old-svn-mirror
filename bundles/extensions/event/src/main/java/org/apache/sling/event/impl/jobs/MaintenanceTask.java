@@ -279,7 +279,7 @@ public class MaintenanceTask {
     private boolean topologyHasChanged(final TopologyCapabilities topologyCapabilities) {
         boolean topologyChanged = false;
         if ( topologyCapabilities != null ) {
-            if ( this.topologyChangeCount < topologyCapabilities.getChangeCount() ) {
+            if ( this.topologyChangeCount != topologyCapabilities.getChangeCount() ) {
                 this.topologyChangeCount = topologyCapabilities.getChangeCount();
                 topologyChanged = true;
             }
