@@ -150,7 +150,7 @@ public class TimedEventReceiver implements EventHandler {
                     scheduleInfo = new ScheduleInfo(event);
                     this.writeEvent(event, scheduleInfo);
                 } catch (final IllegalArgumentException iae) {
-                    this.logger.error(iae.getMessage());
+                    this.logger.error(iae.getMessage(), iae);
                 }
             }
         }

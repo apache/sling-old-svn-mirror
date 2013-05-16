@@ -61,7 +61,7 @@ final class ScheduleInfo implements Serializable {
         // if the event contains a timed event id or a job id we'll append that to the name
         this.topic = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC);
         if ( topic == null ) {
-            throw new IllegalArgumentException("Timed event does not contain required property " + EventUtil.PROPERTY_TIMED_EVENT_TOPIC);
+            throw new IllegalArgumentException("Timed event does not contain required property " + EventUtil.PROPERTY_TIMED_EVENT_TOPIC + " : " +  EventUtil.toString(event));
         }
         // TODO id or job name needs to be available?!?!
         final String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
