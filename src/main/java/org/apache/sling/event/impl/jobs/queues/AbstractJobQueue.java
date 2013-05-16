@@ -470,8 +470,9 @@ public abstract class AbstractJobQueue
                 info = this.take();
             }
 
-            checkSuspended();
-
+            if ( this.running ) {
+                checkSuspended();
+            }
             if ( info != null && this.running ) {
                 info = this.start(info);
             }
