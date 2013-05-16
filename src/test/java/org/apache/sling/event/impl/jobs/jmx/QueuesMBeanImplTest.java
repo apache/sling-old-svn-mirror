@@ -61,7 +61,7 @@ public class QueuesMBeanImplTest {
     public void setup() throws NoSuchFieldException {
         mbean = new QueuesMBeanImpl();
         Mockito.when(componentContext.getBundleContext()).thenReturn(bundleContext);
-        mbean.activate(componentContext);
+        mbean.activate(componentContext.getBundleContext());
     }
 
 

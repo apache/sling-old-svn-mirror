@@ -21,37 +21,30 @@ import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
 
 /**
- * An MBean that provides statistics from 
+ * An MBean that provides statistics from
  */
 public class QueueMBeanImpl extends AbstractJobStatistics {
 
-    private Queue queue;
-    private Statistics emptyStatistics = new EmptyStatistics();
+    private final String name;
+
+    private final Statistics statistics;
 
     public QueueMBeanImpl(Queue queue) {
-        this.queue = queue;
-    }
-
-    public void notifyUpdate(Queue queue) {
-        // TODO Auto-generated method stub
-
-    }
-
-    public void notifyRemove() {
-        // TODO Auto-generated method stub
-
+        this.name = queue.getName();
+        if (queue instanceof Statistics) {
+            this.statistics = (Statistics) queue;
+        } else {
+            this.statistics = new EmptyStatistics();
+        }
     }
 
     @Override
     protected Statistics getStatistics() {
-        if (queue instanceof Statistics) {
-            return (Statistics) queue;
-        }
-        return emptyStatistics;
+        return this.statistics;
     }
 
+    @Override
     public String getName() {
-        return queue.getName();
+        return name;
     }
-
 }
