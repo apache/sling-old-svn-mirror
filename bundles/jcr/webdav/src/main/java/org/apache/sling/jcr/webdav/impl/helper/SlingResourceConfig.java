@@ -92,8 +92,15 @@ public class SlingResourceConfig extends ResourceConfig {
             config.get(SlingWebDavServlet.PROP_REALM),
             SlingWebDavServlet.DEFAULT_REALM);
         servletInitParams.put(
-            SimpleWebdavServlet.INIT_PARAM_AUTHENTICATE_HEADER,
-            "Basic realm=\"" + value + "\"");
+                SimpleWebdavServlet.INIT_PARAM_AUTHENTICATE_HEADER,
+                "Basic realm=\"" + value + "\"");
+
+        boolean createAbsoluteUri = OsgiUtil.toBoolean(
+            config.get(SlingWebDavServlet.PROP_CREATE_ABSOLUTE_URI),
+            SlingWebDavServlet.DEFAULT_CREATE_ABSOLUTE_URI);
+        servletInitParams.put(
+                SimpleWebdavServlet.INIT_PARAM_CREATE_ABSOLUTE_URI,
+                Boolean.toString(createAbsoluteUri));
     }
 
     // ---------- ResourceConfig overwrites

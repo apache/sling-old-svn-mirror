@@ -83,6 +83,11 @@ public class SlingWebDavServlet extends SimpleWebdavServlet {
     @Property(DEFAULT_CONTEXT)
     public static final String PROP_CONTEXT = "dav.root";
 
+    public static final boolean DEFAULT_CREATE_ABSOLUTE_URI = true;
+
+    @Property(boolValue=DEFAULT_CREATE_ABSOLUTE_URI)
+    public static final String PROP_CREATE_ABSOLUTE_URI = "dav.create-absolute-uri";
+
     public static final String DEFAULT_REALM = "Sling WebDAV";
 
     @Property(DEFAULT_REALM)
