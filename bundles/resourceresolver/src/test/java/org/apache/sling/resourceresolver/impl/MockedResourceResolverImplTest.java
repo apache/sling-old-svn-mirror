@@ -325,7 +325,7 @@ public class MockedResourceResolverImplTest {
         Dictionary<String, Object> properties = new Hashtable<String, Object>();
         properties.put("resource.resolver.virtual", new String[] { "/:/" });
         properties.put("resource.resolver.mapping", new String[] { "/:/",
-            "/content/:/", "/system/docroot/:/" });
+            "/content/:/", "/system/docroot/:/", "/content.html-/$" });
         properties.put("resource.resolver.allowDirect", true);
         properties.put("resource.resolver.searchpath", new String[] { "/apps",
             "/libs" });
@@ -463,6 +463,10 @@ public class MockedResourceResolverImplTest {
         // test path mapping without a request.
         path = resourceResolver.map("/factory/test");
         Assert.assertEquals("/factory/test", path);
+        
+        buildResource("/content", EMPTY_RESOURCE_LIST, resourceResolver, factoryResourceProvider);
+        path = resourceResolver.map("/content.html");
+        Assert.assertEquals("/content.html", path);
 
     }
 

@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.ResourceResolverImpl;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -38,6 +39,9 @@ import org.slf4j.LoggerFactory;
  */
 public class MapEntry implements Comparable<MapEntry> {
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+	
     private static final Pattern[] URL_WITH_PORT_MATCH = {
         Pattern.compile("http/([^/]+)(\\.[^\\d/]+)(/.*)?$"),
         Pattern.compile("https/([^/]+)(\\.[^\\d/]+)(/.*)?$") };
@@ -265,7 +269,11 @@ public class MapEntry implements Comparable<MapEntry> {
             final String[] redirects = getRedirect();
             final String[] results = new String[redirects.length];
             for (int i = 0; i < redirects.length; i++) {
-                results[i] = m.replaceFirst(redirects[i]);
+            	try{
+            		 results[i] = m.replaceFirst(redirects[i]);
+            	}catch(StringIndexOutOfBoundsException siob){
+            		log.debug("Exception while replacing, ignoring entry {} ",redirects[i],siob);
+             	}               
             }
             return results;
         }
