@@ -168,7 +168,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             final Map<String, Object> props = new HashMap<String, Object>();
             props.put("dao", dao);
 
-            jobManager.addJob(TOPIC + "/failed", null, props);
+            final String id = jobManager.addJob(TOPIC + "/failed", null, props).getId();
 
             // we simply wait a little bit
             sleep(2000);
@@ -179,6 +179,8 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
             assertEquals(0, jobManager.getStatistics().getNumberOfActiveJobs());
 
+            jobManager.removeJobById(id);
+            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
         } finally {
             jcReg.unregister();
             ehReg.unregister();
