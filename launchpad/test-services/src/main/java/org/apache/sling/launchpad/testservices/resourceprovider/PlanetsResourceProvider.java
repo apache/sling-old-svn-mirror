@@ -91,6 +91,7 @@ public class PlanetsResourceProvider implements ResourceProvider {
     /** ResourceProvider interface */
     public Iterator<Resource> listChildren(Resource parent) {
         if(parent.getPath().startsWith(ABS_ROOT)) {
+            // Not the most efficient thing...good enough for this example
             final List<Resource> kids = new ArrayList<Resource>();
             for(Map.Entry<String, ValueMap> e : PLANETS.entrySet()) {
                 if(parent.getPath().equals(parentPath(e.getKey()))) {
