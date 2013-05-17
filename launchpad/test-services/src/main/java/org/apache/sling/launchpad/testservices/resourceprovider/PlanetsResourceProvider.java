@@ -35,7 +35,9 @@ import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.api.resource.ValueMap;
 
 /** Test/example ResourceProvider that provides info about
- *  the Solar System's planets at /planets */
+ *  the Solar System's planets at /planets. 
+ *  Use /planets.tidy.-1.json to GET the whole thing. 
+ */
 @Component
 @Service
 @Properties({
