@@ -423,6 +423,7 @@ public class JcrResourceProvider
                 nodeType = null;
             }
         }
+        Node node = null;
         try {
             final int lastPos = path.lastIndexOf('/');
             final Node parent;
@@ -432,7 +433,6 @@ public class JcrResourceProvider
                 parent = (Node)this.session.getItem(path.substring(0, lastPos));
             }
             final String name = path.substring(lastPos + 1);
-            final Node node;
             if ( nodeType != null ) {
                 node = parent.addNode(name, nodeType);
             } else {
@@ -452,6 +452,11 @@ public class JcrResourceProvider
                         try {
                             jcrMap.put(entry.getKey(), entry.getValue());
                         } catch (final IllegalArgumentException iae) {
+                            try {
+                                node.remove();
+                            } catch ( final RepositoryException re) {
+                                // we ignore this
+                            }
                             throw new PersistenceException(iae.getMessage(), iae, path, entry.getKey());
                         }
                     }
@@ -460,6 +465,13 @@ public class JcrResourceProvider
 
             return new JcrNodeResource(resolver, node, this.dynamicClassLoader);
         } catch (final RepositoryException e) {
+            if ( node != null ) {
+                try {
+                    node.remove();
+                } catch ( final RepositoryException re) {
+                    // we ignore this
+                }
+            }
             throw new PersistenceException("Unable to create node at " + path, e, path, null);
         }
     }
