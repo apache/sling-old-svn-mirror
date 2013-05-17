@@ -113,7 +113,8 @@ public abstract class AbstractJobHandlingTest {
 
                 mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "0.1.0-SNAPSHOT"),
+                mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.1-SNAPSHOT"),
+                mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "0.0.1-SNAPSHOT"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.2.2"),
@@ -178,12 +179,6 @@ public abstract class AbstractJobHandlingTest {
             }
         };
         this.bc.registerService(StartupHandler.class.getName(), handler, null);
-
-        // cluster discovery
-        final org.osgi.service.cm.Configuration c = this.configAdmin.getConfiguration("org.apache.sling.discovery.impl.NoClusterDiscoveryService",  null);
-        Dictionary<String, Object> p = new Hashtable<String, Object>();
-        p.put("a", "b");
-        c.update(p);
     }
 
     /**
