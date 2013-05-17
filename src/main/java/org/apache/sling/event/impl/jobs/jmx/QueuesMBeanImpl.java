@@ -35,7 +35,6 @@ import javax.management.StandardEmitterMBean;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.event.jobs.Queue;
@@ -44,17 +43,11 @@ import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
-import org.osgi.service.event.EventHandler;
 
-@Component(immediate=true)
-@Service(value = { QueuesMBean.class, EventHandler.class })
-@Properties({
-        @Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames"),
-        @Property(name = EventConstants.EVENT_TOPIC, propertyPrivate = true, value = { QueueStatusEvent.TOPIC }) })
-public class QueuesMBeanImpl extends StandardEmitterMBean implements
-        QueuesMBean, EventHandler {
+@Component
+@Service(value = { QueuesMBean.class })
+@Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames")
+public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean {
 
     private static final String QUEUE_NOTIFICATION = "org.apache.sling.event.queue";
     private static final String[] NOTIFICATION_TYPES = { QUEUE_NOTIFICATION };
@@ -95,17 +88,13 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
         bundleContext = null;
     }
 
-    @Override
-    public void handleEvent(Event event) {
-        if (event instanceof QueueStatusEvent) {
-            QueueStatusEvent e = (QueueStatusEvent) event;
-            if (e.isNew()) {
-                bindQueueMBean(e);
-            } else if (e.isRemoved()) {
-                unbindQueueMBean(e);
-            } else {
-                updateQueueMBean(e);
-            }
+    public void sendEvent(final QueueStatusEvent e) {
+        if (e.isNew()) {
+            bindQueueMBean(e);
+        } else if (e.isRemoved()) {
+            unbindQueueMBean(e);
+        } else {
+            updateQueueMBean(e);
         }
     }
 

@@ -57,6 +57,7 @@ import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueInfo;
 import org.apache.sling.event.impl.jobs.jmx.QueueStatusEvent;
+import org.apache.sling.event.impl.jobs.jmx.QueuesMBeanImpl;
 import org.apache.sling.event.impl.jobs.queues.AbstractJobQueue;
 import org.apache.sling.event.impl.jobs.queues.OrderedJobQueue;
 import org.apache.sling.event.impl.jobs.queues.ParallelJobQueue;
@@ -75,6 +76,7 @@ import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -127,6 +129,9 @@ public class JobManagerImpl
 
     @Reference
     private JobConsumerManager jobConsumerManager;
+
+    @Reference
+    private QueuesMBean queuesMBean;
 
     /** The job manager configuration. */
     private JobManagerConfiguration configuration;
@@ -201,10 +206,10 @@ public class JobManagerImpl
         while ( i.hasNext() ) {
             final AbstractJobQueue jbq = i.next();
             // update mbeans
-            eventAdmin.sendEvent(new QueueStatusEvent(null, jbq));
+            ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
             jbq.close();
             // update mbeans
-            eventAdmin.sendEvent(new QueueStatusEvent(null, jbq));
+            ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
         }
         this.queues.clear();
         logger.info("Apache Sling Job Manager stopped on instance {}", Environment.APPLICATION_ID);
@@ -248,7 +253,7 @@ public class JobManagerImpl
                         // remove
                         i.remove();
                         // update mbeans
-                        eventAdmin.sendEvent(new QueueStatusEvent(null, jbq));
+                        ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
                     } else {
                         // mark to be removed during next cycle
                         jbq.markForRemoval();
@@ -330,7 +335,7 @@ public class JobManagerImpl
                             handler.remove();
                         } else {
                             queues.put(queueInfo.queueName, queue);
-                            eventAdmin.sendEvent(new QueueStatusEvent(queue, null));
+                            ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
                             queue.start();
                         }
                     }
@@ -379,7 +384,7 @@ public class JobManagerImpl
             // copy statistics
             this.baseStatistics.add(queue);
             // update mbeans
-            eventAdmin.sendEvent(new QueueStatusEvent(null, queue));
+            ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, queue));
         } else {
             if ( !queue.getName().contains("<outdated>") ) {
                 // notify queue
@@ -388,7 +393,7 @@ public class JobManagerImpl
             // readd with new name
             this.queues.put(queue.getName(), queue);
             // update mbeans
-            eventAdmin.sendEvent(new QueueStatusEvent(queue, queue));
+            ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, queue));
         }
     }
 
