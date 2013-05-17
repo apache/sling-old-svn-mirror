@@ -17,39 +17,35 @@
  */
 package org.apache.sling.event.impl.jobs.jmx;
 
-import java.util.Map;
-
 import org.apache.sling.event.jobs.Queue;
-import org.osgi.service.event.Event;
 
-public class QueueStatusEvent extends Event {
+public class QueueStatusEvent {
 
-    public static final String TOPIC = "org/apache/sling/event/Queue";
-    private Queue queue;
-    private Queue oldqueue;
+    private final Queue queue;
+    private final Queue oldqueue;
 
 
-    @SuppressWarnings({ "rawtypes" })
-    public QueueStatusEvent(Queue queue, Queue oldqueue) {
-        super(TOPIC, (Map<String, Object>)null);
+    public QueueStatusEvent(final Queue queue, final Queue oldqueue) {
         this.queue = queue;
         this.oldqueue = oldqueue;
     }
     public boolean isNew() {
         return this.oldqueue == null;
     }
+
     public boolean isUpdate() {
         return this.queue == this.oldqueue;
     }
+
     public boolean isRemoved() {
         return this.queue == null;
     }
+
     public Queue getQueue() {
         return queue;
     }
+
     public Queue getOldQueue() {
         return oldqueue;
     }
-
-
 }

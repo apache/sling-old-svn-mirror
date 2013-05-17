@@ -75,7 +75,7 @@ public class QueuesMBeanImplTest {
         mockStatistics((Statistics) queue);
         Mockito.when(queue.getName()).thenReturn("queue-name");
         Mockito.when(bundleContext.registerService(Mockito.anyString(), Mockito.any(StatisticsMBean.class), Mockito.any(Dictionary.class))).thenReturn(serviceRegistration);
-        mbean.handleEvent(new QueueStatusEvent(queue,null));
+        mbean.sendEvent(new QueueStatusEvent(queue,null));
         Mockito.verify(bundleContext, Mockito.only()).registerService(serviceClass.capture(), serviceObject.capture(), serviceProperties.capture());
         Assert.assertEquals("Expected bean to be registerd as a StatisticsMBean ", StatisticsMBean.class.getName(), serviceClass.getValue());
         Assert.assertTrue("Expected service to be an instance of SatisticsMBean", serviceObject.getValue() instanceof StatisticsMBean);
@@ -91,14 +91,14 @@ public class QueuesMBeanImplTest {
         Queue queue = Mockito.mock(Queue.class, Mockito.withSettings().extraInterfaces(Statistics.class));
         Mockito.when(queue.getName()).thenReturn("queue-name-changed");
         Mockito.reset(bundleContext);
-        mbean.handleEvent(new QueueStatusEvent(queue,firstQueue));
+        mbean.sendEvent(new QueueStatusEvent(queue,firstQueue));
         Mockito.verify(bundleContext, Mockito.never()).registerService(serviceClass.capture(), serviceObject.capture(), serviceProperties.capture());
     }
 
     @Test
     public void removeQueue() {
         Queue firstQueue = addQueue();
-        mbean.handleEvent(new QueueStatusEvent(null,firstQueue));
+        mbean.sendEvent(new QueueStatusEvent(null,firstQueue));
         Mockito.verify(serviceRegistration, Mockito.only()).unregister();
 
     }
