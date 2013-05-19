@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventConstants;
@@ -119,10 +120,12 @@ public abstract class Utility {
         if ( job.getName() != null ) {
             eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
         }
-        // copy paylod
+        // copy payload
         for(final String name : job.getPropertyNames()) {
             eventProps.put(name, job.getProperty(name));
         }
+        // remove async handler
+        eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
         // add timestamp
         eventProps.put(EventConstants.TIMESTAMP, System.currentTimeMillis());
         // add internal time information
@@ -148,6 +151,7 @@ public abstract class Utility {
             eventProps.put(JobUtil.PROPERTY_JOB_NAME, job.getName());
         }
         eventProps.put(JobUtil.JOB_ID, job.getId());
+        eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
         return new Event(job.getTopic(), eventProps);
     }
 
