@@ -395,36 +395,7 @@
 				object.
 			</description>
 			<name>var</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-
-	<tag>
-		<description>
-			Lists the children of a Sling Resource.
-		</description>
-		<name>listChildren</name>
-		<tag-class>
-			org.apache.sling.scripting.jsp.taglib.ListChildrenTag
-		</tag-class>
-		<body-content>empty</body-content>
-		<attribute>
-			<description>
-				The resource for which to retrieve the children.
-			</description>
-			<name>resource</name>
 			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-			<type>org.apache.sling.api.resource.Resource</type>
-		</attribute>
-		<attribute>
-			<description>
-				The name of the variable to which to save the child
-				resources.
-			</description>
-			<name>var</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
@@ -460,47 +431,7 @@
 				The name of the variable to which to save the resources.
 			</description>
 			<name>var</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-
-	<tag>
-		<description>
-			Retrieves resources based on either an absolute path or a
-			relative path and a
-			base resource.
-		</description>
-		<name>getResource</name>
-		<tag-class>
-			org.apache.sling.scripting.jsp.taglib.GetResourceTag
-		</tag-class>
-		<body-content>empty</body-content>
-		<attribute>
-			<description>
-				The base resource under which to retrieve the child
-				resource, will only
-				be considered if a relative path is specified.
-			</description>
-			<name>base</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>
-				The path of the resource to retrieve, if relative, the
-				base resource must be specified.
-			</description>
-			<name>path</name>
 			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-		<attribute>
-			<description>
-				The name of the variable to which to save the resource.
-			</description>
-			<name>var</name>
-			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
@@ -557,5 +488,73 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
+
+    <tag>
+        <description>
+            Retrieves resources based on either an absolute path or a
+            relative path and a base resource.
+        </description>
+        <name>getResource</name>
+        <tag-class>
+            org.apache.sling.scripting.jsp.taglib.GetResourceTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>
+                The base resource under which to retrieve the child
+                resource, will only
+                be considered if a relative path is specified.
+            </description>
+            <name>base</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The path of the resource to retrieve, if relative, the
+                base resource must be specified.
+            </description>
+            <name>path</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                The name of the variable to which to save the resource.
+            </description>
+            <name>var</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    
+    <tag>
+        <description>
+            Lists the children of a Sling Resource.
+        </description>
+        <name>listChildren</name>
+        <tag-class>
+            org.apache.sling.scripting.jsp.taglib.ListChildrenTag
+        </tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>
+                The resource for which to retrieve the children.
+            </description>
+            <name>resource</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>org.apache.sling.api.resource.Resource</type>
+        </attribute>
+        <attribute>
+            <description>
+                The name of the variable to which to save the child
+                resources.
+            </description>
+            <name>var</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
 </taglib>
 

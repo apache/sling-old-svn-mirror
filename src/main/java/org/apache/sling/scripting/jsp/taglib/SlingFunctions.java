@@ -142,6 +142,9 @@ public class SlingFunctions {
 		log.trace("getResource");
 
 		log.debug("Getting resource at path {}", path);
+		if(resolver == null){
+			throw new IllegalArgumentException("Null resource resolver");
+		}
 		return resolver.getResource(path);
 	}
 
