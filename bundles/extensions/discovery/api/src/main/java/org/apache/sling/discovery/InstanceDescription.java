@@ -42,7 +42,7 @@ public interface InstanceDescription {
      * Property containing a description for the instance.
      * The instance should provide this property.
      */
-    String PROPERTY_DESCRIPTION = "org.apache.sling.instance.name";
+    String PROPERTY_DESCRIPTION = "org.apache.sling.instance.description";
 
     /**
      * Property containing endpoints to connect to the instance. The
