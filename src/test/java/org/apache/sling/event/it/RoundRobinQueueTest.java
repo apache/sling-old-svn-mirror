@@ -35,6 +35,7 @@ import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.ExamReactorStrategy;
@@ -53,6 +54,8 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
     private static int MAX_PAR = 5;
     private static int NUM_JOBS = 300;
 
+    private String queueConfPid;
+
     @Override
     @Before
     public void setup() throws IOException {
@@ -69,7 +72,15 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_MAX_PARALLEL, MAX_PAR);
         orderedConfig.update(orderedProps);
 
+        queueConfPid = orderedConfig.getPid();
+
         this.sleep(1000L);
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        this.removeConfiguration(this.queueConfPid);
+
     }
 
     @org.junit.Test public void testRoundRobinQueue() throws Exception {

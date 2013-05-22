@@ -32,6 +32,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.ExamReactorStrategy;
@@ -69,6 +70,11 @@ public class DropQueueTest extends AbstractJobHandlingTest {
         this.sleep(1000L);
     }
 
+    @After
+    public void cleanUp() throws IOException {
+        this.removeConfiguration(this.queueConfPid);
+
+    }
 
     @org.junit.Test public void testDroppingQueue() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);

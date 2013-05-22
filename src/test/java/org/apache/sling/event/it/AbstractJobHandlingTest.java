@@ -204,4 +204,14 @@ public abstract class AbstractJobHandlingTest {
                 handler, props);
         return reg;
     }
+
+    /**
+     * Helper method to remove a configuration
+     */
+    protected void removeConfiguration(final String pid) throws IOException {
+        if ( pid != null ) {
+            final org.osgi.service.cm.Configuration cfg = this.configAdmin.getConfiguration(pid, null);
+            cfg.delete();
+        }
+    }
 }
