@@ -39,6 +39,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.ExamReactorStrategy;
@@ -55,6 +56,8 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
     private static final String QUEUE_NAME = "cltest";
     private static final String TOPIC = "sling/cltest";
 
+    private String queueConfigPid;
+
     @Override
     @Before
     public void setup() throws IOException {
@@ -68,9 +71,16 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_TOPICS, TOPIC);
         orderedConfig.update(orderedProps);
 
+        queueConfigPid = orderedConfig.getPid();
+
         this.sleep(1000L);
     }
 
+    @After
+    public void cleanUp() throws IOException {
+        this.removeConfiguration(this.queueConfigPid);
+
+    }
 
     @org.junit.Test public void testSimpleClassloading() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);

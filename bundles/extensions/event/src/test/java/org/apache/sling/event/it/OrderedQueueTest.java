@@ -36,6 +36,7 @@ import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,6 +50,8 @@ import org.osgi.service.event.EventHandler;
 @RunWith(JUnit4TestRunner.class)
 @ExamReactorStrategy(AllConfinedStagedReactorFactory.class)
 public class OrderedQueueTest extends AbstractJobHandlingTest {
+
+    private String queueConfPid;
 
     @Override
     @Before
@@ -65,7 +68,15 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
         orderedProps.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
         orderedConfig.update(orderedProps);
 
+        this.queueConfPid = orderedConfig.getPid();
+
         this.sleep(1000L);
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        this.removeConfiguration(this.queueConfPid);
+
     }
 
     /**

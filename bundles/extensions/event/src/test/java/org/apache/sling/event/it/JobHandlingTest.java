@@ -41,6 +41,7 @@ import org.apache.sling.event.jobs.JobProcessor;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,6 +58,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
 
     public static final String TOPIC = "sling/test";
 
+    private String queueConfPid;
+
     @Override
     @Before
     public void setup() throws IOException {
@@ -72,7 +75,14 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
         props.put(ConfigurationConstants.PROP_RETRY_DELAY, 2000L);
         config.update(props);
 
+        this.queueConfPid = config.getPid();
         this.sleep(1000L);
+    }
+
+    @After
+    public void cleanUp() throws IOException {
+        this.removeConfiguration(this.queueConfPid);
+
     }
 
     /**
@@ -518,6 +528,11 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             assertEquals("Finished count", COUNT / 2, count.get());
             assertEquals("Unprocessed count",COUNT, unprocessedCount.get());
             assertEquals("Finished count", COUNT / 2, jobManager.getStatistics().getNumberOfFinishedJobs());
+
+            // now remove jobs
+            for(final Job j : jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "2", -1, (Map<String, Object>[])null)) {
+                jobManager.removeJobById(j.getId());
+            }
         } finally {
             eh1.unregister();
             eh2.unregister();
