@@ -17,7 +17,6 @@
 package org.apache.sling.security.impl;
 
 import static org.mockito.Mockito.*;
-import static org.mockito.Matchers.*;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -40,7 +39,10 @@ public class ReferrerFilterTest {
         final ComponentContext ctx = mock(ComponentContext.class);
         final BundleContext bundleCtx = mock(BundleContext.class);
         final ServiceRegistration reg = mock(ServiceRegistration.class);
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        final Dictionary<String, Object> props = new Hashtable<String, Object>(){{
+            put("allow.hosts", new String[]{"relhost"});
+            put("allow.hosts.regexp", new String[]{"http://([^.]*.)?abshost:80"});
+        }};
         doReturn(props).when(ctx).getProperties();
         doReturn(bundleCtx).when(ctx).getBundleContext();
         doReturn(reg).when(bundleCtx).registerService(any(String[].class), any(), any(Dictionary.class));
@@ -83,5 +85,13 @@ public class ReferrerFilterTest {
         Assert.assertEquals(true, filter.isValidRequest(getRequest("http://localhost")));
         Assert.assertEquals(true, filter.isValidRequest(getRequest("http://127.0.0.1")));
         Assert.assertEquals(false, filter.isValidRequest(getRequest("http://somehost/but/[illegal]")));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest("http://relhost")));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest("http://relhost:9001")));
+        Assert.assertEquals(false, filter.isValidRequest(getRequest("http://abshost:9001")));
+        Assert.assertEquals(false, filter.isValidRequest(getRequest("https://abshost:80")));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest("http://abshost:80")));
+        Assert.assertEquals(false, filter.isValidRequest(getRequest("http://abshost:9001")));
+        Assert.assertEquals(true, filter.isValidRequest(getRequest("http://another.abshost:80")));
+        Assert.assertEquals(false, filter.isValidRequest(getRequest("http://yet.another.abshost:80")));
     }
 }

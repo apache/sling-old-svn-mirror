@@ -26,12 +26,14 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -93,19 +95,30 @@ public class ReferrerFilter implements Filter {
     @Property(boolValue=DEFAULT_ALLOW_EMPTY)
     private static final String PROP_ALLOW_EMPTY = "allow.empty";
 
-    /** Allow empty property. */
+    private static final String[] DEFAULT_PROP_HOSTS = {};
+
+    /** Allow referrer uri hosts property. */
     @Property(unbounded=PropertyUnbounded.ARRAY)
     private static final String PROP_HOSTS = "allow.hosts";
 
-    /** Allow empty property. */
+    /** Allow referrer regex hosts property */
+    @Property(unbounded=PropertyUnbounded.ARRAY)
+    private static final String PROP_HOSTS_REGEX = "allow.hosts.regexp";
+
+    /** Filtered methods property */
     @Property(unbounded=PropertyUnbounded.ARRAY, value={"POST", "PUT", "DELETE"})
     private static final String PROP_METHODS = "filter.methods";
+
+
 
     /** Do we allow empty referrer? */
     private boolean allowEmpty;
 
-    /** Allowed referrers */
-    private URL[] allowedReferrers;
+    /** Allowed uri referrers */
+    private URL[] allowedUriReferrers;
+
+    /** Allowed regexp referrers */
+    private Pattern[] allowedRegexReferrers;
 
     /** Methods to be filtered. */
     private String[] filterMethods;
@@ -160,7 +173,7 @@ public class ReferrerFilter implements Filter {
     }
 
     /**
-     * Create URLs out of the referrer list
+     * Create URLs out of the uri referrer set
      */
     private URL[] createReferrerUrls(final Set<String> referrers) {
         final List<URL> urls = new ArrayList<URL>();
@@ -179,27 +192,41 @@ public class ReferrerFilter implements Filter {
     }
 
     /**
+     * Create Patterns out of the regexp referrer list
+     */
+    private Pattern[] createReferrerPatterns(final String[] regexps) {
+        final List<Pattern> patterns = new ArrayList<Pattern>();
+        for(final String regexp : regexps) {
+            try {
+                final Pattern pattern  = Pattern.compile(regexp);
+                patterns.add(pattern);
+            } catch (final Exception e) {
+                logger.warn("Unable to create Pattern from {} : {}", new String[]{regexp, e.getMessage()});
+            }
+        }
+        return patterns.toArray(new Pattern[patterns.size()]);
+    }
+
+    /**
      * Activate
      */
     @Activate
     protected void activate(final ComponentContext ctx) {
-        this.allowEmpty = PropertiesUtil.toBoolean(ctx.getProperties().get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
-        String[] allowHosts = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_HOSTS));
-        if ( allowHosts != null ) {
-            if ( allowHosts.length == 0 ) {
-                allowHosts = null;
-            } else if ( allowHosts.length == 1 && allowHosts[0].trim().length() == 0 ) {
-                allowHosts = null;
-            }
-        }
-        final Set<String> allowedReferrers = this.getDefaultAllowedReferrers();
-        if ( allowHosts != null ) {
-            for(final String host : allowHosts) {
-                allowedReferrers.add(host);
-            }
-        }
-        this.allowedReferrers = this.createReferrerUrls(allowedReferrers);
-        this.filterMethods = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_METHODS));
+        final Dictionary props = ctx.getProperties();
+
+        this.allowEmpty = PropertiesUtil.toBoolean(props.get(PROP_ALLOW_EMPTY), DEFAULT_ALLOW_EMPTY);
+
+        final String[] allowRegexHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS_REGEX),
+                DEFAULT_PROP_HOSTS), DEFAULT_PROP_HOSTS);
+        this.allowedRegexReferrers = createReferrerPatterns(allowRegexHosts);
+
+        final Set<String> allowUriReferrers = getDefaultAllowedReferrers();
+        final String[] allowHosts = defaultIfEmpty(PropertiesUtil.toStringArray(props.get(PROP_HOSTS),
+                DEFAULT_PROP_HOSTS), DEFAULT_PROP_HOSTS);
+        allowUriReferrers.addAll(Arrays.asList(allowHosts));
+        this.allowedUriReferrers = createReferrerUrls(allowUriReferrers);
+
+        this.filterMethods = PropertiesUtil.toStringArray(props.get(PROP_METHODS));
         if ( this.filterMethods != null && this.filterMethods.length == 1 && (this.filterMethods[0] == null || this.filterMethods[0].trim().length() == 0) ) {
             this.filterMethods = null;
         }
@@ -267,6 +294,9 @@ public class ReferrerFilter implements Filter {
         public String host;
         public String scheme;
         public int port;
+        public String toURI() {
+            return scheme + "://" + host + ":" + port;
+        }
     }
 
     HostInfo getHost(final String referrer) {
@@ -330,15 +360,9 @@ public class ReferrerFilter implements Filter {
             return true;
         }
 
-        boolean valid = false;
-        for(final URL ref : this.allowedReferrers) {
-            if ( info.host.equals(ref.getHost()) && info.scheme.equals(ref.getProtocol()) ) {
-                if ( ref.getPort() == 0 || info.port == ref.getPort() ) {
-                    valid = true;
-                    break;
-                }
-            }
-        }
+        // allow the request if the referrer matches any of the allowed referrers
+        boolean valid = isValidUriReferrer(info) || isValidRegexReferrer(info);
+
         if ( !valid) {
             this.logger.info("Rejected referrer header for {} request to {} : {}",
                     new Object[] {request.getMethod(), request.getRequestURI(), referrer});
@@ -358,6 +382,45 @@ public class ReferrerFilter implements Filter {
      */
     public void destroy() {
         // nothing to do
+    }
+
+    /**
+     * @param hostInfo The hostInfo to check for validity
+     * @return <code>true</code> if the hostInfo matches any of the allowed URI referrer.
+     */
+    private boolean isValidUriReferrer(HostInfo hostInfo) {
+        for(final URL ref : this.allowedUriReferrers) {
+            if ( hostInfo.host.equals(ref.getHost()) && hostInfo.scheme.equals(ref.getProtocol()) ) {
+                if ( ref.getPort() == 0 || hostInfo.port == ref.getPort() ) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param hostInfo The hostInfo to check for validity
+     * @return <code>true</code> if the hostInfo matches any of the allowed regexp referrer.
+     */
+    private boolean isValidRegexReferrer(HostInfo hostInfo) {
+        for(final Pattern ref : this.allowedRegexReferrers) {
+            String url = hostInfo.toURI();
+            if (ref.matcher(url).matches()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return The <code>defaultProperties</code> if <code>properties</code> contains a single empty string,
+     *         <code>properties</code> otherwise.
+     */
+    private String[] defaultIfEmpty(String[] properties, String[] defaultProperties) {
+        return properties.length == 1 && properties[0].trim().length() == 0
+                ? defaultProperties
+                : properties;
     }
 
     /**
@@ -391,8 +454,11 @@ public class ReferrerFilter implements Filter {
         public void printConfiguration(final PrintWriter pw) {
             pw.println("Current Apache Sling Referrer Filter Allowed Referrers:");
             pw.println();
-            for (final URL url : allowedReferrers) {
+            for (final URL url : allowedUriReferrers) {
                 pw.println(url.toString());
+            }
+            for (final Pattern pattern : allowedRegexReferrers) {
+                pw.println(pattern.toString());
             }
         }
 
