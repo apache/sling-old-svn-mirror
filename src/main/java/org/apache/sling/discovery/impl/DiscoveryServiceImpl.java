@@ -346,6 +346,10 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                             resourceResolver,
                             config.getClusterInstancesPath()
                                     + "/" + slingId + "/properties");
+            // SLING-2879 - revert/refresh resourceResolver here to work
+            // around a potential issue with jackrabbit in a clustered environment
+            resourceResolver.revert();
+            resourceResolver.refresh();
 
             final ModifiableValueMap myInstanceMap = myInstance.adaptTo(ModifiableValueMap.class);
             final Set<String> keys = new HashSet<String>(myInstanceMap.keySet());
