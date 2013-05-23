@@ -105,14 +105,9 @@ public class SlingPropertyValueHandler {
                 }
             }
         }
-        final NodeTypeIterator nti = nodeType.getSubtypes();
-        while ( nti.hasNext() ) {
-            final NodeType st = nti.nextNodeType();
-            PropertyDefinition result = searchPropertyDefinition(st, name);
-            if ( result != null ) {
-                return result;
-            }
-        }
+        // SLING-2877:
+        // no need to search property definitions of super types, as nodeType.getPropertyDefinitions()
+        // already includes those. see javadoc of {@link NodeType#getPropertyDefinitions()}
         return null;
     }
 
@@ -168,7 +163,8 @@ public class SlingPropertyValueHandler {
             if ( mod.node != null ) {
                 final PropertyDefinition pd = this.searchPropertyDefinition(mod.node, name);
                 if ( pd != null ) {
-                    if ( pd.isAutoCreated() || pd.isProtected() ) {
+                    // SLING-2877 (autocreated check is only required for new nodes)
+                    if ( (mod.node.isNew() && pd.isAutoCreated()) || pd.isProtected() ) {
                         return;
                     }
                 }
