@@ -18,12 +18,9 @@
  */
 package org.apache.sling.discovery.impl.common.resource;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -32,6 +29,7 @@ import javax.jcr.Session;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 
 /**
@@ -42,29 +40,16 @@ public class ResourceHelper {
     public static Resource getOrCreateResource(
             final ResourceResolver resourceResolver, final String path)
             throws PersistenceException {
-        Resource resource = resourceResolver.getResource(path);
-        if (resource == null) {
-            resource = createResource(resourceResolver, path);
-        }
-        return resource;
+    	return ResourceUtil.getOrCreateResource(resourceResolver, path, 
+    			(String)null, null, true);
     }
     
+    /**
+     * @deprecated use {@link #getOrCreateResource(ResourceResolver, String)} instead
+     */
     public static Resource createResource(final ResourceResolver resourceResolver,
             final String path) throws PersistenceException {
-        final StringTokenizer st = new StringTokenizer(path, "/");
-        Resource resource = resourceResolver.getResource("/");
-        while (st.hasMoreTokens()) {
-            String elem = st.nextToken();
-            Resource child = resource.getChild(elem);
-            if (child==null) {
-                Map<String, Object> properties = new HashMap<String, Object>();
-                properties.put("jcr:primaryType", "nt:unstructured");
-                child = resourceResolver.create(resource, elem, properties);
-            }
-            resource = child;
-        }
-        resourceResolver.commit();
-        return resourceResolver.getResource(path);
+    	return getOrCreateResource(resourceResolver, path);
     }
 
     /** Compile a stringbuffer containing the properties of a resource - used for logging **/
