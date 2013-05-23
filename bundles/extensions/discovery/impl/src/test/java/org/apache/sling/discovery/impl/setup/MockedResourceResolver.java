@@ -252,7 +252,11 @@ public class MockedResourceResolver implements ResourceResolver {
     }
 
     public void revert() {
-        throw new UnsupportedOperationException("Not implemented");
+        try {
+            this.session.refresh(false);
+        } catch (final RepositoryException re) {
+            throw new RuntimeException("Unable to commit changes.", re);
+        }
     }
 
     public void commit() throws PersistenceException {
