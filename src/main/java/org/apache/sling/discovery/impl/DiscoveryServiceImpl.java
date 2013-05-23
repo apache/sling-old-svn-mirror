@@ -357,7 +357,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 if (newProps.containsKey(key)) {
                     // perfect
                     continue;
-                } else if (key.equals("jcr:primaryType")) {
+                } else if (key.indexOf(":")!=-1) {
                     // ignore
                     continue;
                 } else {
