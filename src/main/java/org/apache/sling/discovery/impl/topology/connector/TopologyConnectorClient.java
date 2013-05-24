@@ -26,6 +26,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -33,6 +34,7 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
@@ -75,6 +77,9 @@ public class TopologyConnectorClient implements
     
     /** the status code of the last post **/
     private int lastStatusCode = -1;
+    
+    /** SLING-2882: whether or not to suppress ping warnings **/
+    private boolean suppressPingWarnings_ = false;
 
     TopologyConnectorClient(final ClusterViewService clusterViewService,
             final AnnouncementRegistry announcementRegistry, final Config config,
@@ -149,6 +154,8 @@ public class TopologyConnectorClient implements
         		logger.debug("ping: topologyAnnouncement json is: " + p);
         	}
             method.setRequestEntity(new StringRequestEntity(p, "application/json", "UTF-8"));
+            DefaultHttpMethodRetryHandler retryhandler = new DefaultHttpMethodRetryHandler(0, false);
+            httpClient.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, retryhandler);
             httpClient.executeMethod(method);
         	if (logger.isDebugEnabled()) {
 	            logger.debug("ping: done. code=" + method.getStatusCode() + " - "
@@ -187,11 +194,21 @@ public class TopologyConnectorClient implements
             } else {
                 lastInheritedAnnouncement = null;
             }
+        	// SLING-2882 : reset suppressPingWarnings_ flag in success case
+    		suppressPingWarnings_ = false;
         } catch (URIException e) {
-            logger.warn("ping: Got URIException: " + e);
+            logger.warn("ping: Got URIException: " + e + ", uri=" + uri);
             lastInheritedAnnouncement = null;
         } catch (IOException e) {
-            logger.warn("ping: got IOException: " + e);
+        	// SLING-2882 : set/check the suppressPingWarnings_ flag
+        	if (suppressPingWarnings_) {
+        		if (logger.isDebugEnabled()) {
+        			logger.debug("ping: got IOException: " + e + ", uri=" + uri);
+        		}
+        	} else {
+        		suppressPingWarnings_ = true;
+    			logger.warn("ping: got IOException [suppressing further warns]: " + e + ", uri=" + uri);
+        	}
             lastInheritedAnnouncement = null;
         } catch (JSONException e) {
             logger.warn("ping: got JSONException: " + e);
