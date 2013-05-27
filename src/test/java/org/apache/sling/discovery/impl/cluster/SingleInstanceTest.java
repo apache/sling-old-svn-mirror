@@ -115,7 +115,32 @@ public class SingleInstanceTest {
                 .getInstances().get(0)
                 .getProperty(UUID.randomUUID().toString()));
     }
+    
+    @Test
+    public void testInvalidProperties() throws Throwable {
+        final String propertyValue = UUID.randomUUID().toString();
+        doTestProperty(UUID.randomUUID().toString(), propertyValue, propertyValue);
 
+        doTestProperty("", propertyValue, null);
+        doTestProperty("-", propertyValue, propertyValue);
+        doTestProperty("_", propertyValue, propertyValue);
+        doTestProperty("jcr:" + UUID.randomUUID().toString(), propertyValue, null);
+        doTestProperty("var/" + UUID.randomUUID().toString(), propertyValue, null);
+        doTestProperty(UUID.randomUUID().toString() + "@test", propertyValue, null);
+        doTestProperty(UUID.randomUUID().toString() + "!test", propertyValue, null);
+    }
+
+	private void doTestProperty(final String propertyName,
+			final String propertyValue,
+			final String expectedPropertyValue) throws Throwable {
+		PropertyProviderImpl pp = new PropertyProviderImpl();
+        pp.setProperty(propertyName, propertyValue);
+        instance.bindPropertyProvider(pp, propertyName);
+        assertEquals(expectedPropertyValue,
+                instance.getClusterViewService().getClusterView()
+                        .getInstances().get(0).getProperty(propertyName));
+	}
+    
     @Test
     public void testTopologyEventListeners() throws Throwable {
         instance.runHeartbeatOnce();

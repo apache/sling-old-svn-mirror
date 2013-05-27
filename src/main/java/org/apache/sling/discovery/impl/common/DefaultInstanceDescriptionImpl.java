@@ -19,10 +19,17 @@
 package org.apache.sling.discovery.impl.common;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
+import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
+
+import aQute.bnd.service.ResourceHandle;
 
 /**
  * Base implementation for the InstanceDescription interface.
@@ -58,7 +65,7 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
         this.isLeader = isLeader;
         this.isLocal = isOwn;
         this.slingId = slingId;
-        this.properties = properties;
+        this.properties = filterValidProperties(properties);
         if (clusterView != null) {
             clusterView.addInstanceDescription(this);
             if (this.clusterView == null) {
@@ -162,6 +169,25 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
         if (properties == null) {
             throw new IllegalArgumentException("properties must not be null");
         }
-        this.properties = properties;
+        this.properties = filterValidProperties(properties);
     }
+
+    /** SLING-2883 : filter (pass-through) valid properties only **/
+	private Map<String, String> filterValidProperties(
+			Map<String, String> rawProps) {
+		if (rawProps==null) {
+			return null;
+		}
+		
+		final HashMap<String, String> filteredProps = new HashMap<String, String>();
+		final Set<Entry<String, String>> entries = rawProps.entrySet();
+		final Iterator<Entry<String, String>> it = entries.iterator();
+		while(it.hasNext()) {
+			final Entry<String, String> anEntry = it.next();
+			if (ResourceHelper.isValidPropertyName(anEntry.getKey())) {
+				filteredProps.put(anEntry.getKey(), anEntry.getValue());
+			}
+		}
+		return filteredProps;
+	}
 }

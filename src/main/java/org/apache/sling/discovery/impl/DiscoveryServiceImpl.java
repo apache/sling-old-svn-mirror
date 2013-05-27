@@ -580,19 +580,26 @@ public class DiscoveryServiceImpl implements DiscoveryService {
             if (this.propertyProperties instanceof String) {
                 final String val = provider.getProperty((String) this.propertyProperties);
                 if (val != null) {
-                    this.properties.put((String) this.propertyProperties, val);
+                	putPropertyIfValid((String) this.propertyProperties, val);
                 }
             } else if (this.propertyProperties instanceof String[]) {
                 for (final String name : (String[]) this.propertyProperties) {
                     final String val = provider.getProperty(name);
                     if (val != null) {
-                        this.properties.put(name, val);
+                        putPropertyIfValid(name, val);
                     }
                 }
             }
         }
 
-        /**
+        /** SLING-2883 : put property only if valid **/
+		private void putPropertyIfValid(final String name, final String val) {
+			if (ResourceHelper.isValidPropertyName(name)) {
+				this.properties.put(name, val);
+			}
+		}
+
+		/**
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
         public int compareTo(final ProviderInfo o) {
