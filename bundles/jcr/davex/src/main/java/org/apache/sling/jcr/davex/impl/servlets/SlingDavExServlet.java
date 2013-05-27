@@ -71,6 +71,16 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     @Property(value=DEFAULT_DAV_ROOT)
     private static final String PROP_DAV_ROOT = "alias";
 
+    private static final boolean DEFAULT_CREATE_ABSOLUTE_URI = true;
+
+    /**
+     * Name of the property to configure whether absolute URIs ({@code true}) or
+     * absolute paths ({@code false}) are generated in responses. Default for
+     * the property is {@link #DEFAULT_CREATE_ABSOLUTE_URI}.
+     */
+    @Property(boolValue=DEFAULT_CREATE_ABSOLUTE_URI)
+    private static final String PROP_CREATE_ABSOLUTE_URI = "dav.create-absolute-uri";
+
     /**
      * The name of the service property of the registered dummy service to cause
      * the path to the DavEx servlet to not be subject to forced authentication.
@@ -110,6 +120,7 @@ public class SlingDavExServlet extends JcrRemotingServlet {
     @Activate
     protected void activate(final BundleContext bundleContext, final Map<String, ?> config) {
         final String davRoot = OsgiUtil.toString(config.get(PROP_DAV_ROOT), DEFAULT_DAV_ROOT);
+        final boolean createAbsoluteUri = OsgiUtil.toBoolean(config.get(PROP_CREATE_ABSOLUTE_URI), DEFAULT_CREATE_ABSOLUTE_URI);
 
         final AuthHttpContext context = new AuthHttpContext(davRoot);
         context.setAuthenticationSupport(authSupport);
@@ -119,6 +130,9 @@ public class SlingDavExServlet extends JcrRemotingServlet {
 
         // prefix to the servlet
         initProps.put(INIT_PARAM_RESOURCE_PATH_PREFIX, davRoot);
+
+        // create absolute URIs (or absolute paths)
+        initProps.put(INIT_PARAM_CREATE_ABSOLUTE_URI, Boolean.toString(createAbsoluteUri));
 
         // disable CSRF checks for now (should be handled by Sling)
         initProps.put(INIT_PARAM_CSRF_PROTECTION, CSRFUtil.DISABLED);
