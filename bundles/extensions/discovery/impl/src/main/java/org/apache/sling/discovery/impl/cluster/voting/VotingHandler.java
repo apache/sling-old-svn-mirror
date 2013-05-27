@@ -124,9 +124,12 @@ public class VotingHandler implements EventHandler {
     }
 
     /**
-     * Analyze any ongoing voting in the repository
+     * Analyze any ongoing voting in the repository.
+     * <p>
+     * SLING-2885: this method must be synchronized as it can be called concurrently
+     * by the HearbeatHandler.doCheckView and the VotingHandler.handleEvent.
      */
-    public void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
+    public synchronized void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
         VotingView winningVote = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         if (winningVote != null) {
