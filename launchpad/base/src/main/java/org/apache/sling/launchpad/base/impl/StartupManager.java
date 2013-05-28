@@ -172,7 +172,7 @@ public class StartupManager {
     /**
      * Get the time stamp of a class through its url classloader (if possible)
      */
-    private long getTimeStampOfClass(final Class<?> clazz, final long selfStamp) {
+    long getTimeStampOfClass(final Class<?> clazz, final long selfStamp) {
         long timeStamp = selfStamp;
         final ClassLoader loader = clazz.getClassLoader();
         if (loader instanceof URLClassLoader) {
@@ -184,7 +184,7 @@ public class StartupManager {
                     final long stamp = urls[0].openConnection().getLastModified();
                     if ( stamp > selfStamp ) {
                         logger.log(Logger.LOG_INFO, String.format("Newer timestamp for %s from %s : %s", clazz.getName(), url, selfStamp));
-                        timeStamp = selfStamp;
+                        timeStamp = stamp;
                     }
                 } catch (final IOException ignore) {}
             }
