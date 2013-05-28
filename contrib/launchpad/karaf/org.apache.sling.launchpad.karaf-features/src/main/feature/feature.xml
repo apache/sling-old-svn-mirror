@@ -64,6 +64,10 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.osgi/2.2.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.scheduler/2.3.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.commons.threads/3.1.0</bundle>
+    <!-- Apache Sling Discovery -->
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.api/1.0.1-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.impl/0.1.0-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.discovery.support/0.0.1-SNAPSHOT</bundle>
     <!-- Apache Sling Extensions -->
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.groovy/1.0.0-SNAPSHOT</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.threaddump/0.2.2</bundle>
