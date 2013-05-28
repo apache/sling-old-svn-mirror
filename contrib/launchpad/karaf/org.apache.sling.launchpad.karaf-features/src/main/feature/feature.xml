@@ -22,13 +22,13 @@
     <bundle dependency="true">mvn:commons-io/commons-io/1.4</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/2.5</bundle>
     <bundle dependency="true">mvn:org.apache.commons/commons-math/2.2</bundle>
-    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
     <!-- Apache Felix Webconsole -->
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole/4.0.0</bundle>
     <!-- Apache Felix Webconsole Plugins -->
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.ds/1.0.0</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.event/1.0.2</bundle>
-    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.2</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.4</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0</bundle>
   </feature>
   <feature name="sling-karaf" version="0.1.0.BUILD-SNAPSHOT">
@@ -40,21 +40,21 @@
     <bundle dependency="true">mvn:commons-io/commons-io/1.4</bundle>
     <bundle dependency="true">mvn:commons-lang/commons-lang/2.5</bundle>
     <bundle dependency="true">mvn:org.apache.commons/commons-math/2.2</bundle>
-    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.bundles/commons-httpclient/3.1_2</bundle>
     <!-- Apache Derby -->
     <bundle dependency="true">mvn:org.apache.derby/derby/10.5.3.0_1</bundle>
     <!-- Apache Sling -->
     <bundle>mvn:org.apache.sling/org.apache.sling.adapter/2.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.3.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.bundleresource.impl/2.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.2.6</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.api/2.4.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.bundleresource.impl/2.1.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.engine/2.2.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.event/3.1.4</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.fsresource/1.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.0.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.fsresource/1.1.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.resourceresolver/1.0.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.settings/1.2.2</bundle>
     <!-- Apache Sling Auth -->
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.core/1.1.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.auth.form/1.0.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.openid/1.0.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.auth.selector/1.0.4</bundle>
     <!-- Apache Sling Commons -->
@@ -91,7 +91,7 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.ocm/2.0.4-incubator</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.registration/0.0.1-SNAPSHOT</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.2.4</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.resource/2.2.8</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webconsole/1.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.webdav/2.1.2</bundle>
     <!-- Apache Sling JCR Jackrabbit -->
@@ -103,12 +103,12 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.api/2.1.4</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.core/2.0.24</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.javascript/2.0.12</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.0.26</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp/2.0.28</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.scripting.jsp.taglib/2.1.8</bundle>
     <!-- Apache Sling Servlets -->
     <bundle>mvn:org.apache.sling/org.apache.sling.servlets.get/2.1.4</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.2.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.2.2</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.post/2.3.0</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.servlets.resolver/2.2.4</bundle>
     <!-- Apache Jackrabbit -->
     <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-api/2.4.2</bundle>
     <bundle dependency="true">mvn:org.apache.jackrabbit/jackrabbit-jcr-commons/2.4.2</bundle>
