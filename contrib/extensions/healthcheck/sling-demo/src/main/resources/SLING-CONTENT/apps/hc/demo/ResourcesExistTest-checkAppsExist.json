@@ -1,0 +1,7 @@
+{
+  "sling:resourceType" : "sling/healthcheck/rules",
+  "ruleName": "junit",
+  "namespace": "sling",
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "org.apache.sling.hc.demo.tests.ResourcesExistTest#checkAppsExist"
+}

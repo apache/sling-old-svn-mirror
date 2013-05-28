@@ -18,21 +18,24 @@
  */
 package org.apache.sling.event.impl.jobs.config;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.event.impl.jobs.JobEvent;
-import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.event.impl.support.ResourceHelper;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
 
 /**
- * An event handler for special job events.
- *
- * We schedule this event handler to run in the background and clean up
- * obsolete events.
+ * The queue manager manages queue configurations.
  */
 @Component
 @Service(value=QueueConfigurationManager.class)
@@ -47,13 +50,16 @@ public class QueueConfigurationManager {
     /** Tracker count to detect changes. */
     private volatile int lastTrackerCount = -1;
 
+    @Reference
+    private MainQueueConfiguration mainQueueConfiguration;
 
     /**
      * Activate this component.
      * Create the service tracker and start it.
      */
     @Activate
-    protected void activate(final BundleContext bundleContext) {
+    protected void activate(final BundleContext bundleContext)
+    throws LoginException, PersistenceException {
         this.configTracker = new ServiceTracker(bundleContext,
                 InternalQueueConfiguration.class.getName(), null);
         this.configTracker.open();
@@ -85,13 +91,13 @@ public class QueueConfigurationManager {
                     if ( trackedConfigs == null || trackedConfigs.length == 0 ) {
                         configurations = new InternalQueueConfiguration[0];
                     } else {
-                        configurations = new InternalQueueConfiguration[trackedConfigs.length];
-                        int i = 0;
+                        final List<InternalQueueConfiguration> configs = new ArrayList<InternalQueueConfiguration>();
                         for(final Object entry : trackedConfigs) {
                             final InternalQueueConfiguration config = (InternalQueueConfiguration)entry;
-                            configurations[i] = config;
-                            i++;
+                            configs.add(config);
                         }
+                        Collections.sort(configs);
+                        configurations = configs.toArray(new InternalQueueConfiguration[configs.size()]);
                     }
                     this.orderedConfigs = configurations;
                     this.lastTrackerCount = count;
@@ -101,25 +107,42 @@ public class QueueConfigurationManager {
         return configurations;
     }
 
+    public InternalQueueConfiguration getMainQueueConfiguration() {
+        return this.mainQueueConfiguration.getMainConfiguration();
+    }
+
+    public static final class QueueInfo {
+        public InternalQueueConfiguration queueConfiguration;
+        public String queueName;
+        public String targetId;
+    }
+
     /**
      * Find the queue configuration for the job.
      * This method only returns a configuration if one matches.
      */
-    public InternalQueueConfiguration getQueueConfiguration(final JobEvent event) {
+    public QueueInfo getQueueInfo(final String topic) {
         final InternalQueueConfiguration[] configurations = this.getConfigurations();
-        final String queueName = (String)event.event.getProperty(JobUtil.PROPERTY_JOB_QUEUE_NAME);
         for(final InternalQueueConfiguration config : configurations) {
             if ( config.isValid() ) {
-                // check for queue name first
-                if ( queueName != null && queueName.equals(config.getName()) ) {
-                    event.queueName = queueName;
-                    return config;
-                }
-                if ( config.match(event) ) {
-                    return config;
+                final String qn = config.match(topic);
+                if ( qn != null ) {
+                    final QueueInfo result = new QueueInfo();
+                    result.queueConfiguration = config;
+                    result.queueName = ResourceHelper.filterName(qn);
+
+                    return result;
                 }
             }
         }
-        return null;
+        final QueueInfo result = new QueueInfo();
+        result.queueConfiguration = this.mainQueueConfiguration.getMainConfiguration();
+        result.queueName = result.queueConfiguration.getName();
+
+        return result;
+    }
+
+    public int getChangeCount() {
+        return this.configTracker.getTrackingCount();
     }
 }

@@ -23,11 +23,11 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>15</version>
+        <version>16</version>
     </parent>
 
     <artifactId>org.apache.sling.security</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.5-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling Security</name>

@@ -26,8 +26,10 @@ import org.apache.sling.tenant.Tenant;
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * This is a service interface which services are called by the WebConsole
- * plugin (or admin tool) to complete the Tenant setup.
+ * This is a service interface to customize tenant setup and administration.
+ *
+ * Tools can hook into the tenant creation, changing a tenant and removing
+ * thereof by implementing this interface.
  */
 @ConsumerType
 public interface TenantCustomizer {

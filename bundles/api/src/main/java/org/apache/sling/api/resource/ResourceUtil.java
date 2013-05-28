@@ -438,6 +438,9 @@ public class ResourceUtil {
      */
     @Deprecated
     public static String findResourceSuperType(final Resource resource) {
+        if ( resource == null ) {
+            return null;
+        }
         return resource.getResourceResolver().getParentResourceType(resource);
     }
 
@@ -457,6 +460,9 @@ public class ResourceUtil {
      */
     @Deprecated
     public static boolean isA(final Resource resource, final String resourceType) {
+        if ( resource == null ) {
+            return false;
+        }
         return resource.getResourceResolver().isResourceType(resource, resourceType);
     }
 
@@ -568,7 +574,17 @@ public class ResourceUtil {
             if ( autoCommit ) {
                 resolver.refresh();
             }
-            rsrc = resolver.create(parentResource, name, resourceProperties);
+            try {
+                rsrc = resolver.create(parentResource, name, resourceProperties);
+            } catch ( final PersistenceException pe ) {
+                // this could be thrown because someone else tried to create this
+                // node concurrently
+                resolver.refresh();
+                rsrc = resolver.getResource(parentResource, name);
+                if ( rsrc == null ) {
+                    throw pe;
+                }
+            }
             if ( autoCommit ) {
                 try {
                     resolver.commit();

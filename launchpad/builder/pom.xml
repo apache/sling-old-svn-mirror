@@ -16,7 +16,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>15</version>
+        <version>16</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -114,35 +114,6 @@
                         <goals>
                             <goal>attach-bundle-list</goal>
                         </goals>
-                    </execution>
-                    <execution>
-                        <id>create-karaf-descriptor</id>
-                        <goals>
-                            <goal>create-karaf-descriptor</goal>
-                        </goals>
-                        <configuration>
-                            <additionalBundles>
-                                <bundle>
-                                    <groupId>org.apache.geronimo.specs</groupId>
-                                    <artifactId>geronimo-jta_1.1_spec</artifactId>
-                                    <version>1.1.1</version>
-                                </bundle>
-                            </additionalBundles>
-                            <bundleExclusions>
-                                <bundle>
-                                    <groupId>org.apache.felix</groupId>
-                                    <artifactId>org.apache.felix.configadmin</artifactId>
-                                </bundle>
-                                <bundle>
-                                    <groupId>org.apache.felix</groupId>
-                                    <artifactId>org.apache.felix.webconsole</artifactId>
-                                </bundle>
-                                <bundle>
-                                    <groupId>org.apache.sling</groupId>
-                                    <artifactId>org.apache.sling.launchpad.installer</artifactId>
-                                </bundle>
-                            </bundleExclusions>
-                        </configuration>
                     </execution>
                     <execution>
                         <id>create-bundle-jar</id>

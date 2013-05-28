@@ -35,27 +35,19 @@ import javax.management.StandardEmitterMBean;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.event.impl.jobs.QueueStatusEvent;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventHandler;
 
-@Component(immediate = true)
-@Service(value = { QueuesMBean.class, EventHandler.class })
-@Properties({
-        @Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames"),
-        @Property(name = "event.topics", propertyPrivate = true, value = { QueueStatusEvent.TOPIC }) })
-public class QueuesMBeanImpl extends StandardEmitterMBean implements
-        QueuesMBean, EventHandler {
+@Component
+@Service(value = { QueuesMBean.class })
+@Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames")
+public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean {
 
     private static final String QUEUE_NOTIFICATION = "org.apache.sling.event.queue";
     private static final String[] NOTIFICATION_TYPES = { QUEUE_NOTIFICATION };
@@ -87,25 +79,22 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
     }
 
     @Activate
-    public void activate(ComponentContext componentContext) {
-        bundleContext = componentContext.getBundleContext();
+    public void activate(final BundleContext bc) {
+        bundleContext = bc;
     }
 
     @Deactivate
-    public void deactivate(ComponentContext componentContext) {
-
+    public void deactivate() {
+        bundleContext = null;
     }
 
-    public void handleEvent(Event event) {
-        if (event instanceof QueueStatusEvent) {
-            QueueStatusEvent e = (QueueStatusEvent) event;
-            if (e.isNew()) {
-                bindQueueMBean(e);
-            } else if (e.isRemoved()) {
-                unbindQueueMBean(e);
-            } else {
-                updateQueueMBean(e);
-            }
+    public void sendEvent(final QueueStatusEvent e) {
+        if (e.isNew()) {
+            bindQueueMBean(e);
+        } else if (e.isRemoved()) {
+            unbindQueueMBean(e);
+        } else {
+            updateQueueMBean(e);
         }
     }
 
@@ -113,13 +102,11 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
         QueueMBeanHolder queueMBeanHolder = queues.get(e.getQueue().getName());
         if (queueMBeanHolder != null) {
             String[] oldQueue = getQueueNames();
-            queueMBeanHolder.queueMBean.notifyUpdate(e.getQueue());
             names = null;
             this.sendNotification(new AttributeChangeNotification(this,
                     sequence.incrementAndGet(), System.currentTimeMillis(),
                     "Queue " + e.getQueue().getName() + " updated ",
                     "queueNames", "String[]", oldQueue, getQueueNames()));
-
         }
     }
 
@@ -165,7 +152,7 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
                         createProperties(
                                 "jmx.objectname","org.apache.sling:type=queues,name="+queue.getName(),
                                 Constants.SERVICE_DESCRIPTION, "QueueMBean for queue "+queue.getName(),
-                                Constants.SERVICE_VENDOR,"Apache"));
+                                Constants.SERVICE_VENDOR, "The Apache Software Foundation"));
         QueueMBeanHolder queueMBeanHolder = new QueueMBeanHolder(
                 queue.getName(), queueMBean, serviceRegistration);
         queues.put(queueMBeanHolder.name, queueMBeanHolder);
@@ -181,11 +168,11 @@ public class QueuesMBeanImpl extends StandardEmitterMBean implements
     }
 
     private void remove(QueueMBeanHolder queueMBeanHolder) {
-        queueMBeanHolder.queueMBean.notifyRemove();
         queueMBeanHolder.registration.unregister();
         queues.remove(queueMBeanHolder.name);
     }
 
+    @Override
     public String[] getQueueNames() {
         if (names == null) {
             List<String> lnames = new ArrayList<String>(queues.keySet());

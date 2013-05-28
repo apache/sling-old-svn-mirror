@@ -60,8 +60,8 @@ public class JcrNodeResourceIterator implements Iterator<Resource> {
                                    final ClassLoader dynamicClassLoader) {
         this.resourceResolver = resourceResolver;
         this.nodes = nodes;
-        this.nextResult = seek();
         this.dynamicClassLoader = dynamicClassLoader;
+        this.nextResult = seek();
     }
 
     public boolean hasNext() {

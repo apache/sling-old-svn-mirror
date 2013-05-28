@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Unit Tests for the Class GetResourceTag.
+ * 
  * @see org.apache.sling.scripting.jsp.taglib.GetResourceTag
  */
 public class TestGetResourceTag {
@@ -42,7 +43,8 @@ public class TestGetResourceTag {
 	private MockResource resource;
 	private MockPageContext pageContext;
 	private static final String VAR_KEY = "resource";
-	private static final String TEST_PATH = "/content";
+	private static final String TEST_ABSOLUTE_PATH = "/content";
+	private static final String TEST_RELATIVE_PATH = "test";
 	private static final String TEST_NON_PATH = "/content/page";
 
 	/**
@@ -54,8 +56,13 @@ public class TestGetResourceTag {
 		log.info("init");
 
 		final MockResourceResolver resolver = new MockResourceResolver();
-		resource = new MockResource(resolver, TEST_PATH, "test");
+
+		resource = new MockResource(resolver, TEST_ABSOLUTE_PATH, "test");
 		resolver.addResource(resource);
+
+		MockResource child = new MockResource(resolver, TEST_ABSOLUTE_PATH
+				+ "/" + TEST_RELATIVE_PATH, "test");
+		resolver.addResource(child);
 
 		getResourceTag = new GetResourceTag() {
 			protected ResourceResolver getResourceResolver() {
@@ -70,19 +77,39 @@ public class TestGetResourceTag {
 	}
 
 	/**
-	 * Tests using a 'good' path.
+	 * Tests using an absolute path.
 	 */
 	@Test
-	public void testGoodPath() {
-		log.info("testGoodPath");
+	public void testAbsolutePath() {
+		log.info("testAbsolutePath");
 
 		getResourceTag.setVar(VAR_KEY);
-		getResourceTag.setPath(TEST_PATH);
+		getResourceTag.setPath(TEST_ABSOLUTE_PATH);
 		getResourceTag.doEndTag();
 		Object result = pageContext.getAttribute(VAR_KEY);
 		assertNotNull(result);
 		assertTrue(result instanceof Resource);
-		assertEquals(TEST_PATH, ((Resource) result).getPath());
+		assertEquals(TEST_ABSOLUTE_PATH, ((Resource) result).getPath());
+
+		log.info("Test successful!");
+	}
+
+	/**
+	 * Tests using an relative path.
+	 */
+	@Test
+	public void testRelativePath() {
+		log.info("testRelativePath");
+
+		getResourceTag.setVar(VAR_KEY);
+		getResourceTag.setBase(resource);
+		getResourceTag.setPath(TEST_RELATIVE_PATH);
+		getResourceTag.doEndTag();
+		Object result = pageContext.getAttribute(VAR_KEY);
+		assertNotNull(result);
+		assertTrue(result instanceof Resource);
+		assertEquals(TEST_ABSOLUTE_PATH + "/" + TEST_RELATIVE_PATH,
+				((Resource) result).getPath());
 
 		log.info("Test successful!");
 	}

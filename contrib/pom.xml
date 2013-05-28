@@ -88,8 +88,10 @@
           <module>commons/html</module>
           <module>extensions/apt/parser</module>
           <module>extensions/apt/servlet</module>
+          <module>extensions/collection</module>
           <module>extensions/dojo</module>
           <module>extensions/dojo-sling</module>
+          <module>extensions/ftpserver</module>
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
           <module>extensions/i18n</module>
@@ -101,6 +103,10 @@
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
           <module>jcr/prefs</module>
+     <!-- 
+          <module>launchpad/karaf</module>
+      -->     
+          <module>launchpad/testing</module>
           <module>scripting/script-console</module>
           <module>scripting/jsp-taglib-atom</module>
           <module>scripting/freemarker</module>
@@ -110,8 +116,6 @@
           <module>scripting/ruby</module>
           <module>scripting/velocity</module>
           <module>scripting/xproc</module>
-          <module>launchpad/smx-kernel</module>
-          <module>launchpad/karaf</module>
     </modules>
     <profiles>
         <profile>

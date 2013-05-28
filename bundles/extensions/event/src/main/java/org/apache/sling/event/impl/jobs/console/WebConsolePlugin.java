@@ -37,7 +37,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.event.impl.jobs.DefaultJobManager;
+import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.jobs.JobManager;
@@ -49,10 +49,11 @@ import org.apache.sling.event.jobs.TopicStatistics;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is a webconsole plugin displaying the active queues, some statistics
+ * This is a web console plugin displaying the active queues, some statistics
  * and the configurations.
  * @since 3.0
  */
@@ -60,10 +61,10 @@ import org.slf4j.LoggerFactory;
 @Service(value={javax.servlet.Servlet.class, EventHandler.class})
 @Properties({
     @Property(name="felix.webconsole.label", value="slingevent", propertyPrivate=true),
-    @Property(name="felix.webconsole.title", value="Sling Eventing", propertyPrivate=true),
+    @Property(name="felix.webconsole.title", value="Sling Jobs", propertyPrivate=true),
     @Property(name="felix.webconsole.configprinter.modes", value={"zip", "txt"}, propertyPrivate=true),
     @Property(name="event.topics",propertyPrivate=true,
-    value={"sling/webconsole/test"})
+              value={"sling/webconsole/test"})
 })
 public class WebConsolePlugin extends HttpServlet implements EventHandler {
 
@@ -71,16 +72,21 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
 
     private static final long serialVersionUID = -6983227434841706385L;
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Reference
     private JobManager jobManager;
-    
+
     @Reference
     private EventAdmin eventAdmin;
 
     @Reference
     private QueueConfigurationManager queueConfigManager;
 
-    /** Escape the output for html. */
+    @Reference
+    private JobConsumerManager jobConsumerManager;
+
+    /** Escape the output for HTML. */
     private String escape(final String text) {
         if ( text == null ) {
             return "";
@@ -148,9 +154,8 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
                 }
             }
         } else if ( "test".equals(cmd) ) {
-            String queueName = req.getParameter(PAR_QUEUE);
-            LoggerFactory.getLogger(this.getClass()).info("Posting event to queue {}", queueName);
-            eventAdmin.postEvent(getTestEvent(null, queueName, null, true));
+            logger.info("Posting test event.");
+            eventAdmin.postEvent(getTestEvent(null));
         } else if ( "restart".equals(cmd) ) {
             this.jobManager.restart();
         } else if ( "dropall".equals(cmd) ) {
@@ -172,25 +177,15 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         }
         resp.sendRedirect(redirectTo);
     }
-    
-    private Event getTestEvent(String id, String queueName, String parallel, boolean runlocal) {
+
+    private Event getTestEvent(final String id) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobUtil.PROPERTY_JOB_TOPIC, SLING_WEBCONSOLE_TEST_JOB_TOPIC);
         if ( id != null ) {
             props.put(JobUtil.PROPERTY_JOB_NAME, id);
         }
-        props.put(JobUtil.PROPERTY_JOB_RETRY_DELAY, 2000L);
-        props.put(JobUtil.PROPERTY_JOB_RETRIES, 2);
-        if ( queueName != null ) {
-            props.put(JobUtil.PROPERTY_JOB_QUEUE_NAME, queueName);
-        }
-        if ( parallel != null ) {
-            props.put(JobUtil.PROPERTY_JOB_PARALLEL, parallel);
-        }
-        if ( runlocal ) {
-            props.put(JobUtil.PROPERTY_JOB_RUN_LOCAL, "true");
-        }
-        return new Event(JobUtil.TOPIC_JOB, props); 
+
+        return new Event(JobUtil.TOPIC_JOB, props);
     }
 
     @Override
@@ -206,25 +201,29 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         pw.println("<script type='text/javascript'>");
         pw.println("function eventingsubmit(action, queue) {" +
                    " if ( action == 'restart' ) {" +
-                   "   if ( !confirm('Do you really want to restart the eventing?') ) { return; }" +
+                   "   if ( !confirm('Do you really want to restart the job handling?') ) { return; }" +
                    " }" +
                    " document.forms['eventingcmd'].action.value = action;" +
                    " document.forms['eventingcmd'].queue.value = queue;" +
                    " document.forms['eventingcmd'].submit();" +
                    "} </script>");
 
-        pw.printf("<p class='statline ui-state-highlight'>Apache Sling Eventing%s%s%n</p>",
-                this.jobManager.isJobProcessingEnabled() ? "" : " (JOB PROCESSING IS DISABLED!)",
+        pw.printf("<p class='statline ui-state-highlight'>Apache Sling Job Handling%s%n</p>",
                 msg != null ? " : " + msg : "");
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>");
-        pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Eventing: Overall Statistics</span>");
+        pw.println("<span style='float: left; margin-left: 1em'>Apache Sling Job Handling: Overall Statistics</span>");
         this.printForm(pw, null, "Restart!", "restart");
         this.printForm(pw, null, "Reset Stats", "reset");
         pw.println("</div>");
 
         pw.println("<table class='nicetable'><tbody>");
+        String topics = this.jobConsumerManager.getTopics();
+        if ( topics == null ) {
+            topics = "";
+        }
         Statistics s = this.jobManager.getStatistics();
         pw.printf("<tr><td>Start Time</td><td>%s</td></tr>", formatDate(s.getStartTime()));
+        pw.printf("<tr><td>Local topic consumers: </td><td>%s</td></tr>", topics);
         pw.printf("<tr><td>Last Activated</td><td>%s</td></tr>", formatDate(s.getLastActivatedJobTime()));
         pw.printf("<tr><td>Last Finished</td><td>%s</td></tr>", formatDate(s.getLastFinishedJobTime()));
         pw.printf("<tr><td>Queued Jobs</td><td>%s</td></tr>", s.getNumberOfQueuedJobs());
@@ -267,8 +266,8 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
             pw.printf("<tr><td>Queued Jobs</td><td>%s</td><td>Max Retries</td><td>%s</td></tr>", s.getNumberOfQueuedJobs(), c.getMaxRetries());
             pw.printf("<tr><td>Active Jobs</td><td>%s</td><td>Retry Delay</td><td>%s ms</td></tr>", s.getNumberOfActiveJobs(), c.getRetryDelayInMs());
             pw.printf("<tr><td>Jobs</td><td>%s</td><td>Priority</td><td>%s</td></tr>", s.getNumberOfJobs(), c.getPriority());
-            pw.printf("<tr><td>Finished Jobs</td><td>%s</td><td>Run Local</td><td>%s</td></tr>", s.getNumberOfFinishedJobs(), c.isLocalQueue());
-            pw.printf("<tr><td>Failed Jobs</td><td>%s</td><td>App Ids</td><td>%s</td></tr>", s.getNumberOfFailedJobs(), formatArray(c.getApplicationIds()));
+            pw.printf("<tr><td>Finished Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfFinishedJobs());
+            pw.printf("<tr><td>Failed Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfFailedJobs());
             pw.printf("<tr><td>Cancelled Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfCancelledJobs());
             pw.printf("<tr><td>Processed Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfProcessedJobs());
             pw.printf("<tr><td>Average Processing Time</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", formatTime(s.getAverageProcessingTime()));
@@ -298,8 +297,8 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
             pw.println("<br/>");
         }
 
-        pw.println("<p class='statline'>Apache Sling Eventing - Job Queue Configurations</p>");
-        this.printQueueConfiguration(req, pw, ((DefaultJobManager)this.jobManager).getMainQueueConfiguration());
+        pw.println("<p class='statline'>Apache Sling Job Handling - Job Queue Configurations</p>");
+        this.printQueueConfiguration(req, pw, this.queueConfigManager.getMainQueueConfiguration());
         final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             this.printQueueConfiguration(req, pw, c);
@@ -324,8 +323,6 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         pw.printf("<tr><td>Max Retries</td><td>%s</td></tr>", c.getMaxRetries());
         pw.printf("<tr><td>Retry Delay</td><td>%s ms</td></tr>", c.getRetryDelayInMs());
         pw.printf("<tr><td>Priority</td><td>%s</td></tr>", c.getPriority());
-        pw.printf("<tr><td>Run Local</td><td>%s</td></tr>", c.isLocalQueue());
-        pw.printf("<tr><td>App Ids</td><td>%s</td></tr>", formatArray(c.getApplicationIds()));
         pw.printf("<tr><td>Ranking</td><td>%s</td></tr>", c.getRanking());
 
         pw.println("</tbody></table>");
@@ -363,10 +360,11 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
 
     private String formatType(final QueueConfiguration.Type type) {
         switch ( type ) {
-            case IGNORE : return "Ignore";
             case ORDERED : return "Ordered";
             case TOPIC_ROUND_ROBIN : return "Topic Round Robin";
             case UNORDERED : return "Parallel";
+            case IGNORE : return "Ignore";
+            case DROP : return "Drop";
         }
         return type.toString();
     }
@@ -415,16 +413,18 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         if ( !"zip".equals(mode) && !"txt".equals(mode) ) {
             return;
         }
-        pw.println("Apache Sling Eventing");
-        pw.println("---------------------");
+        pw.println("Apache Sling Job Handling");
+        pw.println("-------------------------");
 
-        if (!jobManager.isJobProcessingEnabled()) {
-            pw.println("JOB PROCESSING IS DISABLED!");
-            pw.println();
+        String topics = this.jobConsumerManager.getTopics();
+        if ( topics == null ) {
+            topics = "";
         }
+
         Statistics s = this.jobManager.getStatistics();
         pw.println("Overall Statistics");
         pw.printf("Start Time : %s%n", formatDate(s.getStartTime()));
+        pw.printf("Local topic consumers: %s%n", topics);
         pw.printf("Last Activated : %s%n", formatDate(s.getLastActivatedJobTime()));
         pw.printf("Last Finished : %s%n", formatDate(s.getLastFinishedJobTime()));
         pw.printf("Queued Jobs : %s%n", s.getNumberOfQueuedJobs());
@@ -467,8 +467,6 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
             pw.printf("Max Retries : %s%n", c.getMaxRetries());
             pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
             pw.printf("Priority : %s%n", c.getPriority());
-            pw.printf("Run Local : %s%n", c.isLocalQueue());
-            pw.printf("App Ids : %s%n", formatArrayAsText(c.getApplicationIds()));
             pw.println();
         }
         if ( isEmpty ) {
@@ -489,9 +487,9 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
             pw.println();
         }
 
-        pw.println("Apache Sling Eventing - Job Queue Configurations");
-        pw.println("------------------------------------------------");
-        this.printQueueConfiguration(pw, ((DefaultJobManager)this.jobManager).getMainQueueConfiguration());
+        pw.println("Apache Sling Job Handling - Job Queue Configurations");
+        pw.println("----------------------------------------------------");
+        this.printQueueConfiguration(pw, this.queueConfigManager.getMainQueueConfiguration());
         final InternalQueueConfiguration[] configs = this.queueConfigManager.getConfigurations();
         for(final InternalQueueConfiguration c : configs ) {
             this.printQueueConfiguration(pw, c);
@@ -509,15 +507,16 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         pw.printf("Max Retries : %s%n", c.getMaxRetries());
         pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
         pw.printf("Priority : %s%n", c.getPriority());
-        pw.printf("Run Local : %s%n", c.isLocalQueue());
-        pw.printf("App Ids : %s%n", formatArrayAsText(c.getApplicationIds()));
         pw.printf("Ranking : %s%n", c.getRanking());
 
         pw.println();
     }
 
-    public void handleEvent(Event event) {
-        if ( event != null && SLING_WEBCONSOLE_TEST_JOB_TOPIC.equals(event.getTopic()) ) {
+    @Override
+    public void handleEvent(final Event event) {
+        if ( SLING_WEBCONSOLE_TEST_JOB_TOPIC.equals(event.getTopic()) ) {
+            logger.info("Received test event.");
+
             JobUtil.acknowledgeJob(event);
             JobUtil.finishedJob(event);
         }

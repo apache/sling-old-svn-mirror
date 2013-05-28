@@ -168,8 +168,13 @@
         <!-- Extensions -->
         <module>bundles/extensions/adapter</module>
         <module>bundles/extensions/bundleresource</module>
+        <module>bundles/extensions/discovery/api</module>
+        <module>bundles/extensions/discovery/impl</module>
+        <module>bundles/extensions/discovery/support</module>
+        <module>bundles/extensions/discovery/standalone</module>
         <module>bundles/extensions/event</module>
         <module>bundles/extensions/fsresource</module>
+        <module>bundles/extensions/javax.activation</module>
         <module>bundles/extensions/settings</module>
         <module>bundles/extensions/threaddump</module>
         <module>bundles/extensions/webconsolebranding</module>
@@ -182,6 +187,7 @@
         <module>testing/junit/core</module>
         <module>testing/junit/scriptable</module>
         <module>testing/junit/remote</module>
+        <module>testing/resourceresolver-mock</module>
         
         <!-- Installer -->
         <module>installer/api</module>

@@ -27,7 +27,7 @@ import aQute.bnd.annotation.ProviderType;
  * further customize request and other processing.
  * <p>
  * This interface is intended to be implemented by the implementor of the
- * {@link TenantProvider} interface to be returned for it tenant accessor
+ * {@link TenantProvider} interface to be returned by the tenant accessor
  * methods.
  */
 @ProviderType

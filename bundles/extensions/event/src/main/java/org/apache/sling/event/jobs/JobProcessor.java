@@ -18,13 +18,16 @@
  */
 package org.apache.sling.event.jobs;
 
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 
 /**
  * A job processor processes a job in the background.
  * It is used by {@link JobUtil#processJob(Event, JobProcessor)}.
  * @since 3.0
+ * @deprecated - Use the new {@link JobConsumer} interface instead.
  */
+@Deprecated
 public interface JobProcessor {
 
     /**

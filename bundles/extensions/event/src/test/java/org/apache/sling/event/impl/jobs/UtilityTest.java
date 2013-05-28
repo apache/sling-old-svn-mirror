@@ -20,49 +20,51 @@ package org.apache.sling.event.impl.jobs;
 
 import junit.framework.TestCase;
 
+import org.apache.sling.event.impl.support.ResourceHelper;
+
 public class UtilityTest extends TestCase {
 
     public void test_filter_allowed() {
         final String allowed = "ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz0123456789_,.-+#!?$%&()=";
         assertEquals("Allowed Characters must not be filtered", allowed,
-            Utility.filter(allowed));
+                ResourceHelper.filterName(allowed));
     }
 
     public void test_filter_illegal_jcr() {
-        assertEquals("_", Utility.filter("["));
-        assertEquals("_", Utility.filter("]"));
-        assertEquals("_", Utility.filter("*"));
-        assertEquals("_", Utility.filter("/"));
-        assertEquals("_", Utility.filter(":"));
-        assertEquals("_", Utility.filter("'"));
-        assertEquals("_", Utility.filter("\""));
+        assertEquals("_", ResourceHelper.filterName("["));
+        assertEquals("_", ResourceHelper.filterName("]"));
+        assertEquals("_", ResourceHelper.filterName("*"));
+        assertEquals("_", ResourceHelper.filterName("/"));
+        assertEquals("_", ResourceHelper.filterName(":"));
+        assertEquals("_", ResourceHelper.filterName("'"));
+        assertEquals("_", ResourceHelper.filterName("\""));
 
-        assertEquals("a_b", Utility.filter("a[b"));
-        assertEquals("a_b", Utility.filter("a]b"));
-        assertEquals("a_b", Utility.filter("a*b"));
-        assertEquals("a_b", Utility.filter("a/b"));
-        assertEquals("a_b", Utility.filter("a:b"));
-        assertEquals("a_b", Utility.filter("a'b"));
-        assertEquals("a_b", Utility.filter("a\"b"));
+        assertEquals("a_b", ResourceHelper.filterName("a[b"));
+        assertEquals("a_b", ResourceHelper.filterName("a]b"));
+        assertEquals("a_b", ResourceHelper.filterName("a*b"));
+        assertEquals("a_b", ResourceHelper.filterName("a/b"));
+        assertEquals("a_b", ResourceHelper.filterName("a:b"));
+        assertEquals("a_b", ResourceHelper.filterName("a'b"));
+        assertEquals("a_b", ResourceHelper.filterName("a\"b"));
 
-        assertEquals("_b", Utility.filter("[b"));
-        assertEquals("_b", Utility.filter("]b"));
-        assertEquals("_b", Utility.filter("*b"));
-        assertEquals("_b", Utility.filter("/b"));
-        assertEquals("_b", Utility.filter(":b"));
-        assertEquals("_b", Utility.filter("'b"));
-        assertEquals("_b", Utility.filter("\"b"));
+        assertEquals("_b", ResourceHelper.filterName("[b"));
+        assertEquals("_b", ResourceHelper.filterName("]b"));
+        assertEquals("_b", ResourceHelper.filterName("*b"));
+        assertEquals("_b", ResourceHelper.filterName("/b"));
+        assertEquals("_b", ResourceHelper.filterName(":b"));
+        assertEquals("_b", ResourceHelper.filterName("'b"));
+        assertEquals("_b", ResourceHelper.filterName("\"b"));
 
-        assertEquals("a_", Utility.filter("a["));
-        assertEquals("a_", Utility.filter("a]"));
-        assertEquals("a_", Utility.filter("a*"));
-        assertEquals("a_", Utility.filter("a/"));
-        assertEquals("a_", Utility.filter("a:"));
-        assertEquals("a_", Utility.filter("a'"));
-        assertEquals("a_", Utility.filter("a\""));
+        assertEquals("a_", ResourceHelper.filterName("a["));
+        assertEquals("a_", ResourceHelper.filterName("a]"));
+        assertEquals("a_", ResourceHelper.filterName("a*"));
+        assertEquals("a_", ResourceHelper.filterName("a/"));
+        assertEquals("a_", ResourceHelper.filterName("a:"));
+        assertEquals("a_", ResourceHelper.filterName("a'"));
+        assertEquals("a_", ResourceHelper.filterName("a\""));
     }
 
     public void test_filter_consecutive_replace() {
-        assertEquals("a_b_", Utility.filter("a/[b]"));
+        assertEquals("a_b_", ResourceHelper.filterName("a/[b]"));
     }
 }

@@ -26,34 +26,76 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tag for retrieving a resource based a path.
+ * Tag for retrieving resources based on either an absolute path or a relative
+ * path and a base resource.
  */
 public class GetResourceTag extends TagSupport {
 
+	/** The Constant log. */
 	private static final Logger log = LoggerFactory
 			.getLogger(GetResourceTag.class);
+
+	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -1945089681840552408L;
+
+	/** The base. */
+	private Resource base;
+
+	/** The path. */
 	private String path;
+
+	/** The var. */
 	private String var;
+
+	@Override
+	public int doEndTag() {
+		log.trace("doEndTag");
+
+		ResourceResolver resolver = getResourceResolver();
+		Resource resource = null;
+		if (path.startsWith("/")) {
+			log.debug("Retrieving resource at absolute path: {}", path);
+			resource = resolver.getResource(path);
+		} else {
+			if (base != null) {
+				log.debug(
+						"Retrieving resource at relative path: {} to resource {}",
+						path, base.getPath());
+				resource = resolver.getResource(base, path);
+			} else {
+				log.warn(
+						"Unable to retrieve resource at relative path {}, no base resource specified",
+						path);
+			}
+		}
+
+		log.debug("Saving {} to variable {}", resource, var);
+		pageContext.setAttribute(var, resource);
+
+		return EVAL_PAGE;
+	}
+
+	/**
+	 * Gets the base resource.
+	 * 
+	 * @return the base resource
+	 */
+	public Resource getBase() {
+		return base;
+	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
 	 */
-	@Override
-	public int doEndTag() {
-		log.trace("doEndTag");
-
-		log.debug("Retrieving resource at path: " + path);
-
-		ResourceResolver resolver = getResourceResolver();
-		final Resource resource = resolver.getResource(path);
-
-		log.debug("Saving " + resource + " to variable " + var);
-		pageContext.setAttribute(var, resource);
-
-		return EVAL_PAGE;
+	/**
+	 * Get the path of the resource to retrieve.
+	 * 
+	 * @return the path
+	 */
+	public String getPath() {
+		return path;
 	}
 
 	/**
@@ -71,21 +113,22 @@ public class GetResourceTag extends TagSupport {
 	}
 
 	/**
-	 * Get the path of the resource to retrieve.
-	 * 
-	 * @return the path
-	 */
-	public String getPath() {
-		return path;
-	}
-
-	/**
 	 * Gets the variable name to which to save the list of children.
 	 * 
 	 * @return the variable name
 	 */
 	public String getVar() {
 		return var;
+	}
+
+	/**
+	 * Sets the base resource.
+	 * 
+	 * @param base
+	 *            the new base resource
+	 */
+	public void setBase(Resource base) {
+		this.base = base;
 	}
 
 	/**

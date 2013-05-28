@@ -88,7 +88,23 @@ public class JcrResourceUtil {
         // multi-value property: return an array of values
         if (property.isMultiple()) {
             Value[] values = property.getValues();
-            Object[] result = new Object[values.length];
+            final Object firstValue = values.length > 0 ? toJavaObject(values[0]) : null;
+            final Object[] result;
+            if ( firstValue instanceof Boolean ) {
+                result = new Boolean[values.length];
+            } else if ( firstValue instanceof Calendar ) {
+                result = new Calendar[values.length];
+            } else if ( firstValue instanceof Double ) {
+                result = new Double[values.length];
+            } else if ( firstValue instanceof Long ) {
+                result = new Long[values.length];
+            } else if ( firstValue instanceof BigDecimal) {
+                result = new BigDecimal[values.length];
+            } else if ( firstValue instanceof InputStream) {
+                result = new Object[values.length];
+            } else {
+                result = new String[values.length];
+            }
             for (int i = 0; i < values.length; i++) {
                 Value value = values[i];
                 if (value != null) {

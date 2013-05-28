@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>15</version>
+        <version>16</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -181,6 +181,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-launchpad-plugin</artifactId>
+                <version>2.2.1-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <id>prepare-package</id>

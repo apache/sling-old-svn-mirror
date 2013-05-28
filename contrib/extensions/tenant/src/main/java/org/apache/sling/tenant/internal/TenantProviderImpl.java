@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -61,16 +62,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * JCR Tenant Provider implementation.
+ * Resource based Tenant Provider implementation.
  */
 @Component(
         metatype = true,
-        label = "Apache Sling JCR Tenant Provider",
+        label = "Apache Sling Tenant Provider",
         description = "Service responsible for providing Tenants",
         immediate = true)
 @Service
 @Properties(value = {
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JCR Tenant Provider")
+    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling Tenant Provider")
 })
 @Reference(
         name = "tenantSetup",
@@ -85,9 +86,9 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
     /**
      * Root path for tenant
      */
-    private static final String JCR_TENANT_ROOT = "/etc/tenants";
+    private static final String RESOURCE_TENANT_ROOT = "/etc/tenants";
 
-    @Property(value = JCR_TENANT_ROOT, label = "Tenants Root Path", description = "Defines tenants root path")
+    @Property(value = RESOURCE_TENANT_ROOT, label = "Tenants Root Path", description = "Defines tenants root path")
     private static final String TENANT_ROOT = "tenant.root";
 
     private static final String[] DEFAULT_PATH_MATCHER = {};
@@ -102,7 +103,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
             description = "Defines tenants path matcher i.e. /content/sample/([^/]+)/*, used while resolving path to tenant")
     private static final String TENANT_PATH_MATCHER = "tenant.path.matcher";
 
-    private String tenantRootPath = JCR_TENANT_ROOT;
+    private String tenantRootPath = RESOURCE_TENANT_ROOT;
 
     @Reference
     private ResourceResolverFactory factory;
@@ -113,7 +114,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
 
     @Activate
     private void activate(final BundleContext bundleContext, final Map<String, Object> properties) {
-        this.tenantRootPath = PropertiesUtil.toString(properties.get(TENANT_ROOT), JCR_TENANT_ROOT);
+        this.tenantRootPath = PropertiesUtil.toString(properties.get(TENANT_ROOT), RESOURCE_TENANT_ROOT);
         this.adapterFactory = new TenantAdapterFactory(bundleContext, this, PropertiesUtil.toStringArray(properties.get(TENANT_PATH_MATCHER), DEFAULT_PATH_MATCHER));
         this.plugin = new WebConsolePlugin(bundleContext, this);
     }
@@ -319,6 +320,7 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                         }
                     });
                 }
+                current = child;
             }
 
             tenantRoot = current;
