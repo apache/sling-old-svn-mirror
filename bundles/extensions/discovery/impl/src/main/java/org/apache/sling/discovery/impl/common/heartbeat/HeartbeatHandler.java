@@ -103,6 +103,12 @@ public class HeartbeatHandler implements Runnable {
     /** lock object for synchronizing the run method **/
     private final Object lock = new Object();
     
+    /** SLING-2892: remember first heartbeat written to repository by this instance **/
+    private long firstHeartbeatWritten = -1;
+    
+    /** SLING-2892: remember the value of the heartbeat this instance has written the last time **/
+    private Calendar lastHeartbeatWritten = null;
+    
     @Activate
     protected void activate(ComponentContext context) {
         slingId = slingSettingsService.getSlingId();
@@ -209,6 +215,7 @@ public class HeartbeatHandler implements Runnable {
     private void issueClusterLocalHeartbeat() {
         ResourceResolver resourceResolver = null;
         final String myClusterNodePath = getLocalClusterNodePath();
+        final Calendar currentTime = Calendar.getInstance();
         try {
             resourceResolver = getResourceResolver();
             if (resourceResolver == null) {
@@ -219,7 +226,36 @@ public class HeartbeatHandler implements Runnable {
             final Resource resource = ResourceHelper.getOrCreateResource(
                     resourceResolver, myClusterNodePath);
             final ModifiableValueMap resourceMap = resource.adaptTo(ModifiableValueMap.class);
-            resourceMap.put("lastHeartbeat", Calendar.getInstance());
+            
+            if (firstHeartbeatWritten!=-1 && lastHeartbeatWritten!=null) {
+            	// SLING-2892: additional paranoia check
+            	// after the first heartbeat, check if there's someone else using
+            	// the same sling.id in this cluster
+            	final long timeSinceFirstHeartbeat = 
+            			System.currentTimeMillis() - firstHeartbeatWritten;
+            	if (timeSinceFirstHeartbeat > 2*config.getHeartbeatInterval()) {
+            		// but wait at least 2 heartbeat intervals to handle the situation
+            		// where a bundle is refreshed, and startup cases.
+            		final Calendar lastHeartbeat = resourceMap.get("lastHeartbeat", Calendar.class);
+            		if (lastHeartbeat!=null) {
+            			// if there is a heartbeat value, check if it is what I've written 
+            			// the last time
+            			if (!lastHeartbeatWritten.getTime().equals(lastHeartbeat.getTime())) {
+            				// then we've likely hit the situation where there is another
+            				// sling instance accessing the same repository (ie in the same cluster)
+            				// using the same sling.id - hence writing to the same
+            				// resource
+            				logger.error("issueClusterLocalHeartbeat: SLING-2892: Detected unexpected, concurrent update of: "+
+            						myClusterNodePath+" 'lastHeartbeat'. If not done manually, " +
+            						"this likely indicates that there is more than 1 instance running in this cluster" +
+            						" with the same sling.id. My sling.id is "+slingId+"." +
+            						" Check for sling.id.file in your installation of all instances in this cluster " +
+            						"to verify this! Duplicate sling.ids are not allowed within a cluster!");
+            			}
+            		}
+            	}
+            }
+            resourceMap.put("lastHeartbeat", currentTime);
             if (resetLeaderElectionId || !resourceMap.containsKey("leaderElectionId")) {
                 int maxLongLength = String.valueOf(Long.MAX_VALUE).length();
                 String currentTimeMillisStr = String.format("%0"
@@ -246,6 +282,13 @@ public class HeartbeatHandler implements Runnable {
                 resetLeaderElectionId = false;
             }
             resourceResolver.commit();
+
+            // SLING-2892: only in success case: remember the last heartbeat value written
+            lastHeartbeatWritten = currentTime;
+            // and set the first heartbeat written value - if it is not already set
+            if (firstHeartbeatWritten==-1) {
+            	firstHeartbeatWritten = System.currentTimeMillis();
+            }
 
         } catch (LoginException e) {
             logger.error("issueHeartbeat: could not log in administratively: "
