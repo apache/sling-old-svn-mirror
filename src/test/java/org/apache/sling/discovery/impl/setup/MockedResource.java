@@ -191,7 +191,7 @@ public class MockedResource extends SyntheticResource {
                 }
                 
                 public Object get(Object arg0) {
-                    throw new UnsupportedOperationException();
+                	throw new UnsupportedOperationException();
                 }
                 
                 public Set<Entry<String, Object>> entrySet() {
@@ -221,7 +221,24 @@ public class MockedResource extends SyntheticResource {
                 }
                 
                 public <T> T get(String name, Class<T> type) {
-                    throw new UnsupportedOperationException();
+                    Session session = getSession();
+                    try{
+                        final Node node = session.getNode(getPath());
+                        if (node==null) {
+                        	return null;
+                        }
+                        Property p = node.getProperty(name);
+                        if (p==null) {
+                        	return null;
+                        }
+                        if (type.equals(Calendar.class)) {
+                        	return (T) p.getDate();
+                        } else {
+                            throw new UnsupportedOperationException();
+                        }
+                    } catch(RepositoryException e) {
+                    	throw new RuntimeException(e);
+                    }
                 }
             };
         } else {
