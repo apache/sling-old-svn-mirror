@@ -598,8 +598,9 @@ public class ResourceUtil {
                     rsrc = resolver.getResource(parentResource, name);
                     if ( rsrc == null ) {
                         rsrc = resolver.create(parentResource, name, resourceProperties);
+                        resolver.commit();
                     }
-            }
+                }
             }
         }
         return rsrc;
