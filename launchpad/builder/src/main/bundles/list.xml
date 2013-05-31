@@ -205,7 +205,12 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.jsp.taglib</artifactId>
-            <version>2.1.8</version>
+            <version>2.1.9-SNAPSHOT</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.geronimo.bundles</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2_1</version>
         </bundle>
         <bundle>
             <groupId>org.codehaus.groovy</groupId>
