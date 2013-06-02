@@ -51,7 +51,7 @@ public class SlingJSPTaglibTest extends JspTestBase {
 				+ SlingPostConstants.DEFAULT_CREATE_SUFFIX, props);
 
 		log.info("Creating testing component...");
-		testClient.mkdir(HTTP_BASE_URL + "/apps/integration-test/taglib-test");
+		testClient.mkdirs(HTTP_BASE_URL, "/apps/integration-test/taglib-test");
 		testClient.upload(
 				HTTP_BASE_URL
 						+ "/apps/integration-test/taglib-test/taglib-test.jsp",
