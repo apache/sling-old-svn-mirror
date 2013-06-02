@@ -103,6 +103,9 @@ public abstract class AbstractJobQueue
     /** Async counter. */
     private final AtomicInteger asyncCounter = new AtomicInteger();
 
+    /** Flag for outdated. */
+    private final AtomicBoolean isOutdated = new AtomicBoolean(false);
+
     /**
      * Start this queue
      * @param name The queue name
@@ -655,11 +658,22 @@ public abstract class AbstractJobQueue
     }
 
     /**
-     * Rename this queue.
+     * Is the queue outdated?
      */
-    public void rename(final String name) {
-        this.logger.info("Queue reconfiguration: old queue {} is renamed to {}.", this.queueName, name);
-        this.queueName = name;
+    protected boolean isOutdated() {
+        return this.isOutdated.get();
+    }
+
+    /**
+     * Outdate this queue.
+     */
+    public void outdate() {
+        if ( !this.isOutdated() ) {
+            this.isOutdated.set(true);
+            final String name = this.getName() + "<outdated>(" + this.hashCode() + ")";
+            this.logger.info("Outdating queue {}, renaming to {}.", this.queueName, name);
+            this.queueName = name;
+        }
     }
 
     /**

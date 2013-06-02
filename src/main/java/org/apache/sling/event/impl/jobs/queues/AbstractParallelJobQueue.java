@@ -58,6 +58,11 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
         // acquire a slot
         this.acquireSlot();
 
+        // check if we got outdated in the meantime
+        if ( this.isOutdated() ) {
+            this.freeSlot();
+            return null;
+        }
         if ( !this.executeJob(processInfo) ) {
             this.freeSlot();
         }
