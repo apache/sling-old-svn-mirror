@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.resourceresolver.impl.tree.ProviderHandler;
 import org.apache.sling.resourceresolver.impl.tree.ResourceProviderFactoryHandler;
 import org.apache.sling.resourceresolver.impl.tree.ResourceProviderHandler;
@@ -182,6 +183,25 @@ public class SortedProviderList<T> {
      */
     public void remove(final ResourceProviderFactoryHandler factory) {
         this.removeFromList(factory);
+    }
+    
+    /**
+     * returns the ProviderHandler for a specific resource provider
+     */
+    public ProviderHandler getProviderHandler ( ResourceProvider resourceProvider )
+    {
+        ProviderHandler returnValue = null;
+        final List<Entry> list = new ArrayList<Entry>();
+        list.addAll(Arrays.asList(this.sortedList));
+        final Iterator<Entry> i = list.iterator();
+        while ( i.hasNext() ) {
+            final Entry entry = i.next();
+            if ( entry.handler.equals(resourceProvider) ) {
+                returnValue = entry.handler;
+                break;
+            }
+        }
+        return returnValue;
     }
 
     private static final class Entry implements Comparable<Entry> {

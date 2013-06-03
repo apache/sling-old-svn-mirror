@@ -29,9 +29,11 @@ import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.osgi.framework.Constants;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The provider handler is the common base class for the
@@ -54,6 +56,9 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
 
     /** Owns roots? */
     private final boolean ownsRoots;
+    
+    /** use ResourceAccessSecurity? */
+    private final boolean useResourceAccessSecurity;
 
     /**
      * Create a new handler
@@ -85,6 +90,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             this.roots = configuredRoots.toArray(new String[configuredRoots.size()]);
         }
         this.ownsRoots = PropertiesUtil.toBoolean(properties.get(ResourceProvider.OWNS_ROOTS), false);
+        this.useResourceAccessSecurity = PropertiesUtil.toBoolean(properties.get(ResourceProvider.USE_RESOURCE_ACCESS_SECURITY), false);
         final Set<String> configuredLanguages = new HashSet<String>();
         final String[] languages = PropertiesUtil.toStringArray(properties.get(QueriableResourceProvider.LANGUAGES));
         if ( languages != null) {
@@ -102,6 +108,54 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
         } else {
             this.queryLanguages = configuredLanguages;
         }
+    }
+    
+    /**
+     * applies resource access security if configured
+     */
+    protected Resource getReadableResource ( final ResourceResolverContext ctx, Resource resource ) {
+        Resource returnValue = null;
+        
+        if (useResourceAccessSecurity && resource != null) {
+            ServiceTracker serviceTracker = ctx
+                    .getResourceAccessSecurityTracker();
+            if (serviceTracker != null) {
+                ResourceAccessSecurity resourceAccessSecurity = (ResourceAccessSecurity) serviceTracker
+                        .getService();
+                if (resourceAccessSecurity != null) {
+                    returnValue = resourceAccessSecurity
+                            .getReadableResource(resource);
+                }
+            }
+        } else {
+            returnValue = resource;
+        }
+            
+        return returnValue;
+    }
+    
+    /**
+     * applies resource access security if configured
+     */
+    protected Iterator<Resource> getReadableChildrenIterator ( final ResourceResolverContext ctx, Iterator<Resource> childrenIterator ) {
+        Iterator<Resource> returnValue = null;
+        if ( useResourceAccessSecurity && childrenIterator != null ) {
+            List<Resource> childs = new ArrayList<Resource>();
+            while ( childrenIterator.hasNext() )
+            {
+                Resource res = getReadableResource( ctx, childrenIterator.next() );
+                if ( res != null )
+                {
+                    childs.add(res);
+                }
+            }
+            returnValue = childs.iterator();
+        }
+        else {
+            returnValue = childrenIterator;
+        }
+            
+        return returnValue;
     }
 
     /**

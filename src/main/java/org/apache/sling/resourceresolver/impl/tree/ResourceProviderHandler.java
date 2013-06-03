@@ -47,14 +47,14 @@ public class ResourceProviderHandler extends ProviderHandler {
      * @see ResourceProvider#getResource(ResourceResolver, String)
      */
     public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
-        return this.resourceProvider.getResource(resourceResolver, path);
+        return getReadableResource(ctx, this.resourceProvider.getResource(resourceResolver, path) );
     }
 
     /**
      * @see ResourceProvider#listChildren(Resource)
      */
     public Iterator<Resource> listChildren(final ResourceResolverContext ctx, final Resource parent) {
-        return this.resourceProvider.listChildren(parent);
+        return getReadableChildrenIterator( ctx, this.resourceProvider.listChildren(parent) );
     }
 
     /**
