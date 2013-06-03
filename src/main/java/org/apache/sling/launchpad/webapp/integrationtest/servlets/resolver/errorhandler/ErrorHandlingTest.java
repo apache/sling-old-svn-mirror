@@ -16,7 +16,6 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.resolver.errorhandler;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +46,10 @@ public class ErrorHandlingTest extends JspTestBase {
 	private static final String SELECTOR_THROWABLE =".throwable";
 
 	private String testNodePath;
+	
+	/** Need some retries as there might be some latency when installing error handler scripts */  
+	public static final int RETRY_MAX_TIME_SEC = 10;
+    public static final int RETRY_INTERVAL_MSEC = 500;
 
 	@Override
 	protected void setUp() throws Exception {
@@ -70,45 +73,72 @@ public class ErrorHandlingTest extends JspTestBase {
 		super.tearDown();
 		testClient.delete(HTTP_BASE_URL + TEST_ROOT);
 	}
+	
+	
+    private void assertWithRetries(String url, int expectedStatus, String expectedContent) throws Throwable {
+        assertWithRetries(url, expectedStatus, expectedContent, HTTP_METHOD_GET, null);
+    }
+    
+	private void assertWithRetries(String url, int expectedStatus, String expectedContent, String httpMethod, List<NameValuePair> params) throws Throwable {
+	    final long endTime = System.currentTimeMillis() + RETRY_MAX_TIME_SEC * 1000L;
+	    Throwable caught = null;
+	    while(System.currentTimeMillis() < endTime) {
+	        try {
+                caught = null;
+	            assertContains(getContent(url, CONTENT_TYPE_HTML,params,expectedStatus, httpMethod), expectedContent);
+	            break;
+	        } catch(Throwable t) {
+	            caught = t;
+	            try {
+	                Thread.sleep(RETRY_INTERVAL_MSEC);
+	            } catch(InterruptedException ignored) {
+	            }
+	        }
+	    }
+	    
+	    if(caught != null) {
+	        throw caught;
+	    }
+	}
 
-	public void test_404_errorhandling() throws IOException{	
+	public void test_404_errorhandling() throws Throwable{	
 		final String expected = "No resource found (404) - custom error page";
 		final String url =  testNodePath+NOT_EXISTING_NODE_PATH +".html";	
-		assertContains(getContent(url, CONTENT_TYPE_HTML,null,200), expected);
+        assertWithRetries(url, 200, expected);
 	}
 
-	public void test_500_errorhandling() throws IOException{	
+	public void test_500_errorhandling() throws Throwable{	
 		final String expected = "Internal Server Error (500) - custom error page";
-		final String url =  testNodePath +SELECTOR_500+".html"; 
-		assertContains(getContent(url, CONTENT_TYPE_HTML,null,500), expected);
+		final String url =  testNodePath +SELECTOR_500+".html";
+        assertWithRetries(url, 500, expected);
  	}
 
-	public void test_401_errorhandling() throws IOException{
+	public void test_401_errorhandling() throws Throwable{
 		final String expected = "401 Unauthorized - custom error page";
 		final String url =  testNodePath +SELECTOR_401+".html"; 
-		assertContains(getContent(url, CONTENT_TYPE_HTML,null,401), expected);
+        assertWithRetries(url, 401, expected);
 	}
 
-	public void test_throwable_errorhandling() throws IOException{	
+	public void test_throwable_errorhandling() throws Throwable{	
 		final String expected = "Exception thrown - custom error page";
 		final String url =  testNodePath +SELECTOR_THROWABLE+".html";
-		assertContains(getContent(url, CONTENT_TYPE_HTML,null,200), expected);
+        assertWithRetries(url, 200, expected);
  	}
 	
-	public void test_500_errorhandling_POST_operation() throws IOException{	
+	public void test_500_errorhandling_POST_operation() throws Throwable{	
 		final String expected = "Internal Server Error (500) - custom error page";
 		final String url =  testNodePath +".html"; 
 		uploadTestScript(THROW_ERROR_PATH+"/"+"POST.jsp", THROW_ERROR_PATH+"/"+"POST.jsp");
-		assertContains(getContent(url, CONTENT_TYPE_HTML,null,500,HTTP_METHOD_POST), expected);
+        assertWithRetries(url, 500, expected, HTTP_METHOD_POST, null);
   	}
 	
-	public void test_errorhandling_POST_operation_SlingPostServlet() throws IOException{
+	public void test_errorhandling_POST_operation_SlingPostServlet() throws Throwable{
 		final String expected = "Exception thrown - custom error page";
 		final String url =  testNodePath +".html";
 		List <NameValuePair> params=new ArrayList<NameValuePair>();
         params.add(new NameValuePair(SlingPostConstants.RP_OPERATION,"notExistingOperation"));
         params.add(new NameValuePair(SlingPostConstants.RP_SEND_ERROR,"true"));        
-        assertContains(getContent(url, CONTENT_TYPE_HTML,params,500,HTTP_METHOD_POST), expected);
+        assertWithRetries(url, 500, expected, HTTP_METHOD_POST, params);
 	}
 
 }
