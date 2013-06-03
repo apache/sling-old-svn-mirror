@@ -24,6 +24,7 @@ import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
@@ -32,6 +33,7 @@ import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +57,8 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
 
     /** The activator */
     private final ResourceResolverFactoryActivator activator;
+    
+    private ServiceTracker resourceAccessSecurityTracker;
 
     public ResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
@@ -89,7 +93,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
                     final boolean isAdmin)
     throws LoginException {
         // create context
-        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo);
+        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, resourceAccessSecurityTracker);
 
         // login
         this.activator.getRootProviderEntry().loginToRequiredFactories(ctx);
@@ -117,6 +121,10 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         } catch (final Exception e) {
             logger.error("activate: Cannot access repository, failed setting up Mapping Support", e);
         }
+        
+        // create and open service tracker for ResourceAccessSecurity
+        resourceAccessSecurityTracker = new ServiceTracker(bundleContext, ResourceAccessSecurity.class.getName(), null);
+        resourceAccessSecurityTracker.open();
     }
 
     /**
@@ -132,6 +140,8 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
         }
+
+        resourceAccessSecurityTracker.close();
     }
 
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
@@ -164,5 +174,13 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
 
     public int getDefaultVanityPathRedirectStatus() {
         return this.activator.getDefaultVanityPathRedirectStatus();
+    }
+    
+    /**
+     * get's the ServiceTracker of the ResourceAccessSecurity service
+     */
+    
+    public ServiceTracker getResourceAccessSecurityTracker () {
+        return resourceAccessSecurityTracker;
     }
 }

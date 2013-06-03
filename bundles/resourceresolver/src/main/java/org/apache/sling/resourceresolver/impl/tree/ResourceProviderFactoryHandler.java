@@ -104,7 +104,7 @@ public class ResourceProviderFactoryHandler extends ProviderHandler {
     public Resource getResource(final ResourceResolverContext ctx, final ResourceResolver resourceResolver, final String path) {
         final ResourceProvider rp = this.getResourceProvider(ctx);
         if ( rp != null ) {
-            return rp.getResource(resourceResolver, path);
+            return getReadableResource(ctx, rp.getResource(resourceResolver, path) );
         }
         return null;
     }
@@ -115,7 +115,7 @@ public class ResourceProviderFactoryHandler extends ProviderHandler {
     public Iterator<Resource> listChildren(final ResourceResolverContext ctx, final Resource parent) {
         final ResourceProvider rp = this.getResourceProvider(ctx);
         if ( rp != null ) {
-            return rp.listChildren(parent);
+            return getReadableChildrenIterator( ctx, rp.listChildren(parent) );
         }
         return null;
     }

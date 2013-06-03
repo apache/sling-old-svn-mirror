@@ -28,6 +28,7 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.RefreshableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * This class keeps track of the used resource providers for a
@@ -55,13 +56,17 @@ public class ResourceResolverContext {
      * The original authentication information - this is used for cloning and lazy logins.
      */
     private final Map<String, Object> originalAuthInfo;
+    
+    /** service tracker for ResourceAccessSecurity service */
+    private final ServiceTracker resourceAccessSecurityTracker;
 
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo) {
+    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ServiceTracker resourceAccessSecurityTracker) {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
+        this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
     }
 
     /**
@@ -169,4 +174,12 @@ public class ResourceResolverContext {
             provider.refresh();
         }
     }
+    
+    /**
+     * get's the ServiceTracker of the ResourceAccessSecurity service
+     */
+    public ServiceTracker getResourceAccessSecurityTracker () {
+        return resourceAccessSecurityTracker;
+    }
+    
 }

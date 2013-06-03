@@ -65,6 +65,17 @@ public interface ResourceProvider {
     String OWNS_ROOTS = "provider.ownsRoots";
 
     /**
+     * The name of the service registration property containing the a boolean
+     * flag indicating if the ResourceAccessSecurity service should be used for
+     * this provider or not. ResourceProvider implementations are encouraged 
+     * to use the ResourceAccessSecurity service for access control unless
+     * the underlying storage already provides it.
+     * The default for this value is <code>false</code>. 
+     * (value is "provider.useResourceAccessSecurity")
+     */
+    String USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";
+
+    /**
      * The resource type be set on resources returned by the
      * {@link #listChildren(Resource)} method to enable traversing the
      * resource

@@ -134,6 +134,8 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
             private Resource nextObject = this.seek();
 
             private Iterator<Resource> nextResourceIter;
+            
+            private ProviderHandler actProviderHandler;
 
             private Resource seek() {
                 Resource result = null;
@@ -142,12 +144,14 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                     while ( i.hasNext() && nextResourceIter == null ) {
                         final QueriableResourceProvider adap = i.next();
                         nextResourceIter = adap.findResources(resolver, query, language);
+                        actProviderHandler = queriableProviders.getProviderHandler(adap);
                     }
                 }
                 if ( nextResourceIter != null ) {
                     while ( nextResourceIter.hasNext() && result == null ) {
                         result = nextResourceIter.next();
                     }
+                    result = actProviderHandler.getReadableResource(ctx, result);
                     if ( result == null ) {
                         result = seek();
                     }
