@@ -54,11 +54,11 @@ public class ResourceResolverImplTest {
 
     @Before public void setup() {
         resFac = new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
-        resResolver = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null));
+        resResolver = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null, null));
     }
 
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null));
+        final ResourceResolver rr = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null, null));
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -355,7 +355,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null));
+                new ResourceResolverContext(false, null, null));
         resolvers.add(resolver);
 
         // the resources to test
@@ -391,7 +391,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null));
+                new ResourceResolverContext(false, null, null));
         resolvers.add(resolver);
         final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
             @Override
