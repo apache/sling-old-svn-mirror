@@ -109,20 +109,29 @@ public class HeartbeatHandler implements Runnable {
     /** SLING-2892: remember the value of the heartbeat this instance has written the last time **/
     private Calendar lastHeartbeatWritten = null;
     
+    /** SLING-2895: avoid heartbeats after deactivation **/
+    private boolean activated = false;
+    
     @Activate
-    protected void activate(ComponentContext context) {
-        slingId = slingSettingsService.getSlingId();
-        // on activate the resetLeaderElectionId is set to true to ensure that
-        // the 'leaderElectionId' property is reset on next heartbeat issuance.
-        // the idea being that a node which leaves the cluster should not
-        // become leader on next join - and by resetting the leaderElectionId
-        // to the current time, this is ensured.
-        resetLeaderElectionId = true;
+    protected synchronized void activate(ComponentContext context) {
+    	synchronized(lock) {
+	        slingId = slingSettingsService.getSlingId();
+	        // on activate the resetLeaderElectionId is set to true to ensure that
+	        // the 'leaderElectionId' property is reset on next heartbeat issuance.
+	        // the idea being that a node which leaves the cluster should not
+	        // become leader on next join - and by resetting the leaderElectionId
+	        // to the current time, this is ensured.
+	        resetLeaderElectionId = true;
+	        activated = true;
+    	}
     }
 
     @Deactivate
     protected void deactivate() {
-        scheduler.removeJob(NAME);
+    	synchronized(lock) {
+	    	activated = false;
+    	}
+    	scheduler.removeJob(NAME);
     }
 
     /**
@@ -152,6 +161,11 @@ public class HeartbeatHandler implements Runnable {
 
     public void run() {
         synchronized(lock) {
+        	if (!activated) {
+        		// SLING:2895: avoid heartbeats if not activated
+        		return;
+        	}
+        	
             // issue a heartbeat
             issueHeartbeat();
     
