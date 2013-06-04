@@ -18,6 +18,9 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
@@ -25,8 +28,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
@@ -37,15 +38,17 @@ import org.apache.sling.testing.tools.jarexec.JarExecutor;
 import org.apache.sling.testing.tools.sling.SlingClient;
 import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.codehaus.plexus.util.Expand;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * Execute all server-side test scripts found in a specified
  * (class) resource folder.
  */
-public class ServerSideScriptsTest extends TestCase {
+public class ServerSideScriptsTest {
 
     /** Script directory default value */
     private static String TEST_SCRIPT_DIR_DEFAULT = "scripts/sling-it";
@@ -130,9 +133,8 @@ public class ServerSideScriptsTest extends TestCase {
         this.slingClient = new SlingClient(this.serverBaseUrl, this.serverUsername, this.serverPassword);
     }
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setup() throws Exception {
 
         // create base path (if not existing)
         final String[] pathSegments = ("apps/" + RESOURCE_TYPE_PREFIX).split("/");
@@ -146,13 +148,13 @@ public class ServerSideScriptsTest extends TestCase {
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void cleanup() throws Exception {
         this.slingClient.delete("/apps/" + RESOURCE_TYPE_PREFIX);
-        super.tearDown();
     }
 
-    public void testRunScripts() throws Exception {
+    @Test
+    public void runScripts() throws Exception {
         // upload test scripts
         for(final Description test : this.tests) {
             final String resourceType = RESOURCE_TYPE_PREFIX + '/' + test.testName;
@@ -177,6 +179,7 @@ public class ServerSideScriptsTest extends TestCase {
                     this.serverPassword,
                     true);
 
+                final long startTime = System.currentTimeMillis();
                 final RequestExecutor executor = testClient.runTests(
                         "org.apache.sling.junit.scriptable.ScriptableTestsProvider",
                         null,
@@ -207,6 +210,8 @@ public class ServerSideScriptsTest extends TestCase {
                             + " for " + test.testScriptFile.getAbsolutePath()
                             + ": " + failures);
                 }
+                
+                logger.info("Execution of {} took {} msec", scriptPath, System.currentTimeMillis() - startTime);
 
             } finally {
                 if(toDelete != null) {
