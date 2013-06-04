@@ -47,6 +47,7 @@ import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleException;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,9 +113,17 @@ public class HeartbeatHandler implements Runnable {
     /** SLING-2895: avoid heartbeats after deactivation **/
     private boolean activated = false;
     
+    /** SLING-2901: the runtimeId is a unique id, set on activation, used for robust duplicate sling.id detection **/
+    private String runtimeId;
+    
+    /** keep a reference to the component context **/
+    private ComponentContext context;
+    
     @Activate
     protected synchronized void activate(ComponentContext context) {
     	synchronized(lock) {
+    		this.context = context;
+    		
 	        slingId = slingSettingsService.getSlingId();
 	        // on activate the resetLeaderElectionId is set to true to ensure that
 	        // the 'leaderElectionId' property is reset on next heartbeat issuance.
@@ -122,6 +131,12 @@ public class HeartbeatHandler implements Runnable {
 	        // become leader on next join - and by resetting the leaderElectionId
 	        // to the current time, this is ensured.
 	        resetLeaderElectionId = true;
+	        runtimeId = UUID.randomUUID().toString();
+
+	        // SLING-2895: reset variables to avoid unnecessary log.error
+	        firstHeartbeatWritten = -1;
+	        lastHeartbeatWritten = null;
+	        
 	        activated = true;
     	}
     }
@@ -268,8 +283,36 @@ public class HeartbeatHandler implements Runnable {
             			}
             		}
             	}
+            	
+            	// SLING-2901 : robust paranoia check: on first heartbeat write, the
+            	//              'runtimeId' is set as a property (ignoring any former value).
+            	//              If in subsequent calls the value of 'runtimeId' changes, then
+            	//              there is someone else around with the same slingId.
+            	final String readRuntimeId = resourceMap.get("runtimeId", String.class);
+            	if (!runtimeId.equals(readRuntimeId)) {
+            		logger.error("issueClusterLocalHeartbeat: SLING-2091: Detected more than 1 instance running in this cluster " +
+            				" with the same sling.id. My sling.id is "+slingId+", " +
+    						" Check for sling.id.file in your installation of all instances in this cluster " +
+    						"to verify this! Duplicate sling.ids are not allowed within a cluster!");
+            		logger.error("issueClusterLocalHeartbeat: disabling discovery.impl");
+            		activated = false;
+            		if (context!=null) {
+            			// disable all components
+            			try {
+							context.getBundleContext().getBundle().stop();
+						} catch (BundleException e) {
+							logger.warn("issueClusterLocalHeartbeat: could not stop bundle: "+e, e);
+							// then disable all compnoents instead
+							context.disableComponent(null);
+						}
+            		}
+            		return;
+            	}
             }
             resourceMap.put("lastHeartbeat", currentTime);
+            if (firstHeartbeatWritten==-1) {
+            	resourceMap.put("runtimeId", runtimeId);
+            }
             if (resetLeaderElectionId || !resourceMap.containsKey("leaderElectionId")) {
                 int maxLongLength = String.valueOf(Long.MAX_VALUE).length();
                 String currentTimeMillisStr = String.format("%0"

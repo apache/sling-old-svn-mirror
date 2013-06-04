@@ -233,6 +233,8 @@ public class MockedResource extends SyntheticResource {
                         }
                         if (type.equals(Calendar.class)) {
                         	return (T) p.getDate();
+                        } else if (type.equals(String.class)) {
+                        	return (T) p.getString();
                         } else {
                             throw new UnsupportedOperationException();
                         }
