@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -37,7 +39,10 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
+import org.apache.sling.event.impl.jobs.JobManagerImpl;
+import org.apache.sling.event.impl.jobs.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
 import org.apache.sling.event.jobs.JobManager;
@@ -235,6 +240,31 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         pw.printf("<tr><td>Processed Jobs</td><td>%s</td></tr>", s.getNumberOfProcessedJobs());
         pw.printf("<tr><td>Average Processing Time</td><td>%s</td></tr>", formatTime(s.getAverageProcessingTime()));
         pw.printf("<tr><td>Average Waiting Time</td><td>%s</td></tr>", formatTime(s.getAverageWaitingTime()));
+        pw.println("</tbody></table>");
+        pw.println("<br/>");
+
+        pw.println("<table class='nicetable'><tbody>");
+        pw.println("<tr><th colspan='2'>Topology Capabilities</th></tr>");
+        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        if ( cap == null ) {
+            pw.print("<tr><td colspan='2'>No topology information available !</td></tr>");
+        } else {
+            final Map<String, List<InstanceDescription>> instanceCaps = cap.getInstanceCapabilities();
+            for(final Map.Entry<String, List<InstanceDescription>> entry : instanceCaps.entrySet()) {
+                final StringBuilder sb = new StringBuilder();
+                for(final InstanceDescription id : entry.getValue()) {
+                    if ( sb.length() > 0 ) {
+                        sb.append("<br/>");
+                    }
+                    if ( id.isLocal() ) {
+                        sb.append("<b>local</b>");
+                    } else {
+                        sb.append(id.getSlingId());
+                    }
+                }
+                pw.printf("<tr><td>%s</td><td>%s</td></tr>", entry.getKey(), sb.toString());
+            }
+        }
         pw.println("</tbody></table>");
         pw.println("<br/>");
 
@@ -436,6 +466,29 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         pw.printf("Processed Jobs : %s%n", s.getNumberOfProcessedJobs());
         pw.printf("Average Processing Time : %s%n", formatTime(s.getAverageProcessingTime()));
         pw.printf("Average Waiting Time : %s%n", formatTime(s.getAverageWaitingTime()));
+        pw.println();
+
+        pw.println("Topology Capabilities");
+        final TopologyCapabilities cap = ((JobManagerImpl)this.jobManager).getTopologyCapabilities();
+        if ( cap == null ) {
+            pw.print("No topology information available !");
+        } else {
+            final Map<String, List<InstanceDescription>> instanceCaps = cap.getInstanceCapabilities();
+            for(final Map.Entry<String, List<InstanceDescription>> entry : instanceCaps.entrySet()) {
+                final StringBuilder sb = new StringBuilder();
+                for(final InstanceDescription id : entry.getValue()) {
+                    if ( sb.length() > 0 ) {
+                        sb.append(", ");
+                    }
+                    if ( id.isLocal() ) {
+                        sb.append("local");
+                    } else {
+                        sb.append(id.getSlingId());
+                    }
+                }
+                pw.printf("%s : %s%n", entry.getKey(), sb.toString());
+            }
+        }
         pw.println();
 
         boolean isEmpty = true;
