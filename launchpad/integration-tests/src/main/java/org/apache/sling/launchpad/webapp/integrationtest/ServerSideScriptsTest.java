@@ -157,6 +157,7 @@ public class ServerSideScriptsTest extends TestCase {
         for(final Description test : this.tests) {
             final String resourceType = RESOURCE_TYPE_PREFIX + '/' + test.testName;
             final String scriptPath = "/apps/" + resourceType;
+            String toDelete = null;
 
             try {
                 // create test node
@@ -164,6 +165,7 @@ public class ServerSideScriptsTest extends TestCase {
                         "jcr:primaryType", "sling:Folder",
                         "jcr:mixinTypes", "sling:Test",
                         "sling:resourceType", RESOURCE_TYPE_PREFIX + '/' + test.testName);
+                toDelete = scriptPath;
 
                 final String destPath = scriptPath + "/test.txt" + test.scriptExtension;
                 logger.info("Setting up node {} for {}", destPath, test.testScriptFile.getAbsoluteFile());
@@ -207,7 +209,9 @@ public class ServerSideScriptsTest extends TestCase {
                 }
 
             } finally {
-                this.slingClient.delete(scriptPath);
+                if(toDelete != null) {
+                    this.slingClient.delete(toDelete);
+                }
             }
         }
     }
