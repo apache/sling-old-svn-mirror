@@ -1308,4 +1308,8 @@ public class JobManagerImpl
             this.maintenanceTask.reassignJob(handler.getJob(), targetId);
         }
     }
+
+    public TopologyCapabilities getTopologyCapabilities() {
+        return this.topologyCapabilities;
+    }
 }

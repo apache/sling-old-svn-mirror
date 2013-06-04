@@ -258,4 +258,8 @@ public class TopologyCapabilities {
 
         return null;
     }
+
+    public Map<String, List<InstanceDescription>> getInstanceCapabilities() {
+        return this.instanceCapabilities;
+    }
 }
