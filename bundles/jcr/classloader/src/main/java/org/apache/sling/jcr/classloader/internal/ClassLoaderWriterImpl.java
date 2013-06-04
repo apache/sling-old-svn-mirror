@@ -138,8 +138,9 @@ public class ClassLoaderWriterImpl
      * Deactivate this component.
      */
     @Deactivate
-    protected void deactivate() {
-        destroyRepositoryClassLoader();
+    protected synchronized void deactivate() {
+        this.destroyRepositoryClassLoader();
+        this.callerBundle = null;
     }
 
     /**
@@ -168,12 +169,15 @@ public class ClassLoaderWriterImpl
      * being used.
      */
     private void destroyRepositoryClassLoader() {
-        if (this.repositoryClassLoader != null) {
-            if ( this.dynamicClassLoaderManager != null ) {
-                this.callerBundle.getBundleContext().ungetService(this.dynamicClassLoaderManager);
-            }
-            this.repositoryClassLoader.destroy();
+        final RepositoryClassLoader rcl = this.repositoryClassLoader;
+        if (rcl != null) {
             this.repositoryClassLoader = null;
+            rcl.destroy();
+            final ServiceReference localDynamicClassLoaderManager = this.dynamicClassLoaderManager;
+            final Bundle localCallerBundle = this.callerBundle;
+            if ( localDynamicClassLoaderManager != null && localCallerBundle != null ) {
+                localCallerBundle.getBundleContext().ungetService(localDynamicClassLoaderManager);
+            }
         }
     }
 
@@ -223,6 +227,13 @@ public class ClassLoaderWriterImpl
         return this.repositoryClassLoader;
     }
 
+    private synchronized void handleChangeEvent(final String path) {
+        final RepositoryClassLoader rcl = this.repositoryClassLoader;
+        if ( rcl != null ) {
+            rcl.handleEvent(path);
+        }
+    }
+
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#delete(java.lang.String)
      */
@@ -235,7 +246,7 @@ public class ClassLoaderWriterImpl
                 Item fileItem = session.getItem(path);
                 fileItem.remove();
                 session.save();
-                this.getOrCreateClassLoader().handleEvent(path);
+                this.handleChangeEvent(path);
                 return true;
             }
         } catch (final RepositoryException re) {
@@ -270,8 +281,8 @@ public class ClassLoaderWriterImpl
             session = this.createSession();
             session.move(oldPath, newPath);
             session.save();
-            this.getOrCreateClassLoader().handleEvent(oldName);
-            this.getOrCreateClassLoader().handleEvent(newName);
+            this.handleChangeEvent(oldName);
+            this.handleChangeEvent(newName);
             return true;
         } catch (final RepositoryException re) {
             logger.error("Cannot rename " + oldName + " to " + newName, re);
@@ -457,7 +468,7 @@ public class ClassLoaderWriterImpl
                 contentNode.setProperty("jcr:mimeType", mimeType);
 
                 session.save();
-                this.repositoryOutputProvider.getOrCreateClassLoader().handleEvent(fileName);
+                this.repositoryOutputProvider.handleChangeEvent(fileName);
             } catch (final RepositoryException re) {
                 throw (IOException)new IOException("Cannot write file " + fileName + ", reason: " + re.toString()).initCause(re);
             } finally {
@@ -479,7 +490,16 @@ public class ClassLoaderWriterImpl
             session = this.createSession();
             if ( session.itemExists(path) ) {
                 final Property prop = (Property)session.getItem(path);
-                return prop.getStream();
+                final InputStream is = prop.getStream();
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                int l = 0;
+                final byte[] buf = new byte[2048];
+                while ( (l = is.read(buf)) > -1 ) {
+                    if ( l > 0 ) {
+                        baos.write(buf, 0, l);
+                    }
+                }
+                return new ByteArrayInputStream(baos.toByteArray());
             }
             throw new FileNotFoundException("Unable to find " + name);
         } catch (final RepositoryException re) {
