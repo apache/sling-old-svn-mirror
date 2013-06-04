@@ -294,6 +294,8 @@ public class HeartbeatHandler implements Runnable {
             				" with the same sling.id. My sling.id is "+slingId+", " +
     						" Check for sling.id.file in your installation of all instances in this cluster " +
     						"to verify this! Duplicate sling.ids are not allowed within a cluster!");
+            		logger.error("issueClusterLocalHeartbeat: sending TOPOLOGY_CHANGING before self-disabling.");
+            		discoveryService.forcedShutdown();
             		logger.error("issueClusterLocalHeartbeat: disabling discovery.impl");
             		activated = false;
             		if (context!=null) {

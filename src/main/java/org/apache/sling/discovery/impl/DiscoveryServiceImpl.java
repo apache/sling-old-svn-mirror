@@ -637,4 +637,26 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         }
     }
 
+    /** SLING-2901 : send a TOPOLOGY_CHANGING event and shutdown the service thereafter **/
+	public void forcedShutdown() {
+		synchronized(lock) {
+	        if (!activated) {
+	            logger.error("forcedShutdown: ignoring forced shutdown. Service is not activated.");
+	            return;
+	        }
+	        if (oldView == null) {
+	            logger.error("forcedShutdown: ignoring forced shutdown. No oldView available.");
+	            return;
+	        }
+	        logger.error("forcedShutdown: sending TOPOLOGY_CHANGING to all listeners");
+            for (final TopologyEventListener da : eventListeners) {
+                sendTopologyEvent(da, new TopologyEvent(Type.TOPOLOGY_CHANGING, oldView,
+                        null));
+            }
+	        logger.error("forcedShutdown: deactivating DiscoveryService.");
+	        // to make sure no further event is sent after this, flag this service as deactivated
+            activated = false;
+		}
+	}
+
 }
