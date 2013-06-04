@@ -248,22 +248,12 @@ public class ServerSideScriptsTest {
 
     @Before
     public void setup() throws Exception {
-
-        // create base path (if not existing)
-        final String[] pathSegments = ("apps/" + RESOURCE_TYPE_PREFIX).split("/");
-        String path = "";
-        for(final String segment : pathSegments) {
-            path = path + '/' + segment;
-            if ( !this.slingClient.exists(path) ) {
-                this.slingClient.createNode(path,
-                        "jcr:primaryType", "sling:Folder");
-            }
-        }
+        slingClient.mkdirs("/apps/" + RESOURCE_TYPE_PREFIX);
     }
 
     @After
     public void cleanup() throws Exception {
-        this.slingClient.delete("/apps/" + RESOURCE_TYPE_PREFIX);
+        slingClient.delete("/apps/" + RESOURCE_TYPE_PREFIX);
     }
 
     @Test
