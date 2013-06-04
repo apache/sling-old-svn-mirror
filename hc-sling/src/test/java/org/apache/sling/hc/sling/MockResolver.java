@@ -22,21 +22,42 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 class MockResolver implements ResourceResolver {
 
     private final List<MockResource> resources = new ArrayList<MockResource>();
+    
+    @Mock
+    private Session session;
 
     void addResource(MockResource r) {
         resources.add(r);
     }
     
+    MockResolver() {
+        MockitoAnnotations.initMocks(this);
+    }
+    
+    void setUnauthorized() throws RepositoryException {
+        Mockito.doThrow(RepositoryException.class).when(session).checkPermission(Matchers.anyString(), Matchers.anyString());
+    }
+    
+    @SuppressWarnings("unchecked")
     @Override
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> arg0) {
+    public <AdapterType> AdapterType adaptTo(Class<AdapterType> target) {
+        if(target == Session.class) {
+            return (AdapterType)session;
+        }
         return null;
     }
 
