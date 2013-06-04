@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.sling.api.JsonResultRenderer;
 
@@ -35,35 +37,41 @@ public class JsonResultRendererImpl implements JsonResultRenderer {
     
     @Override
     public void render(List<EvaluationResult> results, Writer output) throws IOException {
-        // TODO: trouble with animalsniffer and JSON dependency
-        output.write("TODO: this should be JSON - not implemented yet\n\n");
-        for(EvaluationResult r : results) {
-            output.write(r.getRule().toString());
-            output.write("\n");
-            
-            if(!r.anythingToReport()) {
-                output.write("Rule execution successful, nothing to report\n");
-            } else {
-                output.write("*** WARNING *** Rule has info, warnings or errors, see log for report\n");
-            }
-            
-            for(EvaluationResult.LogMessage msg : r.getLogMessages()) {
-                output.write("\t");
-                output.write(msg.getLevel().toString());
-                output.write("\t");
-                output.write(msg.getMessage());
-                output.write("\n");
-            }
-            output.write("\n");
-        }
-        /*
         final JSONWriter w = new JSONWriter(output);
+        w.setTidy(true);
         try {
             w.object();
+            w.key("results");
+            w.array();
+            for(EvaluationResult r : results) {
+                w.object();
+                {
+                    w.key("rule").value(r.getRule().toString());
+                    w.key("tags").array();
+                    for(String tag : r.getRule().getTags()) {
+                        w.value(tag);
+                    }
+                    w.endArray();
+                    if(r.anythingToReport()) {
+                        w.key("log").array();
+                        {
+                            for(EvaluationResult.LogMessage msg : r.getLogMessages()) {
+                                w.object();
+                                {
+                                    w.key(msg.getLevel().toString()).value(msg.getMessage());
+                                }
+                                w.endObject();
+                            }
+                        }
+                        w.endArray();
+                    }
+                }
+                w.endObject();
+            }
+            w.endArray();
             w.endObject();
         } catch (JSONException e) {
             throw new IOException(e.getClass().getSimpleName(), e);
         }
-        */
     }
 }
