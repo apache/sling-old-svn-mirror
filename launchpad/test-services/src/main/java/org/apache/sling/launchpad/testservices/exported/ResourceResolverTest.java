@@ -59,10 +59,15 @@ public class ResourceResolverTest {
 
     private Node mapRoot;
 
-
     private String vanity;
+    
+    // TODO - there should be a better way to wait for changes to be propagated.
+    // For now, let's make this tunable, for debugging (remember to set this property server-side)
+    public static final String SLEEP_TIME_PROP = "ResourceResolverTest.sleep.msec";
+    private static final long sleepTime = Long.valueOf(System.getProperty(SLEEP_TIME_PROP, "2000"));
 
     public ResourceResolverTest(final ResourceResolverFactory resourceResolverFactory) throws Exception {
+        logger.info("sleepTime = {}, use {} system property to change", sleepTime, SLEEP_TIME_PROP);
         this.resourceResolverFactory = resourceResolverFactory;
         this.resResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
         this.session = this.resResolver.adaptTo(Session.class);
@@ -431,7 +436,7 @@ public class ResourceResolverTest {
         session.save();
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
             Resource res = resResolver.resolve(request, rootPath);
             assertNotNull(res);
@@ -454,7 +459,7 @@ public class ResourceResolverTest {
             "http://localhost");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
         try {
             Resource res = resResolver.resolve(request, rootPath);
@@ -484,7 +489,7 @@ public class ResourceResolverTest {
             "/content/$1");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
         try {
 
             Resource res = resResolver.resolve(request, "/playground.html");
@@ -512,7 +517,7 @@ public class ResourceResolverTest {
         toContent.setProperty(PROP_REDIRECT_INTERNAL, "/content/$1");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -532,7 +537,7 @@ public class ResourceResolverTest {
             toContent.setProperty("sling:match", "(homeground|foreignground)");
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             res = resResolver.resolve(request, "/homeground.html");
@@ -562,7 +567,7 @@ public class ResourceResolverTest {
             "/content/virtual.html");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -608,7 +613,7 @@ public class ResourceResolverTest {
             "/content2/virtual.html");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -639,7 +644,7 @@ public class ResourceResolverTest {
             "/content/virtual");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -686,7 +691,7 @@ public class ResourceResolverTest {
             contentEN);
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -763,7 +768,7 @@ public class ResourceResolverTest {
             "/");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -861,7 +866,7 @@ public class ResourceResolverTest {
             "/content/virtual");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
         try {
             final Resource res0 = resResolver.resolve(request, "/playground.html");
@@ -898,7 +903,7 @@ public class ResourceResolverTest {
             "/");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -936,7 +941,7 @@ public class ResourceResolverTest {
             "/content/virtual");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -973,7 +978,7 @@ public class ResourceResolverTest {
             "/content/virtual");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -1018,7 +1023,7 @@ public class ResourceResolverTest {
             content);
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         // HTTP request
@@ -1096,7 +1101,7 @@ public class ResourceResolverTest {
         rootNode.setProperty("sling:alias", alias);
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
         try {
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
@@ -1143,7 +1148,7 @@ public class ResourceResolverTest {
         content.setProperty("sling:alias", alias);
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -1190,7 +1195,7 @@ public class ResourceResolverTest {
             session.save();
 
             try {
-                Thread.sleep(2000);
+                Thread.sleep(sleepTime);
 
 
                 res = resResolver.resolve(request, path);
@@ -1362,7 +1367,7 @@ public class ResourceResolverTest {
             PROP_REDIRECT_INTERNAL, mapRootInternal);
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -1423,7 +1428,7 @@ public class ResourceResolverTest {
             mapRootPath);
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
         try {
             // ---------------------------------------------------------------------
@@ -1934,7 +1939,7 @@ public class ResourceResolverTest {
         session.save();
 
         try {
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // we should get child2 now
@@ -1947,7 +1952,7 @@ public class ResourceResolverTest {
             child2.remove();
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // we should get child 1 now
@@ -1963,7 +1968,7 @@ public class ResourceResolverTest {
             child2.setProperty("sling:vanityOrder", 200);
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // we should get child2 now
@@ -1976,7 +1981,7 @@ public class ResourceResolverTest {
             child1.setProperty("sling:vanityOrder", 300);
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // we should get child 1 now
@@ -1989,7 +1994,7 @@ public class ResourceResolverTest {
             child1.setProperty("sling:vanityOrder", 50);
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // we should get child 2 now
@@ -2012,7 +2017,7 @@ public class ResourceResolverTest {
         child.setProperty("sling:alias", "kind");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
         try {
             // expect kind due to alias and no parent due to mapping
@@ -2037,7 +2042,7 @@ public class ResourceResolverTest {
             grandchild.setProperty("sling:alias", "enkel");
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // expect kind/enkel due to alias and no parent due to mapping
@@ -2133,7 +2138,7 @@ try {
             "kind", "enfant" });
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -2176,7 +2181,7 @@ try {
             grandchild.setProperty("sling:alias", "enkel");
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // expect kind/enkel due to alias and no parent due to mapping
@@ -2224,7 +2229,7 @@ try {
         child.setProperty("sling:alias", "kind");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -2249,7 +2254,7 @@ try {
             grandchild.setProperty("sling:alias", "enkel");
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // expect kind/enkel due to alias and no parent due to mapping
@@ -2283,7 +2288,7 @@ try {
         child.setProperty("sling:alias", "kind");
         session.save();
 
-        Thread.sleep(2000);
+        Thread.sleep(sleepTime);
 
 
         try {
@@ -2308,7 +2313,7 @@ try {
             grandchild.setProperty("sling:alias", "enkel");
             session.save();
 
-            Thread.sleep(2000);
+            Thread.sleep(sleepTime);
 
 
             // expect kind/enkel due to alias and no parent due to mapping
@@ -2342,8 +2347,7 @@ try {
         child.setProperty("sling:alias", "kind");
         session.save();
 
-        Thread.sleep(2000);
-
+        Thread.sleep(sleepTime);
 
         try {
             // expect kind due to alias and no parent due to mapping
