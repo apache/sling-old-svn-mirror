@@ -28,12 +28,17 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 
 /**
@@ -42,8 +47,8 @@ import org.osgi.service.component.ComponentContext;
  *
  */
 @Component
-@Service(value={ClassLoaderWriter.class})
-@Property( name="service.ranking", intValue=100)
+@Service(value={ClassLoaderWriter.class}, serviceFactory = true)
+@Property( name=Constants.SERVICE_RANKING, intValue=100)
 public class FSClassLoaderProvider
     implements ClassLoaderWriter {
 
@@ -56,8 +61,73 @@ public class FSClassLoaderProvider
     /** Current class loader */
     private FSDynamicClassLoader loader;
 
-    @Reference
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
+    @Reference(
+            referenceInterface = DynamicClassLoaderManager.class,
+            bind = "bindDynamicClassLoaderManager",
+            unbind = "unbindDynamicClassLoaderManager")
+    private ServiceReference dynamicClassLoaderManager;
+
+    /** The bundle asking for this service instance */
+    private Bundle callerBundle;
+
+    /**
+     * Activate this component.
+     * Create the root directory.
+     * @param componentContext
+     * @throws MalformedURLException
+     */
+    @Activate
+    protected void activate(final ComponentContext componentContext) throws MalformedURLException {
+        // get the file root
+        this.root = new File(componentContext.getBundleContext().getDataFile(""), "classes");
+        this.root.mkdirs();
+        this.rootURL = this.root.toURI().toURL();
+        this.callerBundle = componentContext.getUsingBundle();
+    }
+
+    /**
+     * Deactivate this component.
+     * Create the root directory.
+     */
+    @Deactivate
+    protected void deactivate() {
+        this.root = null;
+        this.rootURL = null;
+        this.destroyClassLoader();
+    }
+
+    /**
+     * Called to handle binding the DynamicClassLoaderManager service
+     * reference
+     */
+    @SuppressWarnings("unused")
+    private void bindDynamicClassLoaderManager(final ServiceReference ref) {
+        this.dynamicClassLoaderManager = ref;
+    }
+
+    /**
+     * Called to handle unbinding of the DynamicClassLoaderManager service
+     * reference
+     */
+    @SuppressWarnings("unused")
+    private void unbindDynamicClassLoaderManager(final ServiceReference ref) {
+        if (this.dynamicClassLoaderManager == ref) {
+            this.dynamicClassLoaderManager = null;
+        }
+    }
+
+    private void destroyClassLoader() {
+        final ClassLoader rcl = this.loader;
+        if (rcl != null) {
+            this.loader = null;
+
+            final ServiceReference localDynamicClassLoaderManager = this.dynamicClassLoaderManager;
+            final Bundle localCallerBundle = this.callerBundle;
+            if ( localDynamicClassLoaderManager != null && localCallerBundle != null ) {
+                localCallerBundle.getBundleContext().ungetService(localDynamicClassLoaderManager);
+            }
+        }
+    }
 
     /**
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getClassLoader()
@@ -65,7 +135,13 @@ public class FSClassLoaderProvider
     public ClassLoader getClassLoader() {
         synchronized ( this ) {
             if ( loader == null || !loader.isLive() ) {
-                loader = new FSDynamicClassLoader(new URL[] {this.rootURL}, this.dynamicClassLoaderManager.getDynamicClassLoader());
+                this.destroyClassLoader();
+                // get the dynamic class loader for the bundle using this
+                // class loader writer
+                final DynamicClassLoaderManager dclm = (DynamicClassLoaderManager) this.callerBundle.getBundleContext().getService(
+                    this.dynamicClassLoaderManager);
+
+                loader = new FSDynamicClassLoader(new URL[] {this.rootURL}, dclm.getDynamicClassLoader());
             }
             return this.loader;
         }
@@ -179,28 +255,5 @@ public class FSClassLoaderProvider
 
         // fallback to "non-existant" in case of problems
         return -1;
-    }
-
-    /**
-     * Activate this component.
-     * Create the root directory.
-     * @param componentContext
-     * @throws MalformedURLException
-     */
-    protected void activate(final ComponentContext componentContext) throws MalformedURLException {
-        // get the file root
-        this.root = new File(componentContext.getBundleContext().getDataFile(""), "classes");
-        this.root.mkdirs();
-        this.rootURL = this.root.toURI().toURL();
-    }
-
-    /**
-     * Deactivate this component.
-     * Create the root directory.
-     * @param componentContext
-     */
-    protected void deactivate(final ComponentContext componentContext) {
-        this.root = null;
-        this.rootURL = null;
     }
 }
