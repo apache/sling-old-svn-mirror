@@ -20,7 +20,6 @@ import static org.apache.sling.api.scripting.SlingBindings.SLING;
 
 import java.io.Reader;
 import java.util.Dictionary;
-import java.util.Hashtable;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -57,9 +56,9 @@ import org.apache.sling.scripting.jsp.jasper.runtime.AnnotationProcessor;
 import org.apache.sling.scripting.jsp.jasper.runtime.JspApplicationContextImpl;
 import org.apache.sling.scripting.jsp.jasper.servlet.JspServletWrapper;
 import org.apache.sling.scripting.jsp.util.TagUtil;
-import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +70,7 @@ import org.slf4j.LoggerFactory;
 @Component(label="%jsphandler.name",
            description="%jsphandler.description",
            metatype=true)
-@Service(value=javax.script.ScriptEngineFactory.class)
+@Service(value={javax.script.ScriptEngineFactory.class, EventHandler.class})
 @Properties({
    @Property(name="service.description",value="JSP Script Handler"),
    @Property(name="service.vendor",value="The Apache Software Foundation"),
@@ -82,7 +81,8 @@ import org.slf4j.LoggerFactory;
    @Property(name="jasper.keepgenerated",boolValue=true),
    @Property(name="jasper.mappedfile",boolValue=true),
    @Property(name="jasper.trimSpaces",boolValue=false),
-   @Property(name="jasper.displaySourceFragments",boolValue=false)
+   @Property(name="jasper.displaySourceFragments",boolValue=false),
+   @Property(name=EventConstants.EVENT_TOPIC, value="org/apache/sling/api/resource/*")
 })
 public class JspScriptEngineFactory
     extends AbstractScriptEngineFactory
@@ -117,8 +117,6 @@ public class JspScriptEngineFactory
     private JspServletContext jspServletContext;
 
     private ServletConfig servletConfig;
-
-    private ServiceRegistration eventHandlerRegistration;
 
     private boolean defaultIsSession;
 
@@ -335,15 +333,6 @@ public class JspScriptEngineFactory
             Thread.currentThread().setContextClassLoader(old);
         }
 
-        // register event handler
-        final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put("event.topics","org/apache/sling/api/resource/*");
-        props.put("service.description","JSP Script Modification Handler");
-        props.put("service.vendor","The Apache Software Foundation");
-
-        this.eventHandlerRegistration = componentContext.getBundleContext()
-                  .registerService(EventHandler.class.getName(), this, props);
-
         logger.debug("IMPORTANT: Do not modify the generated servlets");
     }
 
@@ -356,10 +345,6 @@ public class JspScriptEngineFactory
         if ( this.tldLocationsCache != null ) {
             this.tldLocationsCache.deactivate(componentContext.getBundleContext());
             this.tldLocationsCache = null;
-        }
-        if ( this.eventHandlerRegistration != null ) {
-            this.eventHandlerRegistration.unregister();
-            this.eventHandlerRegistration = null;
         }
         if (jspRuntimeContext != null) {
             this.destroyJspRuntimeContext(this.jspRuntimeContext);
