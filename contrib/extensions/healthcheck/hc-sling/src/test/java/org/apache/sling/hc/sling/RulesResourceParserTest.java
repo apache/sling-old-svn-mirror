@@ -26,6 +26,9 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
@@ -142,5 +145,12 @@ public class RulesResourceParserTest {
         for(String resText : expect) {
             assertTrue("Expecting rules list (" + allText + ") to contain " + resText, allText.indexOf(resText) >= 0);
         }
+    }
+    
+    @Test(expected=SlingException.class)
+    public void testUnauthorized() throws RepositoryException {
+        resolver.setUnauthorized();
+        final Resource root = new MockResource(resolver, "/foo", "test", "constant", "5", "> 3");
+        parser.parseResource(root); 
     }
 }

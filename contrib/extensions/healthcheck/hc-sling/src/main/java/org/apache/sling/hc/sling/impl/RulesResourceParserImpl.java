@@ -17,23 +17,27 @@
  */
 package org.apache.sling.hc.sling.impl;
 
-import org.apache.sling.engine.SlingRequestProcessor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.api.SlingException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.scripting.SlingScript;
+import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.sling.api.RulesResourceParser;
 
-/** Parses a Resource into a list of Rule. See unit tests for details */
+/** Parses a Resource into a list of Rule. See unit tests for details.
+ *  TODO should probably be an Adapter instead */
 @Component
 @Service(value=RulesResourceParser.class)
 public class RulesResourceParserImpl implements RulesResourceParser {
@@ -44,8 +48,22 @@ public class RulesResourceParserImpl implements RulesResourceParser {
     @Reference
     private SlingRequestProcessor requestProcessor;
     
+    @SuppressWarnings("serial")
+    public static class UnauthorizedException extends SlingException {
+        UnauthorizedException() {
+            super("Current user is not authorized to execute health check Rules");
+        }
+    };
+    
     @Override
     public List<Rule> parseResource(Resource r) {
+        
+        try {
+            new RulesExecutionPermission().checkPermission(r);
+        } catch(RepositoryException rex) {
+            throw new UnauthorizedException();
+        }
+        
         final List<Rule> result = new ArrayList<Rule>();
         recursivelyParseResource(result, r);
         return result;

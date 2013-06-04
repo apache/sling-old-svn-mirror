@@ -66,8 +66,6 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
             throws ServletException,IOException {
         
-        // TODO restrict execution to admin?
-        
         // TODO we could cache the engine + rules, not sure if it's worth it...
         final RulesEngine engine = healthcheck.getNewRulesEngine();
         engine.addRules(parser.parseResource(request.getResource()));
