@@ -24,6 +24,9 @@ package org.apache.sling.discovery;
  * The discovery service is in charge of managing live instances that
  * have announced themselves as being part of a topology view. The exact
  * details of how this announcement occurs is implementation dependent.
+ * <p>
+ * Note that the discovery service fails if it detects a situation
+ * where more than one instance with the same sling.id exists in a cluster. 
  */
 public interface DiscoveryService {
 
