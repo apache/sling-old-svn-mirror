@@ -33,9 +33,10 @@ import org.apache.sling.api.request.ResponseUtil;
  * Generator for a HTML status response that displays the changes made in a post
  * request. see <a href="HtmlResponse.html">HtmlResponse.html</a> for the
  * format.
- * 
+ *
  * @deprecated use org.apache.sling.servlets.post.HtmlResponse instead.
  */
+@Deprecated
 public class HtmlResponse {
 
     /**
@@ -101,7 +102,7 @@ public class HtmlResponse {
     /**
      * list of changes
      */
-    private final StringBuffer changes = new StringBuffer();
+    private final StringBuilder changes = new StringBuilder();
 
     /**
      * Properties of the response
@@ -322,19 +323,19 @@ public class HtmlResponse {
      * method call, where the <code>type</code> is the method name and the
      * <code>arguments</code> are the string arguments to the method enclosed in
      * double quotes. For example, the the call
-     * 
+     *
      * <pre>
      * onChange(&quot;sameple&quot;, &quot;arg1&quot;, &quot;arg2&quot;);
      * </pre>
-     * 
+     *
      * is aded as
-     * 
+     *
      * <pre>
      * sample(&quot;arg1&quot;, &quot;arg2&quot;)
      * </pre>
-     * 
+     *
      * to the internal list of changes.
-     * 
+     *
      * @param type The type of the modification
      * @param arguments The arguments to the modifications
      */
