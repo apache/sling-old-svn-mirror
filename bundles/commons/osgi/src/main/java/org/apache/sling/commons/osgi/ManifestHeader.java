@@ -243,7 +243,7 @@ public class ManifestHeader {
 
         final List<String> list = new ArrayList<String>();
 
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
 
         int expecting = (CHAR | DELIMITER | STARTQUOTE);
 
