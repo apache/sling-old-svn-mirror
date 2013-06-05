@@ -49,7 +49,7 @@ public class VotingView extends View {
             .getLogger(VotingView.class);
 
     /**
-     * Create a new voting with the given list of instances, the given 
+     * Create a new voting with the given list of instances, the given
      * voting/view id and the given slingid of the initiator.
      * @param newViewId the new voting/view id
      * @param initiatorId the slingid of the initiator
@@ -78,7 +78,7 @@ public class VotingView extends View {
             String leaderElectionId = instanceResource.adaptTo(ValueMap.class)
                     .get("leaderElectionId", String.class);
             properties.put("leaderElectionId", leaderElectionId);
-            
+
             resourceResolver.create(membersResource, memberId, properties);
         }
         resourceResolver.commit();
@@ -97,7 +97,7 @@ public class VotingView extends View {
     public String toString() {
         final Resource members = getResource().getChild("members");
         String initiatorId = null;
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         if (members != null) {
             Iterator<Resource> it = members.getChildren().iterator();
             while (it.hasNext()) {
@@ -256,7 +256,7 @@ public class VotingView extends View {
             return;
         }
         final ModifiableValueMap memberMap = memberResource.adaptTo(ModifiableValueMap.class);
-        
+
         if (vote == null) {
             memberMap.remove("vote");
         } else {

@@ -40,31 +40,32 @@ public class ResourceHelper {
     public static Resource getOrCreateResource(
             final ResourceResolver resourceResolver, final String path)
             throws PersistenceException {
-    	return ResourceUtil.getOrCreateResource(resourceResolver, path, 
+    	return ResourceUtil.getOrCreateResource(resourceResolver, path,
     			(String)null, null, true);
     }
-    
+
     /**
      * @deprecated use {@link #getOrCreateResource(ResourceResolver, String)} instead
      */
+    @Deprecated
     public static Resource createResource(final ResourceResolver resourceResolver,
             final String path) throws PersistenceException {
     	return getOrCreateResource(resourceResolver, path);
     }
 
-    /** Compile a stringbuffer containing the properties of a resource - used for logging **/
-    public static StringBuffer getPropertiesForLogging(final Resource resource) {
+    /** Compile a string builder containing the properties of a resource - used for logging **/
+    public static StringBuilder getPropertiesForLogging(final Resource resource) {
         ValueMap valueMap;
         try{
             valueMap = resource.adaptTo(ValueMap.class);
         } catch(RuntimeException re) {
-            return new StringBuffer("non-existing resource: "+resource+" ("+re.getMessage()+")");
+            return new StringBuilder("non-existing resource: "+resource+" ("+re.getMessage()+")");
         }
         if (valueMap==null) {
-            return new StringBuffer("non-existing resource: "+resource+" (no ValueMap)");
+            return new StringBuilder("non-existing resource: "+resource+" (no ValueMap)");
         }
         final Set<Entry<String, Object>> entrySet = valueMap.entrySet();
-        final StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         for (Iterator<Entry<String, Object>> it = entrySet.iterator(); it
                 .hasNext();) {
             Entry<String, Object> entry = it.next();

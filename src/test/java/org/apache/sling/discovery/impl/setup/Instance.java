@@ -87,9 +87,9 @@ public class Instance {
     private ResourceResolver resourceResolver;
 
     private int serviceId = 999;
-    
+
     private static Scheduler singletonScheduler = null;
-    
+
     private static Scheduler getSingletonScheduler() throws Exception {
     	if (singletonScheduler!=null) {
     		return singletonScheduler;
@@ -122,13 +122,13 @@ public class Instance {
             public long getHeartbeatTimeout() {
                 return 20;
             }
-            
+
             @Override
             public int getMinEventDelay() {
             	return 1;
             }
         };
-        
+
         clusterViewService = OSGiFactory.createClusterViewServiceImpl(slingId,
                 resourceResolverFactory, config);
         announcementRegistry = OSGiFactory.createITopologyAnnouncementRegistry(
@@ -140,7 +140,7 @@ public class Instance {
                 connectorRegistry, config,
                 resourceResolverFactory.getAdministrativeResourceResolver(null)
                         .adaptTo(Repository.class), getSingletonScheduler());
-        
+
 		discoveryService = OSGiFactory.createDiscoverService(slingId,
                 heartbeatHandler, clusterViewService, announcementRegistry,
                 resourceResolverFactory, config, connectorRegistry, getSingletonScheduler());
@@ -275,7 +275,7 @@ public class Instance {
         }
 
         PropertyIterator pi = node.getProperties();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         while (pi.hasNext()) {
             Property p = pi.nextProperty();
             sb.append(" ");

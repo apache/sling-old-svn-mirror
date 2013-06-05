@@ -495,7 +495,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
             Set<InstanceDescription> newInstances = event.getNewView()
                     .getInstances();
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (Iterator<InstanceDescription> it = newInstances.iterator(); it
                     .hasNext();) {
                 final InstanceDescription newInstanceDescription = it.next();
@@ -514,7 +514,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         .getProperties();
                 Map<String, String> newProps = newInstanceDescription
                         .getProperties();
-                StringBuffer diff = diff(oldProps, newProps);
+                StringBuilder diff = diff(oldProps, newProps);
                 if (diff.length() > 0) {
                     if (sb.length() != 0) {
                         sb.append(", ");
@@ -527,7 +527,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             addEventLog(event.getType(), sb.toString());
         } else if (event.getType() == Type.TOPOLOGY_INIT) {
             this.currentView = event.getNewView();
-            StringBuffer details = new StringBuffer();
+            StringBuilder details = new StringBuilder();
             for (Iterator<InstanceDescription> it = event.getNewView()
                     .getInstances().iterator(); it.hasNext();) {
                 InstanceDescription newInstance = it.next();
@@ -549,7 +549,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 addEventLog(event.getType(),
                         "new view: " + shortViewInfo(event.getNewView()));
             } else {
-                StringBuffer details = new StringBuffer();
+                StringBuilder details = new StringBuilder();
                 for (Iterator<InstanceDescription> it = event.getNewView()
                         .getInstances().iterator(); it.hasNext();) {
                     InstanceDescription newInstance = it.next();
@@ -637,12 +637,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * calculate the difference between two sets of properties
      */
-    private StringBuffer diff(final Map<String, String> oldProps,
+    private StringBuilder diff(final Map<String, String> oldProps,
             final Map<String, String> newProps) {
         final Set<String> oldKeys = new HashSet<String>(oldProps.keySet());
         final Set<String> newKeys = new HashSet<String>(newProps.keySet());
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         for (Iterator<String> it = oldKeys.iterator(); it.hasNext();) {
             String oldKey = it.next();
