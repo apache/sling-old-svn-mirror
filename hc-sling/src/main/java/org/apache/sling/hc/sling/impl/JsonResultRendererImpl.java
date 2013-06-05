@@ -20,6 +20,7 @@ package org.apache.sling.hc.sling.impl;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
@@ -47,11 +48,24 @@ public class JsonResultRendererImpl implements JsonResultRenderer {
                 w.object();
                 {
                     w.key("rule").value(r.getRule().toString());
+                    
+                    final Map<String, Object> info = r.getRule().getInfo();
+                    if(!info.isEmpty()) {
+                        w.key("info").array();
+                        for(Map.Entry<String, Object> e : info.entrySet()) {
+                            w.object();
+                            w.key(e.getKey()).value(e.getValue());
+                            w.endObject();
+                        }
+                        w.endArray();
+                    }
+                    
                     w.key("tags").array();
                     for(String tag : r.getRule().getTags()) {
                         w.value(tag);
                     }
                     w.endArray();
+                    
                     if(r.anythingToReport()) {
                         w.key("log").array();
                         {

@@ -48,6 +48,8 @@ public class RulesResourceParserImpl implements RulesResourceParser {
     @Reference
     private SlingRequestProcessor requestProcessor;
     
+    public static final String RESOURCE_PATH_INFO = "sling.resource.path";
+    
     @SuppressWarnings("serial")
     public static class UnauthorizedException extends SlingException {
         UnauthorizedException() {
@@ -110,6 +112,11 @@ public class RulesResourceParserImpl implements RulesResourceParser {
                     if(tags != null && tags.length > 0) {
                         rule.setTags(tags);
                     }
+                }
+                
+                // resource path info
+                if(rule != null) {
+                    rule.getInfo().put(RESOURCE_PATH_INFO, r.getPath());
                 }
                 
                 if(rule != null) {

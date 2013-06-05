@@ -18,6 +18,7 @@
 package org.apache.sling.hc.sling;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class RulesResourceParserTest {
     
     @Test
     public void testResourceWithTags() {
-        final MockResource r = new MockResource(resolver, "/", "test", "constant", "5", "> 3");
+        final MockResource r = new MockResource(resolver, "/foo", "test", "constant", "5", "> 3");
         r.setTags(new String [] { "foo", "bar" });
         final List<Rule> rules = parser.parseResource(r); 
         assertEquals(1, rules.size());
@@ -105,6 +106,8 @@ public class RulesResourceParserTest {
         assertEquals(2, rule.getTags().size());
         assertTrue(rule.hasTag("foo"));
         assertTrue(rule.hasTag("bar"));
+        assertNotNull(rule.getInfo());
+        assertEquals("/foo", rule.getInfo().get("sling.resource.path"));
     }
     
     @Test
