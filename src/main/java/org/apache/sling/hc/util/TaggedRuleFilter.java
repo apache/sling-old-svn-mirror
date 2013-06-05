@@ -17,22 +17,27 @@
  */
 package org.apache.sling.hc.util;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleFilter;
 
 /** {@link RulerFilter} that accepts {@link Rule} that have certain tags */
 public class TaggedRuleFilter implements RuleFilter {
-    private String [] tags;
+    private final List<String> tags = new ArrayList<String>();
     
     /** Create a RuleFilter that selects Rules
      *  having all supplied tags (lowercased)
      */
-    public TaggedRuleFilter(String ...tags) {
-        this.tags = tags;
-        for(int i=0 ; i < tags.length; i++) {
-            tags[i] = tags[i].toLowerCase();
+    public TaggedRuleFilter(String ...inputTags) {
+        
+        // Trim and ignore empty tags
+        for(int i=0 ; i < inputTags.length; i++) {
+            String tag = inputTags[i].trim();
+            if(tag.length() > 0) {
+                tags.add(tag.toLowerCase());
+            }
         }
     }
     
@@ -47,6 +52,6 @@ public class TaggedRuleFilter implements RuleFilter {
     
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ", tags=" + Arrays.asList(tags);
+        return getClass().getSimpleName() + ", tags=" + tags;
     }
 }
