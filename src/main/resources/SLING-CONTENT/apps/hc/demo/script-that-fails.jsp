@@ -1,4 +1,3 @@
 # example script that fails as a health check rule
-Anything that the script outputs
-that is not TEST_PASSED, and empty line or a comment
-causes it to fail.
+This script outputs more than just TEST_PASSED
+so the corresponding rule will fail.
