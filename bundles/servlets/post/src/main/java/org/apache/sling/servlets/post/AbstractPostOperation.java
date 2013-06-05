@@ -271,7 +271,7 @@ public abstract class AbstractPostOperation implements PostOperation {
      */
     protected final String externalizePath(SlingHttpServletRequest request,
             String path) {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         ret.append(SlingRequestPaths.getContextPath(request));
         ret.append(request.getResourceResolver().map(path));
 

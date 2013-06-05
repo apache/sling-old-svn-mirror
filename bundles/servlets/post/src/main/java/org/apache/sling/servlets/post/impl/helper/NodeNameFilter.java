@@ -26,7 +26,7 @@ public class NodeNameFilter {
     public static final char REPLACEMENT_CHAR = '_';
 
     public String filter(String nodeName) {
-        final StringBuffer sb  = new StringBuffer();
+        final StringBuilder sb  = new StringBuilder();
         char lastAdded = 0;
 
         nodeName = nodeName.toLowerCase();
@@ -40,15 +40,15 @@ public class NodeNameFilter {
                     continue;
                 }
                 toAdd = REPLACEMENT_CHAR;
-                
+
             } else if(i == 0 && Character.isDigit(c)) {
                 sb.append(REPLACEMENT_CHAR);
             }
-            
+
             sb.append(toAdd);
             lastAdded = toAdd;
         }
-        
+
         if (sb.length()==0) {
             sb.append(REPLACEMENT_CHAR);
         }

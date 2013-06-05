@@ -17,15 +17,16 @@
 
 package org.apache.sling.servlets.post.impl.helper;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Facilitates parsing of the Accept HTTP request header.
@@ -313,7 +314,9 @@ public class MediaRangeList extends TreeSet<MediaRangeList.MediaRange> {
 
         @Override
         public String toString() {
-            StringBuffer buf = new StringBuffer(this.supertype + "/" + this.subtype);
+            final StringBuilder buf = new StringBuilder(this.supertype);
+            buf.append('/');
+            buf.append(this.subtype);
             if (parameters != null) {
                 String delimiter = ";";
                 for (String key : parameters.keySet()) {

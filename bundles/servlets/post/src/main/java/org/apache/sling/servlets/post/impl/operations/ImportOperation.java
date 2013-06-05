@@ -51,10 +51,6 @@ public class ImportOperation extends AbstractCreateOperation {
      */
     private ContentImporter contentImporter;
 
-    public ImportOperation(ContentImporter contentImporter) {
-        this.contentImporter = contentImporter;
-    }
-
     public void setContentImporter(ContentImporter importer) {
         this.contentImporter = importer;
     }

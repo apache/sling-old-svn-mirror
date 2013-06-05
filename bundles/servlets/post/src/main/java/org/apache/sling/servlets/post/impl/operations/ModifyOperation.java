@@ -118,7 +118,7 @@ public class ModifyOperation extends AbstractCreateOperation {
     protected String getItemPath(SlingHttpServletRequest request) {
 
         // calculate the paths
-        StringBuffer rootPathBuf = new StringBuffer();
+        StringBuilder rootPathBuf = new StringBuilder();
         String suffix;
         Resource currentResource = request.getResource();
         if (ResourceUtil.isSyntheticResource(currentResource)) {
