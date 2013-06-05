@@ -159,6 +159,7 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
         this.status = status;
     }
 
+    @Override
     public void addCookie(Cookie cookie) {
 
         // register the cookie for later use
@@ -170,26 +171,31 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
         super.addCookie(cookie);
     }
 
+    @Override
     public void addDateHeader(String name, long date) {
         this.registerHeader(name, toDateString(date), true);
         super.addDateHeader(name, date);
     }
 
+    @Override
     public void addHeader(String name, String value) {
         this.registerHeader(name, value, true);
         super.addHeader(name, value);
     }
 
+    @Override
     public void addIntHeader(String name, int value) {
         this.registerHeader(name, String.valueOf(value), true);
         super.addIntHeader(name, value);
     }
 
+    @Override
     public void setContentLength(int len) {
         this.registerHeader(HEADER_CONTENT_LENGTH, String.valueOf(len), false);
         super.setContentLength(len);
     }
 
+    @Override
     public void setContentType(String type) {
         // SLING-726 No handling required since this seems to be correct
         this.registerHeader(HEADER_CONTENT_TYPE, type, false);
@@ -204,21 +210,25 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
         }
     }
 
+    @Override
     public void setDateHeader(String name, long date) {
         this.registerHeader(name, toDateString(date), false);
         super.setDateHeader(name, date);
     }
 
+    @Override
     public void setHeader(String name, String value) {
         this.registerHeader(name, value, false);
         super.setHeader(name, value);
     }
 
+    @Override
     public void setIntHeader(String name, int value) {
         this.registerHeader(name, String.valueOf(value), false);
         this.setHeader(name, String.valueOf(value));
     }
 
+    @Override
     public void setLocale(Locale loc) {
         // TODO: Might want to register the Content-Language header
         super.setLocale(loc);
@@ -272,7 +282,7 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
         } else if (header instanceof String) {
             return (String) header;
         } else {
-            StringBuffer headerBuf = new StringBuffer();
+            StringBuilder headerBuf = new StringBuilder();
             for (Iterator<?> hi = ((List<?>) header).iterator(); hi.hasNext();) {
                 if (headerBuf.length() > 0) {
                     headerBuf.append(",");
@@ -288,7 +298,7 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
     /**
      * Stores the name header-value pair in the header map. The name is
      * converted to lower-case before using it as an index in the map.
-     * 
+     *
      * @param name The name of the header to register
      * @param value The value of the header to register
      * @param add If <code>true</code> the header value is added to the list of
@@ -332,7 +342,7 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
      * specification. The resulting string is compliant with section 3.3.1, Full
      * Date, of <a href="http://www.faqs.org/rfcs/rfc2616.html">RFC 2616</a> and
      * may thus be used as the value of date header such as <code>Date</code>.
-     * 
+     *
      * @param date The date value to convert to a string
      * @return The string representation of the date and time value.
      */
@@ -358,25 +368,30 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
             return this.count;
         }
 
+        @Override
         public void write(int b) throws IOException {
             this.delegatee.write(b);
             this.count++;
         }
 
+        @Override
         public void write(byte[] b) throws IOException {
             this.delegatee.write(b);
             this.count += b.length;
         }
 
+        @Override
         public void write(byte[] b, int off, int len) throws IOException {
             this.delegatee.write(b, off, len);
             this.count += len;
         }
 
+        @Override
         public void flush() throws IOException {
             this.delegatee.flush();
         }
 
+        @Override
         public void close() throws IOException {
             this.delegatee.close();
         }
@@ -397,21 +412,25 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
             return this.count;
         }
 
+        @Override
         public void write(int c) {
             super.write(c);
             this.count++;
         }
 
+        @Override
         public void write(char[] buf, int off, int len) {
             super.write(buf, off, len);
             this.count += len;
         }
 
+        @Override
         public void write(String s, int off, int len) {
             super.write(s, off, len);
             this.count += len;
         }
 
+        @Override
         public void println() {
             super.println();
             this.count += LINE_SEPARATOR_LENGTH;
