@@ -172,6 +172,8 @@ public class DefaultErrorHandler implements ErrorHandler {
 
             // commit the response
             response.flushBuffer();
+            // close the response (SLING-2724)
+            pw.close();
         }
     }
 }

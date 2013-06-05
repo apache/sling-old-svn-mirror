@@ -157,6 +157,8 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
             }
 
+        } catch ( final SlingHttpServletResponseImpl.WriterAlreadyClosedException wace ) {
+            log.error("Writer has already been closed.", wace);
         } catch (ResourceNotFoundException rnfe) {
 
             // send this exception as a 404 status
@@ -371,6 +373,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             super(wrappedResponse);
         }
 
+        @Override
         public PrintWriter getWriter() throws IOException {
             if (writer == null) {
                 try {
