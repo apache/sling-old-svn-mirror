@@ -1,6 +1,7 @@
 package org.apache.sling.hc.sling;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -102,6 +103,36 @@ class MockResource implements Resource {
 
     @Override
     public String getResourceType() {
+        return null;
+    }
+
+    @Override
+    public Resource getChild(String arg0) {
+        return null;
+    }
+
+    @Override
+    public Iterable<Resource> getChildren() {
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        return null;
+    }
+
+    @Override
+    public Resource getParent() {
+        return null;
+    }
+
+    @Override
+    public boolean isResourceType(String arg0) {
+        return false;
+    }
+
+    @Override
+    public Iterator<Resource> listChildren() {
         return null;
     }
 }

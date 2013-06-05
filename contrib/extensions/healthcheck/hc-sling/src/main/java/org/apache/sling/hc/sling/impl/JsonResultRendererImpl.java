@@ -22,21 +22,21 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.io.JSONWriter;
 import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.sling.api.JsonResultRenderer;
 
-/** Renders a List of EvaluationResult in JSON. See unit tests
- *  for details.
- */
-@Component
-@Service(value=JsonResultRenderer.class)
-public class JsonResultRendererImpl implements JsonResultRenderer {
+/** Renders a List of EvaluationResult in JSON */
+public class JsonResultRendererImpl implements SlingHealthCheckServlet.Renderer {
     
-    @Override
+    public String getExtension() {
+        return "json";
+    }
+    
+    public String getContentType() {
+        return "application/json";
+    }
+    
     public void render(List<EvaluationResult> results, Writer output) throws IOException {
         final JSONWriter w = new JSONWriter(output);
         w.setTidy(true);

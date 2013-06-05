@@ -18,23 +18,31 @@
 package org.apache.sling.hc.sling.impl;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.api.HealthCheckFacade;
 import org.apache.sling.hc.api.RulesEngine;
-import org.apache.sling.hc.sling.api.JsonResultRenderer;
 import org.apache.sling.hc.sling.api.RulesResourceParser;
 import org.apache.sling.hc.util.TaggedRuleFilter;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /** Sling Servlet that renders a Resource that contains health check rules 
  *  definitions, after evaluating the rules.
@@ -43,7 +51,7 @@ import org.slf4j.LoggerFactory;
  */
 @SuppressWarnings("serial")
 @SlingServlet(
-        extensions="json",
+        extensions={"json","html"},
         resourceTypes="sling/healthcheck/rules",
         methods="GET",
         selectors=SlingHealthCheckServlet.HC_SELECTOR)
@@ -52,6 +60,7 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
     public static final String HC_SELECTOR = "healthcheck";
     
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private SlingHealthCheckWebconsolePlugin consolePlugin;
     
     @Reference
     private HealthCheckFacade healthcheck;
@@ -60,19 +69,54 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
     private RulesResourceParser parser;
     
     @Reference
-    private JsonResultRenderer renderer;
+    private ResourceResolverFactory resourceResolverFactory;
+    
+    static interface Renderer {
+        String getExtension();
+        String getContentType();
+        void render(List<EvaluationResult> results, Writer output) throws IOException;
+    }
+    
+    private final Renderer [] renderers = { new JsonResultRendererImpl(), new HtmlResultRendererImpl() };
+    
+    @Activate
+    public void activate(ComponentContext ctx) {
+        consolePlugin = new SlingHealthCheckWebconsolePlugin(ctx.getBundleContext(), resourceResolverFactory, this);
+    }
+    
+    @Deactivate
+    public void deactivate(ComponentContext ctx) {
+        consolePlugin.deactivate();
+        consolePlugin = null;
+    }
     
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
-            throws ServletException,IOException {
-        
-        // TODO we could cache the engine + rules, not sure if it's worth it...
+            throws ServletException, IOException {
+        executeRules(request.getResource(), getRuleTagsFromRequest(request), request.getRequestPathInfo().getExtension(), response);
+    }
+    
+    void executeRules(Resource rulesRoot, String [] tags, String extension, HttpServletResponse response) 
+            throws ServletException, IOException {
         final RulesEngine engine = healthcheck.getNewRulesEngine();
-        engine.addRules(parser.parseResource(request.getResource()));
-        response.setContentType("application/json");
+        engine.addRules(parser.parseResource(rulesRoot));
+        final TaggedRuleFilter filter = new TaggedRuleFilter(tags);
+        
+        Renderer renderer = null;
+        for(Renderer x : renderers) {
+            if(extension.equals(x.getExtension())) {
+                renderer = x;
+                break;
+            }
+        }
+        if(renderer == null) {
+            throw new ServletException("No Renderer found for extension " + extension);
+        }
+        
+        log.info("Executing rules found under {} with {} and rendering with {}", 
+                new Object[] { rulesRoot.getPath(), filter, renderer });
+        response.setContentType(renderer.getContentType());
         response.setCharacterEncoding("UTF-8");
-        final TaggedRuleFilter filter = new TaggedRuleFilter(getRuleTagsFromRequest(request));
-        log.info("Executing rules found under {} with {}", request.getResource().getPath(), filter);
         renderer.render(engine.evaluateRules(filter), response.getWriter());
         response.getWriter().flush();
     }
