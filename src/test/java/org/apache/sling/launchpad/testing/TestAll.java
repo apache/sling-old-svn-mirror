@@ -16,13 +16,6 @@
  */
 package org.apache.sling.launchpad.testing;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -31,21 +24,28 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
-/**
- *
- */
-public class TestAll extends TestCase {
+import junit.framework.JUnit4TestAdapter;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import static org.junit.Assert.fail;
+import org.junit.runner.RunWith;
+import org.junit.runners.AllTests;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/** Collect our tests and run them with our LoggingSuite */
+ @RunWith(AllTests.class)
+public class TestAll {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestAll.class);
 
     @SuppressWarnings("unchecked")
-    public static Test suite() {
+    public static TestSuite suite() {
         final ClassLoader sysClassLoader = TestAll.class.getClassLoader();
         final List<String> matchingClasses = new ArrayList<String>();
         // Get the URLs
@@ -63,24 +63,27 @@ public class TestAll extends TestCase {
                 e.printStackTrace();
             }
         }
-        final Set<Class<TestCase>> classSet = new HashSet<Class<TestCase>>();
+        
+        final TestSuite suite = new LoggingSuite("Sling Integration Tests matching " + testPattern, LOGGER);
+        int counter=0;
         for (String classFile : matchingClasses) {
             String className = classFileToName(classFile);
             try {
                 final Class<TestCase> c = (Class<TestCase>) sysClassLoader.loadClass(className);
                 if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers())) {
+                    suite.addTest(new JUnit4TestAdapter(c));
+                    counter++;
                     LOGGER.info("Added " + className);
-                    classSet.add(c);
                 }
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
-        LOGGER.info(classSet.size() + " test classes found using Pattern "
-            + testRegex);
-        TestSuite suite = new LoggingSuite(classSet,
-            "Sling Integration Tests matching " + testPattern, LOGGER);
-
+        
+        if(counter==0) {
+            fail("No test classes found in classpath using Pattern " + testRegex);
+        }
+        LOGGER.info("{} test classes found using Pattern {}", counter, testRegex);
         return suite;
     }
 

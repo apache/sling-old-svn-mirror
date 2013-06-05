@@ -16,10 +16,7 @@
  */
 package org.apache.sling.launchpad.testing;
 
-import java.util.Set;
-
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
@@ -38,8 +35,8 @@ class LoggingSuite extends TestSuite {
 
     private int lastFailures;
 
-    LoggingSuite(Set<Class<TestCase>> classSet, String name, Logger logger) {
-        super(classSet.toArray(new Class[classSet.size()]), name);
+    LoggingSuite(String name, Logger logger) {
+        super(name);
         this.logger = logger;
     }
 
@@ -51,9 +48,7 @@ class LoggingSuite extends TestSuite {
 
     @Override
     public void runTest(Test test, TestResult result) {
-        final String name = (test instanceof TestSuite)
-                ? ((TestSuite) test).getName()
-                : test.getClass().getName();
+        final String name = getName(test); 
         final String startMessage = String.format("Running %s", name);
         System.out.println(startMessage);
         logger.info(startMessage);
@@ -71,6 +66,10 @@ class LoggingSuite extends TestSuite {
         lastRuns = result.runCount();
         lastFailures = result.failureCount();
         lastErrors = result.errorCount();
+    }
+    
+    private String getName(Test t) {
+        return (t instanceof TestSuite) ? ((TestSuite) t).getName() : t.toString();
     }
 
 }
