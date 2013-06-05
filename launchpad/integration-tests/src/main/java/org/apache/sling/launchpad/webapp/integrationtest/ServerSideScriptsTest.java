@@ -67,13 +67,13 @@ public class ServerSideScriptsTest {
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final class ScriptableTest {
+    private static final class Definition {
         public final File testScriptFile;
         public final String testName;
         public final String scriptExtension;
         public final boolean willFail;
 
-        public ScriptableTest(final File file, final boolean willFail) {
+        public Definition(final File file, final boolean willFail) {
             final String name = file.getName();
             final int pos = name.lastIndexOf('.');
 
@@ -90,11 +90,11 @@ public class ServerSideScriptsTest {
         }
     }
     
-    private static class ScriptableTestCollector {
-        private final List<ScriptableTest> tests = new ArrayList<ScriptableTest>();
+    private static class Collector {
+        private final List<Definition> tests = new ArrayList<Definition>();
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
-        ScriptableTestCollector() {
+        Collector() {
             addScripts(TEST_SCRIPT_DIR_DEFAULT, false);
             addScripts(TEST_SCRIPT_DIR_FAIL_DEFAULT, true);
         }
@@ -172,7 +172,7 @@ public class ServerSideScriptsTest {
                         if ( f.isFile() ) {
                             logger.info("Found test script {}", f.getAbsolutePath());
 
-                            final ScriptableTest test = new ScriptableTest(f, willFail);
+                            final Definition test = new Definition(f, willFail);
 
                             this.tests.add(test);
                         }
@@ -183,7 +183,7 @@ public class ServerSideScriptsTest {
             }
         }
         
-        List<ScriptableTest> getTests() {
+        List<Definition> getTests() {
             return tests;
         }
     };
@@ -192,18 +192,18 @@ public class ServerSideScriptsTest {
     private final String serverBaseUrl;
     private final String serverUsername;
     private final String serverPassword;
-    private final ScriptableTest test;
+    private final Definition test;
     
     @Parameters(name="{index} - {0}")
     public static Collection<Object[]> data() {
         final List<Object []> result = new ArrayList<Object []>();
-        for(ScriptableTest t : new ScriptableTestCollector().getTests()) {
+        for(Definition t : new Collector().getTests()) {
             result.add(new Object[] { t });
         }
         return result;
     }
 
-    public ServerSideScriptsTest(ScriptableTest scriptableTest) {
+    public ServerSideScriptsTest(Definition scriptableTest) {
         this.test = scriptableTest;
 
         // get configuration - we can't inherit from SlingTestBase as
