@@ -19,6 +19,7 @@ package org.apache.sling.servlets.post.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -29,7 +30,9 @@ import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -67,7 +70,6 @@ import org.apache.sling.servlets.post.impl.operations.MoveOperation;
 import org.apache.sling.servlets.post.impl.operations.NopOperation;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -137,35 +139,32 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     @Property(value = DEFAULT_IGNORED_PARAMETER_NAME_PATTERN)
     private static final String PROP_IGNORED_PARAMETER_NAME_PATTERN = "servlet.post.ignorePattern";
 
-    private ModifyOperation modifyOperation;
+    private final ModifyOperation modifyOperation = new ModifyOperation();
 
     private ServiceRegistration[] internalOperations;
 
-    private final List<ServiceReference> delayedPostOperations = new ArrayList<ServiceReference>();
-
+    /** Map of post operations. */
     private final Map<String, PostOperation> postOperations = new HashMap<String, PostOperation>();
 
-    private final List<ServiceReference> delayedPostProcessors = new ArrayList<ServiceReference>();
+    /** Sorted list of post processor holders. */
+    private final List<PostProcessorHolder> postProcessors = new ArrayList<PostProcessorHolder>();
 
-    private final List<ServiceReference> postProcessors = new ArrayList<ServiceReference>();
-
+    /** Cached list of post processors, used during request processing. */
     private SlingPostProcessor[] cachedPostProcessors = new SlingPostProcessor[0];
 
-    private final List<ServiceReference> delayedNodeNameGenerators = new ArrayList<ServiceReference>();
+    /** Sorted list of node name generator holders. */
+    private final List<NodeNameGeneratorHolder> nodeNameGenerators = new ArrayList<NodeNameGeneratorHolder>();
 
-    private final List<ServiceReference> nodeNameGenerators = new ArrayList<ServiceReference>();
-
+    /** Cached list of node name generators used during request processing. */
     private NodeNameGenerator[] cachedNodeNameGenerators = new NodeNameGenerator[0];
 
-    private final List<ServiceReference> delayedPostResponseCreators = new ArrayList<ServiceReference>();
+    /** Sorted list of post response creator holders. */
+    private final List<PostResponseCreatorHolder> postResponseCreators = new ArrayList<PostResponseCreatorHolder>();
 
-    private final List<ServiceReference> postResponseCreators = new ArrayList<ServiceReference>();
-
+    /** Cached array of post response creators used during request processing. */
     private PostResponseCreator[] cachedPostResponseCreators = new PostResponseCreator[0];
 
-    private ComponentContext componentContext;
-
-    private ImportOperation importOperation;
+    private final ImportOperation importOperation = new ImportOperation();
 
     /**
      * The content importer reference.
@@ -175,17 +174,17 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     private VersioningConfiguration baseVersioningConfiguration;
 
     @Override
-    protected void doPost(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws IOException {
-        VersioningConfiguration localVersioningConfig = createRequestVersioningConfiguration(request);
+    protected void doPost(final SlingHttpServletRequest request,
+            final SlingHttpServletResponse response) throws IOException {
+        final VersioningConfiguration localVersioningConfig = createRequestVersioningConfiguration(request);
 
         request.setAttribute(VersioningConfiguration.class.getName(), localVersioningConfig);
 
         // prepare the response
-        PostResponse htmlResponse = createPostResponse(request);
+        final PostResponse htmlResponse = createPostResponse(request);
         htmlResponse.setReferer(request.getHeader("referer"));
 
-        PostOperation operation = getSlingPostOperation(request);
+        final PostOperation operation = getSlingPostOperation(request);
         if (operation == null) {
 
             htmlResponse.setStatus(
@@ -194,10 +193,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         } else {
 
-            final SlingPostProcessor[] processors;
-            synchronized ( this.delayedPostProcessors ) {
-                processors = this.cachedPostProcessors;
-            }
+            final SlingPostProcessor[] processors = this.cachedPostProcessors;
             try {
                 operation.run(request, htmlResponse, processors);
             } catch (ResourceNotFoundException rnfe) {
@@ -225,20 +221,20 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     /**
      * Redirects the HttpServletResponse, if redirectURL is not empty
-     * @param htmlResponse 
-     * @param request 
+     * @param htmlResponse
+     * @param request
      * @param redirectURL The computed redirect URL
-     * @param response The HttpServletResponse to use for redirection 
+     * @param response The HttpServletResponse to use for redirection
      * @return Whether a redirect was requested
      * @throws IOException
      */
-    boolean redirectIfNeeded(SlingHttpServletRequest request, PostResponse htmlResponse, SlingHttpServletResponse response)
+    boolean redirectIfNeeded(final SlingHttpServletRequest request, final PostResponse htmlResponse, final SlingHttpServletResponse response)
             throws IOException {
-        String redirectURL = getRedirectUrl(request, htmlResponse);
+        final String redirectURL = getRedirectUrl(request, htmlResponse);
         if (redirectURL != null) {
-            Matcher m = REDIRECT_WITH_SCHEME_PATTERN.matcher(redirectURL);
-            boolean hasScheme = m.matches();
-            String encodedURL;
+            final Matcher m = REDIRECT_WITH_SCHEME_PATTERN.matcher(redirectURL);
+            final boolean hasScheme = m.matches();
+            final String encodedURL;
             if (hasScheme && m.group(2).length() > 0) {
                 encodedURL = m.group(1) + response.encodeRedirectURL(m.group(2));
             } else if (hasScheme) {
@@ -266,9 +262,9 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * </ul>
      * or a {@link org.apache.sling.api.servlets.PostResponse} otherwise
      */
-    PostResponse createPostResponse(SlingHttpServletRequest req) {
+    PostResponse createPostResponse(final SlingHttpServletRequest req) {
         for (final PostResponseCreator creator : cachedPostResponseCreators) {
-            PostResponse response = creator.createPostResponse(req);
+            final PostResponse response = creator.createPostResponse(req);
             if (response != null) {
                 return response;
             }
@@ -276,7 +272,7 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
         // Fall through to default behavior
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection"})
-        MediaRangeList mediaRangeList = new MediaRangeList(req);
+        final MediaRangeList mediaRangeList = new MediaRangeList(req);
         if (JSONResponse.RESPONSE_CONTENT_TYPE.equals(mediaRangeList.prefer("text/html", JSONResponse.RESPONSE_CONTENT_TYPE))) {
             return new JSONResponse();
         } else {
@@ -285,15 +281,17 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
     }
 
     private PostOperation getSlingPostOperation(
-            SlingHttpServletRequest request) {
-        String operation = request.getParameter(SlingPostConstants.RP_OPERATION);
+            final SlingHttpServletRequest request) {
+        final String operation = request.getParameter(SlingPostConstants.RP_OPERATION);
         if (operation == null || operation.length() == 0) {
             // standard create/modify operation;
             return modifyOperation;
         }
 
         // named operation, retrieve from map
-        return postOperations.get(operation);
+        synchronized ( this.postOperations ) {
+            return postOperations.get(operation);
+        }
     }
 
     /**
@@ -302,16 +300,16 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
      * @param ctx the post processor
      * @return the redirect location or <code>null</code>
      */
-    protected String getRedirectUrl(SlingHttpServletRequest request, PostResponse ctx) {
+    protected String getRedirectUrl(final SlingHttpServletRequest request, final PostResponse ctx) {
         // redirect param has priority (but see below, magic star)
         String result = request.getParameter(SlingPostConstants.RP_REDIRECT_TO);
         if (result != null && ctx.getPath() != null) {
             log.debug("redirect requested as [{}] for path [{}]", result, ctx.getPath());
 
             // redirect to created/modified Resource
-            int star = result.indexOf('*');
+            final int star = result.indexOf('*');
             if (star >= 0) {
-                StringBuffer buf = new StringBuffer();
+                final StringBuilder buf = new StringBuilder();
 
                 // anything before the star
                 if (star > 0) {
@@ -327,15 +325,15 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 }
 
                 // Prepend request path if it ends with create suffix and result isn't absolute
-                String requestPath = request.getPathInfo();
-                if (requestPath.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX) && buf.charAt(0) != '/' && 
+                final String requestPath = request.getPathInfo();
+                if (requestPath.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX) && buf.charAt(0) != '/' &&
                         !REDIRECT_WITH_SCHEME_PATTERN.matcher(buf).matches()) {
                     buf.insert(0, requestPath);
                 }
 
                 // use the created path as the redirect result
                 result = buf.toString();
-                
+
             } else if (result.endsWith(SlingPostConstants.DEFAULT_CREATE_SUFFIX)) {
                 // if the redirect has a trailing slash, append modified node
                 // name
@@ -347,8 +345,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         return result;
     }
 
-    protected boolean isSetStatus(SlingHttpServletRequest request) {
-        String statusParam = request.getParameter(SlingPostConstants.RP_STATUS);
+    protected boolean isSetStatus(final SlingHttpServletRequest request) {
+        final String statusParam = request.getParameter(SlingPostConstants.RP_STATUS);
         if (statusParam == null) {
             log.debug(
                 "getStatusMode: Parameter {} not set, assuming standard status code",
@@ -378,51 +376,15 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
 
     // ---------- SCR Integration ----------------------------------------------
 
+    @Activate
     protected void activate(final ComponentContext context,
             final Map<String, Object> configuration) {
-        synchronized ( this.delayedPostProcessors ) {
-            this.componentContext = context;
-            for(final ServiceReference ref : this.delayedPostProcessors) {
-                this.registerPostProcessor(ref);
-            }
-            this.delayedPostProcessors.clear();
-        }
-        synchronized ( this.delayedPostOperations ) {
-            for(final ServiceReference ref : this.delayedPostOperations) {
-                this.registerPostOperation(ref);
-            }
-            this.delayedPostOperations.clear();
-        }
-
-        // Dictionary<?, ?> props = context.getProperties();
-
-        synchronized ( this.delayedNodeNameGenerators ) {
-            for(final ServiceReference ref : this.delayedNodeNameGenerators) {
-                this.registerNodeNameGenerator(ref);
-            }
-            this.delayedNodeNameGenerators.clear();
-        }
-
-        synchronized ( this.delayedPostResponseCreators ) {
-            for(final ServiceReference ref : this.delayedPostResponseCreators) {
-                this.registerPostResponseCreator(ref);
-            }
-            this.delayedPostResponseCreators.clear();
-        }
-
-        // default operation: create/modify
-        modifyOperation = new ModifyOperation();
-        modifyOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
-
-        importOperation = new ImportOperation(contentImporter);
-        importOperation.setExtraNodeNameGenerators(cachedNodeNameGenerators);
-
         // configure now
-        configure(configuration);
+        this.configure(configuration);
 
         // other predefined operations
         final ArrayList<ServiceRegistration> providedServices = new ArrayList<ServiceRegistration>();
-        final BundleContext bundleContext = componentContext.getBundleContext();
+        final BundleContext bundleContext = context.getBundleContext();
         providedServices.add(registerOperation(bundleContext,
             SlingPostConstants.OPERATION_MODIFY, modifyOperation));
         providedServices.add(registerOperation(bundleContext,
@@ -443,17 +405,29 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         internalOperations = providedServices.toArray(new ServiceRegistration[providedServices.size()]);
     }
 
+    private ServiceRegistration registerOperation(final BundleContext context,
+            final String opCode, final PostOperation operation) {
+        final Properties properties = new Properties();
+        properties.put(PostOperation.PROP_OPERATION_NAME, opCode);
+        properties.put(Constants.SERVICE_DESCRIPTION,
+            "Apache Sling POST Servlet Operation " + opCode);
+        properties.put(Constants.SERVICE_VENDOR,
+            context.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
+        return context.registerService(PostOperation.SERVICE_NAME, operation,
+            properties);
+    }
+
     @Override
     public void init() throws ServletException {
         modifyOperation.setServletContext(getServletContext());
     }
 
     @Modified
-    private void configure(Map<String, Object> configuration) {
+    private void configure(final Map<String, Object> configuration) {
         this.baseVersioningConfiguration = createBaseVersioningConfiguration(configuration);
 
         final DateParser dateParser = new DateParser();
-        String[] dateFormats = OsgiUtil.toStringArray(configuration.get(PROP_DATE_FORMAT));
+        final String[] dateFormats = OsgiUtil.toStringArray(configuration.get(PROP_DATE_FORMAT));
         for (String dateFormat : dateFormats) {
             try {
                 dateParser.register(dateFormat);
@@ -464,10 +438,10 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             }
         }
 
-        String[] nameHints = OsgiUtil.toStringArray(configuration.get(PROP_NODE_NAME_HINT_PROPERTIES));
-        int nameMax = (int) OsgiUtil.toLong(
+        final String[] nameHints = OsgiUtil.toStringArray(configuration.get(PROP_NODE_NAME_HINT_PROPERTIES));
+        final int nameMax = (int) OsgiUtil.toLong(
             configuration.get(PROP_NODE_NAME_MAX_LENGTH), -1);
-        NodeNameGenerator nodeNameGenerator = new DefaultNodeNameGenerator(
+        final NodeNameGenerator nodeNameGenerator = new DefaultNodeNameGenerator(
             nameHints, nameMax);
 
         final String paramMatch = OsgiUtil.toString(
@@ -487,215 +461,212 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
         modifyOperation.setServletContext(null);
     }
 
-    protected void deactivate(ComponentContext context) {
+    @Deactivate
+    protected void deactivate() {
         if (internalOperations != null) {
-            for (ServiceRegistration registration : internalOperations) {
+            for (final ServiceRegistration registration : internalOperations) {
                 registration.unregister();
             }
             internalOperations = null;
         }
-        modifyOperation = null;
-        this.componentContext = null;
+        modifyOperation.setExtraNodeNameGenerators(null);
+        importOperation.setExtraNodeNameGenerators(null);
+        importOperation.setContentImporter(null);
     }
 
-    protected void bindPostOperation(ServiceReference ref) {
-    	synchronized ( this.delayedPostOperations ) {
-			if (this.componentContext == null) {
-				this.delayedPostOperations.add(ref);
-			} else {
-				this.registerPostOperation(ref);
-			}
-		}
-    }
-
-    protected void registerPostOperation(ServiceReference ref) {
-    	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
-		PostOperation operation = (PostOperation) this.componentContext.locateService("postOperation", ref);
-		if ( operation != null ) {
-	        synchronized (this.postOperations) {
-	            this.postOperations.put(operationName, operation);
-	        }
-		}
-    }
-
-    protected void unbindPostOperation(ServiceReference ref) {
-    	synchronized ( this.delayedPostOperations ) {
-        	String operationName = (String) ref.getProperty(SlingPostOperation.PROP_OPERATION_NAME);
-        	synchronized (this.postOperations) {
-        		this.postOperations.remove(operationName);
-        	}
-    	}
-    }
-
-    protected void bindPostProcessor(ServiceReference ref) {
-        synchronized ( this.delayedPostProcessors ) {
-            if ( this.componentContext == null ) {
-                this.delayedPostProcessors.add(ref);
-            } else {
-                this.registerPostProcessor(ref);
+    /**
+     * Bind a new post operation
+     */
+    protected void bindPostOperation(final PostOperation operation, final Map<String, Object> properties) {
+        final String operationName = (String) properties.get(SlingPostOperation.PROP_OPERATION_NAME);
+        if ( operationName != null && operation != null ) {
+            synchronized (this.postOperations) {
+                this.postOperations.put(operationName, operation);
             }
         }
     }
 
-    protected void unbindPostProcessor(ServiceReference ref) {
-        synchronized ( this.delayedPostProcessors ) {
-            this.delayedPostProcessors.remove(ref);
-            this.postProcessors.remove(ref);
+    /**
+     * Unbind a post operation
+     */
+    protected void unbindPostOperation(final PostOperation operation, final Map<String, Object> properties) {
+        final String operationName = (String) properties.get(SlingPostOperation.PROP_OPERATION_NAME);
+        if ( operationName != null ) {
+            synchronized (this.postOperations) {
+                this.postOperations.remove(operationName);
+            }
         }
     }
 
-    protected void registerPostProcessor(ServiceReference ref) {
-        final int ranking = OsgiUtil.toInteger(ref.getProperty(Constants.SERVICE_RANKING), 0);
-        int index = 0;
-        while ( index < this.postProcessors.size() &&
-                ranking < OsgiUtil.toInteger(this.postProcessors.get(index).getProperty(Constants.SERVICE_RANKING), 0)) {
-            index++;
-        }
-        if ( index == this.postProcessors.size() ) {
-            this.postProcessors.add(ref);
-        } else {
-            this.postProcessors.add(index, ref);
-        }
-        this.cachedPostProcessors = new SlingPostProcessor[this.postProcessors.size()];
-        index = 0;
-        for(final ServiceReference current : this.postProcessors) {
-            final SlingPostProcessor processor = (SlingPostProcessor) this.componentContext.locateService("postProcessor", current);
-            if ( processor != null ) {
-                this.cachedPostProcessors[index] = processor;
+    /**
+     * Bind a new post processor
+     */
+    protected void bindPostProcessor(final SlingPostProcessor processor, final Map<String, Object> properties) {
+        final PostProcessorHolder pph = new PostProcessorHolder();
+        pph.processor = processor;
+        pph.ranking = OsgiUtil.toInteger(properties.get(Constants.SERVICE_RANKING), 0);
+
+        synchronized ( this.postProcessors ) {
+            int index = 0;
+            while ( index < this.postProcessors.size() &&
+                    pph.ranking < this.postProcessors.get(index).ranking ) {
                 index++;
             }
-        }
-        if ( index < this.cachedPostProcessors.length ) {
-            SlingPostProcessor[] oldArray = this.cachedPostProcessors;
-            this.cachedPostProcessors = new SlingPostProcessor[index];
-            for(int i=0;i<index;i++) {
-                this.cachedPostProcessors[i] = oldArray[i];
-            }
-        }
-    }
-
-    private ServiceRegistration registerOperation(final BundleContext context,
-            final String opCode, final PostOperation operation) {
-        Properties properties = new Properties();
-        properties.put(PostOperation.PROP_OPERATION_NAME, opCode);
-        properties.put(Constants.SERVICE_DESCRIPTION,
-            "Sling POST Servlet Operation " + opCode);
-        properties.put(Constants.SERVICE_VENDOR,
-            context.getBundle().getHeaders().get(Constants.BUNDLE_VENDOR));
-        return context.registerService(PostOperation.SERVICE_NAME, operation,
-            properties);
-    }
-
-    protected void bindNodeNameGenerator(ServiceReference ref) {
-        synchronized ( this.delayedNodeNameGenerators ) {
-            if ( this.componentContext == null ) {
-                this.delayedNodeNameGenerators.add(ref);
+            if ( index == this.postProcessors.size() ) {
+                this.postProcessors.add(pph);
             } else {
-                this.registerNodeNameGenerator(ref);
+                this.postProcessors.add(index, pph);
             }
+            this.updatePostProcessorCache();
         }
     }
 
-    protected void unbindNodeNameGenerator(ServiceReference ref) {
-        synchronized ( this.delayedNodeNameGenerators ) {
-            this.delayedNodeNameGenerators.remove(ref);
-            this.nodeNameGenerators.remove(ref);
+    /**
+     * Unbind a post processor
+     */
+    protected void unbindPostProcessor(final SlingPostProcessor processor, final Map<String, Object> properties) {
+        synchronized ( this.postProcessors ) {
+            final Iterator<PostProcessorHolder> i = this.postProcessors.iterator();
+            while ( i.hasNext() ) {
+                final PostProcessorHolder current = i.next();
+                if ( current.processor == processor ) {
+                    i.remove();
+                }
+            }
+            this.updatePostProcessorCache();
         }
     }
 
-    protected void registerNodeNameGenerator(ServiceReference ref) {
-        final int ranking = OsgiUtil.toInteger(ref.getProperty(Constants.SERVICE_RANKING), 0);
+    /**
+     * Update the post processor cache
+     * This method is called by sync'ed methods, no need to add additional syncing.
+     */
+    private void updatePostProcessorCache() {
+        final SlingPostProcessor[] localCache = new SlingPostProcessor[this.postProcessors.size()];
         int index = 0;
-        while ( index < this.nodeNameGenerators.size() &&
-                ranking < OsgiUtil.toInteger(this.nodeNameGenerators.get(index).getProperty(Constants.SERVICE_RANKING), 0)) {
+        for(final PostProcessorHolder current : this.postProcessors) {
+            localCache[index] = current.processor;
             index++;
         }
-        if ( index == this.nodeNameGenerators.size() ) {
-            this.nodeNameGenerators.add(ref);
-        } else {
-            this.nodeNameGenerators.add(index, ref);
-        }
-        this.cachedNodeNameGenerators = new NodeNameGenerator[this.nodeNameGenerators.size()];
-        index = 0;
-        for(final ServiceReference current : this.nodeNameGenerators) {
-            final NodeNameGenerator generator = (NodeNameGenerator) this.componentContext.locateService("nodeNameGenerator", current);
-            if ( generator != null ) {
-                this.cachedNodeNameGenerators[index] = generator;
+        this.cachedPostProcessors = localCache;
+    }
+
+    /**
+     * Bind a new node name generator
+     */
+    protected void bindNodeNameGenerator(final NodeNameGenerator generator, final Map<String, Object> properties) {
+        final NodeNameGeneratorHolder nngh = new NodeNameGeneratorHolder();
+        nngh.generator = generator;
+        nngh.ranking = OsgiUtil.toInteger(properties.get(Constants.SERVICE_RANKING), 0);
+
+        synchronized ( this.nodeNameGenerators ) {
+            int index = 0;
+            while ( index < this.nodeNameGenerators.size() &&
+                    nngh.ranking < this.nodeNameGenerators.get(index).ranking ) {
                 index++;
             }
-        }
-        if ( index < this.cachedNodeNameGenerators.length ) {
-            NodeNameGenerator[] oldArray = this.cachedNodeNameGenerators;
-            this.cachedNodeNameGenerators = new NodeNameGenerator[index];
-            for(int i=0;i<index;i++) {
-                this.cachedNodeNameGenerators[i] = oldArray[i];
-            }
-        }
-        if(this.modifyOperation != null) {
-            this.modifyOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
-        }
-        if (this.importOperation != null) {
-        	this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
-        }
-    }
-
-    protected void bindPostResponseCreator(ServiceReference ref) {
-        synchronized ( this.delayedPostResponseCreators ) {
-            if ( this.componentContext == null ) {
-                this.delayedPostResponseCreators.add(ref);
+            if ( index == this.nodeNameGenerators.size() ) {
+                this.nodeNameGenerators.add(nngh);
             } else {
-                this.registerPostResponseCreator(ref);
+                this.nodeNameGenerators.add(index, nngh);
             }
+            this.updateNodeNameGeneratorCache();
         }
     }
 
-    protected void unbindPostResponseCreator(ServiceReference ref) {
-        synchronized ( this.delayedPostResponseCreators ) {
-            this.delayedPostResponseCreators.remove(ref);
-            this.postResponseCreators.remove(ref);
+    /**
+     * Unbind a node name generator
+     */
+    protected void unbindNodeNameGenerator(final NodeNameGenerator generator, final Map<String, Object> properties) {
+        synchronized ( this.nodeNameGenerators ) {
+            final Iterator<NodeNameGeneratorHolder> i = this.nodeNameGenerators.iterator();
+            while ( i.hasNext() ) {
+                final NodeNameGeneratorHolder current = i.next();
+                if ( current.generator == generator ) {
+                    i.remove();
+                }
+            }
+            this.updateNodeNameGeneratorCache();
         }
     }
 
-    protected void registerPostResponseCreator(ServiceReference ref) {
-        final int ranking = OsgiUtil.toInteger(ref.getProperty(Constants.SERVICE_RANKING), 0);
+    /**
+     * Update the node name generator cache
+     * This method is called by sync'ed methods, no need to add additional syncing.
+     */
+    private void updateNodeNameGeneratorCache() {
+        final NodeNameGenerator[] localCache = new NodeNameGenerator[this.nodeNameGenerators.size()];
         int index = 0;
-        while ( index < this.postResponseCreators.size() &&
-            ranking < OsgiUtil.toInteger(this.postResponseCreators.get(index).getProperty(Constants.SERVICE_RANKING), 0)) {
+        for(final NodeNameGeneratorHolder current : this.nodeNameGenerators) {
+            localCache[index] = current.generator;
             index++;
         }
-        if ( index == this.postResponseCreators.size() ) {
-            this.postResponseCreators.add(ref);
-        } else {
-            this.postResponseCreators.add(index, ref);
-        }
-        this.cachedPostResponseCreators = new PostResponseCreator[this.postResponseCreators.size()];
-        index = 0;
-        for(final ServiceReference current : this.postResponseCreators) {
-            final PostResponseCreator creator = (PostResponseCreator) this.componentContext.locateService("postResponseCreator", current);
-            if ( creator != null ) {
-                this.cachedPostResponseCreators[index] = creator;
+        this.cachedNodeNameGenerators = localCache;
+        this.modifyOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
+        this.importOperation.setExtraNodeNameGenerators(this.cachedNodeNameGenerators);
+    }
+
+    /**
+     * Bind a new post response creator
+     */
+    protected void bindPostResponseCreator(final PostResponseCreator creator, final Map<String, Object> properties) {
+        final PostResponseCreatorHolder nngh = new PostResponseCreatorHolder();
+        nngh.creator = creator;
+        nngh.ranking = OsgiUtil.toInteger(properties.get(Constants.SERVICE_RANKING), 0);
+
+        synchronized ( this.postResponseCreators ) {
+            int index = 0;
+            while ( index < this.postResponseCreators.size() &&
+                    nngh.ranking < this.postResponseCreators.get(index).ranking ) {
                 index++;
             }
-        }
-        if ( index < this.cachedPostResponseCreators.length ) {
-            PostResponseCreator[] oldArray = this.cachedPostResponseCreators;
-            this.cachedPostResponseCreators = new PostResponseCreator[index];
-            for(int i=0;i<index;i++) {
-                this.cachedPostResponseCreators[i] = oldArray[i];
+            if ( index == this.postResponseCreators.size() ) {
+                this.postResponseCreators.add(nngh);
+            } else {
+                this.postResponseCreators.add(index, nngh);
             }
+            this.updatePostResponseCreatorCache();
         }
     }
 
-    protected void bindContentImporter(ContentImporter importer) {
+    /**
+     * Unbind a post response creator
+     */
+    protected void unbindPostResponseCreator(final PostResponseCreator creator, final Map<String, Object> properties) {
+        synchronized ( this.postResponseCreators ) {
+            final Iterator<PostResponseCreatorHolder> i = this.postResponseCreators.iterator();
+            while ( i.hasNext() ) {
+                final PostResponseCreatorHolder current = i.next();
+                if ( current.creator == creator ) {
+                    i.remove();
+                }
+            }
+            this.updatePostResponseCreatorCache();
+        }
+    }
+
+    /**
+     * Update the post response creator cache
+     * This method is called by sync'ed methods, no need to add additional syncing.
+     */
+    private void updatePostResponseCreatorCache() {
+        final PostResponseCreator[] localCache = new PostResponseCreator[this.postResponseCreators.size()];
+        int index = 0;
+        for(final PostResponseCreatorHolder current : this.postResponseCreators) {
+            localCache[index] = current.creator;
+            index++;
+        }
+        this.cachedPostResponseCreators = localCache;
+    }
+
+    protected void bindContentImporter(final ContentImporter importer) {
         this.contentImporter = importer;
-        if (importOperation != null) {
-            importOperation.setContentImporter(importer);
-        }
+        importOperation.setContentImporter(importer);
     }
 
-    protected void unbindContentImporter(ContentImporter importer) {
-        this.contentImporter = null;
-        if (importOperation != null) {
+    protected void unbindContentImporter(final ContentImporter importer) {
+        if ( this.contentImporter == importer ) {
+            this.contentImporter = null;
             importOperation.setContentImporter(null);
         }
     }
@@ -727,5 +698,20 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
             cfg.setAutoCheckin(Boolean.parseBoolean(paramValue));
         }
         return cfg;
+    }
+
+    private static final class PostProcessorHolder {
+        public SlingPostProcessor processor;
+        public int ranking;
+    }
+
+    private static final class NodeNameGeneratorHolder {
+        public NodeNameGenerator generator;
+        public int ranking;
+    }
+
+    private static final class PostResponseCreatorHolder {
+        public PostResponseCreator creator;
+        public int ranking;
     }
 }

@@ -50,7 +50,7 @@ public class HtmlResponse extends AbstractPostResponse {
     /**
      * list of changes
      */
-    private final StringBuffer changes = new StringBuffer();
+    private final StringBuilder changes = new StringBuilder();
 
     /**
      * Records a generic change of the given <code>type</code>.
@@ -99,6 +99,7 @@ public class HtmlResponse extends AbstractPostResponse {
      * @param setStatus whether to set the status code on the response
      * @throws IOException if an i/o exception occurs
      */
+    @Override
     protected void doSend(HttpServletResponse response)
             throws IOException {
 
@@ -113,7 +114,7 @@ public class HtmlResponse extends AbstractPostResponse {
         Writer out = response.getWriter();
         InputStream template = getClass().getResourceAsStream(TEMPLATE_NAME);
         Reader in = new BufferedReader(new InputStreamReader(template));
-        StringBuffer varBuffer = new StringBuffer();
+        StringBuilder varBuffer = new StringBuilder();
         int state = 0;
         int read;
         while ((read = in.read()) >= 0) {
