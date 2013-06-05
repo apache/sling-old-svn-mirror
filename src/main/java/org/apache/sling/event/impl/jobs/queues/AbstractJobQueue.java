@@ -82,9 +82,6 @@ public abstract class AbstractJobQueue
     /** Are we still running? */
     protected volatile boolean running;
 
-    /** Are we marked for removal */
-    private volatile boolean markedForRemoval = false;
-
     /** Is the queue currently waiting(sleeping) */
     protected volatile boolean isWaiting = false;
 
@@ -131,7 +128,6 @@ public abstract class AbstractJobQueue
     public String getStateInfo() {
         synchronized ( this.suspendLock ) {
             return "isWaiting=" + this.isWaiting +
-                    ", markedForRemoval=" + this.markedForRemoval +
                     ", suspendedSince=" + this.suspendedSince +
                     ", asyncJobs=" + this.asyncCounter.get();
         }
@@ -151,7 +147,7 @@ public abstract class AbstractJobQueue
 
                     try {
                         runJobQueue();
-                    } catch (Throwable t) { //NOSONAR
+                    } catch (final Throwable t) { //NOSONAR
                         logger.error("Job queue " + queueName + " stopped with exception: " + t.getMessage() + ". Restarting.", t);
                     }
                 }
@@ -176,7 +172,6 @@ public abstract class AbstractJobQueue
     public void close() {
         this.running = false;
         this.logger.debug("Shutting down job queue {}", queueName);
-        this.logger.debug("Waking up sleeping queue {}", queueName);
         this.resume();
         if ( this.isWaiting ) {
             this.logger.debug("Waking up waiting queue {}", this.queueName);
@@ -192,6 +187,24 @@ public abstract class AbstractJobQueue
             this.startedJobsLists.clear();
         }
         this.logger.info("Stopped job queue {}", this.queueName);
+    }
+
+    /**
+     * Check if the queue can be closed
+     */
+    public boolean tryToClose() {
+        // resume the queue as we want to close it!
+        this.resume();
+        // check if possible
+        if ( this.canBeClosed() ) {
+            this.close();
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean canBeClosed() {
+        return this.isEmpty() && !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0;
     }
 
     /**
@@ -398,32 +411,6 @@ public abstract class AbstractJobQueue
             reprocessInfo = this.reschedule(info);
         }
         notifyFinished(reprocessInfo);
-    }
-
-    protected boolean canBeMarkedForRemoval() {
-        return this.isEmpty() && !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0;
-    }
-
-    /**
-     * Mark this queue for removal.
-     */
-    public void markForRemoval() {
-        if ( this.canBeMarkedForRemoval() ) {
-            this.markedForRemoval = true;
-        }
-    }
-
-    /**
-     * Check if this queue is marked for removal
-     */
-    public boolean isMarkedForRemoval() {
-        if ( this.markedForRemoval ) {
-            if ( this.canBeMarkedForRemoval() ) {
-                return true;
-            }
-            this.markedForRemoval = false;
-        }
-        return false;
     }
 
     /**
@@ -691,6 +678,7 @@ public abstract class AbstractJobQueue
     public void resume() {
         synchronized ( this.suspendLock ) {
             if ( this.suspendedSince != -1 ) {
+                this.logger.debug("Waking up suspended queue {}", queueName);
                 this.suspendedSince = -1;
                 this.suspendLock.notify();
             }
@@ -704,6 +692,7 @@ public abstract class AbstractJobQueue
     public void suspend() {
         synchronized ( this.suspendLock ) {
             if ( this.suspendedSince == -1 ) {
+                this.logger.debug("Suspending queue {}", queueName);
                 this.suspendedSince = System.currentTimeMillis();
             }
         }

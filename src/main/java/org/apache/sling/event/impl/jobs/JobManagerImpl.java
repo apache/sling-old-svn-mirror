@@ -205,8 +205,6 @@ public class JobManagerImpl
         final Iterator<AbstractJobQueue> i = this.queues.values().iterator();
         while ( i.hasNext() ) {
             final AbstractJobQueue jbq = i.next();
-            // update mbeans
-            ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
             jbq.close();
             // update mbeans
             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
@@ -244,19 +242,14 @@ public class JobManagerImpl
                 while ( i.hasNext() ) {
                     final Map.Entry<String, AbstractJobQueue> current = i.next();
                     final AbstractJobQueue jbq = current.getValue();
-                    if ( jbq.isMarkedForRemoval() ) {
-                        logger.debug("Removing idle Job Queue {}", jbq);
-                        // close
-                        jbq.close();
+                    if ( jbq.tryToClose() ) {
+                        logger.debug("Removing idle job queue {}", jbq);
                         // copy statistics
                         this.baseStatistics.add(jbq);
                         // remove
                         i.remove();
                         // update mbeans
                         ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(null, jbq));
-                    } else {
-                        // mark to be removed during next cycle
-                        jbq.markForRemoval();
                     }
                 }
             }
@@ -377,10 +370,7 @@ public class JobManagerImpl
         // remove the queue with the old name
         this.queues.remove(queue.getName());
         // check if we can close or have to rename
-        queue.markForRemoval();
-        if ( queue.isMarkedForRemoval() ) {
-            // close
-            queue.close();
+        if ( queue.tryToClose() ) {
             // copy statistics
             this.baseStatistics.add(queue);
             // update mbeans
@@ -388,7 +378,12 @@ public class JobManagerImpl
         } else {
             queue.outdate();
             // readd with new name
-            this.queues.put(queue.getName(), queue);
+            String newName = queue.getName();
+            int index = 0;
+            while ( this.queues.containsKey(newName) ) {
+                newName = queue.getName() + '$' + String.valueOf(index++);
+            }
+            this.queues.put(newName, queue);
             // update mbeans
             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, queue));
         }
