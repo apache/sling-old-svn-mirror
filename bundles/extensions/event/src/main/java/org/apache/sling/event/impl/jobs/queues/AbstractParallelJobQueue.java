@@ -106,8 +106,8 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
     }
 
     @Override
-    protected boolean canBeMarkedForRemoval() {
-        boolean result = super.canBeMarkedForRemoval();
+    protected boolean canBeClosed() {
+        boolean result = super.canBeClosed();
         if ( result ) {
             result = this.jobCount == 0;
         }

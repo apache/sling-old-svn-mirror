@@ -188,7 +188,7 @@ public class StatisticsImpl implements Statistics {
     }
 
     /**
-     * New job in the qeue
+     * New job in the queue
      */
     public synchronized void incQueued() {
         this.queuedJobs++;

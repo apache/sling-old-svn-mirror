@@ -39,6 +39,8 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     /** The queue. */
     private final BlockingQueue<JobHandler> queue = new LinkedBlockingQueue<JobHandler>();
 
+    private boolean isWaitingForNext = false;
+
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final JobConsumerManager jobConsumerManager,
@@ -48,8 +50,23 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     }
 
     @Override
+    public String getStateInfo() {
+        return super.getStateInfo() + ", isWaitingForNext=" + this.isWaitingForNext;
+    }
+
+    @Override
+    protected boolean canBeClosed() {
+        boolean result = super.canBeClosed();
+        if ( result ) {
+            result = this.isWaitingForNext;
+        }
+        return result;
+    }
+
+    @Override
     protected void put(final JobHandler event) {
         try {
+            this.isWaitingForNext = false;
             this.queue.put(event);
         } catch (final InterruptedException e) {
             // this should never happen
@@ -60,10 +77,13 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     @Override
     protected JobHandler take() {
         try {
+            this.isWaitingForNext = true;
             return this.queue.take();
         } catch (final InterruptedException e) {
             // this should never happen
             this.ignoreException(e);
+        } finally {
+            this.isWaitingForNext = false;
         }
         return null;
     }
