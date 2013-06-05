@@ -82,19 +82,19 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             whitelist.add(aWhitelistEntry);
         }
     }
-    
+
     @Override
     protected void doDelete(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
-        
+
         if (!isWhitelisted(request)) {
-            // in theory it would be 403==forbidden, but that would reveal that 
+            // in theory it would be 403==forbidden, but that would reveal that
             // a resource would exist there in the first place
-            response.sendError(HttpServletResponse.SC_NOT_FOUND); 
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        
+
         final RequestPathInfo pathInfo = request.getRequestPathInfo();
         final String extension = pathInfo.getExtension();
         if (!"json".equals(extension)) {
@@ -102,22 +102,22 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             return;
         }
         final String selector = pathInfo.getSelectorString();
-        
+
         announcementRegistry.unregisterAnnouncement(selector);
     }
-    
+
     @Override
     protected void doPut(SlingHttpServletRequest request,
             SlingHttpServletResponse response) throws ServletException,
             IOException {
 
         if (!isWhitelisted(request)) {
-            // in theory it would be 403==forbidden, but that would reveal that 
+            // in theory it would be 403==forbidden, but that would reveal that
             // a resource would exist there in the first place
-            response.sendError(HttpServletResponse.SC_NOT_FOUND); 
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        
+
         final RequestPathInfo pathInfo = request.getRequestPathInfo();
         final String extension = pathInfo.getExtension();
         if (!"json".equals(extension)) {
@@ -125,9 +125,9 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             return;
         }
         final String selector = pathInfo.getSelectorString();
-        
+
         final BufferedReader reader = request.getReader();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         while(true) {
             final String line = reader.readLine();
             if (line==null) {
@@ -146,12 +146,12 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
         try {
             incomingTopologyAnnouncement = Announcement
                     .fromJSON(topologyAnnouncementJSON);
-            
+
             if (!incomingTopologyAnnouncement.getOwnerId().equals(selector)) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST);
                 return;
             }
-            
+
             String slingId = clusterViewService.getSlingId();
             if (slingId==null) {
             	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -198,7 +198,7 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
                         .getClusterView());
                 announcementRegistry.addAllExcept(replyAnnouncement,
                         new AnnouncementFilter() {
-    
+
                             public boolean accept(final String receivingSlingId, Announcement announcement) {
                                 if (announcement.getPrimaryKey().equals(
                                         incomingTopologyAnnouncement

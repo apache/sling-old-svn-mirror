@@ -53,7 +53,7 @@ public class Announcement {
 
     private final static Logger logger = LoggerFactory
             .getLogger(Announcement.class);
-    
+
     /** the protocol version this announcement currently represents. Mismatching protocol versions are
      * used to detect incompatible topology connectors
      */
@@ -61,16 +61,16 @@ public class Announcement {
 
     /** the sling id of the owner of this announcement. the owner is where this announcement comes from **/
     private final String ownerId;
-    
+
     /** announcement protocol version **/
     private final int protocolVersion;
-    
+
     /** the local cluster view **/
     private ClusterView localCluster;
-    
+
     /** the incoming instances **/
     private List<Announcement> incomings = new LinkedList<Announcement>();
-    
+
     /** time this announcement was received **/
     private long created = System.currentTimeMillis();
 
@@ -79,14 +79,14 @@ public class Announcement {
 
     /** some information about the server where this announcement came from **/
     private String serverInfo;
-    
+
     /** whether or not this announcement represents a loop detected in the topology connectors **/
     private boolean loop = false;
 
     public Announcement(final String ownerId) {
         this(ownerId, PROTOCOL_VERSION);
     }
-    
+
     public Announcement(final String ownerId, int protocolVersion) {
         if (ownerId==null || ownerId.length()==0) {
             throw new IllegalArgumentException("ownerId must not be null or empty");
@@ -94,10 +94,10 @@ public class Announcement {
         this.ownerId = ownerId;
         this.protocolVersion = protocolVersion;
     }
-    
+
     @Override
     public String toString() {
-        StringBuffer incomingList = new StringBuffer();
+        StringBuilder incomingList = new StringBuilder();
         for (Iterator<Announcement> it = incomings.iterator(); it.hasNext();) {
             Announcement anIncomingAnnouncement = it.next();
             if (incomingList.length()!=0) {
@@ -112,7 +112,7 @@ public class Announcement {
                 ", loop="+loop+
                 ", incomings="+incomingList+"]";
     }
-    
+
     /** check whether this is announcement contains the valid protocol version **/
     public boolean isCorrectVersion() {
         return (protocolVersion==PROTOCOL_VERSION);
@@ -152,17 +152,17 @@ public class Announcement {
     public boolean isInherited() {
         return inherited;
     }
-    
+
     /** Sets the loop falg - set true when this announcement should represent a loop detected in the topology connectors **/
     public void setLoop(final boolean loop) {
         this.loop = loop;
     }
-    
+
     /** Returns the loop flag - set when this announcement represents a loop detected in the topology connectors **/
     public boolean isLoop() {
         return loop;
     }
-    
+
     /** Returns the protocolVersion of this announcement **/
     public int getProtocolVersion() {
         return protocolVersion;
@@ -178,7 +178,7 @@ public class Announcement {
         return serverInfo;
     }
 
-    /** 
+    /**
      * Returns the slingid of the owner of this announcement.
      * <p>
      * The owner is the instance which initiated the topology connection
@@ -364,7 +364,7 @@ public class Announcement {
         return instances;
     }
 
-    /** 
+    /**
      * Persists this announcement using the given 'announcements' resource,
      * under which a node with the primary key is created
      **/
@@ -382,7 +382,7 @@ public class Announcement {
         }
     }
 
-    /** 
+    /**
      * Remove all announcements that match the given owner Id
      */
     public void removeInherited(final String ownerId) {
