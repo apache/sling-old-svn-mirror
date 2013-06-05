@@ -490,6 +490,9 @@ public class SlingServletResolver
         }
     }
 
+    /**
+     * @see org.apache.sling.engine.servlets.ErrorHandler#handleError(java.lang.Throwable, org.apache.sling.api.SlingHttpServletRequest, org.apache.sling.api.SlingHttpServletResponse)
+     */
     public void handleError(Throwable throwable, SlingHttpServletRequest request, SlingHttpServletResponse response)
     throws IOException {
         // do not handle, if already handling ....
@@ -761,7 +764,7 @@ public class SlingServletResolver
         return fallbackErrorServlet;
     }
 
-    private void handleError(Servlet errorHandler, HttpServletRequest request, HttpServletResponse response)
+    private void handleError(final Servlet errorHandler, final HttpServletRequest request, final HttpServletResponse response)
             throws IOException {
 
         request.setAttribute(SlingConstants.ERROR_REQUEST_URI, request.getRequestURI());
@@ -774,10 +777,14 @@ public class SlingServletResolver
 
         try {
             errorHandler.service(request, response);
-        } catch (IOException ioe) {
-            // forware the IOException
+            // commit the response
+            response.flushBuffer();
+            // close the response (SLING-2724)
+            response.getWriter().close();
+        } catch (final IOException ioe) {
+            // forward the IOException
             throw ioe;
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             LOGGER.error("Calling the error handler resulted in an error", t);
             LOGGER.error("Original error " + request.getAttribute(SlingConstants.ERROR_EXCEPTION_TYPE),
                     (Throwable) request.getAttribute(SlingConstants.ERROR_EXCEPTION));
