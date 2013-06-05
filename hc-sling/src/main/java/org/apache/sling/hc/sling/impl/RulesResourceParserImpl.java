@@ -96,7 +96,7 @@ public class RulesResourceParserImpl implements RulesResourceParser {
 
         // else convert using available RuleBuilders if suitable
         final ValueMap props = r.adaptTo(ValueMap.class);
-        if(props.containsKey(NAMESPACE) && props.containsKey(RULE_NAME)) {
+        if(props != null && props.containsKey(NAMESPACE) && props.containsKey(RULE_NAME)) {
             for(RuleBuilder b : healthcheck.getRuleBuilders()) {
                 // basic properties
                 final Rule rule = b.buildRule(

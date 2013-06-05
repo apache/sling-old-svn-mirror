@@ -52,6 +52,14 @@ public class TaggedRuleFilterTest {
     }
     
     @Test
+    public void testTrimAndIgnoreTags() {
+        final TaggedRuleFilter f = new TaggedRuleFilter("", "\nfoo\t", "", "bar");
+        assertFalse(f.accept(notags));
+        assertTrue(f.accept(foobar));
+        assertFalse(f.accept(foo));
+    }
+    
+    @Test
     public void testFoobarLowercaseTagsFilter() {
         final TaggedRuleFilter f = new TaggedRuleFilter("Foo", "BAR");
         assertFalse(f.accept(notags));

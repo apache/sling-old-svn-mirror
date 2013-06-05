@@ -41,6 +41,10 @@ public class RulesExecutionPermission {
     
     /** Check if the user to which r points is authorized to execute our Rules */
     public void checkPermission(Resource r) throws RepositoryException {
+        if(r == null) {
+            throw new AccessDeniedException("No Resource, cannot check permissions");
+        }
+        
         final Session s = r.getResourceResolver().adaptTo(Session.class);
         if(s == null) {
             log.warn("Adapting {} to a Session returns null, cannot check permissions", r);
