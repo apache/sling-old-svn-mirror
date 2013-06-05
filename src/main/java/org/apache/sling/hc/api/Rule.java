@@ -18,7 +18,9 @@
 package org.apache.sling.hc.api;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.hc.impl.RuleLoggerImpl;
@@ -36,6 +38,7 @@ public class Rule {
     private final String expression;
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private Set<String> tags = Collections.<String>emptySet();
+    private final Map<String, Object> ruleInfo = new HashMap<String, Object>();
     
     public Rule(SystemAttribute attr, String expression) {
         this(attr, expression, new DefaultEvaluator());
@@ -72,6 +75,12 @@ public class Rule {
         final RuleLoggerImpl ruleLogger = new RuleLoggerImpl(logger);
         evaluator.evaluate(attribute, expression, ruleLogger);
         return new EvaluationResult(this, ruleLogger);
+    }
+    
+    /** Optional additional free-form information about this Rule.
+     *  The return Map is mutable so that clients can add info to it. */
+    public Map<String, Object> getInfo() {
+        return ruleInfo;
     }
     
     @Override
