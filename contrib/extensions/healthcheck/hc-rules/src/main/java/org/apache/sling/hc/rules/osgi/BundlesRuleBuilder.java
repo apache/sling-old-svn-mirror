@@ -22,6 +22,7 @@ import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 
 /** RuleBuilder about OSGi bundles */
@@ -29,34 +30,77 @@ public class BundlesRuleBuilder implements RuleBuilder {
 
     public static final String NAMESPACE = "osgi";
     public static final String BUNDLE_STATE_RULE = "bundle.state";
-    private final BundleContext bundleContext;
+    public static final String BUNDLES_INACTIVE_RULE = "inactive.bundles.count";
+    private final BundleContext ctx;
     
-    static class BundleAttribute implements SystemAttribute {
-        private final SystemAttribute attr;
+    class BundleStateAttribute implements SystemAttribute {
         private final String name;
+        private final String qualifier;
+        private final BundleContext ctx;
         
-        BundleAttribute(String name, SystemAttribute attr) {
+        BundleStateAttribute(BundleContext ctx, String name, String qualifier) {
+            this.ctx = ctx;
             this.name = name;
-            this.attr = attr;
+            this.qualifier = qualifier;
         }
         
         @Override
         public String toString() {
-            return name;
+            return name + ":" + qualifier;
         }
         
         @Override
         public Object getValue(Logger logger) {
-            return attr.getValue(logger);
+            String result = null;
+            Bundle b = findBundle(ctx, qualifier);
+            if(b == null) {
+                logger.error("Bundle not found: {}", qualifier);
+            } else {
+                result = bundleStateToString(b.getState());
+                logger.debug("Bundle {} found, state={} ({})", 
+                        new Object[] { b.getSymbolicName(), result, b.getState()});
+            }
+            return result;
+        }
+    }
+    
+    static class InactiveBundlesCount implements SystemAttribute {
+        private final BundleContext ctx;
+        
+        InactiveBundlesCount(BundleContext ctx) {
+            this.ctx = ctx;
+        }
+        
+        @Override
+        public String toString() {
+            return getClass().getSimpleName();
+        }
+        
+        @Override
+        public Object getValue(Logger logger) {
+            int inactiveCount=0;
+            for(Bundle b : ctx.getBundles()) {
+                if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
+                    inactiveCount++;
+                    logger.debug("Bundle {} is not active, state={} ({})", 
+                            new Object[] { b.getSymbolicName(), b.getState(), bundleStateToString(b.getState())});
+                }
+            }
+            
+            if(inactiveCount > 0) {
+                logger.debug("{} bundles found inactive", inactiveCount);
+            }
+            
+            return inactiveCount;
         }
     }
     
     BundlesRuleBuilder(BundleContext ctx) {
-        bundleContext = ctx;
+        this.ctx = ctx;
     }
     
-    private Bundle findBundle(String symbolicName) {
-        for(Bundle b : bundleContext.getBundles()) {
+    private static Bundle findBundle(BundleContext ctx, String symbolicName) {
+        for(Bundle b : ctx.getBundles()) {
             if(symbolicName.equals(b.getSymbolicName())) {
                 return b;
             }
@@ -64,7 +108,7 @@ public class BundlesRuleBuilder implements RuleBuilder {
         return null;
     }
     
-    private String bundleStateToString(int state) {
+    private static String bundleStateToString(int state) {
         // TODO this must exist somewhere already...
         if(state == Bundle.ACTIVE) {
             return "active";
@@ -81,35 +125,21 @@ public class BundlesRuleBuilder implements RuleBuilder {
         }
     }
     
+    private static boolean isFragment(Bundle b) {
+        final String header = (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
+        return header!= null && header.trim().length() > 0;
+    }
+    
     @Override
     public Rule buildRule(String namespace, String ruleName, final String qualifier, String expression) {
         if(!NAMESPACE.equals(namespace)) {
             return null;
         }
         
-        SystemAttribute attr = null;
-        
         if(BUNDLE_STATE_RULE.equals(ruleName) && qualifier != null) {
-            // Get the state of a bundle
-            attr = new BundleAttribute(ruleName + ":" + qualifier, new SystemAttribute() {
-                @Override
-                public Object getValue(Logger logger) {
-                    String result = null;
-                    Bundle b = findBundle(qualifier);
-                    if(b == null) {
-                        logger.error("Bundle not found: {}", qualifier);
-                    } else {
-                        result = bundleStateToString(b.getState());
-                        logger.debug("Bundle {} found, state={} ({})", 
-                                new Object[] { b.getSymbolicName(), result, b.getState()});
-                    }
-                    return result;
-                }
-            });
-        }
-        
-        if(attr != null) {
-            return new Rule(attr, expression);
+            return new Rule(new BundleStateAttribute(ctx, ruleName,qualifier), expression);
+        } else if(BUNDLES_INACTIVE_RULE.equals(ruleName)) {
+            return new Rule(new InactiveBundlesCount(ctx), expression);
         }
         
         return null;
