@@ -61,6 +61,7 @@ public class SlingHealthCheckWebconsolePlugin extends HttpServlet {
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", LABEL);
         props.put("felix.webconsole.title", TITLE);
+        props.put("felix.webconsole.category", "Sling");
         props.put("felix.webconsole.css", "/" + LABEL + "/res/ui/healthcheck.css");
 
         service = ctx.registerService(new String[] { "javax.servlet.Servlet" }, this, props);
