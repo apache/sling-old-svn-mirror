@@ -204,7 +204,11 @@ public class VotingView extends View {
      * @return true if the given slingId has voted yes or is the initiator of this voting
      */
     public boolean hasVotedOrIsInitiator(final String slingId) {
-        final Resource memberResource = getResource().getChild("members").getChild(
+        Resource members = getResource().getChild("members");
+        if (members==null) {
+        	return false;
+        }
+		final Resource memberResource = members.getChild(
                 slingId);
         if (memberResource == null) {
             return false;
