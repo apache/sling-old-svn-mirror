@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 @Service(value={javax.servlet.Servlet.class, EventHandler.class})
 @Properties({
     @Property(name="felix.webconsole.label", value="slingevent", propertyPrivate=true),
-    @Property(name="felix.webconsole.title", value="Sling Jobs", propertyPrivate=true),
+    @Property(name="felix.webconsole.title", value="Jobs", propertyPrivate=true),
     @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true),
     @Property(name="event.topics",propertyPrivate=true,
               value={"sling/webconsole/test"})
