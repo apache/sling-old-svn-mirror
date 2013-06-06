@@ -1,0 +1,12 @@
+{
+  "expression": "> 100",
+  "ruleName": "java.lang:type=ClassLoading",
+  "sling:resourceType": "sling/healthcheck/rules",
+  "namespace": "jmxbeans",
+  "tags": [
+    "jmx",
+    "jvm"
+  ],
+  "qualifier": "LoadedClassCount",
+  "jcr:primaryType": "nt:unstructured"
+}

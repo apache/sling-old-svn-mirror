@@ -1,0 +1,12 @@
+{
+  "expression": "< 20",
+  "ruleName": "org.apache.sling:type=engine,service=RequestProcessor",
+  "sling:resourceType": "sling/healthcheck/rules",
+  "namespace": "jmxbeans",
+  "tags": [
+    "jmx",
+    "sling"
+  ],
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "RequestsCount"
+}
