@@ -34,6 +34,27 @@ import org.slf4j.Logger;
 
 public class RulesEngineTest {
     
+    /** A Rule returns the value of a SystemAttribute */
+    static class ConstantSystemAttribute implements SystemAttribute {
+
+        private final int value;
+        
+        ConstantSystemAttribute(int val) {
+            this.value = val;
+        }
+        
+        @Override
+        public Object getValue(Logger logger) {
+            logger.debug("Constant value of {} is {}", this, value);
+            return value;
+        }
+        
+    }
+    
+    /** A RuleBuilder builds Rules for a specific namespace and a set
+     *  of rule names. The qualifier and expression are used to further
+     *  specify the Rule and SystemAttribute.
+     */
     static class TestBuilder implements RuleBuilder {
         @Override
         public Rule buildRule(final String namespace, final String ruleName,final String qualifier, final String expression) {
@@ -41,23 +62,19 @@ public class RulesEngineTest {
                 return null;
             }
             
-            SystemAttribute attr = new SystemAttribute() {
-                @Override
-                public Object getValue(Logger logger) {
-                    if("constant".equals(ruleName)) {
-                        return Integer.valueOf(qualifier);
-                    } else if("invert".equals(ruleName)) {
-                            return Integer.valueOf("-" + qualifier);
-                    } else {
-                        return null;
-                    }
-                }
-                
-            };
+            SystemAttribute attr = null;
+            if("constant".equals(ruleName)) {
+                attr = new ConstantSystemAttribute(Integer.valueOf(qualifier));
+            } else if("invert".equals(ruleName)) {
+                attr = new ConstantSystemAttribute(Integer.valueOf("-" + qualifier));
+            } else {
+                return null;
+            }
             
             return new Rule(attr, expression, new DefaultEvaluator()) {
                 @Override
                 public String toString() {
+                    // specific toString() value used in our tests 
                     return "" + namespace + "_" + ruleName + "_" + qualifier + "_" + expression;
                 }
             };
