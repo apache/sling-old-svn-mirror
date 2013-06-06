@@ -27,7 +27,6 @@ import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.mockito.Matchers;
@@ -136,20 +135,6 @@ class MockResolver implements ResourceResolver {
     }
 
     @Override
-    public void commit() throws PersistenceException {
-    }
-
-    @Override
-    public Resource create(Resource arg0, String arg1, Map<String, Object> arg2)
-            throws PersistenceException {
-        return null;
-    }
-
-    @Override
-    public void delete(Resource arg0) throws PersistenceException {
-    }
-
-    @Override
     public Object getAttribute(String arg0) {
         return null;
     }
@@ -160,45 +145,12 @@ class MockResolver implements ResourceResolver {
     }
 
     @Override
-    public Iterable<Resource> getChildren(Resource arg0) {
-        return null;
-    }
-
-    @Override
-    public String getParentResourceType(Resource arg0) {
-        return null;
-    }
-
-    @Override
-    public String getParentResourceType(String arg0) {
-        return null;
-    }
-
-    @Override
     public String getUserID() {
         return null;
     }
 
     @Override
-    public boolean hasChanges() {
-        return false;
-    }
-
-    @Override
     public boolean isLive() {
         return false;
-    }
-
-    @Override
-    public boolean isResourceType(Resource arg0, String arg1) {
-        return false;
-    }
-
-    @Override
-    public void refresh() {
-    }
-
-    @Override
-    public void revert() {
     }
 }
