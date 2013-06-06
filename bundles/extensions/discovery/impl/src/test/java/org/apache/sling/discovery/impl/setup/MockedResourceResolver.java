@@ -24,12 +24,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
@@ -40,39 +42,55 @@ import org.apache.sling.commons.testing.jcr.RepositoryProvider;
 
 public class MockedResourceResolver implements ResourceResolver {
 
-    public final RepositoryProvider repoProvider;
+	private final Repository repository;
+	
+	private Session session;
+	
     private List<MockedResource> resources = new LinkedList<MockedResource>();
 
-    private Session session;
-
-    public MockedResourceResolver() throws Exception {
-        this.repoProvider = RepositoryProvider.instance();
+    public MockedResourceResolver() throws RepositoryException {
+    	this(null);
     }
 
-    public Session createSession() throws RepositoryException {
+    public MockedResourceResolver(Repository repositoryOrNull) throws RepositoryException {
+    	if (repositoryOrNull==null) {
+    		this.repository = RepositoryProvider.instance().getRepository();
+    	} else {
+    		this.repository = repositoryOrNull;
+    	}
+    }
+    
+    public Session getSession() throws RepositoryException {
         synchronized (this) {
             if (session != null) {
                 return session;
             }
-            session = repoProvider.getRepository().loginAdministrative(null);
+            session = createSession();
             return session;
         }
     }
 
+    private Repository getRepository() {
+    	return repository;
+    }
+    
+    private Session createSession() throws RepositoryException {
+        final Credentials credentials = new SimpleCredentials("admin",
+                "admin".toCharArray());
+        return repository.login(credentials, "default");
+    }
+	
+	
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type.equals(Session.class)) {
             try {
-                return (AdapterType) createSession();
+                return (AdapterType) getSession();
             } catch (RepositoryException e) {
                 throw new RuntimeException("RepositoryException: " + e, e);
             }
         } else if (type.equals(Repository.class)) {
-            try {
-                return (AdapterType) repoProvider.getRepository();
-            } catch (RepositoryException e) {
-                throw new RuntimeException("RepositoryException: " + e, e);
-            }
+        	return (AdapterType) getRepository();
         }
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -101,7 +119,7 @@ public class MockedResourceResolver implements ResourceResolver {
     public Resource getResource(String path) {
         Session session;
         try {
-            session = createSession();
+            session = getSession();
             session.getNode(path);
         } catch (PathNotFoundException e) {
             return null;
@@ -290,4 +308,5 @@ public class MockedResourceResolver implements ResourceResolver {
         // TODO Auto-generated method stub
 
     }
+
 }

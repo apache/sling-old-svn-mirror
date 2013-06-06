@@ -18,6 +18,8 @@
  */
 package org.apache.sling.discovery.impl.setup;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -87,9 +89,9 @@ public class Instance {
     private ResourceResolver resourceResolver;
 
     private int serviceId = 999;
-
+    
     private static Scheduler singletonScheduler = null;
-
+    
     private static Scheduler getSingletonScheduler() throws Exception {
     	if (singletonScheduler!=null) {
     		return singletonScheduler;
@@ -107,9 +109,53 @@ public class Instance {
         singletonScheduler = newscheduler;
         return singletonScheduler;
     }
+    
+    private HeartbeatRunner heartbeatRunner = null;
+    
+    private class HeartbeatRunner implements Runnable {
+    	
+    	private final int intervalInSeconds;
+
+    	private boolean stopped_ = false;
+    	
+		public HeartbeatRunner(int intervalInSeconds) {
+    		this.intervalInSeconds = intervalInSeconds;
+    	}
+		
+		public synchronized void stop() {
+			System.err.println("Stopping Instance ["+slingId+"]");
+			stopped_ = true;
+		}
+
+		public void run() {
+			while(true) {
+				synchronized(this) {
+					if (stopped_) {
+						System.err.println("Instance ["+slingId+"] stopps.");
+						return;
+					}
+				}
+				runHeartbeatOnce();
+				try {
+					Thread.sleep(intervalInSeconds*1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					return;
+				}
+			}
+		}
+    	
+    }
 
     private Instance(String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo)
+            throws Exception {
+    	this(debugName, resourceResolverFactory, resetRepo, 20, 1);
+    }
+    
+    private Instance(String debugName,
+            ResourceResolverFactory resourceResolverFactory, boolean resetRepo,
+            final int heartbeatTimeout, final int minEventDelay)
             throws Exception {
         this.debugName = debugName;
 
@@ -120,15 +166,15 @@ public class Instance {
         Config config = new Config() {
             @Override
             public long getHeartbeatTimeout() {
-                return 20;
+                return heartbeatTimeout;
             }
 
             @Override
             public int getMinEventDelay() {
-            	return 1;
+            	return minEventDelay;
             }
         };
-
+        
         clusterViewService = OSGiFactory.createClusterViewServiceImpl(slingId,
                 resourceResolverFactory, config);
         announcementRegistry = OSGiFactory.createITopologyAnnouncementRegistry(
@@ -140,7 +186,7 @@ public class Instance {
                 connectorRegistry, config,
                 resourceResolverFactory.getAdministrativeResourceResolver(null)
                         .adaptTo(Repository.class), getSingletonScheduler());
-
+        
 		discoveryService = OSGiFactory.createDiscoverService(slingId,
                 heartbeatHandler, clusterViewService, announcementRegistry,
                 resourceResolverFactory, config, connectorRegistry, getSingletonScheduler());
@@ -209,10 +255,29 @@ public class Instance {
     }
 
     public static Instance newStandaloneInstance(String debugName,
+            Repository repository) throws Exception {
+        ResourceResolverFactory resourceResolverFactory = MockFactory
+                .mockResourceResolverFactory(repository);
+        return new Instance(debugName, resourceResolverFactory, false);
+    }
+
+    public static Instance newStandaloneInstance(String debugName,
+            boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
+        ResourceResolverFactory resourceResolverFactory = MockFactory
+                .mockResourceResolverFactory();
+        return new Instance(debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay);
+    }
+    
+    public static Instance newStandaloneInstance(String debugName,
             boolean resetRepo) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
         return new Instance(debugName, resourceResolverFactory, resetRepo);
+    }
+
+    public static Instance newClusterInstance(String debugName, Instance other,
+            boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
+        return new Instance(debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay);
     }
 
     public static Instance newClusterInstance(String debugName, Instance other,
@@ -240,7 +305,31 @@ public class Instance {
     }
 
     public void runHeartbeatOnce() {
+    	System.err.println("Instance ["+slingId+"] issues a heartbeat now "+new Date());
         heartbeatHandler.run();
+    }
+    
+    public void startHeartbeats(int intervalInSeconds) throws IllegalAccessException, InvocationTargetException {
+    	if (heartbeatRunner!=null) {
+    		heartbeatRunner.stop();
+    	}
+    	OSGiMock.activate(heartbeatHandler);
+    	heartbeatRunner = new HeartbeatRunner(intervalInSeconds);
+    	Thread th = new Thread(heartbeatRunner, "Test-Heartbeat-Runner");
+    	th.setDaemon(true);
+    	th.start();
+    }
+    
+	public boolean isHeartbeatRunning() {
+		return (heartbeatRunner!=null);
+	}
+
+    public void stopHeartbeats() throws Throwable {
+    	if (heartbeatRunner!=null) {
+    		heartbeatRunner.stop();
+    		heartbeatRunner = null;
+    	}
+    	PrivateAccessor.invoke(heartbeatHandler, "deactivate", null, null);
     }
 
     public void dumpRepo() throws Exception {
@@ -301,6 +390,10 @@ public class Instance {
     }
 
     public void stop() throws Exception {
+    	if (heartbeatRunner!=null) {
+    		heartbeatRunner.stop();
+    		heartbeatRunner = null;
+    	}
         if (resourceResolver != null) {
             resourceResolver.close();
         }
