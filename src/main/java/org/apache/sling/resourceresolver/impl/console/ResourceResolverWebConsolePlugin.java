@@ -70,7 +70,8 @@ public class ResourceResolverWebConsolePlugin extends HttpServlet {
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", "jcrresolver");
-        props.put("felix.webconsole.title", "Sling Resource Resolver");
+        props.put("felix.webconsole.title", "Resource Resolver");
+        props.put("felix.webconsole.categorie", "Sling");
         props.put("felix.webconsole.configprinter.modes", "always");
 
         service = context.registerService(
