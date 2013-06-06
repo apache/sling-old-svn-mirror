@@ -22,10 +22,7 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.settings.SlingSettingsService;
@@ -41,9 +38,6 @@ import org.apache.sling.settings.SlingSettingsService;
 @Component(immediate=true)
 @Service(value=EnvironmentComponent.class)
 public class EnvironmentComponent {
-
-    @Reference(policy=ReferencePolicy.DYNAMIC,cardinality=ReferenceCardinality.OPTIONAL_UNARY)
-    private DynamicClassLoaderManager classLoaderManager;
 
     /**
      * Our thread pool.
