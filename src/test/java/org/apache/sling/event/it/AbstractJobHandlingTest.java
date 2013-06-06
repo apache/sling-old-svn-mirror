@@ -102,6 +102,7 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.14"),
                 mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
+                mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.0"),
 //                mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.6"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
