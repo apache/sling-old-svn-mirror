@@ -37,7 +37,7 @@ public class JsonResultRendererImpl implements SlingHealthCheckServlet.Renderer 
         return "application/json";
     }
     
-    public void render(List<EvaluationResult> results, Writer output) throws IOException {
+    public void render(List<EvaluationResult> results, Writer output, Map<String, String> options) throws IOException {
         final JSONWriter w = new JSONWriter(output);
         w.setTidy(true);
         try {

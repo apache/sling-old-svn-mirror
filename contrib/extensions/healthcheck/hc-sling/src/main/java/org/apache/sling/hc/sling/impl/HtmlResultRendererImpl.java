@@ -25,10 +25,17 @@ import java.util.Map;
 
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.hc.api.EvaluationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Renders a List of EvaluationResult in HTML */
 public class HtmlResultRendererImpl implements SlingHealthCheckServlet.Renderer {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    /** Quiet rendering option - do not show rules which have nothing to report */
+    public static final String OPTION_QUIET = "quiet";
+    
     public String getExtension() {
         return "html";
     }
@@ -37,11 +44,18 @@ public class HtmlResultRendererImpl implements SlingHealthCheckServlet.Renderer 
         return "text/html";
     }
     
-    public void render(List<EvaluationResult> results, Writer output) throws IOException {
+    public void render(List<EvaluationResult> results, Writer output, Map<String, String> options) throws IOException {
         final PrintWriter pw = new PrintWriter(output);
         final WebConsoleHelper c = new WebConsoleHelper(pw);
+        final boolean quiet = options == null ? false : Boolean.valueOf(options.get(OPTION_QUIET)); 
+                
         pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
         for(EvaluationResult r : results) {
+            if(quiet && !r.anythingToReport()) {
+                log.debug("Ignoring result {}, quiet mode and nothing to report", r);
+                continue;
+            }
+            
             c.titleHtml(r.getRule().toString(), null);
             
             if(!r.getRule().getTags().isEmpty()) {
