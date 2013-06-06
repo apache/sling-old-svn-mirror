@@ -58,7 +58,9 @@ public class JmxBeansRuleBuilder implements RuleBuilder {
                 if(jmxServer.queryNames(objectName, null).size() == 0) {
                     logger.error("MBean not found: {}", objectName);
                 }
-                return jmxServer.getAttribute(objectName, attributeName);
+                final Object value = jmxServer.getAttribute(objectName, attributeName);
+                logger.debug("{} {} returns {}", new Object[] { beanName, attributeName, value });
+                return value;
             } catch(Exception e) {
                 logger.error("MBean exception", e);
             }
