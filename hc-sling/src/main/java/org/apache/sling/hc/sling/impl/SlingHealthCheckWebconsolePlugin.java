@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -93,7 +95,8 @@ public class SlingHealthCheckWebconsolePlugin extends HttpServlet {
         }
         
         // Send parameters form
-        doForm(req, resp);
+        final boolean quiet = req.getParameter(HtmlResultRendererImpl.OPTION_QUIET) != null;
+        doForm(req, resp, quiet);
         
         // And execute rules if we got a path
         final String path = getParam(req, PARAM_PATH, null);
@@ -103,6 +106,9 @@ public class SlingHealthCheckWebconsolePlugin extends HttpServlet {
             return;
         }
         
+        final Map<String, String> renderingOptions = new HashMap<String, String>();
+        renderingOptions.put(HtmlResultRendererImpl.OPTION_QUIET, String.valueOf(quiet));
+        
         ResourceResolver resolver = null;
         try {
             resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -110,7 +116,7 @@ public class SlingHealthCheckWebconsolePlugin extends HttpServlet {
             if(r == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, path);
             }
-            servlet.executeRules(r, tags, "html", resp);
+            servlet.executeRules(r, tags, "html", resp, renderingOptions);
         } catch (LoginException e) {
             throw new ServletException("Unable to get a ResourceResolver", e);
         } finally {
@@ -120,7 +126,7 @@ public class SlingHealthCheckWebconsolePlugin extends HttpServlet {
         }
     }
     
-    private void doForm(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private void doForm(HttpServletRequest req, HttpServletResponse resp, boolean quiet) throws IOException {
         final PrintWriter pw = resp.getWriter();
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
@@ -144,6 +150,13 @@ public class SlingHealthCheckWebconsolePlugin extends HttpServlet {
         c.tdLabel("Rule tags (comma-separated)");
         c.tdContent();
         pw.println("<input type='text' name='" + PARAM_TAGS + "' value='" + tags + "' class='input' size='80'>");
+        c.closeTd(); 
+        c.closeTr();
+        
+        c.tr(); 
+        c.tdLabel("Omit 'nothing to report' results");
+        c.tdContent();
+        pw.println("<input type='checkbox' name='" + HtmlResultRendererImpl.OPTION_QUIET + (quiet ? "' checked='true'>" : "'>"));
         c.closeTd(); 
         c.closeTr();
         

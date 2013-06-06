@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -74,7 +75,7 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
     static interface Renderer {
         String getExtension();
         String getContentType();
-        void render(List<EvaluationResult> results, Writer output) throws IOException;
+        void render(List<EvaluationResult> results, Writer output, Map<String, String> options) throws IOException;
     }
     
     private final Renderer [] renderers = { new JsonResultRendererImpl(), new HtmlResultRendererImpl() };
@@ -93,10 +94,14 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
             throws ServletException, IOException {
-        executeRules(request.getResource(), getRuleTagsFromRequest(request), request.getRequestPathInfo().getExtension(), response);
+        executeRules(request.getResource(), getRuleTagsFromRequest(request), request.getRequestPathInfo().getExtension(), response, null);
     }
     
-    void executeRules(Resource rulesRoot, String [] tags, String extension, HttpServletResponse response) 
+    void executeRules(Resource rulesRoot, 
+            String [] tags, 
+            String extension, 
+            HttpServletResponse response,
+            Map<String, String> renderingOptions) 
             throws ServletException, IOException {
         final RulesEngine engine = healthcheck.getNewRulesEngine();
         engine.addRules(parser.parseResource(rulesRoot));
@@ -117,7 +122,7 @@ public class SlingHealthCheckServlet extends SlingSafeMethodsServlet {
                 new Object[] { rulesRoot.getPath(), filter, renderer });
         response.setContentType(renderer.getContentType());
         response.setCharacterEncoding("UTF-8");
-        renderer.render(engine.evaluateRules(filter), response.getWriter());
+        renderer.render(engine.evaluateRules(filter), response.getWriter(), renderingOptions);
         response.getWriter().flush();
     }
     
