@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
@@ -54,7 +55,7 @@ public class MockedResource extends SyntheticResource {
         synchronized (this) {
             if (session == null) {
                 try {
-                    session = mockedResourceResolver.createSession();
+                    session = mockedResourceResolver.getSession();
                 } catch (RepositoryException e) {
                     throw new RuntimeException("RepositoryException: " + e, e);
                 }
@@ -129,7 +130,22 @@ public class MockedResource extends SyntheticResource {
                 }
                 
                 public Object remove(Object arg0) {
-                    throw new UnsupportedOperationException();
+                    Session session = getSession();
+                    try{
+                        final Node node = session.getNode(getPath());
+                        final Property p = node.getProperty(String.valueOf(arg0));
+                        if (p!=null) {
+                        	p.remove();
+                        }
+                        // this is not according to the spec - but OK for tests since
+                        // the return value is never used
+                        return null;
+                    } catch(PathNotFoundException pnfe) {
+                    	// perfectly fine
+                    	return null;
+                    } catch(RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 
                 public void putAll(Map<? extends String, ? extends Object> arg0) {
