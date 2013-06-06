@@ -40,6 +40,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>FSClassLoaderProvider</code> is a dynamic class loader provider
@@ -60,6 +62,8 @@ public class FSClassLoaderProvider
 
     /** Current class loader */
     private FSDynamicClassLoader loader;
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Reference(
             referenceInterface = DynamicClassLoaderManager.class,
@@ -170,9 +174,12 @@ public class FSClassLoaderProvider
         final File file = new File(path);
         if ( file.exists() ) {
             final boolean result = file.delete();
+            logger.debug("Deleted {} : {}", name,result);
             if ( result ) {
                 this.checkClassLoader(file.getAbsolutePath());
             }
+
+            return result;
         }
         // file does not exist so we return false
         return false;
@@ -182,6 +189,7 @@ public class FSClassLoaderProvider
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getOutputStream(java.lang.String)
      */
     public OutputStream getOutputStream(final String name) {
+        logger.debug("Get stream for {}", name);
         final String path = cleanPath(name);
         final File file = new File(path);
         final File parentDir = file.getParentFile();
@@ -202,6 +210,7 @@ public class FSClassLoaderProvider
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
      */
     public boolean rename(final String oldName, final String newName) {
+        logger.debug("Rename {} to {}", oldName, newName);
         final String oldPath = cleanPath(oldName);
         final String newPath = cleanPath(newName);
         final File old = new File(oldPath);
@@ -238,6 +247,7 @@ public class FSClassLoaderProvider
      */
     public InputStream getInputStream(final String name)
     throws IOException {
+        logger.debug("Get input stream of {}", name);
         final String path = cleanPath(name);
         final File file = new File(path);
         return new FileInputStream(file);
@@ -247,6 +257,7 @@ public class FSClassLoaderProvider
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#getLastModified(java.lang.String)
      */
     public long getLastModified(final String name) {
+        logger.debug("Get last modified of {}", name);
         final String path = cleanPath(name);
         final File file = new File(path);
         if ( file.exists() ) {
