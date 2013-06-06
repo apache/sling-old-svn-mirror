@@ -112,11 +112,6 @@ class MockResource implements Resource {
     }
 
     @Override
-    public Iterable<Resource> getChildren() {
-        return null;
-    }
-
-    @Override
     public String getName() {
         return null;
     }
