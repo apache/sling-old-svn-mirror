@@ -188,7 +188,7 @@ public class SortedProviderList<T> {
     /**
      * returns the ProviderHandler for a specific resource provider
      */
-    public ProviderHandler getProviderHandler ( ResourceProvider resourceProvider )
+    public ProviderHandler getProviderHandler ( ResourceResolverContext ctx, ResourceProvider resourceProvider )
     {
         ProviderHandler returnValue = null;
         final List<Entry> list = new ArrayList<Entry>();
@@ -196,7 +196,7 @@ public class SortedProviderList<T> {
         final Iterator<Entry> i = list.iterator();
         while ( i.hasNext() ) {
             final Entry entry = i.next();
-            if ( entry.handler.equals(resourceProvider) ) {
+            if ( entry.handler.getResourceProvider(ctx).equals(resourceProvider) ) {
                 returnValue = entry.handler;
                 break;
             }
