@@ -39,28 +39,12 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     /** The queue. */
     private final BlockingQueue<JobHandler> queue = new LinkedBlockingQueue<JobHandler>();
 
-    private boolean isWaitingForNext = false;
-
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final JobConsumerManager jobConsumerManager,
                            final EventAdmin eventAdmin,
                            final Scheduler scheduler) {
         super(name, config, jobConsumerManager, eventAdmin, scheduler);
-    }
-
-    @Override
-    public String getStateInfo() {
-        return super.getStateInfo() + ", isWaitingForNext=" + this.isWaitingForNext;
-    }
-
-    @Override
-    protected boolean canBeClosed() {
-        boolean result = super.canBeClosed();
-        if ( result ) {
-            result = this.isWaitingForNext;
-        }
-        return result;
     }
 
     @Override

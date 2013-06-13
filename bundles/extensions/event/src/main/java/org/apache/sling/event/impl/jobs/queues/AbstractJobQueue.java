@@ -103,6 +103,11 @@ public abstract class AbstractJobQueue
     /** Flag for outdated. */
     private final AtomicBoolean isOutdated = new AtomicBoolean(false);
 
+    /** Marker flag if the queue is waiting for another element (= empty) */
+    protected boolean isWaitingForNext = false;
+
+    private final AtomicBoolean closeMarker = new AtomicBoolean(false);
+
     /**
      * Start this queue
      * @param name The queue name
@@ -129,6 +134,7 @@ public abstract class AbstractJobQueue
         synchronized ( this.suspendLock ) {
             return "isWaiting=" + this.isWaiting +
                     ", suspendedSince=" + this.suspendedSince +
+                    ", isWaitingForNext=" + this.isWaitingForNext +
                     ", asyncJobs=" + this.asyncCounter.get();
         }
     }
@@ -197,14 +203,17 @@ public abstract class AbstractJobQueue
         this.resume();
         // check if possible
         if ( this.canBeClosed() ) {
-            this.close();
-            return true;
+            if ( this.closeMarker.get() ) {
+                this.close();
+                return true;
+            }
+            this.closeMarker.set(true);
         }
         return false;
     }
 
-    protected boolean canBeClosed() {
-        return this.isEmpty() && !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0;
+    private boolean canBeClosed() {
+        return this.isEmpty() && !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0 && this.isWaitingForNext;
     }
 
     /**
@@ -426,6 +435,7 @@ public abstract class AbstractJobQueue
      * Add a new job to the queue.
      */
     public void process(final JobHandler event) {
+        this.closeMarker.set(false);
         this.put(event);
         event.queued = System.currentTimeMillis();
         this.incQueued();

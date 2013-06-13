@@ -50,8 +50,6 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     /** Event count. */
     private int eventCount;
 
-    private boolean isWaitingForNext = false;
-
     public TopicRoundRobinJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final JobConsumerManager jobConsumerManager,
@@ -62,16 +60,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
 
     @Override
     public String getStateInfo() {
-        return super.getStateInfo() + ", eventCount=" + this.eventCount + ", isWaitingForNext=" + this.isWaitingForNext;
-    }
-
-    @Override
-    protected boolean canBeClosed() {
-        boolean result = super.canBeClosed();
-        if ( result ) {
-            result = this.isWaitingForNext;
-        }
-        return result;
+        return super.getStateInfo() + ", eventCount=" + this.eventCount;
     }
 
     @Override

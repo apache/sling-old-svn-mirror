@@ -46,8 +46,6 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     /** Lock and status object for handling the sleep phase. */
     private final SleepLock sleepLock = new SleepLock();
 
-    private boolean isWaitingForNext = false;
-
     /** The queue - we use a set which is sorted by job creation date. */
     private final Set<JobHandler> queue = new TreeSet<JobHandler>(new Comparator<JobHandler>() {
 
@@ -77,16 +75,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
 
     @Override
     public String getStateInfo() {
-        return super.getStateInfo() + ", isSleepingUntil=" + this.sleepLock.sleepingSince + ", isWaitingForNext=" + this.isWaitingForNext;
-    }
-
-    @Override
-    protected boolean canBeClosed() {
-        boolean result = super.canBeClosed();
-        if ( result ) {
-            result = this.isWaitingForNext;
-        }
-        return result;
+        return super.getStateInfo() + ", isSleepingUntil=" + this.sleepLock.sleepingSince;
     }
 
     @Override
