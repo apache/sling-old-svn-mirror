@@ -149,6 +149,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
                 }
+                this.isWaitingForNext = false;
             }
             // get the first element and remove it
             final Iterator<JobHandler> i = this.queue.iterator();
