@@ -212,7 +212,10 @@ public abstract class AbstractJobQueue
         return false;
     }
 
-    private boolean canBeClosed() {
+    /**
+     * Check whether this queue can be closed
+     */
+    protected boolean canBeClosed() {
         return this.isEmpty() && !this.isWaiting && !this.isSuspended() && this.asyncCounter.get() == 0 && this.isWaitingForNext;
     }
 
