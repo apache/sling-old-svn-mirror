@@ -43,6 +43,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferencePolicyOption;
 import org.apache.felix.scr.annotations.sling.SlingFilter;
 import org.apache.felix.scr.annotations.sling.SlingFilterScope;
 import org.apache.sling.api.SlingHttpServletRequest;
@@ -61,7 +62,7 @@ import org.slf4j.LoggerFactory;
  * the resource bundle for the current request.
  */
 @SlingFilter(generateComponent = false, generateService = true, order = -700, scope = { SlingFilterScope.REQUEST, SlingFilterScope.ERROR })
-@Component(immediate = true, metatype = false, specVersion="1.1")
+@Component(immediate = true, metatype = false, specVersion="1.2")
 @Properties({
     @Property(name = "pattern", value="/.*"),
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Internationalization Support Filter"),
@@ -73,10 +74,10 @@ public class I18NFilter implements Filter {
 
     private final DefaultLocaleResolver DEFAULT_LOCALE_RESOLVER = new DefaultLocaleResolver();
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
     private LocaleResolver localeResolver = DEFAULT_LOCALE_RESOLVER;
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, policyOption=ReferencePolicyOption.GREEDY)
     private RequestLocaleResolver requestLocaleResolver = DEFAULT_LOCALE_RESOLVER;
 
     @Reference(name = "resourceBundleProvider",
