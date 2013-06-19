@@ -137,8 +137,6 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
             
             private ProviderHandler actProviderHandler;
             
-            private ResourceResolverContext rrCtx = ctx; 
-
             private Resource seek() {
                 Resource result = null;
                 if ( nextResourceIter == null || !nextResourceIter.hasNext() ) {
@@ -146,7 +144,7 @@ public class RootResourceProviderEntry extends ResourceProviderEntry {
                     while ( i.hasNext() && nextResourceIter == null ) {
                         final QueriableResourceProvider adap = i.next();
                         nextResourceIter = adap.findResources(resolver, query, language);
-                        actProviderHandler = queriableProviders.getProviderHandler(rrCtx, adap);
+                        actProviderHandler = queriableProviders.getProviderHandler(ctx, adap);
                     }
                 }
                 if ( nextResourceIter != null ) {
