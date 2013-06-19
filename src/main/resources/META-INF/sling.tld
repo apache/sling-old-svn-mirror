@@ -42,6 +42,13 @@
 		<function-signature>org.apache.sling.api.resource.Resource getResource(org.apache.sling.api.resource.ResourceResolver,java.lang.String)</function-signature>
 	</function>
 
+    <function>
+        <name>getValue</name>
+        <function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+        <function-signature>java.lang.Object getValue(org.apache.sling.api.resource.ValueMap,java.lang.String,java.lang.Object)</function-signature>
+    </function>
+	
+
 	<function>
 		<name>listChildren</name>
 		<function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>

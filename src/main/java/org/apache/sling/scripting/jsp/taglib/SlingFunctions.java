@@ -21,6 +21,7 @@ import java.util.Iterator;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,21 +91,6 @@ public class SlingFunctions {
 	}
 
 	/**
-	 * Loads the Class for the name from the current thread's classload.
-	 * 
-	 * @param className
-	 *            The name of the class to load
-	 * @return the class
-	 * @throws ClassNotFoundException
-	 *             a class with the specified name could not be found
-	 */
-	private static Class<?> loadClass(String className)
-			throws ClassNotFoundException {
-		return Thread.currentThread().getContextClassLoader()
-				.loadClass(className);
-	}
-
-	/**
 	 * Gets the resource at the relative path to the provided resource.
 	 * 
 	 * @param base
@@ -142,10 +128,34 @@ public class SlingFunctions {
 		log.trace("getResource");
 
 		log.debug("Getting resource at path {}", path);
-		if(resolver == null){
+		if (resolver == null) {
 			throw new IllegalArgumentException("Null resource resolver");
 		}
 		return resolver.getResource(path);
+	}
+
+	/**
+	 * Gets the value of the specified key from the ValueMap and either coerses
+	 * the value into the specified type or uses the specified type as a default
+	 * depending on the parameter passed in.
+	 * 
+	 * @param properties
+	 *            the ValueMap from which to retrieve the value
+	 * @param key
+	 *            the key for the value to retrieve
+	 * @param defaultOrType
+	 *            either the default value or the class to which to coerce the
+	 *            value
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static final <E> E getValue(ValueMap properties, String key,
+			Object defaultOrType) {
+		if (defaultOrType instanceof Class<?>) {
+			return properties.get(key, (Class<E>) defaultOrType);
+		} else {
+			return properties.get(key, (E) defaultOrType);
+		}
 	}
 
 	/**
@@ -159,7 +169,7 @@ public class SlingFunctions {
 	 */
 	public static final Iterator<Resource> listChildren(Resource resource) {
 		log.trace("listChildren");
-		
+
 		Iterator<Resource> children = null;
 		if (resource != null) {
 			log.debug("Listing children at path {}", resource.getPath());
@@ -168,5 +178,20 @@ public class SlingFunctions {
 			log.warn("Null resource specified");
 		}
 		return children;
+	}
+
+	/**
+	 * Loads the Class for the name from the current thread's classload.
+	 * 
+	 * @param className
+	 *            The name of the class to load
+	 * @return the class
+	 * @throws ClassNotFoundException
+	 *             a class with the specified name could not be found
+	 */
+	private static Class<?> loadClass(String className)
+			throws ClassNotFoundException {
+		return Thread.currentThread().getContextClassLoader()
+				.loadClass(className);
 	}
 }

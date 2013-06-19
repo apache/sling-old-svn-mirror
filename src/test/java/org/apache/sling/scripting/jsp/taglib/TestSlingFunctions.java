@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class TestSlingFunctions {
 			.getLogger(TestGetResourceTag.class);
 	private MockResource resource;
 	private MockResourceResolver resolver;
+	private Date date;
 	private static final String TEST_PATH = "/content";
 
 	/**
@@ -68,6 +70,9 @@ public class TestSlingFunctions {
 			}
 		};
 		resource = new MockResource(resolver, TEST_PATH, "test");
+		this.date = new Date();
+		resource.addProperty("date", date);
+		resource.addProperty("long", new Long(0L));
 		resolver.addResource(resource);
 		MockResource child1 = new MockResource(resolver, TEST_PATH + "/child1",
 				"test");
@@ -126,6 +131,34 @@ public class TestSlingFunctions {
 		log.info("Tests successful!");
 	}
 
+	@Test
+	public void testGetValue(){
+		log.info("testGetValue");
+		Resource resource = SlingFunctions.getResource(resolver, TEST_PATH);
+		ValueMap properties = resource.adaptTo(ValueMap.class);
+		
+		log.info("Testing using class coersion");
+		Date retrievedDate = SlingFunctions.getValue(properties, "date", Date.class);
+		assertEquals(date,retrievedDate);
+		assertTrue(retrievedDate instanceof Date);
+		
+		log.info("Testing with default value on existing key");
+		Long retrievedLong = SlingFunctions.getValue(properties, "long", new Long(-123L));
+		assertEquals(new Long(0L),retrievedLong);
+		assertTrue(retrievedLong instanceof Long);
+		
+		log.info("Testing with no value and class coersion");
+		Date fakeDate = SlingFunctions.getValue(properties, "date1", Date.class);
+		assertTrue(fakeDate == null);
+		
+		log.info("Testing with no value and default specified");
+		Long fakeLong = SlingFunctions.getValue(properties, "long1", new Long(-123L));
+		assertEquals(new Long(-123L),fakeLong);
+		assertTrue(fakeLong instanceof Long);
+
+		log.info("Tests successful!");
+	}
+	
 	@Test
 	public void testListChildResources() {
 		log.info("testListChildResources");
