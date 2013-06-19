@@ -1,4 +1,5 @@
 <%@page session="false" contentType="text/html; charset=utf-8"%>
+<%@page import="java.util.Date" %>
 <%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <sling:defineObjects/><c:set var="success" value="true" />
@@ -105,6 +106,20 @@ Get Resource Function
     
     Test 3: Not Found Handling
     Result: <c:set var="nfresource7" value="${sling:getResource(resourceResolver, 'test123123')}" /><c:choose><c:when test="${empty nfresource7.path}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
+    
+Get Value Function
+    Test 1: Get Property
+    <%
+    pageContext.setAttribute("dateClass", Date.class);
+    %>
+    Result: <c:set var="property5" value="${sling:getValue(componentProps,'jcr:created',dateClass)}" /><c:choose><c:when test="${not empty property5}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
+    
+    Test 2: Not Found Property
+    Result: <c:set var="property6" value="${sling:getValue(componentProps,'jcr:created2',dateClass)}" /><c:choose><c:when test="${empty property6}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
+
+    Test 3: Default Value
+    Result: <c:set var="property7" value="${sling:getValue(componentProps,'jcr:created2','fakeval')}" /><c:choose><c:when test="${not empty property7}">SUCCESS</c:when><c:otherwise>ERROR<c:set var="success" value="false" /></c:otherwise></c:choose>
+    
     
 List Children Function
     Test 1: Get Children
