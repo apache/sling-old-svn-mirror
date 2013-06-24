@@ -176,6 +176,24 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+        <attribute>
+            <description>
+                If var is specified, what scope to store the variable in
+            </description>
+            <name>scope</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+            <type>String</type>
+        </attribute>
+        <attribute>
+            <description>
+                Variable name to store the resulting markup into
+            </description>
+            <name>var</name>
+            <required>false</required>
+            <rtexprvalue>false</rtexprvalue>
+            <type>String</type>
+        </attribute>
 	</tag>
 
 	<tag>
