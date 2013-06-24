@@ -17,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
 --%><%@page session="false"%><%
-%><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.2"%><%
+%><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling"%><%
 %><sling:defineObjects/><%
  
 // used by IncludeTest
@@ -42,6 +42,7 @@ String forceResourceType = getProperty(currentNode, "forceResourceType");
 String testInfiniteLoop = getProperty(currentNode, "testInfiniteLoop");
 String testMaxCalls = getProperty(currentNode, "testMaxCalls");
 String testCallScript = getProperty(currentNode, "testCallScript");
+String testVarInclude = getProperty(currentNode, "testVarInclude");
 
 %><html>
 	<body>
@@ -110,5 +111,27 @@ String testCallScript = getProperty(currentNode, "testCallScript");
 		<%
 			}
 		%>
+		
+		
+        <h2>Test 6</h2>
+        <%
+            if (testCallScript != null) {
+        %>
+                <p>Calling <%= testCallScript %></p>
+                <sling:call script="<%= testCallScript %>" />
+        <%
+            }
+        %>
+        
+        <h2>Test 7</h2>
+        <%
+            if (testVarInclude != null) {
+        %>
+                <p>Calling <%= testCallScript %></p>
+                <sling:include path="<%= pathToInclude %>" var="test" />
+                <p>Loaded test content:<br/>${test}</p>
+        <%
+            }
+        %>
 	</body>
 </html>
