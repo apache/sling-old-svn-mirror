@@ -24,11 +24,15 @@ import java.util.Set;
 
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
 /** Test the {link ScriptHelper#include) functionality */
  public class JspIncludeTest extends JspTestBase {
+	 
+	private static final Logger log = LoggerFactory.getLogger(JspIncludeTest.class);
 
     private String nodeUrlA;
     private String testTextA;
@@ -40,6 +44,7 @@ import org.apache.sling.servlets.post.SlingPostConstants;
     private String nodeUrlF;
     private String nodeUrlG;
     private String nodeUrlH;
+	private String nodeUrlI;
     private String forcedResourceType;
     private Set<String> toDelete = new HashSet<String>();
 
@@ -91,6 +96,14 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         props.remove("pathToInclude");
         props.put("testCallScript", "called-test.jsp");
         nodeUrlG = testClient.createNode(url, props);
+        
+        // Node I is used for the "var" test
+        props.remove("forceResourceType");
+        props.remove("testCallScript");
+        props.put("testVarInclude","true"); 
+        props.put("pathToInclude", pathToInclude);
+        props.put("VAR_INCLUDE", "VALUE");
+        nodeUrlI = testClient.createNode(url, props);
 
         // Script for forced resource type
         scriptPath = "/apps/" + forcedResourceType;
@@ -202,5 +215,12 @@ import org.apache.sling.servlets.post.SlingPostConstants;
         final String content = getContent(nodeUrlH + ".html", CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Call has been made",content.contains("called"));
+    }
+    
+    public void testVarInclude() throws IOException{
+    	log.info("testVarInclude");
+        final String content = getContent(nodeUrlI + ".html", CONTENT_TYPE_HTML);
+    	log.info("Loaded content: "+content);
+        assertTrue("Content includes Loaded test content:",content.contains("Loaded test content:"));
     }
 }
