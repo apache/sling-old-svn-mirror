@@ -31,7 +31,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyContent;
 
-import org.apache.tika.io.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 /**
  * The <code>IncludeTagHandler</code> implements the
