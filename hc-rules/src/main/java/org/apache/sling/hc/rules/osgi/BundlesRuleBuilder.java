@@ -17,6 +17,9 @@
  */
 package org.apache.sling.hc.rules.osgi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.api.SystemAttribute;
@@ -66,10 +69,22 @@ public class BundlesRuleBuilder implements RuleBuilder {
     
     static class InactiveBundlesCount implements SystemAttribute {
         private final BundleContext ctx;
+        private final List<String> requiredBundles;
         
-        InactiveBundlesCount(BundleContext ctx) {
+        InactiveBundlesCount(BundleContext ctx, String qualifier) {
             this.ctx = ctx;
-        }
+            
+            
+            if(qualifier != null && qualifier.trim().length() > 0) {
+                // Optional qualifier provides a list of required bundles
+                requiredBundles = new ArrayList<String>();
+                for(String name : qualifier.split(",")) {
+                    requiredBundles.add(name.trim());
+                }
+            } else {
+                requiredBundles = null;
+            }
+        } 
         
         @Override
         public String toString() {
@@ -79,19 +94,48 @@ public class BundlesRuleBuilder implements RuleBuilder {
         @Override
         public Object getValue(Logger logger) {
             int inactiveCount=0;
-            for(Bundle b : ctx.getBundles()) {
-                if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
-                    inactiveCount++;
-                    logger.debug("Bundle {} is not active, state={} ({})", 
-                            new Object[] { b.getSymbolicName(), b.getState(), bundleStateToString(b.getState())});
+            int checked=0;
+            
+            if(requiredBundles == null) {
+                logger.debug("No required bundles specified in rule qualifier, checking all bundles");
+                for(Bundle b : ctx.getBundles()) {
+                    checked++;
+                    if(!checkBundleActive(logger, b)) {
+                        inactiveCount++;
+                        logger.warn("Bundle is not active: {}", b.getSymbolicName());
+                    }
+                }
+            } else {
+                logger.debug("{} required bundles specified in rule qualifier, will check only those", requiredBundles.size());
+                for(String name : requiredBundles) {
+                    checked++;
+                    final Bundle b = findBundle(ctx, name);
+                    if(b == null) {
+                        inactiveCount++;
+                        logger.warn("Bundle not found: {}", name);
+                    } else if(!checkBundleActive(logger, b)){
+                        inactiveCount++;
+                        logger.warn("Bundle is not active: {}", name);
+                    }
                 }
             }
-            
+
+            logger.debug("Checked {} bundles", checked);
             if(inactiveCount > 0) {
                 logger.debug("{} bundles found inactive", inactiveCount);
             }
             
             return inactiveCount;
+        }
+        
+        private boolean checkBundleActive(Logger logger, Bundle b) {
+            boolean result = true;
+            if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
+                result = false;
+                logger.debug("Bundle {} is not active, state={} ({})", 
+                        new Object[] { b.getSymbolicName(), b.getState(), bundleStateToString(b.getState())});
+            }
+            return result;
         }
     }
     
@@ -139,7 +183,7 @@ public class BundlesRuleBuilder implements RuleBuilder {
         if(BUNDLE_STATE_RULE.equals(ruleName) && qualifier != null) {
             return new Rule(new BundleStateAttribute(ctx, ruleName,qualifier), expression);
         } else if(BUNDLES_INACTIVE_RULE.equals(ruleName)) {
-            return new Rule(new InactiveBundlesCount(ctx), expression);
+            return new Rule(new InactiveBundlesCount(ctx, qualifier), expression);
         }
         
         return null;
