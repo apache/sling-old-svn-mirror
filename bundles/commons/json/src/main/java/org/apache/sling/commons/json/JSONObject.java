@@ -484,7 +484,8 @@ public class JSONObject {
     public long getLong(String key) throws JSONException {
         Object o = get(key);
         return o instanceof Number ?
-                ((Number)o).longValue() : (long)getDouble(key);
+                ((Number)o).longValue() :
+                Long.valueOf((String)o).longValue();
     }
 
 

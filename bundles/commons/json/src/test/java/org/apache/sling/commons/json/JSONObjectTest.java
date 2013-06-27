@@ -57,4 +57,10 @@ public class JSONObjectTest extends TestCase {
         TestCase.assertTrue(obj.get(KEY).equals(null));
         TestCase.assertEquals("{\"" + KEY + "\":null}", obj.toString());
     }
+    
+    public void testParseLong() throws JSONException {
+        String jsonStr = "{\"longvalue\":\"13857270119014401\"}";
+        JSONObject obj = new JSONObject(jsonStr);
+        TestCase.assertEquals(13857270119014401L, obj.getLong("longvalue"));
+    }
 }
