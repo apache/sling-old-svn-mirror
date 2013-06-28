@@ -73,19 +73,18 @@ public class HtmlResultRendererImpl implements SlingHealthCheckServlet.Renderer 
                 dataRow(c, "Info", sb.toString());
             }
             
-            if(r.anythingToReport()) {
-                final StringBuilder sb = new StringBuilder();
-                for(EvaluationResult.LogMessage msg : r.getLogMessages()) {
-                    sb.append("<div class='log").append(msg.getLevel().toString()).append("'>");
-                    sb.append(msg.getLevel().toString())
-                    .append(" ")
-                    .append(ResponseUtil.escapeXml(msg.getMessage()))
-                    .append("</div>");
-                }
-                dataRow(c, "Log", sb.toString());
-            } else {
-                dataRow(c, "Log", "<span class='nothingToReport'>Nothing to report</a>");
+            final StringBuilder sb = new StringBuilder();
+            if(!r.anythingToReport()) {
+                sb.append("<div class='nothingToReport'>Nothing to report</div>");
             }
+            for(EvaluationResult.LogMessage msg : r.getLogMessages()) {
+                sb.append("<div class='log").append(msg.getLevel().toString()).append("'>");
+                sb.append(msg.getLevel().toString())
+                .append(" ")
+                .append(ResponseUtil.escapeXml(msg.getMessage()))
+                .append("</div>");
+            }
+            dataRow(c, "Log", sb.toString());
         }
         pw.println("</table>");
     }
