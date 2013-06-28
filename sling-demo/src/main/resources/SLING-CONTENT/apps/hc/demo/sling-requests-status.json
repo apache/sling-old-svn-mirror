@@ -1,0 +1,11 @@
+{
+  "expression": "200",
+  "ruleName": "request.status",
+  "sling:resourceType": "sling/healthcheck/rules",
+  "namespace": "sling",
+  "tags": [
+    "sling"
+  ],
+  "jcr:primaryType": "nt:unstructured",
+  "qualifier": "/index.html,/apps.json,/.explorer.html"
+}
