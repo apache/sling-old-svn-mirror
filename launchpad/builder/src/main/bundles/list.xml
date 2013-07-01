@@ -299,8 +299,8 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.fragment.activation</artifactId>
-            <version>1.0.2</version>
+            <artifactId>org.apache.sling.javax.activation</artifactId>
+            <version>0.1.0</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
