@@ -37,19 +37,20 @@ import javax.servlet.http.HttpSession;
 public class InternalRequest implements HttpServletRequest {
 
     private final String path;
+    private final Map<String, Object> attributes = new HashMap<String, Object>();
     
     public InternalRequest(String path) {
         this.path = path;
     }
     
     @Override
-    public Object getAttribute(String arg0) {
-        return null;
+    public Object getAttribute(String key) {
+        return attributes.get(key);
     }
 
     @Override
     public Enumeration<?> getAttributeNames() {
-        return null;
+        return new Vector<String>(attributes.keySet()).elements();
     }
 
     @Override
@@ -182,7 +183,8 @@ public class InternalRequest implements HttpServletRequest {
     }
 
     @Override
-    public void setAttribute(String arg0, Object arg1) {
+    public void setAttribute(String key, Object value) {
+        attributes.put(key, value);
     }
 
     @Override
