@@ -147,6 +147,7 @@ public class InternalQueueConfiguration
             for(final TopicMatcher m : this.matchers ) {
                 if ( m != null ) {
                     hasMatchers = true;
+                    break;
                 }
             }
         }
