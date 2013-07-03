@@ -75,10 +75,24 @@ public class MappingTest {
     }
 
     @Test
+    public void test_constructor_empty_service_info() {
+        try {
+            new Mapping("srv:=user");
+            TestCase.fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException iae) {
+            // expected
+        }
+    }
+
+    @Test
+    public void test_constructor_user_with_colon() {
+        new Mapping("srv=jcr:user");
+    }
+
+    @Test
     public void test_constructor_and_map() {
         assertMapping("service", null, "user");
         assertMapping("service", "serviceInfo", "user");
-        assertMapping("service", "", "user");
     }
 
     private void assertMapping(final String serviceName, final String serviceInfo, final String userName) {

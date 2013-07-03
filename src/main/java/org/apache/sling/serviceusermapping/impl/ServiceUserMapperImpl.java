@@ -33,7 +33,11 @@ import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true, ds = true)
+@Component(
+        metatype = true,
+        ds = true,
+        label = "Apache Sling Service User Mapper Service",
+        description = "Configuration for the service mapping service names to names of users.")
 @Service()
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
@@ -55,7 +59,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             label = "Default User",
             description = "The name of the user to use as the default if no service mapping"
                 + "applies. If this property is missing or empty no default user is defined.")
-    private static final String PROP_DEFAULT_USER_DEFAULT = "";
+    private static final String PROP_DEFAULT_USER_DEFAULT = null;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -66,7 +70,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Activate
     @Modified
-    private void configure(Map<String, Object> config) {
+    void configure(Map<String, Object> config) {
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
@@ -88,7 +92,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     public String getServiceName(Bundle bundle, String serviceInfo) {
         final String serviceName = getServiceName(bundle);
-        return (serviceInfo == null) ? serviceName : serviceName +  ":" + serviceInfo;
+        return (serviceInfo == null || serviceInfo.length() == 0) ? serviceName : serviceName + ":" + serviceInfo;
     }
 
     public String getUserForService(Bundle bundle, String serviceInfo) {

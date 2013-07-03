@@ -47,15 +47,15 @@ class Mapping {
         final int colon = spec.indexOf(':');
         final int equals = spec.indexOf('=');
 
-        if (equals <= 0) {
-            throw new IllegalArgumentException("serviceName missing");
+        if (colon == 0 || equals <= 0) {
+            throw new IllegalArgumentException("serviceName is required");
         } else if (equals == spec.length() - 1) {
-            throw new IllegalArgumentException("userName missing");
+            throw new IllegalArgumentException("userName is required");
+        } else if (colon + 1 == equals) {
+            throw new IllegalArgumentException("serviceInfo must not be empty");
         }
 
-        if (colon == 0) {
-            throw new IllegalArgumentException("serviceName missing");
-        } else if (colon < 0 || colon > equals) {
+        if (colon < 0 || colon > equals) {
             this.serviceName = spec.substring(0, equals);
             this.serviceInfo = null;
         } else {

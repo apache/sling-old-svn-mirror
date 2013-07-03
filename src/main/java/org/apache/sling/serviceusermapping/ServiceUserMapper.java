@@ -32,6 +32,14 @@ import aQute.bnd.annotation.ProviderType;
  * service appropriate access without requiring administrative level access to
  * the storage.
  * <p>
+ * In general a service is implement in a single bundle such as the JSP compiler
+ * bundle. Other services may be implemented in multiple bundles. In certain
+ * cases there may be sub-services requiring different access levels. For
+ * example a couple of bundles may implement a "mail" service where each bundle
+ * implement implements a part of the service such as the "smtp", "queuing", and
+ * "delivery" sub services. Such sub services are identified with the
+ * {@code serviceInfo} parameter on the method calls.
+ * <p>
  * In addition to allowing to phase out the use of
  * {@code ResourceResolver.getAdministrativeResourceResolver} and
  * {@code SlingRepository.loginAdministrative} it also allows to better account
@@ -58,13 +66,13 @@ public interface ServiceUserMapper {
      * {@code serviceInfo}.
      * <p>
      * The service name consists of a name derived from the bundle and the
-     * {@code serviceInfo} value if not {@code null}.
+     * {@code serviceInfo} value if not {@code null} or empty.
      *
      * @param bundle The bundle implementing the service request access to
      *            resources.
      * @param serviceInfo Additional information about the concrete service
      *            requesting access. This parameter is optional and may be
-     *            {@code null}.
+     *            an empty string or {@code null}.
      * @return The name of the service represented by the bundle along with the
      *         additional service information.
      */
@@ -78,7 +86,7 @@ public interface ServiceUserMapper {
      *            resources.
      * @param serviceInfo Additional information about the concrete service
      *            requesting access. This parameter is optional and may be
-     *            {@code null}.
+     *            an empty string or {@code null}.
      * @return The name of the user to use to provide access to the resources
      *         for the service. This may be {@code null} if no particular user
      *         can be derived for the service identified by the bundle and the
