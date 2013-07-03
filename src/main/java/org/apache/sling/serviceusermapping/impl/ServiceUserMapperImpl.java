@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -34,7 +33,7 @@ import org.osgi.framework.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = true, ds = true, policy = ConfigurationPolicy.REQUIRE)
+@Component(metatype = true, ds = true)
 @Service()
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
@@ -42,7 +41,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             label = "Service Mappings",
             description = "Provides mappings from service name to user names. "
                 + "Each entry is of the form 'serviceName [ \":\" serviceInfo ] \"=\" userName' "
-                + "where serviceName and serviceInfo identify the service and userName would "
+                + "where serviceName and serviceInfo identify the service and userName "
                 + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.",
             unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_SERVICE2USER_MAPPING = "user.mapping";
@@ -55,8 +54,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
             name = PROP_DEFAULT_USER,
             label = "Default User",
             description = "The name of the user to use as the default if no service mapping"
-                + "applies. If this property is missing or empty the default user name reflects "
-                + "an anonymous user.")
+                + "applies. If this property is missing or empty no default user is defined.")
     private static final String PROP_DEFAULT_USER_DEFAULT = "";
 
     /** default log */

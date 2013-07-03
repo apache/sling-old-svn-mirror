@@ -56,6 +56,9 @@ public interface ServiceUserMapper {
     /**
      * Returns the name of the service represented by the {@code bundle} and the
      * {@code serviceInfo}.
+     * <p>
+     * The service name consists of a name derived from the bundle and the
+     * {@code serviceInfo} value if not {@code null}.
      *
      * @param bundle The bundle implementing the service request access to
      *            resources.
@@ -77,8 +80,9 @@ public interface ServiceUserMapper {
      *            requesting access. This parameter is optional and may be
      *            {@code null}.
      * @return The name of the user to use to provide access to the resources
-     *         for the service. This may be {@code null} to only grant guest
-     *         level (or anonymous level) access to the resources.
+     *         for the service. This may be {@code null} if no particular user
+     *         can be derived for the service identified by the bundle and the
+     *         optional {@code serviceInfo}.
      */
     String getUserForService(Bundle bundle, String serviceInfo);
 }
