@@ -239,6 +239,7 @@ public class ClassLoaderWriterImpl
      */
     public boolean delete(final String name) {
         final String path = cleanPath(name);
+        this.handleChangeEvent(path);
         Session session = null;
         try {
             session = createSession();
@@ -246,7 +247,6 @@ public class ClassLoaderWriterImpl
                 Item fileItem = session.getItem(path);
                 fileItem.remove();
                 session.save();
-                this.handleChangeEvent(path);
                 return true;
             }
         } catch (final RepositoryException re) {
@@ -273,16 +273,18 @@ public class ClassLoaderWriterImpl
      * @see org.apache.sling.commons.classloader.ClassLoaderWriter#rename(java.lang.String, java.lang.String)
      */
     public boolean rename(final String oldName, final String newName) {
+        final String oldPath = cleanPath(oldName);
+        final String newPath = cleanPath(newName);
+
         Session session = null;
         try {
-            final String oldPath = cleanPath(oldName);
-            final String newPath = cleanPath(newName);
-
             session = this.createSession();
             session.move(oldPath, newPath);
             session.save();
+
             this.handleChangeEvent(oldName);
             this.handleChangeEvent(newName);
+
             return true;
         } catch (final RepositoryException re) {
             logger.error("Cannot rename " + oldName + " to " + newName, re);
