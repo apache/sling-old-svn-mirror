@@ -130,6 +130,7 @@ public class LaunchpadConfigInstaller {
         for(final String mode : runModes) {
             if ( !activeRunModes.contains(mode) ) {
                 active = false;
+                break;
             }
         }
 
