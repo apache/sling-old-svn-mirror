@@ -40,7 +40,6 @@ import javax.inject.Inject;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
-import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -318,7 +317,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         final InstallableResource result = new MockInstallableResource("/" + configPid, copy(data), null, null, priority);
         return new InstallableResource[] {result};
     }
-    
+
     protected Dictionary<String, Object> copy(Dictionary<String, Object> data) {
         final Dictionary<String, Object> copy = new Hashtable<String, Object>();
         final Enumeration<String> keys = data.keys();
@@ -412,7 +411,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         		)
         );
     }
-    
+
     protected Object startObservingBundleEvents() {
         final BundleEventListener listener = new BundleEventListener();
         this.bundleContext.addBundleListener(listener);
@@ -468,7 +467,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
             this.bundleContext.removeBundleListener(listener);
         }
     }
-    
+
     protected boolean isPackageExported(Bundle b, String packageName) {
         final BundleWiring wiring = b.adapt(BundleWiring.class);
         assertNotNull("Expecting non-null BundleWiring for bundle " + b, wiring);
@@ -479,7 +478,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         }
         return false;
     }
- 
+
     public void logInstalledBundles() {
         for(Bundle b : bundleContext.getBundles()) {
             log(LogService.LOG_DEBUG, "Installed bundle: " + b.getSymbolicName());
@@ -561,6 +560,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                     for(BundleEvent e : this.events ) {
                         if ( symbolicName.equals(e.symbolicName) ) {
                             found = true;
+                            break;
                         }
                     }
                 }
