@@ -146,6 +146,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
                 InstanceDescription instance = it.next();
                 if (instance.isLocal()) {
                     foundLocal = true;
+                    break;
                 }
             }
             if (foundLocal) {
