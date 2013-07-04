@@ -1333,7 +1333,7 @@ class Validator {
 
                     boolean deferred = false;
                     Iterator<ELNode> nodes = el.iterator();
-                    while (nodes.hasNext()) {
+                    while (nodes.hasNext() && !deferred) {
                         ELNode node = nodes.next();
                         if (node instanceof ELNode.Root) {
                             if (((ELNode.Root) node).getType() == '#') {
