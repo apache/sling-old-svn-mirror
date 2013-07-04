@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -79,6 +79,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 	        	for (final String level : selectors) {
 		            if("tidy".equals(level)) {
 		            	isTidy = true;
+		            	break;
 		            }
 				}
 	        }
@@ -99,11 +100,11 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
             throw new ServletException(throwable);
         }
     }
-    
+
     @SuppressWarnings("unchecked")
-	protected JSONObject internalGetAcl(Session jcrSession, String resourcePath) 
+	protected JSONObject internalGetAcl(Session jcrSession, String resourcePath)
     			throws RepositoryException, JSONException {
-		
+
         if (jcrSession == null) {
             throw new RepositoryException("JCR Session not found");
         }
@@ -153,7 +154,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 
 			Principal principal = ace.getPrincipal();
             Map<String, Object> map = aclMap.get(principal.getName());
-			
+
             Set<Privilege> grantedSet = (Set<Privilege>) map.get("granted");
             if (grantedSet == null) {
                 grantedSet = new LinkedHashSet<Privilege>();
@@ -169,14 +170,14 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
             if (allow) {
                 Privilege[] privileges = ace.getPrivileges();
                 for (Privilege privilege : privileges) {
-                	mergePrivilegeSets(privilege, 
+                	mergePrivilegeSets(privilege,
                 			privilegeToAncestorMap,
 							grantedSet, deniedSet);
                 }
             } else {
                 Privilege[] privileges = ace.getPrivileges();
                 for (Privilege privilege : privileges) {
-                	mergePrivilegeSets(privilege, 
+                	mergePrivilegeSets(privilege,
                 			privilegeToAncestorMap,
 							deniedSet, grantedSet);
                 }
@@ -208,7 +209,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
         for ( JSONObject jsonObj : aclList) {
         	jsonAclMap.put(jsonObj.getString("principal"), jsonObj);
         }
-        
+
         return jsonAclMap;
     }
 
@@ -225,7 +226,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 			//remove duplicates from the granted set
 			List<Privilege> asList = Arrays.asList(aggregatePrivileges);
 			firstSet.removeAll(asList);
-			
+
 			//remove from the denied set
 			secondSet.removeAll(asList);
 		}
@@ -251,13 +252,13 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 		//4. Deal with expanding existing aggregate privileges to remove the invalid
 		//  items and add the valid ones.
 		Set<Privilege> filterSet = privilegeToAncestorMap.get(privilege);
-		if (filterSet != null) {    	
-	    	//re-pack the denied set to compensate 
+		if (filterSet != null) {
+	    	//re-pack the denied set to compensate
 	    	for (Privilege privilege2 : filterSet) {
 	    		if (secondSet.contains(privilege2)) {
 	    			secondSet.remove(privilege2);
 	    			if (privilege2.isAggregate()) {
-		    			filterAndMergePrivilegesFromAggregate(privilege2, 
+		    			filterAndMergePrivilegesFromAggregate(privilege2,
 		    					firstSet, secondSet, filterSet, privilege);
 	    			}
 	    		}
@@ -284,7 +285,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 				for (Privilege privilege2 : declaredAggregatePrivileges2) {
 					if (!ignorePrivilege.equals(privilege2)) {
 						if (privilege2.isAggregate()) {
-							filterAndMergePrivilegesFromAggregate(privilege2, 
+							filterAndMergePrivilegesFromAggregate(privilege2,
 									firstSet, secondSet, filterSet, ignorePrivilege);
 						}
 					}
@@ -292,7 +293,7 @@ public abstract class AbstractGetAclServlet extends SlingAllMethodsServlet {
 			}
 		}
 	}
-    
+
     protected abstract AccessControlEntry[] getAccessControlEntries(Session session, String absPath) throws RepositoryException;
 
 }
