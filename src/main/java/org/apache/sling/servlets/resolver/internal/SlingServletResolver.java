@@ -871,6 +871,7 @@ public class SlingServletResolver
                     final String path = this.executionPaths[i];
                     if ( path == null || path.length() == 0 || path.equals("/") ) {
                         hasRoot = true;
+                        break;
                     }
                 }
                 if ( hasRoot ) {
