@@ -24,7 +24,11 @@ import javax.jcr.LoginException;
  * The <code>TooManySessionsException</code> is a special
  * <code>LoginException</code> thrown when the number of active sessions in
  * a given session pool has reached the configured maximum number of sessions.
+ *
+ * @deprecated Session pooling has been removed and thus this exception is not
+ *      used any more.
  */
+@Deprecated
 public class TooManySessionsException extends LoginException {
 
     private static final long serialVersionUID = 373941570783176462L;
