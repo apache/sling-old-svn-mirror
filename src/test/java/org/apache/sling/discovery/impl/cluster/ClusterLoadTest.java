@@ -38,7 +38,7 @@ public class ClusterLoadTest {
     
     @Test
     public void testFramework() throws Exception {
-		Instance firstInstance = Instance.newStandaloneInstance("firstInstance", true, 2, 0);
+		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "firstInstance", false, 2, 0);
 		instances.add(firstInstance);
     	Thread.sleep(2000);
     	// without any heartbeat action, the discovery service reports its local instance
@@ -54,7 +54,7 @@ public class ClusterLoadTest {
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());
         
-        Instance secondInstance = Instance.newClusterInstance("secondInstance", firstInstance, false, 2, 0);
+        Instance secondInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "secondInstance", firstInstance, false, 2, 0);
         instances.add(secondInstance);
         secondInstance.startHeartbeats(1);
         Thread.sleep(2000);
@@ -96,11 +96,11 @@ public class ClusterLoadTest {
 		if (size<2) {
 			fail("can only test 2 or more instances");
 		}
-		Instance firstInstance = Instance.newStandaloneInstance("firstInstance", true, 2, 0);
+		Instance firstInstance = Instance.newStandaloneInstance("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", "firstInstance", false, 2, 0);
 		firstInstance.startHeartbeats(1);
 		instances.add(firstInstance);
 		for(int i=1; i<size; i++) {
-			Instance subsequentInstance = Instance.newClusterInstance("subsequentInstance-"+i, firstInstance, false, 2, 0);
+			Instance subsequentInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/doTest-"+size+"-"+loopCnt+"/", "subsequentInstance-"+i, firstInstance, false, 2, 0);
 			instances.add(subsequentInstance);
 			subsequentInstance.startHeartbeats(1);
 		}
@@ -147,14 +147,17 @@ public class ClusterLoadTest {
 			}
 			
 			// start/stop heartbeats accordingly
+			logger.info("Starting/Stopping heartbeats with count="+instances.size());
 			for (Iterator<Instance> it = instances.iterator(); it.hasNext();) {
 				Instance instance = it.next();
 				if (random.nextBoolean()) {
 					logger.info("Starting heartbeats with "+instance.slingId);
 					instance.startHeartbeats(1);
+					logger.info("Started heartbeats with "+instance.slingId);
 				} else {
 					logger.info("Stopping heartbeats with "+instance.slingId);
 					instance.stopHeartbeats();
+					logger.info("Stopped heartbeats with "+instance.slingId);
 				}
 			}
 			

@@ -150,10 +150,10 @@ public class Instance {
     private Instance(String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo)
             throws Exception {
-    	this(debugName, resourceResolverFactory, resetRepo, 20, 1);
+    	this("/var/discovery/impl/", debugName, resourceResolverFactory, resetRepo, 20, 1);
     }
     
-    private Instance(String debugName,
+    private Instance(String discoveryResourcePath, String debugName,
             ResourceResolverFactory resourceResolverFactory, boolean resetRepo,
             final int heartbeatTimeout, final int minEventDelay)
             throws Exception {
@@ -174,6 +174,7 @@ public class Instance {
             	return minEventDelay;
             }
         };
+        PrivateAccessor.setField(config, "discoveryResourcePath", discoveryResourcePath);
         
         clusterViewService = OSGiFactory.createClusterViewServiceImpl(slingId,
                 resourceResolverFactory, config);
@@ -261,11 +262,11 @@ public class Instance {
         return new Instance(debugName, resourceResolverFactory, false);
     }
 
-    public static Instance newStandaloneInstance(String debugName,
+    public static Instance newStandaloneInstance(String discoveryResourcePath, String debugName,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
         ResourceResolverFactory resourceResolverFactory = MockFactory
                 .mockResourceResolverFactory();
-        return new Instance(debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay);
+        return new Instance(discoveryResourcePath, debugName, resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay);
     }
     
     public static Instance newStandaloneInstance(String debugName,
@@ -275,9 +276,9 @@ public class Instance {
         return new Instance(debugName, resourceResolverFactory, resetRepo);
     }
 
-    public static Instance newClusterInstance(String debugName, Instance other,
+    public static Instance newClusterInstance(String discoveryResourcePath, String debugName, Instance other,
             boolean resetRepo, int heartbeatTimeout, int minEventDelay) throws Exception {
-        return new Instance(debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay);
+        return new Instance(discoveryResourcePath, debugName, other.resourceResolverFactory, resetRepo, heartbeatTimeout, minEventDelay);
     }
 
     public static Instance newClusterInstance(String debugName, Instance other,
@@ -305,19 +306,26 @@ public class Instance {
     }
 
     public void runHeartbeatOnce() {
-    	System.err.println("Instance ["+slingId+"] issues a heartbeat now "+new Date());
+    	logger.info("Instance ["+slingId+"] issues a heartbeat now "+new Date());
         heartbeatHandler.run();
     }
     
     public void startHeartbeats(int intervalInSeconds) throws IllegalAccessException, InvocationTargetException {
+    	logger.info("startHeartbeats: intervalInSeconds="+intervalInSeconds);
     	if (heartbeatRunner!=null) {
+    		logger.info("startHeartbeats: stopping first...");
     		heartbeatRunner.stop();
+    		logger.info("startHeartbeats: stopped.");
     	}
+		logger.info("startHeartbeats: activating...");
     	OSGiMock.activate(heartbeatHandler);
+		logger.info("startHeartbeats: initializing...");
     	heartbeatRunner = new HeartbeatRunner(intervalInSeconds);
     	Thread th = new Thread(heartbeatRunner, "Test-Heartbeat-Runner");
     	th.setDaemon(true);
+		logger.info("startHeartbeats: starting thread...");
     	th.start();
+		logger.info("startHeartbeats: done.");
     }
     
 	public boolean isHeartbeatRunning() {
