@@ -100,13 +100,20 @@ public class View {
         if (members == null) {
             return false;
         }
-        final Iterator<Resource> it = members.getChildren().iterator();
-        while (it.hasNext()) {
-            Resource aMemberRes = it.next();
-
-            if (!viewCopy.remove(aMemberRes.getName())) {
-                return false;
-            }
+        try{
+	        final Iterator<Resource> it = members.getChildren().iterator();
+	        while (it.hasNext()) {
+	            Resource aMemberRes = it.next();
+	
+	            if (!viewCopy.remove(aMemberRes.getName())) {
+	                return false;
+	            }
+	        }
+        } catch(RuntimeException re) {
+        	// SLING-2945 : the members resource could have been deleted
+        	//              by another party simultaneously
+        	//              so treat this situation nicely
+        	return false;
         }
         // now the ViewCopy set must be empty to represent a match
         return (viewCopy.size() == 0);
