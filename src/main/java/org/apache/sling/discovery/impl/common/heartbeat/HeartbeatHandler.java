@@ -120,7 +120,7 @@ public class HeartbeatHandler implements Runnable {
     private ComponentContext context;
     
     @Activate
-    protected synchronized void activate(ComponentContext context) {
+    protected void activate(ComponentContext context) {
     	synchronized(lock) {
     		this.context = context;
     		
@@ -161,8 +161,8 @@ public class HeartbeatHandler implements Runnable {
     public void initialize(final DiscoveryServiceImpl discoveryService,
             final String initialVotingId) {
         this.discoveryService = discoveryService;
-        this.nextVotingId = initialVotingId;
         synchronized(lock) {
+        	this.nextVotingId = initialVotingId;
             issueHeartbeat();
         }
 
@@ -447,11 +447,9 @@ public class HeartbeatHandler implements Runnable {
         // the currently live instances.
 
         // initiate a new voting
-        String votingId;
-        synchronized (this) {
-            votingId = nextVotingId;
-            nextVotingId = UUID.randomUUID().toString();
-        }
+        String votingId = nextVotingId;
+        nextVotingId = UUID.randomUUID().toString();
+
         VotingView.newVoting(resourceResolver, config, votingId, slingId, liveInstances);
     }
 
