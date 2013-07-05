@@ -160,8 +160,8 @@ public class HeartbeatHandler implements Runnable {
      */
     public void initialize(final DiscoveryServiceImpl discoveryService,
             final String initialVotingId) {
-        this.discoveryService = discoveryService;
         synchronized(lock) {
+        	this.discoveryService = discoveryService;
         	this.nextVotingId = initialVotingId;
             issueHeartbeat();
         }
