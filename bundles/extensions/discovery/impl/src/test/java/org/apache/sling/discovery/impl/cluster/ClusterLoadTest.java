@@ -47,7 +47,7 @@ public class ClusterLoadTest {
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());
         firstInstance.startHeartbeats(1);
-        Thread.sleep(2000);
+        Thread.sleep(4000);
         // after a heartbeat and letting it settle, the discovery service must have
         // established a view - test for that
         assertEquals(EstablishedInstanceDescription.class, firstInstance
@@ -57,7 +57,7 @@ public class ClusterLoadTest {
         Instance secondInstance = Instance.newClusterInstance("/var/discovery/impl/ClusterLoadTest/testFramework/", "secondInstance", firstInstance, false, 2, 0);
         instances.add(secondInstance);
         secondInstance.startHeartbeats(1);
-        Thread.sleep(2000);
+        Thread.sleep(4000);
         assertEquals(firstInstance.getClusterViewService().getClusterView().getInstances().size(), 2);
         assertEquals(secondInstance.getClusterViewService().getClusterView().getInstances().size(), 2);
     }
@@ -109,8 +109,8 @@ public class ClusterLoadTest {
 			logger.info("=====================");
 			logger.info(" START of LOOP "+i);
 			logger.info("=====================");
-			// wait 2 heartbeat intervals to let things settle
-			Thread.sleep(3000);
+			// wait 4 heartbeat intervals to let things settle
+			Thread.sleep(5000);
 			
 			// count how many instances had heartbeats running in the first place
 			int aliveCnt = 0;
