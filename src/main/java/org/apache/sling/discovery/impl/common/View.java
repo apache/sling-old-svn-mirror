@@ -113,6 +113,7 @@ public class View {
         	// SLING-2945 : the members resource could have been deleted
         	//              by another party simultaneously
         	//              so treat this situation nicely
+        	logger.info("matches: cannot compare due to "+re);
         	return false;
         }
         // now the ViewCopy set must be empty to represent a match

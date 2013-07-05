@@ -284,30 +284,37 @@ public class VotingView extends View {
             // the vote is being created. wait.
             return false;
         }
-        final Iterable<Resource> children = members.getChildren();
-        final Iterator<Resource> it = children.iterator();
-        boolean isWinning = false;
-        while (it.hasNext()) {
-            Resource aMemberRes = it.next();
-            try{
-                ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
-                Boolean initiator = properties.get("initiator", Boolean.class);
-                Boolean vote = properties.get("vote", Boolean.class);
-                if (initiator != null && initiator) {
-                    isWinning = true;
-                    continue;
-                }
-                if (vote != null && vote) {
-                    isWinning = true;
-                    continue;
-                }
-                return false;
-            } catch(RuntimeException re) {
-                logger.info("isWinning: Could not check vote due to "+re);
-                return false;
-            }
+        try{
+	        final Iterable<Resource> children = members.getChildren();
+	        final Iterator<Resource> it = children.iterator();
+	        boolean isWinning = false;
+	        while (it.hasNext()) {
+	            Resource aMemberRes = it.next();
+	            try{
+	                ValueMap properties = aMemberRes.adaptTo(ValueMap.class);
+	                Boolean initiator = properties.get("initiator", Boolean.class);
+	                Boolean vote = properties.get("vote", Boolean.class);
+	                if (initiator != null && initiator) {
+	                    isWinning = true;
+	                    continue;
+	                }
+	                if (vote != null && vote) {
+	                    isWinning = true;
+	                    continue;
+	                }
+	                return false;
+	            } catch(RuntimeException re) {
+	                logger.info("isWinning: Could not check vote due to "+re);
+	                return false;
+	            }
+	        }
+	        return isWinning;
+        } catch(RuntimeException re) {
+        	// SLING-2945: gracefully handle case where members node is
+        	//             deleted by another instance
+        	logger.info("isWinning: could not check vote due to "+re);
+        	return false;
         }
-        return isWinning;
     }
 
     /**
