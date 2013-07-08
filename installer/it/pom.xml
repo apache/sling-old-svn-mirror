@@ -36,7 +36,6 @@
         <exam.version>3.0.3</exam.version>
         <url.version>1.5.2</url.version>
         <pax.exam.log.level>INFO</pax.exam.log.level>
-        <installer.api.version>1.0.1-SNAPSHOT</installer.api.version>
         <installer.configuration.version>1.0.11-SNAPSHOT</installer.configuration.version>
 
         <!-- BundleInstallStressTest parameters -->
@@ -66,10 +65,6 @@
                         <property>
                             <name>osgi.installer.pom.version</name>
                             <value>${project.version}</value>
-                        </property>
-                        <property>
-                            <name>installer.api.version</name>
-                            <value>${installer.api.version}</value>
                         </property>
                         <property>
                             <name>installer.configuration.version</name>
@@ -437,12 +432,6 @@
     </build>
     
     <dependencies>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.installer.api</artifactId>
-            <version>${installer.api.version}</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.factory.configuration</artifactId>

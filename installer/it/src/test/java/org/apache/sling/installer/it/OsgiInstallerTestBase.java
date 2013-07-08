@@ -63,7 +63,6 @@ import org.osgi.util.tracker.ServiceTracker;
 class OsgiInstallerTestBase implements FrameworkListener {
 	private final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
     private final static String CONFIG_VERSION = System.getProperty("installer.configuration.version");
-    private final static String API_VERSION = System.getProperty("installer.api.version");
 
 	public final static String JAR_EXT = ".jar";
 	private int packageRefreshEventsCount;
@@ -405,7 +404,6 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
                         mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
         	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "2.1.2"),
-        	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.api", API_VERSION),
         	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),
                         mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION)
         		)
