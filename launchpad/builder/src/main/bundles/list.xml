@@ -232,13 +232,8 @@
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.installer.api</artifactId>
-            <version>1.0.0</version>
-        </bundle>
-        <bundle>
-            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.installer.core</artifactId>
-            <version>3.4.6</version>
+            <version>3.4.7-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
