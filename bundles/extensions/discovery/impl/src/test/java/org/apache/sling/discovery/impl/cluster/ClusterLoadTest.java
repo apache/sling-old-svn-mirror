@@ -11,6 +11,7 @@ import java.util.Random;
 import org.apache.sling.discovery.impl.common.resource.EstablishedInstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.setup.Instance;
+import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -18,7 +19,11 @@ import org.slf4j.LoggerFactory;
 
 public class ClusterLoadTest {
 	
-	private final Random random = new Random();
+    // wait up to 4 heartbeat intervals
+    private static final int INSTANCE_VIEW_WAIT_TIME_MILLIS = 5000;
+    private static final int INSTANCE_VIEW_POLL_INTERVAL_MILLIS = 500;
+
+    private final Random random = new Random();
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -109,8 +114,6 @@ public class ClusterLoadTest {
 			logger.info("=====================");
 			logger.info(" START of LOOP "+i);
 			logger.info("=====================");
-			// wait 4 heartbeat intervals to let things settle
-			Thread.sleep(5000);
 			
 			// count how many instances had heartbeats running in the first place
 			int aliveCnt = 0;
@@ -128,21 +131,27 @@ public class ClusterLoadTest {
 				aliveCnt=1;
 			}
 			
+            final int aliveCntFinal = aliveCnt;
+
 			for (Iterator<Instance> it = instances.iterator(); it.hasNext();) {
 				Instance instance = it.next();
-				instance.dumpRepo();
+				try {
+                    instance.dumpRepo();
+                } catch (Exception e) {
+                    logger.error("Failed dumping repo for instance " + instance.getSlingId(), e);
+                }
 			}
 
 			// then verify that each instance sees that many instances
 			for (Iterator<Instance> it = instances.iterator(); it.hasNext();) {
-				Instance instance = it.next();
-				int actualCount = instance.getClusterViewService().getClusterView().getInstances().size();
+                final Instance instance = it.next();
 				if (!instance.isHeartbeatRunning()) {
 					// if the heartbeat is not running, this instance is considered dead
 					// hence we're not doing any assert here (as the count is only
 					// valid if heartbeat/checkView is running and that would void the test)
 				} else {
-					assertEquals(actualCount, aliveCnt);
+                    new RetryLoop(new ConditionImplementation(instance, aliveCntFinal), INSTANCE_VIEW_WAIT_TIME_MILLIS,
+                            INSTANCE_VIEW_POLL_INTERVAL_MILLIS);
 				}
 			}
 			
@@ -163,5 +172,25 @@ public class ClusterLoadTest {
 			
 		}
 	}
+
+    static class ConditionImplementation implements RetryLoop.Condition {
+
+        private final int expectedAliveCount;
+        private final Instance instance;
+
+        private ConditionImplementation(Instance instance, int expectedAliveCount) {
+            this.expectedAliveCount = expectedAliveCount;
+            this.instance = instance;
+        }
+
+        public boolean isTrue() throws Exception {
+            return expectedAliveCount == instance.getClusterViewService().getClusterView().getInstances().size();
+        }
+
+        public String getDescription() {
+            return "Waiting for instance with " + instance.getSlingId() + " to see " + expectedAliveCount
+                    + " instances";
+        }
+    }
 
 }
