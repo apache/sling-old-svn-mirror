@@ -133,6 +133,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
     @Override
     public void clear() {
         synchronized ( this.topicMap ) {
+            this.topicIndex = 0;
             this.eventCount = 0;
             this.topics.clear();
             this.topicMap.clear();
@@ -147,6 +148,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
             for(final List<JobHandler> l : this.topicMap.values() ) {
                 events.addAll(l);
             }
+            this.topicIndex = 0;
             this.eventCount = 0;
             this.topics.clear();
             this.topicMap.clear();
