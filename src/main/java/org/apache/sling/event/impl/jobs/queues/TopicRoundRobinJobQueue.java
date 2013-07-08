@@ -136,6 +136,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
             this.eventCount = 0;
             this.topics.clear();
             this.topicMap.clear();
+            this.topicIndex = 0;
         }
         super.clear();
     }
@@ -150,6 +151,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
             this.eventCount = 0;
             this.topics.clear();
             this.topicMap.clear();
+            this.topicIndex = 0;
         }
         return events;
     }
