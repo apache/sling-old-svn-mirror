@@ -86,6 +86,7 @@ public class JcrResourceBundle extends ResourceBundle {
      *
      * @return The keys of the resources provided by this resource bundle
      */
+    @Override
     protected Set<String> handleKeySet() {
         return resources.keySet();
     }
@@ -155,24 +156,31 @@ public class JcrResourceBundle extends ResourceBundle {
 
     private static String getFullLoadQuery(final Locale locale,
             final String baseName) {
-        StringBuilder buf = new StringBuilder(64);
+        final StringBuilder buf = new StringBuilder(64);
 
         buf.append("//element(*,mix:language)[");
 
-        String localeString = locale.toString().toLowerCase();
-        String localeRFC4646String = toRFC4646String(locale).toLowerCase();
-
-        if (localeString.equals(localeRFC4646String)) {
-            buf.append("fn:lower-case(@jcr:language)='");
-            buf.append(localeString);
-            buf.append('\'');
-        } else {
-            buf.append("(fn:lower-case(@jcr:language)='");
-            buf.append(localeString);
-            buf.append('\'');
-            buf.append(" or fn:lower-case(@jcr:language)='");
-            buf.append(localeRFC4646String);
-            buf.append("\')");
+        final String localeString = locale.toString();
+        buf.append("@jcr:language='").
+            append(localeString).
+            append('\'');
+        final String localeStringLower = localeString.toLowerCase();
+        if (!localeStringLower.equals(localeString)) {
+            buf.append(" or @jcr:language='").
+                append(localeStringLower).
+                append('\'');
+        }
+        final String localeRFC4646String = toRFC4646String(locale);
+        if (!localeRFC4646String.equals(localeString)) {
+            buf.append(" or @jcr:language='").
+                append(localeRFC4646String).
+                append('\'');
+            final String localeRFC4646StringLower = localeRFC4646String.toLowerCase();
+            if (!localeRFC4646StringLower.equals(localeRFC4646String)) {
+                buf.append(" or @jcr:language='").
+                    append(localeRFC4646StringLower).
+                    append('\'');
+            }
         }
 
         if (baseName != null) {
