@@ -16,10 +16,12 @@
  */
 package org.apache.sling.launchpad.testing;
 
-import junit.framework.Test;
+import junit.framework.JUnit4TestAdapter;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.junit.runner.RunWith;
+import org.junit.runners.AllTests;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,11 +43,12 @@ import java.util.regex.Pattern;
 /**
  *
  */
+@RunWith(AllTests.class)
 public class TestAll extends TestCase {
     private static final Logger LOGGER = LoggerFactory.getLogger(TestAll.class);
 
     @SuppressWarnings("unchecked")
-    public static Test suite() {
+    public static TestSuite suite() {
         final ClassLoader sysClassLoader = TestAll.class.getClassLoader();
         final List<String> matchingClasses = new ArrayList<String>();
         // Get the URLs
@@ -63,6 +66,9 @@ public class TestAll extends TestCase {
                 e.printStackTrace();
             }
         }
+        
+        TestSuite suite = new LoggingSuite("Sling Integration Tests matching " + testPattern, LOGGER);
+        int counter = 0;
         final Set<Class<TestCase>> classSet = new HashSet<Class<TestCase>>();
         for (String classFile : matchingClasses) {
             String className = classFileToName(classFile);
@@ -70,16 +76,18 @@ public class TestAll extends TestCase {
                 final Class<TestCase> c = (Class<TestCase>) sysClassLoader.loadClass(className);
                 if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers())) {
                     LOGGER.info("Added " + className);
-                    classSet.add(c);
+                    suite.addTest(new JUnit4TestAdapter(c));
+                    counter++;
                 }
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
+        if ( counter == 0 ) {
+            fail("No test classes found in classpath using Pattern " + testRegex);
+        }
         LOGGER.info(classSet.size() + " test classes found using Pattern "
             + testRegex);
-        TestSuite suite = new LoggingSuite(classSet,
-            "Sling Integration Tests matching " + testPattern, LOGGER);
 
         return suite;
     }
