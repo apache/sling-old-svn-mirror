@@ -106,6 +106,10 @@
                             <name>project.bundle.file</name>
                             <value>${bundle.file.name}</value>
                         </property>
+                        <property>
+                            <name>org.osgi.service.http.port</name>
+                            <value>${http.port}</value>
+                        </property>
                     </systemProperties>
                     <argLine>
                         -Xmx1024m -XX:MaxPermSize=368m
@@ -115,6 +119,24 @@
                     </includes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>pre-integration-test</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                            </portNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
