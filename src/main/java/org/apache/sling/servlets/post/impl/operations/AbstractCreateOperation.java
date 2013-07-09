@@ -472,6 +472,9 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
         while (startingResource == null) {
             if (startingResourcePath.equals("/")) {
                 startingResource = resolver.getResource("/");
+                if (startingResource == null){
+                	throw new PersistenceException("Access denied for root resource, resource can't be created: " + path);
+                }
             } else if (resolver.getResource(startingResourcePath) != null) {
                 startingResource = resolver.getResource(startingResourcePath);
                 updateNodeType(resolver, startingResourcePath, reqProperties, changes, versioningConfiguration);
