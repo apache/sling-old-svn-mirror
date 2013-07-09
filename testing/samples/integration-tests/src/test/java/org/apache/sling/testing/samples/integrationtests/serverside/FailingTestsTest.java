@@ -81,7 +81,7 @@ public class FailingTestsTest extends ServerSideTestsBase {
         
         assertEquals(
                 "testFailsEveryTime(org.apache.sling.testing.samples.failingtests.JUnit4FailingTest): This JUnit4 test fails every time",
-                getFailure(json, "org.apache.sling.testing.samples.failingtests.JUnit4FailingTest")
+                getFailure(json, "testFailsEveryTime(org.apache.sling.testing.samples.failingtests.JUnit4FailingTest")
         );
         
         assertEquals(
