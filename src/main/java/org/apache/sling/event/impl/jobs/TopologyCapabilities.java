@@ -69,7 +69,7 @@ public class TopologyCapabilities {
     private final InstanceDescriptionComparator instanceComparator;
 
     /** Disable distribution flag. */
-    private final boolean disableDistribution;
+    private boolean disableDistribution;
 
     public static final class InstanceDescriptionComparator implements Comparator<InstanceDescription> {
 
@@ -141,6 +141,13 @@ public class TopologyCapabilities {
             this.instanceMap.put(desc.getSlingId(), desc);
         }
         this.instanceCapabilities = newCaps;
+    }
+
+    /**
+     * Update the configuration
+     */
+    public void update(final boolean disableDistribution2) {
+        this.disableDistribution = disableDistribution2;
     }
 
     public boolean isSame(final Map<String, String> newAllInstancesMap) {
@@ -262,4 +269,5 @@ public class TopologyCapabilities {
     public Map<String, List<InstanceDescription>> getInstanceCapabilities() {
         return this.instanceCapabilities;
     }
+
 }
