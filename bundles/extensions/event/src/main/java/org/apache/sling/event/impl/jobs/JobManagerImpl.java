@@ -188,7 +188,11 @@ public class JobManagerImpl
      */
     @Modified
     protected void update(final Map<String, Object> props) {
-        // nothing to do
+        this.configuration.update(props);
+        final TopologyCapabilities caps = this.topologyCapabilities;
+        if ( caps != null ) {
+            caps.update(this.configuration.disableDistribution());
+        }
     }
 
     /**

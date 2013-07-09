@@ -79,7 +79,7 @@ public class JobManagerConfiguration {
     private boolean disabledDistribution;
 
     public JobManagerConfiguration(final Map<String, Object> props) {
-        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
+        this.update(props);
         this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH),
                             DEFAULT_REPOSITORY_PATH) + '/';
 
@@ -95,6 +95,13 @@ public class JobManagerConfiguration {
         this.previousVersionAnonPath = this.jobsBasePathWithSlash + "anon";
         this.previousVersionIdentifiedPath = this.jobsBasePathWithSlash + "identified";
 
+    }
+
+    /**
+     * Update with a new configuration
+     */
+    public void update(final Map<String, Object> props) {
+        this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
         this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
     }
 
