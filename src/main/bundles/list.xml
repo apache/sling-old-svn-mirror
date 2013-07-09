@@ -458,12 +458,12 @@
         <bundle>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>1.0</version>
+            <version>1.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-bundle</artifactId>
-            <version>1.0</version>
+            <version>1.2</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
