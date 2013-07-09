@@ -22,6 +22,8 @@ import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
+import static org.ops4j.pax.exam.CoreOptions.when;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -37,9 +39,13 @@ public class U {
     
     static Option[] config(boolean includeRules) {
         final String coreVersion = System.getProperty("sling.hc.core.version");
+        String localRepo = System.getProperty("maven.repo.local", "");
 
         if(includeRules) {
             return options(
+                    when(localRepo.length() > 0).useOptions(
+                            systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+                    ),
                     junitBundles(),
                     provision(
                             mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
@@ -48,6 +54,9 @@ public class U {
             );
         } else {
             return options(
+                    when(localRepo.length() > 0).useOptions(
+                            systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+                    ),                    
                     junitBundles(),
                     provision(
                             mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion)
