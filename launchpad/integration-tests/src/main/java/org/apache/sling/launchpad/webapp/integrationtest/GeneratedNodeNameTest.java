@@ -28,7 +28,20 @@ import org.apache.sling.servlets.post.SlingPostConstants;
  */
 public class GeneratedNodeNameTest extends HttpTestBase {
 
-    private final String postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
+    private final String postFolder = HTTP_BASE_URL + "/" + getClass().getSimpleName() ;
+    private final String postUrl = postFolder + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
+
+    protected void setUp() throws Exception {
+
+        super.setUp();
+        testClient.delete(postFolder);
+    }
+
+    protected void tearDown() throws Exception {
+
+        testClient.delete(postFolder);
+        super.tearDown();
+    }
 
     public void testTitle() throws IOException {
         final Map<String,String> props = new HashMap<String,String>();
