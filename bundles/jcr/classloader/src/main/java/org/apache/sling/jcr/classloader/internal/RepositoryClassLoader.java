@@ -86,7 +86,7 @@ public final class RepositoryClassLoader
      * repository path.
      *
      * @param classPath The path making up the class path of this class
-     *                  loder
+     *                  loader
      * @param writer The class loader write to get a jcr session.
      * @param parent The parent <code>ClassLoader</code>, which may be
      *      <code>null</code>.
@@ -148,6 +148,7 @@ public final class RepositoryClassLoader
      * @throws ClassNotFoundException If the named class could not be found or
      *      if this class loader has already been destroyed.
      */
+    @Override
     protected Class<?> findClass(final String name) throws ClassNotFoundException {
         if (!this.writer.isActivate()) {
             throw new ClassNotFoundException(name + " (Classloader destroyed)");
@@ -177,6 +178,7 @@ public final class RepositoryClassLoader
      *      if the resource could not be found or if the class loader has
      *      already been destroyed.
      */
+    @Override
     public URL findResource(final String name) {
         if (!this.writer.isActivate()) {
             logger.warn("Destroyed class loader cannot find a resource: " + name, new IllegalStateException());
@@ -208,6 +210,7 @@ public final class RepositoryClassLoader
      *      empty enumeration if no resources are found by this class loader
      *      or if this class loader has already been destroyed.
      */
+    @Override
     public Enumeration<URL> findResources(final String name) {
         if (!this.writer.isActivate()) {
             logger.warn("Destroyed class loader cannot find a resources: " + name, new IllegalStateException());
@@ -395,6 +398,7 @@ public final class RepositoryClassLoader
     /**
      * Returns a string representation of this class loader.
      */
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder(getClass().getName());
         if (destroyed) {

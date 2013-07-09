@@ -44,7 +44,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.classloader.ClassLoaderWriter;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.commons.mime.MimeTypeService;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -77,6 +79,11 @@ public class ClassLoaderWriterImpl
     @org.apache.felix.scr.annotations.Property(value=CLASS_PATH_DEFAULT)
     private static final String CLASS_PATH_PROP = "classpath";
 
+    private static final boolean APPEND_ID_DEFAULT = true;
+
+    @org.apache.felix.scr.annotations.Property(boolValue=APPEND_ID_DEFAULT)
+    private static final String APPEND_ID_PROP = "appendId";
+
     /** Node type for packages/folders. */
     private static final String NT_FOLDER = "nt:folder";
 
@@ -86,6 +93,8 @@ public class ClassLoaderWriterImpl
     @org.apache.felix.scr.annotations.Property(value=OWNER_DEFAULT)
     private static final String OWNER_PROP = "owner";
 
+    @Reference
+    private SlingSettingsService settings;
 
     /** The owner of the class loader / JCR user. */
     private String classLoaderOwner;
@@ -118,18 +127,15 @@ public class ClassLoaderWriterImpl
      */
     @Activate
     protected void activate(final ComponentContext componentContext, final Map<String, Object> properties) {
-        Object prop = properties.get(CLASS_PATH_PROP);
-        if ( prop instanceof String[] && ((String[])prop).length > 0 ) {
-            this.classPath = ((String[])prop)[0];
-        } else {
-            this.classPath = CLASS_PATH_DEFAULT;
-        }
+        this.classPath = PropertiesUtil.toString(properties.get(CLASS_PATH_PROP), CLASS_PATH_DEFAULT);
         if ( this.classPath.endsWith("/") ) {
             this.classPath = this.classPath.substring(0, this.classPath.length() - 1);
         }
+        if ( PropertiesUtil.toBoolean(properties.get(APPEND_ID_PROP), APPEND_ID_DEFAULT) ) {
+            this.classPath = this.classPath + '/' + this.settings.getSlingId();
+        }
 
-        prop = properties.get(OWNER_PROP);
-        this.classLoaderOwner = (prop instanceof String)? (String) prop : OWNER_DEFAULT;
+        this.classLoaderOwner = PropertiesUtil.toString(properties.get(OWNER_PROP), OWNER_DEFAULT);
 
         this.callerBundle = componentContext.getUsingBundle();
     }
@@ -330,7 +336,7 @@ public class ClassLoaderWriterImpl
                         // create the node "at the same time"
                         current = parentNode.addNode(names[i], NT_FOLDER);
                         session.save();
-                    } catch (RepositoryException re) {
+                    } catch (final RepositoryException re) {
                         // let's first refresh the session
                         // we don't catch an exception here, because if
                         // session refresh fails, we might have a serious problem!
