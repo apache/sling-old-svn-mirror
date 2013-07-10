@@ -65,13 +65,15 @@ public class ErrorHandlingTest extends JspTestBase {
  
 		final Map<String, String> props = new HashMap<String, String>();
 		props.put(SLING_RESOURCE_TYPE, TEST_ROOT+"/"+THROW_ERROR_PATH);
-		testNodePath = testClient.createNode(HTTP_BASE_URL + TEST_ROOT, props);
+        testNodePath = testClient.createNode(HTTP_BASE_URL + TEST_ROOT + "/testNode", props);
 	}
 
 	@Override
 	protected void tearDown() throws Exception {
-		super.tearDown();
-		testClient.delete(HTTP_BASE_URL + TEST_ROOT);
+        testClient.delete(HTTP_BASE_URL + ERROR_HANDLER_PATH);
+        testClient.delete(HTTP_BASE_URL + TEST_ROOT + "/" + THROW_ERROR_PATH);
+        testClient.delete(testNodePath);
+        super.tearDown();
 	}
 	
 	
