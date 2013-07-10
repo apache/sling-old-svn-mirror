@@ -126,7 +126,6 @@ public class XsltTest extends RenderingTestBase {
 		
 		// Render content and assertions
 		final String content = getContent(mokeNodePath + ".xml", CONTENT_TYPE_XML);
-		System.out.println(content);
 		assertContains(content, "no_xml");
 		
 	}
