@@ -80,19 +80,19 @@ public class FullTextIndexingTest extends HttpTestBase {
             public String getDescription() {
                 return "A document containing '" + fullTextSearchParameter + "' is found under /" + folderName;
             }
-        }, 5, 50);
+        }, 10, 50);
     }
 
     protected void setUp() throws Exception {
         super.setUp();
 
         folderName = getClass().getSimpleName();
-        testClient.delete(WEBDAV_BASE_URL + "/" + getClass().getSimpleName());
+        testClient.delete(WEBDAV_BASE_URL + "/" + folderName);
     }
 
     protected void tearDown() throws Exception {
 
-        testClient.delete(WEBDAV_BASE_URL + "/" + getClass().getSimpleName());
+        testClient.delete(WEBDAV_BASE_URL + "/" + folderName);
         super.tearDown();
     }
 }
