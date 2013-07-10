@@ -290,7 +290,7 @@
                                                 launchpad.webdav.server.url
                                             </name>
                                             <value>
-                                                http://${test.host}:${http.port}/${http.base.path}/${webdav.workspace.path}
+                                                http://${test.host}:${http.port}/${webdav.workspace.path}
                                             </value>
                                         </property>
 
