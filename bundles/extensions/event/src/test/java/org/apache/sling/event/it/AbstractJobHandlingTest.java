@@ -27,7 +27,6 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
@@ -62,18 +61,6 @@ public abstract class AbstractJobHandlingTest {
     @Inject
     protected BundleContext bc;
 
-    private static synchronized int getNextAvailablePort() {
-        try {
-            final ServerSocket socket = new ServerSocket( 0 );
-            final int unusedPort = socket.getLocalPort();
-            socket.close();
-
-            return unusedPort;
-        } catch (final IOException ioe) {
-            throw new IllegalArgumentException(ioe);
-        }
-    }
-
     @Configuration
     public Option[] config() {
         final String bundleFileName = System.getProperty( BUNDLE_JAR_SYS_PROP );
@@ -89,7 +76,6 @@ public abstract class AbstractJobHandlingTest {
                 when( localRepo.length() > 0 ).useOptions(
                         systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
                 ),
-                systemProperty("org.osgi.service.http.port").value(String.valueOf(getNextAvailablePort())),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.xml", "1.0.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.transaction", "1.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.fragment.activation", "1.0.2"),
