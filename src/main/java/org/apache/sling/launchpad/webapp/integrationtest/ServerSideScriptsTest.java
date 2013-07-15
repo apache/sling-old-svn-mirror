@@ -30,14 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.sling.commons.json.JSONArray;
-import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.json.JSONTokener;
-import org.apache.sling.junit.remote.httpclient.RemoteTestHttpClient;
-import org.apache.sling.testing.tools.http.RequestExecutor;
-import org.apache.sling.testing.tools.jarexec.JarExecutor;
-import org.apache.sling.testing.tools.sling.SlingClient;
-import org.apache.sling.testing.tools.sling.SlingTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.ServerSideTestClient;
 import org.codehaus.plexus.util.Expand;
 import org.junit.After;
 import org.junit.Before;
@@ -188,10 +181,7 @@ public class ServerSideScriptsTest {
         }
     };
 
-    private final SlingClient slingClient;
-    private final String serverBaseUrl;
-    private final String serverUsername;
-    private final String serverPassword;
+    private final ServerSideTestClient slingClient;
     private final Definition test;
     
     @Parameters(name="{index} - {0}")
@@ -205,45 +195,7 @@ public class ServerSideScriptsTest {
 
     public ServerSideScriptsTest(Definition scriptableTest) {
         this.test = scriptableTest;
-
-        // get configuration - we can't inherit from SlingTestBase as
-        // this tries to start the JarExecutor which will fail in some
-        // situations (TODO: split that class into smaller utilities to avoid this problem)
-        final String configuredUrl = System.getProperty(SlingTestBase.TEST_SERVER_URL_PROP,
-                                                        System.getProperty("launchpad.http.server.url"));
-        if (configuredUrl != null) {
-            if ( configuredUrl.endsWith("/") ) {
-                serverBaseUrl = configuredUrl.substring(0, configuredUrl.length() - 1);
-            } else {
-                serverBaseUrl = configuredUrl;
-            }
-        } else {
-            String serverHost = System.getProperty(SlingTestBase.SERVER_HOSTNAME_PROP);
-            if (serverHost == null || serverHost.trim().length() == 0) {
-                serverHost = "localhost";
-            }
-            final String portStr = System.getProperty(JarExecutor.PROP_SERVER_PORT);
-            final int serverPort = portStr == null ? JarExecutor.DEFAULT_PORT : Integer.valueOf(portStr);
-            serverBaseUrl = "http://" + serverHost + ":" + String.valueOf(serverPort);
-        }
-
-        // Set configured username using "admin" as default credential
-        final String configuredUsername = System.getProperty(SlingTestBase.TEST_SERVER_USERNAME);
-        if (configuredUsername != null && configuredUsername.trim().length() > 0) {
-            serverUsername = configuredUsername;
-        } else {
-            serverUsername = SlingTestBase.ADMIN;
-        }
-
-        // Set configured password using "admin" as default credential
-        final String configuredPassword = System.getProperty(SlingTestBase.TEST_SERVER_PASSWORD);
-        if (configuredPassword != null && configuredPassword.trim().length() > 0) {
-            serverPassword = configuredPassword;
-        } else {
-            serverPassword = SlingTestBase.ADMIN;
-        }
-
-        this.slingClient = new SlingClient(this.serverBaseUrl, this.serverUsername, this.serverPassword);
+        this.slingClient = new ServerSideTestClient();
     }
 
     @Before
@@ -274,42 +226,16 @@ public class ServerSideScriptsTest {
             logger.info("Setting up node {} for {}", destPath, test.testScriptFile.getAbsoluteFile());
             this.slingClient.upload(destPath, new FileInputStream(test.testScriptFile), -1, false);
 
-            final RemoteTestHttpClient testClient = new RemoteTestHttpClient(
-                this.serverBaseUrl + "/system/sling/junit",
-                this.serverUsername,
-                this.serverPassword,
-                true);
-
             final long startTime = System.currentTimeMillis();
-            final RequestExecutor executor = testClient.runTests(
-                    "org.apache.sling.junit.scriptable.ScriptableTestsProvider",
-                    null,
-                    "json"
-            );
-            executor.assertContentType("application/json");
-            String content = executor.getContent();
-            final JSONArray json = new JSONArray(new JSONTokener(content));
-
-            int testsCount = 0;
-            final List<String> failures = new ArrayList<String>();
-            for(int i = 0 ; i < json.length(); i++) {
-                final JSONObject obj = json.getJSONObject(i);
-                if("test".equals(obj.getString("INFO_TYPE"))) {
-                    testsCount++;
-                    if(obj.has("failure")) {
-                        failures.add(obj.get("failure").toString());
-                    }
-                }
-            }
-
-            assertEquals("Expecting 1 scriptable tests: ", 1, testsCount);
+            final ServerSideTestClient.TestResults results = slingClient.runTests("org.apache.sling.junit.scriptable.ScriptableTestsProvider");
+            assertEquals("Expecting 1 scriptable test", 1, results.getTestCount());
 
             final int failureCount = test.willFail ? 1 : 0;
-            if( failures.size() != failureCount) {
+            if( results.getFailures().size() != failureCount) {
                 fail("Expected "
-                        + failureCount + " failing tests but got " + failures.size()
+                        + failureCount + " failing tests but got " + results.getFailures().size()
                         + " for " + test.testScriptFile.getAbsolutePath()
-                        + ": " + failures);
+                        + ": " + results.getFailures());
             }
             
             logger.info("Execution of {} took {} msec", test, System.currentTimeMillis() - startTime);
