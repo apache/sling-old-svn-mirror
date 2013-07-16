@@ -400,10 +400,16 @@ class OsgiInstallerTestBase implements FrameworkListener {
                 ),
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxDebugLevel),
                 provision(
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "3.0.0"),
+                        mavenBundle("org.apache.sling", "org.apache.sling.commons.logservice", "1.0.2"),
+
+                        mavenBundle("org.slf4j", "slf4j-api", "1.6.4"),
+                        mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
+                        mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
+
         	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.0"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
                         mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
-        	            mavenBundle("org.apache.sling", "org.apache.sling.commons.log", "2.1.2"),
         	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),
                         mavenBundle("org.apache.sling", "org.apache.sling.installer.factory.configuration", CONFIG_VERSION)
         		)
