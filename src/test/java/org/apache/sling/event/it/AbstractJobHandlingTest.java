@@ -138,6 +138,8 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.1.1-SNAPSHOT"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"),
+                mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.1.2"),
+                mavenBundle("org.apache.httpcomponents", "httpclient-osgi", "4.1.2"),
 
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
 
