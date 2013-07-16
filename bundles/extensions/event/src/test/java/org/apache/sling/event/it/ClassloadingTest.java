@@ -142,7 +142,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                 @Override
                 public boolean isTrue() throws Exception {
                     return jobManager.getStatistics().getNumberOfQueuedJobs() == 0
-                            && processedJobsCount.get() == 0
+                            && processedJobsCount.get() == 1
                             && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
                                     .size() == 0;
                 }
