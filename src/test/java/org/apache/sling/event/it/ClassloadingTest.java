@@ -39,8 +39,10 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.ExamReactorStrategy;
 import org.ops4j.pax.exam.junit.JUnit4TestRunner;
@@ -52,6 +54,9 @@ import org.osgi.service.event.EventHandler;
 @RunWith(JUnit4TestRunner.class)
 @ExamReactorStrategy(AllConfinedStagedReactorFactory.class)
 public class ClassloadingTest extends AbstractJobHandlingTest {
+
+    private static final int CONDITION_INTERVAL_MILLIS = 50;
+    private static final int CONDITION_TIMEOUT_SECONDS = 5;
 
     private static final String QUEUE_NAME = "cltest";
     private static final String TOPIC = "sling/cltest";
@@ -82,15 +87,15 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
     }
 
-    @org.junit.Test public void testSimpleClassloading() throws Exception {
-        final AtomicInteger count = new AtomicInteger(0);
+    @Test
+    public void testSimpleClassloading() throws Exception {
+        final AtomicInteger processedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
                 new JobConsumer() {
-
                     @Override
                     public JobResult process(Job job) {
-                        count.incrementAndGet();
+                        processedJobsCount.incrementAndGet();
                         return JobResult.OK;
                     }
                 });
@@ -123,16 +128,25 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
             jobManager.addJob(TOPIC, null, props);
 
-            while ( finishedEvents.size() < 1 ) {
-                // we wait a little bit
-                Thread.sleep(100);
-            }
-            Thread.sleep(100);
+            new RetryLoop(Conditions.collectionIsNotEmptyCondition(finishedEvents,
+                    "Waiting for finishedEvents to have at least one element"), 5, 50);
 
             // no jobs queued, none processed and no available
-            assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
-            assertEquals(1, count.get());
-            assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
+            new RetryLoop(new RetryLoop.Condition() {
+
+                @Override
+                public String getDescription() {
+                    return "Waiting for job to be processed";
+                }
+
+                @Override
+                public boolean isTrue() throws Exception {
+                    return jobManager.getStatistics().getNumberOfQueuedJobs() == 0
+                            && processedJobsCount.get() == 0
+                            && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[]) null)
+                                    .size() == 0;
+                }
+            }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
             final String jobTopic = (String)finishedEvents.get(0).getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC);
             assertNotNull(jobTopic);
@@ -147,15 +161,16 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
         }
     }
 
-    @org.junit.Test public void testFailedClassloading() throws Exception {
-        final AtomicInteger count = new AtomicInteger(0);
+    @Test
+    public void testFailedClassloading() throws Exception {
+        final AtomicInteger failedJobsCount = new AtomicInteger(0);
         final List<Event> finishedEvents = Collections.synchronizedList(new ArrayList<Event>());
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC + "/failed",
                 new JobConsumer() {
 
                     @Override
                     public JobResult process(Job job) {
-                        count.incrementAndGet();
+                failedJobsCount.incrementAndGet();
                         return JobResult.OK;
                     }
                 });
@@ -180,14 +195,24 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
             final String id = jobManager.addJob(TOPIC + "/failed", null, props).getId();
 
-            // we simply wait a little bit
-            sleep(2000);
-
-            assertEquals(0, count.get());
-            assertEquals(0, finishedEvents.size());
-            assertEquals(1, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
-            assertEquals(0, jobManager.getStatistics().getNumberOfQueuedJobs());
-            assertEquals(0, jobManager.getStatistics().getNumberOfActiveJobs());
+            // wait until the conditions are met
+            new RetryLoop(new RetryLoop.Condition() {
+                
+                @Override
+                public boolean isTrue() throws Exception {
+                    return failedJobsCount.get() == 0
+                            && finishedEvents.size() == 0
+                            && jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1,
+                                    (Map<String, Object>[]) null).size() == 1
+                            && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
+                            && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
+                }
+                
+                @Override
+                public String getDescription() {
+                    return "Waiting for job failure to be recorded";
+                }
+            }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
             jobManager.removeJobById(id);
             assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
