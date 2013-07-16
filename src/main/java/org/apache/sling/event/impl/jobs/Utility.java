@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
-import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -132,8 +131,6 @@ public abstract class Utility {
         if ( time != null ) {
             eventProps.put(PROPERTY_TIME, time);
         }
-        // make distributable
-        eventProps.put(EventUtil.PROPERTY_DISTRIBUTE, "true");
         // compatibility:
         eventProps.put(JobUtil.PROPERTY_NOTIFICATION_JOB, toEvent(job));
         eventAdmin.postEvent(new Event(eventTopic, eventProps));
