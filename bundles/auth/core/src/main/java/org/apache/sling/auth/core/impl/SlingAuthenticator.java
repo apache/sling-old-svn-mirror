@@ -1468,30 +1468,28 @@ public class SlingAuthenticator implements Authenticator,
             this.authenticator = authenticator;
         }
 
-        public void serviceChanged(ServiceEvent event) {
+        public void serviceChanged(final ServiceEvent event) {
+            synchronized ( props ) {
+                // modification of service properties, unregistration of the
+                // service or service properties does not contain requirements
+                // property any longer (new event with type 8 added in OSGi Core
+                // 4.2)
+                if ((event.getType() & (ServiceEvent.MODIFIED
+                    | ServiceEvent.UNREGISTERING | 8)) != 0) {
+                    removeService(event.getServiceReference());
+                }
 
-            // modification of service properties, unregistration of the
-            // service or service properties does not contain requirements
-            // property any longer (new event with type 8 added in OSGi Core
-            // 4.2)
-            if ((event.getType() & (ServiceEvent.MODIFIED
-                | ServiceEvent.UNREGISTERING | 8)) != 0) {
-                removeService(event.getServiceReference());
-            }
-
-            // add requirements for newly registered services and for
-            // updated services
-            if ((event.getType() & (ServiceEvent.REGISTERED | ServiceEvent.MODIFIED)) != 0) {
-                addService(event.getServiceReference());
+                // add requirements for newly registered services and for
+                // updated services
+                if ((event.getType() & (ServiceEvent.REGISTERED | ServiceEvent.MODIFIED)) != 0) {
+                    addService(event.getServiceReference());
+                }
             }
         }
 
         void registerServices() {
             AuthenticationRequirementHolder[][] authReqsList;
-            synchronized (props) {
-                authReqsList = props.values().toArray(
-                    new AuthenticationRequirementHolder[props.size()][]);
-            }
+            authReqsList = props.values().toArray(new AuthenticationRequirementHolder[props.size()][]);
 
             for (AuthenticationRequirementHolder[] authReqs : authReqsList) {
                 registerService(authReqs);
@@ -1517,19 +1515,13 @@ public class SlingAuthenticator implements Authenticator,
             }
 
             final AuthenticationRequirementHolder[] authReqs = authReqList.toArray(new AuthenticationRequirementHolder[authReqList.size()]);
-            registerService(authReqs);
 
-            synchronized (props) {
-                props.put(ref.getProperty(Constants.SERVICE_ID), authReqs);
-            }
+            registerService(authReqs);
+            props.put(ref.getProperty(Constants.SERVICE_ID), authReqs);
         }
 
         private void removeService(final ServiceReference ref) {
-            final AuthenticationRequirementHolder[] authReqs;
-            synchronized (props) {
-                authReqs = props.remove(ref.getProperty(Constants.SERVICE_ID));
-            }
-
+            final AuthenticationRequirementHolder[] authReqs = props.remove(ref.getProperty(Constants.SERVICE_ID));
             if (authReqs != null) {
                 for (AuthenticationRequirementHolder authReq : authReqs) {
                     authenticator.authRequiredCache.removeHolder(authReq);
