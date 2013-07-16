@@ -70,7 +70,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
 	protected OsgiInstaller installer;
 
-	public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 5000;
+    public static final long WAIT_FOR_ACTION_TIMEOUT_MSEC = 6000;
     public static final String BUNDLE_BASE_NAME = "org.apache.sling.installer.it-" + POM_VERSION;
 
     @Inject
