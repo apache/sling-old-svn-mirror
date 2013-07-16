@@ -57,7 +57,7 @@ public class WriteableResourcesTest {
         resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
         assertNotNull("Expecting non-null ResourceResolver", resolver);
         final Resource root = resolver.getResource("/");
-        assertNotNull("Expecting non-null root Resource");
+        assertNotNull("Expecting non-null root Resource", root);
         final String path = getClass().getSimpleName() + "_" + System.currentTimeMillis();
         testRoot = resolver.create(root, path, null);
     }
@@ -88,7 +88,7 @@ public class WriteableResourcesTest {
         {
             // Retrieve and check child resource
             final Resource r = resolver.getResource(fullPath);
-            assertNotNull("Expecting Resource at " + fullPath);
+            assertNotNull("Expecting Resource at " + fullPath, r);
             final ModifiableValueMap m = r.adaptTo(ModifiableValueMap.class);
             assertValueMap(m, "title", "hello", "text", "world");
             
@@ -101,14 +101,14 @@ public class WriteableResourcesTest {
         {
             // Retrieve and check updated resource
             final Resource r = resolver.getResource(fullPath);
-            assertNotNull("Expecting modified Resource at " + fullPath);
+            assertNotNull("Expecting modified Resource at " + fullPath, r);
             assertValueMap(r.adaptTo(ValueMap.class), "title", "changed", "more", "fun", "text", "world");
         }
         
         {
             // Delete test resource and check that it's gone
             final Resource r = resolver.getResource(fullPath);
-            assertNotNull("Expecting non-null resource to delete, at " + fullPath);
+            assertNotNull("Expecting non-null resource to delete, at " + fullPath, r);
             resolver.delete(r);
             resolver.commit();
             assertNull("Expecting " + fullPath + " to be deleted", resolver.getResource(fullPath));
