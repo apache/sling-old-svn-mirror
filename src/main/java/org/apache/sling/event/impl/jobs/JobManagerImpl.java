@@ -1282,8 +1282,9 @@ public class JobManagerImpl
                 path,
                 properties);
 
-        // update property types - priority and create job
+        // update property types - priority, add path and create job
         properties.put(Job.PROPERTY_JOB_PRIORITY, info.queueConfiguration.getPriority());
+        properties.put(JobImpl.PROPERTY_RESOURCE_PATH, path);
         return new JobImpl(jobTopic, jobName, jobId, properties);
     }
 
