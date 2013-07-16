@@ -137,6 +137,8 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.derby", "derby", "10.5.3.0_1"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.1.1-SNAPSHOT"),
 
+                mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"),
+
                 CoreOptions.bundle( bundleFile.toURI().toString() ),
 
                 junitBundles()
