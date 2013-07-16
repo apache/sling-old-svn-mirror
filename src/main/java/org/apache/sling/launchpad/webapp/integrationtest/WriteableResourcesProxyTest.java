@@ -20,7 +20,7 @@ import org.apache.sling.launchpad.webapp.integrationtest.util.ServerSideTestClie
 import org.junit.Test;
 
 /** Run the server-side WriteableResourcesTest */
-public class WriteableResourcesTestProxy {
+public class WriteableResourcesProxyTest {
     @Test
     public void runWriteableResourcesTest() throws Exception {
         new ServerSideTestClient().assertTestsPass("org.apache.sling.launchpad.testservices.serversidetests.WriteableResourcesTest", 1);
