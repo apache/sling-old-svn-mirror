@@ -216,7 +216,7 @@ public class JobImpl implements Job {
     /**
      * Update information about the queue.
      */
-    public void updateQueue(final Queue queue) {
+    public void updateQueueInfo(final Queue queue) {
         this.properties.put(Job.PROPERTY_JOB_QUEUE_NAME, queue.getName());
         this.properties.put(Job.PROPERTY_JOB_RETRIES, queue.getConfiguration().getMaxRetries());
         this.properties.put(Job.PROPERTY_JOB_PRIORITY, queue.getConfiguration().getPriority());

@@ -80,7 +80,7 @@ public class BackgroundLoader implements Runnable {
     private final Set<String> unloadedJobs = new HashSet<String>();
 
     /** A local queue for handling new jobs. */
-    private final BlockingQueue<String> actionQueue = new LinkedBlockingQueue<String>();
+    private final BlockingQueue<Object> actionQueue = new LinkedBlockingQueue<Object>();
 
     /** Boolean to detect the initial start. */
     private boolean firstRun = true ;
@@ -205,36 +205,41 @@ public class BackgroundLoader implements Runnable {
             }
             // and finally process the action queue
             while ( this.isRunning() ) {
-                String path = null;
+                Object nextPathOrJob = null;
                 try {
-                    path = this.actionQueue.take();
+                    nextPathOrJob = this.actionQueue.take();
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
                 }
-                if ( path != null && !END_TOKEN.equals(path) && this.isRunning() ) {
-                    ResourceResolver resolver = null;
-                    try {
-                        resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-                        final Resource resource = resolver.getResource(path);
-                        if ( ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
-                            this.logger.debug("Reading local job from {}", path);
-                            final JobImpl job = this.jobManager.readJob(resource);
-                            if ( job != null ) {
-                                if ( job.hasReadErrors() ) {
-                                    synchronized ( this.unloadedJobs ) {
-                                        this.unloadedJobs.add(path);
+                if ( nextPathOrJob instanceof JobImpl ) {
+                    this.jobManager.process((JobImpl)nextPathOrJob);
+                } else if ( nextPathOrJob instanceof String ) {
+                    final String path = (String)nextPathOrJob;
+                    if ( !END_TOKEN.equals(path) && this.isRunning() ) {
+                        ResourceResolver resolver = null;
+                        try {
+                            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                            final Resource resource = resolver.getResource(path);
+                            if ( ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
+                                this.logger.debug("Reading local job from {}", path);
+                                final JobImpl job = this.jobManager.readJob(resource);
+                                if ( job != null ) {
+                                    if ( job.hasReadErrors() ) {
+                                        synchronized ( this.unloadedJobs ) {
+                                            this.unloadedJobs.add(path);
+                                        }
+                                    } else {
+                                        this.jobManager.process(job);
                                     }
-                                } else {
-                                    this.jobManager.process(job);
                                 }
                             }
-                        }
-                    } catch ( final LoginException le ) {
-                        // administrative login should always work
-                        this.ignoreException(le);
-                    } finally {
-                        if ( resolver != null ) {
-                            resolver.close();
+                        } catch ( final LoginException le ) {
+                            // administrative login should always work
+                            this.ignoreException(le);
+                        } finally {
+                            if ( resolver != null ) {
+                                resolver.close();
+                            }
                         }
                     }
                 }
@@ -382,6 +387,21 @@ public class BackgroundLoader implements Runnable {
             if ( isRunning() ) {
                 try {
                     this.actionQueue.put(path);
+                } catch (final InterruptedException e) {
+                    this.ignoreException(e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Add a job to the load job queue if the instance is running.
+     */
+    public void addJob(final JobImpl job) {
+        synchronized ( loadLock ) {
+            if ( isRunning() ) {
+                try {
+                    this.actionQueue.put(job);
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
                 }

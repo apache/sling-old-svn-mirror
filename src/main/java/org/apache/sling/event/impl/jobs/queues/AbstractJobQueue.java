@@ -437,11 +437,11 @@ public abstract class AbstractJobQueue
     /**
      * Add a new job to the queue.
      */
-    public void process(final JobHandler event) {
+    public void process(final JobHandler handler) {
         this.closeMarker.set(false);
-        this.put(event);
-        event.queued = System.currentTimeMillis();
+        handler.queued = System.currentTimeMillis();
         this.incQueued();
+        this.put(handler);
     }
 
     /**
