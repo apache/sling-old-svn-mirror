@@ -60,13 +60,13 @@
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
-      <version>3.1.0-SNAPSHOT</version>
+      <version>3.1.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-container-karaf</artifactId>
-      <version>3.1.0-SNAPSHOT</version>
+      <version>3.1.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -80,8 +80,26 @@
           <groupId>org.apache.karaf</groupId>
           <artifactId>org.apache.karaf.client</artifactId>
         </exclusion>
+        <!-- Remove after fix for KARAF-2397 is released -->
+        <exclusion>
+          <groupId>org.eclipse</groupId>
+          <artifactId>osgi</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
+    <!-- Remove after fix for KARAF-2397 is released -->
+    <dependency>
+      <groupId>org.eclipse</groupId>
+      <artifactId>org.eclipse.osgi</artifactId>
+      <version>3.8.0.v20120529-1548</version>
+      <scope>test</scope>
+    </dependency>
+	<dependency>
+	    <groupId>org.apache.karaf.tooling.exam</groupId>
+	    <artifactId>org.apache.karaf.tooling.exam.options</artifactId>
+	    <version>3.0.0.RC1</version>
+	    <scope>test</scope>
+	</dependency>
   </dependencies>
 
 </project>
