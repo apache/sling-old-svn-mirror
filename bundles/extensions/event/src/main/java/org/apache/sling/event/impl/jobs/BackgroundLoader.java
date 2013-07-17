@@ -220,7 +220,7 @@ public class BackgroundLoader implements Runnable {
                         try {
                             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                             final Resource resource = resolver.getResource(path);
-                            if ( ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
+                            if ( resource != null && ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
                                 this.logger.debug("Reading local job from {}", path);
                                 final JobImpl job = this.jobManager.readJob(resource);
                                 if ( job != null ) {
