@@ -220,16 +220,21 @@ public class BackgroundLoader implements Runnable {
                         try {
                             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
                             final Resource resource = resolver.getResource(path);
-                            if ( resource != null && ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
-                                this.logger.debug("Reading local job from {}", path);
-                                final JobImpl job = this.jobManager.readJob(resource);
-                                if ( job != null ) {
-                                    if ( job.hasReadErrors() ) {
-                                        synchronized ( this.unloadedJobs ) {
-                                            this.unloadedJobs.add(path);
+                            if ( resource == null ) {
+                                // this should actually never happen, just a sanity check (see SLING-2971)
+                                logger.warn("No job resource found for path {}. Potential job will not be processed.", path);
+                            } else {
+                                if (ResourceHelper.RESOURCE_TYPE_JOB.equals(resource.getResourceType()) ) {
+                                    this.logger.debug("Reading local job from {}", path);
+                                    final JobImpl job = this.jobManager.readJob(resource);
+                                    if ( job != null ) {
+                                        if ( job.hasReadErrors() ) {
+                                            synchronized ( this.unloadedJobs ) {
+                                                this.unloadedJobs.add(path);
+                                            }
+                                        } else {
+                                            this.jobManager.process(job);
                                         }
-                                    } else {
-                                        this.jobManager.process(job);
                                     }
                                 }
                             }
