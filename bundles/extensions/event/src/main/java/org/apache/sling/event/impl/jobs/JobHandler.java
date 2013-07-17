@@ -53,7 +53,7 @@ public class JobHandler {
     }
 
     public boolean remove() {
-        return this.jobManager.remove(this);
+        return this.jobManager.remove(this.job);
     }
 
     public void reassign() {
