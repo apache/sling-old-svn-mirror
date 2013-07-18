@@ -41,7 +41,7 @@ public class MapEntry implements Comparable<MapEntry> {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
-	
+
     private static final Pattern[] URL_WITH_PORT_MATCH = {
         Pattern.compile("http/([^/]+)(\\.[^\\d/]+)(/.*)?$"),
         Pattern.compile("https/([^/]+)(\\.[^\\d/]+)(/.*)?$") };
@@ -219,7 +219,7 @@ public class MapEntry implements Comparable<MapEntry> {
                             LoggerFactory
                             .getLogger(MapEntry.class)
                     		.debug("ignored entry due exception ",iae);
-                    	}     
+                    	}
                     	if (mapEntry!=null){
                     		prepEntries.add(mapEntry);
                     	}
@@ -251,13 +251,13 @@ public class MapEntry implements Comparable<MapEntry> {
         if (!url.startsWith("^")) {
             url = "^".concat(url);
         }
-        
+
         try {
         	this.urlPattern = Pattern.compile(url);
         } catch (Exception e){
         	throw new IllegalArgumentException("Bad url ",e);
         }
-        
+
         this.redirect = redirect;
         this.status = status;
     }
@@ -273,7 +273,7 @@ public class MapEntry implements Comparable<MapEntry> {
             		 results[i] = m.replaceFirst(redirects[i]);
             	}catch(StringIndexOutOfBoundsException siob){
             		log.debug("Exception while replacing, ignoring entry {} ",redirects[i],siob);
-             	}               
+             	}
             }
             return results;
         }
@@ -304,17 +304,20 @@ public class MapEntry implements Comparable<MapEntry> {
             return 0;
         }
 
-        final int tlen = urlPattern.toString().length();
-        final int mlen = m.urlPattern.toString().length();
+        final String ownPatternString = urlPattern.toString();
+        final String mPatternString = m.urlPattern.toString();
+
+        final int tlen = ownPatternString.length();
+        final int mlen = mPatternString.length();
         if (tlen < mlen) {
             return 1;
         } else if (tlen > mlen) {
             return -1;
         }
 
-        // lentghs are equal, but the entries are not
-        // so order m after this
-        return 1;
+        // lengths are equal, but the entries are not
+        // so order based on the pattern
+        return ownPatternString.toString().compareTo(mPatternString);
     }
 
     // ---------- Object overwrite
