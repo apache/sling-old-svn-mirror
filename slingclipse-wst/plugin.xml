@@ -141,6 +141,9 @@
 	      <image
 	         icon="icons/obj16/sling.gif"
 	         typeIds="org.apache.sling.launchpad.server"/>
+	      <image
+	         icon="icons/obj16/sling.gif"
+	         typeIds="sling.content"/>
 	</extension>  
 	
 	<!-- Define the editor section(s) we contribute to the WST UI -->
