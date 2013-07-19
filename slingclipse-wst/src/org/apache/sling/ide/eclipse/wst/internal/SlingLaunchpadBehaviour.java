@@ -16,17 +16,26 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.FileInfo;
+import org.apache.sling.slingclipse.api.ProtectedNodes;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.api.ResponseType;
 import org.apache.sling.slingclipse.api.Result;
+import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
@@ -41,6 +50,9 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.IModuleResourceDelta;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
+import org.json.JSONException;
+import org.json.JSONML;
+import org.json.JSONObject;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
@@ -229,7 +241,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
     }
 
-    private Command<?> addFileCommand(Repository repository, IModuleResource resource) {
+    private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException {
 
         FileInfo info = createFileInfo(resource);
 
@@ -238,7 +250,43 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return null;
         }
 
-        return repository.newAddNodeCommand(info);
+        if (SlingclipseHelper.CONTENT_XML.equals(info.getName())) {
+            try {
+                IFile file = (IFile) resource.getAdapter(IFile.class);
+                InputStream contents = file.getContents();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(contents));
+                StringBuilder out = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    out.append(line);
+                }
+                Map<String, String> properties = getModifiedProperties(out.toString());
+                return repository.newUpdateContentNodeCommand(info, properties);
+            } catch (IOException e) {
+                // TODO logging
+                e.printStackTrace();
+                return null;
+            } catch (JSONException e) {
+                // TODO logging
+                e.printStackTrace();
+                return null;
+            }
+        } else {
+            return repository.newAddNodeCommand(info);
+        }
+    }
+
+    private Map<String, String> getModifiedProperties(String fileContent) throws JSONException {
+        Map<String, String> properties = new HashMap<String, String>();
+        JSONObject json = JSONML.toJSONObject(fileContent);
+        json.remove(SlingclipseHelper.TAG_NAME);
+        for (Iterator<?> keys = json.keys(); keys.hasNext();) {
+            String key = (String) keys.next();
+            if (!ProtectedNodes.exists(key) && !key.contains("xmlns")) {
+                properties.put(key, json.optString(key));
+            }
+        }
+        return properties;
     }
 
     private FileInfo createFileInfo(IModuleResource resource) {
@@ -258,6 +306,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         IPath rootPath = resource.getModuleRelativePath().removeLastSegments(1); // TODO correct name
 
         String relativePath = rootPath.toOSString();
+
+        if (file.getName().equals(SlingclipseHelper.CONTENT_XML)) {
+            relativePath = rootPath.removeLastSegments(1).toOSString();
+        }
 
         FileInfo info = new FileInfo(file.getLocation().toOSString(), relativePath, file.getName());
 
