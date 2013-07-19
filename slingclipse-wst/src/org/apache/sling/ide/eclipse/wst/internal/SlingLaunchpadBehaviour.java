@@ -191,9 +191,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         super.publishModule(kind, deltaKind, module, monitor);
     }
 
-    private Repository getRepository(IProgressMonitor monitor) {
+    public static Repository getRepository(IServer server, IProgressMonitor monitor) {
 
-        SlingLaunchpadServer launchpadServer = (SlingLaunchpadServer) getServer().loadAdapter(
+        SlingLaunchpadServer launchpadServer = (SlingLaunchpadServer) server.loadAdapter(
                 SlingLaunchpadServer.class, monitor);
 
         SlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
@@ -201,7 +201,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         Repository repository = SlingclipsePlugin.getDefault().getRepository();
         try {
             // TODO configurable scheme?
-            URI uri = new URI("http", null, getServer().getHost(), configuration.getPort(),
+            URI uri = new URI("http", null, server.getHost(), configuration.getPort(),
                     configuration.getContextPath(), null, null);
             RepositoryInfo repositoryInfo = new RepositoryInfo(configuration.getUsername(),
                     configuration.getPassword(), uri.toString());
@@ -210,6 +210,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             // TODO handle error
         }
         return repository;
+    }
+
+    private Repository getRepository(IProgressMonitor monitor) {
+
+        return getRepository(getServer(), monitor);
     }
 
     private void execute(Command<?> command) throws CoreException {

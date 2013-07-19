@@ -25,10 +25,16 @@ import org.eclipse.wst.server.core.model.ServerDelegate;
 
 public class SlingLaunchpadServer extends ServerDelegate {
 
+    public static final int PUBLISH_STATE_NEVER = 1;
+    public static final int PUBLISH_STATE_RESOURCE_CHANGE = 2;
+    public static final int PUBLISH_STATE_BUILD_EVENT = 3;
+
     public static final String PROP_PASSWORD = "launchpad.password";
     public static final String PROP_USERNAME = "launchpad.username";
     public static final String PROP_CONTEXT_PATH = "launchpad.contextPath";
     public static final String PROP_PORT = "launchpad.port";
+
+    private static final String PROP_AUTO_PUBLISH_SETTING = "auto-publish-setting";
 
     private static final String MODULE_TYPE_SLING_CONTENT = "sling.content";
 
@@ -130,4 +136,14 @@ public class SlingLaunchpadServer extends ServerDelegate {
         setAttribute(PROP_PASSWORD, "admin");
     }
 
+
+    public int getPublishState() {
+        return getAttribute(PROP_AUTO_PUBLISH_SETTING, PUBLISH_STATE_NEVER);
+    }
+
+    public void setPublishState(int publishState) {
+        System.out.println("[" + Thread.currentThread().getName() + "] Set " + PROP_AUTO_PUBLISH_SETTING + " to "
+                + publishState);
+        setAttribute(PROP_AUTO_PUBLISH_SETTING, publishState);
+    }
 }

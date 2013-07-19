@@ -18,6 +18,7 @@ package org.apache.sling.slingclipse.http.impl;
 
 import java.io.File;
 import java.util.Map;
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -46,7 +47,7 @@ public class RepositoryImpl extends AbstractRepository{
 		return new Command<Void>() {
 			@Override
 			public Result<Void> execute() {
-				PostMethod post = new PostMethod(repositoryInfo.getUrl()+fileInfo.getRelativeLocation());
+                PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation()));
 				try{
 					File f=new File(fileInfo.getLocation());
                     if (f.isFile()) {
@@ -97,7 +98,8 @@ public class RepositoryImpl extends AbstractRepository{
 		return new Command<Void>() {
 			@Override
 			public Result<Void> execute() {
-				PostMethod post = new PostMethod(repositoryInfo.getUrl()+fileInfo.getRelativeLocation()+"/"+fileInfo.getName());
+                PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation() + "/"
+                        + fileInfo.getName()));
 				try{
 					Part[] parts ={new StringPart(":operation", "delete")};
 					post.setRequestEntity(new MultipartRequestEntity(parts,post.getParams()));
@@ -126,7 +128,7 @@ public class RepositoryImpl extends AbstractRepository{
 			@Override
 			public Result<String> execute() {
 				//TODO handle the response type
-				GetMethod get= new GetMethod(repositoryInfo.getUrl()+path+".1.json");
+                GetMethod get = new GetMethod(createFullPath(path + ".1.json"));
 				try{
 					httpClient.getParams().setAuthenticationPreemptive(true);
 				    Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword());
@@ -162,7 +164,7 @@ public class RepositoryImpl extends AbstractRepository{
 			@Override
 			public Result<byte[]> execute() {
 				
-				GetMethod get= new GetMethod(repositoryInfo.getUrl()+path);
+                GetMethod get = new GetMethod(createFullPath(path));
 				
 				try{
 					httpClient.getParams().setAuthenticationPreemptive(true);
@@ -190,13 +192,28 @@ public class RepositoryImpl extends AbstractRepository{
 		};
 	}
 	
+    private String createFullPath(String relativePath) {
+
+        boolean repoUrlHasTrailingSlash = repositoryInfo.getUrl().endsWith("/");
+        boolean relativePathHasLeadingSlash = !relativePath.isEmpty() && relativePath.charAt(0) == '/';
+
+        if (repoUrlHasTrailingSlash ^ relativePathHasLeadingSlash)
+            return repositoryInfo.getUrl() + relativePath;
+        if (!repoUrlHasTrailingSlash && !relativePathHasLeadingSlash)
+            return repositoryInfo.getUrl() + '/' + relativePath;
+        if (repoUrlHasTrailingSlash && relativePathHasLeadingSlash)
+            return repositoryInfo.getUrl() + relativePath.substring(1);
+
+        throw new AssertionError("unreachable");
+    }
+
 	@Override
 	public Command<String> newGetNodeContentCommand(final String path, final ResponseType responseType) {
 		return new Command<String>() {
 			@Override
 			public Result<String> execute() {
 				//TODO handle the response type
-				GetMethod get= new GetMethod(repositoryInfo.getUrl()+path+".json");
+                GetMethod get = new GetMethod(createFullPath(path + ".json"));
 				try{
 					httpClient.getParams().setAuthenticationPreemptive(true);
 				    Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword());
@@ -229,7 +246,7 @@ public class RepositoryImpl extends AbstractRepository{
 		return new Command<Void>() {
 			@Override
 			public Result<Void> execute() {
-				PostMethod post = new PostMethod(repositoryInfo.getUrl()+fileInfo.getRelativeLocation());
+                PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation()));
 				try{
 					Part[] parts = new Part[properties.size()];
 					int counter=0;

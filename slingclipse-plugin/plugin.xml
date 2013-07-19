@@ -19,23 +19,6 @@
       </initializer>
    </extension>
    <extension
-         point="org.eclipse.ui.importWizards">
-      <category
-            id="org.apache.sling.slingclipse.ui.wizards.sampleCategory"
-            name="Sling">
-      </category>
-      <wizard
-            category="org.apache.sling.slingclipse.ui.wizards.sampleCategory"
-            class="org.apache.sling.slingclipse.ui.wizards.ImportWizard"
-            icon="src/org/apache/sling/slingclipse/images/sling-logo.png"
-            id="org.apache.sling.slingclipse.ui.wizards.ImportWizard"
-            name="Import from Sling Repository">
-         <description>
-            Import a file from the local file system into the workspace.
-         </description>
-      </wizard>
-   </extension>
-   <extension
          id="org.apache.sling.slingclipse.SlingProjectNature"
          point="org.eclipse.core.resources.natures">
       <runtime>
@@ -54,23 +37,20 @@
                class="org.apache.sling.slingclipse.internal.AddSlingNatureAction"
                id="org.apache.sling.slingclipse.enableNatureAction"
                label="Convert to Sling Project"
-               menubarPath="org.eclipse.ui.projectConfigure/additions"
                style="push">
          </action>
          <visibility>
-            <and>
-               <objectState
-                     name="open"
-                     value="true">
-               </objectState>
-               <not>
-                  <objectState
-                        name="nature"
-                        value="org.apache.sling.slingclipse.SlingProjectNature">
-                  </objectState>
-               </not>
-            </and>
+           <objectState
+                 name="open"
+                 value="true">
+           </objectState>
          </visibility>
+         <enablement>
+               <test 
+               		property="org.eclipse.wst.common.project.facet.core.projectFacet"
+               		value="sling.content">
+               </test>
+         </enablement>
       </objectContribution>
    </extension>
    <extension
