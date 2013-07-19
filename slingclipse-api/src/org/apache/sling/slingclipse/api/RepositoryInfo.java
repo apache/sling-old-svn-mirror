@@ -16,6 +16,8 @@
  */
 package org.apache.sling.slingclipse.api;
 
+import java.net.URI;
+
 public class RepositoryInfo {
 	
 	private String username;
@@ -47,8 +49,8 @@ public class RepositoryInfo {
 	}
 	
 	public int getPort(){
-		String host=url.substring(7);
-		return Integer.parseInt(host.split(":")[1]);
+
+        return URI.create(url).getPort();
 	}
 
 	@Override

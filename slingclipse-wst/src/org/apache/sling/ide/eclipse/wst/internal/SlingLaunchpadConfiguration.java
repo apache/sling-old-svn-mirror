@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
+import org.eclipse.wst.server.core.IServerWorkingCopy;
+
 
 public class SlingLaunchpadConfiguration {
 
@@ -27,35 +29,43 @@ public class SlingLaunchpadConfiguration {
 
     public int getPort() {
         // TODO central place for setting defaults
-        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_PORT, 8080);
+        return workingCopy().getAttribute(SlingLaunchpadServer.PROP_PORT, 8080);
+    }
+
+    private IServerWorkingCopy workingCopy() {
+        IServerWorkingCopy workingCopy = server.getServerWorkingCopy();
+        server.getServer().createWorkingCopy();
+        if (workingCopy == null)
+            workingCopy = server.getServer().createWorkingCopy();
+        return workingCopy;
     }
 
     public void setPort(int port) {
-        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_PORT, port);
+        workingCopy().setAttribute(SlingLaunchpadServer.PROP_PORT, port);
     }
 
     public String getContextPath() {
-        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_CONTEXT_PATH, "/");
+        return workingCopy().getAttribute(SlingLaunchpadServer.PROP_CONTEXT_PATH, "/");
     }
 
     public void setContextPath(String contextPath) {
-        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_CONTEXT_PATH, contextPath);
+        workingCopy().setAttribute(SlingLaunchpadServer.PROP_CONTEXT_PATH, contextPath);
     }
 
     public String getUsername() {
-        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_USERNAME, "admin");
+        return workingCopy().getAttribute(SlingLaunchpadServer.PROP_USERNAME, "admin");
     }
 
     public void setUsername(String username) {
-        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_USERNAME, username);
+        workingCopy().setAttribute(SlingLaunchpadServer.PROP_USERNAME, username);
     }
 
     public String getPassword() {
-        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_PASSWORD, "admin");
+        return workingCopy().getAttribute(SlingLaunchpadServer.PROP_PASSWORD, "admin");
     }
 
     public void setPassword(String password) {
-        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_PASSWORD, password);
+        workingCopy().setAttribute(SlingLaunchpadServer.PROP_PASSWORD, password);
     }
 
 }

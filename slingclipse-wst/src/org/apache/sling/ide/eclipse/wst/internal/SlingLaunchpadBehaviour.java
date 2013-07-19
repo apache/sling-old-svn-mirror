@@ -25,6 +25,7 @@ import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
+import org.apache.sling.slingclipse.api.ResponseType;
 import org.apache.sling.slingclipse.api.Result;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -32,6 +33,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.wst.server.core.IModule;
@@ -44,13 +46,30 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     @Override
     public void stop(boolean force) {
-        // TODO stub
+
         setServerState(IServer.STATE_STOPPED);
     }
 
-    public void start() {
-        // TODO stub
-        setServerState(IServer.STATE_STARTED);
+    public void start(IProgressMonitor monitor) throws CoreException {
+
+        boolean success = false;
+
+        Result<String> result = null;
+        Command<String> command = getRepository(monitor).newListChildrenNodeCommand("/", ResponseType.XML);
+        result = command.execute();
+        success = result.isSuccess();
+
+        if (success) {
+            setServerState(IServer.STATE_STARTED);
+        } else {
+            setServerState(IServer.STATE_STOPPED);
+            String message = "Unable to connect to Sling Lanchpad. Please make sure a Launchpad instance is running ";
+            if (result != null) {
+                message += " (" + result.toString() + ")";
+            }
+            throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.ide.eclipse.wst",
+                    message));
+        }
     }
 
     // TODO refine signature, visibility
@@ -108,23 +127,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println(trace.toString());
 
-        SlingLaunchpadServer launchpadServer = (SlingLaunchpadServer) getServer().loadAdapter(
-                SlingLaunchpadServer.class, monitor);
-        SlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
+        Repository repository = getRepository(monitor);
 
         IModuleResource[] moduleResources = getResources(module);
-
-        Repository repository = SlingclipsePlugin.getDefault().getRepository();
-        try {
-            // TODO configurable scheme?
-            URI uri = new URI("http", null, getServer().getHost(), configuration.getPort(),
-                    configuration.getContextPath(), null, null);
-            RepositoryInfo repositoryInfo = new RepositoryInfo(configuration.getUsername(),
-                    configuration.getPassword(), uri.toString());
-            repository.setRepositoryInfo(repositoryInfo);
-        } catch (URISyntaxException e) {
-            // TODO handle error
-        }
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
@@ -184,6 +189,27 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         // set state to published
         super.publishModule(kind, deltaKind, module, monitor);
+    }
+
+    private Repository getRepository(IProgressMonitor monitor) {
+
+        SlingLaunchpadServer launchpadServer = (SlingLaunchpadServer) getServer().loadAdapter(
+                SlingLaunchpadServer.class, monitor);
+
+        SlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
+
+        Repository repository = SlingclipsePlugin.getDefault().getRepository();
+        try {
+            // TODO configurable scheme?
+            URI uri = new URI("http", null, getServer().getHost(), configuration.getPort(),
+                    configuration.getContextPath(), null, null);
+            RepositoryInfo repositoryInfo = new RepositoryInfo(configuration.getUsername(),
+                    configuration.getPassword(), uri.toString());
+            repository.setRepositoryInfo(repositoryInfo);
+        } catch (URISyntaxException e) {
+            // TODO handle error
+        }
+        return repository;
     }
 
     private void execute(Command<?> command) throws CoreException {
