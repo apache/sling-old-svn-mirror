@@ -21,6 +21,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import org.apache.sling.slingclipse.SlingclipsePlugin;
+import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
@@ -36,7 +37,10 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.model.IModuleFile;
+import org.eclipse.wst.server.core.model.IModuleFolder;
 import org.eclipse.wst.server.core.model.IModuleResource;
+import org.eclipse.wst.server.core.model.IModuleResourceDelta;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
@@ -132,6 +136,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         SlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
 
         IModuleResource[] moduleResources = getResources(module);
+
         Repository repository = SlingclipsePlugin.getDefault().getRepository();
         try {
             // TODO configurable scheme?
@@ -145,27 +150,92 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             // TODO handle error
         }
 
-        for (IModuleResource resource : moduleResources) {
+        switch (deltaKind) {
+            case ServerBehaviourDelegate.CHANGED:
+                IModuleResourceDelta[] publishedResourceDelta = getPublishedResourceDelta(module);
+                for (IModuleResourceDelta resourceDelta : publishedResourceDelta) {
+                    if (resourceDelta.getModuleResource() instanceof IModuleFile) {
+                        switch (resourceDelta.getKind()) {
+                            case IModuleResourceDelta.ADDED:
+                            case IModuleResourceDelta.CHANGED:
+                            case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
+                                Result<?> result = addFileCommand(repository,
+                                        (IModuleFile) resourceDelta.getModuleResource()).execute();
+                                if (!result.isSuccess()) // TODO proper logging
+                                    throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
+                                break;
+                            case IModuleResourceDelta.REMOVED:
+                                Result<?> deleteResult = removeFileCommand(repository,
+                                        (IModuleFile) resourceDelta.getModuleResource()).execute();
+                                if (!deleteResult.isSuccess()) // TODO proper logging
+                                    throw new CoreException(new Status(Status.ERROR, "some.plugin",
+                                            deleteResult.toString()));
+                                break;
+                        }
+                    }
+                }
+                break;
 
-            IFile file = (IFile) resource.getAdapter(IFile.class);
+            case ServerBehaviourDelegate.ADDED:
+            case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
+                for (IModuleResource resource : moduleResources) {
 
-            IPath projectPath = file.getProject().getFullPath();
-            IPath filePath = file.getFullPath();
-            IPath relativePath = filePath.makeRelativeTo(projectPath);
-            IPath rootPath = relativePath.removeLastSegments(1); // TODO correct name
+                    if (resource instanceof IModuleFile) {
+                        Result<?> result = addFileCommand(repository, (IModuleFile) resource).execute();
+                        if (!result.isSuccess()) // TODO proper logging
+                            throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
+                    } else {
+                        // TODO log/barf
+                    }
+                }
+                break;
+            case ServerBehaviourDelegate.REMOVED:
+                for (IModuleResource resource : moduleResources) {
 
-            FileInfo info = new FileInfo(file.getLocation().toOSString(), rootPath.toOSString(),
-                    file.getName());
-
-            System.out.println("For " + resource + " build fileInfo " + info);
-
-            Result<Void> result = repository.newAddNodeCommand(info).execute();
-            if (!result.isSuccess())
-                throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
+                    if (resource instanceof IModuleFile) {
+                        Result<?> result = removeFileCommand(repository, (IModuleFile) resource).execute();
+                        if (!result.isSuccess()) // TODO proper logging
+                            throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
+                    } else {
+                        // TODO log/barf
+                    }
+                }
+                break;
         }
+
 
         // set state to published
         super.publishModule(kind, deltaKind, module, monitor);
+    }
+
+    private Command<?> addFileCommand(Repository repository, IModuleFile resource) {
+        IFile file = (IFile) resource.getAdapter(IFile.class);
+
+        IPath projectPath = file.getProject().getFullPath();
+        IPath filePath = file.getFullPath();
+        IPath relativePath = filePath.makeRelativeTo(projectPath);
+        IPath rootPath = relativePath.removeLastSegments(1); // TODO correct name
+
+        FileInfo info = new FileInfo(file.getLocation().toOSString(), rootPath.toOSString(), file.getName());
+
+        System.out.println("For " + resource + " build fileInfo " + info);
+
+        return repository.newAddNodeCommand(info);
+    }
+
+    private Command<?> removeFileCommand(Repository repository, IModuleFile resource) {
+        IFile file = (IFile) resource.getAdapter(IFile.class);
+
+        IPath projectPath = file.getProject().getFullPath();
+        IPath filePath = file.getFullPath();
+        IPath relativePath = filePath.makeRelativeTo(projectPath);
+        IPath rootPath = relativePath.removeLastSegments(1); // TODO correct name
+
+        FileInfo info = new FileInfo(file.getLocation().toOSString(), rootPath.toOSString(), file.getName());
+
+        System.out.println("For " + resource + " build fileInfo " + info);
+
+        return repository.newDeleteNodeCommand(info);
     }
 
     /*
