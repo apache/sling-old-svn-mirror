@@ -14,15 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.eclipse.core.internal;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.wst.server.core.model.RuntimeDelegate;
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
+public class SlingLaunchpadRuntime extends RuntimeDelegate {
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
+    @Override
+    public IStatus validate() {
+        // TODO stub
+        return Status.OK_STATUS;
     }
-
 }

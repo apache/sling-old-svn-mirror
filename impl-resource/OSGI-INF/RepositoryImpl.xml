@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
-   <implementation class="org.apache.sling.slingclipse.http.impl.RepositoryImpl"/>
+   <implementation class="org.apache.sling.ide.impl.resource.transport.RepositoryImpl"/>
    <service>
-      <provide interface="org.apache.sling.slingclipse.api.Repository"/>
+      <provide interface="org.apache.sling.ide.transport.Repository"/>
    </service>
-   <reference bind="bindTracer" cardinality="1..1" interface="org.apache.sling.ide.impl.util.Tracer" name="Tracer" policy="static"/>
+   <reference bind="bindTracer" cardinality="1..1" interface="org.apache.sling.ide.impl.resource.util.Tracer" name="Tracer" policy="static"/>
 </scr:component>

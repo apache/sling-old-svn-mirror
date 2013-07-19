@@ -7,9 +7,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
 Import-Package: org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.serialization,
- org.apache.sling.slingclipse,
- org.apache.sling.slingclipse.api,
- org.apache.sling.slingclipse.helper,
+ org.apache.sling.ide.transport,
  org.eclipse.core.commands,
  org.eclipse.core.commands.operations,
  org.eclipse.core.resources,
@@ -43,4 +41,5 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.eclipse.wst.server.core.util,
  org.eclipse.wst.server.ui,
  org.eclipse.wst.server.ui.editor,
- org.json
+ org.json,
+ org.osgi.framework

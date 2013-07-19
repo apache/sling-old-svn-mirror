@@ -14,15 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.transport;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
-
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
-
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
+public interface Result<T> {
+	
+	boolean isSuccess();
+	
+	T get() throws RepositoryException;
 
 }

@@ -14,15 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.eclipse.core.internal;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.wst.common.project.facet.core.IDelegate;
+import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
+public class SlingContentFacetInstallDelegate implements IDelegate {
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
+    @Override
+    public void execute(IProject project, IProjectFacetVersion facetVersion, Object config, IProgressMonitor monitor)
+            throws CoreException {
+
+        // nothing for now
     }
 
 }

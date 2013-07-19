@@ -16,7 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.core;
 
-import org.apache.sling.ide.eclipse.wst.internal.SetServerStringPropertyCommand;
+import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 
 public class SetServerUsernameCommand extends SetServerStringPropertyCommand {

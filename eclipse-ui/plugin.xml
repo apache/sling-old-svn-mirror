@@ -7,7 +7,7 @@
     <launchConfigurationTabGroup
       id="org.apache.sling.ide.eclipse.launchpad.launchConfigurationTabGroup"
       type="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"
-      class="org.apache.sling.ide.eclipse.wst.ui.internal.SlingLaunchpadLaunchConfigurationTabGroup">
+      class="org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadLaunchConfigurationTabGroup">
     </launchConfigurationTabGroup>
   </extension>
   
@@ -29,7 +29,7 @@
          order="10"
          insertionId="org.eclipse.wst.server.editor.overview.right"
          typeIds="org.apache.sling.launchpad.server"
-         class="org.apache.sling.ide.eclipse.wst.ui.internal.ConnectionEditorSection">
+         class="org.apache.sling.ide.eclipse.ui.internal.ConnectionEditorSection">
       </section>
    </extension>   
   
@@ -58,7 +58,7 @@
          	objectClass="org.eclipse.core.resources.IProject">
          	
          <action
-               class="org.apache.sling.ide.eclipse.wst.ui.internal.ImportContentAction"
+               class="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction"
                id="org.apache.sling.slingclipse.importContentAction"
                label="Import Content..."
                menubarPath="org.apache.sling.slingclipse.slingMenu/sling"
@@ -83,7 +83,7 @@
         <page 
             id="org.apache.sling.ide.eclipse.projectPropertyPage" 
             name="Sling" 
-            class="org.apache.sling.ide.eclipse.wst.ui.internal.SlingProjectPropertyPage" > 
+            class="org.apache.sling.ide.eclipse.ui.internal.SlingProjectPropertyPage"> 
             <enabledWhen>
             <and>
              	<instanceof

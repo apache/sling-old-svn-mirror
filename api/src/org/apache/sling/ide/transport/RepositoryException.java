@@ -14,15 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.transport;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+/**
+ * Signals an error when communicating with a Sling repository
+ */
+public class RepositoryException extends Exception {
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
+	private static final long serialVersionUID = -6613542630470583643L;
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
+	public RepositoryException() {
+
+	}
+
+	public RepositoryException(String message) {
+		super(message);
+	}
+
+	public RepositoryException(Throwable cause) {
+		super(cause);
+	}
+
+	public RepositoryException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
 }

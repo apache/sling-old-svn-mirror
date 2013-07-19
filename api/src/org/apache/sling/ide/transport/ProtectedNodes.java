@@ -14,15 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.transport;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
+public enum ProtectedNodes {
+	
+	JCR_CREATED(Repository.JCR_CREATED),JCR_CREATED_BY(Repository.JCR_CREATED_BY),JCR_PRIMARY_TYPE(Repository.JCR_PRIMARY_TYPE);
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
+	private static final Map<String, ProtectedNodes> nameToValueMap =
+			new HashMap<String, ProtectedNodes>();
 
+	static {
+		for (ProtectedNodes value : EnumSet.allOf(ProtectedNodes.class)) {			 
+			nameToValueMap.put(value.getKey(), value);
+		}
+	}
+
+	public static boolean exists(String key) {
+		return nameToValueMap.containsKey(key);
+	}
+	
+	
+	
+	private final String key;
+
+	private ProtectedNodes(String key) {
+		this.key = key;
+	}
+
+	public String getKey() {
+		return this.key;
+	}
+	
 }

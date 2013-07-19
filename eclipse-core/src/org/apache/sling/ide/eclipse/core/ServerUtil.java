@@ -19,10 +19,10 @@ package org.apache.sling.ide.eclipse.core;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer;
-import org.apache.sling.slingclipse.SlingclipsePlugin;
-import org.apache.sling.slingclipse.api.Repository;
-import org.apache.sling.slingclipse.api.RepositoryInfo;
+import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadServer;
+import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.wst.server.core.IServer;
 
@@ -35,7 +35,7 @@ public abstract class ServerUtil {
 
         ISlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
 
-        Repository repository = SlingclipsePlugin.getDefault().getRepository();
+        Repository repository = Activator.getDefault().getRepository();
         try {
             // TODO configurable scheme?
             URI uri = new URI("http", null, server.getHost(), configuration.getPort(), configuration.getContextPath(),

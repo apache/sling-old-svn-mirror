@@ -14,15 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.impl.resource.transport;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryInfo;
+//TODO move to api?
+public abstract class AbstractRepository implements Repository{
+	
+	protected RepositoryInfo repositoryInfo;
+	
+	public void setRepositoryInfo(RepositoryInfo repositoryInfo){
+		this.repositoryInfo=repositoryInfo;
+	}
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
-
+	@Override
+	public String toString() {
+		return "AbstractRepository [repositoryInfo=" + repositoryInfo + "]";
+	}
 }

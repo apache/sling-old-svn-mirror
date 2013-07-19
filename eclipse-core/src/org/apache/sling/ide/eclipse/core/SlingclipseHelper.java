@@ -16,13 +16,11 @@
  */
 package org.apache.sling.ide.eclipse.core;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
-
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
-
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
-
+@Deprecated
+public class SlingclipseHelper {
+	
+    /**
+     * @deprecated Will be transformed into a per-project property
+     */
+	public static final String JCR_ROOT= "jcr_root";
 }

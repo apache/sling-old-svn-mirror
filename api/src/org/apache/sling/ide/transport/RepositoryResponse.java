@@ -14,15 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.transport;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
-
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
-
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
-
+public class RepositoryResponse {
+	
+	public static int STATUS_OK=0;
+	public static int STATUS_FAILED=-1;
+	
+	private int state;
+	private String message;
+ 	
+	public RepositoryResponse(int state) {
+		super();
+		this.state = state;
+	}
+	public int getState() {
+		return state;
+	}
+	public void setState(int state) {
+		this.state = state;
+	}
+	public String getMessage() {
+		return message;
+	}
+	public void setMessage(String message) {
+		this.message = message;
+	}
 }

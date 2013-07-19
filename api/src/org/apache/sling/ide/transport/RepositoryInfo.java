@@ -14,15 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.transport;
 
-import org.apache.sling.ide.eclipse.core.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+import java.net.URI;
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
+public class RepositoryInfo {
+	
+	private String username;
+	private String password;
+	private String url;
+	
+	public RepositoryInfo(String username, String password, String url) {
+		super();
+		this.username = username;
+		this.password = password;
+		this.url = url;
+	}
+	
+	public String getUsername() {
+		return username;
+	}
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, ISlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
+	public String getPassword() {
+		return password;
+	}
 
+	public String getUrl() {
+		return url;
+	}
+	
+	public String getHost(){
+		String host=url.substring(7);
+		return host.split(":")[0];
+	}
+	
+	public int getPort(){
+
+        return URI.create(url).getPort();
+	}
+
+	@Override
+	public String toString() {
+		return "RepositoryInfo [username=" + username + ", url=" + url + "]";
+	}
 }

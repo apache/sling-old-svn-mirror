@@ -13,7 +13,7 @@
   <extension point="org.eclipse.wst.server.core.moduleFactories">
   	<moduleFactory
   		projects="true"
-  		class="org.apache.sling.ide.eclipse.wst.internal.SlingContentModuleFactory"
+  		class="org.apache.sling.ide.eclipse.core.internal.SlingContentModuleFactory"
   		id="org.apache.sling.contentModuleFactory">
 	    <moduleType
 	       versions="1.0"
@@ -32,11 +32,11 @@
   		<!-- TODO add image -->
   		
   		<action facet="sling.content" version="1.0" type="INSTALL">
-  			<delegate class="org.apache.sling.ide.eclipse.wst.internal.SlingContentFacetInstallDelegate"/>
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingContentFacetInstallDelegate"/>
   		</action>
 
   		<action facet="sling.content" version="1.0" type="UNINSTALL">
-  			<delegate class="org.apache.sling.ide.eclipse.wst.internal.SlingContentFacetUninstallDelegate"/>
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingContentFacetUninstallDelegate"/>
   		</action>
 	</extension>  
 
@@ -48,7 +48,7 @@
        description="Sling Launchpad (runtime description)"
        vendor="Sling"
        version="1.0"
-       class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadRuntime">
+       class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadRuntime">
        <moduleType types="sling.content" versions="1.0"/> 
     </runtimeType>
   </extension>
@@ -67,14 +67,14 @@
        hasConfiguration="true"
        launchConfigId="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"       
        runtimeTypeId="org.apache.sling.launchpad.runtime"
-       class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer"
-       behaviourClass="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadBehaviour">
+       class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadServer"
+       behaviourClass="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadBehaviour">
      </serverType>
   </extension>
 
   <extension point="org.eclipse.wst.server.core.launchableAdapters">
      <launchableAdapter
-        class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadLaunchableAdapterDelegate"
+        class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadLaunchableAdapterDelegate"
         id="org.sling.slingclipse.web"/>
   </extension>
 
@@ -83,7 +83,7 @@
      <launchConfigurationType
         id="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"
         name="Sling Launchpad"
-        delegate="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadLaunchConfigurationDelegate"
+        delegate="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadLaunchConfigurationDelegate"
         modes="run"
         sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
   </extension>
