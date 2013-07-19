@@ -38,6 +38,8 @@ public class Activator extends Plugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
 
+        System.out.println("Starting with context " + context);
+
         serializationManagerRef = context.getServiceReference(SerializationManager.class);
         serializationManager = context.getService(serializationManagerRef);
 
@@ -49,6 +51,8 @@ public class Activator extends Plugin {
         INSTANCE = null;
 
         context.ungetService(serializationManagerRef);
+
+        System.out.println("Stopping with context " + context);
 
         super.stop(context);
     }
