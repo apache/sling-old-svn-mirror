@@ -3,19 +3,19 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.apache.sling.slingclipse</groupId>
-	<artifactId>slingclipse</artifactId>
+	<groupId>org.apache.sling.ide</groupId>
+	<artifactId>reactor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Slingclipse Builder</name>
+	<name>Sling IDE Tools: Reactor</name>
 	<modules>
-		<module>slingclipse-target-definition</module>
-		<module>slingclipse-api</module>
-		<module>slingclipse-http</module>
-		<module>slingclipse-plugin</module>
-		<module>slingclipse-wst</module>
-		<module>slingclipse-feature</module>
-		<module>slingclipse-p2update</module>
+		<module>target-definition</module>
+		<module>api</module>
+		<module>impl-resource</module>
+		<module>eclipse-core</module>
+		<module>eclipse-ui</module>
+		<module>feature</module>
+		<module>p2update</module>
 	</modules>
 
 	<build>
@@ -34,7 +34,7 @@
 					<target>
 						<artifact>
 							<groupId>${project.groupId}</groupId>
-							<artifactId>org.apache.sling.slingclipse.target-definition</artifactId>
+							<artifactId>org.apache.sling.ide.target-definition</artifactId>
 							<version>${project.version}</version>
 						</artifact>
 					</target>
