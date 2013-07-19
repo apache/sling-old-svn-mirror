@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
-import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -28,6 +27,8 @@ import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryInfo;
 import org.apache.sling.slingclipse.api.Result;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -35,7 +36,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
-import org.eclipse.wst.server.core.model.IModuleFile;
 import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.IModuleResourceDelta;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
@@ -155,18 +155,15 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
                     System.out.println(deltaTrace);
 
-                    if (resourceDelta.getModuleResource() instanceof IModuleFile) {
-
-                        switch (resourceDelta.getKind()) {
-                            case IModuleResourceDelta.ADDED:
-                            case IModuleResourceDelta.CHANGED:
-                            case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
-                                execute(addFileCommand(repository, (IModuleFile) resourceDelta.getModuleResource()));
-                                break;
-                            case IModuleResourceDelta.REMOVED:
-                                execute(removeFileCommand(repository, (IModuleFile) resourceDelta.getModuleResource()));
-                                break;
-                        }
+                    switch (resourceDelta.getKind()) {
+                        case IModuleResourceDelta.ADDED:
+                        case IModuleResourceDelta.CHANGED:
+                        case IModuleResourceDelta.NO_CHANGE: // TODO is this needed?
+                            execute(addFileCommand(repository, resourceDelta.getModuleResource()));
+                            break;
+                        case IModuleResourceDelta.REMOVED:
+                            execute(removeFileCommand(repository, resourceDelta.getModuleResource()));
+                            break;
                     }
                 }
                 break;
@@ -174,22 +171,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             case ServerBehaviourDelegate.ADDED:
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
                 for (IModuleResource resource : moduleResources) {
-
-                    if (resource instanceof IModuleFile) {
-                        execute(addFileCommand(repository, (IModuleFile) resource));
-                    } else {
-                        // TODO log/barf
-                    }
+                    execute(addFileCommand(repository, resource));
                 }
                 break;
             case ServerBehaviourDelegate.REMOVED:
                 for (IModuleResource resource : moduleResources) {
-
-                    if (resource instanceof IModuleFile) {
-                        execute(removeFileCommand(repository, (IModuleFile) resource));
-                    } else {
-                        // TODO log/barf
-                    }
+                    execute(removeFileCommand(repository, resource));
                 }
                 break;
         }
@@ -211,7 +198,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
     }
 
-    private Command<?> addFileCommand(Repository repository, IModuleFile resource) {
+    private Command<?> addFileCommand(Repository repository, IModuleResource resource) {
 
         FileInfo info = createFileInfo(resource);
 
@@ -223,13 +210,17 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return repository.newAddNodeCommand(info);
     }
 
-    private FileInfo createFileInfo(IModuleFile resource) {
+    private FileInfo createFileInfo(IModuleResource resource) {
 
-        IFile file = (IFile) resource.getAdapter(IFile.class);
+        IResource file = (IFile) resource.getAdapter(IFile.class);
+        if (file == null) {
+            file = (IFolder) resource.getAdapter(IFolder.class);
+        }
 
         if (file == null) {
             // Usually happens on server startup, it seems to be safe to ignore for now
-            System.out.println("Got null '" + IFile.class.getSimpleName() + "' for " + resource);
+            System.out.println("Got null '" + IFile.class.getSimpleName() + "' and '" + IFolder.class.getSimpleName()
+                    + "'for " + resource);
             return null;
         }
 
@@ -244,7 +235,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return info;
     }
 
-    private Command<?> removeFileCommand(Repository repository, IModuleFile resource) {
+    private Command<?> removeFileCommand(Repository repository, IModuleResource resource) {
 
         FileInfo info = createFileInfo(resource);
 

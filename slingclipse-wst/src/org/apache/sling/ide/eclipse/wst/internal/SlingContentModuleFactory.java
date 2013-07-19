@@ -81,6 +81,8 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
                     IPath relativePath = resource.getProjectRelativePath();
 
+                    System.out.println("Visiting " + resource + " ...");
+
                     // only recurse in the expected content path
                     // TODO make configurable
                     if (!SlingclipseHelper.JCR_ROOT.equals(relativePath.segment(0))) {
@@ -89,12 +91,19 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
                     IPath modulePath = relativePath.removeFirstSegments(1); // remove jcr_root
 
-                    if (resource.getType() == IResource.FILE) {
+                    IModuleResource moduleFile = null;
 
-                        ModuleFile moduleFile = new ModuleFile((IFile) resource, resource.getName(), modulePath);
-                        resources.add(moduleFile);
-                        System.out.println("Converted " + resource + " to " + moduleFile);
+                    if (resource.getType() == IResource.FILE) {
+                        moduleFile = new ModuleFile((IFile) resource, resource.getName(), modulePath);
+                    } else if (resource.getType() == IResource.FOLDER) {
+                        moduleFile = new ModuleFolder((IFolder) resource, resource.getName(), modulePath);
                     }
+
+                    if (moduleFile != null)
+                        resources.add(moduleFile);
+
+                    System.out.println("Converted " + resource + " to " + moduleFile);
+
                     return true;
                 }
             });
