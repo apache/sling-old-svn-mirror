@@ -16,93 +16,46 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
 
 public class SlingLaunchpadConfiguration {
 
-    private final IFolder path;
+    private SlingLaunchpadServer server;
 
-    private int port = 8080;
-    private String contextPath = "/";
-    private String username = "admin";
-    private String password = "admin";
-
-    public SlingLaunchpadConfiguration(IFolder path) {
-        this.path = path;
-    }
-
-    public void load(IProgressMonitor monitor) {
-
-        IFile configFile = path.getFile("config.ini");
-        if (!configFile.exists()) {
-            return;
-        }
-
-        Properties p = new Properties();
-        InputStream contents = null;
-        try {
-            contents = configFile.getContents();
-            p.load(contents);
-
-            port = Integer.parseInt(p.getProperty("launchpad.port"));
-            contextPath = p.getProperty("launchpad.contextPath", "/");
-            username = p.getProperty("launchpad.username");
-            password = p.getProperty("launchpad.password");
-
-        } catch (CoreException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } finally {
-            try {
-                contents.close();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-
+    public SlingLaunchpadConfiguration(SlingLaunchpadServer server) {
+        this.server = server;
     }
 
     public int getPort() {
-        return port;
+        // TODO central place for setting defaults
+        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_PORT, 8080);
     }
 
     public void setPort(int port) {
-        this.port = port;
+        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_PORT, port);
     }
 
     public String getContextPath() {
-        return contextPath;
+        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_CONTEXT_PATH, "/");
     }
 
     public void setContextPath(String contextPath) {
-        this.contextPath = contextPath;
+        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_CONTEXT_PATH, contextPath);
     }
 
     public String getUsername() {
-        return username;
+        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_USERNAME, "admin");
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_USERNAME, username);
     }
 
     public String getPassword() {
-        return password;
+        return server.getServerWorkingCopy().getAttribute(SlingLaunchpadServer.PROP_PASSWORD, "admin");
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        server.getServerWorkingCopy().setAttribute(SlingLaunchpadServer.PROP_PASSWORD, password);
     }
 
 }

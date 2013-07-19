@@ -16,25 +16,29 @@
  */
 package org.apache.sling.ide.eclipse.wst.ui.internal;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import org.apache.sling.ide.eclipse.wst.internal.SetServerContextPathCommand;
+import org.apache.sling.ide.eclipse.wst.internal.SetServerPasswordCommand;
+import org.apache.sling.ide.eclipse.wst.internal.SetServerUsernameCommand;
 import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.forms.IFormColors;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
-import org.eclipse.ui.forms.IFormColors;
 import org.eclipse.wst.server.ui.editor.ServerEditorSection;
 
 public class ConnectionEditorSection extends ServerEditorSection {
@@ -46,6 +50,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
     private Text usernameText;
     private Text passwordText;
     private SlingLaunchpadServer launchpadServer;
+    private PropertyChangeListener serverListener;
 
     @Override
     public void createSection(Composite parent) {
@@ -113,6 +118,25 @@ public class ConnectionEditorSection extends ServerEditorSection {
     public void init(IEditorSite site, IEditorInput input) {
         super.init(site, input);
 
+        serverListener = new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+
+                if (SlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
+                    portText.setText(((Integer) evt.getNewValue()).toString());
+                } else if (SlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
+                    contextPathText.setText((String) evt.getNewValue());
+                } else if (SlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
+                    usernameText.setText((String) evt.getNewValue());
+                } else if (SlingLaunchpadServer.PROP_PASSWORD.equals(evt.getPropertyName())) {
+                    passwordText.setText((String) evt.getNewValue());
+                }
+            }
+        };
+
+        server.addPropertyChangeListener(serverListener);
+
         launchpadServer = (SlingLaunchpadServer) server.getAdapter(SlingLaunchpadServer.class);
         if (launchpadServer == null) {
             // TODO progress monitor
@@ -131,19 +155,43 @@ public class ConnectionEditorSection extends ServerEditorSection {
         usernameText.setText(config.getUsername());
         passwordText.setText(config.getPassword());
 
-        portText.addModifyListener(new ModifyListener() {
-
+        ModifyListener listener = new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e) {
-
-                try {
-                    config.setPort(Integer.parseInt(portText.getText()));
-                    // TODO persist change
-                } catch (NumberFormatException ex) {
-                    // shucks
+                if (e.getSource() == portText) {
+                    try {
+                        int port = Integer.parseInt(portText.getText());
+                        execute(new SetServerPortCommand(server, port));
+                    } catch (NumberFormatException ex) {
+                        // shucks
+                    }
+                } else if (e.getSource() == contextPathText) {
+                    execute(new SetServerContextPathCommand(server, contextPathText.getText()));
+                } else if (e.getSource() == usernameText) {
+                    execute(new SetServerUsernameCommand(server, usernameText.getText()));
+                } else if (e.getSource() == passwordText) {
+                    execute(new SetServerPasswordCommand(server, passwordText.getText()));
                 }
             }
-        });
+        };
+
+        for (Text text : new Text[] { portText, contextPathText, usernameText, passwordText }) {
+            text.addModifyListener(listener);
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.wst.server.ui.editor.ServerEditorSection#dispose()
+     */
+    @Override
+    public void dispose() {
+        if (server != null)
+            server.removePropertyChangeListener(serverListener);
+
+        super.dispose();
     }
 
 }

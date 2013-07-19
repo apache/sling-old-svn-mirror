@@ -16,18 +16,22 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
 public class SlingLaunchpadServer extends ServerDelegate {
 
+    public static final String PROP_PASSWORD = "launchpad.password";
+    public static final String PROP_USERNAME = "launchpad.username";
+    public static final String PROP_CONTEXT_PATH = "launchpad.contextPath";
+    public static final String PROP_PORT = "launchpad.port";
+
     private static final String MODULE_TYPE_SLING_CONTENT = "sling.content";
+
     private SlingLaunchpadConfiguration config;
 
     public SlingLaunchpadConfiguration getConfiguration() {
@@ -36,12 +40,7 @@ public class SlingLaunchpadServer extends ServerDelegate {
             return config;
         }
 
-        IFolder folder = getServer().getServerConfiguration();
-
-        config = new SlingLaunchpadConfiguration(folder);
-        config.load(new NullProgressMonitor()); // TODO progress monitor
-
-        return config;
+        return config = new SlingLaunchpadConfiguration(this);
 
     }
 
@@ -120,6 +119,15 @@ public class SlingLaunchpadServer extends ServerDelegate {
         for (IModule module : toRemove) {
             System.out.println("Removing module " + module);
         }
+    }
+
+    @Override
+    public void setDefaults(IProgressMonitor monitor) {
+
+        setAttribute(PROP_PORT, 8080);
+        setAttribute(PROP_CONTEXT_PATH, "/");
+        setAttribute(PROP_USERNAME, "admin");
+        setAttribute(PROP_PASSWORD, "admin");
     }
 
 }
