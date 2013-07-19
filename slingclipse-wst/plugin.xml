@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+  <extension point="org.eclipse.wst.server.core.runtimeTypes">
+  
+    <runtimeType
+       id="org.apache.sling.ide.eclipse.wst.slingLaunchpad"
+       name="Sling Launchpad"
+       description="Sling Launchpad"
+       vendor="Sling"
+       version="2.4"
+       class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadRuntime">
+       
+       <!-- TODO do we need a Sling module type ? -->
+       
+       <!--
+       <moduleType
+         types="jst.web"
+         versions="2.2, 2.3, 2.4, 2.5"/>
+       <moduleType
+         types="jst.utility"
+         versions="1.0"/>
+         -->
+    </runtimeType>
+  </extension>
+  
+  <!-- TODO remove launchConfigId for now ? -->
+  <extension point="org.eclipse.wst.server.core.serverTypes">
+     <serverType
+       id="org.apache.sling.ide.eclipse.wst.slingLaunchpad"
+       name="Sling Launchpad"
+       description="Sling Launchpad"
+       supportsRemoteHosts="true"
+       runtime="true"
+       startTimeout="30000"
+       stopTimeout="15000"
+       initialState="stopped"
+       hasConfiguration="true"
+       launchConfigId="org.apache.sling.ide.eclipse.wst.slingLaunchpadConfigurationType"
+       runtimeTypeId="org.apache.sling.ide.eclipse.wst.slingLaunchpad"
+       class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer"
+       behaviourClass="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadBehaviour">
+     </serverType>
+  </extension>
+
+<!-- TODO move to wst.ui bundle -->  
+	<extension point="org.eclipse.wst.server.ui.serverImages">      
+	      <image
+	         id="org.apache.sling.ide.eclipse.wst.launchpad"
+	         icon="icons/obj16/sling.gif"
+	         typeIds="org.apache.sling.ide.eclipse.wst.slingLaunchpad"/>
+	</extension>  
+	
+   <extension point="org.eclipse.wst.server.ui.editorPageSections">      
+      <section
+         id="org.apache.sling.ide.eclipse.configuration.editor.port"
+         order="10"
+         insertionId="org.eclipse.wst.server.editor.overview.right"
+         typeIds="org.apache.sling.ide.eclipse.wst.*"
+         class="org.apache.sling.ide.eclipse.wst.ui.internal.ConnectionEditorSection">
+      </section>
+   </extension>	
+</plugin>    

@@ -13,6 +13,7 @@
 		<module>slingclipse-api</module>
 		<module>slingclipse-http</module>
 		<module>slingclipse-plugin</module>
+		<module>slingclipse-wst</module>
 		<module>slingclipse-feature</module>
 		<module>slingclipse-p2update</module>
 	</modules>
