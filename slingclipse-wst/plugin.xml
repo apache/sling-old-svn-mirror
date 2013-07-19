@@ -9,6 +9,18 @@
        name="Sling module type"/>
   </extension>
   
+  <!-- Define a sling module factory -->
+  <extension point="org.eclipse.wst.server.core.moduleFactories">
+  	<moduleFactory
+  		projects="true"
+  		class="org.apache.sling.ide.eclipse.wst.internal.SlingContentModuleFactory"
+  		id="org.apache.sling.contentModuleFactory">
+	    <moduleType
+	       versions="1.0"
+	       types="sling.content"/>
+  	</moduleFactory>
+  </extension>
+  
 	<!-- Define the sling facet we support -->
 	<extension point="org.eclipse.wst.common.project.facet.core.facets">
 		<project-facet id="sling.content">
