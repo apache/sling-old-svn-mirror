@@ -5,18 +5,19 @@
   <!-- Define the launch configuration's tab group -->
     <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
     <launchConfigurationTabGroup
-      id="org.apache.sling.ide.eclipse.launchpad.launchConfigurationTabGroup"
-      type="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"
+      id="org.apache.sling.ide.launchpadLaunchConfigurationTabGroup"
+      type="org.apache.sling.ide.launchpadLaunchConfigurationType"
       class="org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadLaunchConfigurationTabGroup">
     </launchConfigurationTabGroup>
   </extension>
   
 
 	<!-- Define images -->
-	<extension point="org.eclipse.wst.server.ui.serverImages">      
+	<extension point="org.eclipse.wst.server.ui.serverImages">
+	<!-- TODO : merge into a single image? -->
 	      <image
 	         icon="icons/obj16/sling.gif"
-	         typeIds="org.apache.sling.launchpad.server"/>
+	         typeIds="org.apache.sling.ide.launchpadServer"/>
 	      <image
 	         icon="icons/obj16/sling.gif"
 	         typeIds="sling.content"/>
@@ -25,17 +26,17 @@
 	<!-- Define the editor section(s) we contribute to the WST UI -->
    <extension point="org.eclipse.wst.server.ui.editorPageSections">      
       <section
-         id="org.apache.sling.ide.eclipse.configuration.editor.port"
+         id="org.apache.sling.ide.launchpadConfigurationEditorSection"
          order="10"
          insertionId="org.eclipse.wst.server.editor.overview.right"
-         typeIds="org.apache.sling.launchpad.server"
+         typeIds="org.apache.sling.ide.launchpadServer"
          class="org.apache.sling.ide.eclipse.ui.internal.ConnectionEditorSection">
       </section>
    </extension>   
   
   <!-- Runtime images -->
     <extension point="org.eclipse.wst.common.project.facet.ui.images">
-    <image runtime-component-type="org.apache.sling.launchpad"
+    <image runtime-component-type="org.apache.sling.ide.launchpadRuntimeComponentType"
        path="icons/obj16/sling.gif"/>
   </extension>
   
@@ -44,9 +45,9 @@
          point="org.eclipse.ui.popupMenus">
          <!-- All Sling contributions -->
         <objectContribution
-            id="org.apache.sling.slingclipse.slingMenu"
+            id="org.apache.sling.ide.menu"
             objectClass="org.eclipse.core.resources.IProject">
-            <menu id="org.apache.sling.slingclipse.slingMenu"
+            <menu id="org.apache.sling.ide.menu"
               path="additions"
               label="Sling">
             	<groupMarker name="sling"/>
@@ -54,14 +55,14 @@
          </objectContribution>
          <!-- Import. 
          	I prefer to do this outside the import wizard section since I can restrict the destination -->
-         <objectContribution id="org.apache.sling.slingclipse.slingImport"
+         <objectContribution id="org.apache.sling.ide.menu.import"
          	objectClass="org.eclipse.core.resources.IProject">
          	
          <action
                class="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction"
-               id="org.apache.sling.slingclipse.importContentAction"
+               id="org.apache.sling.ide.menu.importContentAction"
                label="Import Content..."
-               menubarPath="org.apache.sling.slingclipse.slingMenu/sling"
+               menubarPath="org.apache.sling.ide.menu/sling"
                style="push">
          </action>
          <visibility>
@@ -81,7 +82,7 @@
    <!-- Property page for project to select directory to sync -->
    <extension point="org.eclipse.ui.propertyPages"> 
         <page 
-            id="org.apache.sling.ide.eclipse.projectPropertyPage" 
+            id="org.apache.sling.ide.projectPropertyPage" 
             name="Sling" 
             class="org.apache.sling.ide.eclipse.ui.internal.SlingProjectPropertyPage"> 
             <enabledWhen>

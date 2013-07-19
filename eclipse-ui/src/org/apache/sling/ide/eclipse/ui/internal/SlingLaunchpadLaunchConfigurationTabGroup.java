@@ -28,11 +28,13 @@ import org.eclipse.wst.server.ui.ServerLaunchConfigurationTab;
 
 public class SlingLaunchpadLaunchConfigurationTabGroup extends AbstractLaunchConfigurationTabGroup {
 
+    private static final String LAUNCHPAD_SERVER_ID = "org.apache.sling.ide.launchpadServer";
+
     @Override
     public void createTabs(ILaunchConfigurationDialog dialog, String mode) {
 
         ILaunchConfigurationTab[] tabs = new ILaunchConfigurationTab[6];
-        tabs[0] = new ServerLaunchConfigurationTab(new String[] { "org.apache.sling.launchpad.server" });
+        tabs[0] = new ServerLaunchConfigurationTab(new String[] { LAUNCHPAD_SERVER_ID });
         tabs[0].setLaunchConfigurationDialog(dialog);
         tabs[1] = new JavaArgumentsTab();
         tabs[1].setLaunchConfigurationDialog(dialog);
