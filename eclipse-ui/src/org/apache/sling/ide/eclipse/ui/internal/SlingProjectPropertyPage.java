@@ -1,10 +1,9 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -24,7 +23,7 @@ import org.eclipse.ui.dialogs.PropertyPage;
 
 public class SlingProjectPropertyPage extends PropertyPage {
 
-    private static final String PROPERTY_SYNC_ROOT = "sync_root";
+
     private Text folderText;
 
     @Override
@@ -37,7 +36,7 @@ public class SlingProjectPropertyPage extends PropertyPage {
         new Label(c, SWT.NONE).setText("Folder to sync");
         folderText = new Text(c, SWT.BORDER);
         folderText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-        folderText.setText(getValueWithDefault());
+        folderText.setText(ProjectUtil.getSyncDirectoryValue(getProject()));
 
         folderText.addModifyListener(new ModifyListener() {
 
@@ -90,21 +89,6 @@ public class SlingProjectPropertyPage extends PropertyPage {
         return c;
     }
 
-    private String getValueWithDefault() {
-
-        String value = null;
-        try {
-            value = getProject().getPersistentProperty(new QualifiedName(Constants.PLUGIN_ID, PROPERTY_SYNC_ROOT));
-        } catch (CoreException e) {
-            // TODO error handling
-        }
-
-        // TODO central place for defaults
-        if (value == null)
-            value = "jcr_root";
-        return value;
-    }
-
     @Override
     public boolean isValid() {
 
@@ -119,19 +103,15 @@ public class SlingProjectPropertyPage extends PropertyPage {
             return false;
         }
 
+        setErrorMessage(null);
+
         return true;
     }
 
     @Override
     public boolean performOk() {
 
-        IProject project = getProject();
-
-        try {
-            project.setPersistentProperty(new QualifiedName(Constants.PLUGIN_ID, PROPERTY_SYNC_ROOT), folderText.getText());
-        } catch (CoreException e) {
-            setErrorMessage(e.getMessage());
-        }
+        ProjectUtil.setSyncDirectoryPath(getProject(), folderText.getText());
 
         return super.performOk();
     }

@@ -3,7 +3,7 @@ package org.apache.sling.ide.eclipse.core.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.sling.ide.eclipse.core.SlingclipseHelper;
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -71,6 +71,12 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
         public IModuleResource[] members() throws CoreException {
             IProject project = module.getProject();
             final List<IModuleResource> resources = new ArrayList<IModuleResource>();
+            final IFolder syncFolder = project.getFolder(ProjectUtil.getSyncDirectoryValue(project));
+
+            if (!syncFolder.exists()) {
+                return new IModuleResource[0];
+            }
+
             project.accept(new IResourceVisitor() {
                 @Override
                 public boolean visit(IResource resource) throws CoreException {
@@ -81,13 +87,18 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
                     IPath relativePath = resource.getProjectRelativePath();
 
-                    // only recurse in the expected content path
-                    // TODO make configurable
-                    if (!SlingclipseHelper.JCR_ROOT.equals(relativePath.segment(0))) {
+                    if (relativePath.isPrefixOf(syncFolder.getProjectRelativePath())) {
+                        // parent directory of our sync location, don't process but recurse
+                        return true;
+                    }
+
+                    // urelated resource tree, stop processing
+                    if (!syncFolder.getProjectRelativePath().isPrefixOf(relativePath)) {
                         return false;
                     }
 
-                    IPath modulePath = relativePath.removeFirstSegments(1); // remove jcr_root
+                    IPath modulePath = relativePath.removeFirstSegments(syncFolder.getProjectRelativePath()
+                            .segmentCount()); // remove sync dir
 
                     IModuleResource moduleFile = null;
 

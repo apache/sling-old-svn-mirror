@@ -19,7 +19,8 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.util.List;
 
-import org.apache.sling.ide.eclipse.core.SlingclipseHelper;
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -72,8 +73,8 @@ public class ImportWizardPage extends WizardResourceImportPage {
 		setTitle(pageName); // NON-NLS-1
 		setDescription("Import content from a Sling Repository into the workspace"); // NON-NLS-1
 
-        setContainerFieldValue(getProject(selection).getFullPath()
-                .append(SlingclipseHelper.JCR_ROOT).toOSString());
+        IProject project = getProject(selection);
+        setContainerFieldValue(project.getFullPath().append(ProjectUtil.getSyncDirectoryValue(project)).toOSString());
 	}
 
     private IProject getProject(IStructuredSelection selection) {
@@ -194,8 +195,13 @@ public class ImportWizardPage extends WizardResourceImportPage {
 			return false;
 		}
 		
-        if (!getResourcePath().toOSString().endsWith(SlingclipseHelper.JCR_ROOT)) {
-			setErrorMessage("Please enter a valid Sling project folder (e.g. jcr_root)");
+        IProject project = getProject(selection);
+        String syncDirectoryPath = ProjectUtil.getSyncDirectoryValue(project);
+        IFolder syncFolder = project.getFolder(syncDirectoryPath);
+
+        if (!syncFolder.getFullPath().isPrefixOf(getResourcePath())) {
+            setErrorMessage("The destination directory must be " + syncFolder.getFullPath().toPortableString()
+                    + " or one of its descendants.");
 			return false;
 		}
 		
