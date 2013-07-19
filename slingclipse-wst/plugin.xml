@@ -201,6 +201,25 @@
          </enablement>
 		</objectContribution>
   </extension>
+  
+   <!-- Property page for project to select directory to sync -->
+   <extension point="org.eclipse.ui.propertyPages"> 
+        <page 
+            id="org.apache.sling.ide.eclipse.projectPropertyPage" 
+            name="Sling" 
+            class="org.apache.sling.ide.eclipse.wst.ui.internal.SlingProjectPropertyPage" > 
+            <enabledWhen>
+            <and>
+             	<instanceof
+                  	value="org.eclipse.core.resources.IProject">
+             	</instanceof>
+ 				<test 
+		            property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+		            value="sling.content"/>
+             </and>
+          </enabledWhen>
+        </page> 
+    </extension> 
    
 <!--
   <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
