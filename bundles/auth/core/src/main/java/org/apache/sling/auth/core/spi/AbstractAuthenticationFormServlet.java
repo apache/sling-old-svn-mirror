@@ -130,12 +130,33 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
             throws IOException {
         String form = getRawForm();
 
-        form = form.replace("${resource}", getResource(request));
-        form = form.replace("${j_reason}", getReason(request));
-        form = form.replace("${requestContextPath}", getContextPath(request));
-        form = form.replace("${contextPath}", request.getContextPath());
+        form = form.replace("${resource}", escapeXml(getResource(request)));
+        form = form.replace("${j_reason}", escapeXml(getReason(request)));
+        form = form.replace("${requestContextPath}", escapeXml(getContextPath(request)));
+        form = form.replace("${contextPath}", escapeXml(request.getContextPath()));
 
         return form;
+    }
+
+    private static String escapeXml(final String input) {
+        if (input == null) {
+            return null;
+        }
+
+        final StringBuilder b = new StringBuilder(input.length());
+        for(int i = 0;i  < input.length(); i++) {
+            final char c = input.charAt(i);
+            if(c == '&') {
+                b.append("&amp;");
+            } else if(c == '<') {
+                b.append("&lt;");
+            } else if(c == '>') {
+                b.append("&gt;");
+            } else {
+                b.append(c);
+            }
+        }
+        return b.toString();
     }
 
     /**
