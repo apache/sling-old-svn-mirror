@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -23,31 +25,22 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
-public class SlingLaunchpadServer extends ServerDelegate {
-
-    public static final int PUBLISH_STATE_NEVER = 1;
-    public static final int PUBLISH_STATE_RESOURCE_CHANGE = 2;
-    public static final int PUBLISH_STATE_BUILD_EVENT = 3;
-
-    public static final String PROP_PASSWORD = "launchpad.password";
-    public static final String PROP_USERNAME = "launchpad.username";
-    public static final String PROP_CONTEXT_PATH = "launchpad.contextPath";
-    public static final String PROP_PORT = "launchpad.port";
+public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunchpadServer {
 
     private static final String PROP_AUTO_PUBLISH_SETTING = "auto-publish-setting";
 
     private static final String MODULE_TYPE_SLING_CONTENT = "sling.content";
 
-    private SlingLaunchpadConfiguration config;
+    private ISlingLaunchpadConfiguration config;
 
-    public SlingLaunchpadConfiguration getConfiguration() {
+    @Override
+    public ISlingLaunchpadConfiguration getConfiguration() {
 
         if (config != null) {
             return config;
         }
 
         return config = new SlingLaunchpadConfiguration(this);
-
     }
 
     /*
@@ -137,10 +130,12 @@ public class SlingLaunchpadServer extends ServerDelegate {
     }
 
 
+    @Override
     public int getPublishState() {
         return getAttribute(PROP_AUTO_PUBLISH_SETTING, PUBLISH_STATE_NEVER);
     }
 
+    @Override
     public void setPublishState(int publishState) {
         System.out.println("[" + Thread.currentThread().getName() + "] Set " + PROP_AUTO_PUBLISH_SETTING + " to "
                 + publishState);

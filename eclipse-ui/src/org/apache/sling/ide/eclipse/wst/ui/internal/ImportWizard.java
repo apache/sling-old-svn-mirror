@@ -20,8 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
-import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadBehaviour;
-import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.api.Command;
@@ -86,21 +86,21 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
 				protected IStatus run(IProgressMonitor monitor) {
 
-                    Repository repository = SlingLaunchpadBehaviour.getRepository(server, monitor);
+                    Repository repository = ServerUtil.getRepository(server, monitor);
 
 					Tracer tracer = SlingclipsePlugin.getDefault().getTracer();
 					
 					monitor.setTaskName("Loading configuration...");
 					monitor.worked(5);
-                    SlingLaunchpadServer launchpad = (SlingLaunchpadServer) server.loadAdapter(
-                            SlingLaunchpadServer.class, monitor);
+                    ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
+                            ISlingLaunchpadServer.class, monitor);
 					
                     int oldPublishState = launchpad.getPublishState();
                     // TODO disabling publish does not work; since the publish is done async
                     // Not sure if there is a simple workaround. Anyway, the only side effect is that we
                     // make too many calls after the import, functionality is not affected
-                    if (server.canPublish().isOK() && oldPublishState != SlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-                        launchpad.setPublishState(SlingLaunchpadServer.PUBLISH_STATE_NEVER);
+                    if (server.canPublish().isOK() && oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
+                        launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER);
                     }
 
 					try {
@@ -121,7 +121,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 						SlingclipsePlugin.getDefault().getLog().log(status);
 						return status;
 					}finally{
-                        if (oldPublishState != SlingLaunchpadServer.PUBLISH_STATE_NEVER) {
+                        if (oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
                             launchpad.setPublishState(oldPublishState);
                         }
 

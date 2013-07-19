@@ -14,15 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.wst.internal;
+package org.apache.sling.ide.eclipse.core;
 
-import org.apache.sling.ide.eclipse.wst.ui.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+public interface ISlingLaunchpadConfiguration {
 
-public class SetServerContextPathCommand extends SetServerStringPropertyCommand {
+    int getPort();
 
-    public SetServerContextPathCommand(IServerWorkingCopy server, String newValue) {
-        super(server, SlingLaunchpadServer.PROP_CONTEXT_PATH, newValue, "/");
-    }
+    String getContextPath();
+
+    String getUsername();
+
+    String getPassword();
 
 }

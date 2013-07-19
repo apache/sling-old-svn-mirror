@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.api.Command;
@@ -65,7 +66,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         boolean success = false;
 
         Result<String> result = null;
-        Command<String> command = getRepository(monitor).newListChildrenNodeCommand("/", ResponseType.XML);
+        Command<String> command = ServerUtil.getRepository(getServer(), monitor).newListChildrenNodeCommand("/", ResponseType.XML);
         result = command.execute();
         success = result.isSuccess();
 
@@ -137,7 +138,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println(trace.toString());
 
-        Repository repository = getRepository(monitor);
+        Repository repository = ServerUtil.getRepository(getServer(), monitor);
 
         IModuleResource[] moduleResources = getResources(module);
 
@@ -199,32 +200,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         // set state to published
         super.publishModule(kind, deltaKind, module, monitor);
-    }
-
-    public static Repository getRepository(IServer server, IProgressMonitor monitor) {
-
-        SlingLaunchpadServer launchpadServer = (SlingLaunchpadServer) server.loadAdapter(
-                SlingLaunchpadServer.class, monitor);
-
-        SlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
-
-        Repository repository = SlingclipsePlugin.getDefault().getRepository();
-        try {
-            // TODO configurable scheme?
-            URI uri = new URI("http", null, server.getHost(), configuration.getPort(),
-                    configuration.getContextPath(), null, null);
-            RepositoryInfo repositoryInfo = new RepositoryInfo(configuration.getUsername(),
-                    configuration.getPassword(), uri.toString());
-            repository.setRepositoryInfo(repositoryInfo);
-        } catch (URISyntaxException e) {
-            // TODO handle error
-        }
-        return repository;
-    }
-
-    private Repository getRepository(IProgressMonitor monitor) {
-
-        return getRepository(getServer(), monitor);
     }
 
     private void execute(Command<?> command) throws CoreException {

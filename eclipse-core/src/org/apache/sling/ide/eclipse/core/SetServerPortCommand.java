@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.wst.ui.internal;
+package org.apache.sling.ide.eclipse.core;
 
-import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
 import org.eclipse.core.runtime.IAdaptable;
@@ -39,9 +38,9 @@ public class SetServerPortCommand extends AbstractOperation {
 
     @Override
     public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-        oldValue = server.getAttribute(SlingLaunchpadServer.PROP_PORT, 8080);
+        oldValue = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
 
-        server.setAttribute(SlingLaunchpadServer.PROP_PORT, port);
+        server.setAttribute(ISlingLaunchpadServer.PROP_PORT, port);
 
         return Status.OK_STATUS;
     }
@@ -65,7 +64,7 @@ public class SetServerPortCommand extends AbstractOperation {
      */
     @Override
     public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-        server.setAttribute(SlingLaunchpadServer.PROP_PORT, oldValue);
+        server.setAttribute(ISlingLaunchpadServer.PROP_PORT, oldValue);
 
         return Status.OK_STATUS;
     }

@@ -19,11 +19,12 @@ package org.apache.sling.ide.eclipse.wst.ui.internal;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import org.apache.sling.ide.eclipse.wst.internal.SetServerContextPathCommand;
-import org.apache.sling.ide.eclipse.wst.internal.SetServerPasswordCommand;
-import org.apache.sling.ide.eclipse.wst.internal.SetServerUsernameCommand;
-import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadConfiguration;
-import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.SetServerContextPathCommand;
+import org.apache.sling.ide.eclipse.core.SetServerPasswordCommand;
+import org.apache.sling.ide.eclipse.core.SetServerPortCommand;
+import org.apache.sling.ide.eclipse.core.SetServerUsernameCommand;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
@@ -49,7 +50,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
     private Text contextPathText;
     private Text usernameText;
     private Text passwordText;
-    private SlingLaunchpadServer launchpadServer;
+    private ISlingLaunchpadServer launchpadServer;
     private PropertyChangeListener serverListener;
 
     @Override
@@ -123,13 +124,13 @@ public class ConnectionEditorSection extends ServerEditorSection {
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
 
-                if (SlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
+                if (ISlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
                     portText.setText(((Integer) evt.getNewValue()).toString());
-                } else if (SlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
+                } else if (ISlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
                     contextPathText.setText((String) evt.getNewValue());
-                } else if (SlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
+                } else if (ISlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
                     usernameText.setText((String) evt.getNewValue());
-                } else if (SlingLaunchpadServer.PROP_PASSWORD.equals(evt.getPropertyName())) {
+                } else if (ISlingLaunchpadServer.PROP_PASSWORD.equals(evt.getPropertyName())) {
                     passwordText.setText((String) evt.getNewValue());
                 }
             }
@@ -137,17 +138,17 @@ public class ConnectionEditorSection extends ServerEditorSection {
 
         server.addPropertyChangeListener(serverListener);
 
-        launchpadServer = (SlingLaunchpadServer) server.getAdapter(SlingLaunchpadServer.class);
+        launchpadServer = (ISlingLaunchpadServer) server.getAdapter(ISlingLaunchpadServer.class);
         if (launchpadServer == null) {
             // TODO progress monitor
-            launchpadServer = (SlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class,
+            launchpadServer = (ISlingLaunchpadServer) server.loadAdapter(ISlingLaunchpadServer.class,
                     new NullProgressMonitor());
         }
     }
 
     private void initialize() {
 
-        final SlingLaunchpadConfiguration config = launchpadServer.getConfiguration();
+        final ISlingLaunchpadConfiguration config = launchpadServer.getConfiguration();
 
         portText.setText(String.valueOf(config.getPort()));
         contextPathText.setText(config.getContextPath());

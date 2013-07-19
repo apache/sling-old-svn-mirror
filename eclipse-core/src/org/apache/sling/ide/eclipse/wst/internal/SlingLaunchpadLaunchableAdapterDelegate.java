@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.wst.server.core.IModuleArtifact;
 import org.eclipse.wst.server.core.IServer;
@@ -32,7 +33,7 @@ public class SlingLaunchpadLaunchableAdapterDelegate extends LaunchableAdapterDe
             return null;
         }
 
-        SlingLaunchpadServer launchpad = (SlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class, null);
+        ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class, null);
         if (launchpad == null) {
             return null;
         }

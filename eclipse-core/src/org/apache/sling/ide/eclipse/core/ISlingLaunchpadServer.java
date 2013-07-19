@@ -14,15 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.wst.internal;
+package org.apache.sling.ide.eclipse.core;
 
-import org.apache.sling.ide.eclipse.wst.ui.internal.SetServerStringPropertyCommand;
-import org.eclipse.wst.server.core.IServerWorkingCopy;
+public interface ISlingLaunchpadServer {
 
-public class SetServerPasswordCommand extends SetServerStringPropertyCommand {
+    public static final int PUBLISH_STATE_NEVER = 1;
+    public static final int PUBLISH_STATE_RESOURCE_CHANGE = 2;
+    public static final int PUBLISH_STATE_BUILD_EVENT = 3;
 
-    public SetServerPasswordCommand(IServerWorkingCopy server, String newValue) {
-        super(server, SlingLaunchpadServer.PROP_PASSWORD, newValue, "admin");
-    }
+    public static final String PROP_PASSWORD = "launchpad.password";
+    public static final String PROP_USERNAME = "launchpad.username";
+    public static final String PROP_CONTEXT_PATH = "launchpad.contextPath";
+    public static final String PROP_PORT = "launchpad.port";
 
+    void setPublishState(int publishState);
+
+    int getPublishState();
+
+    ISlingLaunchpadConfiguration getConfiguration();
 }
