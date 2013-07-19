@@ -16,15 +16,19 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.wst.server.core.model.RuntimeDelegate;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.wst.common.project.facet.core.IDelegate;
+import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
 
-public class SlingLaunchpadRuntime extends RuntimeDelegate {
+public class SlingContentFacetInstallDelegate implements IDelegate {
 
     @Override
-    public IStatus validate() {
-        // TODO stub
-        return Status.OK_STATUS;
+    public void execute(IProject project, IProjectFacetVersion facetVersion, Object config, IProgressMonitor monitor)
+            throws CoreException {
+
+        // nothing for now
     }
+
 }

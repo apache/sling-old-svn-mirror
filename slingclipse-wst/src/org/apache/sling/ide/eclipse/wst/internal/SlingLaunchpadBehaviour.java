@@ -16,12 +16,66 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.wst.server.core.IModule;
+import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     @Override
-    public void stop(boolean arg0) {
+    public void stop(boolean force) {
+        // TODO stub
+        setServerState(IServer.STATE_STOPPED);
     }
 
+    public void start() {
+        // TODO stub
+        setServerState(IServer.STATE_STARTED);
+    }
+
+    // TODO refine signature, visibility
+    protected void setupLaunch(ILaunch launch, String launchMode, IProgressMonitor monitor) throws CoreException {
+        // TODO check that ports are free
+
+        setServerRestartState(false);
+        setServerState(IServer.STATE_STARTING);
+        setMode(launchMode);
+    }
+
+    @Override
+    public IStatus canPublish() {
+        IStatus canPublish = super.canPublish();
+        System.out.println("SlingLaunchpadBehaviour.canPublish() is " + canPublish);
+        return canPublish;
+    }
+
+    @Override
+    public boolean canPublishModule(IModule[] module) {
+        System.out.println("SlingLaunchpadBehaviour.canPublishModule()");
+        return super.canPublishModule(module);
+    }
+
+    @Override
+    protected void publishServer(int kind, IProgressMonitor monitor) throws CoreException {
+        System.out.println("SlingLaunchpadBehaviour.publishServer()");
+        super.publishServer(kind, monitor);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.wst.server.core.model.ServerBehaviourDelegate#setupLaunchConfiguration(org.eclipse.debug.core.
+     * ILaunchConfigurationWorkingCopy, org.eclipse.core.runtime.IProgressMonitor)
+     */
+    @Override
+    public void setupLaunchConfiguration(ILaunchConfigurationWorkingCopy workingCopy, IProgressMonitor monitor)
+            throws CoreException {
+        System.out.println("SlingLaunchpadBehaviour.setupLaunchConfiguration()");
+        super.setupLaunchConfiguration(workingCopy, monitor);
+    }
 }

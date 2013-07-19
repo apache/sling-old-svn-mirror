@@ -16,15 +16,28 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.wst.server.core.model.RuntimeDelegate;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.wst.server.core.IModuleArtifact;
+import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.model.LaunchableAdapterDelegate;
 
-public class SlingLaunchpadRuntime extends RuntimeDelegate {
+public class SlingLaunchpadLaunchableAdapterDelegate extends LaunchableAdapterDelegate {
 
     @Override
-    public IStatus validate() {
-        // TODO stub
-        return Status.OK_STATUS;
+    public Object getLaunchable(IServer server, IModuleArtifact moduleArtifact) throws CoreException {
+
+        System.out.println("SlingLaunchpadLaunchableAdapterDelegate.getLaunchable()");
+
+        if (server == null || moduleArtifact == null) {
+            return null;
+        }
+
+        SlingLaunchpadServer launchpad = (SlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class, null);
+        if (launchpad == null) {
+            return null;
+        }
+
+        return null;
     }
+
 }

@@ -2,63 +2,167 @@
 <?eclipse version="3.0"?>
 <plugin>
 
-  <extension point="org.eclipse.wst.server.core.runtimeTypes">
+	<!-- Define the sling module type. TODO needed ? -->
+  <extension point="org.eclipse.wst.server.core.moduleTypes">
+    <moduleType
+       id="sling.content"
+       name="Sling module type"/>
+  </extension>
   
+	<!-- Define the sling facet we support -->
+	<extension point="org.eclipse.wst.common.project.facet.core.facets">
+		<project-facet id="sling.content">
+			<label>Sling content module</label>
+			<description>Sling content modules contain content which is installed into the repository as-is. Good examples are static files ( HTML, CSS, JS ), scripts ( JSP, ESP ) and any other form of content.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sling.content" version="1.0"/>
+  		<!-- TODO add image -->
+  		
+  		<action facet="sling.content" version="1.0" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.wst.internal.SlingContentFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sling.content" version="1.0" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.wst.internal.SlingContentFacetUninstallDelegate"/>
+  		</action>
+	</extension>  
+
+	<!-- Define the Sling launchpad runtime type -->
+  <extension point="org.eclipse.wst.server.core.runtimeTypes">
     <runtimeType
-       id="org.apache.sling.ide.eclipse.wst.slingLaunchpad"
-       name="Sling Launchpad"
-       description="Sling Launchpad"
+       id="org.apache.sling.launchpad.runtime"
+       name="Sling Launchpad (runtime name)"
+       description="Sling Launchpad (runtime description)"
        vendor="Sling"
-       version="2.4"
+       version="1.0"
        class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadRuntime">
-       
-       <!-- TODO do we need a Sling module type ? -->
-       
-       <!--
-       <moduleType
-         types="jst.web"
-         versions="2.2, 2.3, 2.4, 2.5"/>
-       <moduleType
-         types="jst.utility"
-         versions="1.0"/>
-         -->
+       <moduleType types="sling.content" versions="1.0"/> 
     </runtimeType>
   </extension>
   
-  <!-- TODO remove launchConfigId for now ? -->
+  <!-- Define the Sling launchpad server type -->
   <extension point="org.eclipse.wst.server.core.serverTypes">
      <serverType
-       id="org.apache.sling.ide.eclipse.wst.slingLaunchpad"
-       name="Sling Launchpad"
-       description="Sling Launchpad"
+       id="org.apache.sling.launchpad.server"
+       name="Sling Launchpad (server name)"
+       description="Sling Launchpad (server description)"
        supportsRemoteHosts="true"
        runtime="true"
        startTimeout="30000"
        stopTimeout="15000"
        initialState="stopped"
        hasConfiguration="true"
-       launchConfigId="org.apache.sling.ide.eclipse.wst.slingLaunchpadConfigurationType"
-       runtimeTypeId="org.apache.sling.ide.eclipse.wst.slingLaunchpad"
+       launchConfigId="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"       
+       runtimeTypeId="org.apache.sling.launchpad.runtime"
        class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer"
        behaviourClass="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadBehaviour">
      </serverType>
   </extension>
 
-<!-- TODO move to wst.ui bundle -->  
+  <extension point="org.eclipse.wst.server.core.launchableAdapters">
+     <launchableAdapter
+        class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadLaunchableAdapterDelegate"
+        id="org.sling.slingclipse.web"/>
+  </extension>
+
+	<!-- Define the launch configuration type for the launchpad TODO do we need a sourcePathComputer ? -->
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+     <launchConfigurationType
+        id="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"
+        name="Sling Launchpad"
+        delegate="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadLaunchConfigurationDelegate"
+        modes="run"
+        sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
+  </extension>
+    
+	<!-- Declare that the launchpad runtime type, supporting content modules -->
+	<extension point="org.eclipse.wst.common.project.facet.core.runtimes">
+		<runtime-component-type id="org.apache.sling.launchpad"/>
+		<runtime-component-version type="org.apache.sling.launchpad" version="1.0"/>
+		
+	    <adapter>
+	      <runtime-component
+	         id="org.apache.sling.launchpad"/>
+	      <factory
+	         class="org.eclipse.jst.server.core.internal.RuntimeClasspathProvider$Factory"/>
+	      <type
+	         class="org.eclipse.jst.common.project.facet.core.IClasspathProvider"/>
+	    </adapter>		
+		
+  		<supported>
+  			<runtime-component id="org.apache.sling.launchpad" version="1.0"/>
+  			<facet id="sling.content" version="1.0"/>
+  		</supported>	
+	</extension>
+
+
+	<!-- Define default facets ( needed ? ) -->
+  <extension point="org.eclipse.wst.common.project.facet.core.defaultFacets">
+    <default-facets>
+      <runtime-component id="org.apache.sling.launchpad"/>
+      <facet id="sling.content" version="1.0"/>
+    </default-facets>
+  </extension>
+  	
+	<!-- Map from the launchpad runtime type to our runtime components -->
+	  <extension point="org.eclipse.jst.server.core.runtimeFacetMappings">
+    	<runtimeFacetMapping
+      runtimeTypeId="org.apache.sling.launchpad.runtime"
+      runtime-component="org.apache.sling.launchpad"
+      version="1.0"/>
+     </extension>
+  
+  <!-- Define the launch configuration's tab group -->
+    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup
+      id="org.apache.sling.ide.eclipse.launchpad.launchConfigurationTabGroup"
+      type="org.apache.sling.ide.eclipse.launchpad.launchConfigurationType"
+      class="org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadLaunchConfigurationTabGroup">
+    </launchConfigurationTabGroup>
+  </extension>
+  
+
+	<!-- Define images -->
+	<!-- TODO move to ui bundle -->  
 	<extension point="org.eclipse.wst.server.ui.serverImages">      
 	      <image
-	         id="org.apache.sling.ide.eclipse.wst.launchpad"
 	         icon="icons/obj16/sling.gif"
-	         typeIds="org.apache.sling.ide.eclipse.wst.slingLaunchpad"/>
+	         typeIds="org.apache.sling.launchpad.server"/>
 	</extension>  
 	
+	<!-- Define the editor section(s) we contribute to the WST UI -->
    <extension point="org.eclipse.wst.server.ui.editorPageSections">      
       <section
          id="org.apache.sling.ide.eclipse.configuration.editor.port"
          order="10"
          insertionId="org.eclipse.wst.server.editor.overview.right"
-         typeIds="org.apache.sling.ide.eclipse.wst.*"
+         typeIds="org.apache.sling.launchpad.server"
          class="org.apache.sling.ide.eclipse.wst.ui.internal.ConnectionEditorSection">
       </section>
-   </extension>	
+   </extension>   
+  
+  <!-- Runtime images -->
+    <extension point="org.eclipse.wst.common.project.facet.ui.images">
+    <image runtime-component-type="org.apache.sling.launchpad"
+       path="icons/obj16/sling.gif"/>
+  </extension>
+   
+<!--
+  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+    <launchConfigurationTypeImage
+      id="org.eclipse.wst.server.preview.launchConfigurationTypeImage"
+      configTypeID="org.eclipse.wst.server.preview.launchConfigurationType"
+      icon="icons/obj16/preview.gif">
+    </launchConfigurationTypeImage>
+  </extension>
+
+  <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup
+      id="org.eclipse.wst.server.preview.launchConfigurationTabGroup"
+      type="org.eclipse.wst.server.preview.launchConfigurationType"
+      class="org.eclipse.wst.server.preview.adapter.internal.ui.PreviewLaunchConfigurationTabGroup">
+    </launchConfigurationTabGroup>
+  </extension>
+ -->
 </plugin>    
