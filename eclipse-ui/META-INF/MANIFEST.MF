@@ -2,6 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Slingclipse-WST-plugin
 Bundle-SymbolicName: org.apache.sling.ide.eclipse-ui;singleton:=true
+Bundle-Activator: org.apache.sling.ide.eclipse.ui.internal.Activator
 Bundle-Version: 0.0.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
@@ -21,7 +22,9 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.eclipse.jdt.launching,
  org.eclipse.jface.action,
  org.eclipse.jface.dialogs,
+ org.eclipse.jface.operation,
  org.eclipse.jface.preference,
+ org.eclipse.jface.resource,
  org.eclipse.jface.viewers,
  org.eclipse.jface.window,
  org.eclipse.jface.wizard,
@@ -43,3 +46,4 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.eclipse.wst.server.ui.editor,
  org.json,
  org.osgi.framework
+Bundle-ActivationPolicy: lazy

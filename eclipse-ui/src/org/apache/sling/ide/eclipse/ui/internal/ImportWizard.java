@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
@@ -35,9 +36,8 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
@@ -60,7 +60,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	 */
 	public ImportWizard() {
 		super();
-        serializationManager = Activator.getDefault().getSerializationManager();
+        Activator activator = Activator.getDefault();
+        serializationManager = activator.getSerializationManager();
 	}
 
 	/*
@@ -69,8 +70,11 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	 * @see org.eclipse.jface.wizard.Wizard#performFinish()
 	 */
 	public boolean performFinish() {
+
+        if (!mainPage.isPageComplete()) {
+            return false;
+        }
 		
-		if (mainPage.isPageComplete()) {
 
             final IServer server = mainPage.getServer();
 	 
@@ -80,17 +84,18 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
 			final String repositoryPath = mainPage.getRepositoryPath();
 			
-			Job job = new Job("Import") {
+        try {
+            getContainer().run(false, true, new IRunnableWithProgress() {
 
-				protected IStatus run(IProgressMonitor monitor) {
-
+                @Override
+                public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
                     Repository repository = ServerUtil.getRepository(server, monitor);
 
-					monitor.setTaskName("Loading configuration...");
-					monitor.worked(5);
+                    monitor.setTaskName("Loading configuration...");
+                    monitor.worked(5);
                     ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
                             ISlingLaunchpadServer.class, monitor);
-					
+
                     int oldPublishState = launchpad.getPublishState();
                     // TODO disabling publish does not work; since the publish is done async
                     // Not sure if there is a simple workaround. Anyway, the only side effect is that we
@@ -99,49 +104,45 @@ public class ImportWizard extends Wizard implements IImportWizard {
                         launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER);
                     }
 
-					try {
+                    try {
 
-						// TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm processing)
-						monitor.setTaskName("Importing...");
-						monitor.worked(10);
+                        // TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm
+                        // processing)
+                        monitor.setTaskName("Importing...");
+                        monitor.worked(10);
 
                         // we create the root node and assume this is a folder
                         createRoot(project, projectRelativePath, repositoryPath);
 
                         crawlChildrenAndImport(repository, repositoryPath, project, projectRelativePath);
-						
-						monitor.setTaskName("Import Complete");
-						monitor.worked(100);
-					} catch ( Exception e) {
-						Status status = new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed importing repository ", e);
-						Activator.getDefault().getLog().log(status);
-						return status;
-					}finally{
+
+                        monitor.setTaskName("Import Complete");
+                        monitor.worked(100);
+                    } catch (Exception e) {
+                        throw new InvocationTargetException(e);
+                    } finally {
                         if (oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
                             launchpad.setPublishState(oldPublishState);
                         }
+                        monitor.done();
+                        }
 
-					}
-					
-					return Status.OK_STATUS;
-				}
-
-                private void createRoot(final IProject project, final IPath projectRelativePath,
-                        final String repositoryPath) throws CoreException {
-
-                    IPath rootImportPath = projectRelativePath.append(repositoryPath);
-
-                    for (int i = rootImportPath.segmentCount() - 1; i > 0; i--)
-                        createFolder(project, rootImportPath.removeLastSegments(i));
                 }
-			};
-			job.setSystem(false);
-			job.setUser(true);
-			job.schedule();
-			return true;
-		} else {
-			return false;
-		}
+
+            });
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            mainPage.setErrorMessage("Import error : " + cause.getMessage()
+                    + " . Please see the error log for details.");
+            Activator.getDefault().getLog()
+                    .log(new Status(Status.ERROR, Constants.PLUGIN_ID, "Repository import failed", cause));
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+
+        return true;
 	}
 
 	/*
@@ -154,6 +155,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		setWindowTitle("Repositoy Import"); // NON-NLS-1
 		setNeedsProgressMonitor(true);
 		mainPage = new ImportWizardPage("Import from Repository", selection); // NON-NLS-1
+        setDefaultPageImageDescriptor(SharedImages.SLING_LOG);
+
 	}
 
 	/*
@@ -166,6 +169,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		addPage(mainPage);
 	}
 	
+    private void createRoot(final IProject project, final IPath projectRelativePath, final String repositoryPath)
+            throws CoreException {
+
+        IPath rootImportPath = projectRelativePath.append(repositoryPath);
+
+        for (int i = rootImportPath.segmentCount() - 1; i > 0; i--)
+            createFolder(project, rootImportPath.removeLastSegments(i));
+    }
+
 	/**
 	 * Crawls the repository and recursively imports founds resources
 	 * 

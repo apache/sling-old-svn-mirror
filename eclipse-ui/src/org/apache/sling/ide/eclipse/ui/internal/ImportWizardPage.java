@@ -49,12 +49,8 @@ public class ImportWizardPage extends WizardResourceImportPage {
 	private ModifyListener modifyListener = new ModifyListener() {
 		@Override
 		public void modifyText(ModifyEvent event) {
-			try{
-				determinePageCompletion();
-				updateWidgetEnablements();
-			}catch(Exception e){
-				//TODO: Log or just ignore?
-			}
+            determinePageCompletion();
+            updateWidgetEnablements();
 		}
 	};
     private Combo repositoryCombo;
