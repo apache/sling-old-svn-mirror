@@ -1,14 +1,16 @@
 package org.apache.sling.ide.eclipse.wst.internal;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
+import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
@@ -18,6 +20,7 @@ import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.ModuleDelegate;
 import org.eclipse.wst.server.core.util.ModuleFile;
+import org.eclipse.wst.server.core.util.ModuleFolder;
 import org.eclipse.wst.server.core.util.ProjectModuleFactoryDelegate;
 
 public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
@@ -68,20 +71,33 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
         public IModuleResource[] members() throws CoreException {
             IProject project = module.getProject();
             final List<IModuleResource> resources = new ArrayList<IModuleResource>();
-            // TODO just a hack to get some files
             project.accept(new IResourceVisitor() {
                 @Override
                 public boolean visit(IResource resource) throws CoreException {
-                    System.out.println(resource.getName() + " -> " + resource.getFileExtension());
-                    if (resource.getType() == IResource.FILE && resource.getFileExtension().equals("txt")) {
-                        resources.add(new ModuleFile((IFile) resource, resource.getName(), resource
-                                .getProjectRelativePath()));
+
+                    if (resource.getType() == IResource.PROJECT) {
+                        return true;
+                    }
+
+                    IPath relativePath = resource.getProjectRelativePath();
+
+                    // only recurse in the expected content path
+                    // TODO make configurable
+                    if (!SlingclipseHelper.JCR_ROOT.equals(relativePath.segment(0))) {
+                        return false;
+                    }
+
+                    IPath modulePath = relativePath.removeFirstSegments(1); // remove jcr_root
+
+                    if (resource.getType() == IResource.FILE) {
+
+                        ModuleFile moduleFile = new ModuleFile((IFile) resource, resource.getName(), modulePath);
+                        resources.add(moduleFile);
+                        System.out.println("Converted " + resource + " to " + moduleFile);
                     }
                     return true;
                 }
             });
-
-            System.out.println("SlingContentModuleFactory.SlingContentModuleDelegate.members() returned " + resources);
 
             return resources.toArray(new IModuleResource[resources.size()]);
         }

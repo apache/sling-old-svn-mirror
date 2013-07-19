@@ -22,7 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jst.server.core.FacetUtil;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
@@ -74,9 +73,6 @@ public class SlingLaunchpadServer extends ServerDelegate {
 
     @Override
     public IModule[] getChildModules(IModule[] module) {
-
-        System.out.println("SlingLaunchpadServer.getChildModules()");
-
         if (module == null) {
             return null;
         }
@@ -92,8 +88,6 @@ public class SlingLaunchpadServer extends ServerDelegate {
      */
     @Override
     public IModule[] getRootModules(IModule arg0) throws CoreException {
-
-        System.out.println("SlingLaunchpadServer.getRootModules()");
 
         if (MODULE_TYPE_SLING_CONTENT.equals(arg0.getModuleType().getId())) {
             return new IModule[] { arg0 };

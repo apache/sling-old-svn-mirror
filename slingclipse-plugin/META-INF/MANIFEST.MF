@@ -18,4 +18,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
 Service-Component: OSGI-INF/component.xml
 Import-Package: org.osgi.service.component;version="1.1.0"
-Export-Package: org.apache.sling.slingclipse
+Export-Package: org.apache.sling.slingclipse,
+ org.apache.sling.slingclipse.helper
