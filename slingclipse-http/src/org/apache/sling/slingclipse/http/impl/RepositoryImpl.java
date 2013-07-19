@@ -49,8 +49,10 @@ public class RepositoryImpl extends AbstractRepository{
 				PostMethod post = new PostMethod(repositoryInfo.getUrl()+fileInfo.getRelativeLocation());
 				try{
 					File f=new File(fileInfo.getLocation());
-		 			Part[] parts ={ new FilePart(fileInfo.getName(), f)};
-					post.setRequestEntity(new MultipartRequestEntity(parts,post.getParams()));
+                    if (f.isFile()) {
+                        Part[] parts = { new FilePart(fileInfo.getName(), f) };
+                        post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
+                    }
 					httpClient.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(repositoryInfo.getUsername(),repositoryInfo.getPassword()));
 					httpClient.getParams().setAuthenticationPreemptive(true);
 					int responseStatus=httpClient.executeMethod(post);
