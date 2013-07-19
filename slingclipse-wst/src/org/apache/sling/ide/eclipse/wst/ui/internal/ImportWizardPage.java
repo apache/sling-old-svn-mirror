@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -104,10 +103,6 @@ public class ImportWizardPage extends WizardResourceImportPage {
     @Override
 	protected void createSourceGroup(Composite parent) {
 
-        // TODO: Currently only supports first selection
-        IResource resource = ((IResource) selection.getFirstElement());
-        String pathStr = resource.getFullPath().toPortableString();
-
 		Composite container = new Composite(parent, SWT.NONE);
 		container.setLayout(new GridLayout(2, false));
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -135,10 +130,6 @@ public class ImportWizardPage extends WizardResourceImportPage {
         path = new Text(container, SWT.BORDER);
         path.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         path.addModifyListener(modifyListener);
-
-        if (SlingclipseHelper.isValidSlingProjectPath(pathStr)) {
-            path.setText(SlingclipseHelper.getSlingProjectPath(pathStr));
-        }
 	}
 
 	/*
@@ -207,9 +198,7 @@ public class ImportWizardPage extends WizardResourceImportPage {
 			return false;
 		}
 		
-        IPath containerNameField = super.getResourcePath();
-        // TODO - we should force it to be JCR_ROOT for now
-        if (!containerNameField.toOSString().endsWith(SlingclipseHelper.JCR_ROOT)) {
+        if (!getResourcePath().toOSString().endsWith(SlingclipseHelper.JCR_ROOT)) {
 			setErrorMessage("Please enter a valid Sling project folder (e.g. jcr_root)");
 			return false;
 		}

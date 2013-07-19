@@ -14,36 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.slingclipse.internal;
+package org.apache.sling.ide.serialization;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IProjectNature;
-import org.eclipse.core.runtime.CoreException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
 
-public class SlingProjectNature implements IProjectNature {
+public interface SerializationManager {
 
-    public static final String SLING_NATURE_ID = "org.apache.sling.slingclipse.SlingProjectNature";
+    boolean isSerializationFile(String filePath);
 
-    private IProject project;
+    String getSerializationFilePath(String baseFilePath);
 
-    @Override
-    public void configure() throws CoreException {
+    void writeSerializationData(OutputStream destination, Map<String, String> data) throws IOException;
 
-    }
-
-    @Override
-    public void deconfigure() throws CoreException {
-    }
-
-    @Override
-    public IProject getProject() {
-        return project;
-    }
-
-    @Override
-    public void setProject(IProject project) {
-
-        this.project = project;
-    }
-
+    Map<String, String> readSerializationData(InputStream source) throws IOException;
 }

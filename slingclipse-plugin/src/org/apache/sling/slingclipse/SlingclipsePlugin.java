@@ -16,11 +16,13 @@
  */
 package org.apache.sling.slingclipse;
 
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.helper.Tracer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -33,10 +35,12 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	// The shared instance
 	private static SlingclipsePlugin plugin;
 
-	//TODO is fine to be static?
-	private static Repository repository;
-	
+    private Repository repository;
+    private SerializationManager serializationManager;
 	private Tracer tracer;
+
+    private ServiceReference<Repository> repositoryRef;
+    private ServiceReference<SerializationManager> serializationManagerRef;
 
 	/*
 	 * (non-Javadoc)
@@ -47,6 +51,12 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 		plugin = this;
 		tracer = new Tracer();
 		tracer.register(getBundle().getBundleContext());
+
+        repositoryRef = context.getServiceReference(Repository.class);
+        repository = context.getService(repositoryRef);
+
+        serializationManagerRef = context.getServiceReference(SerializationManager.class);
+        serializationManager = context.getService(serializationManagerRef);
 	}
 
 	/*
@@ -54,7 +64,10 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
-		plugin = null;
+        context.ungetService(repositoryRef);
+        context.ungetService(serializationManagerRef);
+
+        plugin = null;
 		super.stop(context);
 		tracer.unregister();
 	}
@@ -79,20 +92,15 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
 
-	public void setRepository(Repository repository ){
-		this.repository=repository;
-
-	}
-
-	public void unsetRepository(Repository repository){
-		this.repository= null;
-	}
+    public Tracer getTracer() {
+        return tracer;
+    }
 
 	public Repository getRepository() {
-		return this.repository;
+        return repository;
 	}
 
-	public Tracer getTracer() {
-		return tracer;
-	}
+    public SerializationManager getSerializationManager() {
+        return serializationManager;
+    }
 }

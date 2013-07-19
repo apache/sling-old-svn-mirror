@@ -22,13 +22,13 @@ import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadBehaviour;
 import org.apache.sling.ide.eclipse.wst.internal.SlingLaunchpadServer;
+import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.Repository;
 import org.apache.sling.slingclipse.api.RepositoryException;
 import org.apache.sling.slingclipse.api.ResponseType;
 import org.apache.sling.slingclipse.api.Result;
-import org.apache.sling.slingclipse.helper.SlingclipseHelper;
 import org.apache.sling.slingclipse.helper.Tracer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -55,12 +55,14 @@ import org.json.JSONObject;
  */
 public class ImportWizard extends Wizard implements IImportWizard {
 	private ImportWizardPage mainPage;
+    private SerializationManager serializationManager;
 
 	/**
 	 * Construct a new Import Wizard container instance.
 	 */
 	public ImportWizard() {
 		super();
+        serializationManager = SlingclipsePlugin.getDefault().getSerializationManager();
 	}
 
 	/*
@@ -200,9 +202,9 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			createFolder(project, projectRelativePath.append(path));
 			String content = executeCommand(repository.newGetNodeContentCommand(path, ResponseType.JSON), tracer);
 			JSONObject jsonContent = new JSONObject(content);
-			jsonContent.put(SlingclipseHelper.TAG_NAME, Repository.JCR_ROOT);
 			String contentXml = JSONML.toString(jsonContent);		
-			createFile( project, projectRelativePath.append( path+"/"+SlingclipseHelper.CONTENT_XML), contentXml.getBytes(Charset.forName("UTF-8") /* TODO is this enough? */));
+            createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
+                    contentXml.getBytes(Charset.forName("UTF-8") /* TODO is this enough? */));
 		}
  		
         for (Iterator<?> keys = json.keys(); keys.hasNext();) {

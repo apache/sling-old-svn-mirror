@@ -16,28 +16,11 @@
  */
 package org.apache.sling.slingclipse.helper;
 
+@Deprecated
 public class SlingclipseHelper {
 	
-	public static final String TAG_NAME= "tagName";
+    /**
+     * @deprecated Will be transformed into a per-project property
+     */
 	public static final String JCR_ROOT= "jcr_root";
-	public static final String CONTENT_XML= ".content.xml";
-	
-	public static boolean isValidSlingProjectPath(String path){
-		//TODO verify only one occurrence of JCR_ROOT.		
-		return path.indexOf(JCR_ROOT)!= -1;
-	}
-	
-	public static String getSlingProjectPath(String path){
-		int index= path.indexOf(JCR_ROOT)+JCR_ROOT.length();
-        return path.substring(index);
-	}
-	
-	public static boolean isFilePath(String path){
-		return path.indexOf(".")!=-1;
-	}
-	
-	public static boolean isFolderPath(String path){
-		return path.indexOf(".")==-1;
-	}
-
 }

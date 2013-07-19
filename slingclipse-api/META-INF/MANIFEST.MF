@@ -7,4 +7,5 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Export-Package: org.apache.sling.slingclipse.api
+Export-Package: org.apache.sling.ide.serialization,
+ org.apache.sling.slingclipse.api
