@@ -16,13 +16,27 @@
  */
 package org.apache.sling.ide.eclipse.wst.internal;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+
+import org.apache.sling.slingclipse.SlingclipsePlugin;
+import org.apache.sling.slingclipse.api.FileInfo;
+import org.apache.sling.slingclipse.api.Repository;
+import org.apache.sling.slingclipse.api.RepositoryInfo;
+import org.apache.sling.slingclipse.api.Result;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
+import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
@@ -56,14 +70,102 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     @Override
     public boolean canPublishModule(IModule[] module) {
-        System.out.println("SlingLaunchpadBehaviour.canPublishModule()");
-        return super.canPublishModule(module);
+        boolean result = super.canPublishModule(module);
+        System.out.println("SlingLaunchpadBehaviour.canPublishModule() is " + result);
+        return result;
     }
 
     @Override
     protected void publishServer(int kind, IProgressMonitor monitor) throws CoreException {
         System.out.println("SlingLaunchpadBehaviour.publishServer()");
         super.publishServer(kind, monitor);
+    }
+
+    @Override
+    protected void publishModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
+            throws CoreException {
+
+        StringBuilder trace = new StringBuilder();
+        trace.append("SlingLaunchpadBehaviour.publishModule(");
+
+        switch (kind) {
+            case IServer.PUBLISH_CLEAN:
+                trace.append("PUBLISH_CLEAN, ");
+                break;
+            case IServer.PUBLISH_INCREMENTAL:
+                trace.append("PUBLISH_INCREMENTAL, ");
+                break;
+            case IServer.PUBLISH_AUTO:
+                trace.append("PUBLISH_AUTO, ");
+                break;
+            case IServer.PUBLISH_FULL:
+                trace.append("PUBLISH_FULL, ");
+                break;
+            default:
+                trace.append("UNKNOWN - ").append(kind).append(", ");
+        }
+
+        switch (deltaKind) {
+            case ServerBehaviourDelegate.ADDED:
+                trace.append("ADDED, ");
+                break;
+            case ServerBehaviourDelegate.CHANGED:
+                trace.append("CHANGED, ");
+                break;
+            case ServerBehaviourDelegate.NO_CHANGE:
+                trace.append("NO_CHANGE, ");
+                break;
+            case ServerBehaviourDelegate.REMOVED:
+                trace.append("REMOVED, ");
+                break;
+            default:
+                trace.append("UNKONWN - ").append(deltaKind).append(", ");
+                break;
+        }
+        
+        trace.append(Arrays.toString(module)).append(")");
+
+        System.out.println(trace.toString());
+
+        SlingLaunchpadServer launchpadServer = (SlingLaunchpadServer) getServer().loadAdapter(
+                SlingLaunchpadServer.class, monitor);
+        SlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
+
+        IModuleResource[] moduleResources = getResources(module);
+        Repository repository = SlingclipsePlugin.getDefault().getRepository();
+        try {
+            // TODO configurable scheme?
+            URI uri = new URI("http", null, getServer().getHost(), configuration.getPort(),
+                    configuration.getContextPath(), null, null);
+            RepositoryInfo repositoryInfo = new RepositoryInfo(configuration.getUsername(),
+                    configuration.getPassword(), uri.toString());
+            repository.setRepositoryInfo(repositoryInfo);
+            System.out.println("RepositoryInfo=" + repository);
+        } catch (URISyntaxException e) {
+            // TODO handle error
+        }
+
+        for (IModuleResource resource : moduleResources) {
+
+            IFile file = (IFile) resource.getAdapter(IFile.class);
+
+            IPath projectPath = file.getProject().getFullPath();
+            IPath filePath = file.getFullPath();
+            IPath relativePath = filePath.makeRelativeTo(projectPath);
+            IPath rootPath = relativePath.removeLastSegments(1); // TODO correct name
+
+            FileInfo info = new FileInfo(file.getLocation().toOSString(), rootPath.toOSString(),
+                    file.getName());
+
+            System.out.println("For " + resource + " build fileInfo " + info);
+
+            Result<Void> result = repository.newAddNodeCommand(info).execute();
+            if (!result.isSuccess())
+                throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
+        }
+
+        // set state to published
+        super.publishModule(kind, deltaKind, module, monitor);
     }
 
     /*
@@ -78,4 +180,5 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         System.out.println("SlingLaunchpadBehaviour.setupLaunchConfiguration()");
         super.setupLaunchConfiguration(workingCopy, monitor);
     }
+
 }

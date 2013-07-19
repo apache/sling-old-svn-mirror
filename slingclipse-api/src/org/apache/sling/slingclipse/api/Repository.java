@@ -78,6 +78,7 @@ public interface Repository {
 	public static String JCR_CHILD_VERSION_HISTORY= "jcr:childVersionHistory";
  	
 	//TODO change with properties
+    // FIXME this is not thread-safe and with multiple sling servers will fail intermitently
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo);
 
 	Command<Void> newAddNodeCommand(FileInfo fileInfo);
