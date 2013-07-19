@@ -4,4 +4,5 @@
    <service>
       <provide interface="org.apache.sling.slingclipse.api.Repository"/>
    </service>
+   <reference bind="bindTracer" cardinality="1..1" interface="org.apache.sling.ide.impl.util.Tracer" name="Tracer" policy="static"/>
 </scr:component>

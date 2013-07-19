@@ -1,4 +1,4 @@
- /*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.slingclipse.helper;
+package org.apache.sling.ide.impl.util;
 
-import org.apache.sling.slingclipse.SlingclipsePlugin;
 import org.eclipse.osgi.service.debug.DebugOptions;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.osgi.service.debug.DebugTrace;
@@ -26,21 +25,22 @@ public class Tracer implements DebugOptionsListener {
 
     private boolean debugEnabled;
     private DebugTrace trace;
-    
+
     @Override
     public void optionsChanged(DebugOptions options) {
-    	
-    	debugEnabled = options.getBooleanOption(SlingclipsePlugin.PLUGIN_ID + "/debug", false);
-    	trace = options.newDebugTrace(SlingclipsePlugin.PLUGIN_ID, getClass());
+
+        debugEnabled = options.getBooleanOption(Constants.PLUGIN_ID + "/debug", false);
+        trace = options.newDebugTrace(Constants.PLUGIN_ID, getClass());
     }
-    
+
     public void trace(String message, Object... arguments) {
-    	if ( !debugEnabled )
-    		return;
-    	
-    	if ( arguments.length > 0 )
-    		message = NLS.bind(message, arguments);
-    	
-    	trace.trace("/debug", message);
+        if (!debugEnabled)
+            return;
+
+        if (arguments.length > 0)
+            message = NLS.bind(message, arguments);
+
+        trace.trace("/debug", message);
     }
+
 }

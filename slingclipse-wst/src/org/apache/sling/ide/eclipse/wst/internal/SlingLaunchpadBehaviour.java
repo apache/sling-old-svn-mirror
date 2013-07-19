@@ -233,8 +233,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         Result<?> result = command.execute();
 
-        System.out.println("COMMAND  : " + command + " -> " + result);
-
         if (!result.isSuccess()) // TODO proper logging
             throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
     }

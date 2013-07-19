@@ -41,6 +41,7 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 
     private ServiceReference<Repository> repositoryRef;
     private ServiceReference<SerializationManager> serializationManagerRef;
+    private ServiceReference<Tracer> tracerRef;
 
 	/*
 	 * (non-Javadoc)
@@ -49,8 +50,9 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		tracer = new Tracer();
-		tracer.register(getBundle().getBundleContext());
+
+        tracerRef = context.getServiceReference(Tracer.class);
+        tracer = context.getService(tracerRef);
 
         repositoryRef = context.getServiceReference(Repository.class);
         repository = context.getService(repositoryRef);
@@ -66,10 +68,10 @@ public class SlingclipsePlugin extends AbstractUIPlugin {
 	public void stop(BundleContext context) throws Exception {
         context.ungetService(repositoryRef);
         context.ungetService(serializationManagerRef);
+        context.ungetService(tracerRef);
 
         plugin = null;
 		super.stop(context);
-		tracer.unregister();
 	}
 
 	/**

@@ -16,7 +16,6 @@ Require-Bundle: org.eclipse.ui,
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
-Service-Component: OSGI-INF/component.xml
 Import-Package: org.eclipse.osgi.service.debug;version="1.2.0",
  org.osgi.service.component;version="1.1.0"
 Export-Package: org.apache.sling.slingclipse,

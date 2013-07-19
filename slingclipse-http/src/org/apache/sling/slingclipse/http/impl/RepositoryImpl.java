@@ -29,6 +29,7 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.sling.ide.impl.util.Tracer;
 import org.apache.sling.slingclipse.api.Command;
 import org.apache.sling.slingclipse.api.FileInfo;
 import org.apache.sling.slingclipse.api.RepositoryException;
@@ -37,14 +38,15 @@ import org.apache.sling.slingclipse.api.Result;
 
 public class RepositoryImpl extends AbstractRepository{
 	
-	private final HttpClient httpClient = new HttpClient();	
+    private final HttpClient httpClient = new HttpClient();
+    private Tracer tracer;
 
 	/* (non-Javadoc)
 	 * @see org.apache.sling.slingclipse.api.Repository#newAddNodeCommand(org.apache.sling.slingclipse.api.FileInfo)
 	 */
 	@Override
 	public Command<Void> newAddNodeCommand(final FileInfo fileInfo) {
-		return new Command<Void>() {
+        return wrap(new Command<Void>() {
 			@Override
 			public Result<Void> execute() {
                 PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation()));
@@ -56,7 +58,7 @@ public class RepositoryImpl extends AbstractRepository{
                     }
 					httpClient.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(repositoryInfo.getUsername(),repositoryInfo.getPassword()));
 					httpClient.getParams().setAuthenticationPreemptive(true);
-					int responseStatus=httpClient.executeMethod(post);
+                    int responseStatus = httpClient.executeMethod(post);
 					
 					return resultForResponseStatus(responseStatus);
 						
@@ -72,8 +74,13 @@ public class RepositoryImpl extends AbstractRepository{
 				
 				return String.format("%8s %s", "ADD", fileInfo.getRelativeLocation() + "/" + fileInfo.getName());
 			}
-		};
+        });
 	}
+
+    private <T> Command<T> wrap(Command<T> command) {
+
+        return new TracingCommand<T>(command, tracer);
+    }
 
 	private Result<Void> resultForResponseStatus(int responseStatus) {
 		if ( isSuccessStatus(responseStatus) )
@@ -95,7 +102,7 @@ public class RepositoryImpl extends AbstractRepository{
 
 	@Override
 	public Command<Void> newDeleteNodeCommand(final FileInfo fileInfo) {
-		return new Command<Void>() {
+        return wrap(new Command<Void>() {
 			@Override
 			public Result<Void> execute() {
                 PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation() + "/"
@@ -119,12 +126,12 @@ public class RepositoryImpl extends AbstractRepository{
 			public String toString() {
 				return String.format("%8s %s", "DELETE", fileInfo.getRelativeLocation() + "/" + fileInfo.getName());
 			}
-		};
+        });
 	}
 	
 	@Override
 	public Command<String> newListChildrenNodeCommand(final String path,final ResponseType responseType) {
-		return new Command<String>() {
+        return wrap(new Command<String>() {
 			@Override
 			public Result<String> execute() {
 				//TODO handle the response type
@@ -154,13 +161,13 @@ public class RepositoryImpl extends AbstractRepository{
 				
 				return String.format("%8s %s (%s)", "LISTCH", path, responseType);
 			}
-		};
+        });
 	}
 
 	@Override
 	public Command<byte[]> newGetNodeCommand(final String path) {
 		
-		return new Command<byte[]>() {
+        return wrap(new Command<byte[]>() {
 			@Override
 			public Result<byte[]> execute() {
 				
@@ -189,7 +196,7 @@ public class RepositoryImpl extends AbstractRepository{
 				
 				return String.format("%8s %s", "GETNODE", path);
 			}
-		};
+        });
 	}
 	
     private String createFullPath(String relativePath) {
@@ -209,7 +216,7 @@ public class RepositoryImpl extends AbstractRepository{
 
 	@Override
 	public Command<String> newGetNodeContentCommand(final String path, final ResponseType responseType) {
-		return new Command<String>() {
+        return wrap(new Command<String>() {
 			@Override
 			public Result<String> execute() {
 				//TODO handle the response type
@@ -237,13 +244,13 @@ public class RepositoryImpl extends AbstractRepository{
 				
 				return String.format("%8s %s (%s)", "GETCONT", path, responseType);
 			}
-		};
+        });
 	}
 	
 	@Override
 	public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, final Map<String, String> properties) {
 		
-		return new Command<Void>() {
+        return wrap(new Command<Void>() {
 			@Override
 			public Result<Void> execute() {
                 PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation()));
@@ -272,7 +279,40 @@ public class RepositoryImpl extends AbstractRepository{
 				
 				return String.format("%8s %s", "UPDATE", fileInfo.getRelativeLocation() + "/" + fileInfo.getName());
 			}
-		};
+        });
 	}
- 
+
+    public void bindTracer(Tracer tracer) {
+
+        System.out.println("Bound tracer " + tracer);
+
+        this.tracer = tracer;
+    }
+
+    public void unbindTracer(Tracer tracer) {
+
+        this.tracer = null;
+    }
+
+    static class TracingCommand<T> implements Command<T> {
+
+        private final Command<T> command;
+        private final Tracer tracer;
+
+        public TracingCommand(Command<T> command, Tracer tracer) {
+            this.command = command;
+            this.tracer = tracer;
+        }
+
+        @Override
+        public Result<T> execute() {
+
+            Result<T> result = command.execute();
+
+            tracer.trace("{} -> {}", command, result.toString());
+
+            return result;
+        }
+
+    }
 }

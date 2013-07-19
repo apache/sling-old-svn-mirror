@@ -250,7 +250,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		if ( destinationFile.exists() )
 			return;
 
-		SlingclipsePlugin.getDefault().getTracer().trace("Creating file{0}", destinationFile.getFullPath());
+        SlingclipsePlugin.getDefault().getTracer().trace("Creating file {0}", destinationFile.getFullPath());
 		
 		destinationFile.create(new ByteArrayInputStream(node), true, null /* TODO progress monitor */);
 	}
