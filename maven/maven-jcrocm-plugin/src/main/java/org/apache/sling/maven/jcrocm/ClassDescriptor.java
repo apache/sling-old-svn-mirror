@@ -244,6 +244,7 @@ public class ClassDescriptor extends AbstractDescriptorElement {
                 for (Iterator ci = children.iterator(); ci.hasNext();) {
                     AbstractDescriptorElement child = (AbstractDescriptorElement) ci.next();
                     valid &= child.validate();
+                    if (!valid) break;
                 }
             }
         }
