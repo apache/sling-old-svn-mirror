@@ -30,8 +30,6 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
     @Override
     public ModuleDelegate getModuleDelegate(IModule module) {
 
-        System.out.println("SlingContentModuleFactory.getModuleDelegate()");
-
         return new SlingContentModuleDelegate(module);
     }
 
@@ -41,15 +39,13 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
         try {
             IFacetedProject facetedProject = ProjectFacetsManager.create(project);
             for (IProjectFacetVersion facet : facetedProject.getProjectFacets()) {
-                System.out.println("Project " + project + " has facet " + facet);
                 if (facet.getProjectFacet().getId().equals(NATURE_ID)) {
                     return createModule(project.getName(), project.getName(), NATURE_ID, "1.0", project);
                 }
             }
         } catch (CoreException ce) {
             // TODO logging
-            }
-
+        }
 
         return null;
     }
@@ -92,7 +88,7 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
                         return true;
                     }
 
-                    // urelated resource tree, stop processing
+                    // unrelated resource tree, stop processing
                     if (!syncFolder.getProjectRelativePath().isPrefixOf(relativePath)) {
                         return false;
                     }

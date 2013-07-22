@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Repository;
 import org.eclipse.core.runtime.Plugin;
@@ -41,10 +42,12 @@ public class Activator extends Plugin {
     private Repository repository;
     private SerializationManager serializationManager;
 	private Tracer tracer;
+    private FilterLocator filterLocator;
 
     private ServiceReference<Repository> repositoryRef;
     private ServiceReference<SerializationManager> serializationManagerRef;
     private ServiceReference<Tracer> tracerRef;
+    private ServiceReference<FilterLocator> filterLocatorRef;
 
 	/*
 	 * (non-Javadoc)
@@ -62,6 +65,9 @@ public class Activator extends Plugin {
 
         serializationManagerRef = context.getServiceReference(SerializationManager.class);
         serializationManager = context.getService(serializationManagerRef);
+
+        filterLocatorRef = context.getServiceReference(FilterLocator.class);
+        filterLocator = context.getService(filterLocatorRef);
 	}
 
 	/*
@@ -72,6 +78,7 @@ public class Activator extends Plugin {
         context.ungetService(repositoryRef);
         context.ungetService(serializationManagerRef);
         context.ungetService(tracerRef);
+        context.ungetService(filterLocatorRef);
 
         plugin = null;
 		super.stop(context);
@@ -96,5 +103,9 @@ public class Activator extends Plugin {
 
     public SerializationManager getSerializationManager() {
         return serializationManager;
+    }
+
+    public FilterLocator getFilterLocator() {
+        return filterLocator;
     }
 }

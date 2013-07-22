@@ -16,28 +16,33 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Map;
 
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.filter.Filter;
+import org.apache.sling.ide.filter.FilterLocator;
+import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
-import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResponseType;
 import org.apache.sling.ide.transport.Result;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.wst.server.core.IModule;
@@ -140,6 +145,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         Repository repository = ServerUtil.getRepository(getServer(), monitor);
 
         IModuleResource[] moduleResources = getResources(module);
+        
+        // TODO it would be more efficient to have a module -> filter mapping
+        // it would be simpler to implement this in SlingContentModuleAdapter, but
+        // the behaviour for resources being filtered out is deletion, and that
+        // would be an incorrect ( or at least suprising ) behaviour at development time
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
@@ -250,6 +260,25 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return null;
         }
 
+        IProject project = file.getProject();
+
+        String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
+
+        Filter filter = null;
+        try {
+            filter = loadFilter(project, project.getFolder(syncDirectory));
+        } catch (CoreException e) {
+            // TODO error handling
+            e.printStackTrace();
+        }
+
+        if (filter != null) {
+            FilterResult filterResult = filter.filter(resource.getModuleRelativePath().toString());
+            if (filterResult == FilterResult.DENY) {
+                return null;
+            }
+        }
+
         IPath relativePath = resource.getModuleRelativePath().removeLastSegments(1);
 
         FileInfo info = new FileInfo(file.getLocation().toOSString(), relativePath.toOSString(), file.getName());
@@ -269,4 +298,30 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         return repository.newDeleteNodeCommand(info);
     }
+
+    private Filter loadFilter(IProject project, final IFolder syncFolder) throws CoreException {
+        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+        File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
+        IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
+        IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
+        Filter filter = null;
+        if (filterFile != null && filterFile.exists()) {
+            InputStream contents = filterFile.getContents();
+            try {
+                filter = filterLocator.loadFilter(contents);
+            } catch (IOException e) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+                        "Failed loading filter file for project " + project.getName() + " from location " + filterFile,
+                        e));
+            } finally {
+                try {
+                    contents.close();
+                } catch (IOException e) {
+                    // TODO exception handling
+                }
+            }
+        }
+        return filter;
+    }
+
 }
