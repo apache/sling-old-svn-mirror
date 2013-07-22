@@ -22,10 +22,29 @@ package org.apache.sling.launchpad.api;
 /**
  * A startup listener receives events about the startup.
  *
+ * On registration of this listener, the method {@link #inform(StartupMode, boolean)}
+ * is called with the startup mode and whether the startup is already finished.
+ *
+ * If the startup is not finished at point of registration, the {@link #startupFinished(StartupMode)}
+ * method will be called, after the inform method has been called once the startup is finished.
+ *
+ * If the startup is not finished, the {@link #startupProgress(float)} method might be called
+ * to indicate the current startup progress. This method should only be used for informational
+ * purposes.
+ *
+ * A listener waiting for the startup to finish, should act on both actions: a call
+ * of the inform method with the second argument set to true or a call of the startupFinished
+ * method. Whatever is called first can be used as indication.
+ *
  * @since 1.1.0
  */
 public interface StartupListener {
 
+    /**
+     * Informs the listener upon registration about the current state.
+     * @param mode The startup mode
+     * @param finished Whether the startup is already finished or not
+     */
     void inform(StartupMode mode, boolean finished);
 
     /**
