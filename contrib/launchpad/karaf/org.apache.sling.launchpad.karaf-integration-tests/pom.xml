@@ -94,12 +94,6 @@
       <version>3.8.0.v20120529-1548</version>
       <scope>test</scope>
     </dependency>
-	<dependency>
-	    <groupId>org.apache.karaf.tooling.exam</groupId>
-	    <artifactId>org.apache.karaf.tooling.exam.options</artifactId>
-	    <version>3.0.0.RC1</version>
-	    <scope>test</scope>
-	</dependency>
   </dependencies>
 
 </project>
