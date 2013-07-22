@@ -45,5 +45,6 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.eclipse.wst.server.ui,
  org.eclipse.wst.server.ui.editor,
  org.json,
- org.osgi.framework
+ org.osgi.framework,
+ org.osgi.util.tracker;version="1.5.0"
 Bundle-ActivationPolicy: lazy

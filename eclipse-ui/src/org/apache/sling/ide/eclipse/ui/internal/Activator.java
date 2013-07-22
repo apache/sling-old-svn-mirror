@@ -16,18 +16,18 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator extends Plugin {
 
     public static final String PLUGIN_ID = "org.apache.sling.ide.eclipse-core";
     public static Activator INSTANCE;
 
-    private SerializationManager serializationManager;
-    private ServiceReference<SerializationManager> serializationManagerRef;
+    private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
 
     public static Activator getDefault() {
 
@@ -38,8 +38,9 @@ public class Activator extends Plugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
 
-        serializationManagerRef = context.getServiceReference(SerializationManager.class);
-        serializationManager = context.getService(serializationManagerRef);
+        serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
+                SerializationManager.class, null);
+        serializationManager.open();
 
         INSTANCE = this;
     }
@@ -47,13 +48,12 @@ public class Activator extends Plugin {
     @Override
     public void stop(BundleContext context) throws Exception {
         INSTANCE = null;
-
-        context.ungetService(serializationManagerRef);
+        serializationManager.close();
 
         super.stop(context);
     }
 
     public SerializationManager getSerializationManager() {
-        return serializationManager;
+        return ServiceUtil.getNotNull(serializationManager);
     }
 }

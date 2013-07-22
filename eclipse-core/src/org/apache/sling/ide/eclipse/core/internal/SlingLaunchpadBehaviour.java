@@ -55,10 +55,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     private SerializationManager serializationManager;
 
-    public SlingLaunchpadBehaviour() {
-        serializationManager = Activator.getDefault().getSerializationManager();
-    }
-
     @Override
     public void stop(boolean force) {
 
@@ -87,8 +83,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
     }
 
-    // TODO refine signature, visibility
-    protected void setupLaunch(ILaunch launch, String launchMode, IProgressMonitor monitor) throws CoreException {
+    // TODO refine signature
+    public void setupLaunch(ILaunch launch, String launchMode, IProgressMonitor monitor) throws CoreException {
         // TODO check that ports are free
 
         setServerRestartState(false);
@@ -230,11 +226,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return null;
         }
 
-        if (serializationManager.isSerializationFile(info.getLocation())) {
+        if (serializationManager().isSerializationFile(info.getLocation())) {
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 InputStream contents = file.getContents();
-                Map<String, String> serializationData = serializationManager.readSerializationData(contents);
+                Map<String, String> serializationData = serializationManager().readSerializationData(contents);
                 return repository.newUpdateContentNodeCommand(info, serializationData);
             } catch (IOException e) {
                 // TODO logging
@@ -323,5 +319,15 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         return filter;
     }
+
+
+    private SerializationManager serializationManager() {
+        if (serializationManager == null) {
+            serializationManager = Activator.getDefault().getSerializationManager();
+        }
+
+        return serializationManager;
+    }
+
 
 }

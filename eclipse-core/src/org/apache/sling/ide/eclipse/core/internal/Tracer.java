@@ -29,8 +29,8 @@ public class Tracer implements DebugOptionsListener {
     @Override
     public void optionsChanged(DebugOptions options) {
     	
-    	debugEnabled = options.getBooleanOption(Activator.PLUGIN_ID + "/debug", false);
-    	trace = options.newDebugTrace(Activator.PLUGIN_ID, getClass());
+        debugEnabled = options.getBooleanOption(Activator.PLUGIN_ID + "/debug", false);
+        trace = options.newDebugTrace(Activator.PLUGIN_ID, getClass());
     }
     
     public void trace(String message, Object... arguments) {

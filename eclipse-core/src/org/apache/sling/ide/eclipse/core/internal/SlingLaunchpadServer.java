@@ -129,7 +129,6 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
         setAttribute(PROP_PASSWORD, "admin");
     }
 
-
     @Override
     public int getPublishState() {
         return getAttribute(PROP_AUTO_PUBLISH_SETTING, PUBLISH_STATE_NEVER);

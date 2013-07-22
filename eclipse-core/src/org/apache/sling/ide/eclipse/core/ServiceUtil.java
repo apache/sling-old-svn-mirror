@@ -14,9 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.resource.util;
+package org.apache.sling.ide.eclipse.core;
 
-public class Constants {
+import org.osgi.util.tracker.ServiceTracker;
 
-    public static final String PLUGIN_ID = "org.apache.sling.ide.impl-resource";
+public class ServiceUtil {
+
+    public static <S, T> T getNotNull(ServiceTracker<S, T> serviceTracker) {
+        T service = serviceTracker.getService();
+        if (service == null)
+            throw new IllegalStateException("Service is null");
+
+        return service;
+    }
 }

@@ -16,12 +16,13 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Repository;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -33,41 +34,29 @@ import org.osgi.framework.ServiceReference;
  */
 public class Activator extends Plugin {
 
-	// The plug-in ID
+    // The plug-in ID
     public static final String PLUGIN_ID = "org.apache.sling.ide.eclipse-core"; //$NON-NLS-1$
 
 	// The shared instance
 	private static Activator plugin;
 
-    private Repository repository;
-    private SerializationManager serializationManager;
-	private Tracer tracer;
-    private FilterLocator filterLocator;
+    private ServiceTracker<Repository, Repository> repository;
+    private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
+    private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
 
-    private ServiceReference<Repository> repositoryRef;
-    private ServiceReference<SerializationManager> serializationManagerRef;
-    private ServiceReference<Tracer> tracerRef;
-    private ServiceReference<FilterLocator> filterLocatorRef;
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
-	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
 
-        tracerRef = context.getServiceReference(Tracer.class);
-        tracer = context.getService(tracerRef);
+        repository = new ServiceTracker<Repository, Repository>(context, Repository.class, null);
+        repository.open();
 
-        repositoryRef = context.getServiceReference(Repository.class);
-        repository = context.getService(repositoryRef);
+        serializationManager = new ServiceTracker<SerializationManager, SerializationManager>(context,
+                SerializationManager.class, null);
+        serializationManager.open();
 
-        serializationManagerRef = context.getServiceReference(SerializationManager.class);
-        serializationManager = context.getService(serializationManagerRef);
-
-        filterLocatorRef = context.getServiceReference(FilterLocator.class);
-        filterLocator = context.getService(filterLocatorRef);
+        filterLocator = new ServiceTracker<FilterLocator, FilterLocator>(context, FilterLocator.class, null);
+        filterLocator.open();
 	}
 
 	/*
@@ -75,10 +64,9 @@ public class Activator extends Plugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
-        context.ungetService(repositoryRef);
-        context.ungetService(serializationManagerRef);
-        context.ungetService(tracerRef);
-        context.ungetService(filterLocatorRef);
+        repository.close();
+        serializationManager.close();
+        filterLocator.close();
 
         plugin = null;
 		super.stop(context);
@@ -93,19 +81,16 @@ public class Activator extends Plugin {
 		return plugin;
 	}
 
-    public Tracer getTracer() {
-        return tracer;
-    }
-
 	public Repository getRepository() {
-        return repository;
+
+        return ServiceUtil.getNotNull(repository);
 	}
 
     public SerializationManager getSerializationManager() {
-        return serializationManager;
+        return ServiceUtil.getNotNull(serializationManager);
     }
 
     public FilterLocator getFilterLocator() {
-        return filterLocator;
+        return ServiceUtil.getNotNull(filterLocator);
     }
 }

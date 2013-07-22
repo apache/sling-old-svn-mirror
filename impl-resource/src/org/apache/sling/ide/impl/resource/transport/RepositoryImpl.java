@@ -41,6 +41,7 @@ public class RepositoryImpl extends AbstractRepository{
     private final HttpClient httpClient = new HttpClient();
     private Tracer tracer;
 
+
 	/* (non-Javadoc)
 	 * @see org.apache.sling.slingclipse.api.Repository#newAddNodeCommand(org.apache.sling.slingclipse.api.FileInfo)
 	 */
@@ -284,8 +285,6 @@ public class RepositoryImpl extends AbstractRepository{
 
     public void bindTracer(Tracer tracer) {
 
-        System.out.println("Bound tracer " + tracer);
-
         this.tracer = tracer;
     }
 
@@ -309,7 +308,8 @@ public class RepositoryImpl extends AbstractRepository{
 
             Result<T> result = command.execute();
 
-            tracer.trace("{} -> {}", command, result.toString());
+            if (tracer != null)
+                tracer.trace("{0} -> {1}", command, result.toString());
 
             return result;
         }

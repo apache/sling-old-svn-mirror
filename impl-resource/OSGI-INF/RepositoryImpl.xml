@@ -4,5 +4,5 @@
    <service>
       <provide interface="org.apache.sling.ide.transport.Repository"/>
    </service>
-   <reference bind="bindTracer" cardinality="1..1" interface="org.apache.sling.ide.impl.resource.util.Tracer" name="Tracer" policy="static"/>
+   <reference bind="bindTracer" cardinality="1..1" interface="org.apache.sling.ide.impl.resource.util.Tracer" name="Tracer" policy="static" unbind="unbindTracer"/>
 </scr:component>

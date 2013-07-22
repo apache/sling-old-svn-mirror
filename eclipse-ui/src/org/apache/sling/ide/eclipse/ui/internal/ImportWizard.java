@@ -207,7 +207,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			createFolder(project, projectRelativePath.append(path));
 		}else if(Repository.NT_RESOURCE.equals(primaryType)){
 			//DO NOTHING
-		}else{		
+        } else {
 			createFolder(project, projectRelativePath.append(path));
             String content = executeCommand(repository.newGetNodeContentCommand(path, ResponseType.JSON));
 			JSONObject jsonContent = new JSONObject(content);
