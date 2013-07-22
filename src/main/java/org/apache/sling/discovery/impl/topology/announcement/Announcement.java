@@ -241,7 +241,6 @@ public class Announcement {
         final JSONArray subAnnouncements = announcement
                 .getJSONArray("topologyAnnouncements");
 
-        final Long created = announcement.getLong("created");
         if (announcement.has("inherited")) {
             final Boolean inherited = announcement.getBoolean("inherited");
             result.inherited = inherited;
@@ -250,7 +249,6 @@ public class Announcement {
             String serverInfo = announcement.getString("serverInfo");
             result.serverInfo = serverInfo;
         }
-        result.created = created;
         result.setLocalCluster(localClusterView);
         for (int i = 0; i < subAnnouncements.length(); i++) {
             String subAnnouncementJSON = subAnnouncements.getString(i);
