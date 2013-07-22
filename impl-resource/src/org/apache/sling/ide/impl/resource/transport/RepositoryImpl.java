@@ -35,6 +35,7 @@ import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResponseType;
 import org.apache.sling.ide.transport.Result;
+import org.apache.sling.ide.util.PathUtil;
 
 public class RepositoryImpl extends AbstractRepository{
 	
@@ -202,17 +203,7 @@ public class RepositoryImpl extends AbstractRepository{
 	
     private String createFullPath(String relativePath) {
 
-        boolean repoUrlHasTrailingSlash = repositoryInfo.getUrl().endsWith("/");
-        boolean relativePathHasLeadingSlash = !relativePath.isEmpty() && relativePath.charAt(0) == '/';
-
-        if (repoUrlHasTrailingSlash ^ relativePathHasLeadingSlash)
-            return repositoryInfo.getUrl() + relativePath;
-        if (!repoUrlHasTrailingSlash && !relativePathHasLeadingSlash)
-            return repositoryInfo.getUrl() + '/' + relativePath;
-        if (repoUrlHasTrailingSlash && relativePathHasLeadingSlash)
-            return repositoryInfo.getUrl() + relativePath.substring(1);
-
-        throw new AssertionError("unreachable");
+        return PathUtil.join(repositoryInfo.getUrl(), relativePath);
     }
 
 	@Override

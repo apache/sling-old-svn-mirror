@@ -17,13 +17,19 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 
+import java.io.File;
 import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.apache.sling.ide.filter.FilterLocator;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.swt.SWT;
@@ -55,6 +61,7 @@ public class ImportWizardPage extends WizardResourceImportPage {
 		}
 	};
     private Combo repositoryCombo;
+    private Label importLabel;
 
 	/**
 	 * Creates an import wizard page for importing from a Sling Repository. If
@@ -94,6 +101,14 @@ public class ImportWizardPage extends WizardResourceImportPage {
 
 	@Override
 	protected void createOptionsGroup(Composite parent) {
+
+        // not really options but to placement is good enough
+        Composite container = new Composite(parent, SWT.NONE);
+        container.setLayout(new GridLayout());
+        GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+        container.setLayoutData(gridData);
+
+        importLabel = new Label(container, SWT.NONE);
 
 	}
 
@@ -207,6 +222,53 @@ public class ImportWizardPage extends WizardResourceImportPage {
 		
 		return true;
 	}
+
+    @Override
+    protected void updateWidgetEnablements() {
+        super.updateWidgetEnablements();
+
+        // called too early
+        if (importLabel == null) {
+            return;
+        }
+
+        IResource syncLocation = getProject(selection).getWorkspace().getRoot().findMember(getResourcePath());
+        // error message will be displayed, no need for the info label
+        if (syncLocation == null) {
+            importLabel.setVisible(false);
+            importLabel.getParent().layout();
+            return;
+        }
+
+        IFile filterFile = getFilter(syncLocation);
+
+        if (filterFile.exists()) {
+            importLabel.setText("Will apply import filter from /" + filterFile.getProjectRelativePath() + ".");
+        } else {
+            importLabel.setText("No filter found at /" + filterFile.getProjectRelativePath()
+                    + ", will import all resources.");
+        }
+        importLabel.setVisible(true);
+        importLabel.getParent().layout();
+    }
+
+    public IFile getFilterFile() {
+
+        IResource syncLocation = getProject(selection).getWorkspace().getRoot().findMember(getResourcePath());
+        if (syncLocation == null) {
+            return null;
+        }
+
+        return getFilter(syncLocation);
+    }
+
+    private IFile getFilter(IResource syncLocation) {
+
+        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+        File filterLocation = filterLocator.findFilterLocation(syncLocation.getLocation().toFile());
+        IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
+        return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
+    }
 
 	/*
 	 * (non-Javadoc)

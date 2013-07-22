@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
+import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
@@ -28,6 +29,7 @@ public class Activator extends Plugin {
     public static Activator INSTANCE;
 
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
+    private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
 
     public static Activator getDefault() {
 
@@ -42,6 +44,9 @@ public class Activator extends Plugin {
                 SerializationManager.class, null);
         serializationManager.open();
 
+        filterLocator = new ServiceTracker<FilterLocator, FilterLocator>(context, FilterLocator.class, null);
+        filterLocator.open();
+
         INSTANCE = this;
     }
 
@@ -49,11 +54,16 @@ public class Activator extends Plugin {
     public void stop(BundleContext context) throws Exception {
         INSTANCE = null;
         serializationManager.close();
+        filterLocator.close();
 
         super.stop(context);
     }
 
     public SerializationManager getSerializationManager() {
         return ServiceUtil.getNotNull(serializationManager);
+    }
+
+    public FilterLocator getFilterLocator() {
+        return ServiceUtil.getNotNull(filterLocator);
     }
 }

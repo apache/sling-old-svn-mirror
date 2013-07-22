@@ -7,8 +7,10 @@ Bundle-Version: 0.0.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
 Import-Package: org.apache.sling.ide.eclipse.core,
+ org.apache.sling.ide.filter,
  org.apache.sling.ide.serialization,
  org.apache.sling.ide.transport,
+ org.apache.sling.ide.util,
  org.eclipse.core.commands,
  org.eclipse.core.commands.operations,
  org.eclipse.core.resources,

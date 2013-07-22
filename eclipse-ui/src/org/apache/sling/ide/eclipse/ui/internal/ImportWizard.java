@@ -17,18 +17,24 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.filter.Filter;
+import org.apache.sling.ide.filter.FilterLocator;
+import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResponseType;
 import org.apache.sling.ide.transport.Result;
+import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -74,16 +80,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
         if (!mainPage.isPageComplete()) {
             return false;
         }
-		
 
-            final IServer server = mainPage.getServer();
-	 
-			IPath destinationPath = mainPage.getResourcePath();
-			
-			final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
-			final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
-			final String repositoryPath = mainPage.getRepositoryPath();
-			
+        final IServer server = mainPage.getServer();
+
+        IPath destinationPath = mainPage.getResourcePath();
+		
+        final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
+        final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
+        final String repositoryPath = mainPage.getRepositoryPath();
+        final IFile filterFile = mainPage.getFilterFile();
         try {
             getContainer().run(false, true, new IRunnableWithProgress() {
 
@@ -92,7 +97,6 @@ public class ImportWizard extends Wizard implements IImportWizard {
                     Repository repository = ServerUtil.getRepository(server, monitor);
 
                     monitor.setTaskName("Loading configuration...");
-                    monitor.worked(5);
                     ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
                             ISlingLaunchpadServer.class, monitor);
 
@@ -104,6 +108,29 @@ public class ImportWizard extends Wizard implements IImportWizard {
                         launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER);
                     }
 
+                    Filter filter = null;
+                    if (filterFile != null) {
+                        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+                        InputStream contents = null;
+                        try {
+                            contents = filterFile.getContents();
+                            filter = filterLocator.loadFilter(contents);
+                        } catch (IOException e) {
+                            throw new InvocationTargetException(e);
+                        } catch (CoreException e) {
+                            throw new InvocationTargetException(e);
+                        } finally {
+                            if (contents != null) {
+                                try {
+                                    contents.close();
+                                } catch (IOException e) {
+                                    // don't care
+                                }
+                            }
+                        }
+                    }
+                    monitor.worked(5);
+
                     try {
 
                         // TODO: We should try to make this give 'nice' progress feedback (aka here's what I'm
@@ -114,7 +141,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
                         // we create the root node and assume this is a folder
                         createRoot(project, projectRelativePath, repositoryPath);
 
-                        crawlChildrenAndImport(repository, repositoryPath, project, projectRelativePath);
+                        crawlChildrenAndImport(repository, filter, repositoryPath, project, projectRelativePath);
 
                         monitor.setTaskName("Import Complete");
                         monitor.worked(100);
@@ -178,20 +205,22 @@ public class ImportWizard extends Wizard implements IImportWizard {
             createFolder(project, rootImportPath.removeLastSegments(i));
     }
 
-	/**
-	 * Crawls the repository and recursively imports founds resources
-	 * 
-	 * @param repository the sling repository to import from
-	 * @param path the current path to import from
-	 * @param project the project to create resources in
-	 * @param projectRelativePath the path, relative to the project root, where the resources should be created
-	 * @param tracer 
-	 * @throws JSONException
-	 * @throws RepositoryException
-	 * @throws CoreException
-	 */
+	    /**
+     * Crawls the repository and recursively imports founds resources
+     * 
+     * @param repository the sling repository to import from
+     * @param filter
+     * @param path the current path to import from
+     * @param project the project to create resources in
+     * @param projectRelativePath the path, relative to the project root, where the resources should be created
+     * @param tracer
+     * @throws JSONException
+     * @throws RepositoryException
+     * @throws CoreException
+     */
 	// TODO: This probably should be pushed into the service layer	
-    private void crawlChildrenAndImport(Repository repository, String path, IProject project, IPath projectRelativePath)
+    private void crawlChildrenAndImport(Repository repository, Filter filter, String path, IProject project,
+            IPath projectRelativePath)
             throws JSONException, RepositoryException, CoreException {
 
         System.out.println("crawlChildrenAndImport(" + repository + ", " + path + ", " + project + ", "
@@ -211,16 +240,23 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			createFolder(project, projectRelativePath.append(path));
             String content = executeCommand(repository.newGetNodeContentCommand(path, ResponseType.JSON));
 			JSONObject jsonContent = new JSONObject(content);
-			String contentXml = JSONML.toString(jsonContent);		
+            jsonContent.put("tagName", Repository.JCR_ROOT); // TODO this is required by JSONML, not sure why
+            String contentXml = JSONML.toString(jsonContent);
             createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
                     contentXml.getBytes(Charset.forName("UTF-8") /* TODO is this enough? */));
 		}
  		
         for (Iterator<?> keys = json.keys(); keys.hasNext();) {
             String key = (String) keys.next();
+            if (filter != null) {
+                FilterResult filterResult = filter.filter(key);
+                if (filterResult == FilterResult.DENY) {
+                    continue;
+                }
+            }
 			JSONObject innerjson=json.optJSONObject(key);
 			if (innerjson!=null){
-                crawlChildrenAndImport(repository, path + "/" + key, project, projectRelativePath);
+                crawlChildrenAndImport(repository, filter, PathUtil.join(path, key), project, projectRelativePath);
 			}
 		}
 	}
