@@ -241,6 +241,7 @@ public class Announcement {
         final JSONArray subAnnouncements = announcement
                 .getJSONArray("topologyAnnouncements");
 
+        final Long created = announcement.getLong("created");
         if (announcement.has("inherited")) {
             final Boolean inherited = announcement.getBoolean("inherited");
             result.inherited = inherited;
@@ -249,6 +250,7 @@ public class Announcement {
             String serverInfo = announcement.getString("serverInfo");
             result.serverInfo = serverInfo;
         }
+        result.created = created;
         result.setLocalCluster(localClusterView);
         for (int i = 0; i < subAnnouncements.length(); i++) {
             String subAnnouncementJSON = subAnnouncements.getString(i);
@@ -369,18 +371,38 @@ public class Announcement {
     public void persistTo(Resource announcementsResource)
             throws PersistenceException, JSONException {
         Resource announcementChildResource = announcementsResource.getChild(getPrimaryKey());
-        if (announcementChildResource==null) {
+        // SLING-2967 : when persisting, reset 'created' to the current time
+        resetCreatedTime();
+        final String announcementJson = asJSON();
+		if (announcementChildResource==null) {
             final ResourceResolver resourceResolver = announcementsResource.getResourceResolver();
             Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put("topologyAnnouncement", asJSON());
+            properties.put("topologyAnnouncement", announcementJson);
             resourceResolver.create(announcementsResource, getPrimaryKey(), properties);
         } else {
             final ModifiableValueMap announcementChildMap = announcementChildResource.adaptTo(ModifiableValueMap.class);
-            announcementChildMap.put("topologyAnnouncement", asJSON());
+            announcementChildMap.put("topologyAnnouncement", announcementJson);
         }
     }
 
     /**
+     * SLING-2967 : Reset the field 'created' to the current local machine time
+     */
+    private void resetCreatedTime() {
+        created = System.currentTimeMillis();
+		if (incomings!=null) {
+			// also loop through the incoming announcements,
+			// as those contain created times of maybe even other
+			// machines
+			final Iterator<Announcement> it = incomings.iterator();
+			while(it.hasNext()) {
+				Announcement incomingAnnouncement = it.next();
+				incomingAnnouncement.resetCreatedTime();
+			}
+		}
+	}
+
+	/**
      * Remove all announcements that match the given owner Id
      */
     public void removeInherited(final String ownerId) {
