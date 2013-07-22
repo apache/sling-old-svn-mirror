@@ -175,7 +175,7 @@ public class TopologyViewImpl implements TopologyView {
             for (Iterator<InstanceDescription> it2 = this.instances.iterator(); it2.hasNext();) {
                 InstanceDescription existingInstance = it2.next();
                 if (existingInstance.getSlingId().equals(instanceDescription.getSlingId())) {
-                    logger.error("addInstance: cannot add same instance twice: "
+                    logger.info("addInstance: cannot add same instance twice: "
                             + instanceDescription);
                     continue outerLoop;
                 }
