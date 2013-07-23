@@ -218,7 +218,7 @@ public class MapEntry implements Comparable<MapEntry> {
                     		//ignore this entry
                             LoggerFactory
                             .getLogger(MapEntry.class)
-                    		.debug("ignored entry due exception ",iae);
+                    		.debug("Ignoring mapping due to exception: " + iae.getMessage(), iae);
                     	}
                     	if (mapEntry!=null){
                     		prepEntries.add(mapEntry);
@@ -255,7 +255,7 @@ public class MapEntry implements Comparable<MapEntry> {
         try {
         	this.urlPattern = Pattern.compile(url);
         } catch (Exception e){
-        	throw new IllegalArgumentException("Bad url ",e);
+        	throw new IllegalArgumentException("Bad url pattern: " + url,e);
         }
 
         this.redirect = redirect;
