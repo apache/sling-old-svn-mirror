@@ -19,7 +19,6 @@
 package org.apache.sling.event.jobs.consumer;
 
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -53,10 +52,10 @@ import aQute.bnd.annotation.ProviderType;
 public interface JobConsumer {
 
     enum JobResult {
-        OK,
-        FAILED,
-        CANCEL,
-        ASYNC
+        OK,      // processing finished
+        FAILED,  // processing failed, can be retried
+        CANCEL,  // processing failed permanently
+        ASYNC    // processing will be done async
     }
 
     /** Job property containing an asynchronous handler. */
