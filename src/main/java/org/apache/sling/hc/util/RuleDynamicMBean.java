@@ -18,6 +18,8 @@
 package org.apache.sling.hc.util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -29,6 +31,7 @@ import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.ReflectionException;
 
+import org.apache.sling.hc.api.EvaluationResult;
 import org.apache.sling.hc.api.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +57,8 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
             throws AttributeNotFoundException, MBeanException, ReflectionException {
         if(RULE_OK_ATTRIBUTE_NAME.equals(attribute)) {
             return !rule.evaluate().anythingToReport();
+        } else if(LOG_ATTRIBUTE_NAME.equals(attribute)) {
+            return logList(rule.evaluate());
         } else {
             final Object o = rule.getInfo().get(attribute);
             if(o == null) {
@@ -61,6 +66,14 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
             }
             return o;
         }
+    }
+    
+    private List<String> logList(EvaluationResult result) {
+        final List<String> list = new ArrayList<String>();
+        for(EvaluationResult.LogMessage msg : result.getLogMessages()) {
+            list.add(msg.getLevel() + " " + msg.getMessage());
+        }
+        return list;
     }
 
     @Override
@@ -78,11 +91,12 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        final MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[rule.getInfo().size() + 1];
+        final MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[rule.getInfo().size() + 2];
         int i=0;
         attrs[i++] = new MBeanAttributeInfo(RULE_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The rule value", true, false, false);
+        attrs[i++] = new MBeanAttributeInfo(LOG_ATTRIBUTE_NAME, String[][].class.getName(), "The rule log", true, false, false);
         for(String key : rule.getInfo().keySet()) {
-            attrs[i++] = new MBeanAttributeInfo(key, String.class.getName(), "Description of " + key, true, false, false);
+            attrs[i++] = new MBeanAttributeInfo(key, List.class.getName(), "Description of " + key, true, false, false);
         }
         
         return new MBeanInfo(this.getClass().getName(), beanName, attrs, null, null, null);
