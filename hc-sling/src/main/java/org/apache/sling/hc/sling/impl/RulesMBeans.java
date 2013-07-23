@@ -64,6 +64,7 @@ public class RulesMBeans {
     private String rulesPath;
     private RulesEngine engine;
     private List<ServiceRegistration> mBeansRegistrations;
+    private ResourceResolver resolver;
     
     @Activate
     public void activate(ComponentContext ctx) throws Exception {
@@ -72,39 +73,34 @@ public class RulesMBeans {
             throw new IllegalStateException("rulesPath is null, cannot activate");
         }
         
-        final ResourceResolver resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
-        try {
-            final Resource rulesRoot = resolver.getResource(rulesPath);
-            if(rulesRoot == null) {
-                throw new IllegalStateException("Resource not found, cannot parse Rules: " + rulesPath);
-            }
-
-            // Parse Rules found under our configured root
-            engine = healthcheck.getNewRulesEngine();
-            final List<Rule> rules = parser.parseResource(rulesRoot); 
-            engine.addRules(rules);
-            
-            // And register MBeans for those Rules
-            mBeansRegistrations = new ArrayList<ServiceRegistration>();
-            final String RESOURCE_PATH_PROP = "sling.resource.path";
-            for(Rule r : rules) {
-                final Object rulePath = r.getInfo().get(RESOURCE_PATH_PROP);
-                if(rulePath == null) {
-                    // TODO this happens with scripted rules
-                    log.warn("Rule {} does not have a {} property, ignored", r, RESOURCE_PATH_PROP);
-                    continue;
-                }
-                final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
-                mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=rules,service=" + rulePath);
-                final RuleDynamicMBean mbean = new RuleDynamicMBean(r);
-                mBeansRegistrations.add(ctx.getBundleContext().registerService(DynamicMBean.class.getName(), mbean, mbeanProps));
-                log.debug("Registered {} with properties {}", mbean, mbeanProps);
-            }
-            log.info("Registered {} Rule MBeans", mBeansRegistrations.size());
-            
-        } finally {
-            resolver.close();
+        resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+        final Resource rulesRoot = resolver.getResource(rulesPath);
+        if(rulesRoot == null) {
+            throw new IllegalStateException("Resource not found, cannot parse Rules: " + rulesPath);
         }
+
+        // Parse Rules found under our configured root
+        engine = healthcheck.getNewRulesEngine();
+        final List<Rule> rules = parser.parseResource(rulesRoot); 
+        engine.addRules(rules);
+        
+        // And register MBeans for those Rules
+        mBeansRegistrations = new ArrayList<ServiceRegistration>();
+        final String RESOURCE_PATH_PROP = "sling.resource.path";
+        for(Rule r : rules) {
+            final Object rulePath = r.getInfo().get(RESOURCE_PATH_PROP);
+            if(rulePath == null) {
+                // TODO this happens with scripted rules
+                log.warn("Rule {} does not have a {} property, ignored", r, RESOURCE_PATH_PROP);
+                continue;
+            }
+            final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
+            mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=rules,service=" + rulePath);
+            final RuleDynamicMBean mbean = new RuleDynamicMBean(r);
+            mBeansRegistrations.add(ctx.getBundleContext().registerService(DynamicMBean.class.getName(), mbean, mbeanProps));
+            log.debug("Registered {} with properties {}", mbean, mbeanProps);
+        }
+        log.info("Registered {} Rule MBeans", mBeansRegistrations.size());
     }
     
     @Deactivate
@@ -114,5 +110,7 @@ public class RulesMBeans {
         }
         log.info("Unregistered {} Rule MBeans", mBeansRegistrations.size());
         mBeansRegistrations = null;
+        resolver.close();
+        resolver = null;
     }
 }

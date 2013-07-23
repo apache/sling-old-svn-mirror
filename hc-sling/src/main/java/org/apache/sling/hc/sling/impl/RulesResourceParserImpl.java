@@ -91,7 +91,9 @@ public class RulesResourceParserImpl implements RulesResourceParser {
         // If r adapts to a Sling script, use it to evaluate our Rule
         final SlingScript script = r.adaptTo(SlingScript.class);
         if(script != null) {
-            return new Rule(new ScriptSystemAttribute(requestProcessor, script), ScriptSystemAttribute.SUCCESS_STRING);
+            final Rule rule = new Rule(new ScriptSystemAttribute(requestProcessor, script), ScriptSystemAttribute.SUCCESS_STRING);
+            rule.getInfo().put(RESOURCE_PATH_INFO, r.getPath());
+            return rule;
         }
 
         // else convert using available RuleBuilders if suitable
