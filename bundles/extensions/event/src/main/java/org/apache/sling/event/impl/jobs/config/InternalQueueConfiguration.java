@@ -47,7 +47,7 @@ import org.osgi.framework.Constants;
             options={@PropertyOption(name="UNORDERED",value="Parallel"),
                      @PropertyOption(name="ORDERED",value="Ordered"),
                      @PropertyOption(name="TOPIC_ROUND_ROBIN",value="Topic Round Robin"),
-                     @PropertyOption(name="PULL",value="Equal Distribution"),
+                     @PropertyOption(name="IGNORE",value="Ignore"),
                      @PropertyOption(name="DROP",value="Drop")}),
     @Property(name=ConfigurationConstants.PROP_TOPICS,
             unbounded=PropertyUnbounded.ARRAY),
