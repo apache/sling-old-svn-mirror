@@ -1,0 +1,5 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "rules.path" : "/apps/hc/demo",
+    "jcr:description" : "This configuration causes Rules MBeans to be created for rules found under the specified rules.path"
+}
