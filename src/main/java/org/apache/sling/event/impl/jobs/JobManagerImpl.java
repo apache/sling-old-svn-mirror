@@ -775,6 +775,14 @@ public class JobManagerImpl
     }
 
     /**
+     * @see org.apache.sling.event.jobs.JobManager#addJob(java.lang.String, java.util.Map)
+     */
+    @Override
+    public Job addJob(String topic, Map<String, Object> properties) {
+        return this.addJob(topic, null, properties);
+    }
+
+    /**
      * @see org.apache.sling.event.jobs.JobManager#addJob(java.lang.String, java.lang.String, java.util.Map)
      */
     @Override

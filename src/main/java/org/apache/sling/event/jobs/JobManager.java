@@ -150,6 +150,23 @@ public interface JobManager {
      * If the topic is missing or illegal, no job is created and <code>null</code> is returned.
      *
      * @param topic The required job topic.
+     * @param properties Optional job properties
+     * @return The new job - or <code>null</code> if the job could not be created.
+     * @since 1.2
+     */
+    Job addJob(String topic, Map<String, Object> properties);
+
+    /**
+     * Add a new job
+     *
+     * If the topic is missing or illegal, no job is created and <code>null</code> is returned.
+     * This method allows to specify a job name which should uniquely identify this job. If a job with
+     * the same name is started on different instances, the job is still processed only once. However,
+     * the topology api in combination with the leader selection provides a better way for
+     * dealing with this situation and as jobs with name come with a heavy processing overhead
+     * these should be avoided.
+     *
+     * @param topic The required job topic.
      * @param name  Optional unique job name
      * @param properties Optional job properties
      * @return The new job - or <code>null</code> if the job could not be created.
