@@ -17,8 +17,10 @@
 package org.apache.sling.ide.impl.resource.transport;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
@@ -34,6 +36,7 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.impl.resource.util.Tracer;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.ProtectedNodes;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -160,13 +163,16 @@ public class RepositoryImpl extends AbstractRepository{
                         resource.addProperty(Repository.JCR_PRIMARY_TYPE, primaryType);
                     }
 
+                    // TODO - populate all properties
+
                     for (Iterator<?> keyIterator = json.keys(); keyIterator.hasNext();) {
 
                         String key = (String) keyIterator.next();
                         JSONObject value = json.optJSONObject(key);
                         if (value != null) {
-                            ResourceProxy child = new ResourceProxy(key);
+                            ResourceProxy child = new ResourceProxy(PathUtil.join(path, key));
                             child.addProperty(Repository.JCR_PRIMARY_TYPE, value.optString(Repository.JCR_PRIMARY_TYPE));
+                            resource.addChild(child);
                         }
                     }
 					
@@ -282,20 +288,24 @@ public class RepositoryImpl extends AbstractRepository{
 			public Result<Void> execute() {
                 PostMethod post = new PostMethod(createFullPath(fileInfo.getRelativeLocation()));
 				try{
-					Part[] parts = new Part[properties.size()];
-					int counter=0;
-                    for (Map.Entry<String, Object> proerty : properties.entrySet()) {
-                        Object propValue = proerty.getValue();
+                    List<Part> parts = new ArrayList<Part>();
+                    for (Map.Entry<String, Object> property : properties.entrySet()) {
+                        if (ProtectedNodes.exists(property.getKey())) {
+                            continue;
+                        }
+
+                        Object propValue = property.getValue();
+
                         if (propValue instanceof String) {
-                            parts[counter] = new StringPart(proerty.getKey(), (String) propValue);
-                            counter++;
-                        } else if (proerty != null) {
+                            parts.add(new StringPart(property.getKey(), (String) propValue));
+                        } else if (property != null) {
                             // TODO handle multi-valued properties
-                            System.err.println("Unable to handle property " + proerty.getKey() + " of type "
-                                    + proerty.getValue().getClass());
+                            System.err.println("Unable to handle property " + property.getKey() + " of type "
+                                    + property.getValue().getClass());
                         }
 					}
-					post.setRequestEntity(new MultipartRequestEntity(parts,post.getParams()));
+                    post.setRequestEntity(new MultipartRequestEntity(parts.toArray(new Part[parts.size()]), post
+                            .getParams()));
 					httpClient.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(repositoryInfo.getUsername(),repositoryInfo.getPassword()));
 					httpClient.getParams().setAuthenticationPreemptive(true);
 					int responseStatus=httpClient.executeMethod(post);

@@ -33,7 +33,6 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
-import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -243,7 +242,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
             }
 		}
 
+        System.out.println("Children: " + resource.getChildren());
+
         for (ResourceProxy child : resource.getChildren()) {
+
+            if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
+                continue;
+            }
 
             if (filter != null) {
                 FilterResult filterResult = filter.filter(child.getPath());
@@ -252,7 +257,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
                 }
             }
 
-            crawlChildrenAndImport(repository, filter, PathUtil.join(path, child.getPath()), project,
+            crawlChildrenAndImport(repository, filter, child.getPath(), project,
                     projectRelativePath);
 		}
 	}
