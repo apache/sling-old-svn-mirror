@@ -35,6 +35,7 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -55,24 +56,18 @@ public class StandardPropertyProvider {
 
     private volatile long changeCount;
 
-    private String instanceName;
-
-    private String instanceDescription;
-
     private ServiceRegistration propagationService;
 
     private final Map<Long, String[]> endpoints = new HashMap<Long, String[]>();
 
     private String endpointString;
 
+    @Reference SlingSettingsService settings;
+
     private Dictionary<String, Object> getRegistrationProperties() {
         final List<String> names = new ArrayList<String>();
-        if ( this.instanceName != null ) {
-            names.add(InstanceDescription.PROPERTY_NAME);
-        }
-        if ( this.instanceDescription != null ) {
-            names.add(InstanceDescription.PROPERTY_DESCRIPTION);
-        }
+        names.add(InstanceDescription.PROPERTY_NAME);
+        names.add(InstanceDescription.PROPERTY_DESCRIPTION);
         names.add(InstanceDescription.PROPERTY_ENDPOINTS);
 
         final StringBuilder sb = new StringBuilder();
@@ -101,17 +96,6 @@ public class StandardPropertyProvider {
         return serviceProps;
     }
 
-    private String getPropertyValue(final ComponentContext bc, final String key) {
-        Object value = bc.getProperties().get(key);
-        if ( value == null ) {
-            value = bc.getBundleContext().getProperty(key);
-        }
-        if ( value != null ) {
-            return value.toString();
-        }
-        return null;
-    }
-
     @Activate
     protected void activate(final ComponentContext cc) {
         this.modified(cc);
@@ -119,18 +103,15 @@ public class StandardPropertyProvider {
 
     @Modified
     protected void modified(final ComponentContext cc) {
-        this.instanceName = this.getPropertyValue(cc, "sling.name");
-        this.instanceDescription = this.getPropertyValue(cc, "sling.description");
-
         this.propagationService = cc.getBundleContext().registerService(PropertyProvider.class.getName(),
                 new PropertyProvider() {
 
                     public String getProperty(final String name) {
                         if ( InstanceDescription.PROPERTY_DESCRIPTION.equals(name) ) {
-                            return instanceDescription;
+                            return settings.getSlingDescription();
                         }
                         if ( InstanceDescription.PROPERTY_NAME.equals(name) ) {
-                            return instanceName;
+                            return settings.getSlingName();
                         }
                         if ( InstanceDescription.PROPERTY_ENDPOINTS.equals(name) ) {
                             return endpointString;
