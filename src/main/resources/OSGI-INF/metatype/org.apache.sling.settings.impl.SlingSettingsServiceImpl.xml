@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><metatype:MetaData xmlns:metatype="http://www.osgi.org/xmlns/metatype/v1.0.0" 
+localization="OSGI-INF/metatype/metatype">
+    <OCD id="org.apache.sling.settings.impl.SlingSettingsServiceImpl" name="%settings.name" description="%settings.description">
+        <AD id="sling.name" type="String" name="%sling.name.name" description="%sling.name.description"/>
+        <AD id="sling.description" type="String" name="%sling.description.name" description="%sling.description.description"/>
+    </OCD>
+    <Designate pid="org.apache.sling.settings.impl.SlingSettingsServiceImpl">
+        <Object ocdref="org.apache.sling.settings.impl.SlingSettingsServiceImpl"/>
+    </Designate>
+</metatype:MetaData>
