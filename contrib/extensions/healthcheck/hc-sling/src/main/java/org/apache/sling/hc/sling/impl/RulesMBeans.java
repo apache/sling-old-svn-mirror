@@ -39,18 +39,26 @@ import org.apache.sling.hc.api.Rule;
 import org.apache.sling.hc.api.RulesEngine;
 import org.apache.sling.hc.sling.api.RulesResourceParser;
 import org.apache.sling.hc.util.RuleDynamicMBean;
+import org.apache.sling.hc.util.TaggedRuleFilter;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Registers MBeans for our health check rules */
-@Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE,metatype=true)
+@Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE, metatype=true)
 public class RulesMBeans {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Property
     public static final String RULES_PATHS_PROP = "rules.path";
+    
+    @Property(value=RulesMBeans.DEFAULT_BEAN_NAME)
+    public static final String BEAN_NAME_PROP = "bean.name";
+    public static final String DEFAULT_BEAN_NAME = "rules";
+    
+    @Property(cardinality=20)
+    public static final String RULE_TAGS_PROP = "rules.tags";
     
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
@@ -65,6 +73,8 @@ public class RulesMBeans {
     private RulesEngine engine;
     private List<ServiceRegistration> mBeansRegistrations;
     private ResourceResolver resolver;
+    private String beanName;
+    private String [] rulesTags;
     
     @Activate
     public void activate(ComponentContext ctx) throws Exception {
@@ -72,6 +82,9 @@ public class RulesMBeans {
         if(rulesPath == null) {
             throw new IllegalStateException("rulesPath is null, cannot activate");
         }
+        
+        beanName = PropertiesUtil.toString(ctx.getProperties().get(BEAN_NAME_PROP), DEFAULT_BEAN_NAME);
+        rulesTags = PropertiesUtil.toStringArray(ctx.getProperties().get(RULE_TAGS_PROP), new String[] {});
         
         resolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
         final Resource rulesRoot = resolver.getResource(rulesPath);
@@ -87,7 +100,12 @@ public class RulesMBeans {
         // And register MBeans for those Rules
         mBeansRegistrations = new ArrayList<ServiceRegistration>();
         final String RESOURCE_PATH_PROP = "sling.resource.path";
+        final TaggedRuleFilter filter = rulesTags.length > 0 ? new TaggedRuleFilter(rulesTags) : null;
         for(Rule r : rules) {
+            if(filter != null && !filter.accept(r)) {
+                log.debug("{} rejected by {}, ignoring this Rule", r, filter);
+                continue;
+            }
             final Object rulePath = r.getInfo().get(RESOURCE_PATH_PROP);
             if(rulePath == null) {
                 // TODO this happens with scripted rules
@@ -95,7 +113,7 @@ public class RulesMBeans {
                 continue;
             }
             final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
-            mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=rules,service=" + rulePath);
+            mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=" + beanName + ",service=" + rulePath);
             final RuleDynamicMBean mbean = new RuleDynamicMBean(r);
             mBeansRegistrations.add(ctx.getBundleContext().registerService(DynamicMBean.class.getName(), mbean, mbeanProps));
             log.debug("Registered {} with properties {}", mbean, mbeanProps);
