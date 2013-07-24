@@ -38,9 +38,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/maven-sling-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/maven-sling-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/maven/maven-sling-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-sling-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-sling-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/maven-sling-plugin</url>
     </scm>
 
     <reporting>
