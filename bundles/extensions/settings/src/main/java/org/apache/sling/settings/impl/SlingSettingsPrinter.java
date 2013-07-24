@@ -78,6 +78,12 @@ public class SlingSettingsPrinter {
         pw.print("Sling ID = ");
         pw.print(this.settings.getSlingId());
         pw.println();
+        pw.print("Sling Name = ");
+        pw.print(this.settings.getSlingName());
+        pw.println();
+        pw.print("Sling Description = ");
+        pw.print(this.settings.getSlingDescription());
+        pw.println();
         pw.print("Sling Home = ");
         pw.print(this.settings.getSlingHomePath());
         pw.println();
