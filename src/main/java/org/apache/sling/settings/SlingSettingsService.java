@@ -117,4 +117,29 @@ public interface SlingSettingsService {
      */
     Set<String> getRunModes();
 
+    /**
+     * Return the optional name of the instance.
+     * @return The name of the instance or <code>null</code>.
+     * @see #setSlingName(String)
+     */
+    String getSlingName();
+
+    /**
+     * Set the name of the instance.
+     * @param value A new name.
+     */
+    void setSlingName(String value);
+
+    /**
+     * Return the optional description of the instance.
+     * @return The description of the instance or <code>null</code>.
+     * @see #setSlingDescrption(String)
+     */
+    String getSlingDescription();
+
+    /**
+     * Set the description of the instance.
+     * @param value A new description.
+     */
+    void setSlingDescrption(String value);
 }

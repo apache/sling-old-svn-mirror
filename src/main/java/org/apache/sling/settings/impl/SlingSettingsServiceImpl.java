@@ -22,8 +22,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
@@ -47,6 +50,12 @@ import org.slf4j.LoggerFactory;
 public class SlingSettingsServiceImpl
     implements SlingSettingsService {
 
+    /** Property containing the sling name. */
+    private static final String SLING_NAME = "sling.name";
+
+    /** Property containing the sling description. */
+    private static final String SLING_DESCRIPTION = "sling.description";
+
     /** The logger */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -56,16 +65,24 @@ public class SlingSettingsServiceImpl
     /** The sling home */
     private String slingHome;
 
+    /** The sling properties */
+    private Properties slingProps;
+
     /** The sling home url */
     private URL slingHomeUrl;
 
     private Set<String> runModes;
 
+    /** The name of the data file holding additional properties. */
+    private static final String PROPS_FILE = "sling.props.file";
+
     /** The name of the data file holding the sling id. */
-    private static final String DATA_FILE = "sling.id.file";
+    private static final String ID_FILE = "sling.id.file";
 
     /** The name of the data file holding install run mode options */
     private static final String OPTIONS_FILE = "sling.options.file";
+
+    private File slingPropsFile;
 
     /**
      * Create the service and search the Sling home urls and
@@ -75,6 +92,7 @@ public class SlingSettingsServiceImpl
      */
     public SlingSettingsServiceImpl(final BundleContext context,
             final StartupHandler handler) {
+        this.setupSlingProps(context);
         this.setupSlingHome(context);
         this.setupSlingId(context);
 
@@ -105,7 +123,7 @@ public class SlingSettingsServiceImpl
      */
     private void setupSlingId(final BundleContext context) {
         // try to read the id from the id file first
-        final File idFile = context.getDataFile(DATA_FILE);
+        final File idFile = context.getDataFile(ID_FILE);
         if ( idFile == null ) {
             // the osgi framework does not support storing something in the file system
             throw new RuntimeException("Unable to read from bundle data file.");
@@ -116,6 +134,41 @@ public class SlingSettingsServiceImpl
         if (slingId == null) {
             slingId = UUID.randomUUID().toString();
             this.writeSlingId(idFile, this.slingId);
+        }
+    }
+
+    /**
+     * Get / create sling id
+     */
+    private void setupSlingProps(final BundleContext context) {
+        // try to read the props from the file
+        this.slingPropsFile = context.getDataFile(PROPS_FILE);
+        if ( this.slingPropsFile == null ) {
+            // the OSGi framework does not support storing something in the file system
+            throw new RuntimeException("Unable to read from bundle data file.");
+        }
+        this.slingProps = new Properties();
+        if ( this.slingPropsFile.exists() ) {
+            InputStream reader = null;
+            try {
+                reader = new FileInputStream(this.slingPropsFile);
+                this.slingProps.load(reader);
+
+            } catch ( final IOException ioe ) {
+                logger.error("Unable to read properties file " + this.slingPropsFile + " : " + ioe.getMessage(), ioe);
+            } finally {
+                if ( reader != null ) {
+                    try {
+                        reader.close();
+                    } catch (final IOException ignore) {}
+                }
+            }
+        }
+        if ( this.slingProps.getProperty(SLING_NAME) == null && context.getProperty(SLING_NAME) != null ) {
+            this.slingProps.setProperty(SLING_NAME, context.getProperty(SLING_NAME));
+        }
+        if ( this.slingProps.getProperty(SLING_DESCRIPTION) == null && context.getProperty(SLING_DESCRIPTION) != null ) {
+            this.slingProps.setProperty(SLING_DESCRIPTION, context.getProperty(SLING_DESCRIPTION));
         }
     }
 
@@ -159,7 +212,6 @@ public class SlingSettingsServiceImpl
     /**
      * Set up run modes.
      */
-    @SuppressWarnings("unchecked")
     private void setupRunModes(final BundleContext context,
             final StartupMode startupMode) {
         final Set<String> modesSet = new HashSet<String>();
@@ -345,5 +397,70 @@ public class SlingSettingsServiceImpl
      */
     public Set<String> getRunModes() {
         return this.runModes;
+    }
+
+    /**
+     * @see org.apache.sling.settings.SlingSettingsService#getSlingName()
+     */
+    public String getSlingName() {
+        String name = this.slingProps.getProperty(SLING_NAME);
+        if ( name == null ) {
+            name = "Instance " + this.slingId; // default
+        }
+        return name;
+    }
+
+    /**
+     * @see org.apache.sling.settings.SlingSettingsService#setSlingName(java.lang.String)
+     */
+    public void setSlingName(final String value) {
+        if ( value == null ) {
+            this.slingProps.setProperty(SLING_NAME, "");
+        } else {
+            this.slingProps.setProperty(SLING_NAME, value);
+        }
+        this.writeSlingProps();
+    }
+
+    /**
+     * @see org.apache.sling.settings.SlingSettingsService#getSlingDescription()
+     */
+    public String getSlingDescription() {
+        String desc = this.slingProps.getProperty(SLING_DESCRIPTION);
+        if ( desc == null ) {
+            desc = "Instance with id " + this.slingId + " and run modes " + this.getRunModes(); // default
+        }
+        return desc;
+    }
+
+    /**
+     * @see org.apache.sling.settings.SlingSettingsService#setSlingDescrption(java.lang.String)
+     */
+    public void setSlingDescrption(final String value) {
+        if ( value == null ) {
+            this.slingProps.setProperty(SLING_DESCRIPTION, "");
+        } else {
+            this.slingProps.setProperty(SLING_DESCRIPTION, value);
+        }
+        this.writeSlingProps();
+    }
+
+    private void writeSlingProps() {
+        if ( this.slingPropsFile != null ) {
+            OutputStream writer = null;
+            try {
+                writer = new FileOutputStream(this.slingPropsFile);
+                this.slingProps.store(writer, null);
+            } catch ( final IOException ioe ) {
+                logger.error("Unable to write properties file " + this.slingPropsFile + " : " + ioe.getMessage(), ioe);
+            } finally {
+                if ( writer != null ) {
+                    try {
+                        writer.close();
+                    } catch (final IOException ignore) {}
+                }
+            }
+
+        }
     }
 }
