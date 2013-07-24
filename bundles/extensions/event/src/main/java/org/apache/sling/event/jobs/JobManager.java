@@ -147,7 +147,9 @@ public interface JobManager {
     /**
      * Add a new job
      *
-     * If the topic is missing or illegal, no job is created and <code>null</code> is returned.
+     * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
+     * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
+     * allowed characters are letters, numbers and the underscore.
      *
      * @param topic The required job topic.
      * @param properties Optional job properties
@@ -159,7 +161,10 @@ public interface JobManager {
     /**
      * Add a new job
      *
-     * If the topic is missing or illegal, no job is created and <code>null</code> is returned.
+     * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
+     * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
+     * allowed characters are letters, numbers and the underscore.
+     *
      * This method allows to specify a job name which should uniquely identify this job. If a job with
      * the same name is started on different instances, the job is still processed only once. However,
      * the topology api in combination with the leader selection provides a better way for
