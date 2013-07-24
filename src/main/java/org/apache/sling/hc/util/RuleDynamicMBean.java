@@ -105,7 +105,7 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
     
     private TabularData logData(EvaluationResult er) {
         final TabularDataSupport result = new TabularDataSupport(LOG_TABLE_TYPE);
-        int i=0;
+        int i=1;
         for(EvaluationResult.LogMessage msg : er.getLogMessages()) {
             final Map<String, Object> data = new HashMap<String, Object>();
             data.put(INDEX_COLUMN, i++);
