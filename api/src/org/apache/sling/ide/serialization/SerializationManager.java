@@ -18,16 +18,17 @@ package org.apache.sling.ide.serialization;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 
 public interface SerializationManager {
 
     boolean isSerializationFile(String filePath);
 
+    String getBaseResourcePath(String serializationFilePath);
+
     String getSerializationFilePath(String baseFilePath);
 
-    void writeSerializationData(OutputStream destination, Map<String, String> data) throws IOException;
+    String buildSerializationData(Map<String, Object> content) throws IOException;
 
-    Map<String, String> readSerializationData(InputStream source) throws IOException;
+    Map<String, Object> readSerializationData(InputStream source) throws IOException;
 }

@@ -20,8 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.Charset;
-import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
@@ -32,12 +31,13 @@ import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
-import org.apache.sling.ide.transport.ResponseType;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -49,9 +49,6 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.wst.server.core.IServer;
-import org.json.JSONException;
-import org.json.JSONML;
-import org.json.JSONObject;
 
 /**
  * Renders the import wizard container page for the Slingclipse repository
@@ -205,7 +202,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
             createFolder(project, rootImportPath.removeLastSegments(i));
     }
 
-	    /**
+	        /**
      * Crawls the repository and recursively imports founds resources
      * 
      * @param repository the sling repository to import from
@@ -217,18 +214,17 @@ public class ImportWizard extends Wizard implements IImportWizard {
      * @throws JSONException
      * @throws RepositoryException
      * @throws CoreException
+     * @throws IOException
      */
 	// TODO: This probably should be pushed into the service layer	
     private void crawlChildrenAndImport(Repository repository, Filter filter, String path, IProject project,
-            IPath projectRelativePath)
-            throws JSONException, RepositoryException, CoreException {
+            IPath projectRelativePath) throws RepositoryException, CoreException, IOException {
 
         System.out.println("crawlChildrenAndImport(" + repository + ", " + path + ", " + project + ", "
                 + projectRelativePath + ")");
 
-        String children = executeCommand(repository.newListChildrenNodeCommand(path, ResponseType.JSON));
-		JSONObject json = new JSONObject(children);
-		String primaryType= json.optString(Repository.JCR_PRIMARY_TYPE);
+        ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
+        String primaryType = (String) resource.getProperties().get(Repository.JCR_PRIMARY_TYPE);
  
 		if (Repository.NT_FILE.equals(primaryType)){
             importFile(repository, path, project, projectRelativePath);
@@ -238,26 +234,26 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			//DO NOTHING
         } else {
 			createFolder(project, projectRelativePath.append(path));
-            String content = executeCommand(repository.newGetNodeContentCommand(path, ResponseType.JSON));
-			JSONObject jsonContent = new JSONObject(content);
-            jsonContent.put("tagName", Repository.JCR_ROOT); // TODO this is required by JSONML, not sure why
-            String contentXml = JSONML.toString(jsonContent);
-            createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
-                    contentXml.getBytes(Charset.forName("UTF-8") /* TODO is this enough? */));
+            Map<String, Object> content = executeCommand(repository.newGetNodeContentCommand(path));
+            
+            String out = serializationManager.buildSerializationData(content);
+            if (out != null) {
+                createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
+                    out.getBytes("UTF-8"));
+            }
 		}
- 		
-        for (Iterator<?> keys = json.keys(); keys.hasNext();) {
-            String key = (String) keys.next();
+
+        for (ResourceProxy child : resource.getChildren()) {
+
             if (filter != null) {
-                FilterResult filterResult = filter.filter(key);
+                FilterResult filterResult = filter.filter(child.getPath());
                 if (filterResult == FilterResult.DENY) {
                     continue;
                 }
             }
-			JSONObject innerjson=json.optJSONObject(key);
-			if (innerjson!=null){
-                crawlChildrenAndImport(repository, filter, PathUtil.join(path, key), project, projectRelativePath);
-			}
+
+            crawlChildrenAndImport(repository, filter, PathUtil.join(path, child.getPath()), project,
+                    projectRelativePath);
 		}
 	}
 
@@ -268,7 +264,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 	}	
 	
     private void importFile(Repository repository, String path, IProject project, IPath destinationPath)
-            throws JSONException, RepositoryException, CoreException {
+            throws RepositoryException, CoreException {
 
         System.out.println("importFile: " + path + " -> " + destinationPath);
 
@@ -285,12 +281,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
 		destinationFolder.create(true, true, null /* TODO progress monitor */);
 	}
 	
-	private void createFile(IProject project, IPath path, byte[] node) throws CoreException {		
+    private void createFile(IProject project, IPath path, byte[] node) throws CoreException {
 		
 		IFile destinationFile = project.getFile(path);
-		if ( destinationFile.exists() )
-			return;
-		
-		destinationFile.create(new ByteArrayInputStream(node), true, null /* TODO progress monitor */);
+		if ( destinationFile.exists() ) {
+            /* TODO progress monitor */
+            destinationFile.setContents(new ByteArrayInputStream(node), IResource.KEEP_HISTORY, null);
+		} else {
+            /* TODO progress monitor */
+            destinationFile.create(new ByteArrayInputStream(node), true, null);
+		}
 	}
 }

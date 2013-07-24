@@ -83,13 +83,13 @@ public interface Repository {
 
 	Command<Void> newAddNodeCommand(FileInfo fileInfo);
 	
-	Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo,Map<String,String> properties);
+    Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, Map<String, Object> serializationData);
 	
 	Command<Void> newDeleteNodeCommand(FileInfo fileInfo);
  
-	Command<String> newListChildrenNodeCommand(String path,ResponseType responseType);
+    Command<ResourceProxy> newListChildrenNodeCommand(String path);
  	
-	Command<String> newGetNodeContentCommand(String path,ResponseType responseType);
+    Command<Map<String, Object>> newGetNodeContentCommand(String path);
 
 	Command<byte[]> newGetNodeCommand(String path);
 }

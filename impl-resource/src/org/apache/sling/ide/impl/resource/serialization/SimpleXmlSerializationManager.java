@@ -16,26 +16,38 @@
  */
 package org.apache.sling.ide.impl.resource.serialization;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.apache.sling.ide.transport.ProtectedNodes;
-import org.json.JSONException;
-import org.json.JSONML;
-import org.json.JSONObject;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class SimpleXmlSerializationManager implements SerializationManager {
 
+    private static final String TAG_PROPERTY = "property";
+    private static final String ATT_PROPERTY_NAME = "name";
+    private static final String TAG_RESOURCE = "resource";
+
     private static final String CONTENT_XML = ".content.xml";
-    private static final String TAG_NAME = "tagName";
 
     @Override
     public boolean isSerializationFile(String filePath) {
@@ -48,40 +60,138 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public Map<String, String> readSerializationData(InputStream source) throws IOException {
+    public String getBaseResourcePath(String serializationFilePath) {
+        if (!serializationFilePath.endsWith(CONTENT_XML)) {
+            throw new IllegalArgumentException("File path " + serializationFilePath + "does not end with '"
+                    + File.separatorChar + CONTENT_XML + "'");
+        }
+
+        if (CONTENT_XML.equals(serializationFilePath)) {
+            return "";
+        }
+
+        return serializationFilePath.substring(0, serializationFilePath.length() - (CONTENT_XML.length() + 1));
+    }
+
+    @Override
+    public Map<String, Object> readSerializationData(InputStream source) throws IOException {
 
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(source));
-            StringBuilder out = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                out.append(line);
-            }
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
 
-            return getModifiedProperties(out.toString());
-        } catch (JSONException e) {
-            // TODO Proper error handling
+            SerializationDataHandler h = new SerializationDataHandler();
+
+            saxParser.parse(new InputSource(source), h);
+
+            return h.getResult();
+        } catch (ParserConfigurationException e) {
+            // TODO proper exception handling
+            throw new RuntimeException(e);
+        } catch (SAXException e) {
+            // TODO proper exception handling
             throw new RuntimeException(e);
         }
 
     }
 
-    private Map<String, String> getModifiedProperties(String fileContent) throws JSONException {
+    @Override
+    public String buildSerializationData(Map<String, Object> content) throws IOException {
 
-        Map<String, String> properties = new HashMap<String, String>();
-        JSONObject json = JSONML.toJSONObject(fileContent);
-        json.remove(TAG_NAME);
-        for (Iterator<?> keys = json.keys(); keys.hasNext();) {
-            String key = (String) keys.next();
-            if (!ProtectedNodes.exists(key) && !key.contains("xmlns")) {
-                properties.put(key, json.optString(key));
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+
+        try {
+            SAXTransformerFactory f = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+
+            StringWriter sw = new StringWriter();
+            StreamResult sr = new StreamResult(sw);
+
+            TransformerHandler handler = f.newTransformerHandler();
+            Transformer t = handler.getTransformer();
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            handler.setResult(sr);
+            handler.startDocument();
+            startElement(handler, TAG_RESOURCE);
+            for (Map.Entry<String, Object> property : content.entrySet()) {
+                Object value = property.getValue();
+                if (value instanceof String) {
+                    String tagName = property.getKey();
+                    String tagValue = (String) value;
+                    AttributesImpl attributes = new AttributesImpl();
+                    attributes.addAttribute("", ATT_PROPERTY_NAME, ATT_PROPERTY_NAME, null, tagName);
+                    handler.startElement("", TAG_PROPERTY, TAG_PROPERTY, attributes);
+                    handler.characters(tagValue.toCharArray(), 0, tagValue.length());
+                    handler.endElement("", TAG_PROPERTY, TAG_PROPERTY);
+                } else {
+                    // TODO multi-valued properties, other primitives
+                    System.err.println("Can't yet handle property " + property.getKey() + " of type "
+                            + value.getClass());
+                }
+            }
+
+            endElement(handler, TAG_RESOURCE);
+            handler.endDocument();
+
+            return sw.toString();
+        } catch (TransformerConfigurationException e) {
+            // TODO proper exception handling
+            throw new RuntimeException(e);
+        } catch (TransformerFactoryConfigurationError e) {
+            // TODO proper exception handling
+            throw new RuntimeException(e);
+        } catch (SAXException e) {
+            // TODO proper exception handling
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void startElement(TransformerHandler handler, String tagName) throws SAXException {
+
+        handler.startElement("", tagName, tagName, null);
+    }
+
+    private void endElement(TransformerHandler handler, String tagName) throws SAXException {
+
+        handler.endElement("", tagName, tagName);
+    }
+
+    static class SerializationDataHandler extends DefaultHandler {
+        private Map<String, Object> result;
+        private String propertyName;
+
+        @Override
+        public void startDocument() throws SAXException {
+            result = new HashMap<String, Object>();
+        }
+
+        @Override
+        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+
+            if (TAG_PROPERTY.equals(qName)) {
+                propertyName = attributes.getValue(ATT_PROPERTY_NAME);
             }
         }
-        return properties;
-    }
 
-    @Override
-    public void writeSerializationData(OutputStream destination, Map<String, String> data) throws IOException {
-    }
+        @Override
+        public void characters(char[] ch, int start, int length) throws SAXException {
 
+            if (propertyName != null) {
+                result.put(propertyName, new String(ch, start, length));
+            }
+        }
+
+        @Override
+        public void endElement(String uri, String localName, String qName) throws SAXException {
+
+            if (TAG_PROPERTY.equals(qName)) {
+                propertyName = null;
+            }
+        }
+
+        public Map<String, Object> getResult() {
+            return result;
+        }
+    }
 }

@@ -17,6 +17,8 @@
 package org.apache.sling.ide.impl.resource.transport;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
@@ -32,16 +34,18 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.impl.resource.util.Tracer;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
-import org.apache.sling.ide.transport.ResponseType;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.apache.sling.ide.util.PathUtil;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class RepositoryImpl extends AbstractRepository{
 	
     private final HttpClient httpClient = new HttpClient();
     private Tracer tracer;
-
 
 	/* (non-Javadoc)
 	 * @see org.apache.sling.slingclipse.api.Repository#newAddNodeCommand(org.apache.sling.slingclipse.api.FileInfo)
@@ -132,25 +136,41 @@ public class RepositoryImpl extends AbstractRepository{
 	}
 	
 	@Override
-	public Command<String> newListChildrenNodeCommand(final String path,final ResponseType responseType) {
-        return wrap(new Command<String>() {
+    public Command<ResourceProxy> newListChildrenNodeCommand(final String path) {
+        return wrap(new Command<ResourceProxy>() {
 			@Override
-			public Result<String> execute() {
-				//TODO handle the response type
+            public Result<ResourceProxy> execute() {
                 GetMethod get = new GetMethod(createFullPath(path + ".1.json"));
 				try{
 					httpClient.getParams().setAuthenticationPreemptive(true);
 				    Credentials defaultcreds = new UsernamePasswordCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword());
-				    //TODO
 				    httpClient.getState().setCredentials(new AuthScope(repositoryInfo.getHost(),repositoryInfo.getPort(), AuthScope.ANY_REALM), defaultcreds);
 					int responseStatus=httpClient.executeMethod(get);
 
 					//TODO change responseAsString with something like
 					//return EncodingUtil.getString(rawdata, m.getResponseCharSet());
-					if ( isSuccessStatus(responseStatus) )
-						return AbstractResult.success(get.getResponseBodyAsString());
+                    if (!isSuccessStatus(responseStatus))
+                        return failureResultForStatusCode(responseStatus);
+
+                    ResourceProxy resource = new ResourceProxy(path);
+
+                    JSONObject json = new JSONObject(get.getResponseBodyAsString());
+                    String primaryType = json.optString(Repository.JCR_PRIMARY_TYPE);
+                    if (primaryType != null) { // TODO - needed?
+                        resource.addProperty(Repository.JCR_PRIMARY_TYPE, primaryType);
+                    }
+
+                    for (Iterator<?> keyIterator = json.keys(); keyIterator.hasNext();) {
+
+                        String key = (String) keyIterator.next();
+                        JSONObject value = json.optJSONObject(key);
+                        if (value != null) {
+                            ResourceProxy child = new ResourceProxy(key);
+                            child.addProperty(Repository.JCR_PRIMARY_TYPE, value.optString(Repository.JCR_PRIMARY_TYPE));
+                        }
+                    }
 					
-					return failureResultForStatusCode(responseStatus);
+                    return AbstractResult.success(resource);
 				} catch (Exception e) {
 					return AbstractResult.failure(new RepositoryException(e));
 				}finally{
@@ -161,7 +181,7 @@ public class RepositoryImpl extends AbstractRepository{
 			@Override
 			public String toString() {
 				
-				return String.format("%8s %s (%s)", "LISTCH", path, responseType);
+                return String.format("%8s %s", "LISTCH", path);
 			}
         });
 	}
@@ -207,10 +227,10 @@ public class RepositoryImpl extends AbstractRepository{
     }
 
 	@Override
-	public Command<String> newGetNodeContentCommand(final String path, final ResponseType responseType) {
-        return wrap(new Command<String>() {
+    public Command<Map<String, Object>> newGetNodeContentCommand(final String path) {
+        return wrap(new Command<Map<String, Object>>() {
 			@Override
-			public Result<String> execute() {
+            public Result<Map<String, Object>> execute() {
 				//TODO handle the response type
                 GetMethod get = new GetMethod(createFullPath(path + ".json"));
 				try{
@@ -220,10 +240,25 @@ public class RepositoryImpl extends AbstractRepository{
 					int responseStatus=httpClient.executeMethod(get);
 					//TODO change responseAsString with something like
 					// return EncodingUtil.getString(rawdata, m.getResponseCharSet());
-					if ( isSuccessStatus(responseStatus) )
-						return AbstractResult.success(get.getResponseBodyAsString()); 
-					
-					return failureResultForStatusCode(responseStatus);
+                    if (!isSuccessStatus(responseStatus))
+                        return failureResultForStatusCode(responseStatus);
+
+                    JSONObject result = new JSONObject(get.getResponseBodyAsString());
+
+                    Map<String, Object> properties = new HashMap<String, Object>();
+                    JSONArray names = result.names();
+                    for (int i = 0; i < names.length(); i++) {
+                        String name = names.getString(i);
+                        Object object = result.get(name);
+                        if (object instanceof String) {
+                            properties.put(name, object);
+                        } else {
+                            System.out.println("Property '" + name + "' of type '" + object.getClass().getName()
+                                    + " is not handled");
+                        }
+                    }
+
+                    return AbstractResult.success(properties);
 				} catch (Exception e) {
 					return AbstractResult.failure(new RepositoryException(e));
 				}finally{
@@ -234,13 +269,13 @@ public class RepositoryImpl extends AbstractRepository{
 			@Override
 			public String toString() {
 				
-				return String.format("%8s %s (%s)", "GETCONT", path, responseType);
+                return String.format("%8s %s", "GETCONT", path);
 			}
         });
 	}
 	
 	@Override
-	public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, final Map<String, String> properties) {
+    public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, final Map<String, Object> properties) {
 		
         return wrap(new Command<Void>() {
 			@Override
@@ -249,9 +284,16 @@ public class RepositoryImpl extends AbstractRepository{
 				try{
 					Part[] parts = new Part[properties.size()];
 					int counter=0;
-					for (Map.Entry <String,String> proerty:properties.entrySet()) {
-						parts[counter]=new StringPart(proerty.getKey(), proerty.getValue());
-						counter++;
+                    for (Map.Entry<String, Object> proerty : properties.entrySet()) {
+                        Object propValue = proerty.getValue();
+                        if (propValue instanceof String) {
+                            parts[counter] = new StringPart(proerty.getKey(), (String) propValue);
+                            counter++;
+                        } else if (proerty != null) {
+                            // TODO handle multi-valued properties
+                            System.err.println("Unable to handle property " + proerty.getKey() + " of type "
+                                    + proerty.getValue().getClass());
+                        }
 					}
 					post.setRequestEntity(new MultipartRequestEntity(parts,post.getParams()));
 					httpClient.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(repositoryInfo.getUsername(),repositoryInfo.getPassword()));

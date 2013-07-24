@@ -31,7 +31,7 @@ public class SimpleFilter implements Filter {
 
     @Override
     public FilterResult filter(String relativeFilePath) {
-        if (relativeFilePath.charAt(0) != '/') {
+        if (relativeFilePath.isEmpty() || relativeFilePath.charAt(0) != '/') {
             relativeFilePath = '/' + relativeFilePath;
         }
         System.out.println("SimpleFilter.filter(" + relativeFilePath + ")");

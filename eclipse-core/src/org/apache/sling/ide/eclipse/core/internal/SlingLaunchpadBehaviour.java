@@ -31,7 +31,7 @@ import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
-import org.apache.sling.ide.transport.ResponseType;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -65,9 +65,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         boolean success = false;
 
-        Result<String> result = null;
-        Command<String> command = ServerUtil.getRepository(getServer(), monitor).newListChildrenNodeCommand("/", ResponseType.XML);
-        result = command.execute();
+        Command<ResourceProxy> command = ServerUtil.getRepository(getServer(), monitor).newListChildrenNodeCommand("/");
+        Result<ResourceProxy> result = command.execute();
         success = result.isSuccess();
 
         if (success) {
@@ -230,7 +229,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 InputStream contents = file.getContents();
-                Map<String, String> serializationData = serializationManager().readSerializationData(contents);
+                Map<String, Object> serializationData = serializationManager().readSerializationData(contents);
                 return repository.newUpdateContentNodeCommand(info, serializationData);
             } catch (IOException e) {
                 // TODO logging
@@ -269,7 +268,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
 
         if (filter != null) {
-            FilterResult filterResult = filter.filter(resource.getModuleRelativePath().toString());
+            FilterResult filterResult = getFilterResult(resource, filter);
             if (filterResult == FilterResult.DENY) {
                 return null;
             }
@@ -282,6 +281,18 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         System.out.println("For " + resource + " built fileInfo " + info);
 
         return info;
+    }
+
+    private FilterResult getFilterResult(IModuleResource resource, Filter filter) {
+
+        String filePath = resource.getModuleRelativePath().toOSString();
+        if (serializationManager().isSerializationFile(filePath)) {
+            filePath = serializationManager.getBaseResourcePath(filePath);
+        }
+
+        System.out.println("Filtering by " + filePath + " for " + resource);
+
+        return filter.filter(filePath);
     }
 
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource) {
@@ -319,7 +330,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         return filter;
     }
-
 
     private SerializationManager serializationManager() {
         if (serializationManager == null) {

@@ -12,6 +12,7 @@
 		<module>target-definition</module>
 		<module>api</module>
 		<module>impl-resource</module>
+        <module>impl-resource-test</module>
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
 		<module>feature</module>
