@@ -31,9 +31,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/maven/maven-launchpad-plugin</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/maven/maven-launchpad-plugin</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/maven/maven-launchpad-plugin</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-launchpad-plugin</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/tooling/maven/maven-launchpad-plugin</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/tooling/maven/maven-launchpad-plugin</url>
     </scm>
 
     <build>
