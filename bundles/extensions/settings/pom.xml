@@ -70,9 +70,12 @@
                         <Bundle-Activator>
                             org.apache.sling.settings.impl.Activator
                         </Bundle-Activator>
+                        <DynamicImport-Package>
+                            org.osgi.service.cm
+                        </DynamicImport-Package>
                         <Import-Package>
-                            org.apache.felix.shell;
-                            resolution:=optional, *
+                            org.apache.felix.shell;resolution:=optional, 
+                            *
                         </Import-Package>
                     </instructions>
                 </configuration>

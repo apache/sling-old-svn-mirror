@@ -23,13 +23,16 @@ import java.util.Hashtable;
 
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.service.cm.ManagedService;
 
 /**
  * The <code>ServicesListener</code> listens for the required services
@@ -46,6 +49,9 @@ public class ServicesListener {
 
     /** The registration of the settings service. */
     private ServiceRegistration settingsReg;
+
+    /** The registration of the managed service. */
+    private ServiceRegistration managedServiceReg;
 
     /**
      * Start listeners
@@ -70,10 +76,9 @@ public class ServicesListener {
     }
 
     private void activate(final StartupHandler handler) {
-        final SlingSettingsService settingsService = new SlingSettingsServiceImpl(bundleContext, handler);
+        final SlingSettingsServiceImpl settingsService = new SlingSettingsServiceImpl(bundleContext, handler);
 
         final Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, settingsService.getClass().getName());
         props.put(Constants.SERVICE_DESCRIPTION,
             "Apache Sling Settings Service");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
@@ -84,14 +89,35 @@ public class ServicesListener {
         SlingSettingsPrinter.initPlugin(bundleContext, settingsService);
         try {
             RunModeCommand.initPlugin(bundleContext, settingsService.getRunModes());
-        } catch (Throwable ignore) {
+        } catch (final Throwable ignore) {
             // we just ignore this
         }
+        // setup manager service for configuration handling
+        final Dictionary<String, String> msProps = new Hashtable<String, String>();
+        msProps.put(Constants.SERVICE_PID, settingsService.getClass().getName());
+        msProps.put(Constants.SERVICE_DESCRIPTION,
+            "Apache Sling Managed Service for the Settings Service");
+        msProps.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
+        managedServiceReg = this.bundleContext.registerService(ManagedService.class.getName(), new ServiceFactory() {
+
+            public void ungetService(final Bundle bundle, final ServiceRegistration registration,
+                    final Object service) {
+                // nothing to do
+            }
+
+            public Object getService(final Bundle bundle, final ServiceRegistration registration) {
+                return new SettingsServiceConfigurator(settingsService);
+            }
+        }, msProps);
     }
     /**
      * Deactivate this listener.
      */
     public void deactivate() {
+        if ( this.managedServiceReg != null ) {
+            this.managedServiceReg.unregister();
+            this.managedServiceReg = null;
+        }
         this.startupListener.deactivate();
         if ( this.settingsReg != null ) {
             this.settingsReg.unregister();
