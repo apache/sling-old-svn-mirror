@@ -80,24 +80,24 @@
 
     <!-- List modules to be included in the build here ! -->
     <modules>
-        <module>maven/apache-sling-jar-resource-bundle</module>
+        <module>tooling/maven/apache-sling-jar-resource-bundle</module>
 
         <!-- The real Sling Parent Project -->
         <module>parent</module>
 
         <!-- The Maven Plugins and Archeyptes-->
-        <module>maven/adapter-annotations</module>
-        <module>maven/maven-jcrocm-plugin</module>
-        <module>maven/maven-jspc-plugin</module>
-        <module>maven/maven-sling-plugin</module>
-        <module>maven/maven-launchpad-plugin</module>
-        <module>maven/archetypes/launchpad-standalone</module>
-        <module>maven/archetypes/launchpad-webapp</module>
-        <module>maven/archetypes/initial-content</module>
-        <module>maven/archetypes/servlet</module>
-        <module>maven/archetypes/bundle</module>
-        <module>maven/archetypes/bundle-for-jcrinstall</module>
-        <module>maven/archetypes/taglib</module>
+        <module>tooling/maven/adapter-annotations</module>
+        <module>tooling/maven/maven-jcrocm-plugin</module>
+        <module>tooling/maven/maven-jspc-plugin</module>
+        <module>tooling/maven/maven-sling-plugin</module>
+        <module>tooling/maven/maven-launchpad-plugin</module>
+        <module>tooling/maven/archetypes/launchpad-standalone</module>
+        <module>tooling/maven/archetypes/launchpad-webapp</module>
+        <module>tooling/maven/archetypes/initial-content</module>
+        <module>tooling/maven/archetypes/servlet</module>
+        <module>tooling/maven/archetypes/bundle</module>
+        <module>tooling/maven/archetypes/bundle-for-jcrinstall</module>
+        <module>tooling/maven/archetypes/taglib</module>
 
         <!-- The Sling API -->
         <module>bundles/api</module>
