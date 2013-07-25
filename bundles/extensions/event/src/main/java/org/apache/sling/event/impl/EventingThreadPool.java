@@ -24,7 +24,6 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -55,12 +54,6 @@ public class EventingThreadPool implements ThreadPool {
     @Property(intValue=DEFAULT_POOL_SIZE)
     private static final String PROPERTY_POOL_SIZE = "minPoolSize";
 
-    @Property(value="NORM",
-            options={@PropertyOption(name="NORM",value="Norm"),
-                     @PropertyOption(name="MIN",value="Min"),
-                     @PropertyOption(name="MAX",value="Max")})
-    private static final String PROPERTY_PRIORITY = "priority";
-
     /**
      * Activate this component.
      */
@@ -71,7 +64,7 @@ public class EventingThreadPool implements ThreadPool {
         config.setMaxPoolSize(config.getMinPoolSize());
         config.setQueueSize(-1); // unlimited
         config.setShutdownGraceful(true);
-        config.setPriority(ThreadPriority.valueOf(PropertiesUtil.toString(props.get(PROPERTY_PRIORITY), "NORM")));
+        config.setPriority(ThreadPriority.NORM);
         config.setDaemon(true);
         this.threadPool = threadPoolManager.create(config, "Apache Sling Eventing Thread Pool");
     }
