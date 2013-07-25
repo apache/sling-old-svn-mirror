@@ -1,0 +1,59 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.sling.ide</groupId>
+    <artifactId>reactor</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>org.apache.sling.ide.impl-resource-test</artifactId>
+  <name>Sling IDE Tools: Resource-based Implementation Tests</name>
+  <dependencies>
+      <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.11</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
+          <groupId>org.apache.sling.ide</groupId>
+          <artifactId>org.apache.sling.ide.impl-resource</artifactId>
+          <version>${project.version}</version>
+          <type>eclipse-plugin</type>
+      </dependency>
+      <!-- 
+        we need to pull in all transitive dependencies of the impl-resource
+        bundle, since they are not exposed by Tycho(?) 
+      -->
+      <dependency>
+          <groupId>org.apache.sling.ide</groupId>
+          <artifactId>org.apache.sling.ide.api</artifactId>
+          <version>${project.version}</version>
+          <type>eclipse-plugin</type>
+      </dependency>
+      <dependency>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+          <version>20090211</version>
+      </dependency>
+      <dependency>
+          <groupId>xmlunit</groupId>
+          <artifactId>xmlunit</artifactId>
+          <version>1.4</version>
+          <scope>test</scope>
+      </dependency>
+  </dependencies>
+  
+  <build>
+      <plugins>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                <!-- Tycho targets 1.6 by default, so we need that as well -->
+                <source>1.6</source>
+                <target>1.6</target>
+              </configuration>
+          </plugin>
+      </plugins>
+  </build>
+</project>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
+   <implementation class="org.apache.sling.ide.impl.resource.serialization.SimpleXmlSerializationManager"/>
+   <service>
+      <provide interface="org.apache.sling.ide.serialization.SerializationManager"/>
+   </service>
+</scr:component>
