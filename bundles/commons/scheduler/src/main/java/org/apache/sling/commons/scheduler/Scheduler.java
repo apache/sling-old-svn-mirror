@@ -26,6 +26,15 @@ import java.util.NoSuchElementException;
  * A job is an object that is executed/fired by the scheduler. The object
  * should either implement the {@link Job} interface or the {@link Runnable}
  * interface.
+ *
+ * A job can be scheduled either by creating a {@link ScheduleOptions} instance
+ * through one of the scheduler methods and then calling {@link #schedule(Object, ScheduleOptions)}
+ * or
+ * by using the whiteboard pattern and registering a Runnable service with either
+ * the {@link #PROPERTY_SCHEDULER_EXPRESSION} or {@link #PROPERTY_SCHEDULER_PERIOD}
+ * property. Services registered by the whiteboard pattern can by default run concurrently,
+ * which usually is not wanted. Therefore it is advisable to also set the
+ * {@link #PROPERTY_SCHEDULER_CONCURRENT} property with Boolean.FALSE.
  */
 public interface Scheduler {
 
@@ -54,6 +63,8 @@ public interface Scheduler {
 
     /** Name of the configuration property to define if the job should only be run on the leader.
      * Default is to start the job on all instances. This property needs to be of type Boolean.
+     * If no topology information is available (= no Apache Sling Discovery Implementation active)
+     * this flag is ignored and the job is run on all instances.
      * @since 2.3.0
      */
     String PROPERTY_SCHEDULER_LEADER_ONLY = "scheduler.leaderonly";
