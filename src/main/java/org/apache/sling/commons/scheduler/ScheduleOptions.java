@@ -51,6 +51,8 @@ public interface ScheduleOptions {
     /**
      * Flag indicating whether the job should only be run on the leader.
      * This defaults to false.
+     * If no topology information is available (= no Apache Sling Discovery Implementation active)
+     * this flag is ignored and the job is run on all instances.
      * @param flag Whether this job should only be run on the leader
      */
     ScheduleOptions onLeaderOnly(final boolean flag);
