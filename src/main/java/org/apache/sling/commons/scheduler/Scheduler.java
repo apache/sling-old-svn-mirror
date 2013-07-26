@@ -52,7 +52,82 @@ public interface Scheduler {
     /** Name of the configuration property to define the job name. */
     String PROPERTY_SCHEDULER_NAME = "scheduler.name";
 
+    /** Name of the configuration property to define if the job should only be run on the leader.
+     * Default is to start the job on all instances. This property needs to be of type Boolean.
+     * @since 2.3.0
+     */
+    String PROPERTY_SCHEDULER_LEADER_ONLY = "scheduler.leaderonly";
 
+    /**
+     * Schedule a job based on the options.
+     *
+     * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
+     * the old job.
+     *
+     * The job object needs either to be a {@link Job} or a {@link Runnable}. The options have to be created
+     * by one of the provided methods from this scheduler.
+     *
+     * @param job The job to execute (either {@link Job} or {@link Runnable}).
+     * @param options Required options defining how to schedule the job
+     * @return true if the job could be added, false otherwise.
+     * @see #NOW()
+     * @see #NOW(int, long)
+     * @see #AT(Date)
+     * @see #AT(Date, int, long)
+     * @see #EXPR(String)
+     * @since 2.3
+     */
+    boolean schedule(Object job, ScheduleOptions options);
+
+    /**
+     * Remove a scheduled job by name.
+     *
+     * @param name The name of the job.
+     * @return <code>true</code> if the job existed and could be stopped, <code>false</code> otherwise.
+     * @since 2.3
+     */
+    boolean unschedule(String jobName);
+
+    /**
+     * Create a schedule options to fire a job immediately and only once.
+     * @since 2.3
+     */
+    ScheduleOptions NOW();
+
+    /**
+     * Create a schedule options to fire a job immediately more than once.
+     * @param times The number of times this job should be started (must be higher than 1 or
+     *              -1 for endless)
+     * @param period Every period seconds this job is started (must be at higher than 0).
+     * @since 2.3
+     */
+    ScheduleOptions NOW(int times, long period);
+
+    /**
+     * Create a schedule options to fire a job once at a specific date
+     * @param date The date this job should be run.
+     * @since 2.3
+     */
+    ScheduleOptions AT(final Date date);
+
+    /**
+     * Create a schedule options to fire a job period starting at a specific date
+     * @param date The date this job should be run.
+     * @param times The number of times this job should be started (must be higher than 1 or
+     *              -1 for endless)
+     * @param period Every period seconds this job is started (must be at higher than 0).
+     * @since 2.3
+     */
+    ScheduleOptions AT(final Date date, int times, long period);
+
+    /**
+     * Create a schedule options to schedule the job based on the expression
+     * @param expression The cron exception
+     * @since 2.3
+     */
+    ScheduleOptions EXPR(final String expression);
+
+    /**
     /**
      * Schedule a time based job.
      * Note that if a job with the same name has already been added, the old job is cancelled and this new job replaces
@@ -65,7 +140,9 @@ public interface Scheduler {
      * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
      * @throws IllegalArgumentException If the scheduling expression can't be parsed or if the job has not the correct type.
      * @throws Exception If the job can't be scheduled.
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     void addJob(String name, Object job, Map<String, Serializable> config, String schedulingExpression, boolean canRunConcurrently)
     throws Exception;
 
@@ -82,7 +159,9 @@ public interface Scheduler {
      * @param canRunConcurrently Whether this job can run even if previous scheduled runs are still running.
      * @throws IllegalArgumentException If the job has not the correct type.
      * @throws Exception If the job can't be scheduled.
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently)
     throws Exception;
 
@@ -100,7 +179,9 @@ public interface Scheduler {
      * @throws IllegalArgumentException If the job has not the correct type.
      * @throws Exception If the job can't be scheduled.
      * @since 2.2
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     void addPeriodicJob(String name, Object job, Map<String, Serializable> config, long period, boolean canRunConcurrently,
             boolean startImmediate)
     throws Exception;
@@ -112,7 +193,9 @@ public interface Scheduler {
      * @param config An optional configuration object - this configuration is only passed to the job the job implements {@link Job}.
      * @throws IllegalArgumentException If the job has not the correct type.
      * @throws Exception If the job can't be scheduled.
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     void fireJob(Object job, Map<String, Serializable> config)
     throws Exception;
 
@@ -126,7 +209,9 @@ public interface Scheduler {
      * @throws IllegalArgumentException If the job has not the correct type.
      * @return true if the code could be added, false otherwise.
      * @since 2.1
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     boolean fireJob(Object job, Map<String, Serializable> config, int times, long period);
 
     /**
@@ -140,7 +225,9 @@ public interface Scheduler {
      * @param date The date this job should be run.
      * @throws IllegalArgumentException If the job has not the correct type.
      * @throws Exception If the job can't be scheduled.
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     void fireJobAt(String name, Object job, Map<String, Serializable> config, Date date)
     throws Exception;
 
@@ -156,9 +243,11 @@ public interface Scheduler {
      * @param times The number of times this job should be started (must be higher than 1)
      * @param period Every period seconds this job is started.
      * @throws IllegalArgumentException If the job has not the correct type.
-     * @return true if the code could be added, false otherwise.
+     * @return true if the job could be added, false otherwise.
      * @since 2.1
+     * @deprecated Use {@link #schedule(Object, ScheduleOptions)} instead.
      */
+    @Deprecated
     boolean fireJobAt(String name, Object job, Map<String, Serializable> config, Date date, int times, long period);
 
     /**
@@ -166,7 +255,9 @@ public interface Scheduler {
      *
      * @param name The name of the job.
      * @throws NoSuchElementException If the job is not scheduled.
+     * @deprecated Use {@link #unschedule(String)} instead.
      */
+    @Deprecated
     void removeJob(String name)
     throws NoSuchElementException;
 }
