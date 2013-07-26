@@ -54,21 +54,35 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            *
-                        </Import-Package>
-                        <Export-Package>
-                            org.apache.sling.commons.scheduler;version=2.2.0
-                        </Export-Package>
                         <Private-Package>
                             org.apache.sling.commons.scheduler.impl
                         </Private-Package>
-                         <DynamicImport-Package>
+                        <DynamicImport-Package>
+                            commonj.work,
+                            com.mchange.v2.c3p0,
                             javax.ejb,
                             javax.jms,
                             javax.mail,
                             javax.mail.internet,
-                            com.mchange.v2.c3p0
+                            oracle.sql,
+                            org.jboss.logging,
+                            org.jboss.naming,
+                            org.jboss.system,
+                            org.quartz.jobs,
+                            org.terracotta.toolkit,
+                            org.terracotta.toolkit.atomic,
+                            org.terracotta.toolkit.builder,
+                            org.terracotta.toolkit.cluster,
+                            org.terracotta.toolkit.collections,
+                            org.terracotta.toolkit.concurrent.locks,
+                            org.terracotta.toolkit.config,
+                            org.terracotta.toolkit.internal,
+                            org.terracotta.toolkit.internal.concurrent.locks,
+                            org.terracotta.toolkit.search,
+                            org.terracotta.toolkit.search.attribute,
+                            org.terracotta.toolkit.store,
+                            weblogic.jdbc.jts,
+                            weblogic.jdbc.vendor.oracle
                         </DynamicImport-Package>
                         <Embed-Dependency>
                             quartz
