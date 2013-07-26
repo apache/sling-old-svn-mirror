@@ -58,6 +58,7 @@
                             org.apache.sling.commons.scheduler.impl
                         </Private-Package>
                         <DynamicImport-Package>
+                            org.apache.sling.discovery,
                             commonj.work,
                             com.mchange.v2.c3p0,
                             javax.ejb,

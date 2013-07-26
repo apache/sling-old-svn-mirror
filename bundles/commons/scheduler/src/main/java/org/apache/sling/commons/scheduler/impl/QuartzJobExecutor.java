@@ -18,6 +18,7 @@ package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.commons.scheduler.JobContext;
 import org.quartz.Job;
@@ -27,11 +28,14 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 
 /**
- * This component is resposible to launch a {@link org.apache.sling.commons.scheduler.Job}
+ * This component is responsible to launch a {@link org.apache.sling.commons.scheduler.Job}
  * or {@link Runnable} in a Quartz Scheduler.
  *
  */
 public class QuartzJobExecutor implements Job {
+
+    /** Is this instance the leader? */
+    public static final AtomicBoolean IS_LEADER = new AtomicBoolean(true);
 
     /**
      * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
@@ -39,6 +43,12 @@ public class QuartzJobExecutor implements Job {
     public void execute(final JobExecutionContext context) throws JobExecutionException {
 
         final JobDataMap data = context.getJobDetail().getJobDataMap();
+
+        // check leader
+        final boolean onLeaderOnly = data.getBooleanValue(QuartzScheduler.DATA_MAP_ON_LEADER_ONLY);
+        if (onLeaderOnly && !IS_LEADER.get()) {
+            return;
+        }
 
         final Object job = data.get(QuartzScheduler.DATA_MAP_OBJECT);
         final Logger logger = (Logger)data.get(QuartzScheduler.DATA_MAP_LOGGER);

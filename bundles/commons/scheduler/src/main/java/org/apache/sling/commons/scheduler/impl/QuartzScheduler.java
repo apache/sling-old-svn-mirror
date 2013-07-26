@@ -87,6 +87,9 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the logger. */
     static final String DATA_MAP_LOGGER = "QuartzJobScheduler.Logger";
 
+    /** Map key for the isLeader information (Boolean). */
+    static final String DATA_MAP_ON_LEADER_ONLY = "QuartzJobScheduler.OnLeaderOnly";
+
     /** The quartz scheduler. */
     private volatile org.quartz.Scheduler scheduler;
 
@@ -223,6 +226,7 @@ public class QuartzScheduler implements Scheduler {
         this.threadPool = null;
     }
 
+
     /**
      * Initialize the data map for the job executor.
      * @param jobName
@@ -232,17 +236,18 @@ public class QuartzScheduler implements Scheduler {
      * @return
      */
     private JobDataMap initDataMap(final String  jobName,
-                                     final Object  job,
-                                     final Map<String, Serializable> config) {
+                                   final Object  job,
+                                   final InternalScheduleOptions options) {
         final JobDataMap jobDataMap = new JobDataMap();
 
         jobDataMap.put(DATA_MAP_OBJECT, job);
 
         jobDataMap.put(DATA_MAP_NAME, jobName);
         jobDataMap.put(DATA_MAP_LOGGER, this.logger);
-        if ( config != null ) {
-            jobDataMap.put(DATA_MAP_CONFIGURATION, config);
+        if ( options.configuration != null ) {
+            jobDataMap.put(DATA_MAP_CONFIGURATION, options.configuration);
         }
+        jobDataMap.put(DATA_MAP_ON_LEADER_ONLY, options.onLeaderOnly);
 
         return jobDataMap;
     }
@@ -421,9 +426,13 @@ public class QuartzScheduler implements Scheduler {
                 try {
                     final String name = getServiceIdentifier(ref);
                     final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
+                    final Boolean onLeaderOnly = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_LEADER_ONLY);
                     final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
                     if ( expression != null ) {
-                        this.scheduleJob(job, this.EXPR(expression).name(name).canRunConcurrently((concurrent != null ? concurrent : true)));
+                        this.scheduleJob(job, this.EXPR(expression)
+                                .name(name)
+                                .canRunConcurrently((concurrent != null ? concurrent : true))
+                                .onLeaderOnly(onLeaderOnly != null ? onLeaderOnly : false));
                     } else {
                         final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
                         if ( period != null ) {
@@ -434,7 +443,10 @@ public class QuartzScheduler implements Scheduler {
                                 if ( ref.getProperty(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE) != null ) {
                                     immediate = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE);
                                 }
-                                this.scheduleJob(job, this.PERIODIC(period, immediate).name(name).canRunConcurrently((concurrent != null ? concurrent : true)));
+                                this.scheduleJob(job, this.PERIODIC(period, immediate)
+                                        .name(name)
+                                        .canRunConcurrently((concurrent != null ? concurrent : true))
+                                        .onLeaderOnly(onLeaderOnly != null ? onLeaderOnly : false));
                             }
                         } else {
                             this.logger.debug("Ignoring servce {} : no scheduling property found.", ref);
@@ -783,7 +795,7 @@ public class QuartzScheduler implements Scheduler {
         final Trigger trigger = opts.trigger.withIdentity(name).build();
 
         // create the data map
-        final JobDataMap jobDataMap = this.initDataMap(name, job, opts.configuration);
+        final JobDataMap jobDataMap = this.initDataMap(name, job, opts);
 
         final JobDetail detail = this.createJobDetail(name, jobDataMap, opts.canRunConcurrently);
 
