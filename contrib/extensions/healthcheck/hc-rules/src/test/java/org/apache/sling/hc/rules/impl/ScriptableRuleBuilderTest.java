@@ -17,9 +17,10 @@
  */
 package org.apache.sling.hc.rules.impl;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -61,7 +62,8 @@ public class ScriptableRuleBuilderTest {
             serviceReference = Mockito.mock(ServiceReference.class);
             
             scriptEngine = Mockito.mock(ScriptEngine.class);
-            Mockito.when(scriptEngine.eval(Matchers.same(CODE))).thenReturn("true");
+            Mockito.when(scriptEngine.eval(Matchers.same(CODE), Matchers.isA(Bindings.class))).thenReturn("true");
+            Mockito.when(scriptEngine.createBindings()).thenReturn(Mockito.mock(Bindings.class));
             
             scriptEngineManager = Mockito.mock(ScriptEngineManager.class);
             Mockito.when(
