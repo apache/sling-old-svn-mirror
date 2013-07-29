@@ -1,0 +1,9 @@
+{
+  "sling:resourceType" : "sling/healthcheck/rules",
+  "namespace": "script",
+  "ruleName": "Test Groovy rule",
+  "qualifier": "groovy",
+  "expression": "karre = { it * it } ; [ 1, 2, 3, 4 ].collect(karre)[2] == 9",
+  "tags" : ["script","groovy"],
+  "jcr:primaryType": "nt:unstructured"
+}
