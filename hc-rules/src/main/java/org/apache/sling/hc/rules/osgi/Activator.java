@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.sling.hc.api.RuleBuilder;
 import org.apache.sling.hc.rules.jmx.JmxBeansRuleBuilder;
+import org.apache.sling.hc.rules.scriptable.ScriptableRuleBuilder;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -34,6 +35,7 @@ public class Activator implements BundleActivator {
         regs = new ArrayList<ServiceRegistration>();
         regs.add(ctx.registerService(RuleBuilder.class.getName(), new BundlesRuleBuilder(ctx), null));
         regs.add(ctx.registerService(RuleBuilder.class.getName(), new JmxBeansRuleBuilder(), null));
+        regs.add(ctx.registerService(RuleBuilder.class.getName(), new ScriptableRuleBuilder(ctx), null));
     }
 
     public void stop(BundleContext ctx) throws Exception {
