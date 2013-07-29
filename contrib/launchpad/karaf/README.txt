@@ -39,7 +39,7 @@ How to deploy this
 	
 2) Add the Apache Sling features repository and install:
 
-  karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.0.BUILD-SNAPSHOT/xml/features
+  karaf@root()> feature:repo-add mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.0-SNAPSHOT/xml/features
   karaf@root()> feature:install sling-karaf
 	
 3) Install Launchpad content and Explorer:

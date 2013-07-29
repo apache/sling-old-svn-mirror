@@ -24,12 +24,12 @@
   <parent>
     <groupId>org.apache.sling</groupId>
     <artifactId>sling</artifactId>
-    <version>16</version>
+    <version>17</version>
     <relativePath>../../../../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>org.apache.sling.launchpad.karaf-features</artifactId>
-  <version>0.1.0.BUILD-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>feature</packaging>
 
   <name>Apache Sling Launchpad Karaf - Features</name>

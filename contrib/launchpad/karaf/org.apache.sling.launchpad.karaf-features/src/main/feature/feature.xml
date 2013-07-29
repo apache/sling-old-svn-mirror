@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <features name="sling-launchpad-karaf" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
-  <feature name="sling-karaf-requirements" version="0.1.0.BUILD-SNAPSHOT">
+  <feature name="sling-karaf-requirements" version="${project.version}">
     <!-- features (some are part of Karaf's defaults)-->
     <feature>config</feature>
     <feature>eventadmin</feature>
@@ -31,7 +31,7 @@
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.memoryusage/1.0.4</bundle>
     <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.webconsole.plugins.packageadmin/1.0.0</bundle>
   </feature>
-  <feature name="sling-karaf" version="0.1.0.BUILD-SNAPSHOT">
+  <feature name="sling-karaf" version="${project.version}">
     <feature>sling-karaf-requirements</feature>
     <!-- Apache Commons -->
     <bundle dependency="true">mvn:commons-codec/commons-codec/1.6</bundle>
@@ -87,12 +87,12 @@
     <bundle>mvn:org.apache.sling/org.apache.sling.installer.provider.jcr/3.1.6</bundle>
     <!-- Apache Sling Launchpad -->
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.api/1.1.0</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.karaf/0.1.0.BUILD-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.karaf/${project.version}</bundle>
     <!-- Apache Sling JCR -->
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.api/2.1.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.base/2.1.2</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.classloader/3.1.12</bundle>
-    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.contentloader/2.1.7-SNAPSHOT</bundle>
+    <bundle>mvn:org.apache.sling/org.apache.sling.jcr.contentloader/2.1.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.davex/1.1.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.jcr-wrapper/2.0.0</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.jcr.ocm/2.0.4-incubator</bundle>
@@ -129,7 +129,7 @@
     <bundle dependency="true">mvn:org.apache.geronimo.bundles/json/20090211_1</bundle>
     <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/1.8.2</bundle>
   </feature>
-  <feature name="sling-karaf-demo" version="0.1.0.BUILD-SNAPSHOT">
+  <feature name="sling-karaf-demo" version="${project.version}">
     <feature>sling-karaf</feature>
     <bundle>mvn:org.apache.sling/org.apache.sling.launchpad.content/2.0.6</bundle>
     <bundle>mvn:org.apache.sling/org.apache.sling.extensions.explorer/1.0.2</bundle>

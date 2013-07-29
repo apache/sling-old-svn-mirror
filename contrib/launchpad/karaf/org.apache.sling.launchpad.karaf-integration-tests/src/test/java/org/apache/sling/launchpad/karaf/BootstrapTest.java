@@ -56,7 +56,7 @@ public class BootstrapTest extends KarafTestSupport {
             karafDistributionConfiguration().frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz")).karafVersion(karafVersion()).name(karafName()).unpackDirectory(new File("target/paxexam/")),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.0.BUILD-SNAPSHOT/xml/features"),
+            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.0-SNAPSHOT/xml/features"),
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", ",sling-karaf"),
             editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "log4j.rootLogger=DEBUG, sift, osgi:*")
         };
