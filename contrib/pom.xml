@@ -103,9 +103,7 @@
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
           <module>jcr/prefs</module>
-     <!-- 
           <module>launchpad/karaf</module>
-      -->     
           <module>launchpad/testing</module>
           <module>scripting/script-console</module>
           <module>scripting/jsp-taglib-atom</module>
