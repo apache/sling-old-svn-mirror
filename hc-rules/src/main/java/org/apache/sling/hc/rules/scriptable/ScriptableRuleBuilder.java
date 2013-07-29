@@ -17,6 +17,7 @@
  */
 package org.apache.sling.hc.rules.scriptable;
 
+import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -83,9 +84,11 @@ public class ScriptableRuleBuilder implements RuleBuilder {
                 logger.error("Cannot evaluate: {}", scriptEngineMsg);
             } else {
                 try {
-                    return scriptEngine.eval(expression);
+                    final Bindings b = scriptEngine.createBindings();
+                    b.put("jmx", new JmxBinding(logger));
+                    return scriptEngine.eval(expression, b);
                 } catch(ScriptException e) {
-                    logger.error("Script evaluation error (" + expression + ")", e);
+                    logger.error("Script evaluation error [" + expression + "]: " + e, e);
                 }
             }
             return null;
