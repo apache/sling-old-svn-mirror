@@ -61,13 +61,31 @@ public interface Scheduler {
     /** Name of the configuration property to define the job name. */
     String PROPERTY_SCHEDULER_NAME = "scheduler.name";
 
-    /** Name of the configuration property to define if the job should only be run on the leader.
-     * Default is to start the job on all instances. This property needs to be of type Boolean.
+    /**
+     * Name of the configuration property to define the instances this job should run on.
+     * By default a job is run on all instances. This property can be configured with:
+     * - a list of Sling IDs : in that case the job is only run on instances in this set.
+     * - constant {@link #VALUE_RUN_ON_LEADER} : the job is only run on the leader
+     * - constant {@link #VALUE_RUN_ON_SINGLE} : the job is only run on a single instance in a cluster. This is
+     *                     basically the same as {@link #VALUE_RUN_ON_LEADER} but it's not further specified which
+     *                     single instance is used.
+     * Default is to start the job on all instances. This property needs to be of type String
+     * or String[].
      * If no topology information is available (= no Apache Sling Discovery Implementation active)
-     * this flag is ignored and the job is run on all instances.
+     * the values {@link #VALUE_RUN_ON_LEADER} and {@link #VALUE_RUN_ON_SINGLE} are ignored, and the job is run on all instances.
      * @since 2.3.0
      */
-    String PROPERTY_SCHEDULER_LEADER_ONLY = "scheduler.leaderonly";
+    String PROPERTY_SCHEDULER_RUN_ON = "scheduler.runOn";
+
+    /** Value for {@link #PROPERTY_SCHEDULER_RUN_ON} to run the job on the leader only.
+     * @since 2.3.0
+     */
+    String VALUE_RUN_ON_LEADER = "LEADER";
+
+    /** Value for {@link #PROPERTY_SCHEDULER_RUN_ON} to run the job on a single instance only.
+     * @since 2.3.0
+     */
+    String VALUE_RUN_ON_SINGLE = "SINGLE";
 
     /**
      * Schedule a job based on the options.

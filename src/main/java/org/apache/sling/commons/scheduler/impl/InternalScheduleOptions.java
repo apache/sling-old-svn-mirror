@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.sling.commons.scheduler.ScheduleOptions;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 
@@ -33,13 +34,13 @@ public class InternalScheduleOptions implements ScheduleOptions {
 
     public boolean canRunConcurrently = false;
 
-    public boolean onLeaderOnly = false;
-
     public Map<String, Serializable> configuration;
 
     public final TriggerBuilder<? extends Trigger> trigger;
 
     public final IllegalArgumentException argumentException;
+
+    public String[] runOn;
 
     public InternalScheduleOptions(final TriggerBuilder<? extends Trigger> trigger) {
         this.trigger = trigger;
@@ -79,7 +80,31 @@ public class InternalScheduleOptions implements ScheduleOptions {
      * @see org.apache.sling.commons.scheduler.ScheduleOptions#onLeaderOnly(boolean)
      */
     public ScheduleOptions onLeaderOnly(final boolean flag) {
-        this.onLeaderOnly = flag;
+        if ( flag ) {
+            this.runOn = new String[] {Scheduler.VALUE_RUN_ON_LEADER};
+        } else {
+            this.runOn = null;
+        }
+        return this;
+    }
+
+    /**
+     * @see org.apache.sling.commons.scheduler.ScheduleOptions#onSingleInstanceOnly(boolean)
+     */
+    public ScheduleOptions onSingleInstanceOnly(final boolean flag) {
+        if ( flag ) {
+            this.runOn = new String[] {Scheduler.VALUE_RUN_ON_SINGLE};
+        } else {
+            this.runOn = null;
+        }
+        return this;
+    }
+
+    /**
+     * @see org.apache.sling.commons.scheduler.ScheduleOptions#onInstancesOnly(java.lang.String[])
+     */
+    public ScheduleOptions onInstancesOnly(final String[] slingIds) {
+        this.runOn = slingIds;
         return this;
     }
 }

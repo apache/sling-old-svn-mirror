@@ -52,8 +52,29 @@ public interface ScheduleOptions {
      * Flag indicating whether the job should only be run on the leader.
      * This defaults to false.
      * If no topology information is available (= no Apache Sling Discovery Implementation active)
-     * this flag is ignored and the job is run on all instances.
+     * this flag is ignored and the job is run on all instances!
+     * If {@link #onSingleInstanceOnly(boolean)} or {@link #onInstancesOnly(String[])} has been called before,
+     * that option is reset and overwritten by the value of this method.
      * @param flag Whether this job should only be run on the leader
      */
     ScheduleOptions onLeaderOnly(final boolean flag);
+
+    /**
+     * Flag indicating whether the job should only be run on a single instance in a cluster
+     * This defaults to false.
+     * If no topology information is available (= no Apache Sling Discovery Implementation active)
+     * this flag is ignored and the job is run on all instances!
+     * If {@link #onLeaderOnly(boolean)} or {@link #onInstancesOnly(String[])} has been called before,
+     * that option is reset and overwritten by the value of this method.
+     * @param flag Whether this job should only be run on a single instance.
+     */
+    ScheduleOptions onSingleInstanceOnly(final boolean flag);
+
+    /**
+     * List of Sling IDs this job should be run on.
+     * If {@link #onLeaderOnly(boolean)} or {@link #onSingleInstanceOnly(boolean)} has been called before,
+     * that option is reset and overwritten by the value of this method.
+     * @param flag Whether this job should only be run on a single instance.
+     */
+    ScheduleOptions onInstancesOnly(String[] slingIds);
 }
