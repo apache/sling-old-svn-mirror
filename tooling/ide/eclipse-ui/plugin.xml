@@ -78,6 +78,23 @@
          </enablement>
 		</objectContribution>
   </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <category
+            id="org.apache.sling.ide.eclipse.ui.internal.sampleCategory"
+            name="Sling">
+      </category>
+      <wizard
+            category="org.apache.sling.ide.eclipse.ui.internal.sampleCategory"
+            class="org.apache.sling.ide.eclipse.ui.internal.ImportWizard"
+            icon="icons/obj16/sling.gif"
+            id="org.apache.sling.ide.eclipse.ui.internal.ImportWizard"
+            name="Import from Sling Repository">
+         <description>
+            Import a file from the local file system into the workspace.
+         </description>
+      </wizard>
+   </extension>
   
    <!-- Property page for project to select directory to sync -->
    <extension point="org.eclipse.ui.propertyPages"> 
@@ -96,5 +113,5 @@
              </and>
           </enabledWhen>
         </page> 
-    </extension> 
+    </extension>
 </plugin>    

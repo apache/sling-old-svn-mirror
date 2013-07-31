@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IModule;
+import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.model.ServerDelegate;
 
 public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunchpadServer {
@@ -133,11 +134,17 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     public int getPublishState() {
         return getAttribute(PROP_AUTO_PUBLISH_SETTING, PUBLISH_STATE_NEVER);
     }
-
+    
     @Override
-    public void setPublishState(int publishState) {
+    public void setPublishState(int publishState, IProgressMonitor monitor) {
         System.out.println("[" + Thread.currentThread().getName() + "] Set " + PROP_AUTO_PUBLISH_SETTING + " to "
                 + publishState);
-        setAttribute(PROP_AUTO_PUBLISH_SETTING, publishState);
+        IServerWorkingCopy wc = getServer().createWorkingCopy();
+		wc.setAttribute(PROP_AUTO_PUBLISH_SETTING, publishState);
+		try {
+			wc.save(false, monitor);
+		} catch (CoreException e) {
+			throw new RuntimeException(e);
+		}
     }
 }
