@@ -22,16 +22,16 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.apache.sling.hc.util.NumericValueChecker;
+import org.apache.sling.hc.util.SimpleConstraintChecker;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-public class NumericValueCheckerTest {
+public class SimpleConstraintCheckerTest {
     private ResultLog resultLog;
     private Result result; 
 
-    private final NumericValueChecker checker = new NumericValueChecker();
+    private final SimpleConstraintChecker checker = new SimpleConstraintChecker();
 
     @Before
     public void setup() {

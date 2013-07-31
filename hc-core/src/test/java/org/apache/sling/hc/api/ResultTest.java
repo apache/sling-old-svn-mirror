@@ -35,8 +35,8 @@ public class ResultTest {
     }
     
     @Test
-    public void testInitiallyOk() {
-        assertTrue(result.isOk());
+    public void testInitiallyNotOk() {
+        assertFalse(result.isOk());
     }
     
     @Test

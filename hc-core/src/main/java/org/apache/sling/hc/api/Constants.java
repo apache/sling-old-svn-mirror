@@ -23,4 +23,7 @@ public interface Constants {
     
     /** info property name: description of a health check */
     String HC_DESCRIPTION = "hc.description";
+    
+    /** info property name: the tags of a health check */
+    String HC_TAGS = "hc.tags";
 }

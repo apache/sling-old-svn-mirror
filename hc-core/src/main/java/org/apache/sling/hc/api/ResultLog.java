@@ -32,7 +32,7 @@ import org.slf4j.helpers.MessageFormatter;
 public class ResultLog implements Logger {
     
     private final Logger wrappedLogger;
-    private Level maxLevel = Level.DEBUG;
+    private Level maxLevel = null;
     private final List<Entry> entries;
     
     /** Log messages at or above this level change the {@link Result's status} */
@@ -85,7 +85,11 @@ public class ResultLog implements Logger {
     }
     
     private void storeMessage(ResultLog.Level level, String message) {
-        maxLevel = level.ordinal() > maxLevel.ordinal() ? level : maxLevel;
+        if(maxLevel == null) {
+            maxLevel = level;
+        } else {
+            maxLevel = level.ordinal() > maxLevel.ordinal() ? level : maxLevel;
+        }
         entries.add(new ResultLog.Entry(level, message));
     }
     
