@@ -16,7 +16,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.slingdemo</artifactId>
     <packaging>bundle</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
 
     <name>Sling Health Check Sling demo content</name>
     <inceptionYear>2013</inceptionYear>
