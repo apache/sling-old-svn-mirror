@@ -22,11 +22,15 @@
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        The Sling Health Check core OSGi bundle, can also be used outside of an OSGi environment.
+        The Sling Health Check Core
     </description>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -37,9 +41,8 @@
                             org.apache.sling.hc.api,
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.hc.impl.*
+                            org.apache.sling.hc.impl.*,
                             org.apache.sling.hc.util.*
-                            org.apache.sling.hc.deprecated.*
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -51,6 +54,17 @@
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
+            </plugin>
+           <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>animal-sniffer-maven-plugin</artifactId>
+              <configuration>
+                <signature>
+                  <groupId>org.codehaus.mojo.signature</groupId>
+                  <artifactId>java16</artifactId>
+                  <version>1.0</version>
+                </signature>
+              </configuration>
             </plugin>
         </plugins>
     </build>
