@@ -17,25 +17,32 @@
  */
 package org.apache.sling.hc.api;
 
-import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
+import java.util.List;
 
-public class RuleInfoTest {
-    @Test
-    public void testInitialInfo() {
-        final Rule r = new Rule(null, null);
-        assertNotNull(r.getInfo());
-        assertTrue(r.getInfo().isEmpty());
+/** The result of executing a {@link HealthCheck} */
+public class Result {
+    
+    private final HealthCheck healthCheck;
+    private final ResultLog log;
+    
+    public Result(HealthCheck hc, ResultLog log) {
+        healthCheck = hc;
+        this.log = log;
+    }
+
+    public HealthCheck getHealthCheck() {
+        return healthCheck;
     }
     
-    @Test
-    public void testSetInfo() {
-        final Rule r = new Rule(null, null);
-        final String key = "myself";
-        r.getInfo().put(key, r);
-        assertNotNull(r.getInfo().get(key));
-        assertEquals(r, r.getInfo().get(key));
+    public List<ResultLog.Entry> getLogEntries() {
+        return log.getEntries();
+    }
+    
+    public boolean isOk() {
+        return log.getMaxLevel().ordinal() < ResultLog.MIN_LEVEL_TO_REPORT.ordinal();
+    }
+    
+    public ResultLog.Level getStatus() {
+        return isOk() ? ResultLog.Level.OK : log.getMaxLevel(); 
     }
 }

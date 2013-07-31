@@ -17,42 +17,21 @@
  */
 package org.apache.sling.hc.util;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.management.Attribute;
-import javax.management.AttributeList;
-import javax.management.AttributeNotFoundException;
 import javax.management.DynamicMBean;
-import javax.management.InvalidAttributeValueException;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanException;
-import javax.management.MBeanInfo;
-import javax.management.ReflectionException;
-import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
-import javax.management.openmbean.OpenDataException;
-import javax.management.openmbean.OpenMBeanAttributeInfoSupport;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
-import javax.management.openmbean.TabularData;
-import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
-import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A {@link DynamicMBean} that gives access to a {@link Rule}'s data */
-public class RuleDynamicMBean implements DynamicMBean, Serializable {
+public class RuleDynamicMBean { //implements DynamicMBean, Serializable {
 
     private static final long serialVersionUID = -90745301105975287L;
     private static final Logger logger = LoggerFactory.getLogger(RuleDynamicMBean.class);
-    private final String beanName;
-    private final Rule rule;
+    //private final String beanName;
     
     public static final String RULE_OK_ATTRIBUTE_NAME = "ok";
     public static final String LOG_ATTRIBUTE_NAME = "log";
@@ -81,7 +60,7 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
         }
     }
 
-    
+    /*
     public RuleDynamicMBean(Rule r) {
         beanName = r.toString();
         rule = r;
@@ -103,10 +82,10 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
         }
     }
     
-    private TabularData logData(EvaluationResult er) {
+    private TabularData logData(Result er) {
         final TabularDataSupport result = new TabularDataSupport(LOG_TABLE_TYPE);
         int i=1;
-        for(EvaluationResult.LogMessage msg : er.getLogMessages()) {
+        for(Result.LogMessage msg : er.getLogMessages()) {
             final Map<String, Object> data = new HashMap<String, Object>();
             data.put(INDEX_COLUMN, i++);
             data.put(LEVEL_COLUMN, msg.getLevel().toString());
@@ -164,4 +143,5 @@ public class RuleDynamicMBean implements DynamicMBean, Serializable {
     public AttributeList setAttributes(AttributeList attributes) {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " does not support setting Rules attributes");
     }
+    */
 }

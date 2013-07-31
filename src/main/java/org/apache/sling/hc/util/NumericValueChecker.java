@@ -17,17 +17,18 @@
  */
 package org.apache.sling.hc.util;
 
-import org.apache.sling.hc.api.Evaluator;
-import org.apache.sling.hc.api.SystemAttribute;
 import org.slf4j.Logger;
 
-public class DefaultEvaluator implements Evaluator {
-    @Override
-    public void evaluate(SystemAttribute a, String expression, Logger logger) {
+/** Simple check of numeric values against expressions
+ *  like < N, > N, between two values etc.
+ *  See  {@link NumericValueCheckerTest} for examples.
+ */
+public class NumericValueChecker {
+    
+    /** Check value against expression and report to logger */
+    public void check(Object inputValue, String expression, Logger logger) {
         
-        boolean matches = false;
-        final Object oValue = a.getValue(logger);
-        final String stringValue = oValue == null ? "" : oValue.toString();
+        final String stringValue = inputValue == null ? "" : inputValue.toString();
         
         if(expression == null || expression.trim().length() == 0) {
             // No expression, result will be based on a.getValue() logging only
@@ -35,7 +36,7 @@ public class DefaultEvaluator implements Evaluator {
         }
         
         final String [] parts = expression.split(" ");
-        
+        boolean matches = false;
         try {
             if(expression.startsWith(">") && parts.length == 2) {
                 final int value = Integer.valueOf(stringValue).intValue();
@@ -55,7 +56,7 @@ public class DefaultEvaluator implements Evaluator {
                 matches = expression.equals(stringValue); 
             }
         } catch(NumberFormatException nfe) {
-            logger.warn("Invalid numeric value [{}] while evaluating {}", oValue, expression);
+            logger.warn("Invalid numeric value [{}] while evaluating {}", inputValue, expression);
         }
         
         if(!matches) {

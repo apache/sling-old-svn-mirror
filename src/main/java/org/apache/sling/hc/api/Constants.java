@@ -17,7 +17,10 @@
  */
 package org.apache.sling.hc.api;
 
-/** A filter that accepts or rejects a {@link Rule} */
-public interface RuleFilter {
-    boolean accept(Rule r);
+public interface Constants {
+    /** info property name: the name of a health check */
+    String HC_NAME = "hc.name";
+    
+    /** info property name: description of a health check */
+    String HC_DESCRIPTION = "hc.description";
 }

@@ -17,12 +17,22 @@
  */
 package org.apache.sling.hc.api;
 
-import org.slf4j.Logger;
+import java.util.Map;
 
-/** An attribute of the system that's being checked */
-public interface SystemAttribute {
-    /** Return the value of out attribute, logging any relevant
-     *  info to the supplied logger.
+/** Health Check services can be executed and 
+ *  return an execution Result */
+public interface HealthCheck {
+    
+    /** Execute this health check.
+     * @param log Any messages written to that log at or above the
+     *            {@link ResultLog.MIN_LEVEL_TO_REPORT} level mean
+     *            that the health check failed.
      */
-    Object getValue(Logger logger);
+    public Result execute(ResultLog log);
+    
+    /** Additional (static) information about
+     *  this check. {@link Constants} defines
+     *  some well-known property names. 
+     */
+    public Map<String, String> getInfo();
 }

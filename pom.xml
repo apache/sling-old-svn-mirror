@@ -33,15 +33,13 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-Activator>
-                            org.apache.sling.hc.impl.Activator
-                        </Bundle-Activator>
                         <Export-Package>
                             org.apache.sling.hc.api,
-                            org.apache.sling.hc.util
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.hc.impl.*
+                            org.apache.sling.hc.util.*
+                            org.apache.sling.hc.deprecated.*
                         </Private-Package>
                     </instructions>
                 </configuration>
