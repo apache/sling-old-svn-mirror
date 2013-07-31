@@ -15,49 +15,78 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.impl;
-
-import static org.apache.sling.hc.api.EvaluationResult.LogLevel.DEBUG;
-import static org.apache.sling.hc.api.EvaluationResult.LogLevel.ERROR;
-import static org.apache.sling.hc.api.EvaluationResult.LogLevel.INFO;
-import static org.apache.sling.hc.api.EvaluationResult.LogLevel.TRACE;
-import static org.apache.sling.hc.api.EvaluationResult.LogLevel.WARN;
+package org.apache.sling.hc.api;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.RuleLogger;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 import org.slf4j.helpers.MessageFormatter;
 
-/** {@link RuleLogger} used to evaluate our rules - wraps 
- *  and slf4j Logger to capture log output and keep
- *  track of the highest log level used.
- */
-public class RuleLoggerImpl implements RuleLogger {
-
+/** Wraps an slf4 Logger to save its messages, 
+ *  to make the log of {@link HealthCheck} executions 
+ *  available as part of the {@link Result}.
+ **/
+public class ResultLog implements Logger {
+    
     private final Logger wrappedLogger;
-    private final List<EvaluationResult.LogMessage> messages = new LinkedList<EvaluationResult.LogMessage>();
-    private EvaluationResult.LogLevel maxLevel = EvaluationResult.LogLevel.DEBUG;
+    private Level maxLevel = Level.DEBUG;
+    private final List<Entry> entries;
     
-    public RuleLoggerImpl(Logger wrapped) {
-        this.wrappedLogger = wrapped;
+    /** Log messages at or above this level change the {@link Result's status} */
+    public static final Level MIN_LEVEL_TO_REPORT = Level.WARN;
+    
+    /** The log level of our entries */
+    public enum Level {
+        OK,
+        TRACE,
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR
     }
     
-    private void storeMessage(EvaluationResult.LogLevel level, String message) {
-        maxLevel = level.ordinal() > maxLevel.ordinal() ? level : maxLevel;
-        messages.add(new EvaluationResult.LogMessage(level, message));
+    /** An entry in our mini-log */
+    public static class Entry {
+        private final Level level;
+        private final String message;
+    
+        Entry(Level level, String message) {
+            this.level = level;
+            this.message = message;
+        }
+        
+        public String toString() {
+            return level + ": " + message;
+        }
+        
+        public Level getLevel() {
+            return level;
+        }
+        
+        public String getMessage() {
+            return message;
+        }
     }
     
-    public List<EvaluationResult.LogMessage> getMessages() {
-        return Collections.unmodifiableList(messages);
+    public ResultLog(Logger wrappedLogger) {
+        this.wrappedLogger = wrappedLogger;
+        entries = new LinkedList<Entry>();
     }
     
-    public EvaluationResult.LogLevel getMaxLevel() {
+    public Level getMaxLevel() {
         return maxLevel;
+    }
+    
+    public List<Entry> getEntries() {
+        return Collections.unmodifiableList(entries);
+    }
+    
+    private void storeMessage(ResultLog.Level level, String message) {
+        maxLevel = level.ordinal() > maxLevel.ordinal() ? level : maxLevel;
+        entries.add(new ResultLog.Entry(level, message));
     }
     
     @Override
@@ -67,61 +96,61 @@ public class RuleLoggerImpl implements RuleLogger {
     
     @Override
     public void debug(Marker arg0, String arg1, Object arg2, Object arg3) {
-        storeMessage(DEBUG, MessageFormatter.format(arg1, arg2, arg3).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.format(arg1, arg2, arg3).getMessage());
         wrappedLogger.debug(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public void debug(Marker arg0, String arg1, Object arg2) {
-        storeMessage(DEBUG, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.debug(arg0, arg1, arg2);
     }
 
     @Override
     public void debug(Marker arg0, String arg1, Object[] arg2) {
-        storeMessage(DEBUG, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
         wrappedLogger.debug(arg0, arg1, arg2);
     }
 
     @Override
     public void debug(Marker arg0, String arg1, Throwable arg2) {
-        storeMessage(DEBUG, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.debug(arg0, arg1, arg2);
     }
 
     @Override
     public void debug(Marker arg0, String arg1) {
-        storeMessage(DEBUG, arg1);
+        storeMessage(Level.DEBUG, arg1);
         wrappedLogger.debug(arg0, arg1);
     }
 
     @Override
     public void debug(String arg0, Object arg1, Object arg2) {
-        storeMessage(DEBUG, MessageFormatter.format(arg0, arg1, arg2).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.format(arg0, arg1, arg2).getMessage());
         wrappedLogger.debug(arg0, arg1, arg2);
     }
 
     @Override
     public void debug(String arg0, Object arg1) {
-        storeMessage(DEBUG, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.debug(arg0, arg1);
     }
 
     @Override
     public void debug(String arg0, Object[] arg1) {
-        storeMessage(DEBUG, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
         wrappedLogger.debug(arg0, arg1);
     }
 
     @Override
     public void debug(String arg0, Throwable arg1) {
-        storeMessage(DEBUG, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.DEBUG, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.debug(arg0, arg1);
     }
 
     @Override
     public void debug(String arg0) {
-        storeMessage(DEBUG, arg0);
+        storeMessage(Level.DEBUG, arg0);
         wrappedLogger.debug(arg0);
     }
 
@@ -137,61 +166,61 @@ public class RuleLoggerImpl implements RuleLogger {
     
     @Override
     public void info(Marker arg0, String arg1, Object arg2, Object arg3) {
-        storeMessage(INFO, MessageFormatter.format(arg1, arg2, arg3).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.format(arg1, arg2, arg3).getMessage());
         wrappedLogger.info(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public void info(Marker arg0, String arg1, Object arg2) {
-        storeMessage(INFO, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.info(arg0, arg1, arg2);
     }
 
     @Override
     public void info(Marker arg0, String arg1, Object[] arg2) {
-        storeMessage(INFO, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
         wrappedLogger.info(arg0, arg1, arg2);
     }
 
     @Override
     public void info(Marker arg0, String arg1, Throwable arg2) {
-        storeMessage(INFO, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.info(arg0, arg1, arg2);
     }
 
     @Override
     public void info(Marker arg0, String arg1) {
-        storeMessage(INFO, arg1);
+        storeMessage(Level.INFO, arg1);
         wrappedLogger.info(arg0, arg1);
     }
 
     @Override
     public void info(String arg0, Object arg1, Object arg2) {
-        storeMessage(INFO, MessageFormatter.format(arg0, arg1, arg2).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.format(arg0, arg1, arg2).getMessage());
         wrappedLogger.info(arg0, arg1, arg2);
     }
 
     @Override
     public void info(String arg0, Object arg1) {
-        storeMessage(INFO, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.info(arg0, arg1);
     }
 
     @Override
     public void info(String arg0, Object[] arg1) {
-        storeMessage(INFO, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
         wrappedLogger.info(arg0, arg1);
     }
 
     @Override
     public void info(String arg0, Throwable arg1) {
-        storeMessage(INFO, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.INFO, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.info(arg0, arg1);
     }
 
     @Override
     public void info(String arg0) {
-        storeMessage(INFO, arg0);
+        storeMessage(Level.INFO, arg0);
         wrappedLogger.info(arg0);
     }
 
@@ -207,61 +236,61 @@ public class RuleLoggerImpl implements RuleLogger {
     
     @Override
     public void warn(Marker arg0, String arg1, Object arg2, Object arg3) {
-        storeMessage(WARN, MessageFormatter.format(arg1, arg2, arg3).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.format(arg1, arg2, arg3).getMessage());
         wrappedLogger.warn(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public void warn(Marker arg0, String arg1, Object arg2) {
-        storeMessage(WARN, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.warn(arg0, arg1, arg2);
     }
 
     @Override
     public void warn(Marker arg0, String arg1, Object[] arg2) {
-        storeMessage(WARN, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
         wrappedLogger.warn(arg0, arg1, arg2);
     }
 
     @Override
     public void warn(Marker arg0, String arg1, Throwable arg2) {
-        storeMessage(WARN, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.warn(arg0, arg1, arg2);
     }
 
     @Override
     public void warn(Marker arg0, String arg1) {
-        storeMessage(WARN, arg1);
+        storeMessage(Level.WARN, arg1);
         wrappedLogger.warn(arg0, arg1);
     }
 
     @Override
     public void warn(String arg0, Object arg1, Object arg2) {
-        storeMessage(WARN, MessageFormatter.format(arg0, arg1, arg2).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.format(arg0, arg1, arg2).getMessage());
         wrappedLogger.warn(arg0, arg1, arg2);
     }
 
     @Override
     public void warn(String arg0, Object arg1) {
-        storeMessage(WARN, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.warn(arg0, arg1);
     }
 
     @Override
     public void warn(String arg0, Object[] arg1) {
-        storeMessage(WARN, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
         wrappedLogger.warn(arg0, arg1);
     }
 
     @Override
     public void warn(String arg0, Throwable arg1) {
-        storeMessage(WARN, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.WARN, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.warn(arg0, arg1);
     }
 
     @Override
     public void warn(String arg0) {
-        storeMessage(WARN, arg0);
+        storeMessage(Level.WARN, arg0);
         wrappedLogger.warn(arg0);
     }
 
@@ -277,61 +306,61 @@ public class RuleLoggerImpl implements RuleLogger {
     
     @Override
     public void error(Marker arg0, String arg1, Object arg2, Object arg3) {
-        storeMessage(ERROR, MessageFormatter.format(arg1, arg2, arg3).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.format(arg1, arg2, arg3).getMessage());
         wrappedLogger.error(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public void error(Marker arg0, String arg1, Object arg2) {
-        storeMessage(ERROR, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.error(arg0, arg1, arg2);
     }
 
     @Override
     public void error(Marker arg0, String arg1, Object[] arg2) {
-        storeMessage(ERROR, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
         wrappedLogger.error(arg0, arg1, arg2);
     }
 
     @Override
     public void error(Marker arg0, String arg1, Throwable arg2) {
-        storeMessage(ERROR, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.error(arg0, arg1, arg2);
     }
 
     @Override
     public void error(Marker arg0, String arg1) {
-        storeMessage(ERROR, arg1);
+        storeMessage(Level.ERROR, arg1);
         wrappedLogger.error(arg0, arg1);
     }
 
     @Override
     public void error(String arg0, Object arg1, Object arg2) {
-        storeMessage(ERROR, MessageFormatter.format(arg0, arg1, arg2).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.format(arg0, arg1, arg2).getMessage());
         wrappedLogger.error(arg0, arg1, arg2);
     }
 
     @Override
     public void error(String arg0, Object arg1) {
-        storeMessage(ERROR, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.error(arg0, arg1);
     }
 
     @Override
     public void error(String arg0, Object[] arg1) {
-        storeMessage(ERROR, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
         wrappedLogger.error(arg0, arg1);
     }
 
     @Override
     public void error(String arg0, Throwable arg1) {
-        storeMessage(ERROR, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.ERROR, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.error(arg0, arg1);
     }
 
     @Override
     public void error(String arg0) {
-        storeMessage(ERROR, arg0);
+        storeMessage(Level.ERROR, arg0);
         wrappedLogger.error(arg0);
     }
 
@@ -347,61 +376,61 @@ public class RuleLoggerImpl implements RuleLogger {
     
     @Override
     public void trace(Marker arg0, String arg1, Object arg2, Object arg3) {
-        storeMessage(TRACE, MessageFormatter.format(arg1, arg2, arg3).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.format(arg1, arg2, arg3).getMessage());
         wrappedLogger.trace(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public void trace(Marker arg0, String arg1, Object arg2) {
-        storeMessage(TRACE, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.trace(arg0, arg1, arg2);
     }
 
     @Override
     public void trace(Marker arg0, String arg1, Object[] arg2) {
-        storeMessage(TRACE, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.arrayFormat(arg1, arg2).getMessage());
         wrappedLogger.trace(arg0, arg1, arg2);
     }
 
     @Override
     public void trace(Marker arg0, String arg1, Throwable arg2) {
-        storeMessage(TRACE, MessageFormatter.format(arg1, arg2).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.format(arg1, arg2).getMessage());
         wrappedLogger.trace(arg0, arg1, arg2);
     }
 
     @Override
     public void trace(Marker arg0, String arg1) {
-        storeMessage(TRACE, arg1);
+        storeMessage(Level.TRACE, arg1);
         wrappedLogger.trace(arg0, arg1);
     }
 
     @Override
     public void trace(String arg0, Object arg1, Object arg2) {
-        storeMessage(TRACE, MessageFormatter.format(arg0, arg1, arg2).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.format(arg0, arg1, arg2).getMessage());
         wrappedLogger.trace(arg0, arg1, arg2);
     }
 
     @Override
     public void trace(String arg0, Object arg1) {
-        storeMessage(TRACE, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.trace(arg0, arg1);
     }
 
     @Override
     public void trace(String arg0, Object[] arg1) {
-        storeMessage(TRACE, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.arrayFormat(arg0, arg1).getMessage());
         wrappedLogger.trace(arg0, arg1);
     }
 
     @Override
     public void trace(String arg0, Throwable arg1) {
-        storeMessage(TRACE, MessageFormatter.format(arg0, arg1).getMessage());
+        storeMessage(Level.TRACE, MessageFormatter.format(arg0, arg1).getMessage());
         wrappedLogger.trace(arg0, arg1);
     }
 
     @Override
     public void trace(String arg0) {
-        storeMessage(TRACE, arg0);
+        storeMessage(Level.TRACE, arg0);
         wrappedLogger.trace(arg0);
     }
 

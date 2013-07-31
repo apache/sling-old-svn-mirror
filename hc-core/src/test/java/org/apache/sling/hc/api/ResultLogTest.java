@@ -17,18 +17,28 @@
  */
 package org.apache.sling.hc.api;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
-/** Service facade for the health check tool */
-public interface HealthCheckFacade {
-    /** Return a new, empty RulesEngine*/
-    RulesEngine getNewRulesEngine();
+import org.junit.Before;
+import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+public class ResultLogTest {
+    private ResultLog resultLog;
     
-    /** Parse a set of rules defined in our simple text format */
-    List<Rule> parseSimpleTextRules(Reader textRules) throws IOException;
+    @Before
+    public void setup() {
+        resultLog = new ResultLog(LoggerFactory.getLogger(getClass()));
+    }
     
-    /** Return our current list of RuleBuilder */
-    List<RuleBuilder> getRuleBuilders();
+    @Test
+    public void testMaxLevel() {
+        assertEquals(ResultLog.Level.DEBUG, resultLog.getMaxLevel());
+        resultLog.debug("something");
+        assertEquals(ResultLog.Level.DEBUG, resultLog.getMaxLevel());
+        resultLog.info("something");
+        assertEquals(ResultLog.Level.INFO, resultLog.getMaxLevel());
+        resultLog.warn("something");
+        assertEquals(ResultLog.Level.WARN, resultLog.getMaxLevel());
+    }
 }
