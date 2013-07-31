@@ -40,8 +40,7 @@ public class JmxAttributeHealthCheckTest {
 
     @Before
     public void setup() {
-        final JmxAttributeHealthCheck c = new JmxAttributeHealthCheck();
-        hc = c;
+        hc = new JmxAttributeHealthCheck();
         log = new ResultLog(LoggerFactory.getLogger(getClass()));
         
         ctx = Mockito.mock(ComponentContext.class);
