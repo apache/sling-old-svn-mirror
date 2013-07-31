@@ -39,7 +39,7 @@ public class Result {
     }
     
     public boolean isOk() {
-        return log.getMaxLevel().ordinal() < ResultLog.MIN_LEVEL_TO_REPORT.ordinal();
+        return log.getMaxLevel() != null && log.getMaxLevel().ordinal() < ResultLog.MIN_LEVEL_TO_REPORT.ordinal();
     }
     
     public ResultLog.Level getStatus() {

@@ -21,28 +21,28 @@ import org.slf4j.Logger;
 
 /** Simple check of numeric values against expressions
  *  like < N, > N, between two values etc.
- *  See  {@link NumericValueCheckerTest} for examples.
+ *  See  {@link SimpleConstraintCheckerTest} for examples.
  */
-public class NumericValueChecker {
+public class SimpleConstraintChecker {
     
     /** Check value against expression and report to logger */
-    public void check(Object inputValue, String expression, Logger logger) {
+    public void check(Object inputValue, String constraint, Logger logger) {
         
         final String stringValue = inputValue == null ? "" : inputValue.toString();
         
-        if(expression == null || expression.trim().length() == 0) {
+        if(constraint == null || constraint.trim().length() == 0) {
             // No expression, result will be based on a.getValue() logging only
             return;
         }
         
-        final String [] parts = expression.split(" ");
+        final String [] parts = constraint.split(" ");
         boolean matches = false;
         try {
-            if(expression.startsWith(">") && parts.length == 2) {
+            if(constraint.startsWith(">") && parts.length == 2) {
                 final int value = Integer.valueOf(stringValue).intValue();
                 matches = value > Integer.valueOf(parts[1]);
                 
-            } else if(expression.startsWith("<") && parts.length == 2) {
+            } else if(constraint.startsWith("<") && parts.length == 2) {
                 final int value = Integer.valueOf(stringValue).intValue();
                 matches = value < Integer.valueOf(parts[1]);
                 
@@ -53,14 +53,16 @@ public class NumericValueChecker {
                 matches = value > lowerBound && value < upperBound;
                 
             } else {
-                matches = expression.equals(stringValue); 
+                matches = constraint.equals(stringValue); 
             }
         } catch(NumberFormatException nfe) {
-            logger.warn("Invalid numeric value [{}] while evaluating {}", inputValue, expression);
+            logger.warn("Invalid numeric value [{}] while evaluating {}", inputValue, constraint);
         }
         
-        if(!matches) {
-            logger.warn("Value [{}] does not match expression [{}]", stringValue, expression);
+        if(matches) {
+            logger.debug("Value [{}] matches constraint [{}]", stringValue, constraint);
+        } else {
+            logger.warn("Value [{}] does not match constraint [{}]", stringValue, constraint);
         }
     }
 }

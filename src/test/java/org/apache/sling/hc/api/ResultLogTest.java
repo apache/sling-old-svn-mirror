@@ -33,7 +33,7 @@ public class ResultLogTest {
     
     @Test
     public void testMaxLevel() {
-        assertEquals(ResultLog.Level.DEBUG, resultLog.getMaxLevel());
+        assertEquals(null, resultLog.getMaxLevel());
         resultLog.debug("something");
         assertEquals(ResultLog.Level.DEBUG, resultLog.getMaxLevel());
         resultLog.info("something");
