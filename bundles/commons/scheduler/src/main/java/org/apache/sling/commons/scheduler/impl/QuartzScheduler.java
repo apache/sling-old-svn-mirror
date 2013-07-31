@@ -37,6 +37,7 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
+import org.apache.sling.discovery.DiscoveryService;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -87,8 +88,8 @@ public class QuartzScheduler implements Scheduler {
     /** Map key for the logger. */
     static final String DATA_MAP_LOGGER = "QuartzJobScheduler.Logger";
 
-    /** Map key for the isLeader information (Boolean). */
-    static final String DATA_MAP_ON_LEADER_ONLY = "QuartzJobScheduler.OnLeaderOnly";
+    /** Map key for the runOn information (String[]). */
+    static final String DATA_MAP_RUN_ON = "QuartzJobScheduler.runOn";
 
     /** The quartz scheduler. */
     private volatile org.quartz.Scheduler scheduler;
@@ -109,6 +110,9 @@ public class QuartzScheduler implements Scheduler {
 
     @Property
     private static final String PROPERTY_POOL_NAME = "poolName";
+
+    @Reference
+    private DiscoveryService discoveryService;
 
     /**
      * Activate this component.
@@ -247,7 +251,9 @@ public class QuartzScheduler implements Scheduler {
         if ( options.configuration != null ) {
             jobDataMap.put(DATA_MAP_CONFIGURATION, options.configuration);
         }
-        jobDataMap.put(DATA_MAP_ON_LEADER_ONLY, options.onLeaderOnly);
+        if ( options.runOn != null) {
+            jobDataMap.put(DATA_MAP_RUN_ON, options.runOn);
+        }
 
         return jobDataMap;
     }
@@ -426,13 +432,21 @@ public class QuartzScheduler implements Scheduler {
                 try {
                     final String name = getServiceIdentifier(ref);
                     final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
-                    final Boolean onLeaderOnly = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_LEADER_ONLY);
+                    final Object runOn = ref.getProperty(Scheduler.PROPERTY_SCHEDULER_RUN_ON);
+                    String[] runOnOpts = null;
+                    if ( runOn instanceof String ) {
+                        runOnOpts = new String[] {runOn.toString()};
+                    } else if ( runOn instanceof String[] ) {
+                        runOnOpts = (String[])runOn;
+                    } else {
+                        this.logger.warn("Property {} ignored for scheduler {}", Scheduler.PROPERTY_SCHEDULER_RUN_ON, ref);
+                    }
                     final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
                     if ( expression != null ) {
                         this.scheduleJob(job, this.EXPR(expression)
                                 .name(name)
                                 .canRunConcurrently((concurrent != null ? concurrent : true))
-                                .onLeaderOnly(onLeaderOnly != null ? onLeaderOnly : false));
+                                .onInstancesOnly(runOnOpts));
                     } else {
                         final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
                         if ( period != null ) {
@@ -446,7 +460,7 @@ public class QuartzScheduler implements Scheduler {
                                 this.scheduleJob(job, this.PERIODIC(period, immediate)
                                         .name(name)
                                         .canRunConcurrently((concurrent != null ? concurrent : true))
-                                        .onLeaderOnly(onLeaderOnly != null ? onLeaderOnly : false));
+                                        .onInstancesOnly(runOnOpts));
                             }
                         } else {
                             this.logger.debug("Ignoring servce {} : no scheduling property found.", ref);
@@ -792,6 +806,30 @@ public class QuartzScheduler implements Scheduler {
         } else {
             name = job.getClass().getName() + ':' + UUID.randomUUID();
         }
+
+        // check run on
+        if ( opts.runOn != null ) {
+            boolean schedule = false;
+            if ( opts.runOn.length == 1 && Scheduler.VALUE_RUN_ON_LEADER.equals(opts.runOn[0])) {
+                schedule = true;
+            } else if ( opts.runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(opts.runOn[0])) {
+                schedule = true;
+            } else { // sling IDs
+                final String myId = this.discoveryService.getTopology().getLocalInstance().getSlingId();
+                for(final String id : opts.runOn ) {
+                    if ( myId.equals(id) ) {
+                        schedule = true;
+                        break;
+                    }
+                }
+                opts.runOn = null;
+            }
+            if ( !schedule ) {
+                this.logger.warn("Not scheduling job {} with name {} - not in required Sling ID set", job, name);
+                return;
+            }
+        }
+
         final Trigger trigger = opts.trigger.withIdentity(name).build();
 
         // create the data map

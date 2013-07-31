@@ -44,9 +44,9 @@ public class QuartzJobExecutor implements Job {
 
         final JobDataMap data = context.getJobDetail().getJobDataMap();
 
-        // check leader
-        final boolean onLeaderOnly = data.getBooleanValue(QuartzScheduler.DATA_MAP_ON_LEADER_ONLY);
-        if (onLeaderOnly && !IS_LEADER.get()) {
+        // check leader/single
+        final String[] runOn = (String[])data.get(QuartzScheduler.DATA_MAP_RUN_ON);
+        if (runOn != null && !IS_LEADER.get()) {
             return;
         }
 
