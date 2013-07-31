@@ -149,4 +149,22 @@ public class SimpleConstraintCheckerTest {
         checker.check("foo", "between 12 and 16", resultLog);
         assertFalse(result.isOk());
     }
+    
+    @Test
+    public void testContainsA() {
+        checker.check("This is a NICE STRING ok?", "contains NICE STRING", resultLog);
+        assertTrue(result.isOk());
+    }
+    
+    @Test
+    public void testContainsB() {
+        checker.check("This is a NICE TOUCH ok?", "contains NICE STRING", resultLog);
+        assertFalse(result.isOk());
+    }
+    
+    @Test
+    public void testContainsC() {
+        checker.check("This is a NICE TOUCH ok?", "contains NICE", resultLog);
+        assertTrue(result.isOk());
+    }
 }

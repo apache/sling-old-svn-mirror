@@ -17,15 +17,13 @@
  */
 package org.apache.sling.hc.impl;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.service.component.ComponentContext;
@@ -33,38 +31,31 @@ import org.slf4j.LoggerFactory;
 
 public class JmxAttributeHealthCheckTest {
     
-    private JmxAttributeHealthCheck hc;
-    private ResultLog log;
-    private Dictionary<String, String> props;
-    private ComponentContext ctx;
-
-    @Before
-    public void setup() {
-        hc = new JmxAttributeHealthCheck();
-        log = new ResultLog(LoggerFactory.getLogger(getClass()));
+    static void assertJmxValue(String objectName, String attributeName, String constraint, boolean expected) {
+        final JmxAttributeHealthCheck hc = new JmxAttributeHealthCheck();
+        final ResultLog log = new ResultLog(LoggerFactory.getLogger(JmxAttributeHealthCheckTest.class));
         
-        ctx = Mockito.mock(ComponentContext.class);
-        props = new Hashtable<String, String>();
-        props.put(JmxAttributeHealthCheck.PROP_OBJECT_NAME, "java.lang:type=ClassLoading");
-        props.put(JmxAttributeHealthCheck.PROP_ATTRIBUTE_NAME, "LoadedClassCount");
+        final ComponentContext ctx = Mockito.mock(ComponentContext.class);
+        final Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put(JmxAttributeHealthCheck.PROP_OBJECT_NAME, objectName);
+        props.put(JmxAttributeHealthCheck.PROP_ATTRIBUTE_NAME, attributeName);
+        props.put(JmxAttributeHealthCheck.PROP_CONSTRAINT, constraint);
         Mockito.when(ctx.getProperties()).thenReturn(props);
+        hc.activate(ctx);
+        
+        final Result r = hc.execute(log);
+        if(r.isOk() != expected) {
+            fail("HealthCheck result is " + r.isOk() + ", log=" + r.getLogEntries());
+        }
     }
     
     @Test
     public void testJmxAttributeMatch() {
-        props.put(JmxAttributeHealthCheck.PROP_CONSTRAINT, "> 10");
-        hc.activate(ctx);
-        final Result r = hc.execute(log);
-        assertTrue(r.isOk());
-        assertFalse(r.getLogEntries().isEmpty());
+        assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "> 10", true);
     }
     
     @Test
     public void testJmxAttributeNoMatch() {
-        props.put(JmxAttributeHealthCheck.PROP_CONSTRAINT, "< 10");
-        hc.activate(ctx);
-        final Result r = hc.execute(log);
-        assertFalse(r.isOk());
-        assertFalse(r.getLogEntries().isEmpty());
+        assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "< 10", false);
     }
 }

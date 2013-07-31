@@ -25,6 +25,8 @@ import org.slf4j.Logger;
  */
 public class SimpleConstraintChecker {
     
+    public static final String CONTAINS = "contains";
+    
     /** Check value against expression and report to logger */
     public void check(Object inputValue, String constraint, Logger logger) {
         
@@ -51,6 +53,10 @@ public class SimpleConstraintChecker {
                 final int lowerBound = Integer.valueOf(parts[1]);
                 final int upperBound = Integer.valueOf(parts[3]);
                 matches = value > lowerBound && value < upperBound;
+                
+            } else if(parts.length >1 && CONTAINS.equalsIgnoreCase(parts[0])) {
+                final String pattern = constraint.substring(CONTAINS.length()).trim();
+                matches = stringValue.contains(pattern);        
                 
             } else {
                 matches = constraint.equals(stringValue); 

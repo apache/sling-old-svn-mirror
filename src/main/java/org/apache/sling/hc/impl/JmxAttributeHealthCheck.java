@@ -36,12 +36,15 @@ import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.util.SimpleConstraintChecker;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that checks a single JMX attribute */
 @Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE, metatype=true)
 @Service
 public class JmxAttributeHealthCheck implements HealthCheck {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final Map<String, String> info = new HashMap<String, String>();
     private String mbeanName;
     private String attributeName;
@@ -59,6 +62,9 @@ public class JmxAttributeHealthCheck implements HealthCheck {
     @Property(cardinality=50)
     public static final String PROP_TAGS = Constants.HC_TAGS;
     
+    @Property
+    public static final String PROP_NAME = Constants.HC_NAME;
+    
     @Activate
     public void activate(ComponentContext ctx) {
         mbeanName = PropertiesUtil.toString(ctx.getProperties().get(PROP_OBJECT_NAME), "");
@@ -68,6 +74,10 @@ public class JmxAttributeHealthCheck implements HealthCheck {
         info.put(PROP_OBJECT_NAME, mbeanName);
         info.put(PROP_ATTRIBUTE_NAME, attributeName);
         info.put(PROP_CONSTRAINT, constraint);
+        info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        
+        log.info("Activated with HealthCheck name={}, objectName={}, attribute={}, constraint={}", 
+                new Object[] { info.get(Constants.HC_NAME), mbeanName, attributeName, constraint });
     }
     
     @Override

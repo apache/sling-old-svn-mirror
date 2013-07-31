@@ -35,16 +35,21 @@ import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that checks a scriptable expression */
 @Component(configurationFactory=true, policy=ConfigurationPolicy.REQUIRE, metatype=true)
 @Service
 public class ScriptableHealthCheck implements HealthCheck {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final Map<String, String> info = new HashMap<String, String>();
     private String expression;
     private String languageExtension;
+    private BundleContext bundleContext;
     
     public static final String DEFAULT_LANGUAGE_EXTENSION = "ecma";
 
@@ -57,16 +62,23 @@ public class ScriptableHealthCheck implements HealthCheck {
     @Property(cardinality=50)
     public static final String PROP_TAGS = Constants.HC_TAGS;
     
+    @Property
+    public static final String PROP_NAME = Constants.HC_NAME;
+    
     @Reference
     private ScriptEngineManager scriptEngineManager;
     
     @Activate
     public void activate(ComponentContext ctx) {
+        bundleContext = ctx.getBundleContext();
         expression = PropertiesUtil.toString(ctx.getProperties().get(PROP_EXPRESSION), "");
         languageExtension = PropertiesUtil.toString(ctx.getProperties().get(PROP_LANGUAGE_EXTENSION), DEFAULT_LANGUAGE_EXTENSION);
         
         info.put(PROP_EXPRESSION, expression);
         info.put(PROP_LANGUAGE_EXTENSION, languageExtension);
+        info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        
+        log.info("Activated, name={}, languageExtension={}, expression={}", languageExtension, expression);
     }
     
     @Override
@@ -81,6 +93,7 @@ public class ScriptableHealthCheck implements HealthCheck {
                 // TODO pluggable Bindings? Reuse the Sling bindings providers?
                 final Bindings b = engine.createBindings();
                 b.put("jmx", new JmxScriptBinding(log));
+                b.put("osgi", new OsgiScriptBinding(bundleContext, log));
                 final Object value = engine.eval(expression, b);
                 if(value!=null && "true".equals(value.toString())) {
                     log.debug("Expression [{}] evaluates to true as expected", expression);
