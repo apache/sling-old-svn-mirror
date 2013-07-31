@@ -49,3 +49,4 @@ Import-Package: org.apache.sling.ide.eclipse.core,
  org.osgi.framework,
  org.osgi.util.tracker;version="1.5.0"
 Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.wst.common.project.facet.ui

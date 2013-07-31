@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.core;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 public interface ISlingLaunchpadServer {
 
     public static final int PUBLISH_STATE_NEVER = 1;
@@ -27,7 +29,7 @@ public interface ISlingLaunchpadServer {
     public static final String PROP_CONTEXT_PATH = "launchpad.contextPath";
     public static final String PROP_PORT = "launchpad.port";
 
-    void setPublishState(int publishState);
+    void setPublishState(int publishState, IProgressMonitor monitor);
 
     int getPublishState();
 

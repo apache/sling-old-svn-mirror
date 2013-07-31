@@ -101,11 +101,11 @@ public class ImportWizard extends Wizard implements IImportWizard {
                     // Not sure if there is a simple workaround. Anyway, the only side effect is that we
                     // make too many calls after the import, functionality is not affected
                     if (server.canPublish().isOK() && oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-                        launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER);
+                        launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER, monitor);
                     }
 
                     Filter filter = null;
-                    if (filterFile != null) {
+                    if (filterFile != null && filterFile.exists()) {
                         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
                         InputStream contents = null;
                         try {
@@ -145,7 +145,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
                         throw new InvocationTargetException(e);
                     } finally {
                         if (oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
-                            launchpad.setPublishState(oldPublishState);
+                            launchpad.setPublishState(oldPublishState, monitor);
                         }
                         monitor.done();
                         }

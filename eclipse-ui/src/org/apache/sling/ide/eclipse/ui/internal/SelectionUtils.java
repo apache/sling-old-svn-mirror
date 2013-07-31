@@ -43,7 +43,15 @@ public abstract class SelectionUtils {
         }
 
         IProject project = (IProject) first;
-        List<IServer> servers = new ArrayList<IServer>();
+        return getServersLinkedToProject(project, monitor);
+    }
+
+	public static List<IServer> getServersLinkedToProject(IProject project,
+			IProgressMonitor monitor) {
+		if (project == null) {
+			return Collections.emptyList();
+		}
+		List<IServer> servers = new ArrayList<IServer>();
 
         IModule module = ServerUtil.getModule(project);
 
@@ -58,7 +66,7 @@ public abstract class SelectionUtils {
         }
 
         return servers;
-    }
+	}
 
     private SelectionUtils() {
 
