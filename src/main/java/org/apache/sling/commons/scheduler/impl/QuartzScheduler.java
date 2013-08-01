@@ -17,31 +17,26 @@
 package org.apache.sling.commons.scheduler.impl;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.discovery.DiscoveryService;
-import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
+import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -61,12 +56,8 @@ import org.slf4j.LoggerFactory;
  * The quartz based implementation of the scheduler.
  *
  */
-@Component(immediate=true, metatype=true,label="%scheduler.name",description="%scheduler.description")
+@Component(metatype=true,label="%scheduler.name",description="%scheduler.description")
 @Service(value=Scheduler.class)
-@References({
-    @Reference(name="job", referenceInterface=Job.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC),
-    @Reference(name="task", referenceInterface=Runnable.class, cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
-})
 public class QuartzScheduler implements Scheduler {
 
     /** Default logger. */
@@ -94,12 +85,6 @@ public class QuartzScheduler implements Scheduler {
     /** The quartz scheduler. */
     private volatile org.quartz.Scheduler scheduler;
 
-    /** List of registrations while this service is not activated yet. */
-    private final List<Registration> registeredJobs = new ArrayList<Registration>();
-
-    /** The component context. */
-    private volatile ComponentContext context;
-
     @Reference
     private ThreadPoolManager threadPoolManager;
 
@@ -112,55 +97,39 @@ public class QuartzScheduler implements Scheduler {
     private static final String PROPERTY_POOL_NAME = "poolName";
 
     @Reference
-    private DiscoveryService discoveryService;
+    private SlingSettingsService settings;
 
     /**
      * Activate this component.
      * Start the scheduler.
-     * @param ctx The component context.
      * @throws Exception
      */
-    protected void activate(final ComponentContext ctx) throws Exception {
-        final Object poolNameObj = ctx.getProperties().get(PROPERTY_POOL_NAME);
+    @Activate
+    protected void activate(final BundleContext ctx, final Map<String, Object> props) throws Exception {
+        final Object poolNameObj = props.get(PROPERTY_POOL_NAME);
         final String poolName;
         if ( poolNameObj != null && poolNameObj.toString().trim().length() > 0 ) {
             poolName = poolNameObj.toString().trim();
         } else {
             poolName = null;
         }
-        this.context = ctx;
+
         // start scheduler
         this.scheduler = this.init(poolName);
-
-        final Registration[] regs;
-        synchronized ( this.registeredJobs ) {
-            regs = this.registeredJobs.toArray(new Registration[this.registeredJobs.size()]);
-            this.registeredJobs.clear();
-        }
-        for( final Registration reg : regs ) {
-            try {
-                this.register(reg.componentName, reg.reference);
-            } catch (Exception e) {
-                // we don't want that one malicious service brings down the scheduler, so we just log
-                // the exception and continue
-                this.logger.error("Exception during registering " + reg.componentName + " service " + reg.reference, e);
-            }
-        }
-        this.plugin = WebConsolePrinter.initPlugin(ctx.getBundleContext(), this);
+        this.plugin = WebConsolePrinter.initPlugin(ctx, this);
     }
 
     /**
      * Deactivate this component.
      * Stop the scheduler.
-     * @param ctx The component context.
      */
-    protected void deactivate(final ComponentContext ctx) {
+    @Deactivate
+    protected void deactivate() {
         WebConsolePrinter.destroyPlugin(this.plugin);
         this.plugin = null;
         final org.quartz.Scheduler s = this.scheduler;
         this.scheduler = null;
         this.dispose(s);
-        this.context = null;
     }
 
     /**
@@ -398,192 +367,10 @@ public class QuartzScheduler implements Scheduler {
         }
     }
 
-    /**
-     * Create unique identifier
-     * @param type
-     * @param ref
-     * @throws Exception
-     */
-    private String getServiceIdentifier(final ServiceReference ref) {
-        String name = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_NAME);
-        if ( name == null ) {
-            name = (String)ref.getProperty(Constants.SERVICE_PID);
-            if ( name == null ) {
-                name = "Registered Service";
-            }
-        }
-        // now append service id to create a unique identifier
-        name = name + "." + ref.getProperty(Constants.SERVICE_ID);
-        return name;
-    }
-
-    /**
-     * Register a job or task
-     * @param type The type (job or task)
-     * @param ref The service reference
-     */
-    private void register(final String type, final ServiceReference ref) {
-        // we called from bind, it might be that deactivate has been
-        // called in the meantime
-        final ComponentContext ctx = this.context;
-        if ( ctx != null ) {
-            final Object job = ctx.locateService(type, ref);
-            if ( job != null ) {
-                try {
-                    final String name = getServiceIdentifier(ref);
-                    final Boolean concurrent = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_CONCURRENT);
-                    final Object runOn = ref.getProperty(Scheduler.PROPERTY_SCHEDULER_RUN_ON);
-                    String[] runOnOpts = null;
-                    if ( runOn instanceof String ) {
-                        runOnOpts = new String[] {runOn.toString()};
-                    } else if ( runOn instanceof String[] ) {
-                        runOnOpts = (String[])runOn;
-                    } else {
-                        this.logger.warn("Property {} ignored for scheduler {}", Scheduler.PROPERTY_SCHEDULER_RUN_ON, ref);
-                    }
-                    final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
-                    if ( expression != null ) {
-                        this.scheduleJob(job, this.EXPR(expression)
-                                .name(name)
-                                .canRunConcurrently((concurrent != null ? concurrent : true))
-                                .onInstancesOnly(runOnOpts));
-                    } else {
-                        final Long period = (Long)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_PERIOD);
-                        if ( period != null ) {
-                            if ( period < 1 ) {
-                                this.logger.debug("Ignoring service {} : scheduler period is less than 1.", ref);
-                            } else {
-                                boolean immediate = false;
-                                if ( ref.getProperty(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE) != null ) {
-                                    immediate = (Boolean)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_IMMEDIATE);
-                                }
-                                this.scheduleJob(job, this.PERIODIC(period, immediate)
-                                        .name(name)
-                                        .canRunConcurrently((concurrent != null ? concurrent : true))
-                                        .onInstancesOnly(runOnOpts));
-                            }
-                        } else {
-                            this.logger.debug("Ignoring servce {} : no scheduling property found.", ref);
-                        }
-                    }
-                } catch (final IllegalStateException e) {
-                    // this can happen if deactivate has been called or the scheduling expression is invalid
-                    this.logger.warn("Ignoring servce " + ref + " : exception occurred during registering.", e);
-                } catch (final SchedulerException e) {
-                    // this can happen if deactivate has been called or the scheduling expression is invalid
-                    this.logger.warn("Ignoring servce " + ref + " : exception occurred during registering.", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Unregister a service.
-     * @param ref The service reference.
-     */
-    private void unregister(final ServiceReference ref) {
-        try {
-            final String name = getServiceIdentifier(ref);
-            this.removeJob(name);
-        } catch (NoSuchElementException nsee) {
-            // we ignore this
-        }
-    }
-
-    /**
-     * Bind a new job.
-     * @param ref
-     * @throws Exception
-     */
-    protected void bindJob(final ServiceReference ref) {
-        if ( this.scheduler != null ) {
-            this.register(Registration.JOB, ref);
-        } else {
-            synchronized ( this.registeredJobs ) {
-                this.registeredJobs.add(new Registration(ref, Registration.JOB));
-            }
-        }
-    }
-
-    /**
-     * Unbind a job.
-     * @param ref
-     */
-    protected void unbindJob(final ServiceReference ref) {
-        if ( this.scheduler != null ) {
-            this.unregister(ref);
-        } else {
-            synchronized ( this.registeredJobs ) {
-                this.registeredJobs.remove(new Registration(ref, Registration.JOB));
-            }
-        }
-    }
-
-    /**
-     * Bind a new task.
-     * @param ref
-     * @throws Exception
-     */
-    protected void bindTask(final ServiceReference ref) {
-        if ( this.scheduler != null ) {
-            this.register(Registration.TASK, ref);
-        } else {
-            synchronized ( this.registeredJobs ) {
-                this.registeredJobs.add(new Registration(ref, Registration.TASK));
-            }
-        }
-    }
-
-    /**
-     * Unbind a task.
-     * @param ref
-     */
-    protected void unbindTask(final ServiceReference ref) {
-        if ( this.scheduler != null ) {
-            this.unregister(ref);
-        } else {
-            synchronized ( this.registeredJobs ) {
-                this.registeredJobs.remove(new Registration(ref, Registration.TASK));
-            }
-        }
-    }
-
+    /** Used by the web console plugin. */
     org.quartz.Scheduler getScheduler() {
         return this.scheduler;
     }
-
-    /**
-     * Helper class holding a registration if this service is not active yet.
-     */
-    private static final class Registration {
-        public static final String JOB = "job";
-        public static final String TASK = "task";
-
-        public final ServiceReference reference;
-        public final String componentName;
-
-        public Registration(final ServiceReference r, final String name) {
-            this.reference = r;
-            this.componentName = name;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if ( !(obj instanceof Registration) ) {
-                return false;
-            }
-            if ( obj == this ) {
-                return true;
-            }
-            return this.reference.equals(((Registration)obj).reference);
-        }
-
-        @Override
-        public int hashCode() {
-            return this.reference.hashCode();
-        }
-    }
-
 
     public static final class QuartzThreadPool implements org.quartz.spi.ThreadPool {
 
@@ -815,7 +602,7 @@ public class QuartzScheduler implements Scheduler {
             } else if ( opts.runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(opts.runOn[0])) {
                 schedule = true;
             } else { // sling IDs
-                final String myId = this.discoveryService.getTopology().getLocalInstance().getSlingId();
+                final String myId = this.settings.getSlingId();
                 for(final String id : opts.runOn ) {
                     if ( myId.equals(id) ) {
                         schedule = true;
