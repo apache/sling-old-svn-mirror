@@ -72,7 +72,7 @@ public interface Scheduler {
      * Default is to start the job on all instances. This property needs to be of type String
      * or String[].
      * If no topology information is available (= no Apache Sling Discovery Implementation active)
-     * the values {@link #VALUE_RUN_ON_LEADER} and {@link #VALUE_RUN_ON_SINGLE} are ignored, and the job is run on all instances.
+     * this option is ignored, and the job is run on all instances.
      * @since 2.3.0
      */
     String PROPERTY_SCHEDULER_RUN_ON = "scheduler.runOn";
