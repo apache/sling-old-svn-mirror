@@ -41,6 +41,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.event.EventAdmin;
@@ -323,8 +324,10 @@ public class JcrResourceListener implements EventListener {
             if ( ref != null ) {
                 final ResourceResolverFactory factory = (ResourceResolverFactory) this.bundleContext.getService(ref);
                 if ( factory != null ) {
+                    final Map<String, Object> authInfo = new HashMap<String, Object>();
+                    authInfo.put(JcrResourceConstants.AUTHENTICATION_INFO_SESSION, this.session);
                     try {
-                        this.resourceResolver = factory.getAdministrativeResourceResolver(null);
+                        this.resourceResolver = factory.getResourceResolver(authInfo);
                         this.resourceResolverFactoryReference = ref;
                     } catch (final LoginException le) {
                         logger.error("Unable to get administrative resource resolver.", le);
