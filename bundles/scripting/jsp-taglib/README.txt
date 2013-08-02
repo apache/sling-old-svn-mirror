@@ -24,4 +24,4 @@ you can checkout the latest source using the following command:
     svn checkout http://svn.apache.org/repos/asf/sling/trunk/scripting/jsp-taglib
 
 See the Subversion documentation for other source control features.
-
+ 
