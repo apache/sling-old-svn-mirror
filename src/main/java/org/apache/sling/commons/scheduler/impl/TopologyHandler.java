@@ -22,6 +22,10 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 
+/**
+ * Optional service - if the Sling discovery service is running, additional features
+ *                    are available
+ */
 @Component
 @Service(value=TopologyEventListener.class)
 public class TopologyHandler implements TopologyEventListener {
@@ -31,9 +35,12 @@ public class TopologyHandler implements TopologyEventListener {
      */
     public void handleTopologyEvent(final TopologyEvent event) {
         if ( event.getType() == Type.TOPOLOGY_INIT || event.getType() == Type.TOPOLOGY_CHANGED ) {
+            QuartzJobExecutor.SLING_ID = event.getNewView().getLocalInstance().getSlingId();
             QuartzJobExecutor.IS_LEADER.set(event.getNewView().getLocalInstance().isLeader());
+            QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.set(true);
         } else if ( event.getType() == Type.TOPOLOGY_CHANGING ) {
             QuartzJobExecutor.IS_LEADER.set(false);
+            QuartzJobExecutor.DISCOVERY_INFO_AVAILABLE.set(false);
         }
     }
 }

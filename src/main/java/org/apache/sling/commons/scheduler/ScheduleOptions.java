@@ -72,9 +72,11 @@ public interface ScheduleOptions {
 
     /**
      * List of Sling IDs this job should be run on.
+     * If no topology information is available (= no Apache Sling Discovery Implementation active)
+     * this flag is ignored and the job is run on all instances!
      * If {@link #onLeaderOnly(boolean)} or {@link #onSingleInstanceOnly(boolean)} has been called before,
      * that option is reset and overwritten by the value of this method.
-     * @param flag Whether this job should only be run on a single instance.
+     * @param slingIds Array of Sling IDs this job should run on
      */
-    ScheduleOptions onInstancesOnly(String[] slingIds);
+    ScheduleOptions onInstancesOnly(final String[] slingIds);
 }

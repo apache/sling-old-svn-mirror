@@ -34,7 +34,6 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.quartz.CronScheduleBuilder;
@@ -95,9 +94,6 @@ public class QuartzScheduler implements Scheduler {
 
     @Property
     private static final String PROPERTY_POOL_NAME = "poolName";
-
-    @Reference
-    private SlingSettingsService settings;
 
     /**
      * Activate this component.
@@ -592,29 +588,6 @@ public class QuartzScheduler implements Scheduler {
             name = opts.name;
         } else {
             name = job.getClass().getName() + ':' + UUID.randomUUID();
-        }
-
-        // check run on
-        if ( opts.runOn != null ) {
-            boolean schedule = false;
-            if ( opts.runOn.length == 1 && Scheduler.VALUE_RUN_ON_LEADER.equals(opts.runOn[0])) {
-                schedule = true;
-            } else if ( opts.runOn.length == 1 && Scheduler.VALUE_RUN_ON_SINGLE.equals(opts.runOn[0])) {
-                schedule = true;
-            } else { // sling IDs
-                final String myId = this.settings.getSlingId();
-                for(final String id : opts.runOn ) {
-                    if ( myId.equals(id) ) {
-                        schedule = true;
-                        break;
-                    }
-                }
-                opts.runOn = null;
-            }
-            if ( !schedule ) {
-                this.logger.warn("Not scheduling job {} with name {} - not in required Sling ID set", job, name);
-                return;
-            }
         }
 
         final Trigger trigger = opts.trigger.withIdentity(name).build();
