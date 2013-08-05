@@ -77,6 +77,7 @@
                         <phase>process-test-resources</phase>
                             <configuration>
                                 <target>
+                                    <mkdir dir="${project.build.testOutputDirectory}" /> <!-- SLING-2804 -->
                                     <fixcrlf srcdir="${project.build.testOutputDirectory}" />
                                 </target>
                             </configuration>
