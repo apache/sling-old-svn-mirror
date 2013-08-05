@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** A Resource that wraps a Bundle entry */
-public class BundleResource extends AbstractResource implements Resource {
+public class BundleResource extends AbstractResource {
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
