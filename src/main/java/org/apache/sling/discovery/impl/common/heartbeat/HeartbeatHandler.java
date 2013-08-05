@@ -46,6 +46,8 @@ import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
+import org.apache.sling.launchpad.api.StartupListener;
+import org.apache.sling.launchpad.api.StartupMode;
 import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleException;
 import org.osgi.service.component.ComponentContext;
@@ -60,8 +62,8 @@ import org.slf4j.LoggerFactory;
  * remote TopologyConnectorServlets.
  */
 @Component
-@Service(value = { HeartbeatHandler.class })
-public class HeartbeatHandler implements Runnable {
+@Service(value = { HeartbeatHandler.class, StartupListener.class })
+public class HeartbeatHandler implements Runnable, StartupListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -118,6 +120,26 @@ public class HeartbeatHandler implements Runnable {
     
     /** keep a reference to the component context **/
     private ComponentContext context;
+    
+    /** SLING-2968 : start issuing remote heartbeats only after startup finished **/
+    private boolean startupFinished = false;
+    
+    public void inform(StartupMode mode, boolean finished) {
+    	if (finished) {
+    		startupFinished(mode);
+    	}
+    }
+
+    public void startupFinished(StartupMode mode) {
+    	synchronized(lock) {
+    		startupFinished = true;
+    		issueHeartbeat();
+    	}
+    }
+    
+    public void startupProgress(float ratio) {
+    	// we dont care
+    }
     
     @Activate
     protected void activate(ComponentContext context) {
@@ -236,6 +258,10 @@ public class HeartbeatHandler implements Runnable {
         if (connectorRegistry == null) {
             logger.error("issueRemoteHeartbeats: connectorRegistry is null");
             return;
+        }
+        if (!startupFinished) {
+        	logger.debug("issueRemoteHeartbeats: not issuing remote heartbeat yet, startup not yet finished");
+        	return;
         }
         connectorRegistry.pingOutgoingConnectors();
     }
