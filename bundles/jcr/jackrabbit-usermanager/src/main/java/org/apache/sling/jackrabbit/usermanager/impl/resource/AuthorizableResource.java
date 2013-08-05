@@ -39,7 +39,7 @@ import org.apache.sling.api.resource.ValueMap;
     @Adapter(condition="If the resource is an AuthorizableResource and represents a JCR User", value = User.class),
     @Adapter(condition="If the resource is an AuthorizableResource and represents a JCR Group", value = Group.class)
 })
-public class AuthorizableResource extends AbstractResource implements Resource {
+public class AuthorizableResource extends AbstractResource {
     private Authorizable authorizable = null;
 
     private ResourceResolver resourceResolver = null;
