@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
     @Adapter({File.class, URL.class}),
     @Adapter(condition="If the resource is an FsResource and is a readable file.", value=InputStream.class)
 })
-public class FsResource extends AbstractResource implements Resource {
+public class FsResource extends AbstractResource {
 
     /**
      * The resource type for file system files mapped into the resource tree by
