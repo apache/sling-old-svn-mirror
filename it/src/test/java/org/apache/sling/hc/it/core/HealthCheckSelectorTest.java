@@ -121,6 +121,7 @@ public class HealthCheckSelectorTest {
         testServices.add(new TestHealthCheck("bar"));
         testServices.add(new TestHealthCheck("foo", "bar"));
         testServices.add(new TestHealthCheck("other", "thing"));
+        testServices.add(new TestHealthCheck());
     }
     
     @After
@@ -151,49 +152,49 @@ public class HealthCheckSelectorTest {
     @Test
     public void testAllServices() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck();
-        assertServices(s, true, true, true, true);
+        assertServices(s, true, true, true, true, true);
     }
     
     @Test
     public void testFooTag() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("foo");
-        assertServices(s, true, false, true, false);
+        assertServices(s, true, false, true, false, false);
     }
     
     @Test
     public void testBarTag() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("bar");
-        assertServices(s, false, true, true, false);
+        assertServices(s, false, true, true, false, false);
     }
     
     @Test
     public void testFooAndBar() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("foo", "bar");
-        assertServices(s, false, false, true, false);
+        assertServices(s, false, false, true, false, false);
     }
     
     @Test
     public void testFooMinusBar() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("foo", "-bar");
-        assertServices(s, true, false, false, false);
+        assertServices(s, true, false, false, false, false);
     }
     
     @Test
     public void testOther() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("other");
-        assertServices(s, false, false, false, true);
+        assertServices(s, false, false, false, true, false);
     }
     
     @Test
     public void testMinusOther() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("-other");
-        assertServices(s, true, true, true, false);
+        assertServices(s, true, true, true, false, true);
     }
     
     @Test
     public void testMinusOtherFoo() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("-other", "-foo");
-        assertServices(s, false, true, false, false);
+        assertServices(s, false, true, false, false, true);
     }
     
     @Test
