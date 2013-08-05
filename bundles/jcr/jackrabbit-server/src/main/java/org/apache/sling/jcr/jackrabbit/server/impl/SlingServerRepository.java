@@ -286,17 +286,26 @@ public class SlingServerRepository extends AbstractSlingRepository
     }
 
     /**
-     * Returns the Jackrabbit {@code RepositoryManager} interface implemented by
-     * the Jackrabbit Repository in addition to the {@code SlingRepository} and
-     * {@code Repository} interfaces implemented by the base class.
+     * Overrides the registerService method of <code>AbstractSlingRepository</code>, in order to register
+     * <code>org.apache.jackrabbit.api.management.RepositoryManager</code> Service using the
+     * component properties as service registration properties.
      *
-     * @since bundle version 2.2.0 replacing the previously overwriting of the
-     *        now final {@code AbstractSlingRepository.registerService} method.
+     * @return The OSGi <code>ServiceRegistration</code> object representing
+     *         the registered service.
+     *
+     * @see org.apache.sling.jcr.base.AbstractSlingRepository#registerService()
      */
-    protected String[] getServiceRegistrationInterfaces() {
-        return new String[] {
-                SlingRepository.class.getName(), Repository.class.getName(), RepositoryManager.class.getName()
+    @Override
+    protected ServiceRegistration registerService() {
+
+        @SuppressWarnings("unchecked")
+        Dictionary<String, Object> props = getComponentContext().getProperties();
+
+        String[] interfaces = new String[] {
+            SlingRepository.class.getName(), Repository.class.getName(), RepositoryManager.class.getName()
         };
+
+        return getComponentContext().getBundleContext().registerService(interfaces, this, props);
     }
 
     //---------- Helper -------------------------------------------------------
