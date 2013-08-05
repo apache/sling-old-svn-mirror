@@ -44,8 +44,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
 
@@ -72,6 +74,12 @@ public class MockedResourceResolverImplTest {
 
     @Mock
     private BundleContext bundleContext;
+
+    @Mock
+    private Bundle usingBundle;
+
+    @Mock
+    private BundleContext usingBundleContext;
 
     private Map<String, Object> services = new HashMap<String, Object>();
 
@@ -122,15 +130,15 @@ public class MockedResourceResolverImplTest {
         activator.eventAdmin = eventAdmin;
 
         activator.bindResourceProvider(resourceProvider,
-            buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.DummyTestProvider", 
-                10L, 
+            buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.DummyTestProvider",
+                10L,
                 new String[] { "/single" }));
-        
+
         // setup mapping resources at /etc/map to exercise vanity etc.
         // hmm, can't provide the resolver since its not up and ready.
         // mapping almost certainly work properly until this can be setup correctly.
         Resource etcMapResource = buildMappingResource("/etc/map", mappingResourceProvider, null);
-        
+
         activator.bindResourceProvider(mappingResourceProvider,
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.MapProvider",
                 11L,
@@ -148,7 +156,7 @@ public class MockedResourceResolverImplTest {
         Mockito.when(
             resourceProviderFactory.getAdministrativeResourceProvider(Mockito.anyMap())).thenReturn(
             factoryAdministrativeResourceProvider);
-        
+
         activator.bindResourceProviderFactory(resourceProviderFactory,
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.DummyTestProviderFactory",
                 12L,
@@ -161,6 +169,10 @@ public class MockedResourceResolverImplTest {
 
         // activate the components.
         activator.activate(componentContext);
+
+        // configure using Bundle
+        Mockito.when(usingBundle.getBundleContext()).thenReturn(usingBundleContext);
+        Mockito.when(usingBundleContext.getBundle()).thenReturn(usingBundle);
 
         // extract any services that were registered into a map.
         ArgumentCaptor<String> classesCaptor = ArgumentCaptor.forClass(String.class);
@@ -182,24 +194,27 @@ public class MockedResourceResolverImplTest {
         }
         // verify that a ResourceResolverFactoryImpl was created and registered.
         Assert.assertNotNull(services.get(ResourceResolverFactory.class.getName()));
-        ResourceResolverFactory rrf = (ResourceResolverFactory) services.get(ResourceResolverFactory.class.getName());
+        Object rrf = services.get(ResourceResolverFactory.class.getName());
+        if (rrf instanceof ServiceFactory) {
+            rrf = ((ServiceFactory) rrf).getService(usingBundle, null);
+        }
         Assert.assertTrue(rrf instanceof ResourceResolverFactoryImpl);
         resourceResolverFactory = (ResourceResolverFactoryImpl) rrf;
     }
-    
+
     private Resource buildMappingResource(String path,
             ResourceProvider provider, ResourceResolver resourceResolver) {
         List<Resource> localHostAnyList = new ArrayList<Resource>();
         localHostAnyList.add(buildResource(path+"/http/example.com.80/cgi-bin", EMPTY_RESOURCE_LIST, resourceResolver, provider, "sling:internalRedirect", "/scripts" ));
         localHostAnyList.add(buildResource(path+"/http/example.com.80/gateway", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "http://gbiv.com"));
         localHostAnyList.add(buildResource(path+"/http/example.com.80/stories", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "/anecdotes/$1"));
-        
+
         List<Resource> mappingChildren = new ArrayList<Resource>();
         mappingChildren.add(buildResource(path+"/http/example.com.80", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:redirect", "http://www.example.com/"));
         mappingChildren.add(buildResource(path+"/http/www.example.com.80", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:internalRedirect", "/example"));
         mappingChildren.add(buildResource(path+"/http/any_example.com.80", EMPTY_RESOURCE_LIST, resourceResolver, provider,"sling:match", ".+\\.example\\.com\\.80", "sling:redirect", "http://www.example.com/"));
         mappingChildren.add(buildResource(path+"/http/localhost_any", localHostAnyList, resourceResolver, provider,"sling:match", "localhost\\.\\d*", "sling:internalRedirect", "/content"));
-        
+
         Resource etcMapResource = buildResource(path+"/http", mappingChildren);
         Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(path))).thenReturn(etcMapResource);
         return etcMapResource;
@@ -265,10 +280,10 @@ public class MockedResourceResolverImplTest {
             Mockito.when(provider.listChildren(resource)).thenReturn(children.iterator());
             if ( resourceResolver != null) {
                 Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.eq(fullpath))).thenReturn(resource);
-                Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);                
+                Mockito.when(provider.getResource(Mockito.eq(resourceResolver), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);
             } else {
                 Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.eq(fullpath))).thenReturn(resource);
-                Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);                
+                Mockito.when(provider.getResource(Mockito.any(ResourceResolver.class), Mockito.any(HttpServletRequest.class), Mockito.eq(fullpath))).thenReturn(resource);
             }
         }
         if ( properties != null ) {
@@ -279,10 +294,10 @@ public class MockedResourceResolverImplTest {
             }
             Mockito.when(resource.adaptTo(Mockito.eq(ValueMap.class))).thenReturn(vm);
         }
-        
+
         return resource;
     }
-        
+
 
     /**
      * extract the name from a path.
@@ -408,7 +423,7 @@ public class MockedResourceResolverImplTest {
         Resource resource = resourceResolver.getResource("/single/test.with/extra.dots/inthepath");
         Assert.assertEquals(singleResource, resource);
     }
-    
+
 
     /**
      * Test search paths
@@ -439,7 +454,7 @@ public class MockedResourceResolverImplTest {
         Resource resource = resourceResolver.getResource("/factory/test");
         Assert.assertEquals(factoryResource, resource);
     }
-    
+
 
     /**
      * Basic test of mapping functionality, at the moment needs more

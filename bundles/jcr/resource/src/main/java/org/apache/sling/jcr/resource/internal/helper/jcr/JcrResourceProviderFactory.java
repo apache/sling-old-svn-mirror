@@ -47,8 +47,13 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.JcrResourceListener;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>JcrResourceProviderFactory</code> creates
@@ -65,20 +70,39 @@ import org.osgi.service.component.ComponentContext;
 })
 public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final String REPOSITORY_REFERNENCE_NAME = "repository";
+
     /** The dynamic class loader */
     @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
     private DynamicClassLoaderManager dynamicClassLoaderManager;
 
-    @Reference
+    @Reference(name = REPOSITORY_REFERNENCE_NAME, referenceInterface = SlingRepository.class)
+    private ServiceReference repositoryReference;
+
     private SlingRepository repository;
 
     /** The jcr resource listner. */
     private JcrResourceListener listener;
 
     @Activate
-    protected void activate(final ComponentContext context)
-    throws RepositoryException {
+    protected void activate(final ComponentContext context) throws RepositoryException {
+
+        SlingRepository repository = (SlingRepository) context.locateService(REPOSITORY_REFERNENCE_NAME,
+            this.repositoryReference);
+        if (repository == null) {
+            // concurrent unregistration of SlingRepository service
+            // don't care, this component is going to be deactivated
+            // so we just stop working
+            log.warn("activate: Activation failed because SlingRepository may have been unregistered concurrently");
+            return;
+        }
+
         final String root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.ROOTS), "/");
+
+        this.repository = repository;
         this.listener = new JcrResourceListener(root, null, this.repository, context.getBundleContext());
     }
 
@@ -97,6 +121,20 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             return dclm.getDynamicClassLoader();
         }
         return null;
+    }
+
+    @SuppressWarnings("unused")
+    private void bindRepository(final ServiceReference ref) {
+        this.repositoryReference = ref;
+        this.repository = null; // make sure ...
+    }
+
+    @SuppressWarnings("unused")
+    private void unbindRepository(final ServiceReference ref) {
+        if (this.repositoryReference == ref) {
+            this.repositoryReference = null;
+            this.repository = null; // make sure ...
+        }
     }
 
     /**
@@ -126,12 +164,14 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         // by default any session used by the resource resolver returned is
         // closed when the resource resolver is closed
         boolean logoutSession = true;
+        RepositoryHolder holder = new RepositoryHolder();
 
         // derive the session to be used
         Session session;
         try {
             final String workspace = getWorkspace(authenticationInfo);
             if (isAdmin) {
+
                 // requested admin session to any workspace (or default)
                 session = repository.loginAdministrative(workspace);
 
@@ -139,11 +179,49 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
                 session = getSession(authenticationInfo);
                 if (session == null) {
-                    // requested non-admin session to any workspace (or default)
-                    final Credentials credentials = getCredentials(authenticationInfo);
-                    session = repository.login(credentials, workspace);
+
+                    final Object serviceBundleObject = authenticationInfo.get(SERVICE_BUNDLE);
+                    if (serviceBundleObject instanceof Bundle) {
+
+                        final String subServiceName = (authenticationInfo.get(ResourceResolverFactory.SUBSERVICE) instanceof String)
+                                ? (String) authenticationInfo.get(ResourceResolverFactory.SUBSERVICE)
+                                : null;
+
+                                final BundleContext bc = ((Bundle) serviceBundleObject).getBundleContext();
+
+                        final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
+                        if (repo == null) {
+                            log.warn(
+                                "getResourceProviderInternal: Cannot login service because cannot get SlingRepository on behalf of bundle {} ({})",
+                                bc.getBundle().getSymbolicName(), bc.getBundle().getBundleId());
+                            throw new LoginException(); // TODO: correct ??
+                        }
+
+                        try {
+                            session = repo.loginService(subServiceName, workspace);
+                            holder.setRepositoryReference(bc, repositoryReference);
+                            holder.setSession(session);
+                        } finally {
+                            // unget the repository if the service cannot
+                            // login to it, otherwise the repository service
+                            // is let go off when the resource resolver is
+                            // closed and the session logged out
+                            if (session == null) {
+                                bc.ungetService(repositoryReference);
+                            }
+                        }
+
+                    } else {
+
+                        // requested non-admin session to any workspace (or
+                        // default)
+                        final Credentials credentials = getCredentials(authenticationInfo);
+                        session = repository.login(credentials, workspace);
+
+                    }
 
                 } else if (workspace != null) {
+
                     // session provided by map; but requested a different
                     // workspace impersonate can only change the user not switch
                     // the workspace as a workaround we login to the requested
@@ -166,6 +244,7 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                     }
 
                 } else {
+
                     // session provided; no special workspace; just make sure
                     // the session is not logged out when the resolver is closed
                     logoutSession = false;
@@ -177,7 +256,11 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
 
         session = handleImpersonation(session, authenticationInfo, logoutSession);
 
-        return new JcrResourceProvider(session, this.getDynamicClassLoader(), logoutSession);
+        if (logoutSession) {
+            holder.setSession(session);
+        }
+
+        return new JcrResourceProvider(session, this.getDynamicClassLoader(), holder);
     }
 
     /**

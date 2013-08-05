@@ -18,6 +18,10 @@
  */
 package org.apache.sling.jcr.base;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Dictionary;
 
 import javax.jcr.Credentials;
@@ -35,18 +39,46 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.util.RepositoryAccessor;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
+import org.slf4j.LoggerFactory;
 
 /**
- * The <code>AbstractSlingRepository</code> is an abstract implementation of
- * the {@link SlingRepository} interface which provides default support for
- * attached repositories as well as ensuring live repository connection,
- * reconnecting if needed. Implementations of the <code>SlingRepository</code>
- * interface may wish to extend this class to benefit from a default
- * implementation.
- *
+ * The <code>AbstractSlingRepository</code> is an abstract implementation of the
+ * {@link SlingRepository} interface which provides default support for attached
+ * repositories as well as ensuring live repository connection, reconnecting if
+ * needed. Implementations of the <code>SlingRepository</code> interface may
+ * wish to extend this class to benefit from a default implementation.
+ * <p>
+ * As of version 2.2 (bundle version 2.2.0) the registration of repository
+ * services based on this abstract base class works differently. To be able to
+ * know the calling bundle to implement the
+ * {@link #loginService(String, String)} method the service is registered as a
+ * service factory. Yet this component is registered as a non-service component
+ * with Declarative Services handling its registration itself so the the
+ * {@code ServiceFactory} cannot simply create instances of this class. The
+ * solution is for the service factory to create a proxy to the actual component
+ * object. All method calls are just routed through with the exception of the
+ * {@link #loginService(String, String)} method which is routed to a new
+ * internal method taking the calling bundle as an additional argument.
+ * <p>
+ * The changes to support this new registration mechanism are as follows:
+ * <ul>
+ * <li>The {@link #registerService()} method is now final.</li>
+ * <li>The {@link #getServiceRegistrationInterfaces()} and
+ * {@link #getServiceRegistrationProperties()} methods have been added and can
+ * be overwritten by implementations of this class. The
+ * {@link #registerService()} method calls these new methods to get the
+ * interfaces and properties for the service registration.</li>
+ * </ul>
+ * Implementations of this class overwriting the {@link #registerService()}
+ * method must replace this overwritten method with overwriting the new
+ * {@link #getServiceRegistrationInterfaces()} and/or
+ * {@link #getServiceRegistrationProperties()} methods.
  */
 @Component(componentAbstract=true)
 public abstract class AbstractSlingRepository
@@ -60,6 +92,10 @@ public abstract class AbstractSlingRepository
     public static final String DEFAULT_ADMIN_USER = "admin";
 
     public static final String DEFAULT_ADMIN_PASS = "admin";
+
+    // For backwards compatibility loginAdministrative is still enabled
+    // In future releases, this default may change to false.
+    public static final boolean DEFAULT_LOGIN_ADMIN_ENABLED = true;
 
     @Property
     public static final String PROPERTY_DEFAULT_WORKSPACE = "defaultWorkspace";
@@ -75,6 +111,9 @@ public abstract class AbstractSlingRepository
 
     @Property(value=DEFAULT_ADMIN_PASS)
     public static final String PROPERTY_ADMIN_PASS = "admin.password";
+
+    @Property(boolValue = DEFAULT_LOGIN_ADMIN_ENABLED)
+    public static final String PROPERTY_LOGIN_ADMIN_ENABLED = "admin.login.enabled";
 
     /**
      * The default value for the number of seconds to wait between two
@@ -100,6 +139,9 @@ public abstract class AbstractSlingRepository
     @Reference
     private LogService log;
 
+    @Reference()
+    private ServiceUserMapper serviceUserMapper;
+
     private ComponentContext componentContext;
 
     private Repository repository;
@@ -115,6 +157,8 @@ public abstract class AbstractSlingRepository
     private String adminUser;
 
     private char[] adminPass;
+
+    private boolean disableLoginAdministrative;
 
     // the poll interval used while the repository is not active
     private long pollTimeInActiveSeconds;
@@ -165,10 +209,32 @@ public abstract class AbstractSlingRepository
         return this.login(null, null);
     }
 
-    public Session loginAdministrative(String workspace)
-            throws RepositoryException {
-        Credentials sc = getAdministrativeCredentials(this.adminUser);
-        return this.login(sc, workspace);
+    public final Session loginAdministrative(String workspace) throws RepositoryException {
+        if (this.disableLoginAdministrative) {
+            log(LogService.LOG_ERROR, "SlingRepository.loginAdministrative is disabled. Please use SlingRepository.loginService.");
+            throw new LoginException();
+        }
+
+        log(LogService.LOG_WARNING,
+            "SlingRepository.loginAdministrative is deprecated. Please use SlingRepository.loginService.");
+        return loginAdministrativeInternal(workspace);
+    }
+
+    /**
+     * This method always throws {@code LoginException} because it does
+     * not directly have the calling bundle at its disposition to decide
+     * on the required service name.
+     * <p>
+     * This method is final and cannot be overwritten by extensions. See the
+     * class comments for full details on how this works.
+     *
+     * @since 2.2 (bundle version 2.2.0)
+     */
+    public final Session loginService(String subServiceName, String workspace) throws LoginException,
+            RepositoryException {
+        log(LogService.LOG_ERROR,
+            "loginService: Cannot get using Bundle because this SlingRepository service is not a ServiceFactory");
+        throw new LoginException();
     }
 
     public Session login(Credentials credentials) throws LoginException,
@@ -233,6 +299,55 @@ public abstract class AbstractSlingRepository
             // repository has already been shut down ...
             throw new RepositoryException(re.getMessage(), re);
         }
+    }
+
+    /**
+     * Actual implementation of the {@link #loginService(String, String)} method
+     * taking into account the bundle calling this method.
+     * <p>
+     * This method is final and cannot be overwritten by extensions. See the
+     * class comments for full details on how this works.
+     *
+     * @param usingBundle The bundle requesting access
+     * @param subServiceName Subservice name (may be {@code null})
+     * @param workspace The workspace to access
+     * @return The session authenticated with the service user
+     * @throws LoginException If authentication fails or if no user is defined
+     *             for the requesting service (bundle)
+     * @throws RepositoryException If a general error occurrs creating the
+     *             session
+     *
+     * @since 2.2 (bundle version 2.2.0)
+     */
+    final Session loginService(final Bundle usingBundle, final String subServiceName, final String workspace)
+            throws LoginException, RepositoryException {
+        final String userName = this.serviceUserMapper.getServiceUserID(usingBundle, subServiceName);
+        final SimpleCredentials creds = new SimpleCredentials(userName, new char[0]);
+
+        Session admin = null;
+        try {
+            admin = this.loginAdministrativeInternal(workspace);
+            return admin.impersonate(creds);
+        } finally {
+            if (admin != null) {
+                admin.logout();
+            }
+        }
+    }
+
+    /**
+     * Actual (unprotected) implementation of administrative login.
+     * <p>
+     * This methods is internally used to administratively login.
+     *
+     * @param workspace The workspace to login to (or {@code null} to use the
+     *            {@link #getDefaultWorkspace() default workspace}.
+     * @return The administrative session
+     * @throws RepositoryException if an error occurrs.
+     */
+    protected Session loginAdministrativeInternal(String workspace) throws RepositoryException {
+        Credentials sc = getAdministrativeCredentials(this.adminUser);
+        return this.login(sc, workspace);
     }
 
     /**
@@ -427,25 +542,69 @@ public abstract class AbstractSlingRepository
     }
 
     /**
-     * Registers this component as an OSGi service with type
-     * <code>javax.jcr.Repository</code> and
-     * <code>org.apache.sling.jcr.api.SlingRepository</code> using the
-     * component properties as service registration properties.
+     * Registers this component as an OSGi service with the types provided by
+     * the {@link #getServiceRegistrationInterfaces()} method and properties
+     * provided by the {@link #getServiceRegistrationProperties()} method.
      * <p>
-     * This method may be overwritten to register the component with different
-     * types.
+     * As of version 2.2 (bundle version 2.2.0) this method is final and cannot
+     * be overwritten because the mechanism of service registration using a
+     * service factory is required to fully implement the
+     * {@link #loginService(String, String)} method. See the class comments for
+     * full details on how this works.
      *
-     * @return The OSGi <code>ServiceRegistration</code> object representing
-     *         the registered service.
+     * @return The OSGi <code>ServiceRegistration</code> object representing the
+     *         registered service.
      */
-    protected ServiceRegistration registerService() {
-        @SuppressWarnings("unchecked")
-        Dictionary<String, Object> props = componentContext.getProperties();
-        String[] interfaces = new String[] { SlingRepository.class.getName(),
-            Repository.class.getName() };
+    protected final ServiceRegistration registerService() {
+        final Dictionary<String, Object> props = getServiceRegistrationProperties();
+        final String[] interfaces = getServiceRegistrationInterfaces();
 
-        return componentContext.getBundleContext().registerService(interfaces,
-            this, props);
+        return componentContext.getBundleContext().registerService(interfaces, new ServiceFactory() {
+            public Object getService(Bundle bundle, ServiceRegistration registration) {
+                return SlingRepositoryProxyHandler.createProxy(interfaces, AbstractSlingRepository.this, bundle);
+            }
+
+            public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
+                // nothing to do (GC does the work for us)
+            }
+        }, props);
+    }
+
+    /**
+     * Return the service registration properties to be used to register the
+     * repository service in {@link #registerService()}.
+     * <p>
+     * This method may be overwritten to return additional service registration
+     * properties. But it is strongly recommended to always include the
+     * properties returned from this method.
+     *
+     * @return The service registration properties to be used to register the
+     *         repository service in {@link #registerService()}
+     *
+     * @since 2.2 (bundle version 2.2.0)
+     */
+    @SuppressWarnings("unchecked")
+    protected Dictionary<String, Object> getServiceRegistrationProperties() {
+        return componentContext.getProperties();
+    }
+
+    /**
+     * Returns the service types to be used to register the repository service
+     * in {@link #registerService()}. All interfaces returned must be accessible
+     * to the class loader of the class of this instance.
+     * <p>
+     * This method may be overwritten to return additional types but the types
+     * returned from this base implementation must always be included.
+     *
+     * @return The service types to be used to register the repository service
+     *         in {@link #registerService()}
+     *
+     * @since 2.2 (bundle version 2.2.0)
+     */
+    protected String[] getServiceRegistrationInterfaces() {
+        return new String[] {
+            SlingRepository.class.getName(), Repository.class.getName()
+        };
     }
 
     /**
@@ -496,7 +655,7 @@ public abstract class AbstractSlingRepository
 
         if(pingRepository(repository)) {
             try {
-                final Session s = loginAdministrative(getDefaultWorkspace());
+                final Session s = loginAdministrativeInternal(getDefaultWorkspace());
                 s.logout();
                 result = true;
             } catch(RepositoryException re) {
@@ -571,6 +730,9 @@ public abstract class AbstractSlingRepository
             DEFAULT_ADMIN_USER);
         this.adminPass = this.getProperty(properties, PROPERTY_ADMIN_PASS,
             DEFAULT_ADMIN_PASS).toCharArray();
+
+        this.disableLoginAdministrative = !this.getProperty(properties, PROPERTY_LOGIN_ADMIN_ENABLED,
+            DEFAULT_LOGIN_ADMIN_ENABLED);
 
         setPollTimeActive(getIntProperty(properties, PROPERTY_POLL_ACTIVE));
         setPollTimeInActive(getIntProperty(properties, PROPERTY_POLL_INACTIVE));
@@ -650,6 +812,17 @@ public abstract class AbstractSlingRepository
         }
 
         return -1;
+    }
+
+    private boolean getProperty(Dictionary<String, Object> properties, String name, boolean defaultValue) {
+        Object prop = properties.get(name);
+        if (prop instanceof Boolean) {
+            return ((Boolean) prop).booleanValue();
+        } else if (prop instanceof String) {
+            return Boolean.valueOf((String) prop);
+        }
+
+        return defaultValue;
     }
 
     private boolean createWorkspace(String workspace) {
@@ -920,4 +1093,79 @@ public abstract class AbstractSlingRepository
         }
     }
 
+    /**
+     * The <code>SlingRepositoryProxyHandler</code> class implements a proxy for all
+     * service interfaces under which the {@link AbstractSlingRepository}
+     * implementation is registered.
+     * <p>
+     * All calls a directly handed through to the object except for the
+     * {@code loginService} call which is routed through
+     * {@code AbstractSlingRepository.loginService(Bundle, String, String)} method
+     * to influence logging in by the calling bundle.
+     *
+     * @since 2.2 (bundle version 2.2.0)
+     */
+    private static class SlingRepositoryProxyHandler implements InvocationHandler {
+
+        // The name of the method to re-route
+        private static final String LOGIN_SERVICE_NAME = "loginService";
+
+        // The delegatee object to which all calls are routed
+        private final AbstractSlingRepository delegatee;
+
+        // The bundle using this proxy service instance
+        private final Bundle usingBundle;
+
+        /**
+         * Creates a new proxy instance for the given {@code delegatee} object. The
+         * proxy is handled by a new instance of this
+         * {@code SlingRepositoryProxyHandler} handler.
+         *
+         * @param interfaceNames The list of interfaces to implement and expose in
+         *            the proxy
+         * @param delegatee The object to which to route all method calls
+         * @param usingBundle The bundle making use of the proxy
+         * @return The proxy to be used by client code or {@code null} if not all
+         *         service interfaces can be loaded by the class loader of the
+         *         {@code delegatee} object.
+         */
+        static Object createProxy(final String[] interfaceNames, final AbstractSlingRepository delegatee,
+                final Bundle usingBundle) {
+
+            // get the interface classes to create the proxy
+            final ClassLoader cl = delegatee.getClass().getClassLoader();
+            final Class<?>[] interfaces = new Class<?>[interfaceNames.length];
+            for (int i = 0; i < interfaces.length; i++) {
+                try {
+                    interfaces[i] = cl.loadClass(interfaceNames[i]);
+                } catch (ClassNotFoundException e) {
+                    LoggerFactory.getLogger(SlingRepositoryProxyHandler.class).error(
+                        "createProxy: Cannot load interface class " + interfaceNames[i], e);
+                    return null;
+                }
+            }
+
+            // create the proxy
+            final InvocationHandler handler = new SlingRepositoryProxyHandler(delegatee, usingBundle);
+            return Proxy.newProxyInstance(cl, interfaces, handler);
+        }
+
+        private SlingRepositoryProxyHandler(final AbstractSlingRepository delegatee, final Bundle usingBundle) {
+            this.delegatee = delegatee;
+            this.usingBundle = usingBundle;
+        }
+
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (SlingRepositoryProxyHandler.LOGIN_SERVICE_NAME.equals(method.getName()) && args != null && args.length == 2) {
+                return this.delegatee.loginService(this.usingBundle, (String) args[0], (String) args[1]);
+            }
+
+            // otherwise forward to the AbstractSlingRepository implementation
+            try {
+                return method.invoke(this.delegatee, args);
+            } catch (InvocationTargetException ite) {
+                throw ite.getTargetException();
+            }
+        }
+    }
 }

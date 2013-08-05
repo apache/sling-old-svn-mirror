@@ -55,10 +55,6 @@
                         <Bundle-Category>
                             sling,jcr,jackrabbit
                         </Bundle-Category>
-                        <Export-Package>
-                            <!-- Export provider API selectively -->
-                            org.apache.sling.jcr.api;version=2.1.0
-                        </Export-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -69,6 +65,11 @@
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

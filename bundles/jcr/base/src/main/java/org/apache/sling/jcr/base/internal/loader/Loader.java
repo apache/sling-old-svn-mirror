@@ -333,6 +333,7 @@ public class Loader implements NamespaceMapper, BundleListener {
     }
 
     private Session getSession() throws RepositoryException {
+        // TODO: Should really use loginService !!
         return this.slingRepository.loginAdministrative(null);
     }
 

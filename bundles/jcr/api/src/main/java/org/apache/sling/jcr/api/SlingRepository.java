@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.api;
 
+import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -39,7 +40,6 @@ import javax.jcr.Session;
  * implementations of the {@link NamespaceMapper} interface <b>before</b>
  * returning <b>any</b> {@link Session} to callers. This includes the methods
  * defined in the {@link Repository} interface.
- *
  */
 public interface SlingRepository extends Repository {
 
@@ -51,19 +51,55 @@ public interface SlingRepository extends Repository {
     String getDefaultWorkspace();
 
     /**
-     * Returns a session to the default workspace which has administrative
-     * powers.
+     * Returns a session to the given workspace which has administrative powers.
      * <p>
      * <b><i>NOTE: This method is intended for use by infrastructure bundles to
      * access the repository and provide general services. This method MUST not
      * be used to handle client requests of whatever kinds. To handle client
-     * requests a regular authenticated session retrieved
-     * through {@link #login(javax.jcr.Credentials, String)} or
+     * requests a regular authenticated session retrieved through
+     * {@link #login(javax.jcr.Credentials, String)} or
      * {@link Session#impersonate(javax.jcr.Credentials)} must be used.</i></b>
+     * <p>
+     * This method is deprecated. Services running in the Sling system should
+     * use the {@link #loginService(String serviceInfo, String workspace)}
+     * method instead. Implementations of this method must throw
+     * {@code javax.jcr.LoginException} if they don't support it.
      *
      * @param workspace The name of the workspace to which to get an
      *            administrative session. If <code>null</code> the
      *            {@link #getDefaultWorkspace()} default workspace is assumed.
+     * @return The administrative Session
+     * @throws LoginException If this method is not supported or is disabled by
+     *             the implementation.
+     * @throws RepositoryException If an error occurrs creating the
+     *             administrative session
+     * @deprecated as of 2.2 (bundle version 2.2.0) because of inherent security
+     *             issues. Services requiring specific permissions should use
+     *             the {@link #loginService(String, String)} instead.
      */
-    Session loginAdministrative(String workspace) throws RepositoryException;
+    @Deprecated
+    Session loginAdministrative(String workspace) throws LoginException, RepositoryException;
+
+    /**
+     * Returns a session to the given workspace with privileges assigned to the
+     * service provided by the calling bundle. The {@code subServiceName}
+     * argument can be used to further specialize the service account to be
+     * used.
+     *
+     * @param subServiceName Optional Subservice Name to specialize account
+     *            selection for the service. This may be {@code null}.
+     * @param workspace The name of the workspace to which to get an
+     *            administrative session. If <code>null</code> the
+     *            {@link #getDefaultWorkspace()} default workspace is assumed.
+     * @return A Session with appropriate permissions to execute the service.
+     * @throws LoginException If there is no service account defined for the
+     *             calling bundle or the defined service account does not exist.
+     * @throws RepositoryException if an error occurrs.
+     * @since 2.2 (bundle version 2.2.0) to replace
+     *        {@link #loginAdministrative(String)}
+     * @see <a
+     *      href="http://sling.apache.org/documentation/the-sling-engine/service-authentication.html">Service
+     *      Authentication</a>
+     */
+    Session loginService(String subServiceName, String workspace) throws LoginException, RepositoryException;
 }

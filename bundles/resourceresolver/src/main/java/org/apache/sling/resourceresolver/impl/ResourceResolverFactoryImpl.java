@@ -18,10 +18,12 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.security.ResourceAccessSecurity;
@@ -32,6 +34,8 @@ import org.apache.sling.resourceresolver.impl.mapping.MapConfigurationProvider;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
@@ -57,26 +61,72 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
 
     /** The activator */
     private final ResourceResolverFactoryActivator activator;
-    
+
     private ServiceTracker resourceAccessSecurityTracker;
 
-    public ResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
+    private final ServiceUserMapper serviceUserMapper;
+
+    private final Bundle usingBundle;
+
+    public ResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator, final Bundle usingBundle,
+            final ServiceUserMapper serviceUserMapper) {
         this.activator = activator;
+        this.serviceUserMapper = serviceUserMapper;
+        this.usingBundle = usingBundle;
     }
 
     // ---------- Resource Resolver Factory ------------------------------------
 
-    /**
-     * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
-     */
+    public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
+
+        // clean authenticaiton from password and get service info
+        final String subServiceName;
+        if (authenticationInfo != null) {
+            authenticationInfo.remove(PASSWORD);
+            final Object info = authenticationInfo.get(SUBSERVICE);
+            subServiceName = (info instanceof String) ? (String) info : null;
+        } else {
+            authenticationInfo = new HashMap<String, Object>();
+            subServiceName = null;
+        }
+
+        // Ensure a mapped user name: If no user is defined for a bundle
+        // acting as a service, the user may be null. We can decide whether
+        // this should yield guest access or no access at all. For now
+        // no access is granted if there is no service user defined for
+        // the bundle.
+        final String userName = this.serviceUserMapper.getServiceUserID(this.usingBundle, subServiceName);
+        if (userName == null) {
+            throw new LoginException("Cannot derive user name for service "
+                + this.serviceUserMapper.getServiceID(this.usingBundle, subServiceName));
+        }
+
+        // ensure proper user name and service bundle
+        authenticationInfo.put(ResourceResolverFactory.USER, userName);
+        authenticationInfo.put(ResourceProviderFactory.SERVICE_BUNDLE, this.usingBundle);
+
+        return getResourceResolverInternal(authenticationInfo, false);
+    }
+
     public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
+
+        // make sure there is no leaking of service bundle and info props
+        if (authenticationInfo != null) {
+            authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
+            authenticationInfo.remove(SUBSERVICE);
+        }
+
         return getResourceResolverInternal(authenticationInfo, true);
     }
 
-    /**
-     * @see org.apache.sling.api.resource.ResourceResolverFactory#getResourceResolver(java.util.Map)
-     */
     public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
+
+        // make sure there is no leaking of service bundle and info props
+        if (authenticationInfo != null) {
+            authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
+            authenticationInfo.remove(SUBSERVICE);
+        }
+
         return getResourceResolverInternal(authenticationInfo, false);
     }
 
@@ -121,7 +171,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         } catch (final Exception e) {
             logger.error("activate: Cannot access repository, failed setting up Mapping Support", e);
         }
-        
+
         // create and open service tracker for ResourceAccessSecurity
         resourceAccessSecurityTracker = new ServiceTracker(bundleContext, ResourceAccessSecurity.class.getName(), null);
         resourceAccessSecurityTracker.open();
@@ -175,11 +225,11 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
     public int getDefaultVanityPathRedirectStatus() {
         return this.activator.getDefaultVanityPathRedirectStatus();
     }
-    
+
     /**
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */
-    
+
     public ServiceTracker getResourceAccessSecurityTracker () {
         return resourceAccessSecurityTracker;
     }

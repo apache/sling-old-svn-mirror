@@ -17,8 +17,10 @@
  * under the License.
  */
 
-@Version("2.4")
-package org.apache.sling.api.resource;
+@Version("1.0")
+@Export(optional = "provide:=true")
+package org.apache.sling.serviceusermapping;
 
+import aQute.bnd.annotation.Export;
 import aQute.bnd.annotation.Version;
 

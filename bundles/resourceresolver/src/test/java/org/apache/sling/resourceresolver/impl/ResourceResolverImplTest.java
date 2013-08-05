@@ -53,7 +53,7 @@ public class ResourceResolverImplTest {
     private ResourceResolverFactoryImpl resFac;
 
     @Before public void setup() {
-        resFac = new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
+        resFac = new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), /* TODO: using Bundle */ null, null);
         resResolver = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null, null));
     }
 
@@ -345,7 +345,7 @@ public class ResourceResolverImplTest {
         // the resource resolver
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
         final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
-                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
+                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), /* TODO: using Bundle */ null, null) {
 
                     @Override
                     public ResourceResolver getAdministrativeResourceResolver(
@@ -381,7 +381,7 @@ public class ResourceResolverImplTest {
 
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
         final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
-                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
+                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), /* TODO: using Bundle */ null, null) {
 
                     @Override
                     public ResourceResolver getAdministrativeResourceResolver(
