@@ -24,7 +24,7 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * The <code>ServiceUserMapper</code> service can be used to map a service
- * provided by a bundle to the name of a user account used to access the
+ * provided by a bundle to the ID of a user account used to access the
  * ResourceResolver used by the service to access its data.
  * <p>
  * The goal of this service is to allow services to be implemented accessing the
@@ -36,9 +36,9 @@ import aQute.bnd.annotation.ProviderType;
  * bundle. Other services may be implemented in multiple bundles. In certain
  * cases there may be sub-services requiring different access levels. For
  * example a couple of bundles may implement a "mail" service where each bundle
- * implement implements a part of the service such as the "smtp", "queuing", and
+ * implements a part of the service such as the "smtp", "queuing", and
  * "delivery" sub services. Such sub services are identified with the
- * {@code serviceInfo} parameter on the method calls.
+ * {@code subServiceName} parameter on the method calls.
  * <p>
  * In addition to allowing to phase out the use of
  * {@code ResourceResolver.getAdministrativeResourceResolver} and
@@ -50,6 +50,10 @@ import aQute.bnd.annotation.ProviderType;
  * {@code SlingRepository} services.
  * <p>
  * This service is not intended to be implemented by clients.
+ *
+ * @see <a href=
+ *      "http://sling.apache.org/documentation/the-sling-engine/service-authentication.html"
+ *      >Service Authentication</a>
  */
 @ProviderType
 public interface ServiceUserMapper {
@@ -62,35 +66,43 @@ public interface ServiceUserMapper {
     String BUNDLE_HEADER_SERVICE_NAME = "Sling-Service";
 
     /**
-     * Returns the name of the service represented by the {@code bundle} and the
-     * {@code serviceInfo}.
+     * Returns the ID of the service represented by the given {@code bundle} and
+     * the {@code subServiceName}.
      * <p>
-     * The service name consists of a name derived from the bundle and the
-     * {@code serviceInfo} value if not {@code null} or empty.
+     * The service ID consists of a name derived from the bundle and the
+     * {@code serviceInfo} value if not {@code null} or empty:
+     *
+     * <pre>
+     * serviceID = serviceName [ ":" subServiceName ] .
+     * serviceName = Sling-Service manifest header or bundle symbolic name .
+     * </pre>
+     * <p>
+     * The service name for a bundle is taken from the
+     * {@value #BUNDLE_HEADER_SERVICE_NAME} manifest header of the bundle. If
+     * there is no such header or the value is empty, the bundle's symbolic name
+     * is used.
      *
      * @param bundle The bundle implementing the service request access to
      *            resources.
-     * @param serviceInfo Additional information about the concrete service
-     *            requesting access. This parameter is optional and may be
-     *            an empty string or {@code null}.
-     * @return The name of the service represented by the bundle along with the
+     * @param subServiceName Name of the sub service. This parameter is optional and
+     *            may be an empty string or {@code null}.
+     * @return The ID of the service represented by the bundle along with the
      *         additional service information.
      */
-    String getServiceName(Bundle bundle, String serviceInfo);
+    String getServiceID(Bundle bundle, String subServiceName);
 
     /**
-     * Returns the name of a user to the be used to access the Sling Resource
-     * tree or the JCR Repository.
+     * Returns the ID of a user to access the data store on behalf of the
+     * service.
      *
      * @param bundle The bundle implementing the service request access to
      *            resources.
-     * @param serviceInfo Additional information about the concrete service
-     *            requesting access. This parameter is optional and may be
-     *            an empty string or {@code null}.
-     * @return The name of the user to use to provide access to the resources
-     *         for the service. This may be {@code null} if no particular user
-     *         can be derived for the service identified by the bundle and the
+     * @param subServiceName Name of the sub service. This parameter is optional and
+     *            may be an empty string or {@code null}.
+     * @return The ID of the user to use to provide access to the resources for
+     *         the service. This may be {@code null} if no particular user can
+     *         be derived for the service identified by the bundle and the
      *         optional {@code serviceInfo}.
      */
-    String getUserForService(Bundle bundle, String serviceInfo);
+    String getServiceUserID(Bundle bundle, String subServiceName);
 }

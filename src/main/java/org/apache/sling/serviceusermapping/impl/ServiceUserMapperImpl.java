@@ -44,8 +44,8 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
     @Property(
             label = "Service Mappings",
             description = "Provides mappings from service name to user names. "
-                + "Each entry is of the form 'serviceName [ \":\" serviceInfo ] \"=\" userName' "
-                + "where serviceName and serviceInfo identify the service and userName "
+                + "Each entry is of the form 'serviceName [ \":\" subServiceName ] \"=\" userName' "
+                + "where serviceName and subServiceName identify the service and userName "
                 + "defines the name of the user to provide to the service. Invalid entries are logged and ignored.",
             unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_SERVICE2USER_MAPPING = "user.mapping";
@@ -90,17 +90,17 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
     }
 
-    public String getServiceName(Bundle bundle, String serviceInfo) {
+    public String getServiceID(Bundle bundle, String subServiceName) {
         final String serviceName = getServiceName(bundle);
-        return (serviceInfo == null || serviceInfo.length() == 0) ? serviceName : serviceName + ":" + serviceInfo;
+        return (subServiceName == null || subServiceName.length() == 0) ? serviceName : serviceName + ":" + subServiceName;
     }
 
-    public String getUserForService(Bundle bundle, String serviceInfo) {
+    public String getServiceUserID(Bundle bundle, String subServiceName) {
         final String serviceName = getServiceName(bundle);
 
         // try with serviceInfo first
         for (Mapping mapping : this.serviceUserMappings) {
-            final String user = mapping.map(serviceName, serviceInfo);
+            final String user = mapping.map(serviceName, subServiceName);
             if (user != null) {
                 return user;
             }

@@ -82,7 +82,7 @@ public class ServiceUserMapperImplTest {
     };
 
     @Test
-    public void test_getServiceName() {
+    public void test_getServiceID() {
         @SuppressWarnings("serial")
         Map<String, Object> config = new HashMap<String, Object>() {
             {
@@ -99,16 +99,16 @@ public class ServiceUserMapperImplTest {
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(config);
 
-        TestCase.assertEquals(BUNDLE_SYMBOLIC1, sum.getServiceName(BUNDLE1, null));
-        TestCase.assertEquals(SRV, sum.getServiceName(BUNDLE2, null));
-        TestCase.assertEquals(BUNDLE_SYMBOLIC1, sum.getServiceName(BUNDLE1, ""));
-        TestCase.assertEquals(SRV, sum.getServiceName(BUNDLE2, ""));
-        TestCase.assertEquals(BUNDLE_SYMBOLIC1 + ":" + SUB, sum.getServiceName(BUNDLE1, SUB));
-        TestCase.assertEquals(SRV + ":" + SUB, sum.getServiceName(BUNDLE2, SUB));
+        TestCase.assertEquals(BUNDLE_SYMBOLIC1, sum.getServiceID(BUNDLE1, null));
+        TestCase.assertEquals(SRV, sum.getServiceID(BUNDLE2, null));
+        TestCase.assertEquals(BUNDLE_SYMBOLIC1, sum.getServiceID(BUNDLE1, ""));
+        TestCase.assertEquals(SRV, sum.getServiceID(BUNDLE2, ""));
+        TestCase.assertEquals(BUNDLE_SYMBOLIC1 + ":" + SUB, sum.getServiceID(BUNDLE1, SUB));
+        TestCase.assertEquals(SRV + ":" + SUB, sum.getServiceID(BUNDLE2, SUB));
     }
 
     @Test
-    public void test_getUserForService() {
+    public void test_getServiceUserID() {
         @SuppressWarnings("serial")
         Map<String, Object> config = new HashMap<String, Object>() {
             {
@@ -125,11 +125,11 @@ public class ServiceUserMapperImplTest {
         final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
         sum.configure(config);
 
-        TestCase.assertEquals(SAMPLE, sum.getUserForService(BUNDLE1, null));
-        TestCase.assertEquals(ANOTHER, sum.getUserForService(BUNDLE2, null));
-        TestCase.assertEquals(SAMPLE, sum.getUserForService(BUNDLE1, ""));
-        TestCase.assertEquals(ANOTHER, sum.getUserForService(BUNDLE2, ""));
-        TestCase.assertEquals(SAMPLE_SUB, sum.getUserForService(BUNDLE1, SUB));
-        TestCase.assertEquals(ANOTHER_SUB, sum.getUserForService(BUNDLE2, SUB));
+        TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, null));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, null));
+        TestCase.assertEquals(SAMPLE, sum.getServiceUserID(BUNDLE1, ""));
+        TestCase.assertEquals(ANOTHER, sum.getServiceUserID(BUNDLE2, ""));
+        TestCase.assertEquals(SAMPLE_SUB, sum.getServiceUserID(BUNDLE1, SUB));
+        TestCase.assertEquals(ANOTHER_SUB, sum.getServiceUserID(BUNDLE2, SUB));
     }
 }

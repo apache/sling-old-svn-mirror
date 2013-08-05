@@ -26,7 +26,7 @@ class Mapping {
 
     private final String serviceName;
 
-    private final String serviceInfo;
+    private final String subServiceName;
 
     private final String userName;
 
@@ -34,7 +34,7 @@ class Mapping {
      * Creates a mapping entry for the entry specification of the form:
      *
      * <pre>
-     * spec = serviceName [ ":" serviceInfo ] "=" userName .
+     * spec = serviceName [ ":" subServiceName ] "=" userName .
      * </pre>
      *
      * @param spec The mapping specification.
@@ -57,10 +57,10 @@ class Mapping {
 
         if (colon < 0 || colon > equals) {
             this.serviceName = spec.substring(0, equals);
-            this.serviceInfo = null;
+            this.subServiceName = null;
         } else {
             this.serviceName = spec.substring(0, colon);
-            this.serviceInfo = spec.substring(colon + 1, equals);
+            this.subServiceName = spec.substring(colon + 1, equals);
         }
 
         this.userName = spec.substring(equals + 1);
@@ -72,12 +72,12 @@ class Mapping {
      *
      * @param serviceName The name of the service to match. If this is
      *            {@code null} this mapping will not match.
-     * @param serviceInfo The info of the service to match. This may be
+     * @param subServiceName The Subservice Name to match. This may be
      *            {@code null}.
      * @return The user name if this mapping matches or {@code null} otherwise.
      */
-    String map(final String serviceName, final String serviceInfo) {
-        if (this.serviceName.equals(serviceName) && equals(this.serviceInfo, serviceInfo)) {
+    String map(final String serviceName, final String subServiceName) {
+        if (this.serviceName.equals(serviceName) && equals(this.subServiceName, subServiceName)) {
             return userName;
         }
 

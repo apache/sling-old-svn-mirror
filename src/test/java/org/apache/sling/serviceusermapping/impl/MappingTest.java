@@ -92,40 +92,40 @@ public class MappingTest {
     @Test
     public void test_constructor_and_map() {
         assertMapping("service", null, "user");
-        assertMapping("service", "serviceInfo", "user");
+        assertMapping("service", "subServiceName", "user");
     }
 
-    private void assertMapping(final String serviceName, final String serviceInfo, final String userName) {
+    private void assertMapping(final String serviceName, final String subServiceName, final String userName) {
         StringBuilder spec = new StringBuilder();
         spec.append(serviceName);
-        if (serviceInfo != null) {
-            spec.append(':').append(serviceInfo);
+        if (subServiceName != null) {
+            spec.append(':').append(subServiceName);
         }
         spec.append('=').append(userName);
 
         // spec analysis
         final Mapping mapping = new Mapping(spec.toString());
         TestCase.assertEquals(getField(mapping, "serviceName"), serviceName);
-        TestCase.assertEquals(getField(mapping, "serviceInfo"), serviceInfo);
+        TestCase.assertEquals(getField(mapping, "subServiceName"), subServiceName);
         TestCase.assertEquals(getField(mapping, "userName"), userName);
 
         // mapping
-        TestCase.assertEquals(userName, mapping.map(serviceName, serviceInfo));
-        if (serviceInfo == null) {
-            // Mapping without serviceInfo must not match request with any
-            // serviceInfo
-            TestCase.assertNull(mapping.map(serviceName, serviceInfo + "-garbage"));
+        TestCase.assertEquals(userName, mapping.map(serviceName, subServiceName));
+        if (subServiceName == null) {
+            // Mapping without subServiceName must not match request with any
+            // subServiceName
+            TestCase.assertNull(mapping.map(serviceName, subServiceName + "-garbage"));
         } else {
-            // Mapping with serviceInfo must not match request without
-            // serviceInfo
+            // Mapping with subServiceName must not match request without
+            // subServiceName
             TestCase.assertNull(mapping.map(serviceName, null));
         }
 
         // no match for different service name
-        TestCase.assertNull(mapping.map(serviceName + "-garbage", serviceInfo));
+        TestCase.assertNull(mapping.map(serviceName + "-garbage", subServiceName));
 
         // no match for null service name
-        TestCase.assertNull(mapping.map(null, serviceInfo));
+        TestCase.assertNull(mapping.map(null, subServiceName));
     }
 
     private String getField(final Object object, final String fieldName) {
