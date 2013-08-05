@@ -84,7 +84,7 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     }
 
     public HealthCheckMBean(HealthCheck hc) {
-        String name = hc.getInfo().get(Constants.HC_NAME);
+        String name = hc.getInfo() == null ? null : hc.getInfo().get(Constants.HC_NAME);
         if(name == null) {
             name = hc.toString();
         }
