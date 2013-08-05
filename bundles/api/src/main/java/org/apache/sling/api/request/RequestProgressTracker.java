@@ -120,8 +120,8 @@ public interface RequestProgressTracker {
     void dump(PrintWriter writer);
 
     /**
-     *  Call this when done processing the request - all calls except the first
-     *  one are ignored
+     *  Call this when done processing the request - only the first call of this
+     *  method is processed, all further calls to this method are ignored.
      */
     void done();
 }
