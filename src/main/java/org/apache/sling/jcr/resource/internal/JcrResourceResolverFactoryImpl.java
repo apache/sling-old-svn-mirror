@@ -106,11 +106,18 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     /**
+     * @see org.apache.sling.api.resource.ResourceResolverFactory#getServiceResourceResolver(Map)
+     */
+    public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
+        return delegatee.getServiceResourceResolver(authenticationInfo);
+    }
+
+    /**
      * @see org.apache.sling.api.resource.ResourceResolverFactory#getAdministrativeResourceResolver(java.util.Map)
      */
     public ResourceResolver getAdministrativeResourceResolver(
-            final Map<String, Object> arg0) throws LoginException {
-        return delegatee.getAdministrativeResourceResolver(arg0);
+            final Map<String, Object> authenticationInfo) throws LoginException {
+        return delegatee.getAdministrativeResourceResolver(authenticationInfo);
     }
 
     /**

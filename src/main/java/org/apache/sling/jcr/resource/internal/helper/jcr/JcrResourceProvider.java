@@ -99,14 +99,14 @@ public class JcrResourceProvider
 
     private final Session session;
     private final ClassLoader dynamicClassLoader;
-    private final boolean closeSession;
+    private final RepositoryHolder repositoryHolder;
 
     public JcrResourceProvider(final Session session,
                                final ClassLoader dynamicClassLoader,
-                               final boolean closeSession) {
+                               final RepositoryHolder repositoryHolder) {
         this.session = session;
         this.dynamicClassLoader = dynamicClassLoader;
-        this.closeSession = closeSession;
+        this.repositoryHolder = repositoryHolder;
     }
 
     // ---------- ResourceProvider interface ----------------------------------
@@ -234,9 +234,7 @@ public class JcrResourceProvider
      * @see org.apache.sling.api.resource.DynamicResourceProvider#close()
      */
     public void close() {
-        if ( this.closeSession && !closed) {
-            session.logout();
-        }
+        this.repositoryHolder.release();
         this.closed = true;
     }
 
