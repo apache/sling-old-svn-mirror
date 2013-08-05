@@ -152,7 +152,7 @@ public class ClusterViewServiceImpl implements ClusterViewService {
             if (foundLocal) {
                 return clusterViewImpl;
             } else {
-                logger.error("getEstablishedView: the existing established view does not incude the local instance yet! Assming isolated mode.");
+                logger.info("getEstablishedView: the existing established view does not incude the local instance yet! Assuming isolated mode.");
                 return getIsolatedClusterView();
             }
         } catch (LoginException e) {
