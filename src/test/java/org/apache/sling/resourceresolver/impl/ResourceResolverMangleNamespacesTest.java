@@ -35,20 +35,20 @@ import org.mockito.MockitoAnnotations;
 /** Test ResourceResolverImpl.mangleNamespaces methods */
 public class ResourceResolverMangleNamespacesTest {
     private ResourceResolverImpl rr;
-    
+
     @Mock
     private Session mockedSession;
-    
+
     private Session activeSession;
-    
+
     public static final String NS_PREFIX = "testNS";
     public static final String NS_URL = "http://example.com/namespaces/testNS";
-    
-    @Before 
+
+    @Before
     public void setup() throws RepositoryException {
         MockitoAnnotations.initMocks(this);
         activeSession = mockedSession;
-        
+
         // Setup a ResourceResolverImpl with namespace mangling and unmangling
         final ResourceResolverFactoryActivator act = new ResourceResolverFactoryActivator() {
             @Override
@@ -56,9 +56,9 @@ public class ResourceResolverMangleNamespacesTest {
                 return true;
             }
         };
-        
+
         Mockito.when(mockedSession.getNamespacePrefix(NS_PREFIX)).thenReturn(NS_URL);
-        
+
         final RootResourceProviderEntry rrpe = new RootResourceProviderEntry() {
             @Override
             @SuppressWarnings("unchecked")
@@ -69,66 +69,66 @@ public class ResourceResolverMangleNamespacesTest {
                 return super.adaptTo(ctx, type);
             }
         };
-        
-        final ResourceResolverFactoryImpl fac = new ResourceResolverFactoryImpl(act) {
+
+        final ResourceResolverFactoryImpl fac = new ResourceResolverFactoryImpl(act, null, null) {
             @Override
             public RootResourceProviderEntry getRootProviderEntry() {
                 return rrpe;
             }
         };
-        
+
         rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, null));
     }
-    
-    @Test 
+
+    @Test
     public void testUrlWithPath() {
         assertEquals("http://example.com/some/path", rr.map("http://example.com/some/path"));
     }
-    
-    @Test 
+
+    @Test
     public void testMangleHttp() {
         assertEquals("http://example.com/path/_with_colon", rr.map("http://example.com/path/with:colon"));
     }
-    
-    @Test 
+
+    @Test
     public void testUnmangleHttp() {
         final Resource r = rr.resolve(null, "http://example.com/path/_with_mangling");
         assertEquals("/http://example.com/path/with:mangling", r.getPath());
     }
-    
-    @Test 
+
+    @Test
     public void testUnmangleNoSession() {
         activeSession = null;
         final Resource r = rr.resolve(null, "http://example.com/path/_with_mangling");
         assertEquals("/http://example.com/path/_with_mangling", r.getPath());
     }
-    
-    @Test 
+
+    @Test
     public void testManglePath() {
         assertEquals("/example.com/path/_with_colon", rr.map("/example.com/path/with:colon"));
     }
-    
-    @Test 
+
+    @Test
     public void testUnmanglePath() {
         final Resource r = rr.resolve(null, "/example.com/path/_with_mangling");
         assertEquals("/example.com/path/with:mangling", r.getPath());
     }
-    
-    @Test 
+
+    @Test
     public void testUrlNoPath() {
         assertEquals("http://withSlash.com/", rr.map("http://withSlash.com/"));
         assertEquals("http://noSlash.com", rr.map("http://noSlash.com"));
         assertEquals("http://nosuffix", rr.map("http://nosuffix"));
     }
-    
-    @Test 
+
+    @Test
     public void testWeirdCases() {
         assertEquals("http://foo", rr.map("http://foo"));
         assertEquals("http://", rr.map("http://"));
         assertEquals("http:/", rr.map("http:/"));
         assertEquals("http:", rr.map("http:"));
         assertEquals("http", rr.map("http"));
-        
+
         assertEquals("gopher://foo", rr.map("gopher://foo"));
         assertEquals("gopher://", rr.map("gopher://"));
         assertEquals("gopher:/", rr.map("gopher:/"));

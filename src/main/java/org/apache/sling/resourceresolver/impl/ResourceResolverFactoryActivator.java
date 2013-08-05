@@ -45,8 +45,11 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
@@ -76,10 +79,6 @@ import org.osgi.service.event.EventAdmin;
 public class ResourceResolverFactoryActivator {
 
     private static final class FactoryRegistration {
-
-        /** Registered resource resolver factory. */
-        public volatile ResourceResolverFactoryImpl factory;
-
         /** Registration .*/
         public volatile ServiceRegistration factoryRegistration;
     }
@@ -158,6 +157,10 @@ public class ResourceResolverFactoryActivator {
     /** Event admin. */
     @Reference
     EventAdmin eventAdmin;
+
+    /** Service User Mapper */
+    @Reference
+    private ServiceUserMapper serviceUserMapper;
 
     /** ComponentContext */
     private volatile ComponentContext componentContext;
@@ -324,9 +327,6 @@ public class ResourceResolverFactoryActivator {
             if ( local.factoryRegistration != null ) {
                 local.factoryRegistration.unregister();
             }
-            if ( local.factory != null ) {
-                local.factory.deactivate();
-            }
         }
     }
 
@@ -334,23 +334,38 @@ public class ResourceResolverFactoryActivator {
      * Try to register the factory.
      */
     private void registerFactory(final ComponentContext localContext) {
-        FactoryRegistration local = null;
-        synchronized ( this ) {
-            if ( this.factoryRegistration == null ) {
+        final FactoryRegistration local;
+        synchronized (this) {
+            if (this.factoryRegistration == null) {
                 this.factoryRegistration = new FactoryRegistration();
                 local = this.factoryRegistration;
+            } else {
+                local = null;
             }
         }
+
         if ( local != null ) {
             // activate and register factory
-            local.factory = new ResourceResolverFactoryImpl(this);
-            local.factory.activate(localContext.getBundleContext());
+
             final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
             serviceProps.put(Constants.SERVICE_VENDOR, localContext.getProperties().get(Constants.SERVICE_VENDOR));
             serviceProps.put(Constants.SERVICE_DESCRIPTION, localContext.getProperties().get(Constants.SERVICE_DESCRIPTION));
 
-            local.factoryRegistration = localContext.getBundleContext().registerService(ResourceResolverFactory.class.getName(),
-                    local.factory, serviceProps);
+            local.factoryRegistration = localContext.getBundleContext().registerService(
+                ResourceResolverFactory.class.getName(), new ServiceFactory() {
+                    public Object getService(Bundle bundle, ServiceRegistration registration) {
+                        final ResourceResolverFactoryImpl r = new ResourceResolverFactoryImpl(
+                            ResourceResolverFactoryActivator.this, bundle,
+                            ResourceResolverFactoryActivator.this.serviceUserMapper);
+                        r.activate(localContext.getBundleContext());
+                        return r;
+                    }
+
+                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
+                        ((ResourceResolverFactoryImpl) service).deactivate();
+                    }
+                }, serviceProps);
+
             // check if an unregister happened in between
             boolean doUnregister = false;
             synchronized ( this ) {
