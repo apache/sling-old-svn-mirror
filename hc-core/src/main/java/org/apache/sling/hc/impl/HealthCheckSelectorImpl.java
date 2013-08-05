@@ -52,15 +52,16 @@ public class HealthCheckSelectorImpl implements HealthCheckSelector {
         // Build service filter
         final StringBuilder filterBuilder = new StringBuilder();
         filterBuilder.append("(&(objectClass=").append(HealthCheck.class.getName()).append(")");
-        if(tags.length > 0) {
-            final int prefixLen = OMIT_PREFIX.length();
-            for(String tag : tags) {
-                tag = tag.trim();
-                if(tag.startsWith(OMIT_PREFIX)) {
-                    filterBuilder.append("(!(").append(Constants.HC_TAGS).append("=").append(tag.substring(prefixLen)).append("))");
-                } else {
-                    filterBuilder.append("(").append(Constants.HC_TAGS).append("=").append(tag).append(")");
-                }
+        final int prefixLen = OMIT_PREFIX.length();
+        for(String tag : tags) {
+            tag = tag.trim();
+            if(tag.length() == 0) {
+                continue;
+            }
+            if(tag.startsWith(OMIT_PREFIX)) {
+                filterBuilder.append("(!(").append(Constants.HC_TAGS).append("=").append(tag.substring(prefixLen)).append("))");
+            } else {
+                filterBuilder.append("(").append(Constants.HC_TAGS).append("=").append(tag).append(")");
             }
         }
         filterBuilder.append(")");

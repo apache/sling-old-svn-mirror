@@ -156,6 +156,12 @@ public class HealthCheckSelectorTest {
     }
     
     @Test
+    public void testEmptyTags() {
+        final List<HealthCheck> s = selector.getTaggedHealthCheck("","","");
+        assertServices(s, true, true, true, true, true);
+    }
+    
+    @Test
     public void testFooTag() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("foo");
         assertServices(s, true, false, true, false, false);
