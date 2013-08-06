@@ -57,7 +57,7 @@
                 <configuration>
                     <instructions>
                         <Export-Package>
-                            org.apache.sling.samples.webloader;version=${pom.version}
+                            org.apache.sling.samples.webloader;version=${project.version}
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.samples.webloader.internal

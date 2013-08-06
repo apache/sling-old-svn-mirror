@@ -52,7 +52,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Export-Package>org.apache.sling.apt.servlet.*;version=${pom.version}</Export-Package>
+            <Export-Package>org.apache.sling.apt.servlet.*;version=${project.version}</Export-Package>
           </instructions>
         </configuration>
       </plugin>

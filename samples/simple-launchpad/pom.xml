@@ -68,7 +68,7 @@
                 <configuration>
                     <contextPath>/</contextPath>
                     <webAppSourceDirectory>
-                        target/${artifactId}-${pom.version}
+                        target/${artifactId}-${project.version}
                     </webAppSourceDirectory>
                 </configuration>
             </plugin>

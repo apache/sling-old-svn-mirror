@@ -91,7 +91,7 @@
                         <!-- we have to export for the classes to be visible -->
                         <Export-Package>
                             org.apache.sling.sample;
-                            org.apache.jsp.*;version=${pom.version}
+                            org.apache.jsp.*;version=${project.version}
                         </Export-Package>
 
                         <!-- node types to be created -->

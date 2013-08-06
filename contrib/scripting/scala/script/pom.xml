@@ -103,8 +103,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
-                        <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
+                        <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
+                        <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
                         <Export-Package>
                             org.apache.sling.scripting.scala.*
                         </Export-Package>

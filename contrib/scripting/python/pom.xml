@@ -60,8 +60,8 @@
                         <Embed-Dependency>jython;inline=true</Embed-Dependency>
 		                <Import-Package>!org.python.*,javax.jcr.*</Import-Package> 
 			            <DynamicImport-Package>*</DynamicImport-Package>
-                        <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
-                        <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
+                        <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
+                        <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
                     </instructions>
                 </configuration>
             </plugin>

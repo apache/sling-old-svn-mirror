@@ -83,8 +83,8 @@
                             javax.xml.*, *
                         </Import-Package>
                         
-                        <ScriptEngine-Name>${pom.name}</ScriptEngine-Name>
-                        <ScriptEngine-Version>${pom.version}</ScriptEngine-Version>
+                        <ScriptEngine-Name>${project.name}</ScriptEngine-Name>
+                        <ScriptEngine-Version>${project.version}</ScriptEngine-Version>
                     </instructions>
                 </configuration>
             </plugin>
