@@ -1,9 +1,0 @@
-{
-  "sling:resourceType" : "sling/healthcheck/rules",
-  "namespace": "script",
-  "ruleName": "Test javascript (ecma) rule",
-  "qualifier": "ecma",
-  "expression": "Math.round(2.6) == 3",
-  "tags" : ["script","javascript"],
-  "jcr:primaryType": "nt:unstructured"
-}

@@ -1,9 +1,0 @@
-{
-  "sling:resourceType" : "sling/healthcheck/rules",
-  "namespace": "script",
-  "ruleName": "Example Groovy expression that combines two JMX attributes",
-  "qualifier": "groovy",
-  "expression": 'jmx.attribute("java.lang:type=ClassLoading", "LoadedClassCount") > 100 && jmx.attribute("osgi.core:type=framework,version=1.5","FrameworkStartLevel") > 1',
-  "tags" : ["script","groovy", "jmx" ],
-  "jcr:primaryType": "nt:unstructured"
-}

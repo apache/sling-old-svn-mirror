@@ -1,4 +1,0 @@
-{
-    "jcr:primaryType" : "nt:unstructured",
-    "sling:resourceType" : "sling/healthcheck/rules"
-}
