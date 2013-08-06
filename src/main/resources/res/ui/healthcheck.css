@@ -32,7 +32,12 @@
     font-weight:bold;
 }
 
-.healthcheck .nothingToReport {
+.healthcheck .resultOktrue {
 	color:green;
+    font-weight:bold;
+}
+
+.healthcheck .resultOkfalse {
+    color:red;
     font-weight:bold;
 }
