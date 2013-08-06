@@ -186,6 +186,12 @@ public class HealthCheckSelectorTest {
     }
     
     @Test
+    public void testWhitespace() {
+        final List<HealthCheck> s = selector.getTaggedHealthCheck("\t \n\r foo  \t", "", " \t-bar\n", "");
+        assertServices(s, true, false, false, false, false);
+    }
+    
+    @Test
     public void testOther() {
         final List<HealthCheck> s = selector.getTaggedHealthCheck("other");
         assertServices(s, false, false, false, true, false);
