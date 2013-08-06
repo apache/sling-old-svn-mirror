@@ -18,6 +18,7 @@
 package org.apache.sling.hc.impl;
 
 import java.lang.management.ManagementFactory;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,6 +76,8 @@ public class JmxAttributeHealthCheck implements HealthCheck {
         info.put(PROP_ATTRIBUTE_NAME, attributeName);
         info.put(PROP_CONSTRAINT, constraint);
         info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        info.put(Constants.HC_TAGS, 
+                Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         
         log.info("Activated with HealthCheck name={}, objectName={}, attribute={}, constraint={}", 
                 new Object[] { info.get(Constants.HC_NAME), mbeanName, attributeName, constraint });

@@ -17,6 +17,7 @@
  */
 package org.apache.sling.hc.impl;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -77,6 +78,8 @@ public class ScriptableHealthCheck implements HealthCheck {
         info.put(PROP_EXPRESSION, expression);
         info.put(PROP_LANGUAGE_EXTENSION, languageExtension);
         info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        info.put(Constants.HC_TAGS, 
+                Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         
         log.info("Activated, name={}, languageExtension={}, expression={}", languageExtension, expression);
     }

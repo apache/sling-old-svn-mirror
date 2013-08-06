@@ -34,11 +34,11 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
+import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.HealthCheckSelector;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
 @Service(Servlet.class)
 @SuppressWarnings("serial")
 @Properties({
-    @Property(name=Constants.SERVICE_DESCRIPTION, value="Sling Health Check Web Console Plugin"),
-    @Property(name=Constants.SERVICE_VENDOR, value="The Apache Software Foundation"),
+    @Property(name=org.osgi.framework.Constants.SERVICE_DESCRIPTION, value="Sling Health Check Web Console Plugin"),
+    @Property(name=org.osgi.framework.Constants.SERVICE_VENDOR, value="The Apache Software Foundation"),
     @Property(name="felix.webconsole.label", value=HealthCheckWebconsolePlugin.LABEL),
     @Property(name="felix.webconsole.title", value=HealthCheckWebconsolePlugin.TITLE),
     @Property(name="felix.webconsole.category", value=HealthCheckWebconsolePlugin.CATEGORY),
@@ -62,6 +62,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     public static final String LABEL = "healthcheck";
     public static final String CATEGORY = "Sling";
     public static final String PARAM_TAGS = "tags";
+    public static final String PARAM_DEBUG = "debug";
+    public static final String PARAM_QUIET = "quiet";
     
     @Reference
     private HealthCheckSelector selector;
@@ -86,31 +88,48 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         }
         
         final String tags = getParam(req, PARAM_TAGS, "");
+        final boolean debug = Boolean.valueOf(getParam(req, PARAM_DEBUG, "false"));
+        final boolean quiet = Boolean.valueOf(getParam(req, PARAM_QUIET, "false"));
         
-        doForm(req, resp, tags);
+        doForm(req, resp, tags, debug, quiet);
         
         final List<HealthCheck> checks = selector.getTaggedHealthCheck(tags.split(","));
         final PrintWriter pw = resp.getWriter();
         pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
         for(HealthCheck hc : checks) {
             final ResultLog rl = new ResultLog(log);
-            renderResult(resp, hc.execute(rl));
+            final Result r = hc.execute(rl);
+            if(!quiet || !r.isOk()) {
+                renderResult(resp, r, debug);
+            }
         }
         pw.println("</table>");
     }
     
-    private void renderResult(HttpServletResponse resp, Result result) throws IOException {
+    private void renderResult(HttpServletResponse resp, Result result, boolean debug) throws IOException {
         final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
 
-        c.tr();
-        c.tdLabel(ResponseUtil.escapeXml(result.getHealthCheck().toString()));
-        c.closeTd();
+        final StringBuilder status = new StringBuilder();
+        status.append("Tags: ").append(result.getHealthCheck().getInfo().get(Constants.HC_TAGS));
+        c.titleHtml(getDescription(result.getHealthCheck()), null);
         
-        // TODO tags and info
-        // dataRow(c, "Tags", ResponseUtil.escapeXml(r.getRule().getTags().toString()));
-            
+        c.tr();
+        c.tdContent();
+        c.writer().print(ResponseUtil.escapeXml(status.toString()));
+        c.writer().print("<br/>Result: <span class='resultOk");
+        c.writer().print(result.isOk());
+        c.writer().print("'>");
+        c.writer().print(result.isOk() ? "Ok" : "NOT OK");
+        c.writer().print("</span>");
+        c.closeTd();
+        c.closeTr();
+        
+        c.tr();
         c.tdContent();
         for(ResultLog.Entry e : result.getLogEntries()) {
+            if(!debug && e.getLevel().ordinal() <= ResultLog.Level.DEBUG.ordinal()) {
+                continue;
+            }
             final StringBuilder sb = new StringBuilder();
             sb.append("<div class='log").append(e.getLevel().toString()).append("'>");
             sb.append(e.getLevel().toString())
@@ -122,18 +141,48 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.closeTd();
     }
     
-    private void doForm(HttpServletRequest req, HttpServletResponse resp, String tags) throws IOException {
+    private String getDescription(HealthCheck hc) {
+        String result = hc.getInfo().get(Constants.HC_NAME);
+        if(result == null) {
+            result = hc.toString();
+        }
+        final String description = hc.getInfo().get(Constants.HC_DESCRIPTION);
+        if(description != null) {
+            result += ": " + description;
+        }
+        return result;
+    }
+    
+    private void doForm(HttpServletRequest req, HttpServletResponse resp, String tags, boolean debug, boolean quiet) 
+            throws IOException {
         final PrintWriter pw = resp.getWriter();
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
         c.titleHtml(TITLE, "To execute health check services, enter "
-                + " an optional list of tags, to select specific health checks, or no tags for all checks.");
+                + " an optional list of tags, to select specific health checks, or no tags for all checks."
+                + " Prefix a tag with a minus sign (-) to omit checks having that tag.");
         
         c.tr(); 
-        c.tdLabel("Rule tags (comma-separated)");
+        c.tdLabel("Health Check tags (comma-separated)");
         c.tdContent();
         pw.println("<input type='text' name='" + PARAM_TAGS + "' value='" + tags + "' class='input' size='80'>");
+        c.closeTd(); 
+        c.closeTr();
+        
+        c.tr(); 
+        c.tdLabel("Show DEBUG logs");
+        c.tdContent();
+        pw.println("<input type='checkbox' name='" + PARAM_DEBUG + "' class='input' value='true'" 
+                + (debug ? " checked=true " : "") + ">");
+        c.closeTd(); 
+        c.closeTr();
+        
+        c.tr(); 
+        c.tdLabel("Show failed checks only");
+        c.tdContent();
+        pw.println("<input type='checkbox' name='" + PARAM_QUIET + "' class='input' value='true'" 
+                + (quiet ? " checked=true " : "") + ">");
         c.closeTd(); 
         c.closeTr();
         
