@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "expression" : "osgi.inactiveBundlesCount() == 0 ",
+    "hc.name" : "Scripted example: check inactive bundles", 
+    "language.extension" : "ecma", 
+    "hc.tags" : [bundles, script] 
+}
