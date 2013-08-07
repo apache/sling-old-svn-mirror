@@ -161,6 +161,12 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             final Map<String, Object> authenticationInfo, final boolean isAdmin)
             throws LoginException {
 
+        // TODO: Consider:
+        //        if (authenticationInfo == null) {
+        //            authenticationInfo = Collections.emptyMap();
+        //        }
+        // instead of repeated checks down the line ...
+
         // by default any session used by the resource resolver returned is
         // closed when the resource resolver is closed
         boolean logoutSession = true;
@@ -180,7 +186,9 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                 session = getSession(authenticationInfo);
                 if (session == null) {
 
-                    final Object serviceBundleObject = authenticationInfo.get(SERVICE_BUNDLE);
+                    final Object serviceBundleObject = (authenticationInfo != null)
+                            ? authenticationInfo.get(SERVICE_BUNDLE)
+                            : null;
                     if (serviceBundleObject instanceof Bundle) {
 
                         final String subServiceName = (authenticationInfo.get(ResourceResolverFactory.SUBSERVICE) instanceof String)
