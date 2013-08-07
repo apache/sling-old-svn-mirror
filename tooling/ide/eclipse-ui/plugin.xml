@@ -114,4 +114,72 @@
           </enabledWhen>
         </page> 
     </extension>
+	<extension
+			point="org.eclipse.ui.navigator.viewer">
+		<viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
+			<includes>
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
+			</includes>
+		</viewerContentBinding>
+	</extension>
+   <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent
+            appearsBefore="org.eclipse.jst.jee.ui.ejb"
+            contentProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentContentProvider"
+            icon="icons/obj16/sling.gif"
+            id="org.apache.sling.ide.eclipse-ui.navigatorJcrContent"
+            labelProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentLabelProvider"
+            name="Sling (JCR) Content"
+            priority="highest">
+         <triggerPoints>
+            <or>         
+              <instanceof 
+                    value="org.eclipse.core.resources.IWorkspaceRoot" /> 
+              <instanceof
+                    value="org.eclipse.core.resources.IProject" />  
+              <instanceof  
+                     value="org.eclipse.core.resources.IFolder" /> 
+              <instanceof  
+                     value="org.eclipse.core.resources.IFile" /> 
+              <instanceof  
+                     value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode" /> 
+           </or>
+         </triggerPoints>
+         <enablement>
+            <or>         
+              <instanceof 
+                    value="org.eclipse.core.resources.IWorkspaceRoot" /> 
+              <instanceof
+                    value="org.eclipse.core.resources.IProject" />  
+              <instanceof  
+                     value="org.eclipse.core.resources.IFolder" /> 
+              <instanceof  
+                     value="org.eclipse.core.resources.IFile" /> 
+              <instanceof  
+                     value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode" /> 
+           </or>
+         </enablement>
+         <!--org.eclipse.ui.navigator.resourceContent-->
+         <!--org.eclipse.jdt.java.ui.javaContent-->
+         <!--override
+               policy="InvokeAlwaysRegardlessOfSuppressedExt"
+               suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
+         </override-->
+        
+      </navigatorContent>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"
+            class="org.apache.sling.ide.eclipse.ui.nav.model.JcrNodeAdapterFactory">
+         <adapter
+               type="org.eclipse.core.resources.IFile">
+         </adapter>
+         <adapter
+               type="org.eclipse.core.resources.IResource">
+         </adapter>
+      </factory>
+   </extension> 
 </plugin>    
