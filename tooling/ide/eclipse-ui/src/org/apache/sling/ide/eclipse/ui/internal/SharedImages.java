@@ -25,6 +25,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 public final class SharedImages {
     
     public static final ImageDescriptor SLING_LOG = ImageDescriptor.createFromFile(SharedImages.class, "sling-logo.png");
+    public static final ImageDescriptor SLING_ICON = ImageDescriptor.createFromFile(SharedImages.class, "sling.gif");
 
     private SharedImages() {
     }
