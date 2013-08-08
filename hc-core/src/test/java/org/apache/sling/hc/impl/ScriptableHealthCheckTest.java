@@ -28,6 +28,7 @@ import javax.script.ScriptEngineManager;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.impl.healthchecks.ScriptableHealthCheck;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;

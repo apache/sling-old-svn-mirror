@@ -24,6 +24,7 @@ import java.util.Hashtable;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.impl.healthchecks.JmxAttributeHealthCheck;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.service.component.ComponentContext;

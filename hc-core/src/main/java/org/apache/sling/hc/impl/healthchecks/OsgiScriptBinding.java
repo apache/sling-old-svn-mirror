@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.impl;
+package org.apache.sling.hc.impl.healthchecks;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
