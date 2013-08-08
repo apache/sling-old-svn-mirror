@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -36,11 +35,8 @@ import org.apache.sling.event.impl.EnvironmentComponent;
  */
 @Component(immediate=true)
 @Service(value={TimedEventConfiguration.class})
-@Properties({
-     @Property(name=TimedEventConfiguration.CONFIG_PROPERTY_REPOSITORY_PATH,
-               value=TimedEventConfiguration.DEFAULT_REPOSITORY_PATH,
-               propertyPrivate=true)
-})
+@Property(name=TimedEventConfiguration.CONFIG_PROPERTY_REPOSITORY_PATH,
+          value=TimedEventConfiguration.DEFAULT_REPOSITORY_PATH)
 public class TimedEventConfiguration {
 
     /** Default repository path. */

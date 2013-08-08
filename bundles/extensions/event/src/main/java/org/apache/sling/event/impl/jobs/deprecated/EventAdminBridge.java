@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 @Component(immediate=true)
 @Service(value={EventHandler.class, JobConsumer.class})
 @Properties({
-    @Property(name=EventConstants.EVENT_TOPIC, value=JobUtil.TOPIC_JOB, propertyPrivate=true),
+    @Property(name=EventConstants.EVENT_TOPIC, value=JobUtil.TOPIC_JOB),
     @Property(name=JobConsumer.PROPERTY_TOPICS, value="/")
 })
 public class EventAdminBridge

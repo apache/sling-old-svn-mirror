@@ -40,13 +40,13 @@ public class DistributedEventAdminConfiguration {
     private static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/distribution";
 
     /** The path where all jobs are stored. */
-    @Property(value=DEFAULT_REPOSITORY_PATH, propertyPrivate=true)
+    @Property(value=DEFAULT_REPOSITORY_PATH)
     private static final String CONFIG_PROPERTY_REPOSITORY_PATH = "repository.path";
 
     /** Default clean up time is 15 minutes. */
     private static final int DEFAULT_CLEANUP_PERIOD = 15;
 
-    @Property(intValue=DEFAULT_CLEANUP_PERIOD, propertyPrivate=true)
+    @Property(intValue=DEFAULT_CLEANUP_PERIOD)
     private static final String CONFIG_PROPERTY_CLEANUP_PERIOD = "cleanup.period";
 
     /** We remove everything which is older than 15min by default. */

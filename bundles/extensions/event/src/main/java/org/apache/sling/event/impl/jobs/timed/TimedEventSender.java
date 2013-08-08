@@ -37,7 +37,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -77,14 +76,12 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate=true)
 @Service(value={TimedEventStatusProvider.class, EventHandler.class, TopologyEventListener.class})
-@Properties({
-     @Property(name=EventConstants.EVENT_TOPIC, propertyPrivate=true,
-               value={SlingConstants.TOPIC_RESOURCE_ADDED,
-                      SlingConstants.TOPIC_RESOURCE_REMOVED,
-                      SlingConstants.TOPIC_RESOURCE_CHANGED,
-                      ResourceHelper.BUNDLE_EVENT_STARTED,
-                      ResourceHelper.BUNDLE_EVENT_UPDATED})
-})
+@Property(name=EventConstants.EVENT_TOPIC,
+          value={SlingConstants.TOPIC_RESOURCE_ADDED,
+                 SlingConstants.TOPIC_RESOURCE_REMOVED,
+                 SlingConstants.TOPIC_RESOURCE_CHANGED,
+                 ResourceHelper.BUNDLE_EVENT_STARTED,
+                 ResourceHelper.BUNDLE_EVENT_UPDATED})
 public class TimedEventSender
     implements Job, TimedEventStatusProvider, EventHandler, TopologyEventListener {
 

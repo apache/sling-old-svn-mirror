@@ -28,7 +28,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -53,10 +52,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate=true)
 @Service(EventHandler.class)
-@Properties({
-     @Property(name=EventConstants.EVENT_TOPIC, propertyPrivate=true,
-               value=EventUtil.TOPIC_TIMED_EVENT)
-})
+@Property(name=EventConstants.EVENT_TOPIC, value=EventUtil.TOPIC_TIMED_EVENT)
 public class TimedEventReceiver implements EventHandler {
 
     public static final String RESOURCE_PROPERTY_TE_EXPRESSION = "slingevent:expression";

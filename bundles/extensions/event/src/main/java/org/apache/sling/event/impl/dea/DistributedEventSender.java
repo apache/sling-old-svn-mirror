@@ -25,7 +25,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -54,9 +53,7 @@ import aQute.bnd.annotation.component.Deactivate;
  */
 @Component(immediate=true)
 @Service(value={EventHandler.class})
-@Properties({
-    @Property(name=EventConstants.EVENT_TOPIC, value=SlingConstants.TOPIC_RESOURCE_ADDED, propertyPrivate=true)
-})
+@Property(name=EventConstants.EVENT_TOPIC, value=SlingConstants.TOPIC_RESOURCE_ADDED)
 public class DistributedEventSender
     implements EventHandler {
 
