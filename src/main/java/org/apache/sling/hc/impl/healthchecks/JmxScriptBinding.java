@@ -37,7 +37,7 @@ public class JmxScriptBinding {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
     private final Logger logger;
     
-    JmxScriptBinding(Logger logger) {
+    public JmxScriptBinding(Logger logger) {
         this.logger = logger;
     }
     
