@@ -23,12 +23,15 @@ import java.util.Map;
 
 import org.osgi.service.event.Event;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * The job manager is the heart of the job event handling.
  * It can be used to manage and monitor the queues.
  * @since 3.0
  */
+@ProviderType
 public interface JobManager {
 
     /**
@@ -64,85 +67,11 @@ public interface JobManager {
     }
 
     /**
-     * Return all jobs either running or scheduled.
-     *
-     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
-     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param templates A list of filter property maps. Each map acts like a template. The searched job
-     *                    must match the template (AND query). By providing several maps, different filters
-     *                    are possible (OR query).
-     * @return A non null collection.
-     * @deprecated
-     */
-    @Deprecated
-    JobsIterator queryJobs(QueryType type, String topic, Map<String, Object>... templates);
-
-    /**
-     * Return all jobs either running or scheduled.
-     *
-     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
-     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
-     * @param limit A positive number indicating the maximum number of jobs returned by the iterator.
-     * @param templates A list of filter property maps. Each map acts like a template. The searched job
-     *                    must match the template (AND query). By providing several maps, different filters
-     *                    are possible (OR query).
-     * @return A non null collection.
-     * @since 1.1
-     * @deprecated
-     */
-    @Deprecated
-    JobsIterator queryJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
-
-    /**
-     * Find a job - either scheduled or active.
-     * This method searches for an event with the given topic and filter properties. If more than one
-     * job matches, the first one found is returned which could be any of the matching jobs.
-     *
-     * @param topic Topic is required.
-     * @param template The map acts like a template. The searched job
-     *                    must match the template (AND query).
-     * @return An event or <code>null</code>
-     * @deprecated
-     */
-    @Deprecated
-    Event findJob(String topic, Map<String, Object> template);
-
-    /**
-     * Cancel this job.
-     * Canceling a job might fail if the job is currently in processing.
-     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
-     * @return <code>true</code> if the job could be cancelled or does not exist anymore.
-     *         <code>false</code> otherwise.
-     * @deprecated
-     */
-    @Deprecated
-    boolean removeJob(String jobId);
-
-    /**
-     * Cancel this job.
-     * This method acts like {@link #removeJob(String)} with the exception that it waits
-     * for a job to finish. The job will be removed when this method returns - however
-     * this method blocks until the job is finished!
-     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
-     * @deprecated
-     */
-    @Deprecated
-    void forceRemoveJob(String jobId);
-
-    /**
      * Restart the job manager.
      * This method restarts the job manager and all queues - currently processed jobs will be finished.
      * The job manager should only be restarted if really necessary!
      */
     void restart();
-
-    /**
-     * Is job processing enabled?
-     * It is possible to completely turn off job processing.
-     * @deprecated This method always returns true
-     */
-    @Deprecated
-    boolean isJobProcessingEnabled();
 
     /**
      * Add a new job
@@ -231,4 +160,78 @@ public interface JobManager {
      * @since 1.2
      */
     Collection<Job> findJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
+
+    /**
+     * Return all jobs either running or scheduled.
+     *
+     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param templates A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @return A non null collection.
+     * @deprecated
+     */
+    @Deprecated
+    JobsIterator queryJobs(QueryType type, String topic, Map<String, Object>... templates);
+
+    /**
+     * Return all jobs either running or scheduled.
+     *
+     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
+     * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
+     * @param limit A positive number indicating the maximum number of jobs returned by the iterator.
+     * @param templates A list of filter property maps. Each map acts like a template. The searched job
+     *                    must match the template (AND query). By providing several maps, different filters
+     *                    are possible (OR query).
+     * @return A non null collection.
+     * @since 1.1
+     * @deprecated
+     */
+    @Deprecated
+    JobsIterator queryJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
+
+    /**
+     * Find a job - either scheduled or active.
+     * This method searches for an event with the given topic and filter properties. If more than one
+     * job matches, the first one found is returned which could be any of the matching jobs.
+     *
+     * @param topic Topic is required.
+     * @param template The map acts like a template. The searched job
+     *                    must match the template (AND query).
+     * @return An event or <code>null</code>
+     * @deprecated
+     */
+    @Deprecated
+    Event findJob(String topic, Map<String, Object> template);
+
+    /**
+     * Cancel this job.
+     * Canceling a job might fail if the job is currently in processing.
+     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
+     * @return <code>true</code> if the job could be cancelled or does not exist anymore.
+     *         <code>false</code> otherwise.
+     * @deprecated
+     */
+    @Deprecated
+    boolean removeJob(String jobId);
+
+    /**
+     * Cancel this job.
+     * This method acts like {@link #removeJob(String)} with the exception that it waits
+     * for a job to finish. The job will be removed when this method returns - however
+     * this method blocks until the job is finished!
+     * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
+     * @deprecated
+     */
+    @Deprecated
+    void forceRemoveJob(String jobId);
+
+    /**
+     * Is job processing enabled?
+     * It is possible to completely turn off job processing.
+     * @deprecated This method always returns true
+     */
+    @Deprecated
+    boolean isJobProcessingEnabled();
 }

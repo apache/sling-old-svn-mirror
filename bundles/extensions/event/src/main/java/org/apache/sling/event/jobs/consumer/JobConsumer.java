@@ -20,7 +20,7 @@ package org.apache.sling.event.jobs.consumer;
 
 import org.apache.sling.event.jobs.Job;
 
-import aQute.bnd.annotation.ProviderType;
+import aQute.bnd.annotation.ConsumerType;
 
 
 
@@ -46,9 +46,14 @@ import aQute.bnd.annotation.ProviderType;
  *   with the highest service ranking is used. If the ranking is equal, the one with
  *   the lowest service ID is used.
  *
+ * If the consumer decides to process the job asynchronously, the processing must finish
+ * within the current lifetime of the job consumer. If the consumer (or the instance
+ * of the consumer) dies, the job processing will mark this processing as failed and
+ * reschedule.
+ *
  * @since 1.0
  */
-@ProviderType
+@ConsumerType
 public interface JobConsumer {
 
     enum JobResult {
