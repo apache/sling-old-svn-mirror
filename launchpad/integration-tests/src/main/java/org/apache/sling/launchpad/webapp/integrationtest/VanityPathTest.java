@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,7 +18,6 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +45,12 @@ public class VanityPathTest extends HttpTestBase {
         postUrl = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "_"
             + System.currentTimeMillis()
             + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
-        vanityPath = "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/vanity"; 
+        vanityPath = "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/vanity";
         vanityUrl = HTTP_BASE_URL + vanityPath;
-        
-       
+
+
     }
-    
+
     /** test vanity path with internal redirect */
     public void testInternalRedirect() throws IOException {
         // create a node with a vanity path
@@ -60,7 +59,7 @@ public class VanityPathTest extends HttpTestBase {
         props.put("sling:vanityPath", vanityPath);
         String createdNodeUrl = testClient.createNode(postUrl, props);
         String createdPath = createdNodeUrl.substring(HTTP_BASE_URL.length());
-        
+
         waitForMapReload();
 
         // get the created node without following redirects
@@ -70,10 +69,10 @@ public class VanityPathTest extends HttpTestBase {
 
         // expect a 200, not a redirect
         assertEquals(200, status);
-        
+
         assertTrue(get.getResponseBodyAsString().contains(createdPath));
     }
-    
+
     /** test vanity path with redirect */
     public void test302Redirect() throws IOException {
         // create a node with a vanity path
@@ -82,7 +81,7 @@ public class VanityPathTest extends HttpTestBase {
         props.put("sling:vanityPath", vanityPath);
         props.put("sling:redirect", "true");
         String createdNodeUrl = testClient.createNode(postUrl, props);
-        
+
         waitForMapReload();
 
         // get the created node's vanity path without following redirects
@@ -98,7 +97,7 @@ public class VanityPathTest extends HttpTestBase {
         assertNotNull(location);
         assertEquals(removeHttpBase(createdNodeUrl) + ".html", location);
     }
-    
+
     /** test vanity path with 301 redirect */
     public void test301Redirect() throws IOException {
         // create a node with a vanity path
@@ -108,7 +107,7 @@ public class VanityPathTest extends HttpTestBase {
         props.put("sling:redirect", "true");
         props.put("sling:redirectStatus", "301");
         String createdNodeUrl = testClient.createNode(postUrl, props);
-        
+
         waitForMapReload();
 
         // get the created node without following redirects
@@ -124,7 +123,7 @@ public class VanityPathTest extends HttpTestBase {
         assertNotNull(location);
         assertEquals(removeHttpBase(createdNodeUrl) + ".html", location);
     }
-    
+
     /** test vanity path with redirect using a non-html extension and a selector */
     public void testRedirectKeepingExtensionAndSelector() throws IOException {
         // create a node with a vanity path
@@ -133,7 +132,7 @@ public class VanityPathTest extends HttpTestBase {
         props.put("sling:vanityPath", vanityPath);
         props.put("sling:redirect", "true");
         String createdNodeUrl = testClient.createNode(postUrl, props);
-        
+
         waitForMapReload();
 
         // get the created node's vanity path without following redirects
@@ -158,14 +157,14 @@ public class VanityPathTest extends HttpTestBase {
         props.put("sling:vanityPath", vanityPath);
         props.put("sling:redirect", "true");
         String createdNodeUrl = testClient.createNode(postUrl, props);
-        
+
         String pathWithExtension = removeHttpBase(createdNodeUrl) + ".ext";
         List<NameValuePair> moveParams = Arrays.asList(
                 new NameValuePair(":dest", pathWithExtension),
                 new NameValuePair(":operation", "move"));
         assertPostStatus(createdNodeUrl, 201, moveParams, "Could not move created node from " + createdNodeUrl);
         createdNodeUrl = createdNodeUrl + ".ext";
-        
+
         waitForMapReload();
 
         // get the created node's vanity path without following redirects
@@ -192,7 +191,7 @@ public class VanityPathTest extends HttpTestBase {
      */
     private void waitForMapReload() {
         try {
-            Thread.sleep(500L);
+            Thread.sleep(750L);
         } catch (InterruptedException e) {
         }
     }
