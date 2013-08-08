@@ -20,11 +20,10 @@ package org.apache.sling.event.impl.jobs.jmx;
 import java.util.Date;
 import java.util.Dictionary;
 
-import junit.framework.Assert;
-
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.jmx.StatisticsMBean;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;

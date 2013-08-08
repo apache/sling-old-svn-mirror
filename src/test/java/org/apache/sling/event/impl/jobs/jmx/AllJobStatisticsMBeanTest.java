@@ -19,10 +19,10 @@ package org.apache.sling.event.impl.jobs.jmx;
 
 import java.util.Date;
 
-import junit.framework.Assert;
 import junitx.util.PrivateAccessor;
 
 import org.apache.sling.event.jobs.JobManager;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
