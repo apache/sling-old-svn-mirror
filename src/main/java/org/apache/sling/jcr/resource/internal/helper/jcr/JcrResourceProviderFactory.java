@@ -18,6 +18,7 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -158,14 +159,13 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
      * authentication info in order to create a new resolver as needed.
      */
     private ResourceProvider getResourceProviderInternal(
-            final Map<String, Object> authenticationInfo, final boolean isAdmin)
+            Map<String, Object> authenticationInfo, final boolean isAdmin)
             throws LoginException {
 
-        // TODO: Consider:
-        //        if (authenticationInfo == null) {
-        //            authenticationInfo = Collections.emptyMap();
-        //        }
-        // instead of repeated checks down the line ...
+        // Make sure authenticationInfo is not null
+        if (authenticationInfo == null) {
+            authenticationInfo = Collections.emptyMap();
+        }
 
         // by default any session used by the resource resolver returned is
         // closed when the resource resolver is closed
@@ -178,6 +178,15 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             final String workspace = getWorkspace(authenticationInfo);
             if (isAdmin) {
 
+                /*
+                 * This implements the deprecated getAdministrativeResourceResolver
+                 * method which is implemented in terms of the deprecated
+                 * SlingRepository.loginAdministrative(String) method. Either
+                 * one can fail, so it is ok to use the deprecated method
+                 * here instead of a properly configured call to
+                 * SlingRepository.loginService(String, String)
+                 */
+
                 // requested admin session to any workspace (or default)
                 session = repository.loginAdministrative(workspace);
 
@@ -186,16 +195,14 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                 session = getSession(authenticationInfo);
                 if (session == null) {
 
-                    final Object serviceBundleObject = (authenticationInfo != null)
-                            ? authenticationInfo.get(SERVICE_BUNDLE)
-                            : null;
+                    final Object serviceBundleObject = authenticationInfo.get(SERVICE_BUNDLE);
                     if (serviceBundleObject instanceof Bundle) {
 
                         final String subServiceName = (authenticationInfo.get(ResourceResolverFactory.SUBSERVICE) instanceof String)
                                 ? (String) authenticationInfo.get(ResourceResolverFactory.SUBSERVICE)
                                 : null;
 
-                                final BundleContext bc = ((Bundle) serviceBundleObject).getBundleContext();
+                        final BundleContext bc = ((Bundle) serviceBundleObject).getBundleContext();
 
                         final SlingRepository repo = (SlingRepository) bc.getService(repositoryReference);
                         if (repo == null) {
@@ -237,6 +244,15 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                     // session's user (if required)
                     Session tmpSession = null;
                     try {
+
+                        /*
+                         * TODO: Instead of using the deprecated loginAdministrative
+                         * method, this bundle could be configured with an appropriate
+                         * user for service authentication and do:
+                         *     tmpSession = repository.loginService(null, workspace);
+                         * For now, we keep loginAdministrative
+                         */
+
                         tmpSession = repository.loginAdministrative(workspace);
                         if (tmpSession.getUserID().equals(session.getUserID())) {
                             session = tmpSession;
@@ -269,40 +285,6 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
         }
 
         return new JcrResourceProvider(session, this.getDynamicClassLoader(), holder);
-    }
-
-    /**
-     * Return the sudo user information.
-     * If the sudo user info is provided, it is returned, otherwise
-     * <code>null</code> is returned.
-     * @param authenticationInfo Optional authentication info.
-     * @return The configured sudo user information or <code>null</code>
-     */
-    private String getSudoUser(final Map<String, Object> authenticationInfo) {
-        if (authenticationInfo != null) {
-            final Object sudoObject = authenticationInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
-            if (sudoObject instanceof String) {
-                return (String) sudoObject;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Return the workspace name.
-     * If the workspace name is provided, it is returned, otherwise
-     * <code>null</code> is returned.
-     * @param authenticationInfo Optional authentication info.
-     * @return The configured workspace name or <code>null</code>
-     */
-    private String getWorkspace(final Map<String, Object> authenticationInfo) {
-        if (authenticationInfo != null) {
-            final Object workspaceObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE);
-            if (workspaceObject instanceof String) {
-                return (String) workspaceObject;
-            }
-        }
-        return null;
     }
 
     /**
@@ -441,18 +423,46 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
     }
 
     /**
+     * Return the sudo user information.
+     * If the sudo user info is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Authentication info (not {@code null}).
+     * @return The configured sudo user information or <code>null</code>
+     */
+    private String getSudoUser(final Map<String, Object> authenticationInfo) {
+        final Object sudoObject = authenticationInfo.get(ResourceResolverFactory.USER_IMPERSONATION);
+        if (sudoObject instanceof String) {
+            return (String) sudoObject;
+        }
+        return null;
+    }
+
+    /**
+     * Return the workspace name.
+     * If the workspace name is provided, it is returned, otherwise
+     * <code>null</code> is returned.
+     * @param authenticationInfo Authentication info (not {@code null}).
+     * @return The configured workspace name or <code>null</code>
+     */
+    private String getWorkspace(final Map<String, Object> authenticationInfo) {
+        final Object workspaceObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_WORKSPACE);
+        if (workspaceObject instanceof String) {
+            return (String) workspaceObject;
+        }
+        return null;
+    }
+
+    /**
      * Returns the session provided as the user.jcr.session property of the
      * <code>authenticationInfo</code> map or <code>null</code> if the
      * property is not contained in the map or is not a <code>javax.jcr.Session</code>.
-     * @param authenticationInfo Optional authentication info.
+     * @param authenticationInfo Authentication info (not {@code null}).
      * @return The user.jcr.session property or <code>null</code>
      */
     private Session getSession(final Map<String, Object> authenticationInfo) {
-        if (authenticationInfo != null) {
-            final Object sessionObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_SESSION);
-            if (sessionObject instanceof Session) {
-                return (Session) sessionObject;
-            }
+        final Object sessionObject = authenticationInfo.get(JcrResourceConstants.AUTHENTICATION_INFO_SESSION);
+        if (sessionObject instanceof Session) {
+            return (Session) sessionObject;
         }
         return null;
     }
