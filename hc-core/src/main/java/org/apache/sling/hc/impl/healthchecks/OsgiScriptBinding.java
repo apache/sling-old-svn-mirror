@@ -30,7 +30,7 @@ public class OsgiScriptBinding {
     private final Logger logger;
     private final BundleContext bundleContext;
     
-    OsgiScriptBinding(BundleContext ctx, Logger logger) {
+    public OsgiScriptBinding(BundleContext ctx, Logger logger) {
         this.logger = logger;
         this.bundleContext = ctx;
     }
