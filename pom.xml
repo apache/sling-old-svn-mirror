@@ -27,8 +27,6 @@
     
     <modules>
         <module>hc-core</module>
-        <module>hc-rules</module>
-        <module>hc-sling</module>
         <module>sling-demo</module>
         <module>it</module>
     </modules>
