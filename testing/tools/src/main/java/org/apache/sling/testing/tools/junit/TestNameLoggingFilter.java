@@ -42,7 +42,7 @@ import org.slf4j.MDC;
  */
 @Component
 @Service
-@Property(name = "pattern",value="/*")
+@Property(name = "pattern",value="/.*")
 public class TestNameLoggingFilter implements Filter{
 
     private Logger log = LoggerFactory.getLogger(getClass());
