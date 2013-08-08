@@ -14,15 +14,15 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.hc.slingdemo</artifactId>
+    <artifactId>org.apache.sling.hc.samples</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Sling demo content</name>
+    <name>Sling Health Check Samples</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        Sling demo content for Sling Health Check
+        Sling Health Check sample content and configurations
     </description>
 
     <build>
