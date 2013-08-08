@@ -1151,9 +1151,10 @@ public class JobManagerImpl
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+            final String lockName = ResourceHelper.filterName(id);
             final StringBuilder sb = new StringBuilder(this.configuration.getLocksPath());
             sb.append('/');
-            sb.append(ResourceHelper.filterName(id));
+            sb.append(lockName);
             final String path = sb.toString();
 
             Resource lockResource = resolver.getResource(path);
@@ -1169,12 +1170,21 @@ public class JobManagerImpl
                             path,
                             props);
 
-                    final ValueMap vm = lockResource.adaptTo(ValueMap.class);
-                    if ( logger.isDebugEnabled() ) {
-                        logger.debug("Got lock resource on instance {} with {}", Environment.APPLICATION_ID, vm.get(Utility.PROPERTY_LOCK_CREATED_APP));
-                    }
-                    if ( vm.get(Utility.PROPERTY_LOCK_CREATED_APP).equals(Environment.APPLICATION_ID) ) {
-                        hasLock = true;
+                    // check if lock resource has correct name (SNS)
+                    if ( !lockResource.getName().equals(lockName) ) {
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Created SNS lock resource on instance {} - discarding", Environment.APPLICATION_ID);
+                        }
+                        resolver.delete(lockResource);
+                        resolver.commit();
+                    } else {
+                        final ValueMap vm = lockResource.adaptTo(ValueMap.class);
+                        if ( logger.isDebugEnabled() ) {
+                            logger.debug("Got lock resource on instance {} with {}", Environment.APPLICATION_ID, vm.get(Utility.PROPERTY_LOCK_CREATED_APP));
+                        }
+                        if ( vm.get(Utility.PROPERTY_LOCK_CREATED_APP).equals(Environment.APPLICATION_ID) ) {
+                            hasLock = true;
+                        }
                     }
                 } catch (final PersistenceException ignore) {
                     // ignore
