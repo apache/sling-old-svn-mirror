@@ -2,6 +2,6 @@
     "jcr:primaryType" : "sling:OsgiConfig",
     "username" : "admin",
     "password" : "admin",
-    "hc.name" : "Default Admin Login Disabled", 
+    "hc.name" : "Admin login fails with default password", 
     "hc.tags" : [security] 
 }

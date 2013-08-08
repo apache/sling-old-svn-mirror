@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "path" : [
+        "index.html",
+        "index.html.json",
+        "apps/hc.tidy.json",
+        "some/non/existent/path:404"
+    ],
+    "hc.name" : "Initial content is present", 
+    "hc.tags" : [request, sling] 
+}
