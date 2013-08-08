@@ -95,11 +95,10 @@ import org.slf4j.LoggerFactory;
 @Service(value={JobManager.class, EventHandler.class, TopologyEventListener.class, Runnable.class})
 @Properties({
     @Property(name=JobManagerConfiguration.CONFIG_PROPERTY_REPOSITORY_PATH,
-          value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH,
-          propertyPrivate=true),
-    @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
-    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
-    @Property(name=EventConstants.EVENT_TOPIC, propertyPrivate=true,
+          value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH),
+    @Property(name="scheduler.period", longValue=60),
+    @Property(name="scheduler.concurrent", boolValue=false),
+    @Property(name=EventConstants.EVENT_TOPIC,
               value={SlingConstants.TOPIC_RESOURCE_ADDED,
                      "org/apache/sling/event/notification/job/*",
                      ResourceHelper.BUNDLE_EVENT_STARTED,

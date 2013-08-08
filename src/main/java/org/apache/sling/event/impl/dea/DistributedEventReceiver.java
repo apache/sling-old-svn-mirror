@@ -67,10 +67,10 @@ import aQute.bnd.annotation.component.Deactivate;
 @Component(immediate=true)
 @Service(value={EventHandler.class, Runnable.class, TopologyEventListener.class})
 @Properties({
-    @Property(name=EventConstants.EVENT_TOPIC, value="*", propertyPrivate=true),
-    @Property(name=EventConstants.EVENT_FILTER, value="(event.distribute=*)", propertyPrivate=true),
-    @Property(name="scheduler.period", longValue=1800, propertyPrivate=true),
-    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true)
+    @Property(name=EventConstants.EVENT_TOPIC, value="*"),
+    @Property(name=EventConstants.EVENT_FILTER, value="(event.distribute=*)"),
+    @Property(name="scheduler.period", longValue=1800),
+    @Property(name="scheduler.concurrent", boolValue=false)
 })
 public class DistributedEventReceiver
     implements EventHandler, Runnable, TopologyEventListener {

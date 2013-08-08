@@ -46,7 +46,7 @@ import org.osgi.framework.ServiceRegistration;
 
 @Component
 @Service(value = { QueuesMBean.class })
-@Property(name = "jmx.objectname", propertyPrivate = true, value = "org.apache.sling:type=queues,name=QueueNames")
+@Property(name = "jmx.objectname", value = "org.apache.sling:type=queues,name=QueueNames")
 public class QueuesMBeanImpl extends StandardEmitterMBean implements QueuesMBean {
 
     private static final String QUEUE_NOTIFICATION = "org.apache.sling.event.queue";

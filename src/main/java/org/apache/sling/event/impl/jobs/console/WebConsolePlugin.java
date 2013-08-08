@@ -64,11 +64,10 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service(value={javax.servlet.Servlet.class, EventHandler.class})
 @Properties({
-    @Property(name="felix.webconsole.label", value="slingevent", propertyPrivate=true),
-    @Property(name="felix.webconsole.title", value="Jobs", propertyPrivate=true),
-    @Property(name="felix.webconsole.category", value="Sling", propertyPrivate=true),
-    @Property(name="event.topics",propertyPrivate=true,
-              value={"sling/webconsole/test"})
+    @Property(name="felix.webconsole.label", value="slingevent"),
+    @Property(name="felix.webconsole.title", value="Jobs"),
+    @Property(name="felix.webconsole.category", value="Sling"),
+    @Property(name="event.topics", value={"sling/webconsole/test"})
 })
 public class WebConsolePlugin extends HttpServlet implements EventHandler {
 
