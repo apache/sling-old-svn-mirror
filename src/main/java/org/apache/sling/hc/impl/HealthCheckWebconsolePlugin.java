@@ -67,10 +67,9 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     
     @Reference
     private HealthCheckSelector selector;
-    
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Static resource?
+
+    /** Serve static resource if applicable, and return true in that case */
+    private boolean getStaticResource(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         final String pathInfo = req.getPathInfo();
         if(pathInfo!= null && pathInfo.contains("res/ui")) {
             final String prefix = "/" + LABEL;
@@ -84,6 +83,14 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                 resp.getOutputStream().write(buffer, 0, n); 
             }
             resp.getOutputStream().flush();
+            return true;
+        }
+        return false;
+    }
+    
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if(getStaticResource(req, resp)) {
             return;
         }
         
@@ -93,17 +100,28 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         
         doForm(req, resp, tags, debug, quiet);
         
-        final List<HealthCheck> checks = selector.getTaggedHealthCheck(tags.split(","));
-        final PrintWriter pw = resp.getWriter();
-        pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
-        for(HealthCheck hc : checks) {
-            final ResultLog rl = new ResultLog(log);
-            final Result r = hc.execute(rl);
-            if(!quiet || !r.isOk()) {
-                renderResult(resp, r, debug);
+        // Execute health checks only if tags are specified (even if empty)
+        if(req.getParameter(PARAM_TAGS) != null) {
+            final List<HealthCheck> checks = selector.getTaggedHealthCheck(tags.split(","));
+            final PrintWriter pw = resp.getWriter();
+            pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
+            int total = 0;
+            int failed = 0;
+            for(HealthCheck hc : checks) {
+                final ResultLog rl = new ResultLog(log);
+                final Result r = hc.execute(rl);
+                total++;
+                if(!r.isOk()) {
+                    failed++;
+                }
+                if(!quiet || !r.isOk()) {
+                    renderResult(resp, r, debug);
+                }
             }
+            final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
+            c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
+            pw.println("</table>");
         }
-        pw.println("</table>");
     }
     
     private void renderResult(HttpServletResponse resp, Result result, boolean debug) throws IOException {
