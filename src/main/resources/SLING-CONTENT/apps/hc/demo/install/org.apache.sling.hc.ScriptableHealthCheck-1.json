@@ -1,7 +1,7 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
     "expression" : "jmx.attribute('java.lang:type=ClassLoading', 'LoadedClassCount') > 10 &&  jmx.attribute('java.lang:type=Runtime', 'ManagementSpecVersion') > 1", 
-    "hc.name" : "Scripted example: check two JMX attributes", 
+    "hc.name" : "Check two JMX attributes", 
     "language.extension" : "ecma", 
     "hc.tags" : [jvm, script] 
 }
