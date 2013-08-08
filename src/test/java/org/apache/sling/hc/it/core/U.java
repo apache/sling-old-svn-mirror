@@ -49,7 +49,10 @@ public class U {
             provision(
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
-                    mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0")
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
+                    mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
             )
         );
     }
