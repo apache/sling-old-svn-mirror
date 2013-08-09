@@ -84,12 +84,23 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     }
 
     public HealthCheckMBean(HealthCheck hc) {
-        String name = hc.getInfo() == null ? null : hc.getInfo().get(Constants.HC_NAME);
-        if(name == null) {
+        String name = null;
+        if(hc.getInfo() != null) {
+            name = hc.getInfo().get(Constants.HC_MBEAN_NAME);
+            if(empty(name)) {
+                name = hc.getInfo().get(Constants.HC_NAME);
+            }
+        }
+                
+        if(empty(name)) {
             name = hc.toString();
         }
         beanName = name;
         healthCheck = hc;
+    }
+    
+    private static boolean empty(String str) {
+        return str == null || str.trim().length() == 0;
     }
     
     @Override

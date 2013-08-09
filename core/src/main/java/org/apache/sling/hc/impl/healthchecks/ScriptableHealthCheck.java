@@ -70,6 +70,9 @@ public class ScriptableHealthCheck implements HealthCheck {
     @Property
     public static final String PROP_NAME = Constants.HC_NAME;
     
+    @Property
+    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
+    
     @Reference
     private ScriptEngineManager scriptEngineManager;
     
@@ -82,6 +85,7 @@ public class ScriptableHealthCheck implements HealthCheck {
         info.put(PROP_EXPRESSION, expression);
         info.put(PROP_LANGUAGE_EXTENSION, languageExtension);
         info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
         info.put(Constants.HC_TAGS, 
                 Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         
