@@ -92,8 +92,10 @@ public abstract class JsonObjectCreator {
                 @SuppressWarnings("unchecked")
                 final Map.Entry prop = props.next();
 
-                createProperty(obj, valueMap, prop.getKey().toString(),
-                    prop.getValue());
+                if ( prop.getValue() != null ) {
+                    createProperty(obj, valueMap, prop.getKey().toString(),
+                        prop.getValue());
+                }
             }
         }
 
