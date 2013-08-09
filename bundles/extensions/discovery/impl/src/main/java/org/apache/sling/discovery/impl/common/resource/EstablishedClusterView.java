@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
@@ -36,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A ClusterView which represents an established view and contains all members
  * as stored in the repository at the according location
- * 
+ *
  */
 public class EstablishedClusterView extends DefaultClusterViewImpl {
 
