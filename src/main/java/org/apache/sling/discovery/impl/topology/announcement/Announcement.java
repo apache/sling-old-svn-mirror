@@ -39,8 +39,6 @@ import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
 import org.apache.sling.discovery.impl.common.DefaultInstanceDescriptionImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An announcement is the information exchanged by the topology connector and
@@ -50,9 +48,6 @@ import org.slf4j.LoggerFactory;
  * An announcement is exchanged in json format and carries a timeout.
  */
 public class Announcement {
-
-    private final static Logger logger = LoggerFactory
-            .getLogger(Announcement.class);
 
     /** the protocol version this announcement currently represents. Mismatching protocol versions are
      * used to detect incompatible topology connectors

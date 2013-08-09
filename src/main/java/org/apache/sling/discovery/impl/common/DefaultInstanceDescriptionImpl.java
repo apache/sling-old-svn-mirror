@@ -29,8 +29,6 @@ import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 
-import aQute.bnd.service.ResourceHandle;
-
 /**
  * Base implementation for the InstanceDescription interface.
  * <p>
@@ -178,7 +176,7 @@ public class DefaultInstanceDescriptionImpl implements InstanceDescription {
 		if (rawProps==null) {
 			return null;
 		}
-		
+
 		final HashMap<String, String> filteredProps = new HashMap<String, String>();
 		final Set<Entry<String, String>> entries = rawProps.entrySet();
 		final Iterator<Entry<String, String>> it = entries.iterator();
