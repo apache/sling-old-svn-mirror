@@ -61,6 +61,13 @@
                         <Private-Package>
                             org.apache.sling.servlets.resolver.*
                         </Private-Package>
+                        <Import-Package>
+                            !org.apache.sling.engine.impl.*,
+                            *
+                        </Import-Package>
+                        <Embed-Dependency>
+                            org.apache.sling.engine;inline="org/apache/sling/engine/impl/request/SlingRequestPathInfo*",
+                        </Embed-Dependency>                
                     </instructions>
                 </configuration>
             </plugin>

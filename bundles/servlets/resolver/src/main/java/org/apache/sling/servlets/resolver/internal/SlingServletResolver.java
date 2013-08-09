@@ -62,6 +62,7 @@ import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.RequestUtil;
 import org.apache.sling.api.resource.LoginException;
@@ -1166,49 +1167,10 @@ public class SlingServletResolver
             }
         }
 
-        class DecomposedURL {
-            final String extension;
-            final String path;
-            final String[] selectors;
-
-            DecomposedURL(String url) {
-                if (url != null) {
-                    final int lastDot = url.lastIndexOf('.');
-                    final int firstDot = url.indexOf('.');
-                    if (lastDot > 0) {
-                        final int slashInExtension = url.indexOf('/', lastDot);
-                        // strip suffix, if any
-                        if (slashInExtension > 0) {
-                            extension = url.substring(lastDot + 1, slashInExtension);
-                        } else {
-                            extension = url.substring(lastDot + 1);
-                        }
-
-                        path = url.substring(0, firstDot);
-                        if (lastDot != firstDot) {
-                            // has selectors
-                            final String selectorString = url.substring(firstDot + 1, lastDot);
-                            selectors = selectorString.split("\\.");
-                        } else {
-                            selectors = new String[0];
-                        }
-                    } else {
-                        extension = "";
-                        path = url;
-                        selectors = new String[0];
-                    }
-                } else {
-                    extension = "";
-                    path = "";
-                    selectors = new String[0];
-                }
-            }
-        }
-
         @Override
         protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
             final String url = request.getParameter(PARAMETER_URL);
-            final DecomposedURL decomposed = new DecomposedURL(url);
+            final RequestPathInfo requestPathInfo = new DecomposedURL(url).getRequestPathInfo();
             String method = request.getParameter(PARAMETER_METHOD);
             if (StringUtils.isBlank(method)) {
                 method = "GET";
@@ -1258,31 +1220,42 @@ public class SlingServletResolver
                     tdContent(pw);
                     pw.println("<dl>");
                     pw.println("<dt>Path</dt>");
-                    pw.println("<dd>" + decomposed.path + "</dd>");
+                    pw.println("<dd>" + requestPathInfo.getResourcePath() + "</dd>");
                     pw.println("<dt>Selectors</dt>");
                     pw.print("<dd>");
-                    if (decomposed.selectors.length == 0) {
+                    if (requestPathInfo.getSelectors().length == 0) {
                         pw.print("&lt;none&gt;");
                     } else {
                         pw.print("[");
-                        pw.print(StringUtils.join(decomposed.selectors, ", "));
+                        pw.print(StringUtils.join(requestPathInfo.getSelectors(), ", "));
                         pw.print("]");
                     }
                     pw.println("</dd>");
                     pw.println("<dt>Extension</dt>");
-                    pw.println("<dd>" + decomposed.extension + "</dd>");
+                    pw.println("<dd>" + requestPathInfo.getExtension() + "</dd>");
+                    pw.println("</dl>");
+                    pw.println("</dd>");
+                    pw.println("<dt>Suffix</dt>");
+                    pw.println("<dd>" + requestPathInfo.getSuffix() + "</dd>");
                     pw.println("</dl>");
                     closeTd(pw);
                     closeTr(pw);
                 }
 
-                if (StringUtils.isNotBlank(decomposed.path)) {
+                if (StringUtils.isNotBlank(requestPathInfo.getResourcePath())) {
                     final Collection<Resource> servlets;
-                    Resource resource = resourceResolver.resolve(decomposed.path);
+                    Resource resource = resourceResolver.resolve(requestPathInfo.getResourcePath());
                     if (resource.adaptTo(Servlet.class) != null) {
                         servlets = Collections.singleton(resource);
                     } else {
-                        final ResourceCollector locationUtil = ResourceCollector.create(resource, defaultWorkspaceName, decomposed.extension, executionPaths, defaultExtensions, method, decomposed.selectors);
+                        final ResourceCollector locationUtil = ResourceCollector.create(
+                                resource, 
+                                defaultWorkspaceName, 
+                                requestPathInfo.getExtension(), 
+                                executionPaths, 
+                                defaultExtensions, 
+                                method, 
+                                requestPathInfo.getSelectors());
                         servlets = locationUtil.getServlets(resourceResolver);
                     }
                     tr(pw);
@@ -1292,7 +1265,7 @@ public class SlingServletResolver
                     if (servlets == null || servlets.isEmpty()) {
                         pw.println("Could not find a suitable servlet for this request!");
                     } else {
-                        pw.println("Candidate servlets and scripts in order of preference:<br/>");
+                        pw.println("Candidate servlets and scripts in order of preference for method " + method + ":<br/>");
                         pw.println("<ol class='servlets'>");
                         Iterator<Resource> iterator = servlets.iterator();
                         outputServlets(pw, iterator);
