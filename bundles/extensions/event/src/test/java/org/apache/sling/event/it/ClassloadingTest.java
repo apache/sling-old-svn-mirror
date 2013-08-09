@@ -44,15 +44,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.ExamReactorStrategy;
-import org.ops4j.pax.exam.junit.JUnit4TestRunner;
-import org.ops4j.pax.exam.spi.reactors.AllConfinedStagedReactorFactory;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
 
-@RunWith(JUnit4TestRunner.class)
-@ExamReactorStrategy(AllConfinedStagedReactorFactory.class)
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class ClassloadingTest extends AbstractJobHandlingTest {
 
     private static final int CONDITION_INTERVAL_MILLIS = 50;
@@ -197,7 +197,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
             // wait until the conditions are met
             new RetryLoop(new RetryLoop.Condition() {
-                
+
                 @Override
                 public boolean isTrue() throws Exception {
                     return failedJobsCount.get() == 0
@@ -207,7 +207,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                             && jobManager.getStatistics().getNumberOfQueuedJobs() == 0
                             && jobManager.getStatistics().getNumberOfActiveJobs() == 0;
                 }
-                
+
                 @Override
                 public String getDescription() {
                     return "Waiting for job failure to be recorded";
