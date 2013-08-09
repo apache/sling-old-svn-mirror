@@ -1,9 +1,0 @@
-{
-  "sling:resourceType" : "sling/healthcheck/rules",
-  "expression": "BUNDLE_NOT_FOUND",
-  "ruleName": "bundle.state",
-  "namespace": "osgi",
-  "jcr:primaryType": "nt:unstructured",
-  "qualifier": "non.existent.bundle",
-  "tags" : "bundles"
-}
