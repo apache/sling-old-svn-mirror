@@ -17,66 +17,51 @@
  */
 package org.apache.sling.hc.it.core;
 
-import static org.junit.Assert.assertEquals;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.provision;
-import static org.ops4j.pax.exam.CoreOptions.when;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import static org.ops4j.pax.exam.CoreOptions.when;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
-
-import org.apache.sling.hc.api.EvaluationResult;
-import org.apache.sling.hc.api.HealthCheckFacade;
-import org.apache.sling.hc.api.RulesEngine;
 import org.ops4j.pax.exam.Option;
 
 /** Test utilities */
 public class U {
     
-    static Option[] config(boolean includeRules) {
+    static Option[] config() {
         final String coreVersion = System.getProperty("sling.hc.core.version");
-        String localRepo = System.getProperty("maven.repo.local", "");
+        final String localRepo = System.getProperty("maven.repo.local", "");
+        final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
 
-        if(includeRules) {
-            return options(
-                    when(localRepo.length() > 0).useOptions(
-                            systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
-                    ),
-                    junitBundles(),
+        return options(
+            when(localRepo.length() > 0).useOptions(
+                    systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
+            ),                    
+            junitBundles(),
+            when(felixShell).useOptions(
                     provision(
-                            mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
-                            mavenBundle("org.apache.sling", "org.apache.sling.hc.rules", coreVersion)
+                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.shell", "0.10.0"),
+                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.runtime", "0.10.0"),
+                            mavenBundle("org.apache.felix", "org.apache.felix.gogo.command", "0.12.0")
                     )
-            );
-        } else {
-            return options(
-                    when(localRepo.length() > 0).useOptions(
-                            systemProperty("org.ops4j.pax.url.mvn.localRepository").value(localRepo)
-                    ),                    
-                    junitBundles(),
-                    provision(
-                            mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion)
-                    )
-            );
-        }
-    }
-    
-    static List<EvaluationResult> evaluateRules(HealthCheckFacade facade, String [] rules) throws IOException {
-        final RulesEngine e = facade.getNewRulesEngine();
-        final StringBuilder b = new StringBuilder();
-        for(String line : rules) {
-            b.append(line).append("\n");
-        }
-        e.addRules(facade.parseSimpleTextRules(new StringReader(b.toString())));
-        return e.evaluateRules();
-    }
-    
-    static void assertResult(EvaluationResult rr, boolean expectOk, String ruleString) {
-        assertEquals("Expecting " + rr.getRule() + " result to match", expectOk, !rr.anythingToReport());
-        assertEquals("Expecting " + rr.getRule() + " string to match", ruleString, rr.getRule().toString());
+            ),
+            provision(
+                    mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.2.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.2"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.2.2"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
+                    mavenBundle("commons-collections", "commons-collections", "3.2.1"),
+                    mavenBundle("commons-io", "commons-io", "1.4"),
+                    mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
+            )
+        );
     }
 }
