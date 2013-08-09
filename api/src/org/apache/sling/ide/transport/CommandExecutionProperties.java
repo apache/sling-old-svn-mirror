@@ -17,6 +17,8 @@
 
 public final class CommandExecutionProperties {
 
+    public static final String TOPIC = Repository.class.getPackage().getName().replace('.', '/');
+
     public static final String TIMESTAMP_START = "timestamp.start";
     public static final String TIMESTAMP_END = "timestamp.end";
     public static final String ACTION_TYPE = "action.type";

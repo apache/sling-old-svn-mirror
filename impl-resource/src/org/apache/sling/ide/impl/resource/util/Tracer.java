@@ -16,12 +16,15 @@
  */
 package org.apache.sling.ide.impl.resource.util;
 
+import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.eclipse.osgi.service.debug.DebugOptions;
 import org.eclipse.osgi.service.debug.DebugOptionsListener;
 import org.eclipse.osgi.service.debug.DebugTrace;
 import org.eclipse.osgi.util.NLS;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
-public class Tracer implements DebugOptionsListener {
+public class Tracer implements DebugOptionsListener, EventHandler {
 
     private boolean debugEnabled;
     private DebugTrace trace;
@@ -41,6 +44,19 @@ public class Tracer implements DebugOptionsListener {
             message = NLS.bind(message, arguments);
 
         trace.trace("/debug", message);
+    }
+
+    @Override
+    public void handleEvent(Event event) {
+        if ( !debugEnabled ) 
+            return;
+        
+        String type = (String) event.getProperty(CommandExecutionProperties.ACTION_TYPE);
+        String target = (String) event.getProperty(CommandExecutionProperties.ACTION_TARGET);
+        String result = (String) event.getProperty(CommandExecutionProperties.RESULT_TEXT);
+
+
+        trace.trace("/debug", NLS.bind("{0} -> {1} : {2}", new Object[] { type, target, result }));
     }
 
 }
