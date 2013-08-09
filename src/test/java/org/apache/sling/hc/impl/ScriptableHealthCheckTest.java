@@ -17,6 +17,7 @@
  */
 package org.apache.sling.hc.impl;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
@@ -35,8 +36,6 @@ import org.mockito.Mockito;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.LoggerFactory;
 
-import com.sun.script.javascript.RhinoScriptEngine;
-
 public class ScriptableHealthCheckTest {
     
     private ScriptableHealthCheck hc;
@@ -50,9 +49,10 @@ public class ScriptableHealthCheckTest {
         ctx = Mockito.mock(ComponentContext.class);
         props = new Hashtable<String, String>();
         
-        final ScriptEngine engine = new RhinoScriptEngine();
+        final ScriptEngine rhino = new ScriptEngineManager().getEngineByExtension("js");
+        assertNotNull("With the rhino jar in our classpath, we should get a js script engine", rhino);
         final ScriptEngineManager manager = Mockito.mock(ScriptEngineManager.class);
-        Mockito.when(manager.getEngineByExtension(Matchers.same("ecma"))).thenReturn(engine);
+        Mockito.when(manager.getEngineByExtension(Matchers.same("ecma"))).thenReturn(rhino);
         final Field f = hc.getClass().getDeclaredField("scriptEngineManager");
         f.setAccessible(true);
         f.set(hc, manager);
