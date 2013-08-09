@@ -52,6 +52,8 @@ public abstract class AbstractJobHandlingTest {
 
     private static final String BUNDLE_JAR_SYS_PROP = "project.bundle.file";
 
+    protected static final int DEFAULT_TEST_TIMEOUT = 1000*60*5;
+
     @Inject
     protected EventAdmin eventAdmin;
 

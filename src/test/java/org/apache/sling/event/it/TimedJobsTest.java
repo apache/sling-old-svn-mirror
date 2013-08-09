@@ -30,6 +30,7 @@ import javax.inject.Inject;
 
 import org.apache.sling.event.EventUtil;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -56,7 +57,8 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
         this.sleep(1000L);
     }
 
-    @org.junit.Test public void testTimedJob() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testTimedJob() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
 
         final ServiceRegistration ehReg = this.registerEventHandler(TOPIC, new EventHandler() {
@@ -85,7 +87,8 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
         }
     }
 
-    @org.junit.Test public void testPeriodicTimedJob() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testPeriodicTimedJob() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
 
         final ServiceRegistration ehReg = this.registerEventHandler(TOPIC, new EventHandler() {

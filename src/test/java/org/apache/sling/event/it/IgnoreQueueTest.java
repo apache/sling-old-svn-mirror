@@ -33,6 +33,7 @@ import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -73,7 +74,8 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
 
     }
 
-    @org.junit.Test public void testIgnoreQueue() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testIgnoreQueue() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
                 new JobConsumer() {

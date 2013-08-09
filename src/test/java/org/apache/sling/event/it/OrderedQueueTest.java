@@ -82,7 +82,8 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
     /**
      * Ordered Queue Test
      */
-    @Test public void testOrderedQueue() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testOrderedQueue() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
         final Barrier cb = new Barrier(2);
