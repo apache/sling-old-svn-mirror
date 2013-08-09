@@ -95,8 +95,8 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("commons-lang", "commons-lang", "2.5"),
 
                 mavenBundle("org.apache.geronimo.bundles", "commons-httpclient", "3.1_1"),
-                mavenBundle("org.apache.tika", "tika-core", "1.0"),
-                mavenBundle("org.apache.tika", "tika-bundle", "1.0"),
+                mavenBundle("org.apache.tika", "tika-core", "1.2"),
+                mavenBundle("org.apache.tika", "tika-bundle", "1.2"),
 
                 mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.14"),
