@@ -39,6 +39,9 @@ public class ReadableValueMap implements ValueMap {
 
     protected void createValueMap(final DBObject dbObject) {
         final Map<String, Object> map = new HashMap<String, Object>();
+        if (dbObject == null) {
+            this.valueMap = Collections.<String, Object> emptyMap();
+        }
         for(final String key : dbObject.keySet()) {
             final String name = MongoDBResourceProvider.keyToPropName(key);
             if ( name != null ) {

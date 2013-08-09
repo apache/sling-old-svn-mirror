@@ -116,5 +116,5 @@ public class MongoDBContext {
         props.put("event.distribute", "");
         final Event event = new Event(SlingConstants.TOPIC_RESOURCE_CHANGED, props);
         this.eventAdmin.postEvent(event);
-    }
+    }    
 }

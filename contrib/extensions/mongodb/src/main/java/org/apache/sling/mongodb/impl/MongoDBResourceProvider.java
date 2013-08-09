@@ -27,9 +27,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,13 +46,13 @@ import com.mongodb.QueryBuilder;
  * The MongoDB resource provider creates resources based on MongoDB entries.
  * The resources contain all properties stored in the MongoDB except those starting with a "_".
  */
-public class MongoDBResourceProvider implements ResourceProvider, ModifyingResourceProvider {
+public class MongoDBResourceProvider implements ResourceProvider, ModifyingResourceProvider, QueriableResourceProvider {
 
     /** The special path property containing the (relative) path of the resource in the tree. */
-    public static final String PROP_PATH = "_path";
+    private static final String PROP_PATH = "_path";
 
     /** The id property. */
-    public static final String PROP_ID = "_id";
+    private static final String PROP_ID = "_id";
 
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -95,7 +97,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                 throw new PersistenceException("Resource already exists at " + path, null, path, null);
             }
             final DBObject dbObj = new BasicDBObject();
-            dbObj.put(PROP_PATH, info[1]);
+            dbObj.put(getPROP_PATH(), info[1]);
             if ( properties != null ) {
                 for(Map.Entry<String, Object> entry : properties.entrySet()) {
                     final String key = propNameToKey(entry.getKey());
@@ -135,11 +137,11 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                     final DBCollection col = this.getCollection(info[0]);
                     final String pattern = "^" + Pattern.quote(info[1]) + "/";
 
-                    final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
+                    final DBObject query = QueryBuilder.start(getPROP_PATH()).regex(Pattern.compile(pattern)).get();
                     final DBCursor cur = col.find(query);
                     while ( cur.hasNext() ) {
                         final DBObject dbObj = cur.next();
-                        final String childPath = info[0] + '/' + dbObj.get(PROP_PATH);
+                        final String childPath = info[0] + '/' + dbObj.get(getPROP_PATH());
                         this.deletedResources.add(childPath);
                         this.changedResources.remove(childPath);
                     }
@@ -183,7 +185,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                 // check if the collection still exists
                 final DBCollection col = this.getCollection(info[0]);
                 if ( col != null ) {
-                    if ( col.findAndRemove(QueryBuilder.start(PROP_PATH).is(info[1]).get()) != null ) {
+                    if ( col.findAndRemove(QueryBuilder.start(getPROP_PATH()).is(info[1]).get()) != null ) {
                         this.context.notifyRemoved(info);
                     }
                 }
@@ -193,10 +195,10 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                 final DBCollection col = this.context.getDatabase().getCollection(changed.getCollection());
                 if ( col != null ) {
                     final String[] info = new String[] {changed.getCollection(),
-                            changed.getProperties().get(PROP_PATH).toString()};
+                            changed.getProperties().get(getPROP_PATH()).toString()};
                     // create or update?
                     if ( changed.getProperties().get(PROP_ID) != null ) {
-                        col.update(QueryBuilder.start(PROP_PATH).is(changed.getProperties().get(PROP_PATH)).get(),
+                        col.update(QueryBuilder.start(getPROP_PATH()).is(changed.getProperties().get(getPROP_PATH())).get(),
                                 changed.getProperties());
                         this.context.notifyUpdated(info);
                     } else {
@@ -283,9 +285,9 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
                     pattern = "^" + Pattern.quote(info[1]) + "/([^/])*$";
                 }
 
-                final DBObject query = QueryBuilder.start(PROP_PATH).regex(Pattern.compile(pattern)).get();
+                final DBObject query = QueryBuilder.start(getPROP_PATH()).regex(Pattern.compile(pattern)).get();
                 final DBCursor cur = col.find(query).
-                        sort(BasicDBObjectBuilder.start(PROP_PATH, 1).get());
+                        sort(BasicDBObjectBuilder.start(getPROP_PATH(), 1).get());
                 return new Iterator<Resource>() {
 
                     public boolean hasNext() {
@@ -294,7 +296,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
 
                     public Resource next() {
                         final DBObject obj = cur.next();
-                        final String objPath = obj.get(PROP_PATH).toString();
+                        final String objPath = obj.get(getPROP_PATH()).toString();
                         final int lastSlash = objPath.lastIndexOf('/');
                         final String name;
                         if (lastSlash == -1) {
@@ -332,7 +334,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     /**
      * Extract info about collection and path
      */
-    private String[] extractResourceInfo(final String path) {
+    protected String[] extractResourceInfo(final String path) {
         if ( path.startsWith(this.context.getRootWithSlash()) ) {
             if ( path.length() == this.context.getRootWithSlash().length() ) {
                 // special resource - show all collections
@@ -358,16 +360,18 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     /**
      * Check if a collection with a given name exists
      */
-    private boolean hasCollection(final String name) {
+    protected boolean hasCollection(final String name) {
+        logger.info("Mongo: Getting collection names");
         final Set<String> names = this.context.getDatabase().getCollectionNames();
         return names.contains(name) && !this.context.isFilterCollectionName(name);
     }
 
+    
     /**
      * Check if a collection with a given name exists and return it
      */
-    private DBCollection getCollection(final String name) {
-        if ( this.hasCollection(name) ) {
+    protected DBCollection getCollection(final String name) {
+        if ( this.hasCollection(name) ) {            
             return this.context.getDatabase().getCollection(name);
         }
         return null;
@@ -376,7 +380,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
     /**
      * Get a resource
      */
-    private Resource getResource(final ResourceResolver resourceResolver, final String path, final String[] info) {
+    protected Resource getResource(final ResourceResolver resourceResolver, final String path, final String[] info) {
         if ( info.length == 0 ) {
             // special resource : all collections
             return new MongoDBCollectionResource(resourceResolver, path);
@@ -390,7 +394,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
         logger.debug("Searching {} in {}", info[1], info[0]);
         final DBCollection col = this.getCollection(info[0]);
         if ( col != null ) {
-            final DBObject obj = col.findOne(QueryBuilder.start(PROP_PATH).is(info[1]).get());
+            final DBObject obj = col.findOne(QueryBuilder.start(getPROP_PATH()).is(info[1]).get());
             logger.debug("Found {}", obj);
             if ( obj != null ) {
                 return new MongoDBResource(resourceResolver,
@@ -413,5 +417,29 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
             return stored.getProperties();
         }
         return dbObj;
+    }
+    
+    protected Set<String> getDeletedResources() {
+        return this.deletedResources;
+    }
+    
+    protected Map<String, MongoDBResource> getChangedResources() {
+        return this.changedResources;
+    }
+    
+    protected MongoDBContext getContext() {
+        return this.context;
+    }
+    
+    protected String getPROP_PATH() {
+        return PROP_PATH;
+    }
+
+    public Iterator<Resource> findResources(ResourceResolver resolver, String query, String language) {
+        return null;
+    }
+
+    public Iterator<ValueMap> queryResources(ResourceResolver resolver, String query, String language) {
+        return null;
     }
 }

@@ -35,7 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mongodb.DB;
+import com.mongodb.DBAddress;
 import com.mongodb.Mongo;
+import com.mongodb.MongoOptions;
 
 /**
  * The MongoDB resource provider factory allows to provided resources stored
@@ -66,10 +68,18 @@ public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
 
     @Property(value=DEFAULT_DB)
     private static final String PROP_DB = "db";
-
+    
     @Property(unbounded=PropertyUnbounded.ARRAY, value="system.indexes")
     private static final String PROP_FILTER_COLLECTIONS = "filter.collections";
 
+    private static final int DEFAULT_NUMCONNECTIONS = 10;
+    @Property(intValue=DEFAULT_NUMCONNECTIONS)
+    private static final String PROP_NUM_CONNECTIONS = "numconnections";
+
+    private static final int DEFAULT_THREAD_MULTIPLIER= 5;
+    @Property(intValue=DEFAULT_THREAD_MULTIPLIER)
+    private static final String  PROP_THREAD_MULTIPLIER = "threadmultiplier";
+    
     /** Logger. */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -96,8 +106,13 @@ public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
         final String db = PropertiesUtil.toString(props.get(PROP_DB), DEFAULT_DB);
         logger.info("Starting MongoDB resource provider with host={}, port={}, db={}",
                 new Object[] {host, port, db});
+        final DBAddress address = new DBAddress(host, port, db);
+        final MongoOptions options = new MongoOptions();
+        
+        options.connectionsPerHost = PropertiesUtil.toInteger(props.get(PROP_NUM_CONNECTIONS), DEFAULT_NUMCONNECTIONS);
+        options.threadsAllowedToBlockForConnectionMultiplier = PropertiesUtil.toInteger(props.get(PROP_THREAD_MULTIPLIER), DEFAULT_THREAD_MULTIPLIER);
+        final Mongo m = new Mongo(address, options);
 
-        final Mongo m = new Mongo( host , port );
         final DB database = m.getDB( db );
         logger.info("Connected to database {}", database);
 
@@ -121,5 +136,9 @@ public class MongoDBResourceProviderFactory implements ResourceProviderFactory {
     public ResourceProvider getAdministrativeResourceProvider(final Map<String, Object> authenticationInfo) throws LoginException {
         // for now we allow anonymous access
         return new MongoDBResourceProvider(this.context);
+    }
+    
+    protected MongoDBContext getContext() {
+        return this.context;
     }
 }

@@ -19,6 +19,7 @@ package org.apache.sling.mongodb.impl;
 import java.util.Map;
 
 import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.Resource;
 
 public class ChangeableValueMap
     extends ReadableValueMap
@@ -78,5 +79,9 @@ public class ChangeableValueMap
             this.resource.changed();
         }
         return result;
+    }
+    
+    protected MongoDBResource getResource() {
+        return this.resource;
     }
 }
