@@ -213,6 +213,15 @@ public class SlingRequestPathInfoTest extends TestCase {
         assertEquals("/some/suffix", p.getSuffix());
     }
 
+    public void testDotsAroundSuffix() {
+        RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
+            "/libs/foo/content/something/formitems", ".json/image/vnd/xnd/knd.xml"));
+        assertEquals("/libs/foo/content/something/formitems", p.getResourcePath());
+        assertEquals("json", p.getExtension());
+        assertNull("Selectors are null",p.getSelectorString());
+        assertEquals("/image/vnd/xnd/knd.xml", p.getSuffix());
+    }
+
     public void testJIRA_250_a() {
         RequestPathInfo p = new SlingRequestPathInfo(new MockResource(
             "/bunkai", ".1.json"));
