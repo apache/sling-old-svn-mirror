@@ -19,7 +19,6 @@ package org.apache.sling.ide.impl.resource.transport;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.ide.impl.resource.util.Tracer;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.CommandExecutionProperties;
 import org.apache.sling.ide.transport.RepositoryException;
@@ -30,12 +29,10 @@ import org.osgi.service.event.EventAdmin;
 class TracingCommand<T> implements Command<T> {
 
     private final AbstractCommand<T> command;
-    private final Tracer tracer;
     private final EventAdmin eventAdmin;
 
-    public TracingCommand(AbstractCommand<T> command, Tracer tracer, EventAdmin eventAdmin) {
+    public TracingCommand(AbstractCommand<T> command, EventAdmin eventAdmin) {
         this.command = command;
-        this.tracer = tracer;
         this.eventAdmin = eventAdmin;
     }
 
@@ -45,9 +42,6 @@ class TracingCommand<T> implements Command<T> {
         long start = System.currentTimeMillis();
         Result<T> result = command.execute();
         long end = System.currentTimeMillis();
-
-        if (tracer != null)
-            tracer.trace("{0} -> {1}", command, result.toString());
 
         if (eventAdmin != null) {
             Map<String, Object> props = new HashMap<String, Object>();
@@ -61,7 +55,7 @@ class TracingCommand<T> implements Command<T> {
             props.put(CommandExecutionProperties.ACTION_TARGET, command.getPath());
             props.put(CommandExecutionProperties.TIMESTAMP_START, start);
             props.put(CommandExecutionProperties.TIMESTAMP_END, end);
-            Event event = new Event("org/apache/sling/ide/transport", props);
+            Event event = new Event(CommandExecutionProperties.TOPIC, props);
             eventAdmin.postEvent(event);
         }
 
