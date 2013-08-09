@@ -37,6 +37,7 @@ import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
@@ -83,7 +84,8 @@ public class RoundRobinQueueTest extends AbstractJobHandlingTest {
 
     }
 
-    @org.junit.Test public void testRoundRobinQueue() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testRoundRobinQueue() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
         final Barrier cb = new Barrier(2);

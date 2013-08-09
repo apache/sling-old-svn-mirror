@@ -102,7 +102,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * Test simple job execution.
      * The job is executed once and finished successfully.
      */
-    @Test public void testSimpleJobExecution() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSimpleJobExecution() throws Exception {
         final Barrier cb = new Barrier(2);
 
         final ServiceRegistration reg = this.registerEventHandler("sling/test",
@@ -126,7 +127,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
         }
     }
 
-    @Test public void testManyJobs() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testManyJobs() throws Exception {
         final ServiceRegistration reg1 = this.registerEventHandler("sling/test",
                 new EventHandler() {
                     @Override
@@ -180,7 +182,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * Test simple job execution with job id.
      * The job is executed once and finished successfully.
      */
-    @org.junit.Test public void testSimpleJobWithIdExecution() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testSimpleJobWithIdExecution() throws Exception {
         final Barrier cb = new Barrier(2);
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
                 new JobConsumer() {
@@ -206,7 +209,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * Test canceling a job
      * The job execution always fails
      */
-    @org.junit.Test public void testCancelJob() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testCancelJob() throws Exception {
         final Barrier cb = new Barrier(2);
         final Barrier cb2 = new Barrier(2);
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
@@ -247,7 +251,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * Test force canceling a job
      * The job execution always fails
      */
-    @org.junit.Test public void testForceCancelJob() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testForceCancelJob() throws Exception {
         final Barrier cb = new Barrier(2);
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
                 new JobConsumer() {
@@ -280,7 +285,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * Reschedule test.
      * The job is rescheduled two times before it fails.
      */
-    @org.junit.Test public void testStartJobAndReschedule() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testStartJobAndReschedule() throws Exception {
         final List<Integer> retryCountList = new ArrayList<Integer>();
         final Barrier cb = new Barrier(2);
         final ServiceRegistration jcReg = this.registerJobConsumer(TOPIC,
@@ -326,7 +332,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
      * We send several jobs which are treated different and then see
      * how many invocations have been sent.
      */
-    @org.junit.Test public void testNotifications() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testNotifications() throws Exception {
         final List<String> cancelled = Collections.synchronizedList(new ArrayList<String>());
         final List<String> failed = Collections.synchronizedList(new ArrayList<String>());
         final List<String> finished = Collections.synchronizedList(new ArrayList<String>());
@@ -443,7 +450,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
     /**
      * Test sending of jobs with and without a processor
      */
-    @org.junit.Test(timeout=1000*60*5) public void testNoJobProcessor() throws Exception {
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    public void testNoJobProcessor() throws Exception {
         final AtomicInteger count = new AtomicInteger(0);
         final AtomicInteger unprocessedCount = new AtomicInteger(0);
 
