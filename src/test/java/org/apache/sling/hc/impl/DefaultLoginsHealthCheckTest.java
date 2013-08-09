@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import javax.jcr.Credentials;
 import javax.jcr.Session;
@@ -42,10 +43,9 @@ public class DefaultLoginsHealthCheckTest {
     
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
-    private Result getTestResult(String username, String password) throws Exception {
+    private Result getTestResult(String login) throws Exception {
         final DefaultLoginsHealthCheck c = new DefaultLoginsHealthCheck();
-        setField(c, "username", username);
-        setField(c, "password", password);
+        setField(c, "logins", Arrays.asList(new String[] { login }));
         
         final SlingRepository repo = Mockito.mock(SlingRepository.class);
         setField(c, "repository", repo);
@@ -73,11 +73,11 @@ public class DefaultLoginsHealthCheckTest {
     
     @Test
     public void testHealthCheckFails() throws Exception {
-        assertFalse("Expecting failed check", getTestResult("admin",  "admin").isOk());
+        assertFalse("Expecting failed check", getTestResult("admin:admin").isOk());
     }
     
     @Test
     public void testHealthCheckSucceeds() throws Exception {
-        assertTrue("Expecting successful check", getTestResult("FOO",  "bar").isOk());
+        assertTrue("Expecting successful check", getTestResult("FOO:bar").isOk());
     }
 }

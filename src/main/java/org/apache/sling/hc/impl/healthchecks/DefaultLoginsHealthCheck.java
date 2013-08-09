@@ -19,6 +19,7 @@ package org.apache.sling.hc.impl.healthchecks;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Credentials;
@@ -54,14 +55,10 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Map<String, String> info = new HashMap<String, String>();
-    private String username;
-    private String password;
     
-    @Property
-    public static final String PROP_USERNAME = "username";
-    
-    @Property
-    public static final String PROP_PASSWORD = "password";
+    @Property(cardinality=500)
+    public static final String PROP_LOGINS = "logins";
+    private List<String> logins;
     
     @Property(cardinality=50)
     public static final String PROP_TAGS = Constants.HC_TAGS;
@@ -77,36 +74,56 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
     
     @Activate
     public void activate(ComponentContext ctx) {
-        username = PropertiesUtil.toString(ctx.getProperties().get(PROP_USERNAME), "");
-        password = PropertiesUtil.toString(ctx.getProperties().get(PROP_PASSWORD), "");
+        logins = Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_LOGINS), new String[] {}));
         
-        info.put(PROP_USERNAME, username);
         info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
         info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
         info.put(Constants.HC_TAGS, 
                 Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         
-        log.info("Activated, username={}", username);
+        log.info("Activated, logins={}", logins);
     }
     
     @Override
     public Result execute(ResultLog log) {
         final Result result = new Result(this, log);
-        final Credentials creds = new SimpleCredentials(username, password.toCharArray());
-        Session s = null;
-        try {
-            s = repository.login(creds);
-            if(s != null) {
-                log.warn("Login as [{}] succeeded, was expecting it to fail", username);
-            } else {
-                log.debug("Login as [{}] didn't throw an Exception but returned null Session", username);
+        int checked=0;
+        int failures=0;
+        
+        for(String login : logins) {
+            final String [] parts = login.split(":");
+            if(parts.length != 2) {
+                log.warn("Expected login in the form username:password, got {}", login);
+                continue;
             }
-        } catch(RepositoryException re) {
-            log.debug("Login as [{}] failed, as expected", username);
-        } finally {
-            if(s != null) {
-                s.logout();
+            checked++;
+            final String username = parts[0].trim();
+            final String password = parts[1].trim();
+            final Credentials creds = new SimpleCredentials(username, password.toCharArray());
+            Session s = null;
+            try {
+                s = repository.login(creds);
+                if(s != null) {
+                    failures++;
+                    log.warn("Login as [{}] succeeded, was expecting it to fail", username);
+                } else {
+                    log.debug("Login as [{}] didn't throw an Exception but returned null Session", username);
+                }
+            } catch(RepositoryException re) {
+                log.debug("Login as [{}] failed, as expected", username);
+            } finally {
+                if(s != null) {
+                    s.logout();
+                }
             }
+        }
+        
+        if(checked==0) {
+            log.warn("Did not check any logins, configured logins={}", logins);
+        } else if(failures != 0){
+            log.warn("Checked {} logins, {} tests failed", checked, failures);
+        } else {
+            log.debug("Checked {} logins, all tests successful", checked);
         }
         return result;
     }
