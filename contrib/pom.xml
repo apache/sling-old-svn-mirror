@@ -95,8 +95,9 @@
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
           <module>extensions/i18n</module>
-          <module>extensions/obr</module>
+          <module>extensions/jmxprovider</module>
           <module>extensions/mongodb</module>
+          <module>extensions/obr</module>
           <module>extensions/reqanalyzer</module>
           <module>extensions/rewriter</module>
           <module>extensions/tenant</module>
