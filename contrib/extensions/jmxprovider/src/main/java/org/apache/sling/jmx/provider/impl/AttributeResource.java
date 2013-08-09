@@ -18,17 +18,15 @@
  */
 package org.apache.sling.jmx.provider.impl;
 
+import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
-import javax.management.RuntimeMBeanException;
+import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
 
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.AbstractResource;
@@ -120,19 +118,41 @@ public class AttributeResource extends AbstractResource {
         try {
             final Object value = server.getAttribute(this.on, info.getName());
             if ( value != null ) {
-                result.put("value", value.toString());
+                if ( value.getClass().isArray() ) {
+                    final int length = Array.getLength(value);
+                    final Object[] values = new Object[length];
+                    for (int i = 0; i < length; i ++) {
+                        final Object o = Array.get(value, i);
+                        values[i] = convert(o);
+                    }
+                    result.put("value", values);
+                } else if (value instanceof TabularData) {
+                    // TODO
+                } else if (value instanceof CompositeData) {
+                    // TODO
+                } else {
+                    result.put("value", convert(value));
+                }
             }
-        } catch (final RuntimeMBeanException uoe) {
-            // ignore
-        } catch (final AttributeNotFoundException e) {
-            // ignore
-        } catch (final InstanceNotFoundException e) {
-            // ignore
-        } catch (final MBeanException e) {
-            // ignore
-        } catch (final ReflectionException e) {
-            // ignore
+        } catch (final Exception ignore) {
+            // ignore, but put this as info
+            result.put("exception", ignore.getMessage());
         }
         return result;
+    }
+
+    private Object convert(final Object value) {
+        if ( value == null ) {
+            return "";
+        } else if ( value instanceof String ) {
+            return value;
+        } else if ( value instanceof Number ) {
+            return value;
+        } else if ( value instanceof Boolean ) {
+            return value;
+        } else if ( value instanceof Character ) {
+            return value;
+        }
+        return value.toString();
     }
 }
