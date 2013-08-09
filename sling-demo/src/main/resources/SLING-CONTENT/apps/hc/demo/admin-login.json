@@ -1,8 +1,0 @@
-{
-  "sling:resourceType" : "sling/healthcheck/rules",
-  "ruleName": "loginfails",
-  "namespace": "sling",
-  "jcr:primaryType": "nt:unstructured",
-  "qualifier": "admin#admin",
-  "tags" : [ "admin", "security" ]
-}

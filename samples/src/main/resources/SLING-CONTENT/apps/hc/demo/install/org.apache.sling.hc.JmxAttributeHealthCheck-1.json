@@ -1,0 +1,9 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "mbean.name" : "java.lang:type=ClassLoading", 
+    "attribute.name" : "LoadedClassCount", 
+    "attribute.value.constraint" : "between 5000 and 50000", 
+    "hc.name" : "LoadedClassCount is in range",
+    "hc.mbean.name" : "JMX LoadedClassCount", 
+    "hc.tags" : [jvm, classloading, jmx] 
+}

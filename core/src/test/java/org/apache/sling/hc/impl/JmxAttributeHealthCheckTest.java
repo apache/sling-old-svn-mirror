@@ -1,0 +1,62 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The SF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
+package org.apache.sling.hc.impl;
+
+import static org.junit.Assert.fail;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+
+import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.impl.healthchecks.JmxAttributeHealthCheck;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.LoggerFactory;
+
+public class JmxAttributeHealthCheckTest {
+    
+    static void assertJmxValue(String objectName, String attributeName, String constraint, boolean expected) {
+        final JmxAttributeHealthCheck hc = new JmxAttributeHealthCheck();
+        final ResultLog log = new ResultLog(LoggerFactory.getLogger(JmxAttributeHealthCheckTest.class));
+        
+        final ComponentContext ctx = Mockito.mock(ComponentContext.class);
+        final Dictionary<String, String> props = new Hashtable<String, String>();
+        props.put(JmxAttributeHealthCheck.PROP_OBJECT_NAME, objectName);
+        props.put(JmxAttributeHealthCheck.PROP_ATTRIBUTE_NAME, attributeName);
+        props.put(JmxAttributeHealthCheck.PROP_CONSTRAINT, constraint);
+        Mockito.when(ctx.getProperties()).thenReturn(props);
+        hc.activate(ctx);
+        
+        final Result r = hc.execute(log);
+        if(r.isOk() != expected) {
+            fail("HealthCheck result is " + r.isOk() + ", log=" + r.getLogEntries());
+        }
+    }
+    
+    @Test
+    public void testJmxAttributeMatch() {
+        assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "> 10", true);
+    }
+    
+    @Test
+    public void testJmxAttributeNoMatch() {
+        assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "< 10", false);
+    }
+}

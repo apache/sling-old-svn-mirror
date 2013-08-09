@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project 
+    xmlns="http://maven.apache.org/POM/4.0.0" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>16</version>
+        <relativePath>16</relativePath>
+    </parent>
+
+    <groupId>org.apache.sling</groupId>
+    <artifactId>org.apache.sling.hc.samples</artifactId>
+    <packaging>bundle</packaging>
+    <version>0.0.2-SNAPSHOT</version>
+
+    <name>Sling Health Check Samples</name>
+    <inceptionYear>2013</inceptionYear>
+    
+    <description>
+        Sling Health Check sample content and configurations
+    </description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Sling-Initial-Content>SLING-CONTENT;overwrite:=true</Sling-Initial-Content>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

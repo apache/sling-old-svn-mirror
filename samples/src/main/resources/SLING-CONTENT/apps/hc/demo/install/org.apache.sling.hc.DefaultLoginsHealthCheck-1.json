@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "logins" : ["admin:admin","foo:bar"],
+    "hc.name" : "Default logins should fail", 
+    "hc.tags" : [security] 
+}

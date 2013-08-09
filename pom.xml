@@ -16,9 +16,9 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.reactor</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Tool Reactor POM</name>
+    <name>Sling Health Check Reactor POM</name>
     <inceptionYear>2013</inceptionYear>
 
     <prerequisites>
@@ -26,10 +26,8 @@
     </prerequisites>
     
     <modules>
-        <module>hc-core</module>
-        <module>hc-rules</module>
-        <module>hc-sling</module>
-        <module>sling-demo</module>
+        <module>core</module>
+        <module>samples</module>
         <module>it</module>
     </modules>
 </project>
