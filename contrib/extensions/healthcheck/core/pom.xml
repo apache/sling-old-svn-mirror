@@ -148,9 +148,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.scripting.javascript</artifactId>
-            <version>2.0.12</version>
+            <groupId>rhino</groupId>
+            <artifactId>js</artifactId>
+            <version>1.6R6</version>
             <scope>test</scope>
         </dependency>
      </dependencies>
