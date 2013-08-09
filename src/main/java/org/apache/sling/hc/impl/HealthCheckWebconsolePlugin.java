@@ -164,10 +164,6 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         if(result == null) {
             result = hc.toString();
         }
-        final String description = hc.getInfo().get(Constants.HC_DESCRIPTION);
-        if(description != null) {
-            result += ": " + description;
-        }
         return result;
     }
     

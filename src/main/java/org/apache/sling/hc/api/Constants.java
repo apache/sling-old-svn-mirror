@@ -21,8 +21,8 @@ public interface Constants {
     /** info property name: the name of a health check */
     String HC_NAME = "hc.name";
     
-    /** info property name: description of a health check */
-    String HC_DESCRIPTION = "hc.description";
+    /** info property name: name of the MBean to create for this Health Check */
+    String HC_MBEAN_NAME = "hc.mbean.name";
     
     /** info property name: the tags of a health check */
     String HC_TAGS = "hc.tags";

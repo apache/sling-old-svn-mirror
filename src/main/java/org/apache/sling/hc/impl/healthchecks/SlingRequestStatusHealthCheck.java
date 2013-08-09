@@ -83,6 +83,9 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
     @Property
     public static final String PROP_NAME = Constants.HC_NAME;
     
+    @Property
+    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
+    
     @Reference
     private SlingRequestProcessor requestProcessor;
     
@@ -94,6 +97,7 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
         paths = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_PATH), new String [] {});
         
         info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
         info.put(Constants.HC_TAGS, 
                 Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         

@@ -70,6 +70,9 @@ public class JmxAttributeHealthCheck implements HealthCheck {
     @Property
     public static final String PROP_NAME = Constants.HC_NAME;
     
+    @Property
+    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
+    
     @Activate
     public void activate(ComponentContext ctx) {
         mbeanName = PropertiesUtil.toString(ctx.getProperties().get(PROP_OBJECT_NAME), "");
@@ -80,6 +83,7 @@ public class JmxAttributeHealthCheck implements HealthCheck {
         info.put(PROP_ATTRIBUTE_NAME, attributeName);
         info.put(PROP_CONSTRAINT, constraint);
         info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
+        info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
         info.put(Constants.HC_TAGS, 
                 Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         
