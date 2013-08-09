@@ -21,6 +21,7 @@ import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator extends Plugin {
@@ -30,6 +31,7 @@ public class Activator extends Plugin {
 
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
+    private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
 
     public static Activator getDefault() {
 
@@ -47,6 +49,9 @@ public class Activator extends Plugin {
         filterLocator = new ServiceTracker<FilterLocator, FilterLocator>(context, FilterLocator.class, null);
         filterLocator.open();
 
+        eventAdmin = new ServiceTracker<EventAdmin, EventAdmin>(context, EventAdmin.class, null);
+        eventAdmin.open();
+
         INSTANCE = this;
     }
 
@@ -55,6 +60,7 @@ public class Activator extends Plugin {
         INSTANCE = null;
         serializationManager.close();
         filterLocator.close();
+        eventAdmin.close();
 
         super.stop(context);
     }
@@ -65,5 +71,9 @@ public class Activator extends Plugin {
 
     public FilterLocator getFilterLocator() {
         return ServiceUtil.getNotNull(filterLocator);
+    }
+
+    public EventAdmin getEventAdmin() {
+        return ServiceUtil.getNotNull(eventAdmin);
     }
 }

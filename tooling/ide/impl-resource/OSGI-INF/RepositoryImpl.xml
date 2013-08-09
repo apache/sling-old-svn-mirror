@@ -5,4 +5,5 @@
       <provide interface="org.apache.sling.ide.transport.Repository"/>
    </service>
    <reference bind="bindTracer" cardinality="1..1" interface="org.apache.sling.ide.impl.resource.util.Tracer" name="Tracer" policy="static" unbind="unbindTracer"/>
+   <reference bind="bindEventAdmin" cardinality="1..1" interface="org.osgi.service.event.EventAdmin" name="EventAdmin" policy="static" unbind="unbindEventAdmin"/>
 </scr:component>

@@ -181,5 +181,13 @@
                type="org.eclipse.core.resources.IResource">
          </adapter>
       </factory>
+   </extension>
+   <extension
+         point="org.eclipse.ui.console.consoleFactories">
+      <consoleFactory
+            class="org.apache.sling.ide.eclipse.ui.internal.console.SlingConsoleFactory"
+            label="Sling Console">
+      </consoleFactory>
    </extension> 
+   
 </plugin>    
