@@ -23,7 +23,6 @@ import java.util.Map;
 
 import javax.management.MBeanInfo;
 
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -99,9 +98,9 @@ public class MBeanResource extends AbstractResource {
 
     private Map<String, Object> getPropertiesMap() {
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put(SlingConstants.PROPERTY_RESOURCE_TYPE, this.getResourceType());
+        result.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.getResourceType());
         if ( this.getResourceSuperType() != null ) {
-            result.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, this.getResourceSuperType());
+            result.put("sling:resourceSuperType", this.getResourceSuperType());
         }
 
         if ( this.info.getDescription() != null ) {

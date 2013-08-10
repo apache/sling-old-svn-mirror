@@ -28,7 +28,6 @@ import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -105,9 +104,9 @@ public class AttributeResource extends AbstractResource {
 
     private Map<String, Object> getPropertiesMap() {
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put(SlingConstants.PROPERTY_RESOURCE_TYPE, this.getResourceType());
+        result.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.getResourceType());
         if ( this.getResourceSuperType() != null ) {
-            result.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, this.getResourceSuperType());
+            result.put("sling:resourceSuperType", this.getResourceSuperType());
         }
 
         if ( info.getDescription() != null ) {
