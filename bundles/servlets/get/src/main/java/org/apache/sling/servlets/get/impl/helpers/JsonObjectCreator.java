@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
@@ -83,10 +82,10 @@ public abstract class JsonObjectCreator {
 
             }
             if ( resource.getResourceType() != null ) {
-                obj.put(SlingConstants.PROPERTY_RESOURCE_TYPE, resource.getResourceType());
+                obj.put("sling:resourceType", resource.getResourceType());
             }
             if ( resource.getResourceSuperType() != null ) {
-                obj.put(SlingConstants.PROPERTY_RESOURCE_SUPER_TYPE, resource.getResourceSuperType());
+                obj.put("sling:resourceSuperType", resource.getResourceSuperType());
             }
 
         } else {
