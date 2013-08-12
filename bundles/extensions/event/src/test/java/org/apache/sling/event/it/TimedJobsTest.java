@@ -105,6 +105,7 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             props.put(EventUtil.PROPERTY_TIMED_EVENT_TOPIC, TOPIC);
             props.put(EventUtil.PROPERTY_TIMED_EVENT_PERIOD, 1L);
+            props.put(EventUtil.PROPERTY_TIMED_EVENT_ID, "id");
             this.eventAdmin.sendEvent(new Event(EventUtil.TOPIC_TIMED_EVENT, props));
 
             while ( counter.get() < 5 ) {
@@ -112,6 +113,7 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
             }
             final Dictionary<String, Object> props2 = new Hashtable<String, Object>();
             props2.put(EventUtil.PROPERTY_TIMED_EVENT_TOPIC, TOPIC);
+            props2.put(EventUtil.PROPERTY_TIMED_EVENT_ID, "id");
 
             this.eventAdmin.sendEvent(new Event(EventUtil.TOPIC_TIMED_EVENT, props2));
             int current = counter.get();
