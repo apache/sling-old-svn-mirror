@@ -17,7 +17,9 @@
  */
 package org.apache.sling.hc.util;
 
-import org.slf4j.Logger;
+import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.ResultLogEntry;
+import org.slf4j.helpers.MessageFormatter;
 
 /** Simple check of numeric values against expressions
  *  like < N, > N, between two values etc.
@@ -27,8 +29,8 @@ public class SimpleConstraintChecker {
     
     public static final String CONTAINS = "contains";
     
-    /** Check value against expression and report to logger */
-    public void check(Object inputValue, String constraint, Logger logger) {
+    /** Check value against expression and report to result */
+    public void check(Object inputValue, String constraint, Result result) {
         
         final String stringValue = inputValue == null ? "" : inputValue.toString();
         
@@ -62,13 +64,19 @@ public class SimpleConstraintChecker {
                 matches = constraint.equals(stringValue); 
             }
         } catch(NumberFormatException nfe) {
-            logger.warn("Invalid numeric value [{}] while evaluating {}", inputValue, constraint);
+            result.log(ResultLogEntry.LT_WARN, 
+                    MessageFormatter.format(
+                    "Invalid numeric value [{}] while evaluating {}", inputValue, constraint).getMessage());
         }
         
         if(matches) {
-            logger.debug("Value [{}] matches constraint [{}]", stringValue, constraint);
+            result.log(ResultLogEntry.LT_DEBUG, 
+                    MessageFormatter.format(
+                    "Value [{}] matches constraint [{}]", stringValue, constraint).getMessage());
         } else {
-            logger.warn("Value [{}] does not match constraint [{}]", stringValue, constraint);
+            result.log(ResultLogEntry.LT_WARN, 
+                    MessageFormatter.format(
+                    "Value [{}] does not match constraint [{}]", stringValue, constraint).getMessage());
         }
     }
 }

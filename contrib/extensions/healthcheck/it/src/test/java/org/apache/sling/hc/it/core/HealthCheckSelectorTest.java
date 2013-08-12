@@ -35,7 +35,6 @@ import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.HealthCheckSelector;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -96,7 +95,7 @@ public class HealthCheckSelectorTest {
         }
         
         @Override
-        public Result execute(ResultLog log) {
+        public Result execute() {
             return null;
         }
 

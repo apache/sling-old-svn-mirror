@@ -23,16 +23,12 @@ import java.util.Map;
  *  return an execution Result */
 public interface HealthCheck {
     
-    /** Execute this health check.
-     * @param log Any messages written to that log at or above the
-     *            {@link ResultLog.MIN_LEVEL_TO_REPORT} level mean
-     *            that the health check failed.
-     */
-    public Result execute(ResultLog log);
+    /** Execute this health check and return a {@link Result} */
+    public Result execute();
     
     /** Additional (static) information about
      *  this check. {@link Constants} defines
-     *  some well-known property names. 
+     *  some well-known property names.
      */
     public Map<String, String> getInfo();
 }

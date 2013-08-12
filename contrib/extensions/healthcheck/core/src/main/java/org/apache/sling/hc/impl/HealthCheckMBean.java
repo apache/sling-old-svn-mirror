@@ -19,6 +19,7 @@ package org.apache.sling.hc.impl;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.ResultLogEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,8 +109,7 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
             throws AttributeNotFoundException, MBeanException, ReflectionException {
         
         // TODO cache the result of execution for a few seconds?
-        final ResultLog resultLog = new ResultLog(logger);
-        final Result result = healthCheck.execute(resultLog);
+        final Result result = healthCheck.execute();
         
         if(HC_OK_ATTRIBUTE_NAME.equals(attribute)) {
             return result.isOk();
@@ -127,10 +127,10 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     private TabularData logData(Result er) {
         final TabularDataSupport result = new TabularDataSupport(LOG_TABLE_TYPE);
         int i=1;
-        for(ResultLog.Entry e : er.getLogEntries()) {
+        for(ResultLogEntry e : er) {
             final Map<String, Object> data = new HashMap<String, Object>();
             data.put(INDEX_COLUMN, i++);
-            data.put(LEVEL_COLUMN, e.getLevel().toString());
+            data.put(LEVEL_COLUMN, e.getEntryType());
             data.put(MESSAGE_COLUMN, e.getMessage());
             try {
                 result.put(new CompositeDataSupport(LOG_ROW_TYPE, data));

@@ -28,7 +28,6 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.impl.healthchecks.DefaultLoginsHealthCheck;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
@@ -36,12 +35,8 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class DefaultLoginsHealthCheckTest {
-    
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private Result getTestResult(String login) throws Exception {
         final DefaultLoginsHealthCheck c = new DefaultLoginsHealthCheck();
@@ -61,8 +56,7 @@ public class DefaultLoginsHealthCheckTest {
             }
         });
         
-        final ResultLog log = new ResultLog(logger);
-        return c.execute(log);
+        return c.execute();
     }
     
     private void setField(Object o, String name, Object value) throws Exception {

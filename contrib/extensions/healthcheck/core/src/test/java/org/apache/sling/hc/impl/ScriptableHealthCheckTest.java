@@ -17,8 +17,8 @@
  */
 package org.apache.sling.hc.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.util.Dictionary;
@@ -28,24 +28,20 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.impl.healthchecks.ScriptableHealthCheck;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.osgi.service.component.ComponentContext;
-import org.slf4j.LoggerFactory;
 
 public class ScriptableHealthCheckTest {
     
     private ScriptableHealthCheck hc;
-    private ResultLog log;
     private Dictionary<String, String> props;
     private ComponentContext ctx;
 
     private void assertExpression(String expression, String languageExtension, boolean expected) throws Exception {
         hc = new ScriptableHealthCheck();
-        log = new ResultLog(LoggerFactory.getLogger(getClass()));
         ctx = Mockito.mock(ComponentContext.class);
         props = new Hashtable<String, String>();
         
@@ -63,10 +59,8 @@ public class ScriptableHealthCheckTest {
         }
         Mockito.when(ctx.getProperties()).thenReturn(props);
         hc.activate(ctx);
-        final Result r = hc.execute(log);
-        if(r.isOk() != expected) {
-            fail("HealthCheck result is " + r.isOk() + ", log=" + r.getLogEntries());
-        }
+        final Result r = hc.execute();
+        assertEquals("Expecting result " + expected, expected, r.isOk());
     }
     
     @Test

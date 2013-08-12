@@ -26,7 +26,7 @@ import javax.management.ObjectName;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.ResultLogEntry;
 import org.junit.Test;
 
 public class HealthCheckMBeanTest {
@@ -43,12 +43,12 @@ public class HealthCheckMBeanTest {
     private HealthCheck testHealthCheck = new HealthCheck() {
 
         @Override
-        public Result execute(ResultLog log) {
-            final Result result = new Result(this, log);
+        public Result execute() {
+            final Result result = new Result();
             if(resultOk) {
-                log.debug("Nothing to report, result ok");
+                result.log(ResultLogEntry.LT_DEBUG, "Nothing to report, result ok");
             } else {
-                log.warn("Result is not ok!");
+                result.log(ResultLogEntry.LT_WARN, "Result is not ok!");
             }
             return result;
         }

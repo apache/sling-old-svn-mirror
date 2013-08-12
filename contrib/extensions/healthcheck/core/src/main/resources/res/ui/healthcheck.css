@@ -23,7 +23,10 @@
     color:blue;
 }
 
-.healthcheck .logWARN {
+.healthcheck .logWARN,
+.healthcheck .logSECURITY,
+.healthcheck .logCONFIG
+{
     color:red;
 }
 
