@@ -14,19 +14,23 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.hc.api</artifactId>
+    <artifactId>org.apache.sling.hc.healthchecks</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check API</name>
+    <name>Sling Health Check Module - Health Check Services</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        The Sling Health Check API
+        Default Sling Health Check Services
     </description>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -34,8 +38,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>
-                            org.apache.sling.hc.impl.*,
-                            org.apache.sling.hc.util.*
+                            org.apache.sling.hc.healthchecks.*
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -74,15 +77,53 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
-            <version>1.50.0</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.hc.api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+            <version>2.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.api</artifactId>
+            <version>2.0.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.engine</artifactId>
+            <version>2.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.6.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+       <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
             <scope>provided</scope>
         </dependency>
          <dependency>
@@ -101,6 +142,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>1.9.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>rhino</groupId>
+            <artifactId>js</artifactId>
+            <version>1.6R6</version>
             <scope>test</scope>
         </dependency>
      </dependencies>
