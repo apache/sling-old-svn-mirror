@@ -18,7 +18,7 @@
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Module - JMX MBeans</name>
+    <name>Sling Health Check MBeans</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
