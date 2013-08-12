@@ -33,8 +33,8 @@ import javax.inject.Inject;
 
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
-import org.apache.sling.hc.api.HealthCheckSelector;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.util.HealthCheckSelector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
