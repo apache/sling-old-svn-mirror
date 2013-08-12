@@ -22,6 +22,7 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,11 +111,14 @@ public class JMXResourceProvider implements ResourceProvider {
             if ( info.isRoot ) {
                 return new RootResource(resourceResolver, path);
             }
-            try {
-                final ObjectName on = new ObjectName(info.mbeanName);
-                final MBeanInfo mbi = this.mbeanServer.getMBeanInfo(on);
+            if ( info.mbeanInfo == null ) {
+                final Set<ObjectName> names = this.queryObjectNames(info.pathInfo.replace('/', '.') + ".");
+                if ( names.size() != 0 ) {
+                    return new RootResource(resourceResolver, path);
+                }
+            } else {
                 if (info.pathInfo == null ) {
-                    return new MBeanResource(resourceResolver, path, mbi);
+                    return new MBeanResource(resourceResolver, path, info.mbeanInfo);
                 }
                 if ( info.pathInfo.equals("attributes") ) {
                     return new AttributesResource(resourceResolver, path);
@@ -122,38 +126,55 @@ public class JMXResourceProvider implements ResourceProvider {
                 if ( info.pathInfo.startsWith("attributes/") ) {
                     final String attrName = info.pathInfo.substring(11);
                     if ( attrName.indexOf('/') == - 1) {
-                        for(final MBeanAttributeInfo mai : mbi.getAttributes()) {
+                        for(final MBeanAttributeInfo mai : info.mbeanInfo.getAttributes()) {
                             if ( mai.getName().equals(attrName) ) {
-                                return new AttributeResource(mbeanServer, on, resourceResolver, path, mai);
+                                return new AttributeResource(mbeanServer, info.objectName, resourceResolver, path, mai);
                             }
                         }
                     }
                 }
-            } catch (final MalformedObjectNameException e) {
-                // ignore
-            } catch (final IntrospectionException e) {
-                // ignore
-            } catch (final InstanceNotFoundException e) {
-                // ignore
-            } catch (final ReflectionException e) {
-                // ignore
             }
         }
         return null;
     }
 
+    private Set<ObjectName> queryObjectNames(final String domainPrefix) {
+        final Set<ObjectName> allNames = this.mbeanServer.queryNames(null, null);
+        Set<ObjectName> names = allNames;
+        if ( domainPrefix != null ) {
+            names = new HashSet<ObjectName>();
+            for(final ObjectName name : allNames) {
+                if ( name.getDomain().startsWith(domainPrefix)) {
+                    names.add(name);
+                }
+            }
+        }
+        return names;
+    }
     /**
      * @see org.apache.sling.api.resource.ResourceProvider#listChildren(org.apache.sling.api.resource.Resource)
      */
     public Iterator<Resource> listChildren(final Resource parent) {
         final PathInfo info = this.parse(parent.getPath());
         if ( info != null ) {
-            if ( info.isRoot ) {
-                // list all mbeans
-                final Set<ObjectName> beans = this.mbeanServer.queryNames(null, null);
-                final List<ObjectName> sortedBeans = new ArrayList<ObjectName>(beans);
-                Collections.sort(sortedBeans);
-                final Iterator<ObjectName> iter = sortedBeans.iterator();
+            if ( info.isRoot || info.mbeanInfo == null ) {
+                // list all MBeans
+                final Set<ObjectName> names = this.queryObjectNames(info.isRoot ? null : info.pathInfo.replace('/', '.') + ".");
+                final Set<String> filteredNames = new HashSet<String>();
+                final String prefix = (info.isRoot ? null : info.pathInfo.replace('/', '.') + ".");
+                for(final ObjectName name : names) {
+                    final String testName = (info.isRoot ? name.getDomain() : name.getDomain().substring(prefix.length()));
+                    final int sep = testName.indexOf('.');
+                    if ( sep == -1 ) {
+                        filteredNames.add(":" + name.getCanonicalName());
+                    } else {
+                        filteredNames.add(testName.substring(0, sep));
+                    }
+                }
+                final List<String> sortedNames = new ArrayList<String>(filteredNames);
+
+                Collections.sort(sortedNames);
+                final Iterator<String> iter = sortedNames.iterator();
                 return new Iterator<Resource>() {
 
                     private Resource next;
@@ -163,18 +184,25 @@ public class JMXResourceProvider implements ResourceProvider {
                     }
 
                     private void seek() {
-                        while ( iter.hasNext() ) {
-                            final ObjectName on = iter.next();
-                            try {
-                                final MBeanInfo info = mbeanServer.getMBeanInfo(on);
-                                this.next = new MBeanResource(parent, on.getCanonicalName(), info);
-                                break;
-                            } catch (final IntrospectionException e) {
-                                // ignore
-                            } catch (final InstanceNotFoundException e) {
-                                // ignore
-                            } catch (final ReflectionException e) {
-                                // ignore
+                        while ( iter.hasNext() && this.next == null ) {
+                            final String name = iter.next();
+                            if ( name.startsWith(":") ) {
+                                try {
+                                    final ObjectName on = new ObjectName(name.substring(1));
+                                    final MBeanInfo info = mbeanServer.getMBeanInfo(on);
+                                    final int sep = on.getDomain().lastIndexOf('.');
+                                    this.next = new MBeanResource(parent, on.getCanonicalName().substring(sep + 1), info);
+                                } catch (final IntrospectionException e) {
+                                    // ignore
+                                } catch (final InstanceNotFoundException e) {
+                                    // ignore
+                                } catch (final ReflectionException e) {
+                                    // ignore
+                                } catch (final MalformedObjectNameException e) {
+                                    // ignore
+                                }
+                            } else {
+                                this.next = new RootResource(parent.getResourceResolver(), parent.getPath() + '/' + name);
                             }
                         }
                     }
@@ -196,43 +224,31 @@ public class JMXResourceProvider implements ResourceProvider {
                     public void remove() {
                         throw new UnsupportedOperationException("remove");
                     }
-                };
+                    };
             } else {
-                try {
-                    final ObjectName on = new ObjectName(info.mbeanName);
-                    final MBeanInfo mbi = this.mbeanServer.getMBeanInfo(on);
-                    if ( info.pathInfo == null ) {
-                        final List<Resource> list = new ArrayList<Resource>();
-                        list.add(new AttributesResource(parent.getResourceResolver(), parent.getPath() + "/attributes"));
-                        return list.iterator();
-                    } else if ( info.pathInfo.equals("attributes") ) {
-                        final MBeanAttributeInfo[] infos = mbi.getAttributes();
-                        final List<MBeanAttributeInfo> list = Arrays.asList(infos);
-                        final Iterator<MBeanAttributeInfo> iter = list.iterator();
-                        return new Iterator<Resource>() {
+                if ( info.pathInfo == null ) {
+                    final List<Resource> list = new ArrayList<Resource>();
+                    list.add(new AttributesResource(parent.getResourceResolver(), parent.getPath() + "/attributes"));
+                    return list.iterator();
+                } else if ( info.pathInfo.equals("attributes") ) {
+                    final MBeanAttributeInfo[] infos = info.mbeanInfo.getAttributes();
+                    final List<MBeanAttributeInfo> list = Arrays.asList(infos);
+                    final Iterator<MBeanAttributeInfo> iter = list.iterator();
+                    return new Iterator<Resource>() {
 
-                            public void remove() {
-                                throw new UnsupportedOperationException("remove");
-                            }
+                        public void remove() {
+                            throw new UnsupportedOperationException("remove");
+                        }
 
-                            public Resource next() {
-                                final MBeanAttributeInfo mai = iter.next();
-                                return new AttributeResource(mbeanServer, on, parent.getResourceResolver(), parent.getPath() + "/" + mai.getName(), mai);
-                            }
+                        public Resource next() {
+                            final MBeanAttributeInfo mai = iter.next();
+                            return new AttributeResource(mbeanServer, info.objectName, parent.getResourceResolver(), parent.getPath() + "/" + mai.getName(), mai);
+                        }
 
-                            public boolean hasNext() {
-                                return iter.hasNext();
-                            }
-                        };
-                    }
-                } catch (final MalformedObjectNameException e) {
-                    // ignore
-                } catch (final IntrospectionException e) {
-                    // ignore
-                } catch (final InstanceNotFoundException e) {
-                    // ignore
-                } catch (final ReflectionException e) {
-                    // ignore
+                        public boolean hasNext() {
+                            return iter.hasNext();
+                        }
+                    };
                 }
             }
         }
@@ -240,23 +256,27 @@ public class JMXResourceProvider implements ResourceProvider {
     }
 
     public final static class PathInfo {
+
         public final boolean isRoot;
-        public final String mbeanName;
         public final String pathInfo;
+
+        public ObjectName objectName;
+        public MBeanInfo mbeanInfo;
 
         public PathInfo(final boolean isRoot) {
             this.isRoot = isRoot;
-            this.mbeanName = null;
             this.pathInfo = null;
         }
 
-        public PathInfo(final String name, final String info) {
+        public PathInfo(final String info) {
             this.isRoot = false;
-            this.mbeanName = name;
             this.pathInfo = info;
         }
     }
 
+    /**
+     * Parse the path
+     */
     private PathInfo parse(final String path) {
         for(final String root : this.rootsWithSlash) {
             if ( path.startsWith(root) ) {
@@ -264,18 +284,43 @@ public class JMXResourceProvider implements ResourceProvider {
                 if ( subPath.length() == 0 ) {
                     return new PathInfo(true);
                 }
-                // mbean name
-                final int sep = subPath.indexOf('/');
-                final String mbeanName;
-                final String pathInfo;
-                if ( sep == -1 ) {
-                    mbeanName = subPath;
-                    pathInfo = null;
-                } else {
-                    mbeanName = subPath.substring(0, sep);
-                    pathInfo = subPath.substring(sep + 1);
+                // MBean name / path
+                String checkPath = subPath;
+                String pathInfo = null;
+
+                ObjectName objectName = null;
+                MBeanInfo mbi = null;
+
+                while ( checkPath.length() > 0 && mbi == null ) {
+                    try {
+                        objectName = new ObjectName(checkPath.replace('/', '.'));
+                        mbi = this.mbeanServer.getMBeanInfo(objectName);
+                    } catch (final MalformedObjectNameException e) {
+                        // ignore
+                    } catch (final IntrospectionException e) {
+                        // ignore
+                    } catch (final InstanceNotFoundException e) {
+                        // ignore
+                    } catch (final ReflectionException e) {
+                        // ignore
+                    }
+                    if ( mbi == null ) {
+                        final int sep = checkPath.lastIndexOf('/');
+                        if ( sep == -1 ) {
+                            checkPath = "";
+                            pathInfo = subPath;
+                        } else {
+                            checkPath = checkPath.substring(0, sep);
+                            pathInfo = subPath.substring(sep + 1);
+                        }
+                    }
                 }
-                return new PathInfo(mbeanName, pathInfo);
+                final PathInfo info = new PathInfo(pathInfo);
+                if ( mbi != null ) {
+                    info.objectName = objectName;
+                    info.mbeanInfo = mbi;
+                }
+                return info;
             }
         }
         for(final String root : this.roots) {
