@@ -53,13 +53,14 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
-                    mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.2.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.2.8"),
                     mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
                     mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.2.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
                     mavenBundle("commons-io", "commons-io", "1.4"),
+                    mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
                     mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
             )
         );
