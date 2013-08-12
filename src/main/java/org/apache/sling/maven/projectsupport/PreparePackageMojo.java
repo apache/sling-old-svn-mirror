@@ -41,7 +41,7 @@ import org.codehaus.plexus.util.FileUtils;
  *
  * @goal prepare-package
  * @requiresDependencyResolution test
- * @phase process-sources
+ * @phase prepare-package
  * @description initialize a Sling application project
  */
 public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
