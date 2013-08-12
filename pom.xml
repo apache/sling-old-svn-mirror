@@ -37,9 +37,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>
-                            org.apache.sling.hc.api,
-                        </Export-Package>
                         <Import-Package>
                             javax.servlet.*;resolution:=optional,
                             org.apache.sling.api.request;resolution:=optional,
@@ -88,6 +85,12 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+      <dependency>
+            <groupId>biz.aQute</groupId>
+            <artifactId>bndlib</artifactId>
+            <version>1.50.0</version>
+            <scope>provided</scope>
         </dependency>
          <dependency>
             <groupId>org.apache.sling</groupId>
