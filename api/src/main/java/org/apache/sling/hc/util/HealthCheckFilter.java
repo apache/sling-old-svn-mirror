@@ -29,13 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** Select from available {@link HealthCheck} services */
-public class HealthCheckSelector {
+public class HealthCheckFilter {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final BundleContext bundleContext;
     public static final String OMIT_PREFIX = "-";
     
-    public HealthCheckSelector(BundleContext bc) {
+    public HealthCheckFilter(BundleContext bc) {
         bundleContext = bc;
     }
     

@@ -38,7 +38,7 @@ import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLogEntry;
-import org.apache.sling.hc.util.HealthCheckSelector;
+import org.apache.sling.hc.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 
@@ -104,7 +104,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         
         // Execute health checks only if tags are specified (even if empty)
         if(req.getParameter(PARAM_TAGS) != null) {
-            final List<HealthCheck> checks = new HealthCheckSelector(bundleContext).getTaggedHealthCheck(tags.split(","));
+            final List<HealthCheck> checks = new HealthCheckFilter(bundleContext).getTaggedHealthCheck(tags.split(","));
             final PrintWriter pw = resp.getWriter();
             pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
             int total = 0;
