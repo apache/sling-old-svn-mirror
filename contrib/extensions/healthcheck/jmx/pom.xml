@@ -14,19 +14,23 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.hc.api</artifactId>
+    <artifactId>org.apache.sling.hc.jmx</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check API</name>
+    <name>Sling Health Check Module - JMX MBeans</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        The Sling Health Check API
+        JMX access to Sling Health Check Services
     </description>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -34,8 +38,7 @@
                 <configuration>
                     <instructions>
                         <Private-Package>
-                            org.apache.sling.hc.impl.*,
-                            org.apache.sling.hc.util.*
+                            org.apache.sling.hc.jmx.*
                         </Private-Package>
                     </instructions>
                 </configuration>
@@ -74,9 +77,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
-            <version>1.50.0</version>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.hc.api</artifactId>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -95,12 +102,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
      </dependencies>

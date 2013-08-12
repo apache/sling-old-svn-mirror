@@ -28,6 +28,9 @@
     <modules>
         <module>core</module>
         <module>samples</module>
+        <module>healthchecks</module>
+        <module>jmx</module>
+        <module>webconsole</module>
         <module>it</module>
     </modules>
 </project>
