@@ -18,7 +18,6 @@
 package org.apache.sling.hc.impl.healthchecks;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +36,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.util.HealthCheckInfo;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 public class DefaultLoginsHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final Map<String, String> info = new HashMap<String, String>();
+    private Map<String, String> info;
     
     @Property(cardinality=500)
     public static final String PROP_LOGINS = "logins";
@@ -74,26 +74,21 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
     
     @Activate
     public void activate(ComponentContext ctx) {
+        info = new HealthCheckInfo(ctx.getProperties());
         logins = Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_LOGINS), new String[] {}));
-        
-        info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
-        info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
-        info.put(Constants.HC_TAGS, 
-                Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
-        
         log.info("Activated, logins={}", logins);
     }
     
     @Override
-    public Result execute(ResultLog log) {
-        final Result result = new Result(this, log);
+    public Result execute() {
+        final Result result = new Result(log);
         int checked=0;
         int failures=0;
         
         for(String login : logins) {
             final String [] parts = login.split(":");
             if(parts.length != 2) {
-                log.warn("Expected login in the form username:password, got {}", login);
+                result.log(ResultLogEntry.LT_WARN, "Expected login in the form username:password, got " + login);
                 continue;
             }
             checked++;
@@ -105,12 +100,12 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
                 s = repository.login(creds);
                 if(s != null) {
                     failures++;
-                    log.warn("Login as [{}] succeeded, was expecting it to fail", username);
+                    result.log(ResultLogEntry.LT_WARN_SECURITY, "Login as [" + username + "] succeeded, was expecting it to fail");
                 } else {
-                    log.debug("Login as [{}] didn't throw an Exception but returned null Session", username);
+                    result.log(ResultLogEntry.LT_DEBUG, "Login as [" + username + "] didn't throw an Exception but returned null Session");
                 }
             } catch(RepositoryException re) {
-                log.debug("Login as [{}] failed, as expected", username);
+                result.log(ResultLogEntry.LT_DEBUG, "Login as [" + username + "] failed, as expected");
             } finally {
                 if(s != null) {
                     s.logout();
@@ -119,11 +114,11 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
         }
         
         if(checked==0) {
-            log.warn("Did not check any logins, configured logins={}", logins);
+            result.log(ResultLogEntry.LT_WARN, "Did not check any logins, configured logins=" + logins);
         } else if(failures != 0){
-            log.warn("Checked {} logins, {} tests failed", checked, failures);
+            result.log(ResultLogEntry.LT_WARN_SECURITY, "Checked " + checked + " logins, " + failures + " tests failed");
         } else {
-            log.debug("Checked {} logins, all tests successful", checked);
+            result.log(ResultLogEntry.LT_DEBUG, "Checked " + checked + " logins, all tests successful");
         }
         return result;
     }

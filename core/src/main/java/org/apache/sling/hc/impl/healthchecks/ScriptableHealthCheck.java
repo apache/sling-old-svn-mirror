@@ -17,8 +17,6 @@
  */
 package org.apache.sling.hc.impl.healthchecks;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.script.Bindings;
@@ -35,11 +33,13 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.util.HealthCheckInfo;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 /** {@link HealthCheck} that checks a scriptable expression */
 @Component(
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class ScriptableHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final Map<String, String> info = new HashMap<String, String>();
+    private Map<String, String> info;
     private String expression;
     private String languageExtension;
     private BundleContext bundleContext;
@@ -78,42 +78,50 @@ public class ScriptableHealthCheck implements HealthCheck {
     
     @Activate
     public void activate(ComponentContext ctx) {
+        info = new HealthCheckInfo(ctx.getProperties());
         bundleContext = ctx.getBundleContext();
         expression = PropertiesUtil.toString(ctx.getProperties().get(PROP_EXPRESSION), "");
         languageExtension = PropertiesUtil.toString(ctx.getProperties().get(PROP_LANGUAGE_EXTENSION), DEFAULT_LANGUAGE_EXTENSION);
         
         info.put(PROP_EXPRESSION, expression);
         info.put(PROP_LANGUAGE_EXTENSION, languageExtension);
-        info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
-        info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
-        info.put(Constants.HC_TAGS, 
-                Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
         
         log.info("Activated, name={}, languageExtension={}, expression={}", languageExtension, expression);
     }
     
     @Override
-    public Result execute(ResultLog log) {
-        final Result result = new Result(this, log);
-        log.debug("Checking expression [{}], language extension=[{}]", expression, languageExtension);
+    public Result execute() {
+        final Result result = new Result(log);
+        result.log(ResultLogEntry.LT_DEBUG, 
+                MessageFormatter.format(
+                        "Checking expression [{}], language extension=[{}]", 
+                        expression, languageExtension).getMessage());
         try {
             final ScriptEngine engine = scriptEngineManager.getEngineByExtension(languageExtension);
             if(engine == null) {
-                log.warn("No ScriptEngine available for extension {}", languageExtension);
+                result.log(ResultLogEntry.LT_WARN, 
+                        MessageFormatter.format(
+                                "No ScriptEngine available for extension {}", 
+                                languageExtension).getMessage());
             } else {
                 // TODO pluggable Bindings? Reuse the Sling bindings providers?
                 final Bindings b = engine.createBindings();
-                b.put("jmx", new JmxScriptBinding(log));
-                b.put("osgi", new OsgiScriptBinding(bundleContext, log));
+                b.put("jmx", new JmxScriptBinding(result));
+                b.put("osgi", new OsgiScriptBinding(bundleContext, result));
                 final Object value = engine.eval(expression, b);
                 if(value!=null && "true".equals(value.toString())) {
-                    log.debug("Expression [{}] evaluates to true as expected", expression);
+                    result.log(ResultLogEntry.LT_DEBUG, 
+                            MessageFormatter.format(
+                                    "Expression [{}] evaluates to true as expected", expression).getMessage());
                 } else {
-                    log.warn("Expression [{}] does not evaluate to true, value={}", expression, value);
+                    result.log(ResultLogEntry.LT_WARN, 
+                            MessageFormatter.format(
+                                    "Expression [{}] does not evaluate to true, value={}", 
+                                    expression, value).getMessage());
                 }
             }
         } catch(Exception e) {
-            log.warn(e.toString(), e);
+            result.log(ResultLogEntry.LT_WARN, e.toString()); 
         }
         return result;
     }

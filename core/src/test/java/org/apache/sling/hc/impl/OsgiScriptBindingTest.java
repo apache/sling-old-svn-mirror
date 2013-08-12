@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.impl.healthchecks.OsgiScriptBinding;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -59,7 +60,8 @@ public class OsgiScriptBindingTest {
         };
         Mockito.when(ctx.getBundles()).thenReturn(bundles);
         
-        final OsgiScriptBinding b = new OsgiScriptBinding(ctx, logger);
+        final Result r = new Result(logger);
+        final OsgiScriptBinding b = new OsgiScriptBinding(ctx, r);
         assertEquals(1, b.inactiveBundlesCount());
     }
 }

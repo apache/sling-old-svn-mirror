@@ -17,32 +17,84 @@
  */
 package org.apache.sling.hc.api;
 
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /** The result of executing a {@link HealthCheck} */
-public class Result {
+public class Result implements Iterable <ResultLogEntry >{
+
+    private final Logger logger;
+    private static final Logger CLASS_LOGGER = LoggerFactory.getLogger(Result.class);
     
-    private final HealthCheck healthCheck;
-    private final ResultLog log;
+    private final List<ResultLogEntry> logEntries = new LinkedList<ResultLogEntry>();
+    private Status status = Status.OK;
     
-    public Result(HealthCheck hc, ResultLog log) {
-        healthCheck = hc;
-        this.log = log;
+    public enum Status {
+        OK,                 // no problem
+        WARN,               // health check detected something wrong but not critical
+        CRITICAL,           // health check detected a critical problem
+        HEALTH_CHECK_ERROR  // health check did not execute properly
+    }
+    
+    /** Build a Result using the default logger */
+    public Result() {
+        this(null);
     }
 
-    public HealthCheck getHealthCheck() {
-        return healthCheck;
+    /** Build a Result that logs to a specific logger */
+    public Result(Logger logger) {
+        this.logger = logger != null ? logger : CLASS_LOGGER;
     }
     
-    public List<ResultLog.Entry> getLogEntries() {
-        return log.getEntries();
+    /** Add an entry to our log. Use the {@ResultLogEntry}.LT_* constants
+     *  for well-known entry types.
+     *  Adding an entry with a type where {@ResultLogEntry#isInformationalEntryType} returns
+     *  false causes our status to be set to WARN, unless it was already set higher.
+     */
+    public void log(String entryType, String message) {
+        if(logger.isDebugEnabled() && ResultLogEntry.LT_DEBUG.equals(entryType)) {
+            logger.debug(message);
+        } else if(logger.isInfoEnabled() && ResultLogEntry.LT_INFO.equals(entryType)) {
+            logger.info(message);
+        } else {
+            logger.warn(message);
+        }
+        logEntries.add(new ResultLogEntry(entryType, message));
+        if(!ResultLogEntry.isInformationalEntryType(entryType) && status.ordinal() < Status.WARN.ordinal()) {
+            logger.warn("Setting Result status to WARN due to log entry of type {}", entryType);
+            setStatus(Status.WARN);
+        }
     }
     
+    /** Set this Result's status. Attempts to set it lower than the current
+     *  status are ignored.
+     */
+    public void setStatus(Status s) {
+        if(s.ordinal() > status.ordinal()) {
+            status = s;
+        } else {
+            logger.debug("setStatus({}) ignored as current status {} is higher", s, status);
+        }
+    }
+    
+    public Iterator<ResultLogEntry> iterator() {
+        return logEntries.iterator();
+    }
+    
+    /** True if our status is OK - just to have a convenient way of 
+     *  checking that.
+     */
     public boolean isOk() {
-        return log.getMaxLevel() != null && log.getMaxLevel().ordinal() < ResultLog.MIN_LEVEL_TO_REPORT.ordinal();
+        return status.ordinal() == Status.OK.ordinal();
     }
     
-    public ResultLog.Level getStatus() {
-        return isOk() ? ResultLog.Level.OK : log.getMaxLevel(); 
+    /** Return our Status */
+    public Status getStatus() {
+        return status;
     }
+    
 }
