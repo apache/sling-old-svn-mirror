@@ -20,8 +20,10 @@ package org.apache.sling.event.impl.jobs.timed;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
@@ -63,7 +65,7 @@ final class ScheduleInfo implements Serializable {
         if ( topic == null ) {
             throw new IllegalArgumentException("Timed event does not contain required property " + EventUtil.PROPERTY_TIMED_EVENT_TOPIC + " : " +  EventUtil.toString(event));
         }
-        // TODO id or job name needs to be available?!?!
+
         final String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
         final String jId = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
 
@@ -86,6 +88,9 @@ final class ScheduleInfo implements Serializable {
         return this.expression == null && this.period == null && this.date == null;
     }
 
+    /** Counter for jobs without an id. */
+    private static final AtomicLong eventCounter = new AtomicLong(0);
+
     public static String getJobId(final String topic, final String timedEventId, final String jobId) {
         final StringBuilder sb = new StringBuilder(topic.replace('/', '.'));
         if ( timedEventId != null ) {
@@ -95,6 +100,12 @@ final class ScheduleInfo implements Serializable {
         if ( jobId != null ) {
             sb.append('_');
             sb.append(ResourceHelper.filterName(jobId));
+        }
+        if ( timedEventId == null && jobId == null ) {
+            sb.append("__");
+            sb.append(Environment.APPLICATION_ID);
+            sb.append("__");
+            sb.append(eventCounter.getAndIncrement());
         }
         return sb.toString();
     }
