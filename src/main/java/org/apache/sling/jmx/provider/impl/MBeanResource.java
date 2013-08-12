@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.management.MBeanInfo;
+import javax.management.ObjectName;
 
 import org.apache.sling.api.resource.AbstractResource;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -40,16 +40,25 @@ public class MBeanResource extends AbstractResource {
 
     private final MBeanInfo info;
 
-    public MBeanResource(final Resource parent, final String name, final MBeanInfo info) {
-        this.resourceResolver = parent.getResourceResolver();
-        this.path = parent.getPath() + '/' + name;
-        this.info = info;
-    }
+    private final ObjectName objectName;
 
-    public MBeanResource(final ResourceResolver resolver, final String path, final MBeanInfo info) {
+    private final String resourceType;
+
+    public MBeanResource(final ResourceResolver resolver,
+            final String resourceType,
+            final String path,
+            final MBeanInfo info,
+            final ObjectName objectName) {
         this.resourceResolver = resolver;
         this.path = path;
         this.info = info;
+        this.objectName = objectName;
+        final int pos = resourceType.lastIndexOf(':');
+        if ( pos == -1 ) {
+            this.resourceType = resourceType;
+        } else {
+            this.resourceType = resourceType.substring(0, pos);
+        }
     }
 
     /**
@@ -63,14 +72,14 @@ public class MBeanResource extends AbstractResource {
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
     public String getResourceType() {
-        return "sling:mbean";
+        return resourceType;
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
      */
     public String getResourceSuperType() {
-        return null;
+        return "sling:mbean";
     }
 
     /**
@@ -99,14 +108,14 @@ public class MBeanResource extends AbstractResource {
     private Map<String, Object> getPropertiesMap() {
         final Map<String, Object> result = new HashMap<String, Object>();
         result.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.getResourceType());
-        if ( this.getResourceSuperType() != null ) {
-            result.put("sling:resourceSuperType", this.getResourceSuperType());
-        }
+        result.put("sling:resourceSuperType", this.getResourceSuperType());
 
         if ( this.info.getDescription() != null ) {
-            result.put("description", this.info.getDescription());
+            result.put("mbean:description", this.info.getDescription());
         }
-        result.put("className", this.info.getClassName());
+        result.put("mbean:className", this.info.getClassName());
+        result.put("mbean:objectName", this.objectName.getCanonicalName());
+
         return result;
     }
 }
