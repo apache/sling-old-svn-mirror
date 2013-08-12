@@ -110,9 +110,9 @@ public class AttributeResource extends AbstractResource {
         }
 
         if ( info.getDescription() != null ) {
-            result.put("description", info.getDescription());
+            result.put("mbean:description", info.getDescription());
         }
-        result.put("type", info.getType());
+        result.put("mbean:type", info.getType());
 
         try {
             final Object value = server.getAttribute(this.on, info.getName());
@@ -124,18 +124,18 @@ public class AttributeResource extends AbstractResource {
                         final Object o = Array.get(value, i);
                         values[i] = convert(o);
                     }
-                    result.put("value", values);
+                    result.put("mbean:value", values);
                 } else if (value instanceof TabularData) {
                     // TODO
                 } else if (value instanceof CompositeData) {
                     // TODO
                 } else {
-                    result.put("value", convert(value));
+                    result.put("mbean:value", convert(value));
                 }
             }
         } catch (final Exception ignore) {
             // ignore, but put this as info
-            result.put("exception", ignore.getMessage());
+            result.put("mbean:exception", ignore.getMessage());
         }
         return result;
     }

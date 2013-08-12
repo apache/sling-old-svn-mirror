@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
@@ -55,12 +56,32 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 @Properties({
     @Property(name = ResourceProvider.ROOTS, value="/system/sling/monitoring/mbeans")
 })
+/**
+ * Brief summary of a "good" object name:
+ *
+ * Object names:
+ * - have a domain
+ * - should have a type property
+ * - could have a name property
+ * - additional props are not recommended
+ *
+ * Path to an MBean:
+ * {Domain}/{type property}/{name property}{all other props}
+ * where
+ * {Domain} : is a path consisting of the domain (dots replaced with slashes)
+ * {type property} : is the value of the type property or "{notype}" if no type property is set
+ * {name property} : is the value of the name property or "{noname}" if no name property is set
+ * {all other props} : name/value pairs containing all additional props
+ */
 public class JMXResourceProvider implements ResourceProvider {
 
+    /** Configured root paths, ending with a slash */
     private String[] rootsWithSlash;
 
+    /** Configured root paths, not ending with a slash */
     private String[] roots;
 
+    /** The mbean server. */
     private MBeanServer mbeanServer;
 
     @Activate
@@ -112,13 +133,13 @@ public class JMXResourceProvider implements ResourceProvider {
                 return new RootResource(resourceResolver, path);
             }
             if ( info.mbeanInfo == null ) {
-                final Set<ObjectName> names = this.queryObjectNames(info.pathInfo.replace('/', '.') + ".");
+                final Set<ObjectName> names = this.queryObjectNames(info.pathInfo);
                 if ( names.size() != 0 ) {
                     return new RootResource(resourceResolver, path);
                 }
             } else {
                 if (info.pathInfo == null ) {
-                    return new MBeanResource(resourceResolver, path, info.mbeanInfo);
+                    return new MBeanResource(resourceResolver, this.convertObjectNameToResourcePath(info.objectName), path, info.mbeanInfo, info.objectName);
                 }
                 if ( info.pathInfo.equals("attributes") ) {
                     return new AttributesResource(resourceResolver, path);
@@ -138,13 +159,15 @@ public class JMXResourceProvider implements ResourceProvider {
         return null;
     }
 
-    private Set<ObjectName> queryObjectNames(final String domainPrefix) {
+    private Set<ObjectName> queryObjectNames(final String prefix) {
         final Set<ObjectName> allNames = this.mbeanServer.queryNames(null, null);
         Set<ObjectName> names = allNames;
-        if ( domainPrefix != null ) {
+        if ( prefix != null ) {
+            final String pathPrefix = prefix + '/';
             names = new HashSet<ObjectName>();
             for(final ObjectName name : allNames) {
-                if ( name.getDomain().startsWith(domainPrefix)) {
+                final String path = this.convertObjectNameToResourcePath(name);
+                if ( path.startsWith(pathPrefix) ) {
                     names.add(name);
                 }
             }
@@ -159,12 +182,13 @@ public class JMXResourceProvider implements ResourceProvider {
         if ( info != null ) {
             if ( info.isRoot || info.mbeanInfo == null ) {
                 // list all MBeans
-                final Set<ObjectName> names = this.queryObjectNames(info.isRoot ? null : info.pathInfo.replace('/', '.') + ".");
+                final Set<ObjectName> names = this.queryObjectNames(info.isRoot ? null : info.pathInfo);
                 final Set<String> filteredNames = new HashSet<String>();
-                final String prefix = (info.isRoot ? null : info.pathInfo.replace('/', '.') + ".");
+                final String prefix = (info.isRoot ? null : info.pathInfo + "/");
                 for(final ObjectName name : names) {
-                    final String testName = (info.isRoot ? name.getDomain() : name.getDomain().substring(prefix.length()));
-                    final int sep = testName.indexOf('.');
+                    final String path = this.convertObjectNameToResourcePath(name);
+                    final String testName = (info.isRoot ? path : path.substring(prefix.length()));
+                    final int sep = testName.indexOf('/');
                     if ( sep == -1 ) {
                         filteredNames.add(":" + name.getCanonicalName());
                     } else {
@@ -190,8 +214,9 @@ public class JMXResourceProvider implements ResourceProvider {
                                 try {
                                     final ObjectName on = new ObjectName(name.substring(1));
                                     final MBeanInfo info = mbeanServer.getMBeanInfo(on);
-                                    final int sep = on.getDomain().lastIndexOf('.');
-                                    this.next = new MBeanResource(parent, on.getCanonicalName().substring(sep + 1), info);
+                                    final String path = convertObjectNameToResourcePath(on);
+                                    final int sep = path.lastIndexOf('/');
+                                    this.next = new MBeanResource(parent.getResourceResolver(), path, parent.getPath() + "/" + path.substring(sep + 1), info, on);
                                 } catch (final IntrospectionException e) {
                                     // ignore
                                 } catch (final InstanceNotFoundException e) {
@@ -255,6 +280,92 @@ public class JMXResourceProvider implements ResourceProvider {
         return null;
     }
 
+    private static final String MARKER_NOTYPE = "{notype}";
+    private static final String MARKER_NONAME = "{noname}";
+
+    private String convertObjectNameToResourcePath(final ObjectName name) {
+        final StringBuilder sb = new StringBuilder(name.getDomain().replace('.', '/'));
+        sb.append('/');
+        if ( name.getKeyProperty("type") != null ) {
+            sb.append(name.getKeyProperty("type"));
+        } else {
+            sb.append(MARKER_NOTYPE);
+        }
+        sb.append('/');
+        if ( name.getKeyProperty("name") != null ) {
+            sb.append(name.getKeyProperty("name"));
+        } else {
+            sb.append(MARKER_NONAME);
+        }
+        final TreeMap<String, String> props = new TreeMap<String, String>(name.getKeyPropertyList());
+        props.remove("name");
+        props.remove("type");
+        boolean first = true;
+        for(final Map.Entry<String, String> entry : props.entrySet()) {
+            if ( first ) {
+                first = false;
+                sb.append(':');
+            } else {
+                sb.append(',');
+            }
+            sb.append(entry.getKey());
+            sb.append('=');
+            sb.append(entry.getValue());
+        }
+        return sb.toString();
+    }
+
+    private ObjectName convertResourcePathToObjectName(final String path) {
+        final int nameSlash = path.lastIndexOf('/');
+        if ( nameSlash != -1 ) {
+            final int typeSlash = path.lastIndexOf('/', nameSlash - 1);
+            if ( typeSlash != -1 ) {
+                final String domain = path.substring(0, typeSlash).replace('/', '.');
+                final String type = path.substring(typeSlash + 1, nameSlash);
+                final String nameAndProps = path.substring(nameSlash + 1);
+                final int colonPos = nameAndProps.indexOf(':');
+                final String name;
+                final String props;
+                if ( colonPos == -1 ) {
+                    name = nameAndProps;
+                    props = null;
+                } else {
+                    name = nameAndProps.substring(0,  colonPos);
+                    props = nameAndProps.substring(colonPos + 1);
+                }
+                final StringBuilder sb = new StringBuilder();
+                sb.append(domain);
+                sb.append(':');
+                boolean hasProps = false;
+                if ( !MARKER_NOTYPE.equals(type)) {
+                    sb.append("type=");
+                    sb.append(type);
+                    hasProps = true;
+                }
+                if ( !MARKER_NONAME.equals(name) ) {
+                    if ( hasProps ) {
+                        sb.append(",");
+                    }
+                    sb.append("name=");
+                    sb.append(name);
+                    hasProps = true;
+                }
+                if ( props != null ) {
+                    if ( hasProps ) {
+                        sb.append(",");
+                    }
+                    sb.append(props);
+                }
+                try {
+                    return new ObjectName(sb.toString());
+                } catch (final MalformedObjectNameException e) {
+                    // ignore
+                }
+            }
+        }
+        return null;
+    }
+
     public final static class PathInfo {
 
         public final boolean isRoot;
@@ -293,10 +404,10 @@ public class JMXResourceProvider implements ResourceProvider {
 
                 while ( checkPath.length() > 0 && mbi == null ) {
                     try {
-                        objectName = new ObjectName(checkPath.replace('/', '.'));
-                        mbi = this.mbeanServer.getMBeanInfo(objectName);
-                    } catch (final MalformedObjectNameException e) {
-                        // ignore
+                        objectName = this.convertResourcePathToObjectName(checkPath);
+                        if ( objectName != null ) {
+                            mbi = this.mbeanServer.getMBeanInfo(objectName);
+                        }
                     } catch (final IntrospectionException e) {
                         // ignore
                     } catch (final InstanceNotFoundException e) {
