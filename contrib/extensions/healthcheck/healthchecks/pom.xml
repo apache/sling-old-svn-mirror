@@ -18,7 +18,7 @@
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Module - Health Check Services</name>
+    <name>Sling Health Check Services</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
