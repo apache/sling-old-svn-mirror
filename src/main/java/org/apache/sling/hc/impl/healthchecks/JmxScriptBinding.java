@@ -27,7 +27,9 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
-import org.slf4j.Logger;
+import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.ResultLogEntry;
+import org.slf4j.helpers.MessageFormatter;
 
 /** The JmxBinding is meant to be bound as "jmx" global variables
  *  in scripted rules, to allow for writing scripted expressions
@@ -35,10 +37,10 @@ import org.slf4j.Logger;
  */
 public class JmxScriptBinding {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
-    private final Logger logger;
+    private final Result result;
     
-    public JmxScriptBinding(Logger logger) {
-        this.logger = logger;
+    public JmxScriptBinding(Result result) {
+        this.result = result;
     }
     
     public Object attribute(String objectNameString, String attributeName) 
@@ -46,12 +48,15 @@ public class JmxScriptBinding {
         final ObjectName name = new ObjectName(objectNameString);
         if(jmxServer.queryNames(name, null).size() == 0) {
             final String msg = "JMX object name not found: [" + objectNameString + "]";
-            logger.warn(msg);
+            result.log(ResultLogEntry.LT_WARN, msg);
             throw new IllegalStateException(msg);
         }
-        logger.debug("Got JMX Object [{}]", name);
+        result.log(ResultLogEntry.LT_DEBUG, MessageFormatter.format("Got JMX Object [{}]", name).getMessage());
         final Object value = jmxServer.getAttribute(name, attributeName);
-        logger.debug("JMX Object [{}] Attribute [{}] = [{}]", new Object[] { name, attributeName, value });
+        result.log(ResultLogEntry.LT_DEBUG, 
+                MessageFormatter.format(
+                        "JMX Object [{}] Attribute [{}] = [{}]", 
+                        new Object[] { name, attributeName, value }).getMessage());
         return value;
     }
 }

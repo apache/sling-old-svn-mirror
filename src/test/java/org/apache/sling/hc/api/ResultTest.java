@@ -17,49 +17,98 @@
  */
 package org.apache.sling.hc.api;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
+import java.util.Iterator;
+
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
+import org.mockito.Matchers;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
 
 public class ResultTest {
-    private ResultLog resultLog;
-    private Result result;
-    
-    @Before
-    public void setup() {
-        resultLog = new ResultLog(LoggerFactory.getLogger(getClass()));
-        result = new Result(null, resultLog);
-    }
     
     @Test
-    public void testInitiallyNotOk() {
-        assertFalse(result.isOk());
-    }
-    
-    @Test
-    public void testDebugOk() {
-        resultLog.debug("something");
+    public void testInitiallyOk() {
+        final Result result = new Result();
+        assertFalse(result.iterator().hasNext());
         assertTrue(result.isOk());
     }
     
     @Test
-    public void testInfoOk() {
-        resultLog.info("something");
+    public void testDebugLogNoChange() {
+        final Result result = new Result();
+        result.log(ResultLogEntry.LT_DEBUG, "Some debug message");
+        assertTrue(result.iterator().hasNext());
         assertTrue(result.isOk());
     }
     
     @Test
-    public void testWarnNotOk() {
-        resultLog.warn("something");
-        assertFalse(result.isOk());
+    public void testInfoLogNoChange() {
+        final Result result = new Result();
+        result.log(ResultLogEntry.LT_INFO, "Some info message");
+        assertTrue(result.iterator().hasNext());
+        assertTrue(result.isOk());
     }
     
     @Test
-    public void testErrorNotOk() {
-        resultLog.error("something");
-        assertFalse(result.isOk());
+    public void testOthersTypesSetStatusWarn() {
+        final String [] entryTypes = new String [] {
+            ResultLogEntry.LT_WARN,
+            ResultLogEntry.LT_WARN_CONFIG,
+            ResultLogEntry.LT_WARN_SECURITY,
+            "SomeNewLogEntryType" + System.currentTimeMillis()
+        };
+        
+        for(String et : entryTypes) {
+            final Result result = new Result();
+            result.log(et, "Some message");
+            assertTrue(result.iterator().hasNext());
+            assertTrue(result.getStatus().equals(Result.Status.WARN));
+        }
+    }
+    
+    @Test
+    public void testNoStatusChangeIfAlreadyCritical() {
+        final Result result = new Result();
+        result.setStatus(Result.Status.CRITICAL);
+        assertTrue(result.getStatus().equals(Result.Status.CRITICAL));
+        result.log(ResultLogEntry.LT_WARN, "Some message");
+        assertTrue(result.iterator().hasNext());
+        assertTrue(result.getStatus().equals(Result.Status.CRITICAL));
+    }
+    
+    @Test
+    public void testSuppliedLogger() {
+        final Logger myLogger = Mockito.mock(Logger.class);
+        final Result r = new Result(myLogger);
+        r.log("foo", "Some message");
+        Mockito.verify(myLogger).warn(Matchers.anyString());
+    }
+    
+    @Test
+    public void testLogEntries() {
+        final Result r = new Result();
+        r.log("ONE", "M1");
+        r.log("two", "M2");
+        r.log("THREE", "M3");
+        
+        final Iterator<ResultLogEntry> it = r.iterator();
+        assertEquals("ONE", it.next().getEntryType());
+        assertEquals("two", it.next().getEntryType());
+        assertEquals("THREE", it.next().getEntryType());
+        assertFalse(it.hasNext());
+    }
+    
+    @Test
+    public void testSetStatus() {
+        final Result r = new Result();
+        assertEquals("Expecting initial OK status", Result.Status.OK, r.getStatus());
+        r.setStatus(Result.Status.CRITICAL);
+        assertEquals("Expecting CRITICAL status after setting it", Result.Status.CRITICAL, r.getStatus());
+        r.setStatus(Result.Status.WARN);
+        assertEquals("Still expecting CRITICAL status after setting it to WARN", Result.Status.CRITICAL, r.getStatus());
     }
 }

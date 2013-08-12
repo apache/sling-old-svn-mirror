@@ -18,7 +18,6 @@
 package org.apache.sling.hc.impl.healthchecks;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,10 +35,12 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.util.HealthCheckInfo;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.MessageFormatter;
 
 /** {@link HealthCheck} that checks the HTTP status of Sling requests */
 @Component(
@@ -51,7 +52,7 @@ import org.slf4j.LoggerFactory;
 public class SlingRequestStatusHealthCheck implements HealthCheck {
 
     private static final Logger log = LoggerFactory.getLogger(SlingRequestStatusHealthCheck.class);
-    private final Map<String, String> info = new HashMap<String, String>();
+    private Map<String, String> info;
     private String [] paths;
     
     static class PathSpec {
@@ -94,19 +95,14 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
     
     @Activate
     public void activate(ComponentContext ctx) {
+        info = new HealthCheckInfo(ctx.getProperties());
         paths = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_PATH), new String [] {});
-        
-        info.put(Constants.HC_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_NAME), ""));
-        info.put(Constants.HC_MBEAN_NAME, PropertiesUtil.toString(ctx.getProperties().get(Constants.HC_MBEAN_NAME), ""));
-        info.put(Constants.HC_TAGS, 
-                Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(Constants.HC_TAGS), new String[] {})).toString());
-        
         log.info("Activated, paths={}", Arrays.asList(paths));
     }
     
     @Override
-    public Result execute(ResultLog log) {
-        final Result result = new Result(this, log);
+    public Result execute() {
+        final Result result = new Result(log);
         
         ResourceResolver resolver = null;
         int checked = 0;
@@ -122,14 +118,18 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
                 final int status = response.getStatus();
                 if(status != ps.status) {
                     failed++;
-                    log.warn("[{}] returns status {}, expected {}", new Object[] { ps.path, status, ps.status });
+                    result.log(ResultLogEntry.LT_WARN,
+                            MessageFormatter.format(
+                            "[{}] returns status {}, expected {}", new Object[] { ps.path, status, ps.status }).getMessage());
                 } else {
-                    log.debug("[{}] returns status {} as expected", ps.path, status);
+                    result.log(ResultLogEntry.LT_DEBUG,
+                            MessageFormatter.format(
+                            "[{}] returns status {} as expected", ps.path, status).getMessage());
                 }
                 checked++;
             }
         } catch(Exception e) {
-            log.warn("Exception while executing request", e);
+            result.log(ResultLogEntry.LT_WARN, "Exception while executing request: " + e.toString());
         } finally {
             if(resolver != null) {
                 resolver.close();
@@ -137,9 +137,11 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
         }
         
         if(checked == 0) {
-            log.warn("No paths checked, empty paths list?");
+            result.log(ResultLogEntry.LT_WARN, "No paths checked, empty paths list?");
         } else {
-            log.debug("{} paths checked, {} failures", checked, failed);
+            result.log(ResultLogEntry.LT_DEBUG, 
+                    MessageFormatter.format(
+                            "{} paths checked, {} failures", checked, failed).getMessage());
         }
         
         return result;

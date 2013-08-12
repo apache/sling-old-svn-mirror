@@ -17,21 +17,25 @@
  */
 package org.apache.sling.hc.impl;
 
-import org.apache.sling.hc.impl.healthchecks.JmxScriptBinding;
-import org.junit.Test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+
+import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.impl.healthchecks.JmxScriptBinding;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JmxScriptBindingTest {
+    
     private final Logger logger = LoggerFactory.getLogger(getClass());
     
     @Test
     public void testJmxAttribute() throws Exception {
-        final JmxScriptBinding b = new JmxScriptBinding(logger);
-        final Object result = b.attribute("java.lang:type=ClassLoading", "LoadedClassCount");
-        assertNotNull("Expecting non-null attribute value", result);
-        assertTrue("Expecting non-empty value", result.toString().length() > 0);
+        final Result r = new Result(logger);
+        final JmxScriptBinding b = new JmxScriptBinding(r);
+        final Object value= b.attribute("java.lang:type=ClassLoading", "LoadedClassCount");
+        assertNotNull("Expecting non-null attribute value", value);
+        assertTrue("Expecting non-empty value", value.toString().length() > 0);
     }
 }

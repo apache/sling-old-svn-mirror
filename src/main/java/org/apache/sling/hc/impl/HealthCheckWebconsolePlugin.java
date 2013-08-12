@@ -38,9 +38,7 @@ import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.HealthCheckSelector;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.sling.hc.api.ResultLogEntry;
 
 /** Webconsole plugin to execute health check services */ 
 @Component(immediate=true)
@@ -56,8 +54,6 @@ import org.slf4j.LoggerFactory;
 })
 public class HealthCheckWebconsolePlugin extends HttpServlet {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
     public static final String TITLE = "Sling Health Check";
     public static final String LABEL = "healthcheck";
     public static final String CATEGORY = "Sling";
@@ -108,14 +104,13 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             int total = 0;
             int failed = 0;
             for(HealthCheck hc : checks) {
-                final ResultLog rl = new ResultLog(log);
-                final Result r = hc.execute(rl);
+                final Result r = hc.execute();
                 total++;
                 if(!r.isOk()) {
                     failed++;
                 }
                 if(!quiet || !r.isOk()) {
-                    renderResult(resp, r, debug);
+                    renderResult(resp, hc, r, debug);
                 }
             }
             final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
@@ -124,12 +119,12 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         }
     }
     
-    private void renderResult(HttpServletResponse resp, Result result, boolean debug) throws IOException {
+    private void renderResult(HttpServletResponse resp, HealthCheck hc, Result result, boolean debug) throws IOException {
         final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
 
         final StringBuilder status = new StringBuilder();
-        status.append("Tags: ").append(result.getHealthCheck().getInfo().get(Constants.HC_TAGS));
-        c.titleHtml(getDescription(result.getHealthCheck()), null);
+        status.append("Tags: ").append(hc.getInfo().get(Constants.HC_TAGS));
+        c.titleHtml(getDescription(hc), null);
         
         c.tr();
         c.tdContent();
@@ -137,20 +132,20 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.writer().print("<br/>Result: <span class='resultOk");
         c.writer().print(result.isOk());
         c.writer().print("'>");
-        c.writer().print(result.isOk() ? "Ok" : "NOT OK");
+        c.writer().print(result.getStatus().toString());
         c.writer().print("</span>");
         c.closeTd();
         c.closeTr();
         
         c.tr();
         c.tdContent();
-        for(ResultLog.Entry e : result.getLogEntries()) {
-            if(!debug && e.getLevel().ordinal() <= ResultLog.Level.DEBUG.ordinal()) {
+        for(ResultLogEntry e : result) {
+            if(!debug && e.getEntryType().equals(ResultLogEntry.LT_DEBUG)) {
                 continue;
             }
             final StringBuilder sb = new StringBuilder();
-            sb.append("<div class='log").append(e.getLevel().toString()).append("'>");
-            sb.append(e.getLevel().toString())
+            sb.append("<div class='log").append(e.getEntryType()).append("'>");
+            sb.append(e.getEntryType())
                 .append(" ")
                 .append(ResponseUtil.escapeXml(e.getMessage()))
                 .append("</div>");
