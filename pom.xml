@@ -36,7 +36,7 @@
                 <configuration>
                     <systemProperties>
                         <org.ops4j.pax.logging.DefaultServiceLog.level>${org.ops4j.pax.logging.DefaultServiceLog.level}</org.ops4j.pax.logging.DefaultServiceLog.level>
-                        <sling.hc.core.version>${project.version}</sling.hc.core.version>
+                        <sling.hc.api.version>${project.version}</sling.hc.api.version>
                         <felix.shell>${felix.shell}</felix.shell>
                     </systemProperties>
                 </configuration>
@@ -55,7 +55,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.hc.core</artifactId>
+            <artifactId>org.apache.sling.hc.api</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
