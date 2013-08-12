@@ -15,38 +15,30 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.impl;
+package org.apache.sling.hc.util;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
-import org.apache.sling.hc.api.HealthCheckSelector;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component
-@Service
-public class HealthCheckSelectorImpl implements HealthCheckSelector {
-
+/** Select from available {@link HealthCheck} services */
+public class HealthCheckSelector {
+    
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private BundleContext bundleContext;
+    private final BundleContext bundleContext;
     public static final String OMIT_PREFIX = "-";
     
-    @Activate
-    protected void activate(ComponentContext ctx) {
-        bundleContext = ctx.getBundleContext();
+    public HealthCheckSelector(BundleContext bc) {
+        bundleContext = bc;
     }
     
-    @Override
     public List<HealthCheck> getTaggedHealthCheck(String... tags) {
         
         // Build service filter

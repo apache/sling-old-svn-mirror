@@ -28,17 +28,19 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
-import org.apache.sling.hc.api.HealthCheckSelector;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.util.HealthCheckSelector;
+import org.osgi.framework.BundleContext;
+import org.osgi.service.component.ComponentContext;
 
 /** Webconsole plugin to execute health check services */ 
 @Component(immediate=true)
@@ -61,9 +63,13 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     public static final String PARAM_DEBUG = "debug";
     public static final String PARAM_QUIET = "quiet";
     
-    @Reference
-    private HealthCheckSelector selector;
+    private BundleContext bundleContext;
 
+    @Activate
+    protected void activate(ComponentContext ctx) {
+        bundleContext = ctx.getBundleContext();
+    }
+    
     /** Serve static resource if applicable, and return true in that case */
     private boolean getStaticResource(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         final String pathInfo = req.getPathInfo();
@@ -98,7 +104,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         
         // Execute health checks only if tags are specified (even if empty)
         if(req.getParameter(PARAM_TAGS) != null) {
-            final List<HealthCheck> checks = selector.getTaggedHealthCheck(tags.split(","));
+            final List<HealthCheck> checks = new HealthCheckSelector(bundleContext).getTaggedHealthCheck(tags.split(","));
             final PrintWriter pw = resp.getWriter();
             pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
             int total = 0;
