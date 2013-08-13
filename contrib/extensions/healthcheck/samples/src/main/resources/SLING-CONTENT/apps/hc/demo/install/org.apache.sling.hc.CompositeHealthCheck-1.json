@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "hc.name" : "CompositeHealthCheck: execute all HealthCheck tagged with 'script'", 
+    "hc.tags" : [composite],
+    "filter.tags" : [script] 
+}
