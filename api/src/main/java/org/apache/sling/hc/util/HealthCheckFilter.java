@@ -18,6 +18,8 @@
 package org.apache.sling.hc.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.sling.hc.api.Constants;
@@ -39,6 +41,7 @@ public class HealthCheckFilter {
         bundleContext = bc;
     }
     
+    @SuppressWarnings("unchecked")
     public List<HealthCheck> getTaggedHealthCheck(String... tags) {
         
         // Build service filter
@@ -67,7 +70,10 @@ public class HealthCheckFilter {
                 log.info("Found no HealthCheck services with filter [{}]", filterString);
             } else {
                 log.info("Found {} HealthCheck services with filter [{}]", refs.length, filterString);
-                for(ServiceReference ref : refs) {
+                final List<ServiceReference> sortedRefs = Arrays.asList(refs);
+                Collections.sort(sortedRefs);
+                
+                for(ServiceReference ref : sortedRefs) {
                     final HealthCheck hc = (HealthCheck)bundleContext.getService(ref);
                     log.debug("Selected HealthCheck service {}", hc);
                     result.add(hc);
