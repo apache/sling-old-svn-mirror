@@ -118,7 +118,7 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
                 if(status != ps.status) {
                     failed++;
                     result.log(ResultLogEntry.LT_WARN,
-                            MessageFormatter.format(
+                            MessageFormatter.arrayFormat(
                             "[{}] returns status {}, expected {}", new Object[] { ps.path, status, ps.status }).getMessage());
                 } else {
                     result.log(ResultLogEntry.LT_DEBUG,

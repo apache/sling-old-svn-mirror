@@ -54,7 +54,7 @@ public class JmxScriptBinding {
         result.log(ResultLogEntry.LT_DEBUG, MessageFormatter.format("Got JMX Object [{}]", name).getMessage());
         final Object value = jmxServer.getAttribute(name, attributeName);
         result.log(ResultLogEntry.LT_DEBUG, 
-                MessageFormatter.format(
+                MessageFormatter.arrayFormat(
                         "JMX Object [{}] Attribute [{}] = [{}]", 
                         new Object[] { name, attributeName, value }).getMessage());
         return value;
