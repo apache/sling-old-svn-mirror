@@ -44,8 +44,6 @@ public class ResultLogEntry {
      * @param entryType The type of this log entry, this is a String instead of an Enum
      *  so that health checks can invent their own types if needed.
      *  For the usual entry types, use the LT_* constants of this class.
-     *  By convention, any log entry that's not LT_DEBUG or LT_INFO causes
-     *  the Result to move to the WARN result state, unless it already was set to a higher state.
      *  
      * @param message The log message.
      */
