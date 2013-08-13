@@ -50,22 +50,41 @@ public class Result implements Iterable <ResultLogEntry >{
         this.logger = logger != null ? logger : CLASS_LOGGER;
     }
     
+    /** Merge a set of Result into this one. This Result's status
+     *  is set to the highest status of all supplied Result, and
+     *  their log entries are added to this. */
+    public void merge(Result ...results) {
+        for(Result r : results) {
+            setStatus(r.getStatus());
+            for(ResultLogEntry e : r) {
+                log(e);
+            }
+        }
+    }
+    
     /** Add an entry to our log. Use the {@ResultLogEntry}.LT_* constants
      *  for well-known entry types.
      *  Adding an entry with a type where {@ResultLogEntry#isInformationalEntryType} returns
      *  false causes our status to be set to WARN, unless it was already set higher.
      */
     public void log(String entryType, String message) {
-        if(logger.isDebugEnabled() && ResultLogEntry.LT_DEBUG.equals(entryType)) {
-            logger.debug(message);
-        } else if(logger.isInfoEnabled() && ResultLogEntry.LT_INFO.equals(entryType)) {
-            logger.info(message);
+        log(new ResultLogEntry(entryType, message));
+    }
+    
+    /** Add an entry to our log - in general it is more convenient to use the {@link #add(String, String)}
+     *  method - this is useful when merging Result for example.
+     */
+    public void log(ResultLogEntry e) {
+        if(logger.isDebugEnabled() && ResultLogEntry.LT_DEBUG.equals(e.getEntryType())) {
+            logger.debug(e.getMessage());
+        } else if(logger.isInfoEnabled() && ResultLogEntry.LT_INFO.equals(e.getEntryType())) {
+            logger.info(e.getMessage());
         } else {
-            logger.warn(message);
+            logger.warn(e.getMessage());
         }
-        logEntries.add(new ResultLogEntry(entryType, message));
-        if(!ResultLogEntry.isInformationalEntryType(entryType) && status.ordinal() < Status.WARN.ordinal()) {
-            logger.warn("Setting Result status to WARN due to log entry of type {}", entryType);
+        logEntries.add(e);
+        if(!ResultLogEntry.isInformationalEntryType(e.getEntryType()) && status.ordinal() < Status.WARN.ordinal()) {
+            logger.warn("Setting Result status to WARN due to log entry of type {}", e.getEntryType());
             setStatus(Status.WARN);
         }
     }
