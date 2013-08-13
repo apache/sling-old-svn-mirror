@@ -17,9 +17,11 @@
  */
 package org.apache.sling.hc.jmx.impl;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 
 import javax.management.DynamicMBean;
@@ -50,11 +52,24 @@ public class HealthCheckMBeanCreator {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private Map<ServiceReference, ServiceRegistration> registeredServices;
     private BundleContext bundleContext;
+    private List<ServiceReference> boundRefs = new ArrayList<ServiceReference>();
     
     @Activate
     protected void activate(ComponentContext ctx) {
-        bundleContext = ctx.getBundleContext();
         registeredServices = new HashMap<ServiceReference, ServiceRegistration>();
+        
+        final List<ServiceReference> toAdd = new ArrayList<ServiceReference>();
+        if(!boundRefs.isEmpty()) {
+            synchronized (boundRefs) {
+                toAdd.addAll(boundRefs);
+                boundRefs.clear();
+            }
+        }
+        
+        bundleContext = ctx.getBundleContext();
+        for(ServiceReference ref : toAdd) {
+            processHealthCheckRef(ref);
+        }
     }
     
     @Deactivate
@@ -66,17 +81,33 @@ public class HealthCheckMBeanCreator {
     }
     
     protected void bindHealthCheck(ServiceReference ref) {
+        if(bundleContext == null) {
+            // Not sure why the bundle context can still be null here, is this
+            // called before activate??
+            synchronized (boundRefs) {
+                boundRefs.add(ref);
+            }
+        } else {
+            processHealthCheckRef(ref);
+        }
+    }
+    
+    private void processHealthCheckRef(ServiceReference ref) {
         final HealthCheck hc = (HealthCheck)bundleContext.getService(ref);
         final HealthCheckMBean mbean = new HealthCheckMBean(hc);
         
         final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
-        mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=HealthCheck,service=" + mbean.getName());
+        mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=" + mbean.getJmxTypeName() + ",service=" + mbean.getName());
         final ServiceRegistration reg = bundleContext.registerService(DynamicMBean.class.getName(), mbean, mbeanProps);
         registeredServices.put(ref, reg);
         log.debug("Registered {} with properties {}", mbean, mbeanProps);
     }
     
     protected void unbindHealthCheck(ServiceReference ref) {
+        if(registeredServices == null) {
+            log.debug("No registeredServices, nothing to unregister");
+            return;
+        }
         final ServiceRegistration reg = registeredServices.remove(ref);
         if(reg == null) {
             log.warn("ServiceRegistration not found for {}", ref);
