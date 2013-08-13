@@ -23,7 +23,10 @@ import java.util.Map;
  *  return an execution Result */
 public interface HealthCheck {
     
-    /** Execute this health check and return a {@link Result} */
+    /** Execute this health check and return a {@link Result} 
+     *  This is meant to execute quickly, access to external
+     *  systems, for example, should be managed asynchronously.
+     */
     public Result execute();
     
     /** Additional (static) information about
