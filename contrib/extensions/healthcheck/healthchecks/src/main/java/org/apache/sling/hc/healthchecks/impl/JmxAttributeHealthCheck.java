@@ -91,7 +91,7 @@ public class JmxAttributeHealthCheck implements HealthCheck {
     public Result execute() {
         final Result result = new Result(log);
         result.log(ResultLogEntry.LT_DEBUG, 
-                MessageFormatter.format("Checking {} / {} with constraint {}", 
+                MessageFormatter.arrayFormat("Checking {} / {} with constraint {}", 
                         new Object[] { mbeanName, attributeName, constraint }).getMessage());
         try {
             final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
@@ -100,7 +100,10 @@ public class JmxAttributeHealthCheck implements HealthCheck {
                 log.error("MBean not found: {}", objectName);
             }
             final Object value = jmxServer.getAttribute(objectName, attributeName);
-            log.debug("{} {} returns {}", new Object[] { mbeanName, attributeName, value });
+            result.log(ResultLogEntry.LT_DEBUG,
+                    MessageFormatter.arrayFormat( 
+                    "{} {} returns {}", 
+                    new Object[] { mbeanName, attributeName, value }).getMessage());
             new SimpleConstraintChecker().check(value, constraint, result);
         } catch(Exception e) {
             log.warn(e.toString(), e);

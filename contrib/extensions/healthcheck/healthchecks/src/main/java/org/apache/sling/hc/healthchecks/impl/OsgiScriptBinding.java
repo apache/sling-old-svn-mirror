@@ -53,7 +53,7 @@ public class OsgiScriptBinding {
         if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
             active = false;
             result.log(ResultLogEntry.LT_INFO, 
-                    MessageFormatter.format(
+                    MessageFormatter.arrayFormat(
                             "Bundle {} is not active, state={} ({})", 
                             new Object[] { b.getSymbolicName(), b.getState(), b.getState()}).getMessage());
         }
