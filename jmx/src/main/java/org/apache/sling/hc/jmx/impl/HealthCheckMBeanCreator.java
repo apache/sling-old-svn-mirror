@@ -17,11 +17,9 @@
  */
 package org.apache.sling.hc.jmx.impl;
 
-import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
 
 import javax.management.DynamicMBean;
@@ -29,91 +27,83 @@ import javax.management.DynamicMBean;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.component.ComponentContext;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Creates an {@link HealthCheckMbean} for every {@link HealthCheckMBean} service */
+/**
+ * Creates an {@link HealthCheckMbean} for every {@link HealthCheckMBean} service
+ *
+ * TODO: What happens if two mbeans want to use the same object name (type and name).
+ *       We need to handle this and maybe use service ranking to resolve the conflict
+ * */
 @Component
-@Reference(
-        name="HealthCheck",
-        referenceInterface=HealthCheck.class, 
-        cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, 
-        policy=ReferencePolicy.DYNAMIC)
 public class HealthCheckMBeanCreator {
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<ServiceReference, ServiceRegistration> registeredServices;
-    private BundleContext bundleContext;
-    private List<ServiceReference> boundRefs = new ArrayList<ServiceReference>();
-    
+
+    private final Map<ServiceReference, ServiceRegistration> registeredServices = new HashMap<ServiceReference, ServiceRegistration>();
+
+    private ServiceTracker hcTracker;
+
     @Activate
-    protected void activate(ComponentContext ctx) {
-        registeredServices = new HashMap<ServiceReference, ServiceRegistration>();
-        
-        final List<ServiceReference> toAdd = new ArrayList<ServiceReference>();
-        if(!boundRefs.isEmpty()) {
-            synchronized (boundRefs) {
-                toAdd.addAll(boundRefs);
-                boundRefs.clear();
+    protected void activate(final BundleContext btx) {
+        this.hcTracker = new ServiceTracker(btx, HealthCheck.class.getName(), new ServiceTrackerCustomizer() {
+
+            @Override
+            public synchronized void removedService(final ServiceReference reference, final Object service) {
+                btx.ungetService(reference);
+                unregisterHCMBean(reference);
             }
-        }
-        
-        bundleContext = ctx.getBundleContext();
-        for(ServiceReference ref : toAdd) {
-            processHealthCheckRef(ref);
-        }
+
+            @Override
+            public synchronized void modifiedService(final ServiceReference reference, final Object service) {
+                unregisterHCMBean(reference);
+                registerHCMBean(btx, reference, (HealthCheck)service);
+            }
+
+            @Override
+            public synchronized Object addingService(final ServiceReference reference) {
+                final HealthCheck hc = (HealthCheck) btx.getService(reference);
+
+                if ( hc != null ) {
+                    registerHCMBean(btx, reference, hc);
+                }
+                return hc;
+            }
+        });
+        this.hcTracker.open();
     }
-    
+
     @Deactivate
-    protected void deactivate(ComponentContext ctx) {
-        for(ServiceRegistration r : registeredServices.values()) {
-            r.unregister();
-        }
-        registeredServices = null;
-    }
-    
-    protected void bindHealthCheck(ServiceReference ref) {
-        if(bundleContext == null) {
-            // Not sure why the bundle context can still be null here, is this
-            // called before activate??
-            synchronized (boundRefs) {
-                boundRefs.add(ref);
-            }
-        } else {
-            processHealthCheckRef(ref);
+    protected void deactivate() {
+        if ( this.hcTracker != null ) {
+            this.hcTracker.close();
+            this.hcTracker = null;
         }
     }
-    
-    private void processHealthCheckRef(ServiceReference ref) {
-        final HealthCheck hc = (HealthCheck)bundleContext.getService(ref);
+
+    private void registerHCMBean(final BundleContext bundleContext, final ServiceReference ref, final HealthCheck hc) {
         final HealthCheckMBean mbean = new HealthCheckMBean(hc);
-        
+
         final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
         mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=" + mbean.getJmxTypeName() + ",service=" + mbean.getName());
+
         final ServiceRegistration reg = bundleContext.registerService(DynamicMBean.class.getName(), mbean, mbeanProps);
         registeredServices.put(ref, reg);
         log.debug("Registered {} with properties {}", mbean, mbeanProps);
     }
-    
-    protected void unbindHealthCheck(ServiceReference ref) {
-        if(registeredServices == null) {
-            log.debug("No registeredServices, nothing to unregister");
-            return;
-        }
+
+    private void unregisterHCMBean(final ServiceReference ref) {
         final ServiceRegistration reg = registeredServices.remove(ref);
-        if(reg == null) {
-            log.warn("ServiceRegistration not found for {}", ref);
-        } else {
+        if ( reg != null ) {
             reg.unregister();
-            log.debug("Ungegistered {}", reg);
+            log.debug("Ungegistered {}", ref);
         }
     }
 }
