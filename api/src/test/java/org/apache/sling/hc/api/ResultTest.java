@@ -111,4 +111,26 @@ public class ResultTest {
         r.setStatus(Result.Status.WARN);
         assertEquals("Still expecting CRITICAL status after setting it to WARN", Result.Status.CRITICAL, r.getStatus());
     }
+    
+    @Test
+    public void testOkIsConsistent() {
+        {
+            final Result r = new Result();
+            assertTrue(r.isOk());
+            r.setStatus(Result.Status.OK);
+            assertTrue("Expecting isOk for OK Status", r.isOk());
+        }
+        
+        final Result.Status [] ts = {
+            Result.Status.WARN,
+            Result.Status.CRITICAL,
+            Result.Status.HEALTH_CHECK_ERROR
+        };
+
+        for(Result.Status s : ts) {
+            final Result r = new Result();
+            r.setStatus(s);
+            assertFalse("Expecting isOk fales for " + s + " Status", r.isOk());
+        }
+    }
 }
