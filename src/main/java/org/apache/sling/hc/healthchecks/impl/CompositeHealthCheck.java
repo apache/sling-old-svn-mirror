@@ -58,7 +58,9 @@ public class CompositeHealthCheck implements HealthCheck {
     @Property(cardinality=50)
     public static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
-    
+
+    @Property
+    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
     
     @Activate
     public void activate(ComponentContext ctx) {
