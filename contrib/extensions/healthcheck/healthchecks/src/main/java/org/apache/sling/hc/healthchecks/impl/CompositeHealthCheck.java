@@ -67,6 +67,7 @@ public class CompositeHealthCheck implements HealthCheck {
         bundleContext = ctx.getBundleContext();
         info = new HealthCheckInfo(ctx.getProperties());
         filterTags = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_FILTER_TAGS), new String[] {});
+        info.put(PROP_FILTER_TAGS, Arrays.asList(filterTags).toString());
         log.info("Activated, will select HealthCheck having tags {}", Arrays.asList(filterTags));
     }
     
