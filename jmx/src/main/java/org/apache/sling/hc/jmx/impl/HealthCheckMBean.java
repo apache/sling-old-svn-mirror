@@ -54,9 +54,11 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     private static final long serialVersionUID = -90745301105975287L;
     private static final Logger logger = LoggerFactory.getLogger(HealthCheckMBean.class);
     private final String beanName;
+    private final String jmxTypeName;
     private final HealthCheck healthCheck;
     
     public static final String HC_OK_ATTRIBUTE_NAME = "ok";
+    public static final String HC_STATUS_ATTRIBUTE_NAME = "status";
     public static final String LOG_ATTRIBUTE_NAME = "log";
     
     private static CompositeType LOG_ROW_TYPE;
@@ -65,6 +67,8 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     public static final String INDEX_COLUMN = "index";
     public static final String LEVEL_COLUMN = "level";
     public static final String MESSAGE_COLUMN = "message";
+    
+    public static final String DEFAULT_JMX_TYPE_NAME = "HealthCheck";
     
     static {
         try {
@@ -95,7 +99,16 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
         if(empty(name)) {
             name = hc.toString();
         }
-        beanName = name;
+        
+        final int pos = name.indexOf('/');
+        if(pos > 0) {
+            jmxTypeName = name.substring(0, pos);
+            beanName = name.substring(pos + 1);
+        } else {
+            jmxTypeName = DEFAULT_JMX_TYPE_NAME;
+            beanName = name;
+        }
+        
         healthCheck = hc;
     }
     
@@ -114,6 +127,8 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
             return result.isOk();
         } else if(LOG_ATTRIBUTE_NAME.equals(attribute)) {
             return logData(result);
+        } else if(HC_STATUS_ATTRIBUTE_NAME.equals(attribute)) {
+            return result.getStatus().toString();
         } else {
             final Object o = healthCheck.getInfo().get(attribute);
             if(o == null) {
@@ -155,10 +170,11 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        final MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[healthCheck.getInfo().size() + 2];
+        final MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[healthCheck.getInfo().size() + 3];
         int i=0;
         attrs[i++] = new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The HealthCheck result", true, false, false);
         attrs[i++] = new OpenMBeanAttributeInfoSupport(LOG_ATTRIBUTE_NAME, "The rule log", LOG_TABLE_TYPE, true, false, false);
+        attrs[i++] = new MBeanAttributeInfo(HC_STATUS_ATTRIBUTE_NAME, String.class.getName(), "The HealthCheck status", true, false, false);
         
         for(String key : healthCheck.getInfo().keySet()) {
             attrs[i++] = new MBeanAttributeInfo(key, List.class.getName(), "Description of " + key, true, false, false);
@@ -187,5 +203,9 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     
     public String getName() {
         return beanName;
+    }
+    
+    public String getJmxTypeName() {
+        return jmxTypeName;
     }
 }

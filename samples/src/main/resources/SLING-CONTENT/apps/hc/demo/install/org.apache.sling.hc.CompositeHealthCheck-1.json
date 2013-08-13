@@ -3,5 +3,5 @@
     "hc.name" : "CompositeHealthCheck: execute all HealthCheck tagged with 'script'", 
     "hc.tags" : [composite],
     "filter.tags" : [script],
-    "hc.mbean.name" : "composite:script" 
+    "hc.mbean.name" : "CompositeHealthCheck/script" 
 }
