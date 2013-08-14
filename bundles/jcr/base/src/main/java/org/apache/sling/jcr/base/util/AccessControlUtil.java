@@ -484,6 +484,9 @@ public class AccessControlUtil {
 		if (privilege.isAggregate()) {
 			Privilege[] privileges = privilege.getAggregatePrivileges();
 			for (Privilege disaggregate : privileges) {
+				if (disaggregate.isAggregate()) {
+					continue; //nested aggregate, so skip it since the privileges are already included.
+				}
 				disaggregatedPrivilegeNames.add(disaggregate.getName());
 			}
 		} else {

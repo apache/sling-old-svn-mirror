@@ -855,4 +855,140 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
         JSONObject jsonObject = new JSONObject(json);
 		assertNotNull(jsonObject);
 	}
+	
+	
+	/**
+	 * Test for SLING-3010
+	 */
+	public void testMergeAceForUserGrantNestedAggregatePrivilegeAfterDenySuperAggregatePrivilege() throws IOException, JSONException {
+		testUserId = createTestUser();
+		
+		testFolderUrl = createTestFolder();
+		
+        String postUrl = testFolderUrl + ".modifyAce.json";
+
+        //1. setup an initial set of denied privileges for the test user
+        List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("principalId", testUserId));
+		postParams.add(new NameValuePair("privilege@jcr:versionManagement", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:read", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "denied")); 
+		postParams.add(new NameValuePair("privilege@rep:write", "denied")); 
+		
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		/*String json = */getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+		
+        //2. now grant the jcr:write subset from the rep:write aggregate privilege
+		postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("principalId", testUserId));
+		postParams.add(new NameValuePair("privilege@jcr:versionManagement", "granted"));
+		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "granted")); 
+		postParams.add(new NameValuePair("privilege@jcr:write", "granted")); //sub-aggregate of rep:write  
+		
+		/*String json = */getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+		
+		//3. verify that the acl has the correct values
+		//fetch the JSON for the acl to verify the settings.
+		String getUrl = testFolderUrl + ".acl.json";
+
+		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		assertNotNull(json);
+		
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
+		
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		assertNotNull(aceObject);
+		
+		assertEquals(testUserId, aceObject.optString("principal"));
+		
+		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		assertNotNull(grantedArray);
+		assertEquals(4, grantedArray.length());
+		Set<String> grantedPrivilegeNames = new HashSet<String>();
+		for (int i=0; i < grantedArray.length(); i++) {
+			grantedPrivilegeNames.add(grantedArray.getString(i));
+		}
+		assertTrue(grantedPrivilegeNames.contains("jcr:versionManagement"));
+		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
+		assertTrue(grantedPrivilegeNames.contains("jcr:modifyAccessControl"));
+		assertTrue(grantedPrivilegeNames.contains("jcr:write"));
+
+		JSONArray deniedArray = aceObject.getJSONArray("denied");
+		assertNotNull(deniedArray);
+		assertEquals(1, deniedArray.length());
+		Set<String> deniedPrivilegeNames = new HashSet<String>();
+		for (int i=0; i < deniedArray.length(); i++) {
+			deniedPrivilegeNames.add(deniedArray.getString(i));
+		}
+		//the leftovers from the denied rep:write that were not granted with jcr:write
+		assertTrue(deniedPrivilegeNames.contains("jcr:nodeTypeManagement")); 
+	}
+
+	/**
+	 * Test for SLING-3010
+	 */
+	public void testMergeAceForUserGrantAggregatePrivilegePartsAfterDenyAggregatePrivilege() throws IOException, JSONException {
+		testUserId = createTestUser();
+		
+		testFolderUrl = createTestFolder();
+		
+        String postUrl = testFolderUrl + ".modifyAce.json";
+
+        //1. setup an initial set of denied privileges for the test user
+        List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("principalId", testUserId));
+		postParams.add(new NameValuePair("privilege@jcr:versionManagement", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:read", "denied"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "denied")); 
+		postParams.add(new NameValuePair("privilege@rep:write", "denied")); 
+		
+		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		/*String json = */getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+
+        //2. now grant the all the privileges contained in the rep:write privilege
+		postParams = new ArrayList<NameValuePair>();
+		postParams.add(new NameValuePair("principalId", testUserId));
+		postParams.add(new NameValuePair("privilege@jcr:versionManagement", "granted"));
+		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
+		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "granted")); 
+		postParams.add(new NameValuePair("privilege@jcr:nodeTypeManagement", "granted")); //sub-privilege of rep:write  
+		postParams.add(new NameValuePair("privilege@jcr:write", "granted")); //sub-aggregate of rep:write  
+		
+		/*String json = */getAuthenticatedPostContent(creds, postUrl, CONTENT_TYPE_JSON, postParams, HttpServletResponse.SC_OK);
+		
+		//3. verify that the acl has the correct values
+		//fetch the JSON for the acl to verify the settings.
+		String getUrl = testFolderUrl + ".acl.json";
+
+		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		assertNotNull(json);
+		
+		JSONObject jsonObject = new JSONObject(json);
+		assertEquals(1, jsonObject.length());
+		
+		JSONObject aceObject = jsonObject.optJSONObject(testUserId);
+		assertNotNull(aceObject);
+		
+		assertEquals(testUserId, aceObject.optString("principal"));
+		
+		JSONArray grantedArray = aceObject.getJSONArray("granted");
+		assertNotNull(grantedArray);
+		assertEquals(4, grantedArray.length());
+		Set<String> grantedPrivilegeNames = new HashSet<String>();
+		for (int i=0; i < grantedArray.length(); i++) {
+			grantedPrivilegeNames.add(grantedArray.getString(i));
+		}
+		assertTrue(grantedPrivilegeNames.contains("jcr:versionManagement"));
+		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
+		assertTrue(grantedPrivilegeNames.contains("jcr:modifyAccessControl"));
+		assertTrue(grantedPrivilegeNames.contains("rep:write")); //jcr:nodeTypeManagement + jcr:write
+
+		//should be nothing left in the denied set.
+		JSONArray deniedArray = aceObject.optJSONArray("denied");
+		assertNull(deniedArray);
+	}
+	
 }
