@@ -24,8 +24,8 @@
 }
 
 .healthcheck .logWARN,
-.healthcheck .logSECURITY,
-.healthcheck .logCONFIG
+.healthcheck .logCRITICAL,
+.healthcheck .logHEALTH_CHECK_ERROR
 {
     color:red;
 }
