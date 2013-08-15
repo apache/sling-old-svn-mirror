@@ -37,7 +37,7 @@ import org.apache.sling.api.request.ResponseUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -145,13 +145,13 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         
         c.tr();
         c.tdContent();
-        for(ResultLogEntry e : result) {
-            if(!debug && e.getEntryType().equals(ResultLogEntry.LT_DEBUG)) {
+        for(ResultLog.Entry e : result) {
+            if(!debug && e.getStatus().equals(Result.Status.DEBUG)) {
                 continue;
             }
             final StringBuilder sb = new StringBuilder();
-            sb.append("<div class='log").append(e.getEntryType()).append("'>");
-            sb.append(e.getEntryType())
+            sb.append("<div class='log").append(e.getStatus()).append("'>");
+            sb.append(e.getStatus())
                 .append(" ")
                 .append(ResponseUtil.escapeXml(e.getMessage()))
                 .append("</div>");

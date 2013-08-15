@@ -18,102 +18,48 @@
 package org.apache.sling.hc.api;
 
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** The result of executing a {@link HealthCheck} */
-public class Result implements Iterable <ResultLogEntry >{
+public class Result implements Iterable <ResultLog.Entry> {
 
-    private final Logger logger;
-    private static final Logger CLASS_LOGGER = LoggerFactory.getLogger(Result.class);
-    
-    private final List<ResultLogEntry> logEntries = new LinkedList<ResultLogEntry>();
-    private Status status = Status.OK;
+    private final ResultLog resultLog;
     
     public enum Status {
+        DEBUG,              // used by ResultLog for debug messages, not an actual output status
+        INFO,               // used by ResultLog for info messages, not an actual output status
         OK,                 // no problem
         WARN,               // health check detected something wrong but not critical
         CRITICAL,           // health check detected a critical problem
         HEALTH_CHECK_ERROR  // health check did not execute properly
     }
     
-    /** Build a Result using the default logger */
-    public Result() {
-        this(null);
+    /** Build a single-value Result 
+     *  @param s if lower than OK, our status is set to OK */
+    public Result(Status s, String explanation) {
+        resultLog = new ResultLog().add(new ResultLog.Entry(s, explanation));
     }
 
-    /** Build a Result that logs to a specific logger */
-    public Result(Logger logger) {
-        this.logger = logger != null ? logger : CLASS_LOGGER;
-    }
-    
-    /** Merge a set of Result into this one. This Result's status
-     *  is set to the highest status of all supplied Result, and
-     *  their log entries are added to this. */
-    public void merge(Result ...results) {
-        for(Result r : results) {
-            setStatus(r.getStatus());
-            for(ResultLogEntry e : r) {
-                log(e);
-            }
-        }
-    }
-    
-    /** Add an entry to our log. Use the {@ResultLogEntry}.LT_* constants
-     *  for well-known entry types.
-     *  Adding an entry with a type where {@ResultLogEntry#isInformationalEntryType} returns
-     *  false causes our status to be set to WARN, unless it was already set higher.
+    /** Build a a Result based on a ResultLog, which can provide
+     *  more details than a single-value Result.
      */
-    public void log(String entryType, String message) {
-        log(new ResultLogEntry(entryType, message));
+    public Result(ResultLog log) {
+        resultLog = log;
     }
     
-    /** Add an entry to our log - in general it is more convenient to use the {@link #add(String, String)}
-     *  method - this is useful when merging Result for example.
-     */
-    public void log(ResultLogEntry e) {
-        if(logger.isDebugEnabled() && ResultLogEntry.LT_DEBUG.equals(e.getEntryType())) {
-            logger.debug(e.getMessage());
-        } else if(logger.isInfoEnabled() && ResultLogEntry.LT_INFO.equals(e.getEntryType())) {
-            logger.info(e.getMessage());
-        } else {
-            logger.warn(e.getMessage());
-        }
-        logEntries.add(e);
-        if(!ResultLogEntry.isInformationalEntryType(e.getEntryType()) && status.ordinal() < Status.WARN.ordinal()) {
-            logger.warn("Setting Result status to WARN due to log entry of type {}", e.getEntryType());
-            setStatus(Status.WARN);
-        }
-    }
-    
-    /** Set this Result's status. Attempts to set it lower than the current
-     *  status are ignored.
-     */
-    public void setStatus(Status s) {
-        if(s.ordinal() > status.ordinal()) {
-            status = s;
-        } else {
-            logger.debug("setStatus({}) ignored as current status {} is higher", s, status);
-        }
-    }
-    
-    public Iterator<ResultLogEntry> iterator() {
-        return logEntries.iterator();
-    }
-    
-    /** True if our status is OK - just to have a convenient way of 
+    /** True if our status is OK - provides a convenient way of 
      *  checking that.
      */
     public boolean isOk() {
-        return status.ordinal() == Status.OK.ordinal();
+        return getStatus().equals(Status.OK);
     }
     
     /** Return our Status */
     public Status getStatus() {
-        return status;
+        return resultLog.getAggregateStatus();
     }
     
+    /** Return an Iterator on the entries of our ResultLog */
+    public Iterator<ResultLog.Entry> iterator() {
+        return resultLog.iterator();
+    }
 }

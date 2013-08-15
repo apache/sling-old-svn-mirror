@@ -27,9 +27,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
-import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
-import org.slf4j.helpers.MessageFormatter;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 
 /** The JmxBinding is meant to be bound as "jmx" global variables
  *  in scripted rules, to allow for writing scripted expressions
@@ -37,10 +35,10 @@ import org.slf4j.helpers.MessageFormatter;
  */
 public class JmxScriptBinding {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
-    private final Result result;
+    private final FormattingResultLog resultLog;
     
-    public JmxScriptBinding(Result result) {
-        this.result = result;
+    public JmxScriptBinding(FormattingResultLog resultLog) {
+        this.resultLog = resultLog;
     }
     
     public Object attribute(String objectNameString, String attributeName) 
@@ -48,15 +46,12 @@ public class JmxScriptBinding {
         final ObjectName name = new ObjectName(objectNameString);
         if(jmxServer.queryNames(name, null).size() == 0) {
             final String msg = "JMX object name not found: [" + objectNameString + "]";
-            result.log(ResultLogEntry.LT_WARN, msg);
+            resultLog.warn(msg);
             throw new IllegalStateException(msg);
         }
-        result.log(ResultLogEntry.LT_DEBUG, MessageFormatter.format("Got JMX Object [{}]", name).getMessage());
+        resultLog.debug("Got JMX Object [{}]", name);
         final Object value = jmxServer.getAttribute(name, attributeName);
-        result.log(ResultLogEntry.LT_DEBUG, 
-                MessageFormatter.arrayFormat(
-                        "JMX Object [{}] Attribute [{}] = [{}]", 
-                        new Object[] { name, attributeName, value }).getMessage());
+        resultLog.debug("JMX Object [{}] Attribute [{}] = [{}]", name, attributeName, value);
         return value;
     }
 }

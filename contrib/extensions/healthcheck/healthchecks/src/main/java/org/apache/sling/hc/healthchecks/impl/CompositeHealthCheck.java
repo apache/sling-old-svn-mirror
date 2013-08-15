@@ -30,7 +30,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -73,40 +74,39 @@ public class CompositeHealthCheck implements HealthCheck {
     
     @Override
     public Result execute() {
-        final Result result = new Result(log);
+        final FormattingResultLog resultLog = new FormattingResultLog();
         final List<HealthCheck> checks = new HealthCheckFilter(bundleContext).getTaggedHealthCheck(filterTags);
         if(checks.size() == 0) {
-            result.log(ResultLogEntry.LT_WARN, "HealthCheckFilter returns no HealthCheck for tags " + Arrays.asList(filterTags));
-            return result;
+            resultLog.warn("HealthCheckFilter returns no HealthCheck for tags {}", Arrays.asList(filterTags));
+            return new Result(resultLog);
         }
-            
-        result.log(ResultLogEntry.LT_DEBUG, 
-                "Executing " + checks.size() 
-                + " HealthCheck selected by the " + Arrays.asList(filterTags) + " tags");
+
+        int executed = 0;
+        resultLog.debug("Executing {} HealthCheck selected by the {} tags", checks.size(), Arrays.asList(filterTags));
         int failures = 0;
         for(HealthCheck hc : checks) {
             if(hc == this) {
-                result.log(ResultLogEntry.LT_WARN, 
-                        "Cowardly forfeiting execution of this HealthCheck in an infinite loop - do not include my tags in the filter tags!");
+                resultLog.info("Cowardly forfeiting execution of this HealthCheck in an infinite loop, ignoring it");
                 continue;
             }
-            result.log(ResultLogEntry.LT_DEBUG, "Executing " + hc); 
+            resultLog.debug("Executing {}", hc);
+            executed++;
             final Result sub = hc.execute();
             if(!sub.isOk()) {
                 failures++;
             }
-            result.merge(sub);
+            for(ResultLog.Entry e : sub) {
+                resultLog.add(e);
+            }
         }
         
         if(failures == 0) {
-            result.log(ResultLogEntry.LT_DEBUG, 
-                    checks.size() + " HealthCheck executed, all ok"); 
+            resultLog.debug("{} HealthCheck executed, all ok", executed);
         } else {
-            result.log(ResultLogEntry.LT_WARN, 
-                    checks.size() + " HealthCheck executed, " + failures + " failures"); 
+            resultLog.warn("{} HealthCheck executed, {} failures", executed, failures);
         }
         
-        return result;
+        return new Result(resultLog);
     }
 
     @Override

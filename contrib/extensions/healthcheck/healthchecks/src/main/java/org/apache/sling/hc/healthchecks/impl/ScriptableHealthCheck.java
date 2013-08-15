@@ -32,12 +32,11 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 
 /** {@link HealthCheck} that checks a scriptable expression */
 @Component(
@@ -89,39 +88,30 @@ public class ScriptableHealthCheck implements HealthCheck {
     
     @Override
     public Result execute() {
-        final Result result = new Result(log);
-        result.log(ResultLogEntry.LT_DEBUG, 
-                MessageFormatter.format(
-                        "Checking expression [{}], language extension=[{}]", 
-                        expression, languageExtension).getMessage());
+        final FormattingResultLog resultLog = new FormattingResultLog();
+        resultLog.debug("Checking expression [{}], language extension=[{}]",  expression, languageExtension);
         try {
             final ScriptEngine engine = scriptEngineManager.getEngineByExtension(languageExtension);
             if(engine == null) {
-                result.log(ResultLogEntry.LT_WARN, 
-                        MessageFormatter.format(
-                                "No ScriptEngine available for extension {}", 
-                                languageExtension).getMessage());
+                resultLog.healthCheckError("No ScriptEngine available for extension {}", languageExtension);
             } else {
                 // TODO pluggable Bindings? Reuse the Sling bindings providers?
                 final Bindings b = engine.createBindings();
-                b.put("jmx", new JmxScriptBinding(result));
-                b.put("osgi", new OsgiScriptBinding(bundleContext, result));
+                b.put("jmx", new JmxScriptBinding(resultLog));
+                b.put("osgi", new OsgiScriptBinding(bundleContext, resultLog));
                 final Object value = engine.eval(expression, b);
                 if(value!=null && "true".equals(value.toString())) {
-                    result.log(ResultLogEntry.LT_DEBUG, 
-                            MessageFormatter.format(
-                                    "Expression [{}] evaluates to true as expected", expression).getMessage());
+                    resultLog.debug("Expression [{}] evaluates to true as expected", expression);
                 } else {
-                    result.log(ResultLogEntry.LT_WARN, 
-                            MessageFormatter.format(
-                                    "Expression [{}] does not evaluate to true, value={}", 
-                                    expression, value).getMessage());
+                    resultLog.warn("Expression [{}] does not evaluate to true as expected, value=[{}]", expression, value); 
                 }
             }
         } catch(Exception e) {
-            result.log(ResultLogEntry.LT_WARN, e.toString()); 
+            resultLog.healthCheckError(
+                    "Exception while evaluating expression [{}] with language extension [{}]: {}", 
+                    expression, languageExtension, e); 
         }
-        return result;
+        return new Result(resultLog);
     }
 
     @Override
