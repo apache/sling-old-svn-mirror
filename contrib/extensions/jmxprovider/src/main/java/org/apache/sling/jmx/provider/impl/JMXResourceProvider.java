@@ -18,7 +18,10 @@
  */
 package org.apache.sling.jmx.provider.impl;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -283,17 +286,35 @@ public class JMXResourceProvider implements ResourceProvider {
     private static final String MARKER_NOTYPE = "{notype}";
     private static final String MARKER_NONAME = "{noname}";
 
+    private String encode(final String value) {
+        try {
+            return URLEncoder.encode(value, "UTF-8");
+        } catch (final UnsupportedEncodingException uee) {
+            // this should never happen, UTF-8 is always supported
+            return value;
+        }
+    }
+
+    private String decode(final String value) {
+        try {
+            return URLDecoder.decode(value, "UTF-8");
+        } catch (final UnsupportedEncodingException uee) {
+            // this should never happen, UTF-8 is always supported
+            return value;
+        }
+    }
+
     private String convertObjectNameToResourcePath(final ObjectName name) {
         final StringBuilder sb = new StringBuilder(name.getDomain().replace('.', '/'));
         sb.append('/');
         if ( name.getKeyProperty("type") != null ) {
-            sb.append(name.getKeyProperty("type"));
+            sb.append(encode(name.getKeyProperty("type")));
         } else {
             sb.append(MARKER_NOTYPE);
         }
         sb.append('/');
         if ( name.getKeyProperty("name") != null ) {
-            sb.append(name.getKeyProperty("name"));
+            sb.append(encode(name.getKeyProperty("name")));
         } else {
             sb.append(MARKER_NONAME);
         }
@@ -308,9 +329,9 @@ public class JMXResourceProvider implements ResourceProvider {
             } else {
                 sb.append(',');
             }
-            sb.append(entry.getKey());
+            sb.append(encode(entry.getKey()));
             sb.append('=');
-            sb.append(entry.getValue());
+            sb.append(encode(entry.getValue()));
         }
         return sb.toString();
     }
@@ -321,16 +342,16 @@ public class JMXResourceProvider implements ResourceProvider {
             final int typeSlash = path.lastIndexOf('/', nameSlash - 1);
             if ( typeSlash != -1 ) {
                 final String domain = path.substring(0, typeSlash).replace('/', '.');
-                final String type = path.substring(typeSlash + 1, nameSlash);
+                final String type = decode(path.substring(typeSlash + 1, nameSlash));
                 final String nameAndProps = path.substring(nameSlash + 1);
                 final int colonPos = nameAndProps.indexOf(':');
                 final String name;
                 final String props;
                 if ( colonPos == -1 ) {
-                    name = nameAndProps;
+                    name = decode(nameAndProps);
                     props = null;
                 } else {
-                    name = nameAndProps.substring(0,  colonPos);
+                    name = decode(nameAndProps.substring(0,  colonPos));
                     props = nameAndProps.substring(colonPos + 1);
                 }
                 final StringBuilder sb = new StringBuilder();
@@ -351,10 +372,16 @@ public class JMXResourceProvider implements ResourceProvider {
                     hasProps = true;
                 }
                 if ( props != null ) {
-                    if ( hasProps ) {
-                        sb.append(",");
+                    final String[] propArray = props.split(",");
+                    for(final String keyValue : propArray) {
+                        if ( hasProps ) {
+                            sb.append(",");
+                        }
+                        final int pos = keyValue.indexOf('=');
+                        sb.append(decode(keyValue.substring(0, pos)));
+                        sb.append('=');
+                        sb.append(decode(keyValue.substring(pos+1)));
                     }
-                    sb.append(props);
                 }
                 try {
                     return new ObjectName(sb.toString());
