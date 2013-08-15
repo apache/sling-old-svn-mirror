@@ -94,11 +94,12 @@ public class JmxAttributeHealthCheck implements HealthCheck {
             final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
             final ObjectName objectName = new ObjectName(mbeanName);
             if(jmxServer.queryNames(objectName, null).size() == 0) {
-                log.error("MBean not found: {}", objectName);
+                resultLog.warn("MBean not found: {}", objectName);
+            } else {
+                final Object value = jmxServer.getAttribute(objectName, attributeName);
+                resultLog.debug("{} {} returns {}", mbeanName, attributeName, value);
+                new SimpleConstraintChecker().check(value, constraint, resultLog);
             }
-            final Object value = jmxServer.getAttribute(objectName, attributeName);
-            resultLog.debug("{} {} returns {}", mbeanName, attributeName, value);
-            new SimpleConstraintChecker().check(value, constraint, resultLog);
         } catch(Exception e) {
             log.warn("JMX attribute {}/{} check failed: {}", new Object []{ mbeanName, attributeName, e});
             resultLog.healthCheckError("JMX attribute check failed: {}", e);
