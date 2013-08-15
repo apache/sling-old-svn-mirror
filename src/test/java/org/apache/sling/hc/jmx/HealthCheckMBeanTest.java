@@ -29,7 +29,7 @@ import javax.management.ObjectName;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.jmx.impl.HealthCheckMBean;
 import org.apache.sling.hc.util.SimpleConstraintChecker;
 import org.junit.Test;
@@ -49,13 +49,11 @@ public class HealthCheckMBeanTest {
 
         @Override
         public Result execute() {
-            final Result result = new Result();
             if(resultOk) {
-                result.log(ResultLogEntry.LT_DEBUG, "Nothing to report, result ok");
+                return new Result(Result.Status.OK, "Nothing to report, result ok");
             } else {
-                result.log(ResultLogEntry.LT_WARN, "Result is not ok!");
+                return new Result(Result.Status.WARN, "Result is not ok!");
             }
-            return result;
         }
 
         @Override
@@ -71,9 +69,9 @@ public class HealthCheckMBeanTest {
             fail("MBean not found: " + objectName);
         }
         final Object value = jmxServer.getAttribute(objectName, attributeName);
-        final Result result = new Result();
-        new SimpleConstraintChecker().check(value, constraint, result);
-        assertEquals("Expecting result " + expected, expected, result.isOk());
+        final ResultLog resultLog = new ResultLog();
+        new SimpleConstraintChecker().check(value, constraint, resultLog);
+        assertEquals("Expecting result " + expected, expected, resultLog.getAggregateStatus().equals(Result.Status.OK));
         
     }
     
