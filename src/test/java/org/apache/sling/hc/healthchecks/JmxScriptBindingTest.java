@@ -20,20 +20,16 @@ package org.apache.sling.hc.healthchecks;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.impl.JmxScriptBinding;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JmxScriptBindingTest {
     
-    private final Logger logger = LoggerFactory.getLogger(getClass());
-    
     @Test
     public void testJmxAttribute() throws Exception {
-        final Result r = new Result(logger);
-        final JmxScriptBinding b = new JmxScriptBinding(r);
+        final FormattingResultLog resultLog = new FormattingResultLog();
+        final JmxScriptBinding b = new JmxScriptBinding(resultLog);
         final Object value= b.attribute("java.lang:type=ClassLoading", "LoadedClassCount");
         assertNotNull("Expecting non-null attribute value", value);
         assertTrue("Expecting non-empty value", value.toString().length() > 0);

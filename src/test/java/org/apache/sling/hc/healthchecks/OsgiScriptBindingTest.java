@@ -22,19 +22,15 @@ import static org.junit.Assert.assertEquals;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.impl.OsgiScriptBinding;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class OsgiScriptBindingTest {
-    
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     
     private Bundle mockBundle(boolean isFragment, boolean isActive) {
         final Bundle b = Mockito.mock(Bundle.class);
@@ -60,8 +56,8 @@ public class OsgiScriptBindingTest {
         };
         Mockito.when(ctx.getBundles()).thenReturn(bundles);
         
-        final Result r = new Result(logger);
-        final OsgiScriptBinding b = new OsgiScriptBinding(ctx, r);
+        final FormattingResultLog resultLog = new FormattingResultLog();
+        final OsgiScriptBinding b = new OsgiScriptBinding(ctx, resultLog);
         assertEquals(1, b.inactiveBundlesCount());
     }
 }

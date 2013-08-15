@@ -17,23 +17,21 @@
  */
 package org.apache.sling.hc.healthchecks.impl;
 
-import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.slf4j.helpers.MessageFormatter;
 
 /** The OsgiBinding is meant to be bound as an "osgi" global variable
  *  in scripted rules, to allow for checking some OSGi states in
  *  a simple way
  */
 public class OsgiScriptBinding {
-    private final Result result;
+    private final FormattingResultLog resultLog;
     private final BundleContext bundleContext;
     
-    public OsgiScriptBinding(BundleContext ctx, Result result) {
-        this.result = result;
+    public OsgiScriptBinding(BundleContext ctx, FormattingResultLog resultLog) {
+        this.resultLog = resultLog;
         this.bundleContext = ctx;
     }
     
@@ -44,7 +42,7 @@ public class OsgiScriptBinding {
                 count++;
             }
         }
-        result.log(ResultLogEntry.LT_DEBUG, MessageFormatter.format("inactiveBundlesCount={}", count).getMessage());
+        resultLog.debug("inactiveBundlesCount={}", count);
         return count;
     }
     
@@ -52,10 +50,7 @@ public class OsgiScriptBinding {
         boolean active = true;
         if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
             active = false;
-            result.log(ResultLogEntry.LT_INFO, 
-                    MessageFormatter.arrayFormat(
-                            "Bundle {} is not active, state={} ({})", 
-                            new Object[] { b.getSymbolicName(), b.getState(), b.getState()}).getMessage());
+            resultLog.info("Bundle {} is not active, state={} ({})", b.getSymbolicName(), b.getState(), b.getState());
         }
         return active;
     }
@@ -63,8 +58,7 @@ public class OsgiScriptBinding {
     private boolean isFragment(Bundle b) {
         final String header = (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
         if(header!= null && header.trim().length() > 0) {
-            result.log(ResultLogEntry.LT_DEBUG, 
-                    MessageFormatter.format("{} is a fragment bundle, state won't be checked", b).getMessage());
+            resultLog.debug("{} is a fragment bundle, state won't be checked", b);
             return true;
         } else {
             return false;
