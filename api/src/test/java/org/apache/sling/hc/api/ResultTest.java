@@ -18,119 +18,48 @@
 package org.apache.sling.hc.api;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
 
 public class ResultTest {
     
-    @Test
-    public void testInitiallyOk() {
-        final Result result = new Result();
-        assertFalse(result.iterator().hasNext());
-        assertTrue(result.isOk());
+    private final AtomicInteger counter = new AtomicInteger();
+    
+    private void assertSingleResult(Result.Status toSet, Result.Status expected, boolean expectOk) {
+        final String msg = "test " + counter.incrementAndGet();
+        final Result r = new Result(toSet, msg);
+        assertEquals(expected, r.getStatus());
+        assertEquals(expectOk, r.isOk());
+        assertTrue(r.iterator().hasNext());
+        assertEquals(toSet.toString() + " " + msg, r.iterator().next().toString());
     }
     
     @Test
-    public void testDebugLogNoChange() {
-        final Result result = new Result();
-        result.log(ResultLogEntry.LT_DEBUG, "Some debug message");
-        assertTrue(result.iterator().hasNext());
-        assertTrue(result.isOk());
+    public void testSingleResult() {
+        assertSingleResult(Result.Status.DEBUG, Result.Status.OK, true);
+        assertSingleResult(Result.Status.INFO, Result.Status.OK, true);
+        assertSingleResult(Result.Status.OK, Result.Status.OK, true);
+        assertSingleResult(Result.Status.WARN, Result.Status.WARN, false);
+        assertSingleResult(Result.Status.CRITICAL, Result.Status.CRITICAL, false);
+        assertSingleResult(Result.Status.HEALTH_CHECK_ERROR, Result.Status.HEALTH_CHECK_ERROR, false);
     }
     
     @Test
-    public void testInfoLogNoChange() {
-        final Result result = new Result();
-        result.log(ResultLogEntry.LT_INFO, "Some info message");
-        assertTrue(result.iterator().hasNext());
-        assertTrue(result.isOk());
-    }
-    
-    @Test
-    public void testOthersTypesSetStatusWarn() {
-        final String [] entryTypes = new String [] {
-            ResultLogEntry.LT_WARN,
-            ResultLogEntry.LT_WARN_CONFIG,
-            ResultLogEntry.LT_WARN_SECURITY,
-            "SomeNewLogEntryType" + System.currentTimeMillis()
-        };
+    public void testLog() {
+        final ResultLog log = new ResultLog();
+        log.add(new ResultLog.Entry(Result.Status.INFO, "argh"));
+        log.add(new ResultLog.Entry(Result.Status.WARN, "bad stuff"));
         
-        for(String et : entryTypes) {
-            final Result result = new Result();
-            result.log(et, "Some message");
-            assertTrue(result.iterator().hasNext());
-            assertTrue(result.getStatus().equals(Result.Status.WARN));
-        }
-    }
-    
-    @Test
-    public void testNoStatusChangeIfAlreadyCritical() {
-        final Result result = new Result();
-        result.setStatus(Result.Status.CRITICAL);
-        assertTrue(result.getStatus().equals(Result.Status.CRITICAL));
-        result.log(ResultLogEntry.LT_WARN, "Some message");
-        assertTrue(result.iterator().hasNext());
-        assertTrue(result.getStatus().equals(Result.Status.CRITICAL));
-    }
-    
-    @Test
-    public void testSuppliedLogger() {
-        final Logger myLogger = Mockito.mock(Logger.class);
-        final Result r = new Result(myLogger);
-        r.log("foo", "Some message");
-        Mockito.verify(myLogger).warn(Matchers.anyString());
-    }
-    
-    @Test
-    public void testLogEntries() {
-        final Result r = new Result();
-        r.log("ONE", "M1");
-        r.log("two", "M2");
-        r.log("THREE", "M3");
+        final Result result = new Result(log);
+        assertEquals(Result.Status.WARN, result.getStatus());
         
-        final Iterator<ResultLogEntry> it = r.iterator();
-        assertEquals("ONE", it.next().getEntryType());
-        assertEquals("two", it.next().getEntryType());
-        assertEquals("THREE", it.next().getEntryType());
-        assertFalse(it.hasNext());
-    }
-    
-    @Test
-    public void testSetStatus() {
-        final Result r = new Result();
-        assertEquals("Expecting initial OK status", Result.Status.OK, r.getStatus());
-        r.setStatus(Result.Status.CRITICAL);
-        assertEquals("Expecting CRITICAL status after setting it", Result.Status.CRITICAL, r.getStatus());
-        r.setStatus(Result.Status.WARN);
-        assertEquals("Still expecting CRITICAL status after setting it to WARN", Result.Status.CRITICAL, r.getStatus());
-    }
-    
-    @Test
-    public void testOkIsConsistent() {
-        {
-            final Result r = new Result();
-            assertTrue(r.isOk());
-            r.setStatus(Result.Status.OK);
-            assertTrue("Expecting isOk for OK Status", r.isOk());
+        final StringBuilder sb = new StringBuilder();
+        for(ResultLog.Entry e : result) {
+            sb.append(e.toString()).append("#");
         }
-        
-        final Result.Status [] ts = {
-            Result.Status.WARN,
-            Result.Status.CRITICAL,
-            Result.Status.HEALTH_CHECK_ERROR
-        };
-
-        for(Result.Status s : ts) {
-            final Result r = new Result();
-            r.setStatus(s);
-            assertFalse("Expecting isOk fales for " + s + " Status", r.isOk());
-        }
+        assertEquals("INFO argh#WARN bad stuff#", sb.toString());
     }
 }

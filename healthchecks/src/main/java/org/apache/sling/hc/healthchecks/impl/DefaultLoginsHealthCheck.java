@@ -36,7 +36,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -80,14 +80,14 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
     
     @Override
     public Result execute() {
-        final Result result = new Result(log);
+        final FormattingResultLog resultLog = new FormattingResultLog();
         int checked=0;
         int failures=0;
         
         for(String login : logins) {
             final String [] parts = login.split(":");
             if(parts.length != 2) {
-                result.log(ResultLogEntry.LT_WARN, "Expected login in the form username:password, got " + login);
+                resultLog.warn("Expected login in the form username:password, got [{}]", login);
                 continue;
             }
             checked++;
@@ -99,12 +99,12 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
                 s = repository.login(creds);
                 if(s != null) {
                     failures++;
-                    result.log(ResultLogEntry.LT_WARN_SECURITY, "Login as [" + username + "] succeeded, was expecting it to fail");
+                    resultLog.warn("Login as [{}] succeeded, was expecting it to fail", username);
                 } else {
-                    result.log(ResultLogEntry.LT_DEBUG, "Login as [" + username + "] didn't throw an Exception but returned null Session");
+                    resultLog.debug("Login as [{}] didn't throw an Exception but returned null Session", username);
                 }
             } catch(RepositoryException re) {
-                result.log(ResultLogEntry.LT_DEBUG, "Login as [" + username + "] failed, as expected");
+                resultLog.debug("Login as [{}] failed, as expected", username);
             } finally {
                 if(s != null) {
                     s.logout();
@@ -113,13 +113,13 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
         }
         
         if(checked==0) {
-            result.log(ResultLogEntry.LT_WARN, "Did not check any logins, configured logins=" + logins);
+            resultLog.warn("Did not check any logins, configured logins={}", logins);
         } else if(failures != 0){
-            result.log(ResultLogEntry.LT_WARN_SECURITY, "Checked " + checked + " logins, " + failures + " tests failed");
+            resultLog.warn("Checked {} logins, {} failures", checked, failures);
         } else {
-            result.log(ResultLogEntry.LT_DEBUG, "Checked " + checked + " logins, all tests successful");
+            resultLog.debug("Checked {} logins, all successful", checked, failures);
         }
-        return result;
+        return new Result(resultLog);
     }
 
     @Override

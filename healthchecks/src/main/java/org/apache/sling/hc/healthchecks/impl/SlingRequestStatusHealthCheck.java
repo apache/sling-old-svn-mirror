@@ -35,11 +35,10 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 
 /** {@link HealthCheck} that checks the HTTP status of Sling requests */
 @Component(
@@ -101,15 +100,17 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
     
     @Override
     public Result execute() {
-        final Result result = new Result(log);
+        final FormattingResultLog resultLog = new FormattingResultLog();
         
         ResourceResolver resolver = null;
         int checked = 0;
         int failed = 0;
+        String lastPath = null;
         
         try {
             resolver = resolverFactory.getAdministrativeResourceResolver(null);
             for(String p : paths) {
+                lastPath = p;
                 final PathSpec ps = new PathSpec(p);
                 final HttpServletRequest request = new InternalRequest(ps.path);
                 final InternalResponse response = new InternalResponse();
@@ -117,18 +118,14 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
                 final int status = response.getStatus();
                 if(status != ps.status) {
                     failed++;
-                    result.log(ResultLogEntry.LT_WARN,
-                            MessageFormatter.arrayFormat(
-                            "[{}] returns status {}, expected {}", new Object[] { ps.path, status, ps.status }).getMessage());
+                    resultLog.warn("[{}] returns status {}, expected {}", new Object[] { ps.path, status, ps.status });
                 } else {
-                    result.log(ResultLogEntry.LT_DEBUG,
-                            MessageFormatter.format(
-                            "[{}] returns status {} as expected", ps.path, status).getMessage());
+                    resultLog.debug("[{}] returns status {} as expected", ps.path, status);
                 }
                 checked++;
             }
         } catch(Exception e) {
-            result.log(ResultLogEntry.LT_WARN, "Exception while executing request: " + e.toString());
+            resultLog.warn("Exception while executing request [{}]: {}", lastPath, e);
         } finally {
             if(resolver != null) {
                 resolver.close();
@@ -136,14 +133,12 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
         }
         
         if(checked == 0) {
-            result.log(ResultLogEntry.LT_WARN, "No paths checked, empty paths list?");
+            resultLog.warn("No paths checked, empty paths list?");
         } else {
-            result.log(ResultLogEntry.LT_DEBUG, 
-                    MessageFormatter.format(
-                            "{} paths checked, {} failures", checked, failed).getMessage());
+            resultLog.debug("{} paths checked, {} failures", checked, failed);
         }
         
-        return result;
+        return new Result(resultLog);
     }
 
     @Override

@@ -44,7 +44,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.api.ResultLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,10 +141,10 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     private TabularData logData(Result er) {
         final TabularDataSupport result = new TabularDataSupport(LOG_TABLE_TYPE);
         int i=1;
-        for(ResultLogEntry e : er) {
+        for(ResultLog.Entry e : er) {
             final Map<String, Object> data = new HashMap<String, Object>();
             data.put(INDEX_COLUMN, i++);
-            data.put(LEVEL_COLUMN, e.getEntryType());
+            data.put(LEVEL_COLUMN, e.getStatus().toString());
             data.put(MESSAGE_COLUMN, e.getMessage());
             try {
                 result.put(new CompositeDataSupport(LOG_ROW_TYPE, data));

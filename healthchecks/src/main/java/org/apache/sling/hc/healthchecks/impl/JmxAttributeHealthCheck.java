@@ -32,12 +32,11 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLogEntry;
+import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
 import org.apache.sling.hc.util.SimpleConstraintChecker;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.MessageFormatter;
 
 /** {@link HealthCheck} that checks a single JMX attribute */
 @Component(
@@ -89,10 +88,8 @@ public class JmxAttributeHealthCheck implements HealthCheck {
     
     @Override
     public Result execute() {
-        final Result result = new Result(log);
-        result.log(ResultLogEntry.LT_DEBUG, 
-                MessageFormatter.arrayFormat("Checking {} / {} with constraint {}", 
-                        new Object[] { mbeanName, attributeName, constraint }).getMessage());
+        final FormattingResultLog resultLog = new FormattingResultLog();
+        resultLog.debug("Checking {} / {} with constraint {}", mbeanName, attributeName, constraint);
         try {
             final MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
             final ObjectName objectName = new ObjectName(mbeanName);
@@ -100,15 +97,13 @@ public class JmxAttributeHealthCheck implements HealthCheck {
                 log.error("MBean not found: {}", objectName);
             }
             final Object value = jmxServer.getAttribute(objectName, attributeName);
-            result.log(ResultLogEntry.LT_DEBUG,
-                    MessageFormatter.arrayFormat( 
-                    "{} {} returns {}", 
-                    new Object[] { mbeanName, attributeName, value }).getMessage());
-            new SimpleConstraintChecker().check(value, constraint, result);
+            resultLog.debug("{} {} returns {}", mbeanName, attributeName, value);
+            new SimpleConstraintChecker().check(value, constraint, resultLog);
         } catch(Exception e) {
-            log.warn(e.toString(), e);
+            log.warn("JMX attribute {}/{} check failed: {}", new Object []{ mbeanName, attributeName, e});
+            resultLog.healthCheckError("JMX attribute check failed: {}", e);
         }
-        return result;
+        return new Result(resultLog);
     }
 
     @Override
