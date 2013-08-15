@@ -57,7 +57,7 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
         int status;
         String path;
         
-        PathSpec(String configuredPath) {
+        PathSpec(String configuredPath, FormattingResultLog resultLog) {
             path = configuredPath;
             status = 200;
             
@@ -67,7 +67,7 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
                     status = Integer.valueOf(parts[1].trim());
                     path = parts[0].trim();
                 } catch(NumberFormatException nfe) {
-                    log.warn("NumberFormatException while parsing [{}], invalid status value?", configuredPath);
+                    resultLog.healthCheckError("NumberFormatException while parsing [{}], invalid status value?", configuredPath);
                 }
             } 
         }
@@ -111,7 +111,7 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
             resolver = resolverFactory.getAdministrativeResourceResolver(null);
             for(String p : paths) {
                 lastPath = p;
-                final PathSpec ps = new PathSpec(p);
+                final PathSpec ps = new PathSpec(p, resultLog);
                 final HttpServletRequest request = new InternalRequest(ps.path);
                 final InternalResponse response = new InternalResponse();
                 requestProcessor.processRequest(request, response, resolver);
