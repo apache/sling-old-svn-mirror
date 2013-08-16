@@ -46,7 +46,7 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
     }
     
     static Pattern getResourcePathPattern(String forPath) {
-        return Pattern.compile("^" + forPath + "/[^/]+/?$");
+        return Pattern.compile("^" + forPath + "(\\.[^/]+)?/[^/]+/?$");
     }
 
     public Iterator<String> getChildren(String path) {
