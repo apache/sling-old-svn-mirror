@@ -67,9 +67,8 @@
                         </Private-Package>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Embed-Dependency>
-                            <!-- TODO embeds should'n be needed... -->                                
-                            oak-jcr,
-                            oak-core;inline=org/apache/jackrabbit/oak/security/authentication/user/** 
+                            <!-- TODO embeds should'n be needed...missing package exports in oak-jcr -->                                
+                            oak-jcr
                         </Embed-Dependency>
                     </instructions>
                 </configuration>                
