@@ -13,7 +13,8 @@
 		<module>api</module>
 		<module>impl-resource</module>
         <module>impl-resource-test</module>
-		<module>vlt-wrapper</module>        
+		<module>vlt-wrapper</module>                
+		<module>impl-vlt</module>
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
 		<module>feature</module>
