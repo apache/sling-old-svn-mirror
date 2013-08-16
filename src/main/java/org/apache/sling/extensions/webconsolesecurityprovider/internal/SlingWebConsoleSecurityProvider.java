@@ -167,7 +167,7 @@ public class SlingWebConsoleSecurityProvider implements
                     + userName
                     + " failed to authenticate with the repository for Web Console access",
                 re);
-        } catch (RepositoryException re) {
+        } catch (Exception re) {
             log.info("authenticate: Generic problem trying grant User "
                 + userName + " access to the Web Console", re);
         } finally {
