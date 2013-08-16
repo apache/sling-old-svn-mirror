@@ -50,15 +50,13 @@ public class ClassLoaderResourceProviderTest {
         assertMatch("something/else/0/", false);
         assertMatch("something/else/0", false);
         
-        /* these fail due to SLING-3022
-        assertMatch("resources/bundles.someRunMode/", true);
+        assertMatch("resources/bundles.someRunMode/", false);
         assertMatch("resources/bundles.someRunMode/14/", true);
-        assertMatch("resources/bundles.someRunMode/15", false);
+        assertMatch("resources/bundles.someRunMode/15", true);
         
         assertMatch("resources/bundles.runModeA.runModeB/", false);
         assertMatch("resources/bundles.runModeA.runModeB/14/", true);
         assertMatch("resources/bundles.runModeA.runModeB/14", true);
         assertMatch("resources/bundles.runModeA.runModeB/15/16", false);
-        */
     }
 }
