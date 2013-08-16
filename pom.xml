@@ -38,6 +38,7 @@
 
     <properties>
         <sling.java.version>6</sling.java.version>
+        <oak.version>0.8</oak.version>
     </properties>
 
     <build>
@@ -83,13 +84,13 @@
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-jcr</artifactId>
-            <version>0.8</version>
+            <version>${oak.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
-            <version>0.8</version>
+            <version>${oak.version}</version>
             <scope>provided</scope>
         </dependency>
         
