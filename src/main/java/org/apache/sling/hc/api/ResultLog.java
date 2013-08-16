@@ -17,6 +17,7 @@
  */
 package org.apache.sling.hc.api;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -26,15 +27,15 @@ import org.apache.sling.hc.api.Result.Status;
 /** The log of a Result, allows for providing multiple lines
  *  of information which are aggregated as a single Result. */
 public class ResultLog implements Iterable<ResultLog.Entry> {
-    
+
     private List<Entry> entries = new LinkedList<Entry>();
     private Status aggregateStatus;
-    
+
     /** An entry in this log */
     public static class Entry {
         private final Status status;
         private final String message;
-        
+
         public Entry(Status s, String message) {
             this.status = s;
             this.message = message;
@@ -44,17 +45,17 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         public String toString() {
             return new StringBuilder(status.toString()).append(" ").append(message).toString();
         }
-        
+
         public Status getStatus() {
             return status;
         }
-        
+
         public String getMessage() {
             return message;
         }
     }
-    
-    /** Build a log. Initial aggregate status is 
+
+    /** Build a log. Initial aggregate status is
      *  set to WARN, as an empty log is not considered ok.
      *  That's reset to OK before adding the first log entry,
      *  and then the status aggregation rules take over.
@@ -63,7 +64,15 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         aggregateStatus = Result.Status.WARN;
     }
 
-    /** Add an entry to this log. The aggregate status of 
+    /**
+     * Create a copy of the result log
+     */
+    public ResultLog(final ResultLog log) {
+        this.aggregateStatus = log.aggregateStatus;
+        this.entries = new ArrayList<ResultLog.Entry>(log.entries);
+    }
+
+    /** Add an entry to this log. The aggregate status of
      *  this is set to the highest of the current aggregate status
      *  and the new Entry's status */
     public ResultLog add(Entry e) {
@@ -76,12 +85,13 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         }
         return this;
     }
-    
+
     /** Return an Iterator on our entries */
+    @Override
     public Iterator<ResultLog.Entry> iterator() {
         return entries.iterator();
     }
-    
+
     /** Return our aggregate status, i.e. the highest status
      *  of the entries added to this log. Starts at OK for an
      *  empty ResultLog, so cannot be lower than that.
