@@ -95,6 +95,12 @@
             <version>${oak.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>oak-lucene</artifactId>
+            <version>${oak.version}</version>
+            <scope>provided</scope>
+        </dependency>
         
         <dependency>
             <groupId>org.apache.sling</groupId>
