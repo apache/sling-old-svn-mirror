@@ -23,7 +23,7 @@ import java.util.Iterator;
 public class Result implements Iterable <ResultLog.Entry> {
 
     private final ResultLog resultLog;
-    
+
     public enum Status {
         DEBUG,              // used by ResultLog for debug messages, not an actual output status
         INFO,               // used by ResultLog for info messages, not an actual output status
@@ -32,33 +32,34 @@ public class Result implements Iterable <ResultLog.Entry> {
         CRITICAL,           // health check detected a critical problem
         HEALTH_CHECK_ERROR  // health check did not execute properly
     }
-    
-    /** Build a single-value Result 
+
+    /** Build a single-value Result
      *  @param s if lower than OK, our status is set to OK */
-    public Result(Status s, String explanation) {
+    public Result(final Status s, final String explanation) {
         resultLog = new ResultLog().add(new ResultLog.Entry(s, explanation));
     }
 
     /** Build a a Result based on a ResultLog, which can provide
      *  more details than a single-value Result.
      */
-    public Result(ResultLog log) {
-        resultLog = log;
+    public Result(final ResultLog log) {
+        resultLog = new ResultLog(log);
     }
-    
-    /** True if our status is OK - provides a convenient way of 
+
+    /** True if our status is OK - provides a convenient way of
      *  checking that.
      */
     public boolean isOk() {
         return getStatus().equals(Status.OK);
     }
-    
+
     /** Return our Status */
     public Status getStatus() {
         return resultLog.getAggregateStatus();
     }
-    
+
     /** Return an Iterator on the entries of our ResultLog */
+    @Override
     public Iterator<ResultLog.Entry> iterator() {
         return resultLog.iterator();
     }
