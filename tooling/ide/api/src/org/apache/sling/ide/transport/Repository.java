@@ -87,8 +87,20 @@ public interface Repository {
 	
 	Command<Void> newDeleteNodeCommand(FileInfo fileInfo);
  
+    /**
+     * Retrieves information about the resource located at <tt>path</tt> and its direct descendants
+     * 
+     * @param path
+     * @return a <tt>ResourceProxy</tt> rooted at <tt>path</tt> and its direct descendants
+     */
     Command<ResourceProxy> newListChildrenNodeCommand(String path);
  	
+    /**
+     * Retrieves all properties of a resource located at <tt>path</tt>
+     * 
+     * @param path
+     * @return all properties for the resource located at <tt>path</tt>
+     */
     Command<Map<String, Object>> newGetNodeContentCommand(String path);
 
 	Command<byte[]> newGetNodeCommand(String path);

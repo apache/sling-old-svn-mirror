@@ -35,6 +35,7 @@ public abstract class AbstractCommand<T> implements Command<T> {
         this.path = createFullPath(relativePath);
     }
 
+    @Override
     public String getPath() {
         return path;
     }

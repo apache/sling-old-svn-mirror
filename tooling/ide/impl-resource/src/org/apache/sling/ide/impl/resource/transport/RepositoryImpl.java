@@ -22,6 +22,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.transport.TracingCommand;
 import org.osgi.service.event.EventAdmin;
 
 public class RepositoryImpl extends AbstractRepository{
