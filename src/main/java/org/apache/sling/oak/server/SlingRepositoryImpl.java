@@ -27,10 +27,13 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
 import org.apache.jackrabbit.oak.spi.security.OpenSecurityProvider;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
+import org.apache.jackrabbit.oak.spi.state.NodeStore;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractNamespaceMappingRepository;
 import org.osgi.service.component.ComponentContext;
@@ -46,12 +49,15 @@ public class SlingRepositoryImpl extends AbstractNamespaceMappingRepository
 
     private Repository oakRepository;
     
+    @Reference
+    private NodeStore nodeStore;
+    
     @Activate
     protected void activate(ComponentContext ctx) {
         final SecurityProvider sp = new OpenSecurityProvider();
         // TODO barebones setup for now...might not provide much functionality.
         // TODO for a simple config (tar persistence) we could use the SegmentNodeStoreService
-        oakRepository = new Jcr().with(sp).createRepository();
+        oakRepository = new Jcr(new Oak(nodeStore)).with(sp).createRepository();
     }
     
     @Override

@@ -59,6 +59,9 @@
                           org.apache.jackrabbit.oak.security.user;resolution:=optional,
                           *
                         </Import-Package>
+                        <Bundle-Activator>
+                            org.apache.sling.oak.server.Activator
+                        </Bundle-Activator>
                         <Private-Package>
                             org.apache.sling.oak.server.*
                         </Private-Package>
