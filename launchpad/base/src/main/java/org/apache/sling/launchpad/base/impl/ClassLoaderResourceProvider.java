@@ -44,14 +44,17 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
                 ? classLoader
                 : this.getClass().getClassLoader();
     }
+    
+    static Pattern getResourcePathPattern(String forPath) {
+        return Pattern.compile("^" + forPath + "/[^/]+/?$");
+    }
 
     public Iterator<String> getChildren(String path) {
         List<String> children;
 
         URL url = this.classLoader.getResource(path);
         if (url != null) {
-            Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+/?$");
-
+            final Pattern pathPattern = getResourcePathPattern(path);
             children = new ArrayList<String>();
             try {
                 URLConnection conn = url.openConnection();
