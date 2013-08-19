@@ -17,8 +17,8 @@
  */
 package org.apache.sling.hc.jmx.impl;
 
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,21 +46,13 @@ import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 import org.osgi.framework.ServiceReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** A {@link DynamicMBean} used to execute a {@link HealthCheck} service */
-public class HealthCheckMBean implements DynamicMBean, Serializable {
-
-    private static final long serialVersionUID = -90745301105975287L;
-    private static final Logger logger = LoggerFactory.getLogger(HealthCheckMBean.class);
-    private final String beanName;
-    private final String jmxTypeName;
-    private final HealthCheck healthCheck;
+public class HealthCheckMBean implements DynamicMBean {
 
     public static final String HC_OK_ATTRIBUTE_NAME = "ok";
     public static final String HC_STATUS_ATTRIBUTE_NAME = "status";
-    public static final String LOG_ATTRIBUTE_NAME = "log";
+    public static final String HC_LOG_ATTRIBUTE_NAME = "log";
 
     private static CompositeType LOG_ROW_TYPE;
     private static TabularType LOG_TABLE_TYPE;
@@ -69,149 +61,174 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     public static final String LEVEL_COLUMN = "level";
     public static final String MESSAGE_COLUMN = "message";
 
-    public static final String DEFAULT_JMX_TYPE_NAME = "HealthCheck";
+    public static final String JMX_TYPE_NAME = "HealthCheck";
+    public static final String JMX_DOMAIN = "org.apache.sling.healthcheck";
 
-    private final ServiceReference serviceReference;
+    /** The health check service to call. */
+    private final HealthCheck healthCheck;
+
+    /** The mbean info. */
+    private final MBeanInfo mbeanInfo;
+
+    /** The default attributes. */
+    private final Map<String, Object> defaultAttributes;
 
     static {
         try {
             // Define the log row and table types
             LOG_ROW_TYPE = new CompositeType(
                     "LogLine",
-                    "A line in the Rule log",
+                    "A line in the result log",
                     new String [] { INDEX_COLUMN, LEVEL_COLUMN, MESSAGE_COLUMN },
                     new String [] { "log line index", "log level", "log message"},
                     new OpenType[] { SimpleType.INTEGER, SimpleType.STRING, SimpleType.STRING }
                     );
             final String [] indexes = { INDEX_COLUMN };
-            LOG_TABLE_TYPE = new TabularType("LogTable", "Rule log messages", LOG_ROW_TYPE, indexes);
+            LOG_TABLE_TYPE = new TabularType("LogTable", "Result log messages", LOG_ROW_TYPE, indexes);
         } catch(Exception ignore) {
             // row or table type will be null if this happens
         }
     }
 
     public HealthCheckMBean(final ServiceReference ref, final HealthCheck hc) {
-        this.serviceReference = ref;
-        String name = (String)ref.getProperty(HealthCheck.MBEAN_NAME);
-        if(empty(name)) {
-            name = (String)ref.getProperty(HealthCheck.NAME);
-        }
-
-        if(empty(name)) {
-            name = hc.toString();
-        }
-
-        final int pos = name.indexOf('/');
-        if(pos > 0) {
-            jmxTypeName = name.substring(0, pos);
-            beanName = name.substring(pos + 1);
-        } else {
-            jmxTypeName = DEFAULT_JMX_TYPE_NAME;
-            beanName = name;
-        }
-
-        healthCheck = hc;
-    }
-
-    private static boolean empty(String str) {
-        return str == null || str.trim().length() == 0;
+        this.healthCheck = hc;
+        this.mbeanInfo = this.createMBeanInfo(ref);
+        this.defaultAttributes = this.createDefaultAttributes(ref);
     }
 
     @Override
     public Object getAttribute(final String attribute)
-            throws AttributeNotFoundException, MBeanException, ReflectionException {
-
-        // TODO cache the result of execution for a few seconds?
-        final Result result = healthCheck.execute();
-
-        if(HC_OK_ATTRIBUTE_NAME.equals(attribute)) {
-            return result.isOk();
-        } else if(LOG_ATTRIBUTE_NAME.equals(attribute)) {
-            return logData(result);
-        } else if(HC_STATUS_ATTRIBUTE_NAME.equals(attribute)) {
-            return result.getStatus().toString();
-        } else {
-            final Object o = this.serviceReference.getProperty(attribute);
-            if(o == null) {
-                throw new AttributeNotFoundException(attribute);
-            }
-            return o;
+    throws AttributeNotFoundException, MBeanException, ReflectionException {
+        // we should call getAttributes - and not vice versa to have the result
+        // of a single check call - and not do a check call for each attribute
+        final AttributeList result = this.getAttributes(new String[] {attribute});
+        if ( result.size() == 0 ) {
+            throw new AttributeNotFoundException(attribute);
         }
+        final Attribute attr = (Attribute) result.get(0);
+        return attr.getValue();
     }
 
-    private TabularData logData(Result er) {
+    private TabularData logData(final Result er) throws OpenDataException {
         final TabularDataSupport result = new TabularDataSupport(LOG_TABLE_TYPE);
-        int i=1;
-        for(ResultLog.Entry e : er) {
+        int i = 1;
+        for(final ResultLog.Entry e : er) {
             final Map<String, Object> data = new HashMap<String, Object>();
             data.put(INDEX_COLUMN, i++);
             data.put(LEVEL_COLUMN, e.getStatus().toString());
             data.put(MESSAGE_COLUMN, e.getMessage());
-            try {
-                result.put(new CompositeDataSupport(LOG_ROW_TYPE, data));
-            } catch(OpenDataException ode) {
-                throw new IllegalStateException("OpenDataException while creating log data", ode);
-            }
+
+            result.put(new CompositeDataSupport(LOG_ROW_TYPE, data));
         }
         return result;
     }
 
     @Override
-    public AttributeList getAttributes(String[] attributes) {
+    public AttributeList getAttributes(final String[] attributes) {
         final AttributeList result = new AttributeList();
-        for(String key : attributes) {
-            try {
-                result.add(new Attribute(key, getAttribute(key)));
-            } catch(Exception e) {
-                logger.error("Exception getting Attribute " + key, e);
+        if ( attributes != null ) {
+            Result hcResult = null;
+            for(final String key : attributes) {
+                final Object defaultValue = this.defaultAttributes.get(key);
+                if ( defaultValue != null ) {
+                    result.add(new Attribute(key, defaultValue));
+                } else {
+                    if ( HC_OK_ATTRIBUTE_NAME.equals(key) ) {
+                        if ( hcResult == null ) {
+                            hcResult = this.healthCheck.execute();
+                        }
+                        result.add(new Attribute(key, hcResult.isOk()));
+                    } else if ( HC_LOG_ATTRIBUTE_NAME.equals(key) ) {
+                        if ( hcResult == null ) {
+                            hcResult = this.healthCheck.execute();
+                        }
+                        try {
+                            result.add(new Attribute(key, logData(hcResult)));
+                        } catch ( final OpenDataException ignore ) {
+                            // we ignore this and simply don't add the attribute
+                        }
+                    } else if ( HC_STATUS_ATTRIBUTE_NAME.equals(key) ) {
+                        if ( hcResult == null ) {
+                            hcResult = this.healthCheck.execute();
+                        }
+                        result.add(new Attribute(key, hcResult.getStatus().toString()));
+                    }
+                }
             }
         }
+
         return result;
+    }
+
+    /**
+     * Create the mbean info
+     */
+    private MBeanInfo createMBeanInfo(final ServiceReference serviceReference) {
+        final List<MBeanAttributeInfo> attrs = new ArrayList<MBeanAttributeInfo>();
+
+        // add relevant service properties
+        if ( serviceReference.getProperty(HealthCheck.NAME) != null ) {
+            attrs.add(new MBeanAttributeInfo(HealthCheck.NAME, String.class.getName(), "The name of the health check service.", true, false, false));
+        }
+        if ( serviceReference.getProperty(HealthCheck.TAGS) != null ) {
+            attrs.add(new MBeanAttributeInfo(HealthCheck.TAGS, String.class.getName(), "The tags of the health check service.", true, false, false));
+        }
+
+        // add standard attributes
+        attrs.add(new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The health check result", true, false, false));
+        attrs.add(new MBeanAttributeInfo(HC_STATUS_ATTRIBUTE_NAME, String.class.getName(), "The health check status", true, false, false));
+
+        attrs.add(new OpenMBeanAttributeInfoSupport(HC_LOG_ATTRIBUTE_NAME, "The health check result log", LOG_TABLE_TYPE, true, false, false));
+
+        return new MBeanInfo(this.getClass().getName(),
+                   "Health check",
+                   attrs.toArray(new MBeanAttributeInfo[attrs.size()]), null, null, null);
+    }
+
+    /**
+     * Create the default attributes.
+     */
+    private Map<String, Object> createDefaultAttributes(final ServiceReference serviceReference) {
+        final Map<String, Object> list = new HashMap<String, Object>();
+        if ( serviceReference.getProperty(HealthCheck.NAME) != null ) {
+            list.put(HealthCheck.NAME, serviceReference.getProperty(HealthCheck.NAME).toString());
+        }
+        if ( serviceReference.getProperty(HealthCheck.TAGS) != null ) {
+            final Object value = serviceReference.getProperty(HealthCheck.TAGS);
+            if ( value instanceof String[] ) {
+                list.put(HealthCheck.TAGS, Arrays.toString((String[])value));
+            } else {
+                list.put(HealthCheck.TAGS, value.toString());
+            }
+        }
+        return list;
     }
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        final List<MBeanAttributeInfo> attrs = new ArrayList<MBeanAttributeInfo>();
-
-        // add relevant service properties
-        final String[] serviceProps = new String[] {HealthCheck.NAME, HealthCheck.TAGS};
-        for(final String propName : serviceProps) {
-            if ( this.serviceReference.getProperty(propName) != null ) {
-                attrs.add(new MBeanAttributeInfo(propName, List.class.getName(), "Description of " + propName, true, false, false));
-            }
-        }
-
-        // add standard attributes
-        attrs.add(new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The HealthCheck result", true, false, false));
-        attrs.add(new OpenMBeanAttributeInfoSupport(LOG_ATTRIBUTE_NAME, "The rule log", LOG_TABLE_TYPE, true, false, false));
-        attrs.add(new MBeanAttributeInfo(HC_STATUS_ATTRIBUTE_NAME, String.class.getName(), "The HealthCheck status", true, false, false));
-
-        return new MBeanInfo(this.getClass().getName(), beanName, attrs.toArray(new MBeanAttributeInfo[attrs.size()]), null, null, null);
+        return this.mbeanInfo;
     }
 
     @Override
-    public Object invoke(String actionName, Object[] params, String[] signature)
+    public Object invoke(final String actionName, final Object[] params, final String[] signature)
             throws MBeanException, ReflectionException {
-        throw new UnsupportedOperationException(getClass().getSimpleName() + " does not support operations on Rules");
+        throw new MBeanException(new UnsupportedOperationException(getClass().getSimpleName() + " does not support operations."));
     }
 
     @Override
-    public void setAttribute(Attribute attribute)
-            throws AttributeNotFoundException, InvalidAttributeValueException,
+    public void setAttribute(final Attribute attribute)
+    throws AttributeNotFoundException, InvalidAttributeValueException,
             MBeanException, ReflectionException {
-        throw new UnsupportedOperationException(getClass().getSimpleName() + " does not support setting Rules attributes");
+        throw new MBeanException(new UnsupportedOperationException(getClass().getSimpleName() + " does not support setting attributes."));
     }
 
     @Override
-    public AttributeList setAttributes(AttributeList attributes) {
-        throw new UnsupportedOperationException(getClass().getSimpleName() + " does not support setting Rules attributes");
+    public AttributeList setAttributes(final AttributeList attributes) {
+        return new AttributeList();
     }
 
-    public String getName() {
-        return beanName;
-    }
-
-    public String getJmxTypeName() {
-        return jmxTypeName;
+    @Override
+    public String toString() {
+        return "HealthCheckMBean [healthCheck=" + healthCheck + "]";
     }
 }
