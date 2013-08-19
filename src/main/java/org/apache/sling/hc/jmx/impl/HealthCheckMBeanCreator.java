@@ -89,7 +89,7 @@ public class HealthCheckMBeanCreator {
     }
 
     private void registerHCMBean(final BundleContext bundleContext, final ServiceReference ref, final HealthCheck hc) {
-        final HealthCheckMBean mbean = new HealthCheckMBean(hc);
+        final HealthCheckMBean mbean = new HealthCheckMBean(ref, hc);
 
         final Dictionary<String, String> mbeanProps = new Hashtable<String, String>();
         mbeanProps.put("jmx.objectname", "org.apache.sling.healthcheck:type=" + mbean.getJmxTypeName() + ",service=" + mbean.getName());
