@@ -19,7 +19,6 @@ package org.apache.sling.hc.healthchecks.impl;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -27,7 +26,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
@@ -43,39 +41,36 @@ import org.slf4j.LoggerFactory;
  */
 @Component(
         name="org.apache.sling.hc.CompositeHealthCheck",
-        configurationFactory=true, 
-        policy=ConfigurationPolicy.REQUIRE, 
+        configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
 @Service
 public class CompositeHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<String, String> info;
     private BundleContext bundleContext;
-    
+
     @Property(cardinality=50)
-    public static final String PROP_TAGS = Constants.HC_TAGS;
-    
+    public static final String PROP_TAGS = HealthCheck.TAGS;
+
     @Property(cardinality=50)
     public static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
 
     @Property
-    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
-    
+    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
+
     @Activate
     public void activate(ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
-        info = new HealthCheckInfo(ctx.getProperties());
         filterTags = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_FILTER_TAGS), new String[] {});
-        info.put(PROP_FILTER_TAGS, Arrays.asList(filterTags).toString());
         log.info("Activated, will select HealthCheck having tags {}", Arrays.asList(filterTags));
     }
-    
+
     @Override
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
-        final List<HealthCheck> checks = new HealthCheckFilter(bundleContext).getTaggedHealthCheck(filterTags);
+        final List<HealthCheck> checks = new HealthCheckFilter(bundleContext).getTaggedHealthChecks(filterTags);
         if(checks.size() == 0) {
             resultLog.warn("HealthCheckFilter returns no HealthCheck for tags {}", Arrays.asList(filterTags));
             return new Result(resultLog);
@@ -99,18 +94,13 @@ public class CompositeHealthCheck implements HealthCheck {
                 resultLog.add(e);
             }
         }
-        
+
         if(failures == 0) {
             resultLog.debug("{} HealthCheck executed, all ok", executed);
         } else {
             resultLog.warn("{} HealthCheck executed, {} failures", executed, failures);
         }
-        
-        return new Result(resultLog);
-    }
 
-    @Override
-    public Map<String, String> getInfo() {
-        return info;
+        return new Result(resultLog);
     }
 }

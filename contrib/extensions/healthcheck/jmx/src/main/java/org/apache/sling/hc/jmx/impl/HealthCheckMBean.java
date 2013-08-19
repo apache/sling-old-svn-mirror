@@ -18,6 +18,7 @@
 package org.apache.sling.hc.jmx.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,10 +42,10 @@ import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,20 +57,22 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     private final String beanName;
     private final String jmxTypeName;
     private final HealthCheck healthCheck;
-    
+
     public static final String HC_OK_ATTRIBUTE_NAME = "ok";
     public static final String HC_STATUS_ATTRIBUTE_NAME = "status";
     public static final String LOG_ATTRIBUTE_NAME = "log";
-    
+
     private static CompositeType LOG_ROW_TYPE;
     private static TabularType LOG_TABLE_TYPE;
-    
+
     public static final String INDEX_COLUMN = "index";
     public static final String LEVEL_COLUMN = "level";
     public static final String MESSAGE_COLUMN = "message";
-    
+
     public static final String DEFAULT_JMX_TYPE_NAME = "HealthCheck";
-    
+
+    private final ServiceReference serviceReference;
+
     static {
         try {
             // Define the log row and table types
@@ -87,19 +90,17 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
         }
     }
 
-    public HealthCheckMBean(HealthCheck hc) {
-        String name = null;
-        if(hc.getInfo() != null) {
-            name = hc.getInfo().get(Constants.HC_MBEAN_NAME);
-            if(empty(name)) {
-                name = hc.getInfo().get(Constants.HC_NAME);
-            }
+    public HealthCheckMBean(final ServiceReference ref, final HealthCheck hc) {
+        this.serviceReference = ref;
+        String name = (String)ref.getProperty(HealthCheck.MBEAN_NAME);
+        if(empty(name)) {
+            name = (String)ref.getProperty(HealthCheck.NAME);
         }
-                
+
         if(empty(name)) {
             name = hc.toString();
         }
-        
+
         final int pos = name.indexOf('/');
         if(pos > 0) {
             jmxTypeName = name.substring(0, pos);
@@ -108,21 +109,21 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
             jmxTypeName = DEFAULT_JMX_TYPE_NAME;
             beanName = name;
         }
-        
+
         healthCheck = hc;
     }
-    
+
     private static boolean empty(String str) {
         return str == null || str.trim().length() == 0;
     }
-    
+
     @Override
-    public Object getAttribute(String attribute)
+    public Object getAttribute(final String attribute)
             throws AttributeNotFoundException, MBeanException, ReflectionException {
-        
+
         // TODO cache the result of execution for a few seconds?
         final Result result = healthCheck.execute();
-        
+
         if(HC_OK_ATTRIBUTE_NAME.equals(attribute)) {
             return result.isOk();
         } else if(LOG_ATTRIBUTE_NAME.equals(attribute)) {
@@ -130,14 +131,14 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
         } else if(HC_STATUS_ATTRIBUTE_NAME.equals(attribute)) {
             return result.getStatus().toString();
         } else {
-            final Object o = healthCheck.getInfo().get(attribute);
+            final Object o = this.serviceReference.getProperty(attribute);
             if(o == null) {
                 throw new AttributeNotFoundException(attribute);
             }
             return o;
         }
     }
-    
+
     private TabularData logData(Result er) {
         final TabularDataSupport result = new TabularDataSupport(LOG_TABLE_TYPE);
         int i=1;
@@ -170,17 +171,22 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        final MBeanAttributeInfo[] attrs = new MBeanAttributeInfo[healthCheck.getInfo().size() + 3];
-        int i=0;
-        attrs[i++] = new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The HealthCheck result", true, false, false);
-        attrs[i++] = new OpenMBeanAttributeInfoSupport(LOG_ATTRIBUTE_NAME, "The rule log", LOG_TABLE_TYPE, true, false, false);
-        attrs[i++] = new MBeanAttributeInfo(HC_STATUS_ATTRIBUTE_NAME, String.class.getName(), "The HealthCheck status", true, false, false);
-        
-        for(String key : healthCheck.getInfo().keySet()) {
-            attrs[i++] = new MBeanAttributeInfo(key, List.class.getName(), "Description of " + key, true, false, false);
+        final List<MBeanAttributeInfo> attrs = new ArrayList<MBeanAttributeInfo>();
+
+        // add relevant service properties
+        final String[] serviceProps = new String[] {HealthCheck.NAME, HealthCheck.TAGS};
+        for(final String propName : serviceProps) {
+            if ( this.serviceReference.getProperty(propName) != null ) {
+                attrs.add(new MBeanAttributeInfo(propName, List.class.getName(), "Description of " + propName, true, false, false));
+            }
         }
-        
-        return new MBeanInfo(this.getClass().getName(), beanName, attrs, null, null, null);
+
+        // add standard attributes
+        attrs.add(new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The HealthCheck result", true, false, false));
+        attrs.add(new OpenMBeanAttributeInfoSupport(LOG_ATTRIBUTE_NAME, "The rule log", LOG_TABLE_TYPE, true, false, false));
+        attrs.add(new MBeanAttributeInfo(HC_STATUS_ATTRIBUTE_NAME, String.class.getName(), "The HealthCheck status", true, false, false));
+
+        return new MBeanInfo(this.getClass().getName(), beanName, attrs.toArray(new MBeanAttributeInfo[attrs.size()]), null, null, null);
     }
 
     @Override
@@ -200,11 +206,11 @@ public class HealthCheckMBean implements DynamicMBean, Serializable {
     public AttributeList setAttributes(AttributeList attributes) {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " does not support setting Rules attributes");
     }
-    
+
     public String getName() {
         return beanName;
     }
-    
+
     public String getJmxTypeName() {
         return jmxTypeName;
     }

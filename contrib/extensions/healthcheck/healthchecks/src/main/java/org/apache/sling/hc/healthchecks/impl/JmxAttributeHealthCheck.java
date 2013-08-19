@@ -18,7 +18,6 @@
 package org.apache.sling.hc.healthchecks.impl;
 
 import java.lang.management.ManagementFactory;
-import java.util.Map;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -29,7 +28,6 @@ import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
@@ -41,51 +39,45 @@ import org.slf4j.LoggerFactory;
 /** {@link HealthCheck} that checks a single JMX attribute */
 @Component(
         name="org.apache.sling.hc.JmxAttributeHealthCheck",
-        configurationFactory=true, 
-        policy=ConfigurationPolicy.REQUIRE, 
+        configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
 @Service
 public class JmxAttributeHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<String, String> info;
     private String mbeanName;
     private String attributeName;
     private String constraint;
 
     @Property
     public static final String PROP_OBJECT_NAME = "mbean.name";
-    
+
     @Property
     public static final String PROP_ATTRIBUTE_NAME = "attribute.name";
-    
+
     @Property
     public static final String PROP_CONSTRAINT = "attribute.value.constraint";
-    
+
     @Property(cardinality=50)
-    public static final String PROP_TAGS = Constants.HC_TAGS;
-    
+    public static final String PROP_TAGS = HealthCheck.TAGS;
+
     @Property
-    public static final String PROP_NAME = Constants.HC_NAME;
-    
+    public static final String PROP_NAME = HealthCheck.NAME;
+
     @Property
-    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
-    
+    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
+
     @Activate
     public void activate(ComponentContext ctx) {
-        info = new HealthCheckInfo(ctx.getProperties());
         mbeanName = PropertiesUtil.toString(ctx.getProperties().get(PROP_OBJECT_NAME), "");
         attributeName = PropertiesUtil.toString(ctx.getProperties().get(PROP_ATTRIBUTE_NAME), "");
         constraint = PropertiesUtil.toString(ctx.getProperties().get(PROP_CONSTRAINT), "");
-        
-        info.put(PROP_OBJECT_NAME, mbeanName);
-        info.put(PROP_ATTRIBUTE_NAME, attributeName);
-        info.put(PROP_CONSTRAINT, constraint);
-        
-        log.info("Activated with HealthCheck name={}, objectName={}, attribute={}, constraint={}", 
-                new Object[] { info.get(Constants.HC_NAME), mbeanName, attributeName, constraint });
+
+        log.info("Activated with HealthCheck name={}, objectName={}, attribute={}, constraint={}",
+                new Object[] { ctx.getProperties().get(HealthCheck.NAME), mbeanName, attributeName, constraint });
     }
-    
+
     @Override
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
@@ -105,10 +97,5 @@ public class JmxAttributeHealthCheck implements HealthCheck {
             resultLog.healthCheckError("JMX attribute check failed: {}", e);
         }
         return new Result(resultLog);
-    }
-
-    @Override
-    public Map<String, String> getInfo() {
-        return info;
     }
 }

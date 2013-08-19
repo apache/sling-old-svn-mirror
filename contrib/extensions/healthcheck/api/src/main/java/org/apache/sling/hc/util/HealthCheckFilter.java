@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -32,18 +31,45 @@ import org.slf4j.LoggerFactory;
 
 /** Select from available {@link HealthCheck} services */
 public class HealthCheckFilter {
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final BundleContext bundleContext;
     public static final String OMIT_PREFIX = "-";
-    
-    public HealthCheckFilter(BundleContext bc) {
+
+    public HealthCheckFilter(final BundleContext bc) {
         bundleContext = bc;
     }
-    
+
+    /**
+     * Get all health check services with one of the supplied tags.
+     * @return A list of services - might be the empty list if none matches
+     */
     @SuppressWarnings("unchecked")
-    public List<HealthCheck> getTaggedHealthCheck(String... tags) {
-        
+    public List<HealthCheck> getTaggedHealthChecks(final String... tags) {
+        final ServiceReference [] refs = this.getTaggedHealthCheckServiceReferences(tags);
+        final List<HealthCheck> result = new ArrayList<HealthCheck>();
+
+        if ( refs != null ) {
+            final List<ServiceReference> sortedRefs = Arrays.asList(refs);
+            Collections.sort(sortedRefs);
+
+            for(final ServiceReference ref : sortedRefs) {
+                final HealthCheck hc = (HealthCheck)bundleContext.getService(ref);
+                log.debug("Selected HealthCheck service {}", hc);
+                if ( hc != null ) {
+                    result.add(hc);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Get all service references for health check services with one of the supplied tags.
+     * @return An array of service references - might be an empty error if none matches
+     */
+    public ServiceReference[] getTaggedHealthCheckServiceReferences(final String... tags) {
         // Build service filter
         final StringBuilder filterBuilder = new StringBuilder();
         filterBuilder.append("(&(objectClass=").append(HealthCheck.class.getName()).append(")");
@@ -54,34 +80,28 @@ public class HealthCheckFilter {
                 continue;
             }
             if(tag.startsWith(OMIT_PREFIX)) {
-                filterBuilder.append("(!(").append(Constants.HC_TAGS).append("=").append(tag.substring(prefixLen)).append("))");
+                filterBuilder.append("(!(").append(HealthCheck.TAGS).append("=").append(tag.substring(prefixLen)).append("))");
             } else {
-                filterBuilder.append("(").append(Constants.HC_TAGS).append("=").append(tag).append(")");
+                filterBuilder.append("(").append(HealthCheck.TAGS).append("=").append(tag).append(")");
             }
         }
         filterBuilder.append(")");
-        
-        final List<HealthCheck> result = new ArrayList<HealthCheck>();
+
         try {
             final String filterString = filterBuilder.length() == 0 ? null : filterBuilder.toString();
             bundleContext.createFilter(filterString); // check syntax early
-            final ServiceReference [] refs = bundleContext.getServiceReferences(HealthCheck.class.getName(), filterString);
-            if(refs == null) {
-                log.info("Found no HealthCheck services with filter [{}]", filterString);
+            final ServiceReference[] refs = bundleContext.getServiceReferences(HealthCheck.class.getName(), filterString);
+            if (refs == null) {
+                log.debug("Found no HealthCheck services with filter [{}]", filterString);
+                return new ServiceReference[0];
             } else {
-                log.info("Found {} HealthCheck services with filter [{}]", refs.length, filterString);
-                final List<ServiceReference> sortedRefs = Arrays.asList(refs);
-                Collections.sort(sortedRefs);
-                
-                for(ServiceReference ref : sortedRefs) {
-                    final HealthCheck hc = (HealthCheck)bundleContext.getService(ref);
-                    log.debug("Selected HealthCheck service {}", hc);
-                    result.add(hc);
-                }
+                log.debug("Found {} HealthCheck services with filter [{}]", refs.length, filterString);
             }
-        } catch(InvalidSyntaxException ise) {
-            throw new IllegalStateException("Invalid OSGi filter syntax in '" + filterBuilder + "'", ise);
+            return refs;
+        } catch (final InvalidSyntaxException ise) {
+            // this should not happen, but we fail gracefully
+            log.error("Invalid OSGi filter syntax in '" + filterBuilder + "'", ise);
+            return new ServiceReference[0];
         }
-        return result;
     }
 }
