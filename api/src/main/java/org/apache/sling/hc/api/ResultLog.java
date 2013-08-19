@@ -99,4 +99,11 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
     public Status getAggregateStatus() {
         return aggregateStatus;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ResultLog: ");
+        sb.append(this.entries.toString());
+        return sb.toString();
+    }
 }
