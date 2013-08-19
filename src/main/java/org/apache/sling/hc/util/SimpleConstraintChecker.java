@@ -24,59 +24,61 @@ import org.slf4j.helpers.MessageFormatter;
 /** Simple check of numeric values against expressions
  *  like < N, > N, between two values etc.
  *  See  {@link SimpleConstraintCheckerTest} for examples.
+ *
+ *  TODO - should we move this to the healthchecks bundle?
  */
 public class SimpleConstraintChecker {
-    
+
     public static final String CONTAINS = "contains";
-    
+
     /** Check value against expression and report to result */
     public void check(Object inputValue, String constraint, ResultLog resultLog) {
-        
+
         final String stringValue = inputValue == null ? "" : inputValue.toString();
-        
+
         if(constraint == null || constraint.trim().length() == 0) {
             throw new IllegalArgumentException("Empty constraint, cannot evaluate");
         }
-        
+
         final String [] parts = constraint.split(" ");
         boolean matches = false;
         try {
             if(constraint.startsWith(">") && parts.length == 2) {
                 final int value = Integer.valueOf(stringValue).intValue();
                 matches = value > Integer.valueOf(parts[1]);
-                
+
             } else if(constraint.startsWith("<") && parts.length == 2) {
                 final int value = Integer.valueOf(stringValue).intValue();
                 matches = value < Integer.valueOf(parts[1]);
-                
+
             } else if(parts.length == 4 && "between".equalsIgnoreCase(parts[0]) && "and".equalsIgnoreCase(parts[2]) ) {
                 final int value = Integer.valueOf(stringValue).intValue();
                 final int lowerBound = Integer.valueOf(parts[1]);
                 final int upperBound = Integer.valueOf(parts[3]);
                 matches = value > lowerBound && value < upperBound;
-                
+
             } else if(parts.length >1 && CONTAINS.equalsIgnoreCase(parts[0])) {
                 final String pattern = constraint.substring(CONTAINS.length()).trim();
-                matches = stringValue.contains(pattern);        
-                
+                matches = stringValue.contains(pattern);
+
             } else {
-                matches = constraint.equals(stringValue); 
+                matches = constraint.equals(stringValue);
             }
         } catch(NumberFormatException nfe) {
             resultLog.add(new ResultLog.Entry(
-                    Result.Status.WARN, 
+                    Result.Status.WARN,
                     MessageFormatter.format(
                             "Invalid numeric value [{}] while evaluating {}", inputValue, constraint).getMessage()));
         }
-        
+
         if(matches) {
             resultLog.add(new ResultLog.Entry(
-                    Result.Status.DEBUG, 
+                    Result.Status.DEBUG,
                     MessageFormatter.format(
                             "Value [{}] matches constraint [{}]", stringValue, constraint).getMessage()));
         } else {
             resultLog.add(new ResultLog.Entry(
-                    Result.Status.WARN, 
+                    Result.Status.WARN,
                     MessageFormatter.format(
                             "Value [{}] does not match constraint [{}]", stringValue, constraint).getMessage()));
         }
