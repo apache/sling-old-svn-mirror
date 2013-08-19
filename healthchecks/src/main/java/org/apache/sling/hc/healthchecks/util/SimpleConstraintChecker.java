@@ -15,17 +15,14 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.util;
+package org.apache.sling.hc.healthchecks.util;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.slf4j.helpers.MessageFormatter;
 
 /** Simple check of numeric values against expressions
  *  like < N, > N, between two values etc.
  *  See  {@link SimpleConstraintCheckerTest} for examples.
- *
- *  TODO - should we move this to the healthchecks bundle?
  */
 public class SimpleConstraintChecker {
 
@@ -67,20 +64,17 @@ public class SimpleConstraintChecker {
         } catch(NumberFormatException nfe) {
             resultLog.add(new ResultLog.Entry(
                     Result.Status.WARN,
-                    MessageFormatter.format(
-                            "Invalid numeric value [{}] while evaluating {}", inputValue, constraint).getMessage()));
+                    "Invalid numeric value [" + inputValue + "] while evaluating " + constraint));
         }
 
         if(matches) {
             resultLog.add(new ResultLog.Entry(
                     Result.Status.DEBUG,
-                    MessageFormatter.format(
-                            "Value [{}] matches constraint [{}]", stringValue, constraint).getMessage()));
+                    "Value [" + inputValue + "] matches constraint [" + constraint + "]"));
         } else {
             resultLog.add(new ResultLog.Entry(
                     Result.Status.WARN,
-                    MessageFormatter.format(
-                            "Value [{}] does not match constraint [{}]", stringValue, constraint).getMessage()));
+                    "Value [" + inputValue + "] does not match constraint [" + constraint + "]"));
         }
     }
 }
