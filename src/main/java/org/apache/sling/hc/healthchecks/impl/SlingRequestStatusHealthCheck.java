@@ -18,7 +18,6 @@
 package org.apache.sling.hc.healthchecks.impl;
 
 import java.util.Arrays;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -32,7 +31,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
@@ -43,24 +41,23 @@ import org.slf4j.LoggerFactory;
 /** {@link HealthCheck} that checks the HTTP status of Sling requests */
 @Component(
         name="org.apache.sling.hc.SlingRequestStatusHealthCheck",
-        configurationFactory=true, 
-        policy=ConfigurationPolicy.REQUIRE, 
+        configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
 @Service
 public class SlingRequestStatusHealthCheck implements HealthCheck {
 
     private static final Logger log = LoggerFactory.getLogger(SlingRequestStatusHealthCheck.class);
-    private Map<String, String> info;
     private String [] paths;
-    
+
     static class PathSpec {
         int status;
         String path;
-        
+
         PathSpec(String configuredPath, FormattingResultLog resultLog) {
             path = configuredPath;
             status = 200;
-            
+
             final String [] parts  = configuredPath.split(":");
             if(parts.length == 2) {
                 try {
@@ -69,44 +66,43 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
                 } catch(NumberFormatException nfe) {
                     resultLog.healthCheckError("NumberFormatException while parsing [{}], invalid status value?", configuredPath);
                 }
-            } 
+            }
         }
     }
-    
+
     @Property(cardinality=Integer.MAX_VALUE)
     public static final String PROP_PATH = "path";
-    
+
     @Property(cardinality=50)
-    public static final String PROP_TAGS = Constants.HC_TAGS;
-    
+    public static final String PROP_TAGS = HealthCheck.TAGS;
+
     @Property
-    public static final String PROP_NAME = Constants.HC_NAME;
-    
+    public static final String PROP_NAME = HealthCheck.NAME;
+
     @Property
-    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
-    
+    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
+
     @Reference
     private SlingRequestProcessor requestProcessor;
-    
+
     @Reference
-    private ResourceResolverFactory resolverFactory;  
-    
+    private ResourceResolverFactory resolverFactory;
+
     @Activate
     public void activate(ComponentContext ctx) {
-        info = new HealthCheckInfo(ctx.getProperties());
         paths = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_PATH), new String [] {});
         log.info("Activated, paths={}", Arrays.asList(paths));
     }
-    
+
     @Override
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
-        
+
         ResourceResolver resolver = null;
         int checked = 0;
         int failed = 0;
         String lastPath = null;
-        
+
         try {
             resolver = resolverFactory.getAdministrativeResourceResolver(null);
             for(String p : paths) {
@@ -131,18 +127,13 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
                 resolver.close();
             }
         }
-        
+
         if(checked == 0) {
             resultLog.warn("No paths checked, empty paths list?");
         } else {
             resultLog.debug("{} paths checked, {} failures", checked, failed);
         }
-        
-        return new Result(resultLog);
-    }
 
-    @Override
-    public Map<String, String> getInfo() {
-        return info;
+        return new Result(resultLog);
     }
 }
