@@ -29,7 +29,6 @@ import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.healthchecks.util.SimpleConstraintChecker;
-import org.apache.sling.hc.jmx.impl.HealthCheckMBean;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
@@ -60,7 +59,7 @@ public class HealthCheckMBeanTest {
         final Object value = jmxServer.getAttribute(objectName, attributeName);
         final ResultLog resultLog = new ResultLog();
         new SimpleConstraintChecker().check(value, constraint, resultLog);
-        assertEquals("Expecting result " + expected, expected, resultLog.getAggregateStatus().equals(Result.Status.OK));
+        assertEquals("Expecting result " + expected + "(" + resultLog + ")", expected, resultLog.getAggregateStatus().equals(Result.Status.OK));
 
     }
 
