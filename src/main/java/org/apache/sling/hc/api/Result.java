@@ -63,4 +63,10 @@ public class Result implements Iterable <ResultLog.Entry> {
     public Iterator<ResultLog.Entry> iterator() {
         return resultLog.iterator();
     }
+
+    @Override
+    public String toString() {
+        return "Result [status=" + getStatus() + ", resultLog=" + resultLog + "]";
+    }
+
 }
