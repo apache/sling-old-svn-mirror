@@ -17,21 +17,46 @@
  */
 package org.apache.sling.hc.api;
 
-import java.util.Map;
+import aQute.bnd.annotation.ConsumerType;
 
-/** Health Check services can be executed and 
- *  return an execution Result */
+
+/**
+ * Health Check services can be executed and
+ * return an execution {@link Result}.
+ */
+@ConsumerType
 public interface HealthCheck {
-    
-    /** Execute this health check and return a {@link Result} 
-     *  This is meant to execute quickly, access to external
-     *  systems, for example, should be managed asynchronously.
+
+    /**
+     * Optional service property: the name of a health check.
+     * This name should be unique, however there might be more than one
+     * health check service with the same value for this property.
+     * The value of this property must be of type String.
      */
-    public Result execute();
-    
-    /** Additional (static) information about
-     *  this check. {@link Constants} defines
-     *  some well-known property names.
+    String NAME = "hc.name";
+
+    /**
+     * Optional service property: the name of the MBean for registering
+     * the health check as an MBean. If this property is missing the
+     * health check is not registered.
+     * If there is more than one service with the same value for this
+     * property, the one with the highest service ranking is registered
+     * only.
+     * The value of this property must be of type String.
      */
-    public Map<String, String> getInfo();
+    String MBEAN_NAME = "hc.mbean.name";
+
+    /**
+     * Optional service property: tags for categorizing the health check
+     * services.
+     * The value of this property must be of type String or String array.
+     */
+    String TAGS = "hc.tags";
+
+    /**
+     * Execute this health check and return a {@link Result}
+     * This is meant to execute quickly, access to external
+     * systems, for example, should be managed asynchronously.
+     */
+    Result execute();
 }

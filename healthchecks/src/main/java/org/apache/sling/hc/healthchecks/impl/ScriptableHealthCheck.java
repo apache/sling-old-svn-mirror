@@ -16,8 +16,6 @@
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.sling.hc.healthchecks.impl;
-import java.util.Map;
-
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -29,7 +27,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
@@ -41,51 +38,46 @@ import org.slf4j.LoggerFactory;
 /** {@link HealthCheck} that checks a scriptable expression */
 @Component(
         name="org.apache.sling.hc.ScriptableHealthCheck",
-        configurationFactory=true, 
-        policy=ConfigurationPolicy.REQUIRE, 
+        configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
 @Service
 public class ScriptableHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<String, String> info;
     private String expression;
     private String languageExtension;
     private BundleContext bundleContext;
-    
+
     public static final String DEFAULT_LANGUAGE_EXTENSION = "ecma";
 
     @Property
     public static final String PROP_EXPRESSION = "expression";
-    
+
     @Property
     public static final String PROP_LANGUAGE_EXTENSION = "language.extension";
-    
+
     @Property(cardinality=50)
-    public static final String PROP_TAGS = Constants.HC_TAGS;
-    
+    public static final String PROP_TAGS = HealthCheck.TAGS;
+
     @Property
-    public static final String PROP_NAME = Constants.HC_NAME;
-    
+    public static final String PROP_NAME = HealthCheck.NAME;
+
     @Property
-    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
-    
+    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
+
     @Reference
     private ScriptEngineManager scriptEngineManager;
-    
+
     @Activate
     public void activate(ComponentContext ctx) {
-        info = new HealthCheckInfo(ctx.getProperties());
         bundleContext = ctx.getBundleContext();
         expression = PropertiesUtil.toString(ctx.getProperties().get(PROP_EXPRESSION), "");
         languageExtension = PropertiesUtil.toString(ctx.getProperties().get(PROP_LANGUAGE_EXTENSION), DEFAULT_LANGUAGE_EXTENSION);
-        
-        info.put(PROP_EXPRESSION, expression);
-        info.put(PROP_LANGUAGE_EXTENSION, languageExtension);
-        
+
         log.info("Activated, name={}, languageExtension={}, expression={}", languageExtension, expression);
     }
-    
+
     @Override
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
@@ -103,19 +95,14 @@ public class ScriptableHealthCheck implements HealthCheck {
                 if(value!=null && "true".equals(value.toString())) {
                     resultLog.debug("Expression [{}] evaluates to true as expected", expression);
                 } else {
-                    resultLog.warn("Expression [{}] does not evaluate to true as expected, value=[{}]", expression, value); 
+                    resultLog.warn("Expression [{}] does not evaluate to true as expected, value=[{}]", expression, value);
                 }
             }
         } catch(Exception e) {
             resultLog.healthCheckError(
-                    "Exception while evaluating expression [{}] with language extension [{}]: {}", 
-                    expression, languageExtension, e); 
+                    "Exception while evaluating expression [{}] with language extension [{}]: {}",
+                    expression, languageExtension, e);
         }
         return new Result(resultLog);
-    }
-
-    @Override
-    public Map<String, String> getInfo() {
-        return info;
     }
 }

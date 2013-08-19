@@ -19,7 +19,6 @@ package org.apache.sling.hc.healthchecks.impl;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
@@ -33,7 +32,6 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
@@ -46,44 +44,42 @@ import org.slf4j.LoggerFactory;
  *  Used to verify that those logins are disabled on production systems */
 @Component(
         name="org.apache.sling.hc.DefaultLoginsHealthCheck",
-        configurationFactory=true, 
-        policy=ConfigurationPolicy.REQUIRE, 
+        configurationFactory=true,
+        policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
 @Service
 public class DefaultLoginsHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private Map<String, String> info;
-    
+
     @Property(cardinality=500)
     public static final String PROP_LOGINS = "logins";
     private List<String> logins;
-    
+
     @Property(cardinality=50)
-    public static final String PROP_TAGS = Constants.HC_TAGS;
-    
+    public static final String PROP_TAGS = HealthCheck.TAGS;
+
     @Property
-    public static final String PROP_NAME = Constants.HC_NAME;
-    
+    public static final String PROP_NAME = HealthCheck.NAME;
+
     @Property
-    public static final String PROP_MBEAN_NAME = Constants.HC_MBEAN_NAME;
-    
+    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
+
     @Reference
     private SlingRepository repository;
-    
+
     @Activate
     public void activate(ComponentContext ctx) {
-        info = new HealthCheckInfo(ctx.getProperties());
         logins = Arrays.asList(PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_LOGINS), new String[] {}));
         log.info("Activated, logins={}", logins);
     }
-    
+
     @Override
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
         int checked=0;
         int failures=0;
-        
+
         for(String login : logins) {
             final String [] parts = login.split(":");
             if(parts.length != 2) {
@@ -111,7 +107,7 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
                 }
             }
         }
-        
+
         if(checked==0) {
             resultLog.warn("Did not check any logins, configured logins={}", logins);
         } else if(failures != 0){
@@ -120,10 +116,5 @@ public class DefaultLoginsHealthCheck implements HealthCheck {
             resultLog.debug("Checked {} logins, all successful", checked, failures);
         }
         return new Result(resultLog);
-    }
-
-    @Override
-    public Map<String, String> getInfo() {
-        return info;
     }
 }

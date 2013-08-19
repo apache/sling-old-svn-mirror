@@ -27,11 +27,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.sling.hc.api.Constants;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.HealthCheckFilter;
@@ -71,13 +69,13 @@ public class HealthCheckFilterTest {
             this.tags = tags;
             final Dictionary<String, Object> props = new Hashtable<String, Object>();
             if (tags != null) {
-                props.put(Constants.HC_TAGS, tags);
+                props.put(HealthCheck.TAGS, tags);
             }
-            props.put(Constants.HC_TAGS, tags);
+            props.put(HealthCheck.TAGS, tags);
             reg = bundleContext.registerService(HealthCheck.class.getName(),
                     this, props);
             log.info("Registered {} with {}={}", new Object[] { this,
-                    Constants.HC_TAGS, props.get(Constants.HC_TAGS) });
+                    HealthCheck.TAGS, props.get(HealthCheck.TAGS) });
         }
 
         @Override
@@ -98,11 +96,6 @@ public class HealthCheckFilterTest {
 
         @Override
         public Result execute() {
-            return null;
-        }
-
-        @Override
-        public Map<String, String> getInfo() {
             return null;
         }
 
@@ -159,70 +152,70 @@ public class HealthCheckFilterTest {
 
     @Test
     public void testAllServices() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck();
+        final List<HealthCheck> s = filter.getTaggedHealthChecks();
         assertServices(s, true, true, true, true, true);
     }
 
     @Test
     public void testEmptyTags() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("", "", "");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("", "", "");
         assertServices(s, true, true, true, true, true);
     }
 
     @Test
     public void testFooTag() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("foo");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("foo");
         assertServices(s, true, false, true, false, false);
     }
 
     @Test
     public void testBarTag() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("bar");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("bar");
         assertServices(s, false, true, true, false, false);
     }
 
     @Test
     public void testFooAndBar() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("foo", "bar");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("foo", "bar");
         assertServices(s, false, false, true, false, false);
     }
 
     @Test
     public void testFooMinusBar() {
         final List<HealthCheck> s = filter
-                .getTaggedHealthCheck("foo", "-bar");
+                .getTaggedHealthChecks("foo", "-bar");
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testWhitespace() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck(
+        final List<HealthCheck> s = filter.getTaggedHealthChecks(
                 "\t \n\r foo  \t", "", " \t-bar\n", "");
         assertServices(s, true, false, false, false, false);
     }
 
     @Test
     public void testOther() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("other");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("other");
         assertServices(s, false, false, false, true, false);
     }
 
     @Test
     public void testMinusOther() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("-other");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("-other");
         assertServices(s, true, true, true, false, true);
     }
 
     @Test
     public void testMinusOtherFoo() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("-other",
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("-other",
                 "-foo");
         assertServices(s, false, true, false, false, true);
     }
 
     @Test
     public void testNoResults() {
-        final List<HealthCheck> s = filter.getTaggedHealthCheck("NOT A TAG");
+        final List<HealthCheck> s = filter.getTaggedHealthChecks("NOT A TAG");
         assertTrue("Expecting no services", s.isEmpty());
     }
 }
