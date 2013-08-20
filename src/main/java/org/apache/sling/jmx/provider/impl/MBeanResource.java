@@ -79,7 +79,7 @@ public class MBeanResource extends AbstractResource {
      * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
      */
     public String getResourceSuperType() {
-        return "sling:mbean";
+        return Constants.TYPE_MBEAN;
     }
 
     /**
@@ -107,14 +107,14 @@ public class MBeanResource extends AbstractResource {
 
     private Map<String, Object> getPropertiesMap() {
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.getResourceType());
-        result.put("sling:resourceSuperType", this.getResourceSuperType());
+        result.put(Constants.PROP_RESOURCE_TYPE, this.getResourceType());
+        result.put(Constants.PROP_RESOURCE_SUPER_TYPE, this.getResourceSuperType());
 
         if ( this.info.getDescription() != null ) {
-            result.put("mbean:description", this.info.getDescription());
+            result.put(Constants.PROP_DESCRIPTION, this.info.getDescription());
         }
-        result.put("mbean:className", this.info.getClassName());
-        result.put("mbean:objectName", this.objectName.getCanonicalName());
+        result.put(Constants.PROP_CLASSNAME, this.info.getClassName());
+        result.put(Constants.PROP_OBJECTNAME, this.objectName.getCanonicalName());
 
         return result;
     }
