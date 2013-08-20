@@ -60,14 +60,14 @@ public class MapResource extends AbstractResource {
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
     public String getResourceType() {
-        return (String)properties.get("sling:resourceType");
+        return (String)properties.get(Constants.PROP_RESOURCE_TYPE);
     }
 
     /**
      * @see org.apache.sling.api.resource.Resource#getResourceSuperType()
      */
     public String getResourceSuperType() {
-        return (String)properties.get("sling:resourceSuperType");
+        return (String)properties.get(Constants.PROP_RESOURCE_SUPER_TYPE);
     }
 
     /**

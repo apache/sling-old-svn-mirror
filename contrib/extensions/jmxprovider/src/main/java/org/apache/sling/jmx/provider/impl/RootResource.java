@@ -52,7 +52,7 @@ public class RootResource extends AbstractResource {
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
     public String getResourceType() {
-        return "sling:mbeans";
+        return Constants.TYPE_MBEANS;
     }
 
     /**
@@ -87,9 +87,9 @@ public class RootResource extends AbstractResource {
 
     private Map<String, Object> getPropertiesMap() {
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.getResourceType());
+        result.put(Constants.PROP_RESOURCE_TYPE, this.getResourceType());
         if ( this.getResourceSuperType() != null ) {
-            result.put("sling:resourceSuperType", this.getResourceSuperType());
+            result.put(Constants.PROP_RESOURCE_SUPER_TYPE, this.getResourceSuperType());
         }
 
         return result;

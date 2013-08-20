@@ -19,10 +19,14 @@
 package org.apache.sling.jmx.provider.impl;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -77,7 +81,7 @@ public class AttributeResource extends AbstractResource {
      * @see org.apache.sling.api.resource.Resource#getResourceType()
      */
     public String getResourceType() {
-        return "sling:mbeanattribute";
+        return Constants.TYPE_ATTRIBUTE;
     }
 
     /**
@@ -112,15 +116,15 @@ public class AttributeResource extends AbstractResource {
 
     private Map<String, Object> getPropertiesMap() {
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.getResourceType());
+        result.put(Constants.PROP_RESOURCE_TYPE, this.getResourceType());
         if ( this.getResourceSuperType() != null ) {
-            result.put("sling:resourceSuperType", this.getResourceSuperType());
+            result.put(Constants.PROP_RESOURCE_SUPER_TYPE, this.getResourceSuperType());
         }
 
         if ( info.getDescription() != null ) {
-            result.put("mbean:description", info.getDescription());
+            result.put(Constants.PROP_DESCRIPTION, info.getDescription());
         }
-        result.put("mbean:type", info.getType());
+        result.put(Constants.PROP_TYPE, info.getType());
 
         try {
             final Object value = server.getAttribute(this.on, info.getName());
@@ -132,13 +136,13 @@ public class AttributeResource extends AbstractResource {
                         final Object o = Array.get(value, i);
                         values[i] = convert(o);
                     }
-                    result.put("mbean:value", values);
+                    result.put(Constants.PROP_VALUE, values);
                 } else if (value instanceof TabularData) {
                     // Nothing to do, value is child resource
                 } else if (value instanceof CompositeData) {
                     // Nothing to do, value is child resource
                 } else {
-                    result.put("mbean:value", convert(value));
+                    result.put(Constants.PROP_VALUE, convert(value));
                 }
             }
         } catch (final Exception ignore) {
@@ -202,17 +206,38 @@ public class AttributeResource extends AbstractResource {
     private Map<String, Object> convertObject(final TabularData td) {
         final TabularType type = td.getTabularType();
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put("sling:resourceSuperType", "mbean:attributes");
-        result.put("sling:resourceType", type.getTypeName());
+        result.put(Constants.PROP_RESOURCE_SUPER_TYPE, Constants.TYPE_ATTRIBUTES);
+        result.put(Constants.PROP_RESOURCE_TYPE, type.getTypeName());
 
         final Map<String, Map<String, Object>> rows = new LinkedHashMap<String, Map<String, Object>>();
-        int index = 1;
-        // TODO - use index values
-        for(final CompositeData data : (Collection<CompositeData>)td.values()) {
-            rows.put(String.valueOf(index), convertObject(data));
-            index++;
+        int rowIndex = 1;
+        @SuppressWarnings("unchecked")
+        final List<CompositeData> values = new ArrayList<CompositeData>((Collection<CompositeData>)td.values());
+        Collections.sort(values, new Comparator<CompositeData>() {
+
+            public int compare(final CompositeData o1, final CompositeData o2) {
+                for(final String name : type.getIndexNames()) {
+                    final Object value1 = o1.get(name);
+                    final Object value2 = o2.get(name);
+                    final int result;
+                    if ( value1 instanceof Comparable ) {
+                        result = ((Comparable)value1).compareTo(value2);
+                    } else {
+                        result = value1.toString().compareTo(value2.toString());
+                    }
+                    if ( result != 0 ) {
+                        return result;
+                    }
+                }
+                return 0;
+            }
+
+        });
+        for(final CompositeData data : values) {
+            rows.put(String.valueOf(rowIndex), convertObject(data));
+            rowIndex++;
         }
-        result.put("mbean:value", rows);
+        result.put(Constants.RSRC_VALUE, rows);
 
         return result;
     }
@@ -220,24 +245,24 @@ public class AttributeResource extends AbstractResource {
     private Map<String, Object> convertObject(final CompositeData cd) {
         final CompositeType type = cd.getCompositeType();
         final Map<String, Object> result = new HashMap<String, Object>();
-        result.put("sling:resourceSuperType", "mbean:attributes");
-        result.put("sling:resourceType", type.getTypeName());
+        result.put(Constants.PROP_RESOURCE_SUPER_TYPE, Constants.TYPE_ATTRIBUTES);
+        result.put(Constants.PROP_RESOURCE_TYPE, type.getTypeName());
 
         final Map<String, Object> attrMap = new TreeMap<String, Object>();
-        attrMap.put("sling:resourceType", "mbean:attributes");
-        result.put("mbean:attributes", attrMap);
+        attrMap.put(Constants.PROP_RESOURCE_TYPE, Constants.TYPE_ATTRIBUTES);
+        result.put(Constants.RSRC_ATTRIBUTES, attrMap);
 
         final Set<String> names = type.keySet();
         for(final String name : names) {
             final Map<String, Object> dataMap = new HashMap<String, Object>();
             attrMap.put(name, dataMap);
             dataMap.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, type.getType(name));
-            dataMap.put("sling:resourceSuperType", "mbean:attributes");
+            dataMap.put(Constants.PROP_RESOURCE_SUPER_TYPE, Constants.TYPE_ATTRIBUTE);
 
             if ( type.getDescription() != null ) {
-                dataMap.put("mbean:description", type.getDescription());
+                dataMap.put(Constants.PROP_DESCRIPTION, type.getDescription());
             }
-            dataMap.put("mbean:type", type.getType(name));
+            dataMap.put(Constants.PROP_TYPE, type.getType(name).getTypeName());
 
             final Object value = cd.get(name);
             if ( value != null ) {
@@ -248,13 +273,13 @@ public class AttributeResource extends AbstractResource {
                         final Object o = Array.get(value, i);
                         values[i] = convert(o);
                     }
-                    dataMap.put("mbean:value", values);
+                    dataMap.put(Constants.PROP_VALUE, values);
                 } else if (value instanceof TabularData) {
-                    dataMap.put("mbean:value", convertObject((TabularData)value));
+                    dataMap.put(Constants.RSRC_VALUE, convertObject((TabularData)value));
                 } else if (value instanceof CompositeData) {
-                    dataMap.put("mbean:value", convertObject((CompositeData)value));
+                    dataMap.put(Constants.RSRC_VALUE, convertObject((CompositeData)value));
                 } else {
-                    dataMap.put("mbean:value", convert(value));
+                    dataMap.put(Constants.PROP_VALUE, convert(value));
                 }
             }
         }
