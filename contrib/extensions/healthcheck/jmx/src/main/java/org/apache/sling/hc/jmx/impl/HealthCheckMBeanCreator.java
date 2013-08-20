@@ -108,10 +108,13 @@ public class HealthCheckMBeanCreator {
                 this.sortedRegistrations.put(reg.name, registered);
             }
             registered.add(reference);
+            // sort orders the references with lowest ranking first
+            // we want the highest!
             Collections.sort(registered);
-            if ( registered.get(0).equals(reference) ) {
+            final int lastIndex = registered.size() - 1;
+            if ( registered.get(lastIndex).equals(reference) ) {
                 if ( registered.size() > 1 ) {
-                    final ServiceReference prevRef = registered.get(1);
+                    final ServiceReference prevRef = registered.get(lastIndex - 1);
                     final Registration prevReg = this.registeredServices.get(prevRef);
                     prevReg.unregister(this.logger);
                 }
