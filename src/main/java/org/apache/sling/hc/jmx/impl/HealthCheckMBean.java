@@ -45,6 +45,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /** A {@link DynamicMBean} used to execute a {@link HealthCheck} service */
@@ -180,8 +181,14 @@ public class HealthCheckMBean implements DynamicMBean {
 
         attrs.add(new OpenMBeanAttributeInfoSupport(HC_LOG_ATTRIBUTE_NAME, "The health check result log", LOG_TABLE_TYPE, true, false, false));
 
+        final String description;
+        if ( serviceReference.getProperty(Constants.SERVICE_DESCRIPTION) != null ) {
+            description = serviceReference.getProperty(Constants.SERVICE_DESCRIPTION).toString();
+        } else {
+            description = "Health check";
+        }
         return new MBeanInfo(this.getClass().getName(),
-                   "Health check",
+                   description,
                    attrs.toArray(new MBeanAttributeInfo[attrs.size()]), null, null, null);
     }
 
