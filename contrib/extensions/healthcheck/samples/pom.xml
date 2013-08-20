@@ -33,7 +33,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Sling-Initial-Content>SLING-CONTENT;overwrite:=true</Sling-Initial-Content>
+                        <Sling-Initial-Content>SLING-CONTENT/apps/hc/demo;path:=/apps/hc/demo;overwrite:=true</Sling-Initial-Content>
                     </instructions>
                 </configuration>
             </plugin>
