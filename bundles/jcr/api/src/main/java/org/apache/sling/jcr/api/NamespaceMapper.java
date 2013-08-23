@@ -21,11 +21,14 @@ package org.apache.sling.jcr.api;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * This interface is used to customize the namespace mapping of
  * a session.
  * @since 2.1
  */
+@ConsumerType
 public interface NamespaceMapper {
 
     /**
