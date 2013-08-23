@@ -23,6 +23,8 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>SlingRepository</code> extends the standard JCR repository
  * interface with two methods: {@link #getDefaultWorkspace()} and
@@ -41,6 +43,7 @@ import javax.jcr.Session;
  * returning <b>any</b> {@link Session} to callers. This includes the methods
  * defined in the {@link Repository} interface.
  */
+@ProviderType
 public interface SlingRepository extends Repository {
 
     /**
