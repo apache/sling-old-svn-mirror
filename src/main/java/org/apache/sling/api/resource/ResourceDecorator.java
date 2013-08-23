@@ -18,6 +18,8 @@ package org.apache.sling.api.resource;
 
 import javax.servlet.http.HttpServletRequest;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Optional service to decorate {@link Resource}s returned by
  * the {@link ResourceResolver}.
@@ -28,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
  *
  * @since 2.1
  */
+@ConsumerType
 public interface ResourceDecorator {
 
     /**
@@ -52,7 +55,7 @@ public interface ResourceDecorator {
      * @param resource The resource to decorate
      * @param request The current request.
      * @return The decorated resource, the original resource or null.
-     * 
+     *
      * @deprecated since 2.3.0 (and JCR Resource 2.1.0), this method will not be invoked.
      */
     @Deprecated

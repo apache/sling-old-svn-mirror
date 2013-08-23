@@ -16,7 +16,12 @@
  */
 package org.apache.sling.api.servlets;
 
-/** HTTP-related constants */
+/**
+ * HTTP-related constants
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides constants not intended to be overwritten.
+ */
 public class HttpConstants {
 
     public static final String METHOD_OPTIONS = "OPTIONS";

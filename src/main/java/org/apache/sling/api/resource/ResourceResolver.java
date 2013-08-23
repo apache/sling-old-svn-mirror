@@ -25,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.adapter.Adaptable;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>ResourceResolver</code> defines the service API which may be used
  * to resolve {@link Resource} objects. The resource resolver is available to
@@ -94,6 +96,7 @@ import org.apache.sling.api.adapter.Adaptable;
  * sensitive properties like {@link ResourceResolverFactory#PASSWORD} which is
  * not exposed.
  */
+@ProviderType
 public interface ResourceResolver extends Adaptable {
 
     /**

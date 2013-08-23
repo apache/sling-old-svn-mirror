@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Iterator;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 /**
  * A queriable resource provider is an extension of a resource provider.
@@ -30,6 +32,7 @@ import java.util.Iterator;
  *
  * @since 2.2.0
  */
+@ConsumerType
 public interface QueriableResourceProvider extends ResourceProvider {
 
     /**

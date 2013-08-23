@@ -22,7 +22,11 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
- * Response-related utilities
+ * Response related utility methods
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides static utility methods not intended to be overwritten.
+ *
  * @since 2.1
  */
 public class ResponseUtil {

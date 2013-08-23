@@ -23,12 +23,15 @@ import java.util.Map;
 
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>ValueMap</code> is an easy way to access properties of a resource.
  * With most resources you can use {@link Resource#adaptTo(Class)} to adapt the
  * resource to a value map. The various getter methods can be used to get the
  * properties of the resource.
  */
+@ConsumerType
 public interface ValueMap extends Map<String, Object> {
 
     /**

@@ -23,6 +23,9 @@ package org.apache.sling.api;
  * for well known constant strings in Sling. Even though these constants will
  * never change, it is recommended that applications refer to the symbolic
  * constants instead of code the strings themselves.
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides constants not intended to be overwritten.
  */
 public class SlingConstants {
 

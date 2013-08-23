@@ -18,6 +18,8 @@ package org.apache.sling.api.request;
 
 import org.apache.sling.api.resource.Resource;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Sling breaks the request URI into four parts: the path itself, optional
  * dot-separated selectors and extension that follow it, and an optional path
@@ -145,6 +147,7 @@ import org.apache.sling.api.resource.Resource;
  * </tr>
  * </table>
  */
+@ProviderType
 public interface RequestPathInfo {
 
     /**

@@ -21,6 +21,8 @@ package org.apache.sling.api.auth;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>Authenticator</code> interface defines the service interface which
  * may be used by applications to enforce requests to be authenticated (see
@@ -66,6 +68,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @since 1.0 (Sling API Bundle 2.1.0)
  */
+@ProviderType
 public interface Authenticator {
 
     /**

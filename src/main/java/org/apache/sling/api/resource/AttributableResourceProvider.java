@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Collection;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The attributes provider is an extensions of a {@link ResourceProvider}.
  * It allows to add attributes to the set of available attributes from a
@@ -34,6 +36,7 @@ import java.util.Collection;
  *
  * @since 2.2
  */
+@ConsumerType
 public interface AttributableResourceProvider extends ResourceProvider {
 
     /**

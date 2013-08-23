@@ -29,6 +29,9 @@ import org.apache.sling.api.wrappers.ValueMapDecorator;
 /**
  * The <code>ResourceUtil</code> class provides helper methods dealing with
  * resources.
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides static utility methods not intended to be overwritten.
  */
 public class ResourceUtil {
 

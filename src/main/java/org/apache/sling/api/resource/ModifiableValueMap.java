@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>ModifiableValueMap</code> is an extension
  * of the {@link ValueMap} which allows to modify and
@@ -55,6 +57,7 @@ package org.apache.sling.api.resource;
  *
  * @since 2.2
  */
+@ConsumerType
 public interface ModifiableValueMap extends ValueMap {
 
     // just a marker

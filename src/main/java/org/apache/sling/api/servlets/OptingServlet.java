@@ -22,12 +22,15 @@ import javax.servlet.Servlet;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>OptingServlet</code> interface may be implemented by
  * <code>Servlets</code> used by Sling which may choose to not handle all
  * requests for which they would be selected based on their registration
  * properties.
  */
+@ConsumerType
 public interface OptingServlet extends Servlet {
 
     /**

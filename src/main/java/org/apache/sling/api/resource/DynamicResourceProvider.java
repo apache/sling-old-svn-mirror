@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A dynamic resource provider is an extension of a resource provider which
  * is only supported if the resource provider has been created through
@@ -37,6 +39,7 @@ package org.apache.sling.api.resource;
  *
  * @since 2.2
  */
+@ConsumerType
 public interface DynamicResourceProvider extends ResourceProvider {
 
     /**

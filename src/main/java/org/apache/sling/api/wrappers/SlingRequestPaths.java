@@ -23,10 +23,13 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * This class is not a "wrapper" per se, but computes the correct path info,
  * request URI, etc. for included requests. When including a request via
- * {@link javax.servlet.RequestDispatcher}, the Servlet API specifies that target paths of
- * the included request are available as request attributes.
- * Request.getPathInfo(), for example will return the value for the including
- * request, *not* for the included one.
+ * {@link javax.servlet.RequestDispatcher}, the Servlet API specifies that
+ * target paths of the included request are available as request attributes.
+ * {@code Request.getPathInfo()}, for example will return the value for the
+ * including request, *not* for the included one.
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides constants and static utility methods not intended to be overwritten.
  */
 public class SlingRequestPaths {
 

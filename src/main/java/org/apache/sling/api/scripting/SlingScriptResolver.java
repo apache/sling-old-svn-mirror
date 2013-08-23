@@ -18,15 +18,18 @@ package org.apache.sling.api.scripting;
 
 import org.apache.sling.api.resource.ResourceResolver;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>ScriptResolver</code> interface defines the API for a service
  * capable of locating scripts. Where the script is actually located is an
  * implementation detail of the service implementation.
- * 
- * @deprecated The SlingScriptResolver interface is intended to be implemented 
- * and also used by project specific code. To keep the API as clean as possible 
+ *
+ * @deprecated The SlingScriptResolver interface is intended to be implemented
+ * and also used by project specific code. To keep the API as clean as possible
  * this interface was deprecated
  */
+@ProviderType
 public interface SlingScriptResolver {
 
     /**

@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>ResourceResolverFactory</code> defines the service API to get and
  * create <code>ResourceResolver</code>s.
@@ -29,6 +31,7 @@ import java.util.Map;
  *
  * @since 2.1
  */
+@ProviderType
 public interface ResourceResolverFactory {
 
     /**

@@ -20,11 +20,14 @@ package org.apache.sling.api.request;
 
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * The <code>RequestParameterMap</code> encapsulates all request parameters of
  * a request.
  */
+@ProviderType
 public interface RequestParameterMap extends Map<String, RequestParameter[]> {
 
     /** Returns all values for the named parameter or null if none

@@ -25,6 +25,8 @@ import javax.servlet.ServletRequest;
 /**
  * represents an event published by the Sling engine while
  * dispatching a request.
+ * <p>
+ * This class is not intended to be extended or instantiated by clients.
  *
  * @see org.apache.sling.api.request.SlingRequestListener
  * @since 2.1.0
