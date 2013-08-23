@@ -24,6 +24,8 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>ServletResolver</code> defines the API for a service capable of
  * resolving <code>javax.servlet.Servlet</code> instances to handle the
@@ -34,6 +36,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * through a <code>RequestDispatcher</code> is handled by the Sling Framework.
  * <p>
  */
+@ProviderType
 public interface ServletResolver {
 
     /**

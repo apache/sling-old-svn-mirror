@@ -20,6 +20,8 @@ import java.util.Iterator;
 
 import org.apache.sling.api.adapter.Adaptable;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Resources are pieces of content on which Sling acts
  * <p>
@@ -33,6 +35,7 @@ import org.apache.sling.api.adapter.Adaptable;
  * suffering from missing method problems should the Sling Resource API be
  * extended in the future.
  */
+@ProviderType
 public interface Resource extends Adaptable {
 
     /**

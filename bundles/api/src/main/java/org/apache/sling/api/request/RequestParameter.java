@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>RequestParameter</code> class represents a single parameter sent
  * with the client request. Instances of this class are returned by the
@@ -33,6 +35,7 @@ import java.io.UnsupportedEncodingException;
  * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameters(String)
  * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameterMap()
  */
+@ProviderType
 public interface RequestParameter {
 
     /**

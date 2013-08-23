@@ -22,6 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.api.adapter.Adaptable;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>SlingHttpServletResponse</code> defines the interface to assist a
  * servlet in creating and sending a response to the client.
@@ -32,6 +34,7 @@ import org.apache.sling.api.adapter.Adaptable;
  * Starting with Sling API 2.0.6, this interface als extends the
  * {@link Adaptable} interface.
  */
+@ProviderType
 public interface SlingHttpServletResponse extends HttpServletResponse,
         Adaptable {
 

@@ -23,11 +23,14 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestDispatcherOptions;
 import org.apache.sling.api.resource.Resource;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>SlingScriptHelper</code> interface defines the API of a helper
  * class which is provided to the scripts called from sling through the global
  * <code>{@link SlingBindings#SLING sling}</code> variable.
  */
+@ProviderType
 public interface SlingScriptHelper {
 
     /**

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.resource;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 
 /**
@@ -34,6 +36,7 @@ package org.apache.sling.api.resource;
  *
  * @since 2.3.0
  */
+@ConsumerType
 public interface RefreshableResourceProvider extends ResourceProvider {
 
     /**

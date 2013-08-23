@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A modifying resource provider is an extension of a resource provider which
  * is only supported if the resource provider has been created through
@@ -41,6 +43,7 @@ import java.util.Map;
  *
  * @since 2.2.0
  */
+@ConsumerType
 public interface ModifyingResourceProvider extends ResourceProvider {
 
     /**

@@ -24,6 +24,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingException;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * API for providers of resources. Used by the {@link ResourceResolver} to
  * transparently access resources from different locations such as a JCR
@@ -38,6 +40,7 @@ import org.apache.sling.api.SlingException;
  * upon successful authentication returns a resource provider with the
  * given user credentials.
  */
+@ConsumerType
 public interface ResourceProvider {
 
     /**
@@ -67,10 +70,10 @@ public interface ResourceProvider {
     /**
      * The name of the service registration property containing the a boolean
      * flag indicating if the ResourceAccessSecurity service should be used for
-     * this provider or not. ResourceProvider implementations are encouraged 
+     * this provider or not. ResourceProvider implementations are encouraged
      * to use the ResourceAccessSecurity service for access control unless
      * the underlying storage already provides it.
-     * The default for this value is <code>false</code>. 
+     * The default for this value is <code>false</code>.
      * (value is "provider.useResourceAccessSecurity")
      */
     String USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";

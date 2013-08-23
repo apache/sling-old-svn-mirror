@@ -29,6 +29,11 @@ import org.apache.sling.api.servlets.HttpConstants;
 import org.apache.sling.api.SlingHttpServletRequest;
 
 /**
+ * Request related utility methods.
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides static utility methods not intended to be overwritten.
+ *
  * @since 2.1
  */
 public class RequestUtil {

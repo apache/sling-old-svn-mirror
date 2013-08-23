@@ -20,6 +20,8 @@ package org.apache.sling.api.resource;
 
 import java.util.Map;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>ResourceProviderFactory</code> defines the service API to get and
  * create <code>ResourceProviders</code>s dynamically on a per usage base.
@@ -32,6 +34,7 @@ import java.util.Map;
  *
  * @since 2.2.0
  */
+@ConsumerType
 public interface ResourceProviderFactory {
 
     /**

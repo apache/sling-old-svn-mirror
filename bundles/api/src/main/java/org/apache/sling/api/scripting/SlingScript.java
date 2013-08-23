@@ -20,6 +20,8 @@ package org.apache.sling.api.scripting;
 
 import org.apache.sling.api.resource.Resource;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>SlingScript</code> defines the API for objects which encapsulate
  * a script. To evaluate a script prepare a {@link SlingBindings} instance of
@@ -31,6 +33,7 @@ import org.apache.sling.api.resource.Resource;
  * and then trying to adapt the resource to a script by
  * calling {@link Resource#adaptTo(Class)}.
  */
+@ConsumerType
 public interface SlingScript {
 
     /**

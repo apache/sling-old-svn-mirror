@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.adapter;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>AdapterManager</code> defines the service interface for a manager
  * for object adaption. The adapter manager coordinates the registered
@@ -31,6 +33,7 @@ package org.apache.sling.api.adapter;
  * <p>
  * This interface is not intended to be implemented by clients.
  */
+@ProviderType
 public interface AdapterManager {
 
     /**

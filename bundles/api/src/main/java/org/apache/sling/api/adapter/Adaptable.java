@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.adapter;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>Adaptable</code> interface identifies objects which can be adapted
  * to other types or representations of the same object. For example a JCR Node
@@ -25,6 +27,7 @@ package org.apache.sling.api.adapter;
  * underlying JCR Node or a file based resource could adapt to the underlying
  * <code>java.io.File</code>.
  */
+@ConsumerType
 public interface Adaptable {
 
     /**

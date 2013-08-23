@@ -21,6 +21,8 @@ package org.apache.sling.api.security;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>ResourceAccessSecurity</code> defines a service API which might be
  * used in implementations of resource providers where the underlying
@@ -36,6 +38,7 @@ import org.apache.sling.api.resource.ResourceResolver;
  * fully delegated to the underlying repository, and mixing security models would
  * be a bad idea.
  */
+@ProviderType
 public interface ResourceAccessSecurity {
 
     /** If supplied Resource can be read, return it (or a wrapped

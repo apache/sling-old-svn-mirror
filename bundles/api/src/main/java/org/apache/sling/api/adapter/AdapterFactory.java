@@ -18,6 +18,8 @@
  */
 package org.apache.sling.api.adapter;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>AdapterFactory</code> interface defines the API for helpers which
  * may be provided to enhance the adaptability of adaptable objects.
@@ -33,6 +35,7 @@ package org.apache.sling.api.adapter;
  * registration properties {@link #ADAPTABLE_CLASSES} and
  * {@link #ADAPTER_CLASSES}.
  */
+@ConsumerType
 public interface AdapterFactory {
 
     /**

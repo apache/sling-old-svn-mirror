@@ -19,6 +19,8 @@
 
 package org.apache.sling.api.request;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Implementations of this service interface receive notifications about
  * changes to Sling request of the Sling application they are part of.
@@ -26,6 +28,7 @@ package org.apache.sling.api.request;
  * registered as an OSGi service with the service name
  * org.apache.sling.api.request.SlingRequestListener.
  */
+@ConsumerType
 public interface SlingRequestListener {
 
 	String SERVICE_NAME = "org.apache.sling.api.request.SlingRequestListener";

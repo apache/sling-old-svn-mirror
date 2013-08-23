@@ -20,9 +20,13 @@ package org.apache.sling.api.scripting;
 
 /**
  * Some constants for the scripting.
+ * <p>
+ * This class is not intended to be extended or instantiated because it just
+ * provides constants not intended to be overwritten.
+ *
  * @since 2.0.6
  */
-public abstract class SlingScriptConstants {
+public class SlingScriptConstants {
 
     /**
      * The name of the script context attribute holding the {@link org.apache.sling.api.resource.ResourceResolver} which
