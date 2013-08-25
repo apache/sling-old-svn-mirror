@@ -16,6 +16,8 @@
  */
 package org.apache.sling.commons.scheduler;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A job is executed by the {@link Scheduler} service.
  * If the implementation of the job requires certain environment information
@@ -24,6 +26,7 @@ package org.apache.sling.commons.scheduler;
  * If no additional information is required, implementing {@link Runnable} is
  * sufficient.
  */
+@ConsumerType
 public interface Job {
 
     /**

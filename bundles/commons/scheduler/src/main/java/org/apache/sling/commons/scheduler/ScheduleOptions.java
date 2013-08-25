@@ -19,12 +19,15 @@ package org.apache.sling.commons.scheduler;
 import java.io.Serializable;
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Scheduler options provide an extensible way of defining how to schedule a job.
  * An option can be created via the scheduler.
  *
  * @since 2.3
  */
+@ProviderType
 public interface ScheduleOptions {
 
     /**

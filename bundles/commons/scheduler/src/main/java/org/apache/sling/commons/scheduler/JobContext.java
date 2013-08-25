@@ -19,9 +19,12 @@ package org.apache.sling.commons.scheduler;
 import java.io.Serializable;
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The context for a {@link Job}.
  */
+@ProviderType
 public interface JobContext {
 
     /**
