@@ -21,6 +21,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A scheduler to schedule time/cron based jobs.
  * A job is an object that is executed/fired by the scheduler. The object
@@ -36,6 +38,7 @@ import java.util.NoSuchElementException;
  * which usually is not wanted. Therefore it is advisable to also set the
  * {@link #PROPERTY_SCHEDULER_CONCURRENT} property with Boolean.FALSE.
  */
+@ProviderType
 public interface Scheduler {
 
     /** Name of the configuration property to define the period for a job.
