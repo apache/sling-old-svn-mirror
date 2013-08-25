@@ -19,6 +19,7 @@
 package org.apache.sling.commons.scheduler.impl;
 
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
@@ -87,29 +88,45 @@ public class WebConsolePrinter {
                 pw.println(s.getSchedulerInstanceId());
                 final List<String> groups = s.getJobGroupNames();
                 for(final String group : groups) {
-                    pw.println();
-                    pw.print  ("Group ");
-                    pw.println(group);
-                    pw.println("---------------------------------------------------------------------------");
+                    boolean printHeader = true;
                     final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
                     for(final JobKey key : keys) {
                         final JobDetail detail = s.getJobDetail(key);
-                        pw.print("Job : ");
-                        pw.print(key.getName());
-                        if ( detail.getDescription() != null && detail.getDescription().length() > 0 ) {
-                            pw.print(" (");
-                            pw.print(detail.getDescription());
-                            pw.print(")");
-                        }
-                        pw.print(", concurrent: ");
-                        pw.print(!detail.isConcurrentExectionDisallowed());
-                        pw.println();
-                        for(final Trigger trigger : s.getTriggersOfJob(key)) {
-                            pw.print("Trigger : ");
-                            pw.print(trigger);
+                        final String jobName = (String) detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME);
+                        final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
+                        // only print jobs started through the sling scheduler
+                        if ( jobName != null && job != null ) {
+                            if ( printHeader ) {
+                                pw.println();
+                                pw.print  ("Group ");
+                                pw.println(group);
+                                pw.println("---------------------------------------------------------------------------");
+                                printHeader = false;
+                            }
+                            pw.print("Job : ");
+                            pw.print(detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
+                            if ( detail.getDescription() != null && detail.getDescription().length() > 0 ) {
+                                pw.print(" (");
+                                pw.print(detail.getDescription());
+                                pw.print(")");
+                            }
+                            pw.print(", class: ");
+                            pw.print(job.getClass().getName());
+                            pw.print(", concurrent: ");
+                            pw.print(!detail.isConcurrentExectionDisallowed());
+                            final String[] runOn = (String[])detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_RUN_ON);
+                            if ( runOn != null ) {
+                                pw.print(", runOn: ");
+                                pw.print(Arrays.toString(runOn));
+                            }
+                            pw.println();
+                            for(final Trigger trigger : s.getTriggersOfJob(key)) {
+                                pw.print("Trigger : ");
+                                pw.print(trigger);
+                                pw.println();
+                            }
                             pw.println();
                         }
-                        pw.println();
                     }
                 }
             } catch ( final SchedulerException se ) {
