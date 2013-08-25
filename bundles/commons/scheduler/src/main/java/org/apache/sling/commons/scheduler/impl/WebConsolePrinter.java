@@ -88,7 +88,6 @@ public class WebConsolePrinter {
                 pw.println(s.getSchedulerInstanceId());
                 final List<String> groups = s.getJobGroupNames();
                 for(final String group : groups) {
-                    boolean printHeader = true;
                     final Set<JobKey> keys = s.getJobKeys(GroupMatcher.jobGroupEquals(group));
                     for(final JobKey key : keys) {
                         final JobDetail detail = s.getJobDetail(key);
@@ -96,13 +95,6 @@ public class WebConsolePrinter {
                         final Object job = detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_OBJECT);
                         // only print jobs started through the sling scheduler
                         if ( jobName != null && job != null ) {
-                            if ( printHeader ) {
-                                pw.println();
-                                pw.print  ("Group ");
-                                pw.println(group);
-                                pw.println("---------------------------------------------------------------------------");
-                                printHeader = false;
-                            }
                             pw.print("Job : ");
                             pw.print(detail.getJobDataMap().get(QuartzScheduler.DATA_MAP_NAME));
                             if ( detail.getDescription() != null && detail.getDescription().length() > 0 ) {
