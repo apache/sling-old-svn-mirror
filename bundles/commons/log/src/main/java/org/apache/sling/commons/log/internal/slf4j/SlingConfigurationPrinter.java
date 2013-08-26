@@ -63,9 +63,6 @@ public class SlingConfigurationPrinter {
         }
     }
 
-    /**
-     * @see org.apache.felix.webconsole.ConfigurationPrinter#printConfiguration(java.io.PrintWriter)
-     */
     public void printConfiguration(PrintWriter printWriter) {
         final LogConfigManager logConfigManager = LogConfigManager.getInstance();
         Iterator<SlingLoggerWriter> writers = logConfigManager.getSlingLoggerWriters();
@@ -98,9 +95,6 @@ public class SlingConfigurationPrinter {
         }
     }
 
-    /**
-     * @see org.apache.felix.webconsole.AttachmentProvider#getAttachments(java.lang.String)
-     */
     public URL[] getAttachments(String mode) {
         // we only provide urls for mode zip
         if ( "zip".equals(mode) ) {
