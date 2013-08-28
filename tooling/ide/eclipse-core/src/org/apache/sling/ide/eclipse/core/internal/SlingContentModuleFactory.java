@@ -25,7 +25,7 @@ import org.eclipse.wst.server.core.util.ProjectModuleFactoryDelegate;
 
 public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
-    private static final String NATURE_ID = "sling.content";
+    static final String SLING_CONTENT_FACET_ID = "sling.content";
 
     @Override
     public ModuleDelegate getModuleDelegate(IModule module) {
@@ -39,8 +39,8 @@ public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
         try {
             IFacetedProject facetedProject = ProjectFacetsManager.create(project);
             for (IProjectFacetVersion facet : facetedProject.getProjectFacets()) {
-                if (facet.getProjectFacet().getId().equals(NATURE_ID)) {
-                    return createModule(project.getName(), project.getName(), NATURE_ID, "1.0", project);
+                if (facet.getProjectFacet().getId().equals(SLING_CONTENT_FACET_ID)) {
+                    return createModule(project.getName(), project.getName(), SLING_CONTENT_FACET_ID, "1.0", project);
                 }
             }
         } catch (CoreException ce) {
