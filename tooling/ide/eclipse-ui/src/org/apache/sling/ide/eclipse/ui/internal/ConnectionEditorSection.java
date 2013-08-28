@@ -22,6 +22,7 @@ import java.beans.PropertyChangeListener;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.SetServerContextPathCommand;
+import org.apache.sling.ide.eclipse.core.SetServerDebugPortCommand;
 import org.apache.sling.ide.eclipse.core.SetServerPasswordCommand;
 import org.apache.sling.ide.eclipse.core.SetServerPortCommand;
 import org.apache.sling.ide.eclipse.core.SetServerUsernameCommand;
@@ -47,6 +48,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
     protected PropertyChangeListener _listener;
 
     private Text portText;
+    private Text debugPortText;
     private Text contextPathText;
     private Text usernameText;
     private Text passwordText;
@@ -79,6 +81,9 @@ public class ConnectionEditorSection extends ServerEditorSection {
 
         createLabel(toolkit, composite, "Port");
         portText = createText(toolkit, composite, SWT.SINGLE);
+
+        createLabel(toolkit, composite, "Debug Port");
+        debugPortText = createText(toolkit, composite, SWT.SINGLE);
 
         createLabel(toolkit, composite, "Context path");
         contextPathText = createText(toolkit, composite, SWT.SINGLE);
@@ -126,6 +131,8 @@ public class ConnectionEditorSection extends ServerEditorSection {
 
                 if (ISlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
                     portText.setText(((Integer) evt.getNewValue()).toString());
+                } else if (ISlingLaunchpadServer.PROP_DEBUG_PORT.equals(evt.getPropertyName())) {
+                    debugPortText.setText(((Integer) evt.getNewValue()).toString());
                 } else if (ISlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
                     contextPathText.setText((String) evt.getNewValue());
                 } else if (ISlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
@@ -151,6 +158,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
         final ISlingLaunchpadConfiguration config = launchpadServer.getConfiguration();
 
         portText.setText(String.valueOf(config.getPort()));
+        debugPortText.setText(String.valueOf(config.getDebugPort()));
         contextPathText.setText(config.getContextPath());
 
         usernameText.setText(config.getUsername());
@@ -159,12 +167,20 @@ public class ConnectionEditorSection extends ServerEditorSection {
         ModifyListener listener = new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e) {
-                if (e.getSource() == portText) {
+            	if (e.getSource() == portText) {
                     try {
                         int port = Integer.parseInt(portText.getText());
                         execute(new SetServerPortCommand(server, port));
                     } catch (NumberFormatException ex) {
                         // shucks
+                    }
+                } else if (e.getSource() == debugPortText) {
+                    try {
+                        int debugPort = Integer.parseInt(debugPortText.getText());
+                        execute(new SetServerDebugPortCommand(server, debugPort));
+                    } catch (NumberFormatException ex) {
+                        // shucks
+                    	ex.printStackTrace();
                     }
                 } else if (e.getSource() == contextPathText) {
                     execute(new SetServerContextPathCommand(server, contextPathText.getText()));
@@ -176,7 +192,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
             }
         };
 
-        for (Text text : new Text[] { portText, contextPathText, usernameText, passwordText }) {
+        for (Text text : new Text[] { portText, debugPortText, contextPathText, usernameText, passwordText }) {
             text.addModifyListener(listener);
         }
 
