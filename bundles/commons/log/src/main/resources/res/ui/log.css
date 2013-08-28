@@ -1,0 +1,6 @@
+.warn  { font-weight: bold; color: #FF6600;}
+.error { font-weight: bold; color: #CC0000;}
+
+td.date { text-align: right; font-family: courier, monospace; font-size: smaller; }
+td.level { text-align: right; }
+td.exception { background: #A2AEE8; white-space: pre; font-family: courier, monospace;}

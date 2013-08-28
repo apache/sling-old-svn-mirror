@@ -19,141 +19,474 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.apache.sling</groupId>
-        <artifactId>sling</artifactId>
-        <version>17</version>
-        <relativePath>../../../parent/pom.xml</relativePath>
-    </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.sling</groupId>
+    <artifactId>sling</artifactId>
+    <version>17</version>
+    <relativePath>../../../parent/pom.xml</relativePath>
+  </parent>
 
-    <artifactId>org.apache.sling.commons.log</artifactId>
-    <version>3.0.3-SNAPSHOT</version>
-    <packaging>bundle</packaging>
+  <artifactId>org.apache.sling.commons.log</artifactId>
+  <version>3.0.3-SNAPSHOT</version>
+  <packaging>bundle</packaging>
 
-    <name>Apache Sling SLF4J Implementation</name>
-    <description>
-        This bundle implements the SLF4J API with support for dynamic
-        configuration through OSGi Configuration Admin Service.
-    </description>
+    <name>Apache Sling SLF4J Implementation (Logback)</name>
+  <description>
+    This bundle embeds Logback to implement the SLF4J logging API.
+    The embedding supports dynamic OSGi-configuration without
+    requring to edit some global filesystem based XML file.
+  </description>
 
-    <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/log</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/log</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/log</url>
-    </scm>
-    
-    <properties>
-      <slf4j.version>1.6.4</slf4j.version>
-    </properties>
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/commons/log</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/commons/log</developerConnection>
+    <url>http://svn.apache.org/viewvc/sling/trunk/bundles/commons/log</url>
+  </scm>
 
-    <build>
+  <properties>
+    <slf4j.version>1.6.4</slf4j.version>
+    <logback.version>1.0.13</logback.version>
+    <sling.java.version>6</sling.java.version>
+    <pax-exam.version>3.0.0</pax-exam.version>
+
+    <bundle.build.dir>
+      ${basedir}/target
+    </bundle.build.dir>
+    <bundle.file.name>
+      ${bundle.build.dir}/${project.build.finalName}.jar
+    </bundle.file.name>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.6</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Activator>
+              org.apache.sling.commons.log.logback.internal.Activator
+            </Bundle-Activator>
+            <Bundle-DocURL>
+              http://sling.apache.org/site/logging.html
+            </Bundle-DocURL>
+            <_exportcontents>
+              org.slf4j.impl;version=${slf4j.version},
+              ch.qos.logback.core;
+              ch.qos.logback.core.spi;
+              ch.qos.logback.classic;
+              ch.qos.logback.classic.spi;version=${logback.version}
+            </_exportcontents>
+            <Import-Package>
+              !org.slf4j.impl,
+              org.osgi.framework;version=1.3,
+              org.slf4j;provide:=true,
+              org.slf4j.spi;provide:=true,
+              groovy.lang;
+              javax.jms;
+              javax.mail;
+              javax.mail.internet;
+              javax.management;
+              javax.naming;
+              javax.sql;
+              javax.xml.parsers;
+              org.codehaus.*;
+              org.xml.sax.*;
+              sun.reflect;resolution:=optional,
+              *
+            </Import-Package>
+            <Export-Package>
+              org.apache.sling.commons.log.logback
+            </Export-Package>
+            <DynamicImport-Package>
+              org.osgi.service.cm;version=1.2,
+              javax.servlet,
+              javax.servlet.http,
+              org.osgi.service.event;version=1.2,
+              <!-- Required by WebConsole support-->
+              javax.xml.transform,
+              javax.xml.transform.sax,
+              javax.xml.transform.stream
+            </DynamicImport-Package>
+            <Embed-Dependency>
+              jul-to-slf4j;inline="org/slf4j/bridge/SLF4JBridgeHandler.class",
+              logback-core,
+              logback-classic
+            </Embed-Dependency>
+          </instructions>
+        </configuration>
+      </plugin>
+      <!-- Required for pax exam-->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>reserve-network-port</id>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
+            <phase>pre-integration-test</phase>
+            <configuration>
+              <portNames>
+                <portName>http.port</portName>
+              </portNames>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.0-alpha-2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>set-system-properties</goal>
+            </goals>
+            <phase>pre-integration-test</phase>
+            <configuration>
+              <properties>
+                <property>
+                  <name>project.bundle.file</name>
+                  <value>${bundle.file.name}</value>
+                </property>
+                <property>
+                  <name>http.port</name>
+                  <value>${http.port}</value>
+                </property>
+              </properties>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.servicemix.tooling</groupId>
+        <artifactId>depends-maven-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+          <execution>
+            <id>generate-depends-file</id>
+            <goals>
+              <goal>generate-depends-file</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- integration tests run with pax-exam -->
+      <plugin>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.12</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <systemPropertyVariables>
+            <project.bundle.file>${bundle.file.name}</project.bundle.file>
+            <project.boot.file>${bundle.file.name}</project.boot.file>
+            <coverage.command>${coverage.command}</coverage.command>
+            <http.port>${http.port}</http.port>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <!-- No javadocs at all -->
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>compile</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>${logback.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>${logback.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- OSGi Libraries not included here -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>4.0.0</version>
+    </dependency>
+
+    <!-- servlet API for the web console plugin -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.3</version>
+    </dependency>
+
+    <!--  OSGi Command Line Shell support -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.gogo.runtime</artifactId>
+      <version>0.6.1</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
+    <!-- Pax Exam Dependencies -->
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-container-forked</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-junit4</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam-link-mvn</artifactId>
+      <version>${pax-exam.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.tinybundles</groupId>
+      <artifactId>tinybundles</artifactId>
+      <version>1.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.configadmin</artifactId>
+      <version>1.6.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.http.bundle</artifactId>
+      <version>2.2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.sourceforge.htmlunit</groupId>
+      <artifactId>htmlunit</artifactId>
+      <version>2.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.commons.logservice</artifactId>
+      <version>1.0.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- Required for testing WebConsole Support -->
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.webconsole</artifactId>
+      <version>3.1.8</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20070829</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <version>1.2.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.http.jetty</artifactId>
+      <version>2.2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.url</groupId>
+      <artifactId>pax-url-wrap</artifactId>
+      <version>1.5.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.eventadmin</artifactId>
+      <version>1.3.2</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <profiles>
+    <!--
+        copy the package such that IDEs may easily use it without
+        setting the system property
+    -->
+    <profile>
+      <id>ide</id>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.6</version>
-                <extensions>true</extensions>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>scr-file-create</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
                 <configuration>
-                    <instructions>
-                        <Bundle-Activator>
-                            org.apache.sling.commons.log.internal.Activator
-                        </Bundle-Activator>
-                        <Bundle-DocURL>
-                            http://sling.apache.org/site/logging.html
-                        </Bundle-DocURL>
-                        <Export-Package>
-                            org.slf4j.impl;version=${slf4j.version}
-                        </Export-Package>
-                        <Private-Package>
-                            org.apache.sling.commons.log.*,
-                        </Private-Package>
-                        <Import-Package>
-                            !org.slf4j.impl,
-                            org.osgi.framework;version=1.3,
-                            org.slf4j;provide:=true,
-                            org.slf4j.spi;provide:=true,
-                            *
-                        </Import-Package>
-                        <DynamicImport-Package>
-                            org.osgi.service.cm;version=1.2,
-                            javax.servlet;javax.servlet.http;version=2.3
-                        </DynamicImport-Package>
-                        <Embed-Dependency>
-                            jul-to-slf4j;inline="org/slf4j/bridge/SLF4JBridgeHandler.class"
-                        </Embed-Dependency>
-                    </instructions>
+                  <target>
+                    <copy file="${project.build.directory}/${project.build.finalName}.jar"
+                          tofile="${project.build.directory}/slinglogback.jar" />
+                  </target>
                 </configuration>
-            </plugin>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-    </build>
-
-    <reporting>
+      </build>
+    </profile>
+    <profile>
+      <id>coverage</id>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.6.2.201302030002</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
                 <configuration>
-                    <!-- No javadocs at all -->
-                    <skip>true</skip>
+                  <propertyName>coverage.command</propertyName>
                 </configuration>
-            </plugin>
+              </execution>
+              <!-- Default to setup argLine required by surefire -->
+              <execution>
+                <id>prepare-agent-surefire</id>
+                <phase>test-compile</phase>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>post-integration-test</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>check</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <!-- Disabling the check for now -->
+                  <skip>true</skip>
+                  <check>
+                    <classRatio>100</classRatio>
+                    <instructionRatio>90</instructionRatio>
+                    <methodRatio>95</methodRatio>
+                    <branchRatio>85</branchRatio>
+                    <complexityRatio>85</complexityRatio>
+                    <lineRatio>90</lineRatio>
+                  </check>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-    </reporting>
+      </build>
+    </profile>
 
-    <dependencies>
+    <profile>
+      <id>felix</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>provided</scope>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>org.apache.felix.framework</artifactId>
+          <version>4.0.2</version>
+          <scope>test</scope>
         </dependency>
+      </dependencies>
+    </profile>
+    <profile>
+      <id>equinox</id>
+      <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jul-to-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
+          <groupId>org.eclipse</groupId>
+          <artifactId>org.eclipse.osgi</artifactId>
+          <version>3.8.0.v20120529-1548</version>
+          <scope>test</scope>
         </dependency>
-
-        <!-- OSGi Libraries not included here -->
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.compendium</artifactId>
-            <version>4.0.0</version>
-        </dependency>
-        
-        <!-- servlet API for the web console plugin -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.3</version>
-        </dependency>
-
-        <!--  OSGi Command Line Shell support -->        
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.gogo.runtime</artifactId>
-            <version>0.6.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- testing -->
-        <!--  using mockito because its a bit more relaxed and makes it easier to maintain
-              the test cases if dependencies change -->
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>1.8.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
-    </dependencies>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>
