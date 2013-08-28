@@ -17,17 +17,17 @@
 package org.apache.sling.ide.eclipse.ui.nav;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
-import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.IMemento;
@@ -175,7 +175,27 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	@Override
 	public void getPipelinedChildren(Object aParent, Set theCurrentChildren) {
 		if (aParent instanceof IProject) {
-			Object[] children = projectGetChildren((IProject)aParent);
+			IProject project = (IProject)aParent;
+			if (ProjectHelper.isContentProject(project)) {
+				for (Iterator it = theCurrentChildren.iterator(); it
+						.hasNext();) {
+					Object aChild = (Object) it.next();
+					if (aChild instanceof IPackageFragmentRoot) {
+						IPackageFragmentRoot ipfr = (IPackageFragmentRoot)aChild;
+						IResource res = ipfr.getResource();
+						IFolder syncDir = getSyncDir(project);
+						if (res!=null && syncDir!=null && res.equals(syncDir)) {
+							// then remove this one folder provided via j2ee content provider
+							// reason: we are showing it too via the sling content provider
+							it.remove();
+							// and we can break here since there's only one syncdir currently
+							break;
+						}
+						
+					}
+				}
+			}
+			Object[] children = projectGetChildren(project);
 			if (children!=null && children.length>0) {
 				theCurrentChildren.addAll(Arrays.asList(children));
 			}
