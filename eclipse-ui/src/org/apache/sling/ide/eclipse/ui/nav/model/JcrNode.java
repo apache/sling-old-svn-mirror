@@ -30,7 +30,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -46,6 +46,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IContributorResourceAdapter;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.views.properties.IPropertySource;
+import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
 import org.w3c.dom.Node;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -83,7 +84,7 @@ public class JcrNode implements IAdaptable {
 
 	private final static WorkbenchLabelProvider workbenchLabelProvider = new WorkbenchLabelProvider();
 	
-	GenericJcrRootFile underlying;
+	final GenericJcrRootFile underlying;
 
 	JcrNode parent;
 
@@ -95,26 +96,91 @@ public class JcrNode implements IAdaptable {
 	
 	private boolean resourceChildrenAdded = false;
 	
-	final ReadOnlyProperties properties = new ReadOnlyProperties();
+	final ModifiableProperties properties = new ModifiableProperties(this);
 	
 	JcrNode() {
 		// for subclass use only
+		if (this instanceof GenericJcrRootFile) {
+			this.underlying = (GenericJcrRootFile) this;
+		} else {
+			this.underlying = null;
+		}
 	}
 	
-	JcrNode(JcrNode parent, Node domNode) {
+	JcrNode(JcrNode parent, Node domNode, IResource resource) {
+		this(parent, domNode, parent.underlying, resource);
+	}
+	
+	
+	JcrNode(JcrNode parent, Node domNode, GenericJcrRootFile underlying, IResource resource) {
 		if (parent == null) {
 			throw new IllegalArgumentException("parent must not be null");
 		}
 		this.parent = parent;
 		// domNode can be null
 		this.domNode = domNode;
-		this.underlying = parent.underlying;
+		this.underlying = underlying;
+		this.resource = resource;
 		parent.addChild(this);
 	}
 	
 	@Override
 	public String toString() {
 		return "JcrNode[dom:"+domNode+", file:"+resource+"]";
+	}
+	
+	@Override
+	public int hashCode() {
+		if (underlying==null) {
+			if (resource==null) {
+				if (domNode==null) {
+					return toString().hashCode();
+				} else {
+					return domNode.toString().hashCode() + parent.hashCode();
+				}
+			} else {
+				return resource.getFullPath().hashCode();
+			}
+		} else {
+			return underlying.hashCode() + domNode.toString().hashCode();
+		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this==obj) {
+			return true;
+		}
+		if (!(obj instanceof JcrNode)) {
+			return false;
+		}
+		JcrNode other = (JcrNode) obj;
+		if (other.underlying==null && underlying!=null) {
+			return false;
+		} else if (other.underlying!=null && underlying==null) {
+			return false;
+		}
+		if (underlying!=null && !underlying.equals(other.underlying)) {
+			return false;
+		}
+		if (resource!=null && other.resource!=null) {
+			if (resource.equals(other.resource)) {
+				return true;
+			} else {
+				return false;
+			}
+		} else if (resource!=null && other.resource==null) {
+			return false;
+		} else if (resource==null && other.resource!=null) {
+			return false;
+		}
+		if (parent!=null && other.parent!=null) {
+			if (!parent.equals(other.parent)) {
+				return false;
+			}
+			return domNode.toString().equals(other.domNode.toString());
+		}
+		return toString().equals(obj.toString());
 	}
 
 	protected void addChild(JcrNode jcrNode) {
@@ -188,9 +254,8 @@ public class JcrNode implements IAdaptable {
 					}
 					for (Iterator it = membersList.iterator(); it.hasNext();) {
 						IResource iResource = (IResource) it.next();
-						JcrNode node = new JcrNode(this, (Node)null);
-						node.setResource(iResource);
-						node.init();
+						JcrNode node = new JcrNode(this, (Node)null, iResource);
+//						node.setResource(iResource);
 						// load the children - to make sure we get vault files loaded too
 						node.getChildren();
 						resultMap.put(node.getName(), node);
@@ -210,10 +275,6 @@ public class JcrNode implements IAdaptable {
 		} catch (IOException e) {
 			return new Object[0];
 		}
-	}
-
-	protected void init() {
-		// placeholder for initializing any common properties
 	}
 
 	private boolean isVaultFile(IResource iResource)
@@ -276,7 +337,7 @@ public class JcrNode implements IAdaptable {
 		//	return workbenchLabelProvider.getImage(domNode);
 		//}
 		
-		return SharedImages.SLING_ICON.createImage();
+		return WhitelabelSupport.JCR_NODE_ICON.createImage();
 	}
 
 	public String getName() {
@@ -305,14 +366,23 @@ public class JcrNode implements IAdaptable {
 	@Override
 	public Object getAdapter(Class adapter) {
 		final Object result = doGetAdapter(adapter);
-		if (result==null) {
-		//	System.out.println("adapter looked for: "+adapter+", result: "+result);
-		}
+		//if (result==null) {
+			//System.out.println("adapter looked for: "+adapter+", result: "+result);
+		//}
 		return result;
 	}
 	
 	private Object doGetAdapter(Class adapter) {
-		if (adapter==IPropertySource.class) {
+		if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
+			return new ITabbedPropertySheetPageContributor() {
+
+				@Override
+				public String getContributorId() {
+					return "org.apache.sling.ide.eclipse-ui.propertyContributor1";
+				}
+				
+			};
+		} else if (adapter==IPropertySource.class) {
 			return properties;
 		} else if (adapter == IFile.class) {
 			if (resource instanceof IFile) {
@@ -376,6 +446,57 @@ public class JcrNode implements IAdaptable {
 			};
 		}
 		return null;
+	}
+
+	public boolean canBeOpenedInEditor() {
+		if (resource==null) {
+			return false;
+		}
+		
+		if (resource instanceof IFolder) {
+			return false;
+		} else {
+			try {
+				if (!isVaultFile(resource)) {
+					return true;
+				} else {
+					return false;
+				}
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (CoreException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return false;
+	}
+
+	public void rename(String string) {
+		if (domNode!=null && underlying!=null) {
+			domNode.getOwnerDocument().renameNode(domNode, domNode.getNamespaceURI(), string);
+			underlying.save();
+		}
+	}
+
+	public boolean canBeRenamed() {
+		if (resource!=null) {
+			return false;
+		}
+		if (domNode!=null && underlying!=null) {
+			if (domNode.getNodeName().equals("jcr:content")) {
+				return false;
+			}
+			return true;
+		}
+		return false;
 	}
 
 }

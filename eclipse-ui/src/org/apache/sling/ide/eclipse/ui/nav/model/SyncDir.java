@@ -34,6 +34,20 @@ public class SyncDir extends JcrNode {
 	}
 	
 	@Override
+	public int hashCode() {
+		return folder.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof SyncDir) {
+			SyncDir other = (SyncDir) obj;
+			return folder.equals(other.folder);
+		}
+		return false;
+	}
+	
+	@Override
 	public Image getImage() {
 		return SharedImages.SLING_ICON.createImage();
 	}
@@ -54,6 +68,11 @@ public class SyncDir extends JcrNode {
 	@Override
 	public String getName() {
 		return "/";
+	}
+	
+	@Override
+	public boolean canBeOpenedInEditor() {
+		return false;
 	}
 
 }
