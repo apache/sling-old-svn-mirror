@@ -47,6 +47,9 @@
             default="{0\,date\,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"
             name="%log.pattern.name"
             description="%log.pattern.description" />
+      <metatype:AD id="org.apache.sling.commons.log.configurationFile"
+             type="String"  name="%log.config.file.name"
+             description="%log.config.file.description" />
     </metatype:OCD>
     <metatype:Designate pid="org.apache.sling.commons.log.LogManager">
         <metatype:Object

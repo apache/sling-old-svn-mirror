@@ -1,0 +1,14 @@
+<included>
+  <appender name="FOO2FILE" class="ch.qos.logback.core.FileAppender">
+    <file>${sling.home}/logs/foo2.log</file>
+    <encoder>
+      <pattern>%d %-5level %logger{35} - %msg %n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="foo2.bar.include" level="DEBUG">
+    <appender-ref ref="FOO2FILE" />
+  </logger>
+  <logger name="foo2.baz.include" level="DEBUG"/>
+
+</included>
