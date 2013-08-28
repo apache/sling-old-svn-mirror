@@ -32,6 +32,8 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
 
     private static final String MODULE_TYPE_SLING_CONTENT = "sling.content";
 
+    private static final String MODULE_TYPE_SLING_BUNDLE = "sling.bundle";
+
     private ISlingLaunchpadConfiguration config;
 
     @Override
@@ -61,9 +63,10 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
 
         for (IModule module : toAdd) {
 
-            if (!MODULE_TYPE_SLING_CONTENT.equals(module.getModuleType().getId())) {
+            if (!MODULE_TYPE_SLING_CONTENT.equals(module.getModuleType().getId()) &&
+            		!MODULE_TYPE_SLING_BUNDLE.equals(module.getModuleType().getId())) {
                 return new Status(IStatus.ERROR, "org.apache.sling.slingclipse", 0,
-                        "Will only handle modules of type 'sling.content'", null);
+                        "Will only handle modules of type 'sling.content' or 'sling.bundle'", null);
             }
         }
 
@@ -88,12 +91,13 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     @Override
     public IModule[] getRootModules(IModule arg0) throws CoreException {
 
-        if (MODULE_TYPE_SLING_CONTENT.equals(arg0.getModuleType().getId())) {
+        if (MODULE_TYPE_SLING_CONTENT.equals(arg0.getModuleType().getId()) || 
+        		MODULE_TYPE_SLING_BUNDLE.equals(arg0.getModuleType().getId())) {
             return new IModule[] { arg0 };
         }
 
         throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.slingclipse", 0,
-                "Will only handle modules of type 'sling.content'", null));
+                "Will only handle modules of type 'sling.content' or 'sling.bundle'", null));
     }
 
     /*
@@ -125,6 +129,7 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     public void setDefaults(IProgressMonitor monitor) {
 
         setAttribute(PROP_PORT, 8080);
+        setAttribute(PROP_DEBUG_PORT, 30303);
         setAttribute(PROP_CONTEXT_PATH, "/");
         setAttribute(PROP_USERNAME, "admin");
         setAttribute(PROP_PASSWORD, "admin");
