@@ -270,7 +270,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.log</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.3-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
