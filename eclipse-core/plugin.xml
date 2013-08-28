@@ -6,9 +6,15 @@
   <extension point="org.eclipse.wst.server.core.moduleTypes">
     <moduleType
        id="sling.content"
-       name="Sling module type"/>
+       name="Sling content module type"/>
   </extension>
   
+  <extension point="org.eclipse.wst.server.core.moduleTypes">
+    <moduleType
+       id="sling.bundle"
+       name="Sling bundle module type"/>
+  </extension>
+
   <!-- Define a sling module factory -->
   <extension point="org.eclipse.wst.server.core.moduleFactories">
   	<moduleFactory
@@ -21,6 +27,18 @@
   	</moduleFactory>
   </extension>
   
+  <extension
+        point="org.eclipse.wst.server.core.moduleFactories">
+  	<moduleFactory
+  		projects="true"
+  		class="org.apache.sling.ide.eclipse.core.internal.SlingBundleModuleFactory"
+  		id="org.apache.sling.ide.bundleModuleFactory">
+	    <moduleType
+	       versions="1.0"
+	       types="sling.bundle"/>
+  	</moduleFactory>
+  </extension>
+
 	<!-- Define the sling facet we support -->
 	<extension point="org.eclipse.wst.common.project.facet.core.facets">
 		<project-facet id="sling.content">
@@ -37,6 +55,21 @@
   		<action facet="sling.content" version="1.0" type="UNINSTALL">
   			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingContentFacetUninstallDelegate"/>
   		</action>
+
+		<project-facet id="sling.bundle">
+			<label>Sling bundle module</label>
+			<description>Sling/OSGi bundle modules contain java code which is installed as an OSGi bundle in Sling.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sling.bundle" version="1.0"/>
+  		
+  		<action facet="sling.bundle" version="1.0" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingBundleFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sling.bundle" version="1.0" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingBundleFacetUninstallDelegate"/>
+  		</action>
 	</extension>  
 
 	<!-- Define the Sling launchpad runtime type -->
@@ -49,6 +82,7 @@
        version="1.0"
        class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadRuntime">
        <moduleType types="sling.content" versions="1.0"/> 
+       <moduleType types="sling.bundle" versions="1.0"/> 
     </runtimeType>
   </extension>
   
@@ -56,8 +90,8 @@
   <extension point="org.eclipse.wst.server.core.serverTypes">
      <serverType
        id="org.apache.sling.ide.launchpadServer"
-       name="Sling Launchpad (server name)"
-       description="Sling Launchpad (server description)"
+       name="External Sling Launchpad (server name)"
+       description="External Sling Launchpad (server description)"
        supportsRemoteHosts="true"
        runtime="true"
        startTimeout="30000"
@@ -83,7 +117,7 @@
         id="org.apache.sling.ide.launchpadLaunchConfigurationType"
         name="Sling Launchpad"
         delegate="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadLaunchConfigurationDelegate"
-        modes="run"
+        modes="run,debug"
         sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
   </extension>
     
@@ -113,6 +147,10 @@
     <default-facets>
       <runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
       <facet id="sling.content" version="1.0"/>
+    </default-facets>
+    <default-facets>
+      <runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
+      <facet id="sling.bundle" version="1.0"/>
     </default-facets>
   </extension>
   	
