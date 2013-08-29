@@ -50,4 +50,11 @@ public class ConfigurationHelper {
 		launchFile.create(in, true, monitor);
 	}
 
+	public static void convertToBundleProject(IProject aBundleProject)
+			throws CoreException {
+		IProjectFacet slingContentFacet = ProjectFacetsManager.getProjectFacet("sling.bundle");
+		IFacetedProject fp2 = ProjectFacetsManager.create(aBundleProject, true, null);
+		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
+	}
+
 }
