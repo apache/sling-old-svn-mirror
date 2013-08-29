@@ -27,7 +27,7 @@ import java.util.Properties;
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.model.Model;
 import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
-import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.apache.sling.ide.eclipse.ui.wizards.ConfigurationHelper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -313,40 +313,11 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
 	}
 	
-	protected Model getMavenModel(IProject project) {
-		IFile pomFile = project.getFile("pom.xml");
-		if (!pomFile.exists()) {
-			return null;
-		}
-		try {
-			Model model = MavenPlugin.getMavenModelManager().readMavenModel(pomFile);
-			return model;
-		} catch (CoreException e) {
-			// TODO proper logging
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
 	protected void configureContentProject(IProject aContentProject,
 			List<IProject> projects, IProgressMonitor monitor) throws CoreException {
-		IProjectFacet slingContentFacet = ProjectFacetsManager.getProjectFacet("sling.content");
-		IFacetedProject fp2 = ProjectFacetsManager.create(aContentProject, true, null);
-		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
-		
-		
-		ProjectUtil.setSyncDirectoryPath(aContentProject, "src/main/content/jcr_root");
-		
-		// temp hack: install the launch file
-		IFolder dotLaunches = aContentProject.getFolder(".settings").getFolder(".launches");
-		dotLaunches.create(true, true, monitor);
-		IFile launchFile = dotLaunches.getFile("clean_package_content_package_install.launch");
-		String l = MavenLaunchHelper.createMavenLaunchConfigMemento(aContentProject.getLocation().toOSString(), 
-				"clean package content-package:install", null, false, null);
-		InputStream in = new ByteArrayInputStream(l.getBytes());
-		launchFile.create(in, true, monitor);
+		ConfigurationHelper.convertToContentPackageProject(aContentProject, monitor, "src/main/content/jcr_root");
 	}
-
+	
 	protected void configureReactorProject(IProject reactorProject, IProgressMonitor monitor) throws CoreException {
 		// temp hack: install the launch file
 		IFolder dotLaunches = reactorProject.getFolder(".settings").getFolder(".launches");

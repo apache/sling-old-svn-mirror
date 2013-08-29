@@ -328,6 +328,23 @@
             class="org.apache.sling.ide.eclipse.ui.internal.console.SlingConsoleFactory"
             label="Sling Console">
       </consoleFactory>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.core.resources.IProject"
+            adaptable="true"
+            id="org.apache.sling.ide.eclipse.ui.pluginProjectToolSet">
+
+         <action
+            label="Convert to Sling Content-Package Project"
+            class="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentPackageAction"
+            menubarPath="org.eclipse.ui.projectConfigure/additions"
+            enablesFor="+"
+            id="org.eclipse.pde.ui.ConvertedProjectWizard">
+      	</action>
+      </objectContribution>
+         
    </extension> 
    
 </plugin>    

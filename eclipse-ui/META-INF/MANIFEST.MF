@@ -79,4 +79,5 @@ Require-Bundle: org.eclipse.wst.common.project.facet.ui,
  org.eclipse.ui.views.properties.tabbed
 Service-Component: OSGI-INF/*.xml
 Export-Package: org.apache.sling.ide.eclipse.ui,
+ org.apache.sling.ide.eclipse.ui.wizards,
  org.apache.sling.ide.eclipse.ui.wizards.np
