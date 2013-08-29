@@ -91,9 +91,11 @@ public class ModifiableProperties implements IPropertySource {
 	public void setNode(GenericJcrRootFile genericJcrRootFile, Node domNode) {
 		this.domNode = domNode;
 		NamedNodeMap attributes = domNode.getAttributes();
-		for(int i=0; i<attributes.getLength(); i++) {
-			Node attr = attributes.item(i);
-			properties.put(attr.getNodeName(), attr.getNodeValue());
+		if (attributes!=null) {
+			for(int i=0; i<attributes.getLength(); i++) {
+				Node attr = attributes.item(i);
+				properties.put(attr.getNodeName(), attr.getNodeValue());
+			}
 		}
 		this.genericJcrRootFile = genericJcrRootFile;
 	}
