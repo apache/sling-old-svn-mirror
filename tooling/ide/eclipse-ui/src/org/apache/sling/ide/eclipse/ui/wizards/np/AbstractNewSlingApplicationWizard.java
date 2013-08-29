@@ -49,9 +49,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.wst.common.project.facet.core.IFacetedProject;
-import org.eclipse.wst.common.project.facet.core.IProjectFacet;
-import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
@@ -308,9 +305,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 
 	protected void configureBundleProject(IProject aBundleProject,
 			List<IProject> projects, IProgressMonitor monitor) throws CoreException {
-		IProjectFacet slingContentFacet = ProjectFacetsManager.getProjectFacet("sling.bundle");
-		IFacetedProject fp2 = ProjectFacetsManager.create(aBundleProject, true, null);
-		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
+		ConfigurationHelper.convertToBundleProject(aBundleProject);
 	}
 	
 	protected void configureContentProject(IProject aContentProject,
