@@ -23,7 +23,9 @@ import java.util.List;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
@@ -44,21 +46,20 @@ import org.slf4j.LoggerFactory;
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
-@Service
+@Properties({
+    @Property(name=HealthCheck.NAME),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
+    @Property(name=HealthCheck.MBEAN_NAME)
+})
+@Service(value=HealthCheck.class)
 public class CompositeHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private BundleContext bundleContext;
 
-    @Property(cardinality=50)
-    public static final String PROP_TAGS = HealthCheck.TAGS;
-
-    @Property(cardinality=50)
-    public static final String PROP_FILTER_TAGS = "filter.tags";
+    @Property(unbounded=PropertyUnbounded.ARRAY)
+    private static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
-
-    @Property
-    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
 
     @Activate
     public void activate(ComponentContext ctx) {

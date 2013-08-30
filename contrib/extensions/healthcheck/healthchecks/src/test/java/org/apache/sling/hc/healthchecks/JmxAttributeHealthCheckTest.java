@@ -19,8 +19,8 @@ package org.apache.sling.hc.healthchecks;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.healthchecks.impl.JmxAttributeHealthCheck;
@@ -29,27 +29,26 @@ import org.mockito.Mockito;
 import org.osgi.service.component.ComponentContext;
 
 public class JmxAttributeHealthCheckTest {
-    
+
     static void assertJmxValue(String objectName, String attributeName, String constraint, boolean expected) {
         final JmxAttributeHealthCheck hc = new JmxAttributeHealthCheck();
-        
+
         final ComponentContext ctx = Mockito.mock(ComponentContext.class);
-        final Dictionary<String, String> props = new Hashtable<String, String>();
+        final Map<String, Object> props = new HashMap<String, Object>();
         props.put(JmxAttributeHealthCheck.PROP_OBJECT_NAME, objectName);
         props.put(JmxAttributeHealthCheck.PROP_ATTRIBUTE_NAME, attributeName);
         props.put(JmxAttributeHealthCheck.PROP_CONSTRAINT, constraint);
-        Mockito.when(ctx.getProperties()).thenReturn(props);
-        hc.activate(ctx);
-        
+        hc.activate(props);
+
         final Result r = hc.execute();
         assertEquals("Expected result " + expected, expected, r.isOk());
     }
-    
+
     @Test
     public void testJmxAttributeMatch() {
         assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "> 10", true);
     }
-    
+
     @Test
     public void testJmxAttributeNoMatch() {
         assertJmxValue("java.lang:type=ClassLoading", "LoadedClassCount", "< 10", false);
