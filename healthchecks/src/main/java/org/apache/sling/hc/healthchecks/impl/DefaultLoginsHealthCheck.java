@@ -28,7 +28,9 @@ import javax.jcr.SimpleCredentials;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -47,23 +49,20 @@ import org.slf4j.LoggerFactory;
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
-@Service
+@Properties({
+    @Property(name=HealthCheck.NAME),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
+    @Property(name=HealthCheck.MBEAN_NAME)
+})
+@Service(value=HealthCheck.class)
 public class DefaultLoginsHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(cardinality=500)
-    public static final String PROP_LOGINS = "logins";
+    @Property(unbounded=PropertyUnbounded.ARRAY)
+    private static final String PROP_LOGINS = "logins";
+
     private List<String> logins;
-
-    @Property(cardinality=50)
-    public static final String PROP_TAGS = HealthCheck.TAGS;
-
-    @Property
-    public static final String PROP_NAME = HealthCheck.NAME;
-
-    @Property
-    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
 
     @Reference
     private SlingRepository repository;
