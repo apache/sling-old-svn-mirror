@@ -23,7 +23,9 @@ import javax.script.ScriptEngineManager;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
@@ -41,7 +43,12 @@ import org.slf4j.LoggerFactory;
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
-@Service
+@Properties({
+    @Property(name=HealthCheck.NAME),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
+    @Property(name=HealthCheck.MBEAN_NAME)
+})
+@Service(value=HealthCheck.class)
 public class ScriptableHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -49,22 +56,13 @@ public class ScriptableHealthCheck implements HealthCheck {
     private String languageExtension;
     private BundleContext bundleContext;
 
-    public static final String DEFAULT_LANGUAGE_EXTENSION = "ecma";
+    private static final String DEFAULT_LANGUAGE_EXTENSION = "ecma";
 
     @Property
     public static final String PROP_EXPRESSION = "expression";
 
-    @Property
+    @Property(value=DEFAULT_LANGUAGE_EXTENSION)
     public static final String PROP_LANGUAGE_EXTENSION = "language.extension";
-
-    @Property(cardinality=50)
-    public static final String PROP_TAGS = HealthCheck.TAGS;
-
-    @Property
-    public static final String PROP_NAME = HealthCheck.NAME;
-
-    @Property
-    public static final String PROP_MBEAN_NAME = HealthCheck.MBEAN_NAME;
 
     @Reference
     private ScriptEngineManager scriptEngineManager;
@@ -75,7 +73,9 @@ public class ScriptableHealthCheck implements HealthCheck {
         expression = PropertiesUtil.toString(ctx.getProperties().get(PROP_EXPRESSION), "");
         languageExtension = PropertiesUtil.toString(ctx.getProperties().get(PROP_LANGUAGE_EXTENSION), DEFAULT_LANGUAGE_EXTENSION);
 
-        log.info("Activated, name={}, languageExtension={}, expression={}", languageExtension, expression);
+        log.debug("Activated scriptable health check name={}, languageExtension={}, expression={}",
+                new Object[] {ctx.getProperties().get(HealthCheck.NAME),
+                languageExtension, expression});
     }
 
     @Override
@@ -84,7 +84,7 @@ public class ScriptableHealthCheck implements HealthCheck {
         resultLog.debug("Checking expression [{}], language extension=[{}]",  expression, languageExtension);
         try {
             final ScriptEngine engine = scriptEngineManager.getEngineByExtension(languageExtension);
-            if(engine == null) {
+            if (engine == null) {
                 resultLog.healthCheckError("No ScriptEngine available for extension {}", languageExtension);
             } else {
                 // TODO pluggable Bindings? Reuse the Sling bindings providers?
@@ -92,13 +92,13 @@ public class ScriptableHealthCheck implements HealthCheck {
                 b.put("jmx", new JmxScriptBinding(resultLog));
                 b.put("osgi", new OsgiScriptBinding(bundleContext, resultLog));
                 final Object value = engine.eval(expression, b);
-                if(value!=null && "true".equals(value.toString())) {
+                if(value!=null && "true".equals(value.toString().toLowerCase())) {
                     resultLog.debug("Expression [{}] evaluates to true as expected", expression);
                 } else {
                     resultLog.warn("Expression [{}] does not evaluate to true as expected, value=[{}]", expression, value);
                 }
             }
-        } catch(Exception e) {
+        } catch (final Exception e) {
             resultLog.healthCheckError(
                     "Exception while evaluating expression [{}] with language extension [{}]: {}",
                     expression, languageExtension, e);
