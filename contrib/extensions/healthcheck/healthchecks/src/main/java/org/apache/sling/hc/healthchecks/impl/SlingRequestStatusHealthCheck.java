@@ -40,7 +40,9 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** {@link HealthCheck} that checks the HTTP status of Sling requests */
+/** {@link HealthCheck} that checks the HTTP status of Sling requests.
+ *  Typically used to check that a freshly installed Sling-based system
+ *  is in good shape, contains all required content etc. */
 @Component(
         name="org.apache.sling.hc.SlingRequestStatusHealthCheck",
         configurationFactory=true,
