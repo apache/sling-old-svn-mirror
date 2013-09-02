@@ -169,11 +169,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         System.out.println(trace.toString());
 
         if (ProjectHelper.isBundleProject(module[0].getProject())) {
-        	if (getServer().getMode().equals(ILaunchManager.RUN_MODE)) {
+            String serverMode = getServer().getMode();
+            if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
+                // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
+                // otherwise, for run and profile modes we explicitly publish the bundle module
+                // TODO: make this configurable as part of the server config
         		publishBundleModule(module, monitor);
-        	} else {
-        		// otherwise, in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
-        		// TODO: make this configurable as part of the server config
         	}
         } else if (ProjectHelper.isContentProject(module[0].getProject())) {
     		publishContentModule(kind, deltaKind, module, monitor); 
@@ -351,7 +352,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 //					IWorkbenchWindow aw = workbench.getActiveWorkbenchWindow();
 //					if (aw==null) {
 //						// we're not in the context of a workbench window?
-//						System.err.println("We're not in the context of a workbench window?");
 //					}
 					ILaunchConfiguration launchConfig = 
 							DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(aLaunchFile);
