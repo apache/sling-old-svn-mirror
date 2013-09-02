@@ -113,13 +113,17 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             for(final ServiceReference ref : references) {
                 final HealthCheck hc = (HealthCheck) this.bundleContext.getService(ref);
                 if ( hc != null ) {
-                    final Result r = hc.execute();
-                    total++;
-                    if (!r.isOk()) {
-                        failed++;
-                    }
-                    if (!quiet || !r.isOk()) {
-                        renderResult(resp, ref, hc, r, debug);
+                    try {
+                        final Result r = hc.execute();
+                        total++;
+                        if (!r.isOk()) {
+                            failed++;
+                        }
+                        if (!quiet || !r.isOk()) {
+                            renderResult(resp, ref, hc, r, debug);
+                        }
+                    } finally {
+                        this.bundleContext.ungetService(ref);
                     }
                 }
             }

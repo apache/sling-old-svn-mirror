@@ -20,7 +20,9 @@ package org.apache.sling.hc.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.BundleContext;
@@ -29,13 +31,28 @@ import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Select from available {@link HealthCheck} services */
+/**
+ * Select from available {@link HealthCheck} services.
+ * Once this filter object and the returned health check services are no longer
+ * be used {@link #dispose()} should be called, to free the service
+ * references.
+ *
+ * This class is not thread safe and instances shouldn't be used concurrently
+ * from different threads.
+ */
 public class HealthCheckFilter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final BundleContext bundleContext;
+
+
     public static final String OMIT_PREFIX = "-";
 
+    private final Set<ServiceReference> usedReferences = new HashSet<ServiceReference>();
+
+    /**
+     * Create a new filter object
+     */
     public HealthCheckFilter(final BundleContext bc) {
         bundleContext = bc;
     }
@@ -57,6 +74,7 @@ public class HealthCheckFilter {
                 final HealthCheck hc = (HealthCheck)bundleContext.getService(ref);
                 log.debug("Selected HealthCheck service {}", hc);
                 if ( hc != null ) {
+                    this.usedReferences.add(ref);
                     result.add(hc);
                 }
             }
@@ -103,5 +121,15 @@ public class HealthCheckFilter {
             log.error("Invalid OSGi filter syntax in '" + filterBuilder + "'", ise);
             return new ServiceReference[0];
         }
+    }
+
+    /**
+     * Dispose all used service references
+     */
+    public void dispose() {
+        for(final ServiceReference ref : this.usedReferences) {
+            this.bundleContext.ungetService(ref);
+        }
+        this.usedReferences.clear();
     }
 }
