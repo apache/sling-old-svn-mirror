@@ -134,24 +134,21 @@ public class HealthCheckMBean implements DynamicMBean {
                 if ( defaultValue != null ) {
                     result.add(new Attribute(key, defaultValue));
                 } else {
+                    // we assume that a valid attribute name is used
+                    // which is requesting a hc result
+                    if ( hcResult == null ) {
+                        hcResult = this.healthCheck.execute();
+                    }
+
                     if ( HC_OK_ATTRIBUTE_NAME.equals(key) ) {
-                        if ( hcResult == null ) {
-                            hcResult = this.healthCheck.execute();
-                        }
                         result.add(new Attribute(key, hcResult.isOk()));
                     } else if ( HC_LOG_ATTRIBUTE_NAME.equals(key) ) {
-                        if ( hcResult == null ) {
-                            hcResult = this.healthCheck.execute();
-                        }
                         try {
                             result.add(new Attribute(key, logData(hcResult)));
                         } catch ( final OpenDataException ignore ) {
                             // we ignore this and simply don't add the attribute
                         }
                     } else if ( HC_STATUS_ATTRIBUTE_NAME.equals(key) ) {
-                        if ( hcResult == null ) {
-                            hcResult = this.healthCheck.execute();
-                        }
                         result.add(new Attribute(key, hcResult.getStatus().toString()));
                     }
                 }
