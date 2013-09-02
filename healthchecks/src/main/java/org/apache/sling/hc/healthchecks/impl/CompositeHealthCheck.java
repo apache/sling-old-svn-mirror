@@ -71,37 +71,41 @@ public class CompositeHealthCheck implements HealthCheck {
     @Override
     public Result execute() {
         final FormattingResultLog resultLog = new FormattingResultLog();
-        final List<HealthCheck> checks = new HealthCheckFilter(bundleContext).getTaggedHealthChecks(filterTags);
-        if(checks.size() == 0) {
-            resultLog.warn("HealthCheckFilter returns no HealthCheck for tags {}", Arrays.asList(filterTags));
-            return new Result(resultLog);
-        }
-
-        int executed = 0;
-        resultLog.debug("Executing {} HealthCheck selected by the {} tags", checks.size(), Arrays.asList(filterTags));
-        int failures = 0;
-        for(HealthCheck hc : checks) {
-            if(hc == this) {
-                resultLog.info("Cowardly forfeiting execution of this HealthCheck in an infinite loop, ignoring it");
-                continue;
+        final HealthCheckFilter filter = new HealthCheckFilter(bundleContext);
+        try {
+            final List<HealthCheck> checks = filter.getTaggedHealthChecks(filterTags);
+            if(checks.size() == 0) {
+                resultLog.warn("HealthCheckFilter returns no HealthCheck for tags {}", Arrays.asList(filterTags));
+                return new Result(resultLog);
             }
-            resultLog.debug("Executing {}", hc);
-            executed++;
-            final Result sub = hc.execute();
-            if(!sub.isOk()) {
-                failures++;
-            }
-            for(ResultLog.Entry e : sub) {
-                resultLog.add(e);
-            }
-        }
 
-        if(failures == 0) {
-            resultLog.debug("{} HealthCheck executed, all ok", executed);
-        } else {
-            resultLog.warn("{} HealthCheck executed, {} failures", executed, failures);
-        }
+            int executed = 0;
+            resultLog.debug("Executing {} HealthCheck selected by the {} tags", checks.size(), Arrays.asList(filterTags));
+            int failures = 0;
+            for(HealthCheck hc : checks) {
+                if(hc == this) {
+                    resultLog.info("Cowardly forfeiting execution of this HealthCheck in an infinite loop, ignoring it");
+                    continue;
+                }
+                resultLog.debug("Executing {}", hc);
+                executed++;
+                final Result sub = hc.execute();
+                if(!sub.isOk()) {
+                    failures++;
+                }
+                for(ResultLog.Entry e : sub) {
+                    resultLog.add(e);
+                }
+            }
 
+            if(failures == 0) {
+                resultLog.debug("{} HealthCheck executed, all ok", executed);
+            } else {
+                resultLog.warn("{} HealthCheck executed, {} failures", executed, failures);
+            }
+        } finally {
+            filter.dispose();
+        }
         return new Result(resultLog);
     }
 }
