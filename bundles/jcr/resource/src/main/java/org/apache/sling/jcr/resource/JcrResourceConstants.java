@@ -117,4 +117,39 @@ public class JcrResourceConstants {
      * @since 2.2
      */
     public static final String NT_SLING_ORDERED_FOLDER = "sling:OrderedFolder";
+
+    /**
+     * Constant for the sling:chunks mixin. Used to identify that node
+     * contains chunks.
+     * @since 2.2.10
+     */
+    public static final String NT_SLING_CHUNK_MIXIN = "sling:chunks";
+
+    /**
+     * Constant for the sling:fileLength property. The property stores file
+     * length.
+     * @since 2.2.10
+     */
+    public static final String NT_SLING_FILE_LENGTH = "sling:fileLength";
+
+    /**
+     * Constant for the sling:length property. The property stores
+     * cumulative length of all uploaded chunks.
+     * @since 2.2.10
+     */
+    public static final String NT_SLING_CHUNKS_LENGTH = "sling:length";
+
+    /**
+     * Constant for the sling:chunk node type. The node type is used
+     * to store chunk.
+     * @since 2.2.10
+     */
+    public static final String NT_SLING_CHUNK_NODETYPE = "sling:chunk";
+
+    /**
+     * Constant for the sling:offset property. The property stores start
+     * offset of chunk.
+     * @since 2.2.10
+     */
+    public static final String NT_SLING_CHUNK_OFFSET = "sling:offset";
 }

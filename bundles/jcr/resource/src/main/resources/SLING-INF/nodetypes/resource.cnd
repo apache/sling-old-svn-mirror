@@ -31,3 +31,22 @@
 [sling:ResourceSuperType]
     mixin
   - sling:resourceSuperType (string)
+
+//-----------------------------------------------------------------------------
+// node type to store chunk
+// offset: offset of chunk in file
+// jcr:data: binary of chunk
+[sling:chunk] > nt:hierarchyNode
+  primaryitem jcr:data
+  - sling:offset  (long) mandatory
+  - jcr:data (binary) mandatory
+
+ //-----------------------------------------------------------------------------
+ // Mixin type to identify that a node has chunks
+ // sling:fileLength : length of complete file
+ // sling:length: cumulative length of all uploaded chunks
+[sling:chunks]
+  mixin
+  - sling:fileLength (long)
+  - sling:length (long)
+  + * (sling:chunk) multiple  

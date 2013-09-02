@@ -16,13 +16,22 @@
  */
 package org.apache.sling.servlets.post.impl.helper;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -33,6 +42,7 @@ import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.servlets.post.Modification;
 
 /**
@@ -87,6 +97,8 @@ public class SlingFileUploadHandler {
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     public static final String JCR_ENCODING = "jcr:encoding";
     public static final String JCR_DATA = "jcr:data";
+
+    private static final String CHUNK_NODE_NAME = "chunk";
 
     /**
      * The servlet context.
@@ -160,9 +172,13 @@ public class SlingFileUploadHandler {
                 res.setProperty(JCR_MIMETYPE, contentType).getPath()
                 ));
         try {
-            changes.add(Modification.onModified(
-                    res.setProperty(JCR_DATA, value.getInputStream()).getPath()
-                    ));
+            // process chunk upload request separately
+            if (prop.isChunkUpload()) {
+                processChunk(resParent, res, prop, value, changes);
+            } else {
+                changes.add(Modification.onModified(res.setProperty(JCR_DATA,
+                        value.getInputStream()).getPath()));
+            }
         } catch (IOException e) {
             throw new RepositoryException("Error while retrieving inputstream from parameter value.", e);
         }
@@ -184,16 +200,22 @@ public class SlingFileUploadHandler {
         if ( typeHint == null ) {
             typeHint = NT_FILE;
         }
-
+        if(prop.isChunkUpload()){
+            // cannot process chunk upload if parent node doesn't
+            // exists. throw exception
+            throw new RepositoryException(
+                    "Cannot process chunk upload request. Parent resource ["
+                            + parentResource.getPath() + "] doesn't exists");
+        }
         // create properties
         final Map<String, Object> props = new HashMap<String, Object>();
         props.put("sling:resourceType", typeHint);
         props.put(JCR_LASTMODIFIED, Calendar.getInstance());
         props.put(JCR_MIMETYPE, contentType);
         try {
-            props.put(JCR_DATA, value.getInputStream());
+             props.put(JCR_DATA, value.getInputStream());
         } catch (final IOException e) {
-            throw new PersistenceException("Error while retrieving inputstream from parameter value.", e);
+             throw new PersistenceException("Error while retrieving inputstream from parameter value.", e);
         }
 
         // get or create resource
@@ -210,6 +232,241 @@ public class SlingFileUploadHandler {
         for(final String key : props.keySet()) {
             changes.add(Modification.onModified(result.getPath() + '/' + key));
         }
+    }
+    /**
+     * Process chunk upload. For first and intermediate chunks request persists
+     * chunks at jcr:content/chunk_start_end/jcr:data or
+     * nt:resource/chunk_start_end/jcr:data. For last last chunk,
+     * merge all previous chunks and current chunk and replace binary at
+     * destination.
+     */
+    private void processChunk(final Resource resParent, final Node res,
+            final RequestProperty prop, RequestParameter value,
+            final List<Modification> changes) throws RepositoryException {
+        try {
+            long chunkOffset = prop.getOffset();
+            if (chunkOffset == 0) {
+                // first chunk
+                // check if another chunk upload is already in progress. throw
+                // exception
+                NodeIterator itr = res.getNodes(CHUNK_NODE_NAME + "*");
+                if (itr.hasNext()) {
+                    throw new RepositoryException(
+                        "Chunk upload already in progress at {" + res.getPath()
+                            + "}");
+                }
+                res.addMixin(JcrResourceConstants.NT_SLING_CHUNK_MIXIN);
+                changes.add(Modification.onModified(res.setProperty(
+                    JcrResourceConstants.NT_SLING_CHUNKS_LENGTH, 0).getPath()));
+                if (!res.hasProperty(JCR_DATA)) {
+                    // create a empty jcr:data property
+                    res.setProperty(JCR_DATA,
+                        new ByteArrayInputStream("".getBytes()));
+                }
+            }
+            if (!res.hasProperty(JcrResourceConstants.NT_SLING_CHUNKS_LENGTH)) {
+                throw new RepositoryException("no chunk upload found at {"
+                    + res.getPath() + "}");
+            }
+            long currentLength = res.getProperty(
+                JcrResourceConstants.NT_SLING_CHUNKS_LENGTH).getLong();
+            long totalLength = prop.getLength();
+            if (chunkOffset != currentLength) {
+                throw new RepositoryException("Chunk's offset {"
+                    + chunkOffset
+                    + "} doesn't match expected offset {"
+                    + res.getProperty(
+                        JcrResourceConstants.NT_SLING_CHUNKS_LENGTH).getLong()
+                    + "}");
+            }
+            if (totalLength != 0) {
+                if (res.hasProperty(JcrResourceConstants.NT_SLING_FILE_LENGTH)) {
+                    long expectedLength = res.getProperty(
+                        JcrResourceConstants.NT_SLING_FILE_LENGTH).getLong();
+                    if (totalLength != expectedLength) {
+                        throw new RepositoryException("File length {"
+                            + totalLength + "} doesn't match expected length {"
+                            + expectedLength + "}");
+                    }
+                } else {
+                    res.setProperty(JcrResourceConstants.NT_SLING_FILE_LENGTH,
+                        totalLength);
+                }
+            }
+            NodeIterator itr = res.getNodes(CHUNK_NODE_NAME + "_"
+                + String.valueOf(chunkOffset) + "*");
+            if (itr.hasNext()) {
+                throw new RepositoryException("Chunk already present at {"
+                    + itr.nextNode().getPath() + "}");
+            }
+            String nodeName = CHUNK_NODE_NAME + "_"
+                + String.valueOf(chunkOffset) + "_"
+                + String.valueOf(chunkOffset + value.getSize() - 1);
+            if (totalLength == (currentLength + value.getSize())
+                || prop.isCompleted()) {
+                File file = null;
+                InputStream fileIns = null;
+                try {
+                    file = mergeChunks(res, value.getInputStream());
+                    fileIns = new FileInputStream(file);
+                    changes.add(Modification.onModified(res.setProperty(
+                        JCR_DATA, fileIns).getPath()));
+                    NodeIterator nodeItr = res.getNodes(CHUNK_NODE_NAME + "*");
+                    while (nodeItr.hasNext()) {
+                        Node nodeRange = nodeItr.nextNode();
+                        changes.add(Modification.onDeleted(nodeRange.getPath()));
+                        nodeRange.remove();
+                    }
+                    if (res.hasProperty(JcrResourceConstants.NT_SLING_FILE_LENGTH)) {
+                        javax.jcr.Property expLenProp = res.getProperty(JcrResourceConstants.NT_SLING_FILE_LENGTH);
+                        changes.add(Modification.onDeleted(expLenProp.getPath()));
+                        expLenProp.remove();
+                    }
+                    if (res.hasProperty(JcrResourceConstants.NT_SLING_CHUNKS_LENGTH)) {
+                        javax.jcr.Property currLenProp = res.getProperty(JcrResourceConstants.NT_SLING_CHUNKS_LENGTH);
+                        changes.add(Modification.onDeleted(currLenProp.getPath()));
+                        currLenProp.remove();
+                    }
+                    res.removeMixin(JcrResourceConstants.NT_SLING_CHUNK_MIXIN);
+                } finally {
+                    try {
+                        fileIns.close();
+                        file.delete();
+                    } catch (IOException ign) {
+
+                    }
+
+                }
+            } else {
+                Node rangeNode = res.addNode(nodeName,
+                    JcrResourceConstants.NT_SLING_CHUNK_NODETYPE);
+                changes.add(Modification.onCreated(rangeNode.getPath()));
+                changes.add(Modification.onModified(rangeNode.setProperty(
+                    JCR_DATA, value.getInputStream()).getPath()));
+                changes.add(Modification.onModified(rangeNode.setProperty(
+                    JcrResourceConstants.NT_SLING_CHUNK_OFFSET, chunkOffset).getPath()));
+                changes.add(Modification.onModified(res.setProperty(
+                    JcrResourceConstants.NT_SLING_CHUNKS_LENGTH,
+                    currentLength + value.getSize()).getPath()));
+            }
+        } catch (IOException e) {
+            throw new RepositoryException(
+                "Error while retrieving inputstream from parameter value.", e);
+        }
+    }
+
+    /**
+     * Merge all previous chunks with last chunk's stream into a temporary file
+     * and return it.
+     */
+    private File mergeChunks(final Node parentNode,
+            final InputStream lastChunkStream) throws PersistenceException,
+            RepositoryException {
+        OutputStream out = null;
+        File file = null;
+        try {
+            file = File.createTempFile("tmp-", "-mergechunk");
+            out = new BufferedOutputStream(new FileOutputStream(file),
+                16 * 1024);
+            String startPattern = CHUNK_NODE_NAME + "_" + "0_*";
+            NodeIterator nodeItr = parentNode.getNodes(startPattern);
+            InputStream ins = null;
+            int i = 0;
+            while (nodeItr.hasNext()) {
+                if (nodeItr.getSize() > 1) {
+                    throw new RepositoryException(
+                        "more than one node found for pattern: " + startPattern);
+                }
+                Node rangeNode = nodeItr.nextNode();
+
+                try {
+                    InputStream in = rangeNode.getProperty(
+                        javax.jcr.Property.JCR_DATA).getBinary().getStream();
+                    ins = new BufferedInputStream(in, 16 * 1024);
+                    byte[] buf = new byte[16 * 1024];
+                    while ((i = ins.read(buf)) != -1) {
+                        out.write(buf, 0, i);
+                        out.flush();
+                    }
+
+                } finally {
+                    if (ins != null) {
+                        try {
+                            ins.close();
+                        } catch (IOException ignore) {
+
+                        }
+                    }
+                }
+                String[] indexBounds = rangeNode.getName().substring(
+                    (CHUNK_NODE_NAME + "_").length()).split("_");
+                startPattern = CHUNK_NODE_NAME + "_"
+                    + String.valueOf(Long.valueOf(indexBounds[1]) + 1) + "_*";
+                nodeItr = parentNode.getNodes(startPattern);
+            }
+
+            ins = new BufferedInputStream(lastChunkStream, 16 * 1024);
+            byte[] buf = new byte[16 * 1024];
+            while ((i = ins.read(buf)) != -1) {
+                out.write(buf, 0, i);
+                out.flush();
+            }
+        } catch (IOException e) {
+            throw new PersistenceException("excepiton occured", e);
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException ignore) {
+
+                }
+            }
+
+        }
+        return file;
+    }
+
+    /**
+     * Delete all chunks saved within a node. If no chunks exist, it is no-op.
+     */
+    public void deleteChunks(final Node node) throws RepositoryException {
+        Node chunkNode = null;
+        Node jcrContentNode = null;
+        if (hasChunks(node)) {
+            chunkNode = node;
+        } else if (node.hasNode(JCR_CONTENT)
+            && hasChunks((jcrContentNode = node.getNode(JCR_CONTENT)))) {
+            chunkNode = jcrContentNode;
+
+        }
+        if (chunkNode != null) {
+            NodeIterator nodeItr = chunkNode.getNodes(CHUNK_NODE_NAME + "*");
+            while (nodeItr.hasNext()) {
+                Node rangeNode = nodeItr.nextNode();
+                rangeNode.remove();
+            }
+            if (chunkNode.hasProperty(JcrResourceConstants.NT_SLING_FILE_LENGTH)) {
+                chunkNode.getProperty(JcrResourceConstants.NT_SLING_FILE_LENGTH).remove();
+            }
+            if (chunkNode.hasProperty(JcrResourceConstants.NT_SLING_CHUNKS_LENGTH)) {
+                chunkNode.getProperty(
+                    JcrResourceConstants.NT_SLING_CHUNKS_LENGTH).remove();
+            }
+            chunkNode.removeMixin(JcrResourceConstants.NT_SLING_CHUNK_MIXIN);
+        }
+    }
+
+    /**
+     * Return true if node has chunks stored in it, otherwise false.
+     */
+    private boolean hasChunks(final Node node) throws RepositoryException {
+        for (NodeType nodeType : node.getMixinNodeTypes()) {
+            if (nodeType.getName().equals(
+                JcrResourceConstants.NT_SLING_CHUNK_MIXIN)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static final String MT_APP_OCTET = "application/octet-stream";
