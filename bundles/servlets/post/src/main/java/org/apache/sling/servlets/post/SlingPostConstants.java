@@ -491,4 +491,31 @@ public interface SlingPostConstants {
      */
     public static final String ATTR_SKIP_SESSION_HANDLING = "skip-session-handling";
 
+    /**
+     * Name of the request parameter indicating offset of the chunk in request.
+     * @since 2.3.4
+     */
+    public static final String SUFFIX_OFFSET = "@Offset";
+
+    /**
+     * Name of the request parameter indicating length of complete file.
+     * @since 2.3.4
+     */
+    public static final String SUFFIX_LENGTH = "@Length";
+
+    /**
+     * Name of the request parameter indicating request contains last chunk
+     * and as a result upload should be finished. It is useful in scenarios
+     * like file streaming where file size is not known in advance.
+     * @since 2.3.4
+     */
+    public static final String SUFFIX_COMPLETED = "@Completed";
+
+    /**
+     * Name of the request parameter indicating request operation is applicable
+     * to chunks.
+     * @since 2.3.4
+     */
+    public static final String RP_APPLY_TO_CHUNKS =  RP_PREFIX + "applyToChunks";
+
 }

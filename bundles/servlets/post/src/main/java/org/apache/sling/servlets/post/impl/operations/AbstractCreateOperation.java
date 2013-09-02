@@ -367,6 +367,35 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
 
                 continue;
             }
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_OFFSET)) {
+                final RequestProperty prop = getOrCreateRequestProperty(
+                        reqProperties, propPath,
+                        SlingPostConstants.SUFFIX_OFFSET);
+                if (e.getValue().length == 1) {
+                    prop.setOffsetValue(Long.parseLong(e.getValue()[0].toString()));
+                }
+                continue;
+            }
+
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_COMPLETED)) {
+                final RequestProperty prop = getOrCreateRequestProperty(
+                        reqProperties, propPath,
+                        SlingPostConstants.SUFFIX_COMPLETED);
+                if (e.getValue().length == 1) {
+                    prop.setCompleted(Boolean.parseBoolean((e.getValue()[0].toString())));
+                }
+                continue;
+            }
+
+            if (propPath.endsWith(SlingPostConstants.SUFFIX_LENGTH)) {
+                final RequestProperty prop = getOrCreateRequestProperty(
+                        reqProperties, propPath,
+                        SlingPostConstants.SUFFIX_LENGTH);
+                if (e.getValue().length == 1) {
+                    prop.setLength(Long.parseLong(e.getValue()[0].toString()));
+                }
+                continue;
+            }
 
             // plain property, create from values
             final RequestProperty prop = getOrCreateRequestProperty(reqProperties,
