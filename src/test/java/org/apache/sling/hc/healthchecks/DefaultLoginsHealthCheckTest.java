@@ -28,7 +28,7 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.healthchecks.impl.DefaultLoginsHealthCheck;
+import org.apache.sling.hc.support.impl.DefaultLoginsHealthCheck;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.Test;
 import org.mockito.Matchers;

@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks.impl;
+package org.apache.sling.hc.support.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
