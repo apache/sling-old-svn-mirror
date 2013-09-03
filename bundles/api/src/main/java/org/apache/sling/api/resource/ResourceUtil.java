@@ -18,6 +18,7 @@
  */
 package org.apache.sling.api.resource;
 
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -607,5 +608,40 @@ public class ResourceUtil {
             }
         }
         return rsrc;
+    }
+
+    /**
+     * Create a unique name for a child of the <code>parent</code>.
+     * Creates a unique name and test if child already exists.
+     * If child resource with the same name exists, iterate until a unique one is found.
+     *
+     * @param parent The parent resource
+     * @param name   The name of the child resource
+     * @return a unique non-existing name for child resource for a given <code>parent</code>
+     *
+     * @throws {@link PersistenceException} if it can not find unique name for child resource.
+     * @throws {@link NullPointerException} if <code>parent</code> is null
+     * @since 2.5.0
+     */
+    public static String createUniqueChildName(final Resource parent, final String name)
+    throws PersistenceException {
+        if (parent.getChild(name) != null) {
+            // leaf node already exists, create new unique name
+            String childNodeName = null;
+            int i = 0;
+            do {
+                childNodeName = name + String.valueOf(i);
+                //just so that it does not run into an infinite loop
+                // this should not happen though :)
+                if (i == Integer.MAX_VALUE) {
+                    String message = MessageFormat.format("can not find a unique name {0} for {1}", name, parent.getPath());
+                    throw new PersistenceException(message);
+                }
+                i++;
+            } while (parent.getChild(childNodeName) != null);
+
+            return childNodeName;
+        }
+        return name;
     }
 }

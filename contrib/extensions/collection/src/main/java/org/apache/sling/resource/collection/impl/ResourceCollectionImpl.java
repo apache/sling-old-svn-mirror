@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.sling.resource.collection.ResourceCollection;
-import org.apache.sling.resource.collection.impl.util.ResourceCollectionUtil;
 
 /**
  * Implements <code>ResourceCollection</code>
@@ -108,7 +107,7 @@ public class ResourceCollectionImpl implements
             properties.put(ResourceCollectionConstants.REF_PROPERTY, res.getPath());
             resolver.create(
                 membersResource,
-                ResourceCollectionUtil.createUniqueChildName(membersResource,
+                ResourceUtil.createUniqueChildName(membersResource,
                     res.getName()), properties);
             log.debug("added member to resource {} to collection {}",
                 new String[] { res.getPath(), resource.getPath() });
@@ -133,7 +132,7 @@ public class ResourceCollectionImpl implements
         	properties.put(ResourceCollectionConstants.REF_PROPERTY, res.getPath());
             resolver.create(
                 membersResource,
-                ResourceCollectionUtil.createUniqueChildName(membersResource,
+                ResourceUtil.createUniqueChildName(membersResource,
                     res.getName()), properties);
             log.debug("added member to resource {} to collection {}",
                 new String[] { res.getPath(), resource.getPath() });
