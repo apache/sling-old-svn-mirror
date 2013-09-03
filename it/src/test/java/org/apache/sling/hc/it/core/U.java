@@ -30,7 +30,7 @@ import org.ops4j.pax.exam.Option;
 public class U {
     
     static Option[] config() {
-        final String coreVersion = System.getProperty("sling.hc.api.version");
+        final String coreVersion = System.getProperty("sling.hc.core.version");
         final String localRepo = System.getProperty("maven.repo.local", "");
         final boolean felixShell = "true".equals(System.getProperty("felix.shell", "false"));
 
@@ -48,7 +48,7 @@ public class U {
             ),
             provision(
                     mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
-                    mavenBundle("org.apache.sling", "org.apache.sling.hc.api", coreVersion),
+                    mavenBundle("org.apache.sling", "org.apache.sling.hc.core", coreVersion),
                     mavenBundle("org.apache.sling", "org.apache.sling.commons.osgi", "2.2.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),

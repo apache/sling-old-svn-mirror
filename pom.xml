@@ -26,9 +26,9 @@
     </prerequisites>
     
     <modules>
-        <module>api</module>
+        <module>core</module>
         <module>samples</module>
-        <module>healthchecks</module>
+        <module>support</module>
         <module>jmx</module>
         <module>webconsole</module>
         <module>it</module>
