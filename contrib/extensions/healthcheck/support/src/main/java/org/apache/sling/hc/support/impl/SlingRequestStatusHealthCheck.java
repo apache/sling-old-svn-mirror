@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks.impl;
+package org.apache.sling.hc.support.impl;
 
 import java.util.Arrays;
 
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *  Typically used to check that a freshly installed Sling-based system
  *  is in good shape, contains all required content etc. */
 @Component(
-        name="org.apache.sling.hc.SlingRequestStatusHealthCheck",
+        name="org.apache.sling.hc.support.SlingRequestStatusHealthCheck",
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)

@@ -14,15 +14,15 @@
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.hc.api</artifactId>
+    <artifactId>org.apache.sling.hc.core</artifactId>
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check API</name>
+    <name>Sling Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
-        The Sling Health Check API
+        The Sling Health Check Core
     </description>
 
     <properties>
