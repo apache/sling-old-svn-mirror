@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks;
+package org.apache.sling.hc.core.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,7 +28,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.healthchecks.impl.ScriptableHealthCheck;
+import org.apache.sling.hc.core.impl.ScriptableHealthCheck;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;

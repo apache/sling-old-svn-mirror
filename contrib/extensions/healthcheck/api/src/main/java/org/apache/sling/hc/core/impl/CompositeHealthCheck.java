@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks.impl;
+package org.apache.sling.hc.core.impl;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +31,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
+import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;

@@ -28,7 +28,7 @@ import javax.management.ObjectName;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.apache.sling.hc.healthchecks.util.SimpleConstraintChecker;
+import org.apache.sling.hc.util.SimpleConstraintChecker;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.ServiceReference;
