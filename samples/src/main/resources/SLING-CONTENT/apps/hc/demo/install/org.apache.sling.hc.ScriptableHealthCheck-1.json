@@ -3,5 +3,6 @@
     "expression" : "jmx.attribute('java.lang:type=ClassLoading', 'LoadedClassCount') > 10 &&  jmx.attribute('java.lang:type=Runtime', 'ManagementSpecVersion') > 1", 
     "hc.name" : "LoadedClassCount and ManagementSpecVersion are in range", 
     "language.extension" : "ecma", 
-    "hc.tags" : [jvm, script] 
+    "hc.tags" : [jvm, script],
+    "hc.mbean.name" : "LoadedClassCount and ManagementSpecVersion"
 }

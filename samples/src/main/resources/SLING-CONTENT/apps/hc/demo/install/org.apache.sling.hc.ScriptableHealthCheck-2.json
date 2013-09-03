@@ -4,5 +4,6 @@
     "hc.name" : "No inactive bundles", 
     "hc.mbean.name" : "InactiveBundlesCheck", 
     "language.extension" : "ecma", 
-    "hc.tags" : [bundles, script] 
+    "hc.tags" : [bundles, script],
+    "hc.mbean.name" : "NoInactiveBundles"
 }
