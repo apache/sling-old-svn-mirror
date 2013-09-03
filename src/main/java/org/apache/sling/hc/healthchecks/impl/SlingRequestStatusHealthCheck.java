@@ -35,7 +35,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
+import org.apache.sling.hc.util.FormattingResultLog;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
