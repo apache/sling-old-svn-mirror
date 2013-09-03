@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks.impl;
+package org.apache.sling.hc.core.impl;
 
 import java.lang.management.ManagementFactory;
 
@@ -27,11 +27,16 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 
-import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
+import org.apache.sling.hc.util.FormattingResultLog;
 
 /** The JmxBinding is meant to be bound as "jmx" global variables
  *  in scripted rules, to allow for writing scripted expressions
  *  like jmx.attribute("java.lang:type=ClassLoading", "LoadedClassCount") > 100
+ *  
+ *  TODO this should really be a {@link BindingsValuesProvider} service,
+ *  but for this we need to modify the default Sling script handling
+ *  so that BindingsValuesProvider which have a specific scope service
+ *  property are ignored.
  */
 public class JmxScriptBinding {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();

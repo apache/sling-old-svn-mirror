@@ -15,13 +15,13 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks;
+package org.apache.sling.hc.core.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.sling.hc.healthchecks.impl.JmxScriptBinding;
-import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
+import org.apache.sling.hc.core.impl.JmxScriptBinding;
+import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.Test;
 
 public class JmxScriptBindingTest {

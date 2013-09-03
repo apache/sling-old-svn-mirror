@@ -15,15 +15,15 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks;
+package org.apache.sling.hc.core.impl;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.hc.healthchecks.impl.OsgiScriptBinding;
-import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
+import org.apache.sling.hc.core.impl.OsgiScriptBinding;
+import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.osgi.framework.Bundle;

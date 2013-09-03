@@ -15,16 +15,21 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.healthchecks.impl;
+package org.apache.sling.hc.core.impl;
 
-import org.apache.sling.hc.healthchecks.util.FormattingResultLog;
+import org.apache.sling.hc.util.FormattingResultLog;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
 /** The OsgiBinding is meant to be bound as an "osgi" global variable
  *  in scripted rules, to allow for checking some OSGi states in
- *  a simple way
+ *  a simple way.
+ *  
+ *  TODO this should really be a {@link BindingsValuesProvider} service,
+ *  but for this we need to modify the default Sling script handling
+ *  so that BindingsValuesProvider which have a specific scope service
+ *  property are ignored.
  */
 public class OsgiScriptBinding {
     private final FormattingResultLog resultLog;
