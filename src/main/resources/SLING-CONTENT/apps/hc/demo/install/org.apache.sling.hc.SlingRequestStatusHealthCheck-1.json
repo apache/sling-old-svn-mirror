@@ -7,5 +7,6 @@
         "some/non/existent/path:404"
     ],
     "hc.name" : "Initial content is present", 
-    "hc.tags" : [request, sling] 
+    "hc.tags" : [request, sling],
+    "hc.mbean.name" : "InitialContentPresent"
 }
