@@ -20,7 +20,6 @@ package org.apache.sling.hc.healthchecks;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import javax.jcr.Credentials;
@@ -40,10 +39,10 @@ public class DefaultLoginsHealthCheckTest {
     
     private Result getTestResult(String login) throws Exception {
         final DefaultLoginsHealthCheck c = new DefaultLoginsHealthCheck();
-        setField(c, "logins", Arrays.asList(new String[] { login }));
+        SetField.set(c, "logins", Arrays.asList(new String[] { login }));
         
         final SlingRepository repo = Mockito.mock(SlingRepository.class);
-        setField(c, "repository", repo);
+        SetField.set(c, "repository", repo);
         final Session s = Mockito.mock(Session.class);
         Mockito.when(repo.login(Matchers.any(Credentials.class))).thenAnswer(new Answer<Session>() {
             @Override
@@ -57,12 +56,6 @@ public class DefaultLoginsHealthCheckTest {
         });
         
         return c.execute();
-    }
-    
-    private void setField(Object o, String name, Object value) throws Exception {
-        final Field f = o.getClass().getDeclaredField(name);
-        f.setAccessible(true);
-        f.set(o, value);
     }
     
     @Test

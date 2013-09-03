@@ -18,6 +18,7 @@
 package org.apache.sling.hc.support.impl;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -36,7 +37,6 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,8 +89,8 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
     private ResourceResolverFactory resolverFactory;
 
     @Activate
-    public void activate(ComponentContext ctx) {
-        paths = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_PATH), new String [] {});
+    public void activate(final Map<String, Object> properties) {
+        paths = PropertiesUtil.toStringArray(properties.get(PROP_PATH), new String [] {});
         log.info("Activated, paths={}", Arrays.asList(paths));
     }
 
