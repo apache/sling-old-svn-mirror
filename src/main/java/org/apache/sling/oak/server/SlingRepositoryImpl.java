@@ -27,6 +27,7 @@ import javax.jcr.SimpleCredentials;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.oak.Oak;
@@ -97,6 +98,13 @@ public class SlingRepositoryImpl extends AbstractNamespaceMappingRepository
 
         //.withAsyncIndexing() // TODO oak 0.9?
         .createRepository();
+        
+        setup(ctx.getBundleContext());
+    }
+    
+    @Deactivate
+    protected void deactivate(ComponentContext ctx) {
+        tearDown();
     }
     
     @Override
