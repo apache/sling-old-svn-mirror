@@ -29,6 +29,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IFileEditorInput;
+import org.eclipse.ui.IPageLayout;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.ResourceUtil;
@@ -91,6 +93,11 @@ public class LinkHelper implements ILinkHelper {
 			return;
 		}
 		final JcrNode node = (JcrNode) selectedElement;
+		// bring properties view to top, if it is open
+		IViewPart propertiesView = aPage.findView(IPageLayout.ID_PROP_SHEET);
+		if (propertiesView!=null) {
+			aPage.bringToTop(propertiesView);
+		}
 		final IResource resource = node.getResource();
 		if (resource==null || !(resource instanceof IFile)) {
 			return;
