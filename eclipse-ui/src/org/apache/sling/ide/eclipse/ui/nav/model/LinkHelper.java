@@ -27,7 +27,10 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.ui.navigator.ILinkHelper;
 import org.w3c.dom.Node;
@@ -83,8 +86,45 @@ public class LinkHelper implements ILinkHelper {
 	@Override
 	public void activateEditor(IWorkbenchPage aPage,
 			IStructuredSelection aSelection) {
-		// nothing done here at the moment. 
-		// PackageExplorerOpenActionProvider currently takes care of opening jcr nodes in an editor
+		final Object selectedElement = aSelection.getFirstElement();
+		if (!(selectedElement instanceof JcrNode)) {
+			return;
+		}
+		final JcrNode node = (JcrNode) selectedElement;
+		final IResource resource = node.getResource();
+		if (resource==null || !(resource instanceof IFile)) {
+			return;
+		}
+		final IFile selectedFile = (IFile)resource;
+		final IEditorReference[] editorReferences = aPage.getEditorReferences();
+		for (int i = 0; i < editorReferences.length; i++) {
+			final IEditorReference reference = editorReferences[i];
+			if (reference==null) {
+				continue;
+			}
+			final IEditorInput editorInput;
+			try {
+				editorInput = reference.getEditorInput();
+			} catch (PartInitException e) {
+				//TODO proper logging
+				e.printStackTrace();
+				continue;
+			}
+			if (editorInput==null) {
+				continue;
+			}
+			if (!(editorInput instanceof IFileEditorInput)) {
+				continue;
+			}
+			final IFileEditorInput fileEditorInput = (IFileEditorInput) editorInput;
+			final IFile file = fileEditorInput.getFile();
+			if (file==null) {
+				continue;
+			}
+			if (file.equals(selectedFile)) {
+				aPage.activate(reference.getEditor(true));
+			}
+		}
 	}
 
 }
