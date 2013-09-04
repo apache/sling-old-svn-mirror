@@ -16,10 +16,18 @@ Bundle-ClassPath: .
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
  org.apache.commons.httpclient.methods;version="3.1.0",
+ org.apache.maven,
+ org.apache.maven.artifact,
+ org.apache.maven.artifact.handler,
+ org.apache.maven.artifact.installer,
  org.apache.maven.artifact.repository,
+ org.apache.maven.execution,
+ org.apache.maven.model,
+ org.apache.maven.plugin,
  org.apache.sling.ide.filter,
  org.apache.sling.ide.serialization,
  org.apache.sling.ide.transport,
+ org.codehaus.plexus,
  org.eclipse.core.commands,
  org.eclipse.core.commands.operations,
  org.eclipse.core.resources,
@@ -38,7 +46,8 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.wst.server.core,
  org.eclipse.wst.server.core.model,
  org.eclipse.wst.server.core.util,
- org.osgi.service.component;version="1.1.0"
+ org.osgi.service.component;version="1.1.0",
+ org.sonatype.aether
 Export-Package: org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.eclipse.core.internal
 Service-Component: OSGI-INF/Tracer.xml

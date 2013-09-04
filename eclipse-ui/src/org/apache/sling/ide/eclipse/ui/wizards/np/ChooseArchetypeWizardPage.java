@@ -176,6 +176,10 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 					monitor.beginTask("discoverying archetypes...", 5);
 				    ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
 				    monitor.worked(1);
+					
+				    // optionally allow the parent to install any archetypes
+				    parent.installArchetypes();
+				    
 				    Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
 				    monitor.worked(2);
 				    ArrayList<Archetype> list = new ArrayList<Archetype>();
