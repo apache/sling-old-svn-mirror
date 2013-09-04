@@ -76,8 +76,14 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 
 	@Override
 	public Object getParent(Object element) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!(element instanceof JcrNode)) {
+			return null;
+		} else if (element instanceof SyncDir) {
+			SyncDir syncDir = (SyncDir) element;
+			return syncDir.getFolder().getProject();
+		}
+		JcrNode node = (JcrNode) element;
+		return node.getParent();
 	}
 
 	@Override

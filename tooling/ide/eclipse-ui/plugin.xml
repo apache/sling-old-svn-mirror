@@ -151,6 +151,7 @@
 		<viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
 			<includes>
 				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.linkHelper"/>	
 			</includes>
 		</viewerContentBinding>
 	</extension>
@@ -374,6 +375,25 @@
             </and>
          </enablement>
       </decorator>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.linkHelper">
+      <linkHelper
+            class="org.apache.sling.ide.eclipse.ui.nav.model.LinkHelper"
+            id="org.apache.sling.ide.eclipse-ui.linkHelper">
+         <editorInputEnablement>
+         	<or>
+               <instanceof
+                     value="org.eclipse.ui.IEditorInput">
+               </instanceof>
+            </or>
+         </editorInputEnablement>
+         <selectionEnablement>
+               <instanceof
+                     value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+               </instanceof>
+         </selectionEnablement>
+      </linkHelper>
    </extension> 
    
 </plugin>    

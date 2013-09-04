@@ -522,4 +522,8 @@ public class JcrNode implements IAdaptable {
 		return false;
 	}
 
+	public JcrNode getParent() {
+		return parent;
+	}
+
 }
