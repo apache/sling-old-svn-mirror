@@ -122,7 +122,7 @@ public class LinkHelper implements ILinkHelper {
 				continue;
 			}
 			if (file.equals(selectedFile)) {
-				aPage.activate(reference.getEditor(true));
+				aPage.bringToTop(reference.getEditor(true));
 			}
 		}
 	}
