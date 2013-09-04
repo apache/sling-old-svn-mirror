@@ -18,6 +18,7 @@ package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -97,6 +98,8 @@ public class JcrNode implements IAdaptable {
 	private boolean resourceChildrenAdded = false;
 	
 	final ModifiableProperties properties = new ModifiableProperties(this);
+
+	final Set<JcrNode> hiddenChildren = new HashSet<JcrNode>();
 	
 	JcrNode() {
 		// for subclass use only
@@ -214,11 +217,26 @@ public class JcrNode implements IAdaptable {
 		}
 		return children.size()>0 || members;
 	}
+	
+	public void hide(JcrNode node) {
+		hiddenChildren.add(node);
+	}
 
+	Object[] filterHiddenChildren(final Collection<JcrNode> collection) {
+		final Collection<JcrNode> values = new HashSet<JcrNode>(collection);
+		
+		for (Iterator<JcrNode> it = hiddenChildren.iterator(); it.hasNext();) {
+			final JcrNode hiddenNode = it.next();
+			values.remove(hiddenNode);
+		}
+		
+		return values.toArray();
+	}
+	
 	public Object[] getChildren() {
 		try {
 			if (resourceChildrenAdded) {
-				return children.toArray();
+				return filterHiddenChildren(children);
 			}
 			Map<String,JcrNode> resultMap = new HashMap<String, JcrNode>();
 			for (Iterator it = children.iterator(); it.hasNext();) {
@@ -254,7 +272,12 @@ public class JcrNode implements IAdaptable {
 					}
 					for (Iterator it = membersList.iterator(); it.hasNext();) {
 						IResource iResource = (IResource) it.next();
-						JcrNode node = new JcrNode(this, (Node)null, iResource);
+						JcrNode node;
+						if (DirNode.isDirNode(iResource)) {
+							node = new DirNode(this, (Node)null, iResource);
+						} else {
+							node = new JcrNode(this, (Node)null, iResource);
+						}
 //						node.setResource(iResource);
 						// load the children - to make sure we get vault files loaded too
 						node.getChildren();
@@ -265,7 +288,7 @@ public class JcrNode implements IAdaptable {
 			}
 			resourceChildrenAdded = true;
 			
-			return resultMap.values().toArray();
+			return filterHiddenChildren(resultMap.values());
 		} catch (CoreException e) {
 			return new Object[0];
 		} catch (ParserConfigurationException e) {
