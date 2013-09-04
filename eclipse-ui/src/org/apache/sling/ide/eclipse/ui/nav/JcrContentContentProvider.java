@@ -214,7 +214,10 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	@Override
 	public boolean hasPipelinedChildren(Object anInput,
 			boolean currentHasChildren) {
-		// TODO Auto-generated method stub
+		if (anInput instanceof IResource) {
+			// then typically the 'currentHasChildren' is correct
+			return currentHasChildren;
+		}
 		return true;
 	}
 
