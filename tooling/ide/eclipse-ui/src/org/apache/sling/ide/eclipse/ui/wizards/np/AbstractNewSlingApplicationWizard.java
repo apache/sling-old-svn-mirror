@@ -62,6 +62,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	// branding
 	public abstract ImageDescriptor getLogo();
 	public abstract String doGetWindowTitle();
+	public abstract void installArchetypes();
 	public abstract boolean acceptsArchetype(Archetype archetype2);
 
 	/**
