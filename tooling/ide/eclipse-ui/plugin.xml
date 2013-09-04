@@ -253,25 +253,6 @@
       </wizard>
    </extension>
    <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            id="org.apache.sling.ide.eclipse-ui.actionSet"
-            label="Sling Action Set"
-            visible="true">
-         <action
-               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               icon="icons/obj16/sling.gif"
-               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
-               label="&amp;Rename JCR Node"
-               toolbarPath="sling"
-               tooltip="Rename JCR Node">
-            <selection
-                  class="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
-            </selection>
-         </action>
-      </actionSet>
-   </extension>
-   <extension
          point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
       <propertyContributor
             contributorId="org.apache.sling.ide.eclipse-ui.propertyContributor1"
@@ -354,6 +335,81 @@
       </objectContribution>
          
    </extension>
+
+   <extension
+         id="org.apache.sling.ide.eclipse.ui.pluginJcrNodeToolSet"
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.apache.sling.ide.eclipse.ui.pluginJcrNodeToolSet"
+            objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.nav.NewJcrNodeAction"
+               label="&amp;New JCR Node"
+               menubarPath="jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
+               label="&amp;Rename JCR Node"
+               menubarPath="jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
+               label="&amp;Delete JCR Node"
+               menubarPath="jcr">
+         </action>
+         <visibility>
+               <objectState
+                     name="domNode"
+                     value="true">
+               </objectState>
+         </visibility>
+      </objectContribution>
+   </extension>
+
+   <extension
+         id="org.apache.sling.ide.eclipse.ui.pluginNonJcrNodeToolSet"
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.apache.sling.ide.eclipse.ui.pluginNonJcrNodeToolSet"
+            objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.nav.NewNonJcrNodeAction"
+               label="New JCR Node"
+               menubarPath="common.new.menu/jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameAction"
+               label="&amp;Rename JCR Node"
+               toolbarPath="common.new.menu/jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
+               label="&amp;Delete JCR Node"
+               toolbarPath="common.new.menu/jcr">
+         </action>
+         <visibility>
+               <objectState
+                     name="nonDomNode"
+                     value="true">
+               </objectState>
+         </visibility>
+      </objectContribution>
+   </extension>
+   
    <extension
          point="org.eclipse.ui.decorators">
       <decorator
