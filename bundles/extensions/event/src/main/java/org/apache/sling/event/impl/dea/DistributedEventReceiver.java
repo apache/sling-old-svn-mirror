@@ -45,6 +45,7 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobUtil;
@@ -255,13 +256,15 @@ public class DistributedEventReceiver
                 final Resource baseResource = resolver.getResource(this.config.getRootPathWithSlash());
                 // sanity check - should never be null
                 if ( baseResource != null ) {
+                    final BatchResourceRemover brr = new BatchResourceRemover();
                     final Iterator<Resource> iter = baseResource.listChildren();
                     while ( iter.hasNext() ) {
                         final Resource rootResource = iter.next();
                         if ( !slingIds.contains(rootResource.getName()) ) {
-                            resolver.delete(rootResource);
+                            brr.delete(rootResource);
                         }
                     }
+                    // final commit for outstanding deletes
                     resolver.commit();
                 }
 
@@ -285,6 +288,7 @@ public class DistributedEventReceiver
             ResourceResolver resolver = null;
             try {
                 resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                final BatchResourceRemover brr = new BatchResourceRemover();
 
                 final Resource baseResource = resolver.getResource(this.config.getOwnRootPath());
                 // sanity check - should never be null
@@ -299,7 +303,7 @@ public class DistributedEventReceiver
                         final Resource yearResource = yearIter.next();
                         final int year = Integer.valueOf(yearResource.getName());
                         if ( year < oldYear ) {
-                            resolver.delete(yearResource);
+                            brr.delete(yearResource);
                         } else if ( year == oldYear ) {
 
                             // same year - check months
@@ -309,7 +313,7 @@ public class DistributedEventReceiver
                                 final Resource monthResource = monthIter.next();
                                 final int month = Integer.valueOf(monthResource.getName());
                                 if ( month < oldMonth ) {
-                                    resolver.delete(monthResource);
+                                    brr.delete(monthResource);
                                 } else if ( month == oldMonth ) {
 
                                     // same month - check days
@@ -319,7 +323,7 @@ public class DistributedEventReceiver
                                         final Resource dayResource = dayIter.next();
                                         final int day = Integer.valueOf(dayResource.getName());
                                         if ( day < oldDay ) {
-                                            resolver.delete(dayResource);
+                                            brr.delete(dayResource);
                                         } else if ( day == oldDay ) {
 
                                             // same day - check hours
@@ -329,7 +333,7 @@ public class DistributedEventReceiver
                                                 final Resource hourResource = hourIter.next();
                                                 final int hour = Integer.valueOf(hourResource.getName());
                                                 if ( hour < oldHour ) {
-                                                    resolver.delete(hourResource);
+                                                    brr.delete(hourResource);
                                                 } else if ( hour == oldHour ) {
 
                                                     // same hour - check minutes
@@ -340,7 +344,7 @@ public class DistributedEventReceiver
 
                                                         final int minute = Integer.valueOf(minuteResource.getName());
                                                         if ( minute < oldMinute ) {
-                                                            resolver.delete(minuteResource);
+                                                            brr.delete(minuteResource);
                                                         }
                                                     }
                                                 }
@@ -352,6 +356,7 @@ public class DistributedEventReceiver
                         }
                     }
                 }
+                // final commit for outstanding resources
                 resolver.commit();
 
             } catch (final PersistenceException pe) {
