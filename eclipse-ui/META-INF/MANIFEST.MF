@@ -6,7 +6,12 @@ Bundle-Activator: org.apache.sling.ide.eclipse.ui.internal.Activator
 Bundle-Version: 0.0.1.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
-Import-Package: org.apache.maven.artifact.repository,
+Import-Package: org.apache.commons.httpclient;version="3.1.0",
+ org.apache.commons.httpclient.auth;version="3.1.0",
+ org.apache.commons.httpclient.methods;version="3.1.0",
+ org.apache.commons.httpclient.methods.multipart;version="3.1.0",
+ org.apache.commons.httpclient.params;version="3.1.0",
+ org.apache.maven.artifact.repository,
  org.apache.maven.model,
  org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.filter,
