@@ -102,6 +102,8 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	private IFolder getSyncDir(IProject project) {
 		if (!project.isOpen()) {
 			return null;
+		} else if (!ProjectHelper.isContentProject(project)) {
+			return null;
 		}
 		IResource syncDir = project.findMember(ProjectUtil.getSyncDirectoryValue(project));
 		return (IFolder) syncDir;
