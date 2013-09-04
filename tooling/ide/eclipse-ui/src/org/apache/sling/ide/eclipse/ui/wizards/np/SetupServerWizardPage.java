@@ -16,12 +16,34 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.commons.httpclient.methods.multipart.PartSource;
+import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.ui.internal.Activator;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -53,6 +75,7 @@ public class SetupServerWizardPage extends WizardPage {
 	private Text newServerHostnameName;
 	private Text newServerPort;
 	private Text newServerDebugPort;
+	private Button installToolingSupportBundle;
 	
 	private Map<String, IServer> serversMap = new HashMap<String, IServer>();
 
@@ -163,6 +186,15 @@ public class SetupServerWizardPage extends WizardPage {
 		    newServerDebugPort.setLayoutData(newServerDebugPortData);
 	    }
 	    
+	    {
+	    	installToolingSupportBundle = new Button(container, SWT.CHECK);
+		    GridData installToolingSupportBundleData = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
+		    installToolingSupportBundleData.horizontalIndent = 10;
+		    installToolingSupportBundle.setLayoutData(installToolingSupportBundleData);
+		    installToolingSupportBundle.setText("Check/Install org.apache.sling.tooling.support.install bundle");
+		    installToolingSupportBundle.setSelection(true);
+	    }
+	    
 	    
 	    SelectionAdapter radioListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
@@ -171,6 +203,7 @@ public class SetupServerWizardPage extends WizardPage {
 				newServerHostnameName.setEnabled(setupNewServer.getSelection());
 				newServerPort.setEnabled(setupNewServer.getSelection());
 				newServerDebugPort.setEnabled(setupNewServer.getSelection());
+				installToolingSupportBundle.setEnabled(setupNewServer.getSelection());
 				dialogChanged();
 			}
 		};
@@ -178,6 +211,7 @@ public class SetupServerWizardPage extends WizardPage {
 		setupNewServer.addSelectionListener(radioListener);
 	    useExistingServer.setSelection(true);
 	    setupNewServer.setSelection(false);
+	    installToolingSupportBundle.setSelection(false);
 	    
 	    ModifyListener ml = new ModifyListener() {
 			
@@ -234,7 +268,7 @@ public class SetupServerWizardPage extends WizardPage {
 			}
 		} else if (setupNewServer.getSelection()) {
 			if (newServerName.getText().length()==0 ||
-					newServerHostnameName.getText().length()==0 ||
+					getHostname().length()==0 ||
 					newServerPort.getText().length()==0 ||
 					newServerDebugPort.getText().length()==0) {
 				updateStatus("Enter values for new server");
@@ -248,6 +282,90 @@ public class SetupServerWizardPage extends WizardPage {
 		setErrorMessage(message);
 		setPageComplete(message == null);
 	}
+	
+
+	private boolean containsToolingSupportBundle() {
+        String hostname = getHostname();
+        int launchpadPort = getPort();
+        GetMethod method = new GetMethod("http://"+hostname+":"+launchpadPort+"/system/console/bundles/org.apache.sling.tooling.support.install");
+        
+        try {
+			return getHttpClient("admin", "admin").executeMethod(method) == 200;
+		} catch (IOException e) {
+			// TODO proper logging
+			e.printStackTrace();
+			return false;
+		}
+    }
+    
+    /**
+     * Get the http client
+     * @param user 
+     * @param password 
+     */
+    protected HttpClient getHttpClient(String user, String password) {
+        final HttpClient client = new HttpClient();
+        client.getHttpConnectionManager().getParams().setConnectionTimeout(
+            5000);
+
+        // authentication stuff
+        client.getParams().setAuthenticationPreemptive(true);
+        Credentials defaultcreds = new UsernamePasswordCredentials(user,
+            password);
+        client.getState().setCredentials(AuthScope.ANY, defaultcreds);
+
+        return client;
+    }
+
+    protected int post(String targetURL, String user, String passwd, InputStream in, String fileName) throws IOException {
+        // append pseudo path after root URL to not get redirected for nothing
+        final PostMethod filePost = new PostMethod(targetURL + "/install");
+
+        try {
+            // set referrer
+            filePost.setRequestHeader("referer", "about:blank");
+
+            List<Part> partList = new ArrayList<Part>();
+            partList.add(new StringPart("action", "install"));
+            partList.add(new StringPart("_noredir_", "_noredir_"));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            copyStream(in, baos);
+			PartSource partSource = new ByteArrayPartSource(fileName, baos.toByteArray());
+            partList.add(new FilePart("bundlefile", partSource));
+            partList.add(new StringPart("bundlestart", "start"));
+
+            Part[] parts = partList.toArray(new Part[partList.size()]);
+
+            filePost.setRequestEntity(new MultipartRequestEntity(parts,
+                filePost.getParams()));
+
+            int status = getHttpClient(user, passwd).executeMethod(filePost);
+            return status;
+        } finally {
+            filePost.releaseConnection();
+        }
+    }
+
+    private void copyStream(InputStream in, OutputStream os) throws IOException {
+		final byte[] bytes = new byte[4*1024];
+		while (true) {
+			final int numRead = in.read(bytes);
+			if (numRead < 0) {
+				break;
+			}
+			os.write(bytes, 0, numRead);
+		}
+	}
+
+    private int installToolingSupportBundle() throws IOException {
+        String hostname = getHostname();
+        int launchpadPort = getPort();
+        String targetURL = "http://"+hostname+":"+launchpadPort+"/system/console";
+    	String fileName = "org.apache.sling.tooling.support.install-0.0.1-SNAPSHOT.jar";
+		URL jarUrl = Activator.getDefault().getBundle().getResource(
+    			"target/sling-tooling-support-install/"+fileName);
+		return post(targetURL, "admin", "admin", jarUrl.openStream(), fileName);
+    }
 	
 	IServer getOrCreateServer() {
 		if (useExistingServer.getSelection()) {
@@ -264,14 +382,32 @@ public class SetupServerWizardPage extends WizardPage {
 					existingRuntime = aRuntime;
 				}
 			}
+			
+			if (installToolingSupportBundle.getSelection() && !containsToolingSupportBundle()) {
+				// then auto-install it if possible
+				try {
+					int status = installToolingSupportBundle();
+					
+					if (status!=HttpStatus.SC_OK) {
+						MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
+								"Could not install sling tooling support bundle: "+status);
+					}
+				} catch (IOException e) {
+					//TODO proper logging
+					e.printStackTrace();
+					MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
+							"Could not install sling tooling support bundle: "+e.getMessage());
+				}
+			}
+			
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
 			try {
 				IRuntime runtime = serverRuntime.createRuntime(null, new NullProgressMonitor());
 				runtime = runtime.createWorkingCopy().save(true, new NullProgressMonitor());
 				IServerWorkingCopy wc = serverType.createServer(null, null, runtime, new NullProgressMonitor());
-				wc.setHost(newServerHostnameName.getText());
+				wc.setHost(getHostname());
 				wc.setName(newServerName.getText() + " (external)");
-				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, Integer.parseInt(newServerPort.getText()));
+				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, Integer.parseInt(newServerDebugPort.getText()));
 				wc.setAttribute("auto-publish-setting", 2); // 2: automatically publish when resources change
 				wc.setAttribute("auto-publish-time", 0);    // 0: zero delay after a resource change (and the builder was kicked, I guess)
@@ -283,6 +419,14 @@ public class SetupServerWizardPage extends WizardPage {
 			}
 			return null;
 		}
+	}
+
+	private int getPort() {
+		return Integer.parseInt(newServerPort.getText());
+	}
+
+	private String getHostname() {
+		return newServerHostnameName.getText();
 	}
 
 }
