@@ -16,9 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-@Version("1.1.0")
 package org.apache.sling.event.jobs.consumer;
 
-import aQute.bnd.annotation.Version;
+import org.apache.sling.event.jobs.Job;
 
+import aQute.bnd.annotation.ConsumerType;
+
+
+
+/**
+ *
+ * @since 1.1
+ */
+@ConsumerType
+public interface JobExecutor {
+
+    /**
+     * Service registration property defining the jobs this consumer is able to process.
+     * The value is either a string or an array of strings.
+     */
+    String PROPERTY_TOPICS = "job.topics";
+
+
+    JobStatus process(Job job, JobExecutionContext context);
+}
