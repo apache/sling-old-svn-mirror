@@ -173,7 +173,7 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
 						InterruptedException {
-					monitor.beginTask("discoverying archetypes...", 5);
+					monitor.beginTask("discovering archetypes...", 5);
 				    ArchetypeManager manager = MavenPluginActivator.getDefault().getArchetypeManager();
 				    monitor.worked(1);
 					
