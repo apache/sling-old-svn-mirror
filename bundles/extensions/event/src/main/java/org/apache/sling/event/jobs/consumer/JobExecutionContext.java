@@ -16,9 +16,36 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-@Version("1.1.0")
 package org.apache.sling.event.jobs.consumer;
 
-import aQute.bnd.annotation.Version;
+import aQute.bnd.annotation.ProviderType;
 
+
+
+
+/**
+ *
+ * @since 1.1
+ */
+@ProviderType
+public interface JobExecutionContext {
+
+    interface AsyncHandler {
+
+        void failed();
+
+        void ok();
+
+        void cancel();
+    }
+
+    AsyncHandler getAsyncHandler();
+
+    void log(final String message);
+
+    void start(final int steps);
+
+    void start(final int steps, final long eta);
+
+    void setProgress(final int step);
+}
