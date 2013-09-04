@@ -17,13 +17,10 @@
 package org.apache.sling.scripting.core.impl;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 
@@ -39,13 +36,10 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,9 +61,6 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
     private final Logger log = LoggerFactory.getLogger(SlingScriptAdapterFactory.class);
 
-    /** list of service property values which indicate 'any' script engine */
-    private static final List<String> ANY_ENGINE = Arrays.asList("*", "ANY");
-
     private BundleContext bundleContext;
 
     /**
@@ -83,16 +74,6 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     private ServiceTracker mapBindingsValuesProviderTracker;
 
     /**
-     * The BindingsValuesProvider impls which apply to all languages. Keys are serviceIds.
-     */
-    private Map<Object, BindingsValuesProvider> genericBindingsValuesProviders;
-
-    /**
-     * The BindingsValuesProvider impls which apply to a specific language.
-     */
-    private Map<String, Map<Object, BindingsValuesProvider>> langBindingsValuesProviders;
-
-    /**
      * The service cache for script execution.
      */
     private ServiceCache serviceCache;
@@ -102,6 +83,11 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
      */
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
+    
+    /**
+     * The customizer for BindingsValuesProvider service trackers
+     */
+    private BindingsValuesProviderCustomizer bindingsValuesProviderCustomizer;
 
     // ---------- AdapterFactory -----------------------------------------------
 
@@ -174,21 +160,17 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     // ---------- SCR integration ----------------------------------------------
 
     protected void activate(ComponentContext context) {
-        this.bundleContext = context.getBundleContext();
+        bundleContext = context.getBundleContext();
+        bindingsValuesProviderCustomizer = new BindingsValuesProviderCustomizer(bundleContext);
 
-        this.genericBindingsValuesProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
-        this.langBindingsValuesProviders = new ConcurrentHashMap<String, Map<Object, BindingsValuesProvider>>();
-
-        ServiceTrackerCustomizer customizer = new BindingsValuesProviderCustomizer();
-
-        this.bindingsValuesProviderTracker = new ServiceTracker(this.bundleContext, BindingsValuesProvider.class.getName(), customizer);
+        this.bindingsValuesProviderTracker = new ServiceTracker(this.bundleContext, BindingsValuesProvider.class.getName(), bindingsValuesProviderCustomizer);
         this.bindingsValuesProviderTracker.open();
 
         try {
             Filter filter = this.bundleContext.createFilter(String.format("(&(objectclass=%s)(javax.script.name=*))",
                     Map.class.getName()));
 
-            this.mapBindingsValuesProviderTracker = new ServiceTracker(this.bundleContext, filter, customizer);
+            this.mapBindingsValuesProviderTracker = new ServiceTracker(this.bundleContext, filter, bindingsValuesProviderCustomizer);
             this.mapBindingsValuesProviderTracker.open();
         } catch (InvalidSyntaxException e) {
             log.warn("Unable to create ServiceTracker for Map-based script bindiings", e);
@@ -213,7 +195,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
     private Collection<BindingsValuesProvider> getBindingsValuesProviders(ScriptEngineFactory scriptEngineFactory) {
         final List<BindingsValuesProvider> results = new ArrayList<BindingsValuesProvider>();
-        results.addAll(genericBindingsValuesProviders.values());
+        results.addAll(bindingsValuesProviderCustomizer.getGenericBindingsValuesProviders().values());
 
         // we load the compatible language ones first so that the most specific
         // overrides these
@@ -221,7 +203,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
         if (factoryProps != null) {
             String[] compatibleLangs = PropertiesUtil.toStringArray(factoryProps.get("compatible.javax.script.name"), new String[0]);
             for (final String name : compatibleLangs) {
-                final Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
+                final Map<Object, BindingsValuesProvider> langProviders = bindingsValuesProviderCustomizer.getLangBindingsValuesProviders().get(name);
                 if (langProviders != null) {
                     results.addAll(langProviders.values());
                 }
@@ -229,7 +211,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
         }
 
         for (final String name : scriptEngineFactory.getNames()) {
-            final Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(name);
+            final Map<Object, BindingsValuesProvider> langProviders = bindingsValuesProviderCustomizer.getLangBindingsValuesProviders().get(name);
             if (langProviders != null) {
                 results.addAll(langProviders.values());
             }
@@ -237,70 +219,4 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
 
         return results;
     }
-
-    private class BindingsValuesProviderCustomizer implements ServiceTrackerCustomizer {
-
-        @SuppressWarnings("unchecked")
-        public Object addingService(final ServiceReference ref) {
-            final String[] engineNames = PropertiesUtil
-                    .toStringArray(ref.getProperty(ScriptEngine.NAME), new String[0]);
-            final Object serviceId = ref.getProperty(Constants.SERVICE_ID);
-            Object service = bundleContext.getService(ref);
-            if (service != null) {
-                if (service instanceof Map) {
-                    service = new MapWrappingBindingsValuesProvider((Map<String, Object>) service);
-                }
-                if (engineNames.length == 0) {
-                    genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
-                } else if (engineNames.length == 1 && ANY_ENGINE.contains(engineNames[0].toUpperCase())) {
-                    genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
-                } else {
-                    for (String engineName : engineNames) {
-                        Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
-                        if (langProviders == null) {
-                            langProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
-                            langBindingsValuesProviders.put(engineName, langProviders);
-                        }
-
-                        langProviders.put(serviceId, (BindingsValuesProvider) service);
-                    }
-                }
-            }
-            return service;
-        }
-
-        public void modifiedService(final ServiceReference ref, final Object service) {
-            removedService(ref, service);
-            addingService(ref);
-        }
-
-        public void removedService(final ServiceReference ref, final Object service) {
-            Object serviceId = ref.getProperty(Constants.SERVICE_ID);
-            if (genericBindingsValuesProviders.remove(serviceId) == null) {
-                for (Map<Object, BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
-                    if (coll.remove(service) != null) {
-                        return;
-                    }
-                }
-            }
-        }
-
-    }
-
-    private class MapWrappingBindingsValuesProvider implements BindingsValuesProvider {
-
-        private Map<String,Object> map;
-
-        MapWrappingBindingsValuesProvider(Map<String, Object> map) {
-            this.map = map;
-        }
-
-        public void addBindings(Bindings bindings) {
-            for (String key : map.keySet()) {
-                bindings.put(key, map.get(key));
-            }
-        }
-
-    }
-
 }
