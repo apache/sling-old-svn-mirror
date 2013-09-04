@@ -104,7 +104,7 @@ public class ConvertToBundleAction  implements IObjectActionDelegate {
 						action.setEnabled(false);
 					} else {
 						Model mavenModel = MavenHelper.getMavenModel(project);
-						if ("bundle".equals(mavenModel.getPackaging())) {
+						if (mavenModel!=null && "bundle".equals(mavenModel.getPackaging())) {
 							action.setEnabled(true);
 						} else {
 							action.setEnabled(false);
