@@ -525,5 +525,9 @@ public class JcrNode implements IAdaptable {
 	public JcrNode getParent() {
 		return parent;
 	}
+	
+	IResource getResource() {
+		return resource;
+	}
 
 }
