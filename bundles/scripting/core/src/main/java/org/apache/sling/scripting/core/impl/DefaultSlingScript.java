@@ -707,7 +707,8 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     private String getLoggerName() {
         String name = scriptName;
         name = name.substring(1);       // cut-off leading slash
-        name = name.replace('.', '$');  // extension separator as part of name
+        name = name.replace('.', '_');  // extension separator as part of name - used to be $ but 
+                                        // logback considers that as a separator (SLING-3037)
         name = name.replace('/', '.');  // hierarchy defined by dot
         return name;
     }
