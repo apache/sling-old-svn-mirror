@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Shell;
@@ -29,7 +30,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /** Testing action which renames a jcr node **/
-public class JcrNodeRenameAction implements IObjectActionDelegate {
+public class JcrNodeDeleteAction implements IObjectActionDelegate {
 
 	private ISelection selection;
 	private JcrNode node;
@@ -38,7 +39,7 @@ public class JcrNodeRenameAction implements IObjectActionDelegate {
 	/**
 	 * The constructor.
 	 */
-	public JcrNodeRenameAction() {
+	public JcrNodeDeleteAction() {
 	}
 
 	/**
@@ -51,21 +52,10 @@ public class JcrNodeRenameAction implements IObjectActionDelegate {
 		if (this.node==null) {
 			return;
 		}
-		InputDialog id = new InputDialog(shell, "Change JCR node name", 
-				"Enter new name for JCR node '"+node.getDescription()+"':", node.getName(), new IInputValidator() {
-					
-					@Override
-					public String isValid(String newText) {
-						if (newText!=null && newText.trim().length()>0 && newText.trim().equals(newText)) {
-							return null;
-						} else {
-							return "Invalid input";
-						}
-					}
-				});
-		if (id.open() == IStatus.OK) {
-			node.rename(id.getValue());
+		if (!MessageDialog.openConfirm(shell, "Delete JCR node", "Do you really want to delete '"+node.getName()+"'?")) {
+			return;
 		}
+		node.delete();
 	}
 
 	/**

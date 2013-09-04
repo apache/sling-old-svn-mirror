@@ -44,10 +44,12 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IActionFilter;
 import org.eclipse.ui.IContributorResourceAdapter;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -396,7 +398,25 @@ public class JcrNode implements IAdaptable {
 	}
 	
 	private Object doGetAdapter(Class adapter) {
-		if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
+		if (adapter==IActionFilter.class) {
+			return new IActionFilter() {
+				
+				@Override
+				public boolean testAttribute(Object target, String name, String value) {
+					if (!(target instanceof JcrNode)) {
+						return false;
+					}
+					final JcrNode node = (JcrNode)target;
+					if ("domNode".equals(name)) {
+						return node.domNode!=null;	
+					}
+					if ("nonDomNode".equals(name)) {
+						return node.domNode==null;	
+					}
+					return false;
+				}
+			};
+		} else if (adapter==ITabbedPropertySheetPageContributor.class && "christmas".equals("christmas")) {
 			return new ITabbedPropertySheetPageContributor() {
 
 				@Override
@@ -528,6 +548,26 @@ public class JcrNode implements IAdaptable {
 	
 	IResource getResource() {
 		return resource;
+	}
+
+	public void createChild(String nodeName) {
+		Element element = domNode.getOwnerDocument().createElement(nodeName);
+		element.setAttribute("jcr:primaryType", "nt:unstructured");
+		Node childDomNode = domNode.appendChild(element);
+		JcrNode childNode = new JcrNode(this, childDomNode, null);
+		underlying.save();
+	}
+
+	public void delete() {
+		if (parent==null) {
+			// then I dont know how to delete
+			return;
+		}
+		parent.children.remove(this);
+		if (domNode!=null) {
+			domNode.getParentNode().removeChild(domNode);
+		}
+		underlying.save();
 	}
 
 }
