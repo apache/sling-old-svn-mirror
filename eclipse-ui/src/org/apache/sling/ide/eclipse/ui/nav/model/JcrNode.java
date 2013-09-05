@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,8 +44,11 @@ import org.eclipse.core.resources.mapping.ResourceTraversal;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionFilter;
 import org.eclipse.ui.IContributorResourceAdapter;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -554,11 +558,34 @@ public class JcrNode implements IAdaptable {
 	}
 
 	public void createChild(String nodeName) {
-		Element element = domNode.getOwnerDocument().createElement(nodeName);
-		element.setAttribute("jcr:primaryType", "nt:unstructured");
-		Node childDomNode = domNode.appendChild(element);
-		JcrNode childNode = new JcrNode(this, childDomNode, null);
-		underlying.save();
+		if (domNode==null) {
+			// then we're not in the context of a .content.xml file yet
+			// so we need to create one
+			final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><jcr:root xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"/>";
+			if (resource instanceof IFolder) {
+				IFolder folder = (IFolder)resource;
+				IFile file = folder.getFile(nodeName+".xml");
+				try {
+					file.create(new ByteArrayInputStream(minimalContentXml.getBytes()), true, new NullProgressMonitor());
+				} catch (CoreException e) {
+					//TODO proper logging
+					e.printStackTrace();
+				}
+			} else {
+				MessageDialog.openInformation(Display.getDefault().getActiveShell(), 
+						"Cannot create JCR node on a File", "Creating a JCR node on a File is not yet supported");
+			}
+		} else {
+			try{
+				Element element = domNode.getOwnerDocument().createElement(nodeName);
+				element.setAttribute("jcr:primaryType", "nt:unstructured");
+				Node childDomNode = domNode.appendChild(element);
+				JcrNode childNode = new JcrNode(this, childDomNode, null);
+				underlying.save();
+			} catch(Exception e) {
+				MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
+			}
+		}
 	}
 
 	public void delete() {
