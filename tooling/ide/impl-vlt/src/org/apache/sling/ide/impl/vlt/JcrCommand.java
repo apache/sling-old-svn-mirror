@@ -47,8 +47,9 @@ public abstract class JcrCommand<T> implements Command<T> {
     @Override
     public Result<T> execute() {
 
+        Session session = null;
         try {
-            Session session = repository.login(credentials);
+            session = repository.login(credentials);
 
             return JcrResult.success(execute0(session));
         } catch (LoginException e) {
@@ -57,6 +58,9 @@ public abstract class JcrCommand<T> implements Command<T> {
             return JcrResult.failure(e);
         } catch (IOException e) {
             return JcrResult.failure(e);
+        } finally {
+            if (session != null)
+                session.logout();
         }
     }
 
