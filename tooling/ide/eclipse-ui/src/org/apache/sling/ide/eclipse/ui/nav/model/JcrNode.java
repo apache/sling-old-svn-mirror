@@ -32,6 +32,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -292,12 +293,16 @@ public class JcrNode implements IAdaptable {
 			
 			return filterHiddenChildren(resultMap.values());
 		} catch (CoreException e) {
+			e.printStackTrace();
 			return new Object[0];
 		} catch (ParserConfigurationException e) {
+			e.printStackTrace();
 			return new Object[0];
 		} catch (SAXException e) {
+			e.printStackTrace();
 			return new Object[0];
 		} catch (IOException e) {
+			e.printStackTrace();
 			return new Object[0];
 		}
 	}
@@ -434,9 +439,9 @@ public class JcrNode implements IAdaptable {
 				return null;
 			}
 		} else if (adapter == IContributorResourceAdapter.class) {
-			if (resource==null) {
-				return null;
-			}
+			//if (resource==null) {
+			//	return null;
+			//}
 			return new IContributorResourceAdapter() {
 				
 				@Override
@@ -447,34 +452,46 @@ public class JcrNode implements IAdaptable {
 					JcrNode node = (JcrNode)adaptable;
 					if (node.resource!=null) {
 						return node.resource;
+					} else {
+						return node.underlying.file;
 					}
-					return null;
+//					return null;
 				}
 			};
 		} else if (adapter == IResource.class) {
-			return resource;		
+			if (resource!=null) {
+				return resource;
+			} else {
+				return null;//underlying.file;
+			}
 		} else if (adapter == ResourceMapping.class) { 
 			boolean t = true;
 			if (!t) {
 				return null;
 			}
-			if (resource==null) {
-				return null;
-			}
+//			if (resource==null) {
+//				return null;
+//			}
 			return new ResourceMapping() {
 				
 				@Override
 				public ResourceTraversal[] getTraversals(ResourceMappingContext context,
 						IProgressMonitor monitor) throws CoreException {
-					return new ResourceTraversal[] { new ResourceTraversal(new IResource[] { resource }, IResource.DEPTH_INFINITE, IResource.NONE) };
+					if (resource!=null) {
+						return new ResourceTraversal[] { new ResourceTraversal(new IResource[] { resource }, IResource.DEPTH_INFINITE, IResource.NONE) };
+					} else {
+						return new ResourceTraversal[] { new ResourceTraversal(new IResource[] { underlying.file }, IResource.DEPTH_INFINITE, IResource.NONE) };
+					}
 				}
 				
 				@Override
 				public IProject[] getProjects() {
 					if (resource!=null) {
 						return new IProject[] {resource.getProject()};
+					} else {
+						return new IProject[] {underlying.file.getProject()};
 					}
-					return null;
+//					return null;
 				}
 				
 				@Override
@@ -484,42 +501,28 @@ public class JcrNode implements IAdaptable {
 				
 				@Override
 				public Object getModelObject() {
-					return resource;
+					if (resource!=null) {
+						return resource;
+					} else {
+						return underlying.file;
+					}
 				}
 			};
 		}
 		return null;
 	}
 
-	public boolean canBeOpenedInEditor() {
-		if (resource==null) {
-			return false;
-		}
-		
-		if (resource instanceof IFolder) {
-			return false;
+	public IFile getFileForEditor() {
+		if (resource instanceof IFile) {
+//			if (!isVaultFile(resource)) {
+			return (IFile)resource;
+		} else if (resource instanceof IContainer) {
+			return null;
+		} else if (underlying!=null && underlying.file!=null) {
+			return underlying.file;
 		} else {
-			try {
-				if (!isVaultFile(resource)) {
-					return true;
-				} else {
-					return false;
-				}
-			} catch (ParserConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (CoreException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			return null;
 		}
-		return false;
 	}
 
 	public void rename(String string) {

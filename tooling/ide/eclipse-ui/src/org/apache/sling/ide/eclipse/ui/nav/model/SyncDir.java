@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.swt.graphics.Image;
 
@@ -71,8 +72,8 @@ public class SyncDir extends JcrNode {
 	}
 	
 	@Override
-	public boolean canBeOpenedInEditor() {
-		return false;
+	public IFile getFileForEditor() {
+		return null;
 	}
 
 }

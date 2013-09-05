@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
 import org.w3c.dom.Node;
@@ -82,8 +83,8 @@ public class DirNode extends JcrNode {
 	}
 	
 	@Override
-	public boolean canBeOpenedInEditor() {
-		return false;
+	public IFile getFileForEditor() {
+		return null;
 	}
 	
 	@Override

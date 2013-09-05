@@ -178,10 +178,10 @@ public class GenericJcrRootFile extends JcrNode {
 	}
 	
 	@Override
-	public boolean canBeOpenedInEditor() {
-		return false;
+	public IFile getFileForEditor() {
+		return file;
 	}
-
+	
 	public void save() {
 		try {
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
