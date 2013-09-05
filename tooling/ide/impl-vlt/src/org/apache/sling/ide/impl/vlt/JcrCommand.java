@@ -51,7 +51,11 @@ public abstract class JcrCommand<T> implements Command<T> {
         try {
             session = repository.login(credentials);
 
-            return JcrResult.success(execute0(session));
+            T result = execute0(session);
+
+            session.save();
+
+            return JcrResult.success(result);
         } catch (LoginException e) {
             return JcrResult.failure(e);
         } catch (RepositoryException e) {
