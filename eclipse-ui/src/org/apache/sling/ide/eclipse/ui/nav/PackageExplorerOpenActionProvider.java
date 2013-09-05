@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.nav;
 
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -25,9 +26,11 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionContext;
 import org.eclipse.ui.actions.OpenFileAction;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.navigator.CommonActionProvider;
 import org.eclipse.ui.navigator.ICommonActionConstants;
 import org.eclipse.ui.navigator.ICommonActionExtensionSite;
@@ -57,12 +60,22 @@ private TreeViewer treeViewer;
 			if (selection instanceof IStructuredSelection) {
 				IStructuredSelection iss = (IStructuredSelection)selection;
 				if (iss.getFirstElement() instanceof JcrNode) {
-					JcrNode node = (JcrNode)iss.getFirstElement();
-					if (node.canBeOpenedInEditor()) {
-						actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, action);
-					} else {
-						return;
+					final JcrNode node = (JcrNode)iss.getFirstElement();
+					final IFile file = node.getFileForEditor();
+					if (file!=null) {
+						actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, new OpenFileAction(getActivePage()) {
+							@Override
+							public void run() {
+								try {
+									IDE.openEditor(getActivePage(), file, true);
+								} catch (PartInitException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+						});
 					}
+					return;
 				}
 			}
 //			fOpenGroup.fillActionBars(actionBars);

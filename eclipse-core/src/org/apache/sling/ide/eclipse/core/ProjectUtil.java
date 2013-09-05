@@ -17,7 +17,10 @@
 package org.apache.sling.ide.eclipse.core;
 
 import org.apache.sling.ide.eclipse.core.internal.Activator;
+import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.QualifiedName;
@@ -28,6 +31,26 @@ public abstract class ProjectUtil {
     private static final String PROPERTY_SYNC_ROOT = "sync_root";
     private static final String PROPERTY_SYNC_ROOT_DEFAULT_VALUE = "jcr_root";
 
+    public static IFolder getSyncDirectory(IProject project) {
+    	if (project==null) {
+    		return null;
+    	}
+		if (!project.isOpen()) {
+			return null;
+		} else if (!ProjectHelper.isContentProject(project)) {
+			return null;
+		}
+		String syncDirectoryValue = ProjectUtil.getSyncDirectoryValue(project);
+		if (syncDirectoryValue==null || syncDirectoryValue.length()==0) {
+			return null;
+		}
+		IResource syncDir = project.findMember(syncDirectoryValue);
+		if (syncDir==null || !(syncDir instanceof IFolder)) {
+			return null;
+		}
+		return (IFolder) syncDir;
+    }
+    
     /**
      * Returns the value of the sync directory configured for a project.
      * 
