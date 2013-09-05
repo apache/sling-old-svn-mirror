@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
  *  selected by their tags, and merges their Results.
  */
 @Component(
-        name="org.apache.sling.hc.CompositeHealthCheck",
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
