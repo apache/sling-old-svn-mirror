@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.jcr.RepositoryException;
@@ -24,15 +25,61 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.vault.fs.Mounter;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
+import org.apache.jackrabbit.vault.fs.api.VaultFsConfig;
+import org.apache.jackrabbit.vault.fs.config.AbstractVaultFsConfig;
+import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
+import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 
 public class VaultFsLocatorImpl implements VaultFsLocator {
 
     @Override
-    public VaultFileSystem getFileSystem(RepositoryAddress repositoryAddress, Session session)
-            throws RepositoryException, IOException {
+    public VaultFileSystem getFileSystem(RepositoryAddress repositoryAddress, File contentSyncRoot, Session session)
+            throws RepositoryException, IOException, ConfigurationException {
 
-        // TODO - supply filter and config
-        return Mounter.mount(null, null, repositoryAddress, "/", session);
+        // TODO - should not use File to read from FS, rather input streams
+        VaultFsConfig config = null;
+        DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
+
+        File filterFile = findFilterFile(contentSyncRoot);
+        if (filterFile != null) {
+            filter.load(filterFile);
+        }
+
+        File metaInfDir = new File(contentSyncRoot.getParent(), "META-INF");
+
+        if (metaInfDir.isDirectory()) {
+            File vaultDir = new File(metaInfDir, "vault");
+            if (vaultDir.isDirectory()) {
+
+                File configFile = new File(vaultDir, "config.xml");
+                config = AbstractVaultFsConfig.load(configFile);
+            }
+        }
+
+        return Mounter.mount(config, filter, repositoryAddress, "/", session);
+    }
+
+    @Override
+    public File findFilterFile(File contentSyncRoot) {
+
+        File metaInfDir = new File(contentSyncRoot.getParent(), "META-INF");
+        if (metaInfDir.isDirectory()) {
+            File vaultDir = new File(metaInfDir, "vault");
+            if (vaultDir.isDirectory()) {
+
+                File filterFile = new File(vaultDir, "filter-vlt.xml");
+                if (filterFile.isFile()) {
+                    return filterFile;
+                } else {
+                    filterFile = new File(vaultDir, "filter.xml");
+                    if (filterFile.isFile()) {
+                        return filterFile;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
 }

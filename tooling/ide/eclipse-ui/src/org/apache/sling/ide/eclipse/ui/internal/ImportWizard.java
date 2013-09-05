@@ -17,11 +17,13 @@
 package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
@@ -200,7 +202,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
             createFolder(project, rootImportPath.removeLastSegments(i));
     }
 
-	        /**
+    /**
      * Crawls the repository and recursively imports founds resources
      * 
      * @param repository the sling repository to import from
@@ -218,6 +220,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
     private void crawlChildrenAndImport(Repository repository, Filter filter, String path, IProject project,
             IPath projectRelativePath) throws RepositoryException, CoreException, IOException {
 
+        File contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
+
         System.out.println("crawlChildrenAndImport(" + repository + ", " + path + ", " + project + ", "
                 + projectRelativePath + ")");
 
@@ -234,8 +238,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			createFolder(project, projectRelativePath.append(path));
             ResourceProxy resourceToSerialize = executeCommand(repository.newGetNodeContentCommand(path));
             
-            String out = serializationManager.buildSerializationData(resourceToSerialize,
-                    repository.getRepositoryInfo());
+            String out = serializationManager.buildSerializationData(contentSyncRoot,
+                    resourceToSerialize, repository.getRepositoryInfo());
             if (out != null) {
                 createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
                     out.getBytes("UTF-8"));
@@ -251,7 +255,8 @@ public class ImportWizard extends Wizard implements IImportWizard {
             }
 
             if (filter != null) {
-                FilterResult filterResult = filter.filter(child.getPath());
+                FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath(),
+                        repository.getRepositoryInfo());
                 if (filterResult == FilterResult.DENY) {
                     continue;
                 }

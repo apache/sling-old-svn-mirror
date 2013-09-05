@@ -16,6 +16,10 @@
  */
 package org.apache.sling.ide.filter;
 
+import java.io.File;
+
+import org.apache.sling.ide.transport.RepositoryInfo;
+
 public interface Filter {
 
     /**
@@ -23,5 +27,5 @@ public interface Filter {
      * @param relativeFilePath a relative path
      * @return the filter result
      */
-    FilterResult filter(String relativeFilePath);
+    FilterResult filter(File contentSyncRoot, String relativeFilePath, RepositoryInfo repositoryInfo);
 }

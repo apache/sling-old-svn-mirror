@@ -373,8 +373,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
         if (filterFile!=null && filterFile.exists()) {
             importLabel.setText("Will apply import filter from /" + filterFile.getProjectRelativePath() + ".");
         } else {
-            importLabel.setText("No filter found at /" + filterFile.getProjectRelativePath()
-                    + ", will import all resources.");
+            importLabel.setText("No filter definition found, will import all resources.");
         }
         importLabel.setVisible(true);
         importLabel.getParent().layout();
@@ -394,6 +393,9 @@ public class ImportWizardPage extends WizardDataTransferPage {
 
         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
         File filterLocation = filterLocator.findFilterLocation(syncLocation.getLocation().toFile());
+        if (filterLocation == null) {
+            return null;
+        }
         IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
         return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
     }

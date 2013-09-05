@@ -37,7 +37,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void emptySerializedData() throws IOException, SAXException {
 
-        String serializationData = sm.buildSerializationData(newResourceWithProperties(new HashMap<String, Object>()), null);
+        String serializationData = sm.buildSerializationData(null, newResourceWithProperties(new HashMap<String, Object>()), null);
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -53,7 +53,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void nullSerializedData() throws IOException, SAXException {
 
-        String serializationData = sm.buildSerializationData(null, null);
+        String serializationData = sm.buildSerializationData(null, null, null);
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -65,7 +65,7 @@ public class SimpleXmlSerializationManagerTest {
         data.put("jcr:createdBy", "admin");
         data.put("jcr:lastModifiedBy", "author");
 
-        String serializationData = sm.buildSerializationData(newResourceWithProperties(data), null);
+        String serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
 
         String methodName = "stringSerializedData";
 
@@ -93,7 +93,7 @@ public class SimpleXmlSerializationManagerTest {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");
 
-        String serializationData = sm.buildSerializationData(newResourceWithProperties(data), null);
+        String serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
 
         String methodName = "serializedDataIsEscaped";
 

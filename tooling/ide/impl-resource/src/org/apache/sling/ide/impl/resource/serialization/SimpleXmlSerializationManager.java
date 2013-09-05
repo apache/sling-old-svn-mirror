@@ -98,7 +98,7 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public String buildSerializationData(ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
+    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
 
         if (resource == null) {
             return null;

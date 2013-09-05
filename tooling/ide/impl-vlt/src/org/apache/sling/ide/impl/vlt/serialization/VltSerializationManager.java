@@ -31,6 +31,7 @@ import org.apache.jackrabbit.vault.fs.api.Aggregate;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.VaultFile;
 import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
+import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.impl.io.DocViewSerializer;
 import org.apache.jackrabbit.vault.util.Constants;
 import org.apache.sling.ide.impl.vlt.RepositoryUtils;
@@ -71,9 +72,11 @@ public class VltSerializationManager implements SerializationManager {
     }
 
     @Override
-    public String buildSerializationData(ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
+    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
 
         // TODO - there might be a performance problem with getting the session on-demand each time
+        // the resolution might be to have a SerializationManager instance kept per 'transaction'
+        // which is stateful, with init(RepositoryInfo) and destroy() methods
         Session session = null;
         try {
             
@@ -84,7 +87,7 @@ public class VltSerializationManager implements SerializationManager {
 
             RepositoryAddress address = RepositoryUtils.getRepositoryAddress(repositoryInfo);
 
-            VaultFileSystem fs = fsLocator.getFileSystem(address, session);
+            VaultFileSystem fs = fsLocator.getFileSystem(address, contentSyncRoot, session);
 
             VaultFile vaultFile = fs.getFile(resource.getPath());
             if (vaultFile == null) {
@@ -107,6 +110,8 @@ public class VltSerializationManager implements SerializationManager {
             return stringResult;
 
         } catch (RepositoryException e) {
+            throw new RuntimeException(e);
+        } catch (ConfigurationException e) {
             throw new RuntimeException(e);
         } finally {
             if (session != null) {

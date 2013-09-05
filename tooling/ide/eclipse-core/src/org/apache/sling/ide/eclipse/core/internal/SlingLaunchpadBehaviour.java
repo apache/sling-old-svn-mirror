@@ -31,6 +31,7 @@ import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.eclipse.core.resources.IFile;
@@ -218,7 +219,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException {
 
-        FileInfo info = createFileInfo(resource);
+        FileInfo info = createFileInfo(resource, repository);
 
         System.out.println("For " + resource + " build fileInfo " + info);
         if (info == null) {
@@ -241,7 +242,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
     }
 
-    private FileInfo createFileInfo(IModuleResource resource) {
+    private FileInfo createFileInfo(IModuleResource resource, Repository repository) {
 
         IResource file = (IFile) resource.getAdapter(IFile.class);
         if (file == null) {
@@ -258,6 +259,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         IProject project = file.getProject();
 
         String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
 
         Filter filter = null;
         try {
@@ -268,7 +270,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
 
         if (filter != null) {
-            FilterResult filterResult = getFilterResult(resource, filter);
+            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
+                    repository.getRepositoryInfo());
             if (filterResult == FilterResult.DENY) {
                 return null;
             }
@@ -283,7 +286,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return info;
     }
 
-    private FilterResult getFilterResult(IModuleResource resource, Filter filter) {
+    private FilterResult getFilterResult(IModuleResource resource, Filter filter, File contentSyncRoot,
+            RepositoryInfo repositoryInfo) {
 
         String filePath = resource.getModuleRelativePath().toOSString();
         if (serializationManager().isSerializationFile(filePath)) {
@@ -292,12 +296,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println("Filtering by " + filePath + " for " + resource);
 
-        return filter.filter(filePath);
+        return filter.filter(contentSyncRoot, filePath, repositoryInfo);
     }
 
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource) {
 
-        FileInfo info = createFileInfo(resource);
+        FileInfo info = createFileInfo(resource, repository);
 
         if (info == null) {
             return null;
@@ -309,6 +313,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     private Filter loadFilter(IProject project, final IFolder syncFolder) throws CoreException {
         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
         File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
+        if (filterLocation == null) {
+            return null;
+        }
         IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
         IFile filterFile = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
         Filter filter = null;

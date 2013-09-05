@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.jcr.RepositoryException;
@@ -23,6 +24,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
+import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 
 /**
  * The <tt>VaultFsLocator</tt> locates {@linkplain VaultFileSystem} instances
@@ -30,7 +32,9 @@ import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
  */
 public interface VaultFsLocator {
 
-    VaultFileSystem getFileSystem(RepositoryAddress repositoryAddress, Session session)
-            throws RepositoryException, IOException;
+    VaultFileSystem getFileSystem(RepositoryAddress repositoryAddress, File contentSyncRoot, Session session)
+            throws RepositoryException, IOException, ConfigurationException;
+
+    File findFilterFile(File contentSyncRoot);
 
 }

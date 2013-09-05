@@ -22,6 +22,7 @@ import java.io.InputStream;
 
 public interface FilterLocator {
 
+    // TODO - should be File[] to allow multiple lookups, see {filter-vlt.xml, filter.xml}
     File findFilterLocation(File syncDirectory);
 
     Filter loadFilter(InputStream filterFileContents) throws IOException;
