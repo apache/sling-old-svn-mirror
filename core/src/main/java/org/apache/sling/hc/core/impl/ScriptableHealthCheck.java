@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that checks a scriptable expression */
 @Component(
-        name="org.apache.sling.hc.ScriptableHealthCheck",
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
