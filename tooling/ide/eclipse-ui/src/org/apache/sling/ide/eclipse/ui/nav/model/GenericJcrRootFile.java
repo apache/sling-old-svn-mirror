@@ -37,6 +37,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -180,6 +181,15 @@ public class GenericJcrRootFile extends JcrNode {
 	@Override
 	public IFile getFileForEditor() {
 		return file;
+	}
+	
+	@Override
+	public void createChild(String nodeName) {
+		Element element = document.createElement(nodeName);
+		element.setAttribute("jcr:primaryType", "nt:unstructured");
+		Node childDomNode = document.getFirstChild().appendChild(element);
+		JcrNode childNode = new JcrNode(this, childDomNode, null);
+		underlying.save();
 	}
 	
 	public void save() {
