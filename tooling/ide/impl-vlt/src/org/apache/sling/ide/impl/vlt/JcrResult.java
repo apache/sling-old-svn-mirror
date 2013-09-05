@@ -56,4 +56,19 @@ public class JcrResult<T> implements Result<T> {
         return success;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder out = new StringBuilder();
+        out.append(getClass().getSimpleName()).append("[ success:").append(success);
+
+        if (exception != null)
+            out.append(", exception: ").append(exception.getClass().getName()).append(" - ")
+                    .append(exception.getMessage());
+
+        out.append(']');
+
+        return out.toString();
+
+    }
+
 }
