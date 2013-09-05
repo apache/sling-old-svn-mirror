@@ -29,6 +29,7 @@ import org.apache.jackrabbit.vault.fs.api.VaultFsConfig;
 import org.apache.jackrabbit.vault.fs.config.AbstractVaultFsConfig;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
+import org.apache.jackrabbit.vault.util.Constants;
 
 public class VaultFsLocatorImpl implements VaultFsLocator {
 
@@ -45,13 +46,13 @@ public class VaultFsLocatorImpl implements VaultFsLocator {
             filter.load(filterFile);
         }
 
-        File metaInfDir = new File(contentSyncRoot.getParent(), "META-INF");
+        File metaInfDir = new File(contentSyncRoot.getParent(), Constants.META_INF);
 
         if (metaInfDir.isDirectory()) {
-            File vaultDir = new File(metaInfDir, "vault");
+            File vaultDir = new File(metaInfDir, Constants.VAULT_DIR);
             if (vaultDir.isDirectory()) {
 
-                File configFile = new File(vaultDir, "config.xml");
+                File configFile = new File(vaultDir, Constants.CONFIG_XML);
                 config = AbstractVaultFsConfig.load(configFile);
             }
         }
@@ -62,16 +63,16 @@ public class VaultFsLocatorImpl implements VaultFsLocator {
     @Override
     public File findFilterFile(File contentSyncRoot) {
 
-        File metaInfDir = new File(contentSyncRoot.getParent(), "META-INF");
+        File metaInfDir = new File(contentSyncRoot.getParent(), Constants.META_INF);
         if (metaInfDir.isDirectory()) {
-            File vaultDir = new File(metaInfDir, "vault");
+            File vaultDir = new File(metaInfDir, Constants.VAULT_DIR);
             if (vaultDir.isDirectory()) {
 
-                File filterFile = new File(vaultDir, "filter-vlt.xml");
+                File filterFile = new File(vaultDir, Constants.FILTER_VLT_XML);
                 if (filterFile.isFile()) {
                     return filterFile;
                 } else {
-                    filterFile = new File(vaultDir, "filter.xml");
+                    filterFile = new File(vaultDir, Constants.FILTER_XML);
                     if (filterFile.isFile()) {
                         return filterFile;
                     }
