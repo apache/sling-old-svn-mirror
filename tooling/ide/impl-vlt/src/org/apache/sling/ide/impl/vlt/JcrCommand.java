@@ -20,11 +20,15 @@ import java.io.IOException;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
+import javax.jcr.Node;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 
 public abstract class JcrCommand<T> implements Command<T> {
@@ -60,5 +64,26 @@ public abstract class JcrCommand<T> implements Command<T> {
 
     public String getPath() {
         return path;
+    }
+
+
+    protected ResourceProxy nodeToResource(Node node) throws RepositoryException {
+    
+        ResourceProxy resource = new ResourceProxy(node.getPath());
+        resource.addAdapted(Node.class, node);
+
+        PropertyIterator properties = node.getProperties();
+        while (properties.hasNext()) {
+            Property property = properties.nextProperty();
+            String propertyName = property.getName();
+            Object propertyValue = ConversionUtils.getPropertyValue(property);
+    
+            if (propertyValue != null) {
+                resource.addProperty(propertyName, propertyValue);
+            }
+        }
+    
+        return resource;
+    
     }
 }

@@ -57,7 +57,7 @@ public class RepositoryImpl extends AbstractRepository{
 	}
 	
 	@Override
-    public Command<Map<String, Object>> newGetNodeContentCommand(final String path) {
+    public Command<ResourceProxy> newGetNodeContentCommand(final String path) {
         return wrap(new GetNodeContentCommand(repositoryInfo, httpClient, path + ".json"));
 	}
 	

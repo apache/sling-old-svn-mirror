@@ -81,6 +81,8 @@ public interface Repository {
     // FIXME this is not thread-safe and with multiple sling servers will fail intermitently
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo);
 
+    RepositoryInfo getRepositoryInfo();
+
 	Command<Void> newAddNodeCommand(FileInfo fileInfo);
 	
     Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, Map<String, Object> serializationData);
@@ -101,7 +103,7 @@ public interface Repository {
      * @param path
      * @return all properties for the resource located at <tt>path</tt>
      */
-    Command<Map<String, Object>> newGetNodeContentCommand(String path);
+    Command<ResourceProxy> newGetNodeContentCommand(String path);
 
 	Command<byte[]> newGetNodeCommand(String path);
 }

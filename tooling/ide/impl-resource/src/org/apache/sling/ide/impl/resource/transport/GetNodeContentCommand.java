@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.impl.resource.transport;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
@@ -26,18 +24,19 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class GetNodeContentCommand extends AbstractCommand<Map<String, Object>> {
+class GetNodeContentCommand extends AbstractCommand<ResourceProxy> {
 
     GetNodeContentCommand(RepositoryInfo repositoryInfo, HttpClient httpClient, String relativePath) {
         super(repositoryInfo, httpClient, relativePath);
     }
 
     @Override
-    public Result<Map<String, Object>> execute() {
+    public Result<ResourceProxy> execute() {
         GetMethod get = new GetMethod(getPath());
     	try{
     		httpClient.getParams().setAuthenticationPreemptive(true);
@@ -51,20 +50,20 @@ class GetNodeContentCommand extends AbstractCommand<Map<String, Object>> {
 
             JSONObject result = new JSONObject(get.getResponseBodyAsString());
 
-            Map<String, Object> properties = new HashMap<String, Object>();
+            ResourceProxy resource = new ResourceProxy(path);
             JSONArray names = result.names();
             for (int i = 0; i < names.length(); i++) {
                 String name = names.getString(i);
                 Object object = result.get(name);
                 if (object instanceof String) {
-                    properties.put(name, object);
+                    resource.addProperty(name, object);
                 } else {
                     System.out.println("Property '" + name + "' of type '" + object.getClass().getName()
                             + " is not handled");
                 }
             }
 
-            return AbstractResult.success(properties);
+            return AbstractResult.success(resource);
     	} catch (Exception e) {
     		return AbstractResult.failure(new RepositoryException(e));
     	}finally{

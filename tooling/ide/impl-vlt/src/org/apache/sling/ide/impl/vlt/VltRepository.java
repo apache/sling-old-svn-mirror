@@ -1,14 +1,10 @@
 package org.apache.sling.ide.impl.vlt;
 
-import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
-import javax.jcr.SimpleCredentials;
 
-import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
-import org.apache.jackrabbit.vault.util.RepositoryProvider;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
@@ -27,8 +23,6 @@ public class VltRepository implements Repository {
     private javax.jcr.Repository jcrRepo;
 
     private EventAdmin eventAdmin;
-
-    private final RepositoryProvider rp = new RepositoryProvider();
     private Credentials credentials;
 
     @Override
@@ -39,18 +33,14 @@ public class VltRepository implements Repository {
         initJcrRepo();
     }
 
+    public RepositoryInfo getRepositoryInfo() {
+        return repositoryInfo;
+    }
+
     private void initJcrRepo() {
         try {
-            // TODO proper error handling
-            String url = repositoryInfo.getUrl()+ "server/-/jcr:root/";
-            // TODO this should be configurable, or even better - automatically discovered
-            RepositoryAddress repositoryAddress = new RepositoryAddress(url);
-            jcrRepo = rp.getRepository(repositoryAddress);
-
-            credentials = new SimpleCredentials(repositoryInfo.getUsername(), repositoryInfo.getPassword()
-                    .toCharArray());
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            jcrRepo = RepositoryUtils.getRepository(repositoryInfo);
+            credentials = RepositoryUtils.getCredentials(repositoryInfo);
         } catch (RepositoryException e) {
             throw new RuntimeException(e);
         }
@@ -81,7 +71,7 @@ public class VltRepository implements Repository {
     }
 
     @Override
-    public Command<Map<String, Object>> newGetNodeContentCommand(String path) {
+    public Command<ResourceProxy> newGetNodeContentCommand(String path) {
 
         return TracingCommand.wrap(new GetNodeContentCommand(jcrRepo, credentials, path), eventAdmin);
     }

@@ -16,42 +16,25 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.jcr.Credentials;
 import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-public class GetNodeContentCommand extends JcrCommand<Map<String, Object>> {
+import org.apache.sling.ide.transport.ResourceProxy;
+
+public class GetNodeContentCommand extends JcrCommand<ResourceProxy> {
 
     public GetNodeContentCommand(Repository repository, Credentials credentials, String path) {
         super(repository, credentials, path);
     }
 
     @Override
-    protected Map<String, Object> execute0(Session session) throws RepositoryException {
+    protected ResourceProxy execute0(Session session) throws RepositoryException {
 
         Node node = session.getNode(getPath());
-        PropertyIterator properties = node.getProperties();
 
-        Map<String, Object> props = new HashMap<String, Object>();
-
-        while (properties.hasNext()) {
-
-            Property property = properties.nextProperty();
-            Object value = ConversionUtils.getPropertyValue(property);
-            if (value == null) {
-                continue;
-            }
-            props.put(property.getName(), value);
-        }
-
-        return props;
+        return nodeToResource(node);
     }
-
 }

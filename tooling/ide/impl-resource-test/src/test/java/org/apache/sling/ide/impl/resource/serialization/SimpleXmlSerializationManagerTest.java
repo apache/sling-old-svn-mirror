@@ -12,6 +12,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,15 +37,23 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void emptySerializedData() throws IOException, SAXException {
 
-        String serializationData = sm.buildSerializationData(new HashMap<String, Object>());
+        String serializationData = sm.buildSerializationData(newResourceWithProperties(new HashMap<String, Object>()), null);
 
         assertThat(serializationData, is(nullValue()));
+    }
+
+    private ResourceProxy newResourceWithProperties(Map<String, Object> properties) {
+        ResourceProxy resource = new ResourceProxy("/");
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            resource.addProperty(entry.getKey(), entry.getValue());
+        }
+        return resource;
     }
 
     @Test
     public void nullSerializedData() throws IOException, SAXException {
 
-        String serializationData = sm.buildSerializationData(null);
+        String serializationData = sm.buildSerializationData(null, null);
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -56,7 +65,7 @@ public class SimpleXmlSerializationManagerTest {
         data.put("jcr:createdBy", "admin");
         data.put("jcr:lastModifiedBy", "author");
 
-        String serializationData = sm.buildSerializationData(data);
+        String serializationData = sm.buildSerializationData(newResourceWithProperties(data), null);
 
         String methodName = "stringSerializedData";
 
@@ -84,7 +93,7 @@ public class SimpleXmlSerializationManagerTest {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");
 
-        String serializationData = sm.buildSerializationData(data);
+        String serializationData = sm.buildSerializationData(newResourceWithProperties(data), null);
 
         String methodName = "serializedDataIsEscaped";
 

@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
@@ -233,9 +232,10 @@ public class ImportWizard extends Wizard implements IImportWizard {
 			//DO NOTHING
         } else {
 			createFolder(project, projectRelativePath.append(path));
-            Map<String, Object> content = executeCommand(repository.newGetNodeContentCommand(path));
+            ResourceProxy resourceToSerialize = executeCommand(repository.newGetNodeContentCommand(path));
             
-            String out = serializationManager.buildSerializationData(content);
+            String out = serializationManager.buildSerializationData(resourceToSerialize,
+                    repository.getRepositoryInfo());
             if (out != null) {
                 createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
                     out.getBytes("UTF-8"));
@@ -289,6 +289,9 @@ public class ImportWizard extends Wizard implements IImportWizard {
     private void createFile(IProject project, IPath path, byte[] node) throws CoreException {
 		
 		IFile destinationFile = project.getFile(path);
+
+        System.out.println("Writing content file at " + path);
+
 		if ( destinationFile.exists() ) {
             /* TODO progress monitor */
             destinationFile.setContents(new ByteArrayInputStream(node), IResource.KEEP_HISTORY, null);

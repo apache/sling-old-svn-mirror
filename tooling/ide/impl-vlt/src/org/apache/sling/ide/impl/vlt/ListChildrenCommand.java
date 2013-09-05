@@ -19,8 +19,6 @@ package org.apache.sling.ide.impl.vlt;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -49,29 +47,10 @@ public class ListChildrenCommand extends JcrCommand<ResourceProxy> {
                 continue;
             }
 
-
             parent.addChild(nodeToResource(childNode));
         }
 
         return parent;
-    }
-
-    private ResourceProxy nodeToResource(Node node) throws RepositoryException {
-
-        ResourceProxy resource = new ResourceProxy(node.getPath());
-        PropertyIterator properties = node.getProperties();
-        while (properties.hasNext()) {
-            Property property = properties.nextProperty();
-            String propertyName = property.getName();
-            Object propertyValue = ConversionUtils.getPropertyValue(property);
-
-            if (propertyValue != null) {
-                resource.addProperty(propertyName, propertyValue);
-            }
-        }
-
-        return resource;
-
     }
 
 }

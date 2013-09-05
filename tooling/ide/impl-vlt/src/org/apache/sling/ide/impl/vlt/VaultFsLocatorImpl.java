@@ -14,26 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.resource.transport;
+package org.apache.sling.ide.impl.vlt;
 
-import org.apache.sling.ide.transport.Repository;
-import org.apache.sling.ide.transport.RepositoryInfo;
-//TODO move to api?
-public abstract class AbstractRepository implements Repository{
-	
-	protected RepositoryInfo repositoryInfo;
-	
-	public void setRepositoryInfo(RepositoryInfo repositoryInfo){
-		this.repositoryInfo=repositoryInfo;
-	}
+import java.io.IOException;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import org.apache.jackrabbit.vault.fs.Mounter;
+import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
+import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
+
+public class VaultFsLocatorImpl implements VaultFsLocator {
 
     @Override
-    public RepositoryInfo getRepositoryInfo() {
-        return repositoryInfo;
+    public VaultFileSystem getFileSystem(RepositoryAddress repositoryAddress, Session session)
+            throws RepositoryException, IOException {
+
+        // TODO - supply filter and config
+        return Mounter.mount(null, null, repositoryAddress, "/", session);
     }
 
-	@Override
-	public String toString() {
-		return "AbstractRepository [repositoryInfo=" + repositoryInfo + "]";
-	}
 }

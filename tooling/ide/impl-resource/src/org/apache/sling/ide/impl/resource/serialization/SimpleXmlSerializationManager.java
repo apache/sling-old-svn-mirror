@@ -35,6 +35,8 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.sling.ide.serialization.SerializationManager;
+import org.apache.sling.ide.transport.RepositoryInfo;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -96,7 +98,13 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public String buildSerializationData(Map<String, Object> content) throws IOException {
+    public String buildSerializationData(ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
+
+        if (resource == null) {
+            return null;
+        }
+
+        Map<String, Object> content = resource.getProperties();
 
         if (content == null || content.isEmpty()) {
             return null;
