@@ -236,7 +236,7 @@
          </adapter>
       </factory>
    </extension>
-   <extension
+   <!--extension
          point="org.eclipse.ui.newWizards">
       <category
             id="org.apache.sling.ide.eclipse.ui"
@@ -251,7 +251,7 @@
                class="selection.Selection1">
          </selection>
       </wizard>
-   </extension>
+   </extension-->
    <extension
          point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
       <propertyContributor
