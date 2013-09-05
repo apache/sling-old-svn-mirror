@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 /** {@link HealthCheck} that checks a single JMX attribute */
 @Component(
-        name="org.apache.sling.hc.JmxAttributeHealthCheck",
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
         metatype=true)
