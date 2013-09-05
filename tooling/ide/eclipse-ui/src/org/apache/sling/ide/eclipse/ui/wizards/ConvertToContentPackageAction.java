@@ -123,7 +123,7 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 						action.setEnabled(false);
 					} else {
 						Model mavenModel = MavenHelper.getMavenModel(project);
-						if ("content-package".equals(mavenModel.getPackaging())) {
+						if (mavenModel!=null && "content-package".equals(mavenModel.getPackaging())) {
 							action.setEnabled(true);
 						} else {
 							action.setEnabled(false);
