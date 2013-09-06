@@ -18,11 +18,14 @@
  */
 package org.apache.sling.discovery;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * Used to filter InstanceDescriptions in a TopologyView.
  * <p>
  * @see DiscoveryService#findInstances(InstanceFilter)
  */
+@ConsumerType
 public interface InstanceFilter {
 
 	/**

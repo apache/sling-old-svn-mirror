@@ -18,6 +18,8 @@
  */
 package org.apache.sling.discovery;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>TopologyEventListener</code> service interface may be implemented by
  * components interested in being made aware of changes in the topology.
@@ -25,6 +27,7 @@ package org.apache.sling.discovery;
  * Upon registration and whenever changes in the topology occur, this
  * service is informed.
  */
+@ConsumerType
 public interface TopologyEventListener {
 
 	/**

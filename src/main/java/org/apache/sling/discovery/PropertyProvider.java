@@ -18,6 +18,8 @@
  */
 package org.apache.sling.discovery;
 
+import aQute.bnd.annotation.ConsumerType;
+
 
 /**
  * The <code>PropertyProvider</code> service interface may be implemented by
@@ -30,6 +32,7 @@ package org.apache.sling.discovery;
  * change, the service registration of the provider should be updated.
  * This avoids periodic polling for changes.
  */
+@ConsumerType
 public interface PropertyProvider {
 
     /**
