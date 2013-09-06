@@ -24,8 +24,6 @@ import java.util.Iterator;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-
-import org.apache.sling.commons.log.logback.integration.LogTestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -68,6 +66,12 @@ public class ITDefaultConfig extends LogTestBase {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) slf4jLogger;
         Iterator<Appender<ILoggingEvent>> itr = logger.iteratorForAppenders();
         assertTrue("One appender should be attached with root logger", itr.hasNext());
+    }
+
+    @Test
+    public void supportNestedClassesWithNestedDot() throws Exception {
+        //SLING-3037 - No illegalArgumentException thrown
+        LoggerFactory.getLogger("com.foo.Bar$Nested.dot");
     }
 
 }
