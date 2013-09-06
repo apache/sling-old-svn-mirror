@@ -20,6 +20,8 @@ package org.apache.sling.hc.core.impl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.management.ManagementFactory;
+
 import org.apache.sling.hc.core.impl.JmxScriptBinding;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.Test;
@@ -29,7 +31,7 @@ public class JmxScriptBindingTest {
     @Test
     public void testJmxAttribute() throws Exception {
         final FormattingResultLog resultLog = new FormattingResultLog();
-        final JmxScriptBinding b = new JmxScriptBinding(resultLog);
+        final JmxScriptBinding.AttributeBinding b = new JmxScriptBinding.AttributeBinding(ManagementFactory.getPlatformMBeanServer(), resultLog);
         final Object value= b.attribute("java.lang:type=ClassLoading", "LoadedClassCount");
         assertNotNull("Expecting non-null attribute value", value);
         assertTrue("Expecting non-empty value", value.toString().length() > 0);

@@ -26,37 +26,63 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
+import javax.script.Bindings;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.hc.util.FormattingResultLog;
+import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** The JmxBinding is meant to be bound as "jmx" global variables
  *  in scripted rules, to allow for writing scripted expressions
  *  like jmx.attribute("java.lang:type=ClassLoading", "LoadedClassCount") > 100
- *  
- *  TODO this should really be a {@link BindingsValuesProvider} service,
- *  but for this we need to modify the default Sling script handling
- *  so that BindingsValuesProvider which have a specific scope service
- *  property are ignored.
  */
-public class JmxScriptBinding {
+@Component
+@Service
+@Property(name="context", value="healthcheck")
+public class JmxScriptBinding implements BindingsValuesProvider {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
-    private final FormattingResultLog resultLog;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String JMX_BINDING_NAME = "jmx";
     
-    public JmxScriptBinding(FormattingResultLog resultLog) {
-        this.resultLog = resultLog;
-    }
-    
-    public Object attribute(String objectNameString, String attributeName) 
-            throws MalformedObjectNameException, AttributeNotFoundException, InstanceNotFoundException, MBeanException, ReflectionException {
-        final ObjectName name = new ObjectName(objectNameString);
-        if(jmxServer.queryNames(name, null).size() == 0) {
-            final String msg = "JMX object name not found: [" + objectNameString + "]";
-            resultLog.warn(msg);
-            throw new IllegalStateException(msg);
+    public static class AttributeBinding {
+        private final MBeanServer jmxServer;
+        private final FormattingResultLog resultLog;
+        
+        AttributeBinding(MBeanServer s, FormattingResultLog r) {
+            jmxServer = s;
+            resultLog = r;
         }
-        resultLog.debug("Got JMX Object [{}]", name);
-        final Object value = jmxServer.getAttribute(name, attributeName);
-        resultLog.debug("JMX Object [{}] Attribute [{}] = [{}]", name, attributeName, value);
-        return value;
+        
+        public Object attribute(String objectNameString, String attributeName) 
+                throws MalformedObjectNameException, AttributeNotFoundException, InstanceNotFoundException, MBeanException, ReflectionException {
+            final ObjectName name = new ObjectName(objectNameString);
+            if(jmxServer.queryNames(name, null).size() == 0) {
+                final String msg = "JMX object name not found: [" + objectNameString + "]";
+                resultLog.warn(msg);
+                throw new IllegalStateException(msg);
+            }
+            resultLog.debug("Got JMX Object [{}]", name);
+            final Object value = jmxServer.getAttribute(name, attributeName);
+            resultLog.debug("JMX Object [{}] Attribute [{}] = [{}]", name, attributeName, value);
+            return value;
+        }
+    }
+
+    @Override
+    public void addBindings(Bindings b) {
+        final String logBindingName = FormattingResultLog.class.getName();
+        final Object resultLog = b.get(logBindingName);
+        if(resultLog == null) {
+            log.info("No {} found in Bindings, cannot activate {} binding", logBindingName, JMX_BINDING_NAME);
+        }
+        try {
+            b.put("jmx", new AttributeBinding(jmxServer, (FormattingResultLog)resultLog));
+        } catch(Exception e) {
+            log.error("Exception while activating " + JMX_BINDING_NAME, e);
+        }
     }
 }
