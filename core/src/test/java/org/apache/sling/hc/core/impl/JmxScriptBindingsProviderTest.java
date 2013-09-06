@@ -22,16 +22,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.lang.management.ManagementFactory;
 
-import org.apache.sling.hc.core.impl.JmxScriptBinding;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.Test;
 
-public class JmxScriptBindingTest {
+public class JmxScriptBindingsProviderTest {
     
     @Test
     public void testJmxAttribute() throws Exception {
         final FormattingResultLog resultLog = new FormattingResultLog();
-        final JmxScriptBinding.AttributeBinding b = new JmxScriptBinding.AttributeBinding(ManagementFactory.getPlatformMBeanServer(), resultLog);
+        final JmxScriptBindingsProvider.AttributeBinding b = new JmxScriptBindingsProvider.AttributeBinding(ManagementFactory.getPlatformMBeanServer(), resultLog);
         final Object value= b.attribute("java.lang:type=ClassLoading", "LoadedClassCount");
         assertNotNull("Expecting non-null attribute value", value);
         assertTrue("Expecting non-empty value", value.toString().length() > 0);
