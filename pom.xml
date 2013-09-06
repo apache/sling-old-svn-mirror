@@ -63,7 +63,7 @@
                             javax.script
                         </Import-Package>
                         <Export-Package>
-                            org.apache.sling.scripting.api;version=2.1.0
+                            org.apache.sling.scripting.api;version=2.2.0
                         </Export-Package>
                     </instructions>
                 </configuration>
