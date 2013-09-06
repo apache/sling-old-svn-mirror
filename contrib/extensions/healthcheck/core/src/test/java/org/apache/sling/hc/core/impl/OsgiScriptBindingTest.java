@@ -57,7 +57,7 @@ public class OsgiScriptBindingTest {
         Mockito.when(ctx.getBundles()).thenReturn(bundles);
         
         final FormattingResultLog resultLog = new FormattingResultLog();
-        final OsgiScriptBinding b = new OsgiScriptBinding(ctx, resultLog);
+        final OsgiScriptBinding.OsgiBinding b = new OsgiScriptBinding.OsgiBinding(ctx, resultLog);
         assertEquals(1, b.inactiveBundlesCount());
     }
 }

@@ -28,7 +28,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.core.impl.ScriptableHealthCheck;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -39,12 +39,9 @@ public class ScriptableHealthCheckTest {
     private ScriptableHealthCheck hc;
     private Dictionary<String, String> props;
     private ComponentContext ctx;
+    private final JmxScriptBinding jmxScriptBinding = new JmxScriptBinding();
 
     private void assertExpression(String expression, String languageExtension, boolean expected) throws Exception {
-        hc = new ScriptableHealthCheck();
-        ctx = Mockito.mock(ComponentContext.class);
-        props = new Hashtable<String, String>();
-        
         final ScriptEngine rhino = new ScriptEngineManager().getEngineByExtension("js");
         assertNotNull("With the rhino jar in our classpath, we should get a js script engine", rhino);
         final ScriptEngineManager manager = Mockito.mock(ScriptEngineManager.class);
@@ -63,9 +60,25 @@ public class ScriptableHealthCheckTest {
         assertEquals("Expecting result " + expected, expected, r.isOk());
     }
     
+    @Before
+    public void setup() {
+        hc = new ScriptableHealthCheck();
+        ctx = Mockito.mock(ComponentContext.class);
+        props = new Hashtable<String, String>();
+        hc.bindBindingsValuesProvider(jmxScriptBinding);
+    }
+    
     @Test
     public void testSimpleExpression() throws Exception {
         assertExpression("2 + 3 == 5", null, true);
+    }
+    
+    @Test
+    public void testRemoveBinding() throws Exception {
+        final String expr = "jmx.attribute('java.lang:type=ClassLoading', 'LoadedClassCount') > 10"; 
+        assertExpression(expr, "ecma", true);
+        hc.unbindBindingsValuesProvider(jmxScriptBinding);
+        assertExpression(expr, "ecma", false);
     }
     
     @Test
