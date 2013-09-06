@@ -78,6 +78,7 @@ public class JmxScriptBindingsProvider implements BindingsValuesProvider {
         final Object resultLog = b.get(logBindingName);
         if(resultLog == null) {
             log.info("No {} found in Bindings, cannot activate {} binding", logBindingName, JMX_BINDING_NAME);
+            return;
         }
         try {
             b.put("jmx", new AttributeBinding(jmxServer, (FormattingResultLog)resultLog));
