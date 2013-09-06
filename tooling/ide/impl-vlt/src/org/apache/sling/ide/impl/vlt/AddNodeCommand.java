@@ -57,7 +57,10 @@ public class AddNodeCommand extends JcrCommand<Void> {
             node = session.getNode(getPath());
         } else {
 
-            String parentLocation = Text.getAbsoluteParent(getPath(), 1);
+            String parentLocation = Text.getRelativeParent(getPath(), 1);
+            if (parentLocation.isEmpty()) {
+                parentLocation = "/";
+            }
             if ( !session.nodeExists(parentLocation)) {
                 throw new RepositoryException("No parent found at " + parentLocation
                         + " ; it's needed to create node at " + getPath());
