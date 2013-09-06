@@ -15,7 +15,7 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.core.impl;
+package org.apache.sling.hc.samples.impl;
 
 import javax.script.Bindings;
 
@@ -41,7 +41,7 @@ import aQute.bnd.annotation.component.Deactivate;
 @Component
 @Service
 @Property(name="context", value="healthcheck")
-public class OsgiScriptBinding implements BindingsValuesProvider {
+public class OsgiScriptBindingsProvider implements BindingsValuesProvider {
     private BundleContext bundleContext;
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final String OSGI_BINDING_NAME = "osgi";
