@@ -20,9 +20,6 @@ package org.apache.sling.event.jobs.consumer;
 
 import aQute.bnd.annotation.ProviderType;
 
-
-
-
 /**
  *
  * @since 1.1
@@ -30,22 +27,53 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface JobExecutionContext {
 
-    interface AsyncHandler {
+    /**
+     * Report an async result.
+     * @throws IllegalStateException If the job is not processed asynchronously
+     */
+    void asyncProcessingFinished(final JobStatus status);
 
-        void failed();
+    /**
+     * Indicate that the job executor is able to report the progress
+     * by providing a step count.
+     * This method should only be called once, consecutive calls
+     * or a call to {@link #startProgress(long)} have no effect.
+     * @param steps Number of total steps or -1 if the number of
+     *              steps is unknown.
+     */
+    void startProgress(final int steps);
 
-        void ok();
+    /**
+     * Indicate that the job executor is able to report the progress
+     * by providing an ETA.
+     * This method should only be called once, consecutive calls
+     * or a call to {@link #startProgress(int)} have no effect.
+     * @param eta Number of seconds the process should take or
+     *        -1 of it's not known now.
+     */
+    void startProgress(final long eta);
 
-        void cancel();
-    }
-
-    AsyncHandler getAsyncHandler();
-
-    void log(final String message);
-
-    void start(final int steps);
-
-    void start(final int steps, final long eta);
-
+    /**
+     * Update the progress to the current finished step.
+     * This method has only effect if {@link #startProgress(int)}
+     * has been called first.
+     * @param step The current step.
+     */
     void setProgress(final int step);
+
+    /**
+     * Update the progress to the new ETA.
+     * This method has only effect if {@link #startProgress(long)}
+     * has been called first.
+     * @param eta The new ETA
+     */
+    void update(final long eta);
+
+    /**
+     * Log a message.
+     * The message might contain place holders for additional arguments.
+     * @param message A message
+     * @param args Additional arguments
+     */
+    void log(final String message, final Object...args);
 }
