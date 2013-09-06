@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 @Component
 @Service
 @Property(name="context", value="healthcheck")
-public class JmxScriptBinding implements BindingsValuesProvider {
+public class JmxScriptBindingsProvider implements BindingsValuesProvider {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final String JMX_BINDING_NAME = "jmx";
