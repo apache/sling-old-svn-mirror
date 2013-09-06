@@ -59,39 +59,6 @@ import aQute.bnd.annotation.ProviderType;
 public interface ServiceUserMapper {
 
     /**
-     * The name of the Bundle manifest header providing the name of the service
-     * provided by the bundle. If this header is missing or empty, the bundle's
-     * symbolic name is used instead to name the service.
-     */
-    String BUNDLE_HEADER_SERVICE_NAME = "Sling-Service";
-
-    /**
-     * Returns the ID of the service represented by the given {@code bundle} and
-     * the {@code subServiceName}.
-     * <p>
-     * The service ID consists of a name derived from the bundle and the
-     * {@code serviceInfo} value if not {@code null} or empty:
-     *
-     * <pre>
-     * serviceID = serviceName [ ":" subServiceName ] .
-     * serviceName = Sling-Service manifest header or bundle symbolic name .
-     * </pre>
-     * <p>
-     * The service name for a bundle is taken from the
-     * {@value #BUNDLE_HEADER_SERVICE_NAME} manifest header of the bundle. If
-     * there is no such header or the value is empty, the bundle's symbolic name
-     * is used.
-     *
-     * @param bundle The bundle implementing the service request access to
-     *            resources.
-     * @param subServiceName Name of the sub service. This parameter is optional and
-     *            may be an empty string or {@code null}.
-     * @return The ID of the service represented by the bundle along with the
-     *         additional service information.
-     */
-    String getServiceID(Bundle bundle, String subServiceName);
-
-    /**
      * Returns the ID of a user to access the data store on behalf of the
      * service.
      *
