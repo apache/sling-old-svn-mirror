@@ -39,7 +39,7 @@ public class ScriptableHealthCheckTest {
     private ScriptableHealthCheck hc;
     private Dictionary<String, String> props;
     private ComponentContext ctx;
-    private final JmxScriptBinding jmxScriptBinding = new JmxScriptBinding();
+    private final JmxScriptBindingsProvider jmxScriptBindingsProvider = new JmxScriptBindingsProvider();
 
     private void assertExpression(String expression, String languageExtension, boolean expected) throws Exception {
         final ScriptEngine rhino = new ScriptEngineManager().getEngineByExtension("js");
@@ -65,7 +65,7 @@ public class ScriptableHealthCheckTest {
         hc = new ScriptableHealthCheck();
         ctx = Mockito.mock(ComponentContext.class);
         props = new Hashtable<String, String>();
-        hc.bindBindingsValuesProvider(jmxScriptBinding);
+        hc.bindBindingsValuesProvider(jmxScriptBindingsProvider);
     }
     
     @Test
@@ -77,7 +77,7 @@ public class ScriptableHealthCheckTest {
     public void testRemoveBinding() throws Exception {
         final String expr = "jmx.attribute('java.lang:type=ClassLoading', 'LoadedClassCount') > 10"; 
         assertExpression(expr, "ecma", true);
-        hc.unbindBindingsValuesProvider(jmxScriptBinding);
+        hc.unbindBindingsValuesProvider(jmxScriptBindingsProvider);
         assertExpression(expr, "ecma", false);
     }
     
