@@ -20,12 +20,15 @@ package org.apache.sling.discovery;
 
 import java.util.List;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A ClusterView represents the instances of a cluster that are
  * up and running and that all can see each other at a certain point in time.
  * <p>
  * A ClusterView can also consist of just one single instance.
  */
+@ProviderType
 public interface ClusterView {
 
 	/**

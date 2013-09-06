@@ -20,11 +20,14 @@ package org.apache.sling.discovery;
 
 import java.util.Set;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A topology view is a cross-cluster list of instances and clusters
  * that have announced themselves with the DiscoveryService.
  *
  */
+@ProviderType
 public interface TopologyView {
 
 	/**

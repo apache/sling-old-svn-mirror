@@ -20,6 +20,8 @@ package org.apache.sling.discovery;
 
 import java.util.Map;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * An InstanceDescription represents and contains information about an
  * instance that is part of a TopologyView.
@@ -30,6 +32,7 @@ import java.util.Map;
  *
  * @see TopologyView
  */
+@ProviderType
 public interface InstanceDescription {
 
     /**
