@@ -29,10 +29,9 @@ import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-/** ServiceTrackerCustomizer used to track our BindingsValuesProviders */
-class BindingsValuesProviderCustomizer implements ServiceTrackerCustomizer {
+/** Keeps track of {@link BindingsValuesProvider} for a single context */
+class ContextBvpCollector {
     
     /** list of service property values which indicate 'any' script engine */
     private static final List<String> ANY_ENGINE = Arrays.asList("*", "ANY");
@@ -49,7 +48,7 @@ class BindingsValuesProviderCustomizer implements ServiceTrackerCustomizer {
      */
     private final Map<String, Map<Object, BindingsValuesProvider>> langBindingsValuesProviders;
     
-    BindingsValuesProviderCustomizer(BundleContext bc) {
+    ContextBvpCollector(BundleContext bc) {
         bundleContext = bc;
         genericBindingsValuesProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
         langBindingsValuesProviders = new ConcurrentHashMap<String, Map<Object, BindingsValuesProvider>>();
@@ -121,7 +120,11 @@ class BindingsValuesProviderCustomizer implements ServiceTrackerCustomizer {
                 bindings.put(key, map.get(key));
             }
         }
-
+        
+        @Override
+        public String toString() {
+            return map.toString();
+        }
     }
 
 }

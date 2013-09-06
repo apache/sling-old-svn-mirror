@@ -1,0 +1,193 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package org.apache.sling.scripting.core.impl;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.script.ScriptEngineFactory;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.scripting.api.BindingsValuesProvider;
+import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
+import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/** Our default {@link BindingsValuesProvidersByContext} implementation */
+@Component
+@Service
+public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvidersByContext, ServiceTrackerCustomizer {
+
+    private final Map<String, ContextBvpCollector> customizers = new HashMap<String, ContextBvpCollector>();
+    public static final String [] DEFAULT_CONTEXT_ARRAY = new String [] { DEFAULT_CONTEXT };
+    
+    private ServiceTracker bvpTracker;
+    private ServiceTracker mapsTracker;
+    private BundleContext bundleContext;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final List<ServiceReference> pendingRefs = new ArrayList<ServiceReference>();
+    
+    @Reference
+    private SlingScriptEngineManager scriptEngineManager;
+    
+    private abstract class ContextLoop {
+        Object apply(ServiceReference ref) {
+            final Object service = bundleContext.getService(ref);
+            if(service != null) {
+                for(String context : getContexts(ref)) {
+                    ContextBvpCollector c = customizers.get(context);
+                    if(c == null) {
+                        synchronized (BindingsValuesProvidersByContextImpl.this) {
+                            c = new ContextBvpCollector(bundleContext);
+                            customizers.put(context, c);
+                        }
+                    }
+                    applyInContext(c);
+                }
+            }
+            return service;
+        }
+        
+        protected abstract void applyInContext(ContextBvpCollector c);
+    };
+    
+    @Activate
+    public void activate(ComponentContext ctx) {
+        bundleContext = ctx.getBundleContext();
+        
+        synchronized (pendingRefs) {
+            for(ServiceReference ref : pendingRefs) {
+                addingService(ref);
+            }
+            pendingRefs.clear();
+        }
+        
+        bvpTracker = new ServiceTracker(bundleContext, BindingsValuesProvider.class.getName(), this);
+        bvpTracker.open();
+        
+        // Map services can also be registered to provide bindings
+        mapsTracker = new ServiceTracker(bundleContext, Map.class.getName(), this);
+        mapsTracker.open();
+    }
+    
+    @Deactivate
+    public void deactivate(ComponentContext ctx) {
+        bvpTracker.close();
+        mapsTracker.close();
+        bundleContext = null;
+    }
+    
+    public Collection<BindingsValuesProvider> getBindingsValuesProviders(
+            ScriptEngineFactory scriptEngineFactory,
+            String context) {
+        final List<BindingsValuesProvider> results = new ArrayList<BindingsValuesProvider>();
+        if(context == null) {
+            context = DEFAULT_CONTEXT;
+        }
+        final ContextBvpCollector bvpc = customizers.get(context);
+        if(bvpc == null) {
+            logger.debug("no BindingsValuesProviderCustomizer available for context '{}'", context);
+            return results;
+        }
+        
+        results.addAll(bvpc.getGenericBindingsValuesProviders().values());
+        logger.debug("Generic BindingsValuesProviders added for engine {}: {}", scriptEngineFactory.getNames(), results);
+
+        // we load the compatible language ones first so that the most specific
+        // overrides these
+        Map<Object, Object> factoryProps = scriptEngineManager.getProperties(scriptEngineFactory);
+        if (factoryProps != null) {
+            String[] compatibleLangs = PropertiesUtil.toStringArray(factoryProps.get("compatible.javax.script.name"), new String[0]);
+            for (final String name : compatibleLangs) {
+                final Map<Object, BindingsValuesProvider> langProviders = bvpc.getLangBindingsValuesProviders().get(name);
+                if (langProviders != null) {
+                    results.addAll(langProviders.values());
+                }
+            }
+            logger.debug("Compatible BindingsValuesProviders added for engine {}: {}", scriptEngineFactory.getNames(), results);
+        }
+
+        for (final String name : scriptEngineFactory.getNames()) {
+            final Map<Object, BindingsValuesProvider> langProviders = bvpc.getLangBindingsValuesProviders().get(name);
+            if (langProviders != null) {
+                results.addAll(langProviders.values());
+            }
+        }
+        logger.debug("All BindingsValuesProviders added for engine {}: {}", scriptEngineFactory.getNames(), results);
+
+        return results;
+    }
+    
+    private String [] getContexts(ServiceReference reference) {
+        return PropertiesUtil.toStringArray(reference.getProperty(CONTEXT), new String[] { DEFAULT_CONTEXT });
+    }
+
+    public Object addingService(final ServiceReference reference) {
+        if(bundleContext == null) {
+            synchronized (pendingRefs) {
+                pendingRefs.add(reference);
+            }
+            return null;
+        }
+        return new ContextLoop() {
+            @Override
+            protected void applyInContext(ContextBvpCollector c) {
+                c.addingService(reference);
+            }
+        }.apply(reference);
+    }
+
+    public void modifiedService(final ServiceReference reference, final Object service) {
+        new ContextLoop() {
+            @Override
+            protected void applyInContext(ContextBvpCollector c) {
+                c.modifiedService(reference, service);
+            }
+        }.apply(reference);
+    }
+
+    public void removedService(final ServiceReference reference, final Object service) {
+        if(bundleContext == null) {
+            synchronized (pendingRefs) {
+                pendingRefs.remove(reference);
+            }
+            return;
+        }
+        new ContextLoop() {
+            @Override
+            protected void applyInContext(ContextBvpCollector c) {
+                c.removedService(reference, service);
+            }
+        }.apply(reference);
+    }
+}
