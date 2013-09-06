@@ -15,14 +15,13 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.core.impl;
+package org.apache.sling.hc.samples.impl;
 
 import static org.junit.Assert.assertEquals;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
 
-import org.apache.sling.hc.core.impl.OsgiScriptBinding;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -30,7 +29,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 
-public class OsgiScriptBindingTest {
+public class OsgiScriptBindingsProviderTest {
     
     private Bundle mockBundle(boolean isFragment, boolean isActive) {
         final Bundle b = Mockito.mock(Bundle.class);
@@ -57,7 +56,7 @@ public class OsgiScriptBindingTest {
         Mockito.when(ctx.getBundles()).thenReturn(bundles);
         
         final FormattingResultLog resultLog = new FormattingResultLog();
-        final OsgiScriptBinding.OsgiBinding b = new OsgiScriptBinding.OsgiBinding(ctx, resultLog);
+        final OsgiScriptBindingsProvider.OsgiBinding b = new OsgiScriptBindingsProvider.OsgiBinding(ctx, resultLog);
         assertEquals(1, b.inactiveBundlesCount());
     }
 }
