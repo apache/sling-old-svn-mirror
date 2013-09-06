@@ -39,10 +39,11 @@ public class VaultFsLocatorImpl implements VaultFsLocator {
 
         // TODO - should not use File to read from FS, rather input streams
         VaultFsConfig config = null;
-        DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
+        DefaultWorkspaceFilter filter = null;
 
         File filterFile = findFilterFile(contentSyncRoot);
         if (filterFile != null) {
+            filter = new DefaultWorkspaceFilter();
             filter.load(filterFile);
         }
 
