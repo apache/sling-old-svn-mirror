@@ -79,7 +79,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
 
     public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
 
-        // clean authenticaiton from password and get service info
+        // clean authentication from password and get service info
         final String subServiceName;
         if (authenticationInfo != null) {
             authenticationInfo.remove(PASSWORD);
@@ -98,7 +98,7 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         final String userName = this.serviceUserMapper.getServiceUserID(this.usingBundle, subServiceName);
         if (userName == null) {
             throw new LoginException("Cannot derive user name for service "
-                + this.serviceUserMapper.getServiceID(this.usingBundle, subServiceName));
+                + this.usingBundle.getSymbolicName() + ":" + subServiceName);
         }
 
         // ensure proper user name and service bundle
