@@ -17,56 +17,96 @@
  */
 package org.apache.sling.hc.core.impl;
 
+import javax.script.Bindings;
+
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.hc.util.FormattingResultLog;
+import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import aQute.bnd.annotation.component.Deactivate;
 
 /** The OsgiBinding is meant to be bound as an "osgi" global variable
  *  in scripted rules, to allow for checking some OSGi states in
  *  a simple way.
- *  
- *  TODO this should really be a {@link BindingsValuesProvider} service,
- *  but for this we need to modify the default Sling script handling
- *  so that BindingsValuesProvider which have a specific scope service
- *  property are ignored.
  */
-public class OsgiScriptBinding {
-    private final FormattingResultLog resultLog;
-    private final BundleContext bundleContext;
+@Component
+@Service
+@Property(name="context", value="healthcheck")
+public class OsgiScriptBinding implements BindingsValuesProvider {
+    private BundleContext bundleContext;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    public static final String OSGI_BINDING_NAME = "osgi";
     
-    public OsgiScriptBinding(BundleContext ctx, FormattingResultLog resultLog) {
-        this.resultLog = resultLog;
-        this.bundleContext = ctx;
-    }
-    
-    public int inactiveBundlesCount() {
-        int count = 0;
-        for(Bundle b : bundleContext.getBundles()) {
-            if(!isActive(b)) {
-                count++;
+    public static class OsgiBinding {
+        private final BundleContext bundleContext;
+        private final FormattingResultLog resultLog;
+        
+        public OsgiBinding(BundleContext bc, FormattingResultLog r) {
+            bundleContext = bc;
+            resultLog = r;
+        }
+        
+        public int inactiveBundlesCount() {
+            int count = 0;
+            for(Bundle b : bundleContext.getBundles()) {
+                if(!isActive(b)) {
+                    count++;
+                }
+            }
+            resultLog.debug("inactiveBundlesCount={}", count);
+            return count;
+        }
+        
+        private boolean isActive(Bundle b) {
+            boolean active = true;
+            if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
+                active = false;
+                resultLog.info("Bundle {} is not active, state={} ({})", b.getSymbolicName(), b.getState(), b.getState());
+            }
+            return active;
+        }
+        
+        private boolean isFragment(Bundle b) {
+            final String header = (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
+            if(header!= null && header.trim().length() > 0) {
+                resultLog.debug("{} is a fragment bundle, state won't be checked", b);
+                return true;
+            } else {
+                return false;
             }
         }
-        resultLog.debug("inactiveBundlesCount={}", count);
-        return count;
     }
     
-    private boolean isActive(Bundle b) {
-        boolean active = true;
-        if(!isFragment(b) && Bundle.ACTIVE != b.getState()) {
-            active = false;
-            resultLog.info("Bundle {} is not active, state={} ({})", b.getSymbolicName(), b.getState(), b.getState());
+    @Activate
+    protected void activate(ComponentContext ctx) {
+        bundleContext = ctx.getBundleContext();
+    }
+    
+    @Deactivate
+    protected void deactivate(ComponentContext ctx) {
+        bundleContext = null;
+    }
+    
+    @Override
+    public void addBindings(Bindings b) {
+        final String logBindingName = FormattingResultLog.class.getName();
+        final Object resultLog = b.get(logBindingName);
+        if(resultLog == null) {
+            log.info("No {} found in Bindings, cannot activate {} binding", logBindingName, OSGI_BINDING_NAME);
         }
-        return active;
-    }
-    
-    private boolean isFragment(Bundle b) {
-        final String header = (String) b.getHeaders().get( Constants.FRAGMENT_HOST );
-        if(header!= null && header.trim().length() > 0) {
-            resultLog.debug("{} is a fragment bundle, state won't be checked", b);
-            return true;
-        } else {
-            return false;
+        try {
+            b.put("osgi", new OsgiBinding(bundleContext, (FormattingResultLog)resultLog));
+        } catch(Exception e) {
+            log.error("Exception while activating " + OSGI_BINDING_NAME, e);
         }
     }
 }
