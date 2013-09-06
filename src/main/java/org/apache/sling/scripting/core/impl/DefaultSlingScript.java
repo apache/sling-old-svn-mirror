@@ -558,6 +558,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
             /**
              * @see java.io.Reader#close()
              */
+            @Override
             public void close() throws IOException {
                 scriptReader.close();
             }
@@ -707,8 +708,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
     private String getLoggerName() {
         String name = scriptName;
         name = name.substring(1);       // cut-off leading slash
-        name = name.replace('.', '_');  // extension separator as part of name - used to be $ but 
-                                        // logback considers that as a separator (SLING-3037)
+        name = name.replace('.', '$');  // extension separator as part of name
         name = name.replace('/', '.');  // hierarchy defined by dot
         return name;
     }
@@ -854,6 +854,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         /**
          * @see org.apache.sling.api.resource.Resource#getPath()
          */
+        @Override
         public String getPath() {
             return this.path;
         }
@@ -861,6 +862,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         /**
          * @see org.apache.sling.api.resource.Resource#getResourceType()
          */
+        @Override
         public String getResourceType() {
             return this.resourceType;
         }
@@ -868,6 +870,7 @@ class DefaultSlingScript implements SlingScript, Servlet, ServletConfig {
         /**
          * @see org.apache.sling.api.resource.Resource#getResourceResolver()
          */
+        @Override
         public ResourceResolver getResourceResolver() {
             return this.resolver;
         }
