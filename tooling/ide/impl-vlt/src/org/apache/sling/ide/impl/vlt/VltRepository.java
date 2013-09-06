@@ -54,7 +54,8 @@ public class VltRepository implements Repository {
     @Override
     public Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, Map<String, Object> serializationData) {
         // TODO implement
-        return new NoOpCommand<Void>(jcrRepo, credentials);
+        return TracingCommand.wrap(new UpdateNodePropertiesCommand(jcrRepo, credentials, fileInfo, serializationData),
+                eventAdmin);
     }
 
     @Override

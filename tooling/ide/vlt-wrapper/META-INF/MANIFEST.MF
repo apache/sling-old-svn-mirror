@@ -16,6 +16,7 @@ Bundle-ClassPath: .,
  lib/jackrabbit-spi-commons-2.4.0.jar,
  lib/jackrabbit-webdav-2.4.0.jar
 Export-Package: javax.jcr,
+ javax.jcr.nodetype,
  org.apache.jackrabbit.vault.davex,
  org.apache.jackrabbit.vault.fs,
  org.apache.jackrabbit.vault.fs.api,

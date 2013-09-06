@@ -7,6 +7,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.eclipse.equinox.ds;bundle-version="1.2.1",
  org.eclipse.osgi.services;bundle-version="3.2.100"
 Import-Package: javax.jcr,
+ javax.jcr.nodetype,
  org.apache.jackrabbit.vault.fs,
  org.apache.jackrabbit.vault.fs.api,
  org.apache.jackrabbit.vault.fs.config,

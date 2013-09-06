@@ -26,6 +26,9 @@ import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.jackrabbit.vault.fs.api.Aggregate;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
@@ -39,6 +42,7 @@ import org.apache.sling.ide.impl.vlt.VaultFsLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.xml.sax.SAXException;
 
 public class VltSerializationManager implements SerializationManager {
 
@@ -122,6 +126,26 @@ public class VltSerializationManager implements SerializationManager {
 
     @Override
     public Map<String, Object> readSerializationData(InputStream source) throws IOException {
-        return null;
+
+        if (source == null)
+            return null;
+
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
+            SAXParser parser = factory.newSAXParser();
+            ContextXmlHandler handler = new ContextXmlHandler();
+            parser.parse(source, handler);
+
+            return handler.getProperties();
+        } catch (SAXException e) {
+            // TODO proper error handling
+            throw new IOException(e);
+        } catch (ParserConfigurationException e) {
+            // TODO proper error handling
+            throw new IOException(e);
+        }
+
     }
 }
