@@ -25,7 +25,6 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.apache.sling.commons.testing.osgi.MockBundle;
-import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 
@@ -33,8 +32,6 @@ public class ServiceUserMapperImplTest {
     private static final String BUNDLE_SYMBOLIC1 = "bundle1";
 
     private static final String BUNDLE_SYMBOLIC2 = "bundle2";
-
-    private static final String SRV = "srv";
 
     private static final String SUB = "sub";
 
@@ -49,63 +46,33 @@ public class ServiceUserMapperImplTest {
     private static final String ANOTHER_SUB = "another_sub";
 
     private static final Bundle BUNDLE1 = new MockBundle(10) {
+        @Override
         public String getSymbolicName() {
             return BUNDLE_SYMBOLIC1;
         };
 
+        @Override
         public java.util.Dictionary<?, ?> getHeaders() {
             return new Hashtable<String, Object>();
         };
 
+        @Override
         public java.util.Dictionary<?, ?> getHeaders(String locale) {
             return getHeaders();
         };
     };
 
     private static final Bundle BUNDLE2 = new MockBundle(10) {
+        @Override
         public String getSymbolicName() {
             return BUNDLE_SYMBOLIC2;
         };
 
-        @SuppressWarnings("serial")
-        public java.util.Dictionary<?, ?> getHeaders() {
-            return new Hashtable<String, Object>() {
-                {
-                    put(ServiceUserMapper.BUNDLE_HEADER_SERVICE_NAME, SRV);
-                }
-            };
-        };
-
+        @Override
         public java.util.Dictionary<?, ?> getHeaders(String locale) {
             return getHeaders();
         };
     };
-
-    @Test
-    public void test_getServiceID() {
-        @SuppressWarnings("serial")
-        Map<String, Object> config = new HashMap<String, Object>() {
-            {
-                put("user.mapping", new String[] {
-                    BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
-                    SRV + "=" + ANOTHER, //
-                    BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
-                    SRV + ":" + SUB + "=" + ANOTHER_SUB //
-                });
-                put("user.default", NONE);
-            }
-        };
-
-        final ServiceUserMapperImpl sum = new ServiceUserMapperImpl();
-        sum.configure(config);
-
-        TestCase.assertEquals(BUNDLE_SYMBOLIC1, sum.getServiceID(BUNDLE1, null));
-        TestCase.assertEquals(SRV, sum.getServiceID(BUNDLE2, null));
-        TestCase.assertEquals(BUNDLE_SYMBOLIC1, sum.getServiceID(BUNDLE1, ""));
-        TestCase.assertEquals(SRV, sum.getServiceID(BUNDLE2, ""));
-        TestCase.assertEquals(BUNDLE_SYMBOLIC1 + ":" + SUB, sum.getServiceID(BUNDLE1, SUB));
-        TestCase.assertEquals(SRV + ":" + SUB, sum.getServiceID(BUNDLE2, SUB));
-    }
 
     @Test
     public void test_getServiceUserID() {
@@ -114,9 +81,9 @@ public class ServiceUserMapperImplTest {
             {
                 put("user.mapping", new String[] {
                     BUNDLE_SYMBOLIC1 + "=" + SAMPLE, //
-                    SRV + "=" + ANOTHER, //
+                    BUNDLE_SYMBOLIC2 + "=" + ANOTHER, //
                     BUNDLE_SYMBOLIC1 + ":" + SUB + "=" + SAMPLE_SUB, //
-                    SRV + ":" + SUB + "=" + ANOTHER_SUB //
+                    BUNDLE_SYMBOLIC2 + ":" + SUB + "=" + ANOTHER_SUB //
                 });
                 put("user.default", NONE);
             }

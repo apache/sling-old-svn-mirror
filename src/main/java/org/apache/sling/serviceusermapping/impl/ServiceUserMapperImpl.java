@@ -35,10 +35,9 @@ import org.slf4j.LoggerFactory;
 
 @Component(
         metatype = true,
-        ds = true,
         label = "Apache Sling Service User Mapper Service",
         description = "Configuration for the service mapping service names to names of users.")
-@Service()
+@Service(value=ServiceUserMapper.class)
 public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Property(
@@ -70,7 +69,7 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
     @Activate
     @Modified
-    void configure(Map<String, Object> config) {
+    void configure(final Map<String, Object> config) {
         final String[] props = PropertiesUtil.toStringArray(config.get(PROP_SERVICE2USER_MAPPING),
             PROP_SERVICE2USER_MAPPING_DEFAULT);
 
@@ -90,13 +89,11 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
         this.defaultUser = PropertiesUtil.toString(config.get(PROP_DEFAULT_USER), PROP_DEFAULT_USER_DEFAULT);
     }
 
-    public String getServiceID(Bundle bundle, String subServiceName) {
-        final String serviceName = getServiceName(bundle);
-        return (subServiceName == null || subServiceName.length() == 0) ? serviceName : serviceName + ":" + subServiceName;
-    }
-
-    public String getServiceUserID(Bundle bundle, String subServiceName) {
-        final String serviceName = getServiceName(bundle);
+    /**
+     * @see org.apache.sling.serviceusermapping.ServiceUserMapper#getServiceUserID(org.osgi.framework.Bundle, java.lang.String)
+     */
+    public String getServiceUserID(final Bundle bundle, final String subServiceName) {
+        final String serviceName = bundle.getSymbolicName();
 
         // try with serviceInfo first
         for (Mapping mapping : this.serviceUserMappings) {
@@ -116,14 +113,5 @@ public class ServiceUserMapperImpl implements ServiceUserMapper {
 
         // finally, fall back to default user
         return this.defaultUser;
-    }
-
-    private String getServiceName(final Bundle bundle) {
-        final String name = (String) bundle.getHeaders().get(BUNDLE_HEADER_SERVICE_NAME);
-        if (name != null && name.trim().length() > 0) {
-            return name.trim();
-        }
-
-        return bundle.getSymbolicName();
     }
 }
