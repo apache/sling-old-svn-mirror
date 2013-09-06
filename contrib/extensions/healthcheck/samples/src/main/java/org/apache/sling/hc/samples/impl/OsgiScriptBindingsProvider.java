@@ -102,6 +102,7 @@ public class OsgiScriptBindingsProvider implements BindingsValuesProvider {
         final Object resultLog = b.get(logBindingName);
         if(resultLog == null) {
             log.info("No {} found in Bindings, cannot activate {} binding", logBindingName, OSGI_BINDING_NAME);
+            return;
         }
         try {
             b.put("osgi", new OsgiBinding(bundleContext, (FormattingResultLog)resultLog));
