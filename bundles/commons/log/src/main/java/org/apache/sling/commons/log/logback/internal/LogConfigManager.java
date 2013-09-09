@@ -244,6 +244,9 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 ch.qos.logback.classic.Logger logger = loggerContext.getLogger(category);
                 logger.setLevel(config.getLogLevel());
                 if (appender != null) {
+                    //If an appender is explicitly defined then set additive to false
+                    //to be compatible with earlier Sling Logging behaviour
+                    logger.setAdditive(false);
                     logger.addAppender(appender);
                 }
             }
