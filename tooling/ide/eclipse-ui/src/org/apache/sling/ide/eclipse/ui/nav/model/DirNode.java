@@ -27,30 +27,39 @@ import org.eclipse.core.resources.IResource;
 import org.w3c.dom.Node;
 
 public class DirNode extends JcrNode {
+	
+	private static String decode(String name) {
+		if (name.endsWith(".dir")) {
+			return name.substring(0, name.length()-4);
+		} else if (name.equals("_jcr_content")) {
+			return "jcr:content";
+		} else {
+			return null;
+		}
+	}
 
 	static boolean isDirNode(IResource resource) {
 		if (resource==null) {
-			return false;
-		}
-		final String resourceName = resource.getName();
-		if (!resourceName.endsWith(".dir")) {
 			return false;
 		}
 		if (!(resource instanceof IFolder)) {
 			return false;
 		}
 		final IFolder folder = (IFolder)resource;
+		final String resourceName = resource.getName();
+		final String decodedName = decode(resourceName);
+		if (decodedName==null) {
+			return false;
+		}
 		final IContainer container = folder.getParent();
 		if (container==null || !container.exists()) {
 			return false;
 		}
-		final IResource peerNode = container.findMember(resourceName.substring(0, resourceName.length()-4));
-		if (peerNode==null || !peerNode.exists()) {
-			return false;
-		}
-		final IResource dotContextXml = folder.findMember(".content.xml");
-		if (dotContextXml==null || !dotContextXml.exists()) {
-			return false;
+		if (resourceName.endsWith(".dir")) {
+			final IResource peerNode = container.findMember(decodedName);
+			if (peerNode==null || !peerNode.exists()) {
+				return false;
+			}
 		}
 		// then it is likely the pattern that corresponds to the case
 		// which we want to handle with this DirNode
@@ -64,18 +73,42 @@ public class DirNode extends JcrNode {
 		}
 	}
 	
+	private String getDecodedName() {
+		String name = getResource().getName();
+		final String decodedName = decode(name);
+		if (decodedName==null) {
+			throw new IllegalStateException("Cannot decode node named '"+name+"'");
+		}
+		return decodedName;
+	}
+	
 	@Override
 	protected void addChild(JcrNode jcrNode) {
-		final String shortName = getName().substring(0, getName().length()-4);
-		Set<JcrNode> c = new HashSet<JcrNode>(parent.children);
+		final String decodedName = getDecodedName();
+		JcrNode nonDirNodeParent = parent;
+		outerloop:while(nonDirNodeParent!=null && (nonDirNodeParent instanceof DirNode)) {
+			final DirNode dirNodeParent = (DirNode)nonDirNodeParent;
+			final String decodedParentName = dirNodeParent.getDecodedName();
+
+			final Set<JcrNode> c = new HashSet<JcrNode>(nonDirNodeParent.parent.children);
+			for (Iterator<JcrNode> it = c.iterator(); it.hasNext();) {
+				final JcrNode node = it.next();
+				if (node.getName().equals(decodedParentName)) {
+					nonDirNodeParent = node;
+					continue outerloop;
+				}
+			}
+			nonDirNodeParent = nonDirNodeParent.parent;
+		}
+		Set<JcrNode> c = new HashSet<JcrNode>(nonDirNodeParent.children);
 		for (Iterator<JcrNode> it = c.iterator(); it.hasNext();) {
 			JcrNode node = it.next();
-			if (node.getName().equals(shortName)) {
+			if (node.getName().equals(decodedName)) {
 				// excellent, the parent contains a child which 
-				// matches the .dir pattern, so add this child there
+				// matches the .dir/_jcr_content pattern, so add this child there
 				node.addChild(jcrNode);
 				// but also hide this node from my parent
-				parent.hide(this);
+				nonDirNodeParent.hide(this);
 				return;
 			}
 		}
