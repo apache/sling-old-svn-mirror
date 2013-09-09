@@ -17,12 +17,13 @@
 package org.apache.sling.ide.impl.vlt;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Property;
-import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -37,7 +38,7 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
     public UpdateNodePropertiesCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
             Map<String, Object> serializationData) {
 
-        // intention since the fileInfo refers to the .content.xml file ( TODO - should we change that )?
+        // intentional since the fileInfo refers to the .content.xml file ( TODO - should we change that )?
         super(jcrRepo, credentials, PathUtil.makePath(fileInfo.getRelativeLocation(), ""));
 
         this.serializationData = serializationData;
@@ -48,6 +49,8 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
 
         Node node = session.getNode(getPath());
 
+        // TODO - review for completeness and filevault compatibility
+        // TODO - multi-valued properties
         for (Map.Entry<String, Object> entry : serializationData.entrySet()) {
 
             if (node.hasProperty(entry.getKey())) {
@@ -57,12 +60,26 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
                     continue;
                 }
 
-                if (prop.getType() != PropertyType.STRING)
-                    throw new UnsupportedOperationException("Unable to set value of property '" + prop.getName()
-                            + "' since its type is '" + prop.getType() + "'");
-            }
+                if (entry.getValue() instanceof String) {
+                    node.setProperty(entry.getKey(), (String) entry.getValue());
+                } else if (entry.getValue() instanceof Boolean) {
+                    node.setProperty(entry.getKey(), (Boolean) entry.getValue());
+                } else if (entry.getValue() instanceof Calendar) {
+                    node.setProperty(entry.getKey(), (Calendar) entry.getValue());
+                } else if (entry.getValue() instanceof Double) {
+                    node.setProperty(entry.getKey(), (Double) entry.getValue());
+                } else if (entry.getValue() instanceof BigDecimal) {
+                    node.setProperty(entry.getKey(), (BigDecimal) entry.getValue());
+                } else if (entry.getValue() instanceof Double) {
+                    node.setProperty(entry.getKey(), (Double) entry.getValue());
+                } else if (entry.getValue() instanceof Long) {
+                    node.setProperty(entry.getKey(), (Long) entry.getValue());
+                } else {
+                    throw new IllegalArgumentException("Unable to handle value of type '"
+                            + entry.getValue().getClass().getName() + "' for property '" + entry.getKey() + "'");
+                }
 
-            node.setProperty(entry.getKey(), entry.getValue().toString());
+            }
         }
 
         return null;

@@ -15,6 +15,7 @@
         <module>impl-resource-test</module>
 		<module>vlt-wrapper</module>                
 		<module>impl-vlt</module>
+		<module>impl-vlt-test</module>
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
 		<module>feature</module>

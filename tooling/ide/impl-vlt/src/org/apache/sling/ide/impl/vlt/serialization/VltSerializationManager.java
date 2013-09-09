@@ -135,7 +135,7 @@ public class VltSerializationManager implements SerializationManager {
             factory.setNamespaceAware(true);
             factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
             SAXParser parser = factory.newSAXParser();
-            ContextXmlHandler handler = new ContextXmlHandler();
+            ContentXmlHandler handler = new ContentXmlHandler();
             parser.parse(source, handler);
 
             return handler.getProperties();

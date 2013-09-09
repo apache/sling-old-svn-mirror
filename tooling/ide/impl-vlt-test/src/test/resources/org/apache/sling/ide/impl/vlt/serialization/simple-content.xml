@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:primaryType="sling:Folder"
+    jcr:title="Application folder"
+    indexDuration="{Decimal}500"
+    indexed="{Boolean}true"
+    indexRatio="{Double}2.54"
+    lastIndexId="{Long}7293120000000"
+    lastIndexTime="{Date}2013-09-04T14:00:00.000+03:00"/>
