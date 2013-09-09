@@ -17,6 +17,7 @@
 package org.apache.sling.ide.impl.vlt.serialization;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,51 +53,119 @@ public class ContentXmlHandler extends DefaultHandler {
     }
     
     // TODO - validate that this is comprehensive
+    // TODO - does not handle correctly multi-valued properties which just one value - do we need to?
     static enum TypeHint {
         BOOLEAN("Boolean") {
             @Override
-            Object parseValue(String rawValue) {
-                return Boolean.valueOf(rawValue);
+            Object parseValues(String[] values) {
+                if (values.length == 1) {
+                    return Boolean.valueOf(values[0]);
+                }
+
+                Boolean[] ret = new Boolean[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    ret[i] = Boolean.parseBoolean(values[i]);
+                }
+                return ret;
+
             }
         },
         DATE("Date") {
             @Override
-            Object parseValue(String rawValue) {
-                return ISO8601.parse(rawValue);
+            Object parseValues(String[] values) {
+
+                if (values.length == 1) {
+                    return ISO8601.parse(values[0]);
+                }
+
+                Calendar[] ret = new Calendar[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    ret[i] = ISO8601.parse(values[i]);
+                }
+                return ret;
             }
         },
         DOUBLE("Double") {
             @Override
-            Object parseValue(String rawValue) {
-                return Double.parseDouble(rawValue);
+            Object parseValues(String[] values) {
+                if (values.length == 1) {
+                    return Double.parseDouble(values[0]);
+                }
+
+                Double[] ret = new Double[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    ret[i] = Double.parseDouble(values[i]);
+                }
+                return ret;
             }
         },
         LONG("Long") {
             @Override
-            Object parseValue(String rawValue) {
-                return Long.valueOf(rawValue);
+            Object parseValues(String[] values) {
+                if ( values.length == 1 ) {
+                    return Long.valueOf(values[0]);
+                }
+                
+                Long[] ret = new Long[values.length];
+                for ( int i =0 ; i < values.length; i++ ) {
+                    ret[i] = Long.valueOf(values[i]);
+                }
+                return ret;
             }
         },
         DECIMAL("Decimal") {
             @Override
-            Object parseValue(String rawValue) {
-                return new BigDecimal(rawValue);
+            Object parseValues(String[] values) {
+                if ( values.length == 1) {
+                    return new BigDecimal(values[0]);
+                }
+                
+                BigDecimal[] ret = new BigDecimal[values.length];
+                for ( int i = 0; i < values.length; i++) {
+                    ret[i] = new BigDecimal(values[i]);
+                }
+                return ret;
             }
         };
 
         static Object parsePossiblyTypedValue(String value) {
 
+            String rawValue;
+            int hintEnd = -1;
+
             if (value.charAt(0) != '{') {
-                return value;
+                rawValue = value;
+            } else {
+                hintEnd = value.indexOf('}');
+                rawValue = value.substring(hintEnd + 1);
+            }
+            
+            String[] values;
+
+            if (rawValue.charAt(0) == '[') {
+
+                if (rawValue.charAt(rawValue.length() - 1) != ']') {
+                    throw new IllegalArgumentException("Invalid multi-valued property definition : '" + rawValue + "'");
+                }
+
+                String rawValues = rawValue.substring(1, rawValue.length() - 1);
+                values = rawValues.split(",");
+            } else {
+                values = new String[] { rawValue };
             }
 
-            int hintEnd = value.indexOf('}');
+            if (hintEnd == -1) {
+                if (values.length == 1) {
+                    return values[0];
+                }
+                return values;
+            }
 
             String rawHint = value.substring(1, hintEnd);
 
             for (TypeHint hint : EnumSet.allOf(TypeHint.class)) {
                 if (hint.rawHint.equals(rawHint)) {
-                    return hint.parseValue(value.substring(hintEnd + 1));
+                    return hint.parseValues(values);
                 }
             }
 
@@ -110,7 +179,7 @@ public class ContentXmlHandler extends DefaultHandler {
             this.rawHint = rawHint;
         }
 
-        abstract Object parseValue(String rawValue);
+        abstract Object parseValues(String[] values);
 
     }
 }

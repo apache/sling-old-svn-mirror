@@ -16,6 +16,9 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import java.math.BigDecimal;
+import java.util.Calendar;
+
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -30,23 +33,43 @@ public abstract class ConversionUtils {
         // TODO - handle isMultiple() == true
         switch (property.getType()) {
             case PropertyType.BOOLEAN:
-                propertyValue = property.getBoolean();
+                if (property.isMultiple()) {
+                    propertyValue = toBooleanArray(property.getValues());
+                } else {
+                    propertyValue = property.getBoolean();
+                }
                 break;
 
             case PropertyType.DATE:
-                propertyValue = property.getDate();
+                if (property.isMultiple()) {
+                    propertyValue = toCalendarArray(property.getValues());
+                } else {
+                    propertyValue = property.getDate();
+                }
                 break;
 
             case PropertyType.DECIMAL:
-                propertyValue = property.getDecimal();
+                if (property.isMultiple()) {
+                    propertyValue = toDecimalArray(property.getValues());
+                } else {
+                    propertyValue = property.getDecimal();
+                }
                 break;
 
             case PropertyType.DOUBLE:
-                propertyValue = property.getDouble();
+                if (property.isMultiple()) {
+                    propertyValue = toDoubleArray(property.getValues());
+                } else {
+                    propertyValue = property.getDouble();
+                }
                 break;
 
             case PropertyType.LONG:
-                propertyValue = property.getLong();
+                if (property.isMultiple()) {
+                    propertyValue = toLongArray(property.getValues());
+                } else {
+                    propertyValue = property.getLong();
+                }
                 break;
 
             case PropertyType.PATH:
@@ -80,6 +103,56 @@ public abstract class ConversionUtils {
         for (int i = 0; i < values.length; i++) {
             ret[i] = values[i].getString();
         }
+        return ret;
+    }
+
+    private static Boolean[] toBooleanArray(Value[] values) throws RepositoryException {
+
+        Boolean[] ret = new Boolean[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = values[i].getBoolean();
+        }
+
+        return ret;
+    }
+
+    private static Calendar[] toCalendarArray(Value[] values) throws RepositoryException {
+
+        Calendar[] ret = new Calendar[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = values[i].getDate();
+        }
+
+        return ret;
+    }
+
+    private static BigDecimal[] toDecimalArray(Value[] values) throws RepositoryException {
+
+        BigDecimal[] ret = new BigDecimal[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = values[i].getDecimal();
+        }
+
+        return ret;
+    }
+
+    private static Double[] toDoubleArray(Value[] values) throws RepositoryException {
+
+        Double[] ret = new Double[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = values[i].getDouble();
+        }
+
+        return ret;
+    }
+
+    private static Long[] toLongArray(Value[] values) throws RepositoryException {
+
+        Long[] ret = new Long[values.length];
+        for (int i = 0; i < values.length; i++) {
+            ret[i] = values[i].getLong();
+        }
+
         return ret;
     }
 

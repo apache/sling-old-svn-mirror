@@ -17,8 +17,8 @@
 package org.apache.sling.ide.impl.vlt.serialization;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.array;
 import static org.hamcrest.Matchers.hasEntry;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -30,6 +30,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.InputSource;
@@ -49,12 +53,10 @@ public class ContentXmlHandlerTest {
         assertThat("properties[indexed]", properties, hasEntry("indexed", (Object) Boolean.TRUE));
         assertThat("properties[indexRatio]", properties, hasEntry("indexRatio", (Object) Double.valueOf(2.54)));
         assertThat("properties[indexDuration]", properties, hasEntry("indexDuration", (Object) BigDecimal.valueOf(500)));
-        assertThat("properties[lastIndexTime]", properties, hasEntry(is("lastIndexTime"), notNullValue()));
+        assertThat("properties[lastIndexTime]", (Calendar) properties.get("lastIndexTime"),
+                is(millis(1378292400000l)));
         assertThat("properties[lastIndexId]", properties,
                 hasEntry("lastIndexId", (Object) Long.valueOf(7293120000000l)));
-
-        Calendar lastIndexTime = (Calendar) properties.get("lastIndexTime");
-        assertThat(lastIndexTime.getTimeInMillis(), is(1378292400000l));
 
     }
 
@@ -98,5 +100,51 @@ public class ContentXmlHandlerTest {
         Map<String, Object> properties = parseContentXmlFile("reference-content.xml");
         
         assertThat("properties.size", properties.size(), is(3));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void parseMultiValuedProperties() throws ParserConfigurationException, SAXException, IOException {
+
+        Map<String, Object> properties = parseContentXmlFile("multivalued-properties-content.xml");
+
+        assertThat("properties.size", properties.size(), is(7));
+        assertThat("properties[values]", (String[]) properties.get("values"),
+                Matchers.is(new String[] { "first", "second" }));
+        assertThat("properties[decimals]", (BigDecimal[]) properties.get("decimals"),
+                Matchers.is(new BigDecimal[] { new BigDecimal("5.10"), new BigDecimal("5.11") }));
+        assertThat("properties[doubles]", (Double[]) properties.get("doubles"),
+                Matchers.is(new Double[] { new Double("5.1"), new Double("7.5"), new Double("9.0") }));
+        assertThat("properties[flags]", (Boolean[]) properties.get("flags"),
+                Matchers.is(new Boolean[] { Boolean.FALSE, Boolean.TRUE }));
+        assertThat("properties[longs]", (Long[]) properties.get("longs"),
+                Matchers.is(new Long[] { Long.valueOf(15), Long.valueOf(25) }));
+        assertThat("properties[dates]", (Calendar[]) properties.get("dates"), array(
+                millis(1377982800000l), millis(1378242000000l)));
+    }
+    
+    private static Matcher<Calendar> millis(long millis) {
+        
+        return new CalendarTimeInMillisMatcher(millis);
+    }
+
+    static class CalendarTimeInMillisMatcher extends TypeSafeMatcher<Calendar> {
+
+        private final long timeInMillis;
+
+        private CalendarTimeInMillisMatcher(long timeInMillis) {
+            this.timeInMillis = timeInMillis;
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("getTimeInMillis() does not equal ").appendValue(timeInMillis);
+        }
+
+        @Override
+        protected boolean matchesSafely(Calendar item) {
+            return timeInMillis == item.getTimeInMillis();
+        }
+
     }
 }
