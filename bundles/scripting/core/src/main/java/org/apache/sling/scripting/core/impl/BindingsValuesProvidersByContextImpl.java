@@ -18,6 +18,9 @@
  */
 package org.apache.sling.scripting.core.impl;
 
+import static org.apache.sling.scripting.api.BindingsValuesProvider.CONTEXT;
+import static org.apache.sling.scripting.api.BindingsValuesProvider.DEFAULT_CONTEXT;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

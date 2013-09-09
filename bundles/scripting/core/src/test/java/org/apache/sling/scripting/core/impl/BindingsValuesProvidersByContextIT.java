@@ -108,7 +108,7 @@ public class BindingsValuesProvidersByContextIT {
     private Dictionary<String, Object> getProperties(String context, String engineName) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         if(context != null) {
-            props.put(BindingsValuesProvidersByContext.CONTEXT, context.split(","));
+            props.put(BindingsValuesProvider.CONTEXT, context.split(","));
         }
         if(engineName != null) {
             props.put(ScriptEngine.NAME, engineName);

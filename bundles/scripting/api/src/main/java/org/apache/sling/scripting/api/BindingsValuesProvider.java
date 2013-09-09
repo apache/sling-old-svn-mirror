@@ -26,6 +26,17 @@ import javax.script.Bindings;
  */
 public interface BindingsValuesProvider {
 
+    /** The name of the multi-value service property that defines the context(s) to which 
+     *  a BindingsValuesProvider applies. This service property is optional, if not set
+     *  the default value is {@link @DEFAULT_CONTEXT}  
+     */
+    String CONTEXT = "context";
+    
+    /** The default value of the CONTEXT service property, used for compatibility with
+     *  previous versions of this bundle that didn't require it. 
+     */
+    String DEFAULT_CONTEXT = "request";
+    
     /**
      * Add objects to the Bindings object. The Bindings
      * object passed to this method does not support replacing
