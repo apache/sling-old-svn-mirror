@@ -62,6 +62,10 @@ public class ModifiableProperties implements IPropertySource {
 		return result.toArray(new IPropertyDescriptor[] {});
 	}
 
+	public String getValue(String key) {
+		return properties.get(key);
+	}
+	
 	@Override
 	public Object getPropertyValue(Object id) {
 		Map.Entry<String, String> entry = (Map.Entry<String, String>)id;

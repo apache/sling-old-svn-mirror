@@ -46,11 +46,13 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionFilter;
 import org.eclipse.ui.IContributorResourceAdapter;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
@@ -351,6 +353,13 @@ public class JcrNode implements IAdaptable {
 			} else
 				try {
 					if (!isVaultFile(resource)){
+						final String jcrMimeType = getJcrContentProperty("jcr:mimeType");
+						if (jcrMimeType!=null && jcrMimeType.length()!=0) {
+							ImageDescriptor desc = getImageDescriptor(resource.getName(), jcrMimeType);
+							if (desc!=null) {
+								return desc.createImage();
+							}
+						}
 						return workbenchLabelProvider.getImage(resource);
 					}
 				} catch (ParserConfigurationException e) {
@@ -372,6 +381,34 @@ public class JcrNode implements IAdaptable {
 		//}
 		
 		return WhitelabelSupport.JCR_NODE_ICON.createImage();
+	}
+
+	private ImageDescriptor getImageDescriptor(String filename, String jcrMimeType) {
+		final String modifiedFilename;
+		if (jcrMimeType.equals("image/jpeg")) {
+			modifiedFilename = filename + ".jpg";
+		} else if (jcrMimeType.startsWith("image/")) {
+			modifiedFilename = filename + "." + (jcrMimeType.substring(jcrMimeType.indexOf("/")+1));
+		} else {
+			return null;
+		}
+		return PlatformUI.getWorkbench().getEditorRegistry().getImageDescriptor(modifiedFilename, null);
+	}
+
+	private String getJcrContentProperty(String propertyKey) {
+		final Object[] chldrn = getChildren();
+		for (int i = 0; i < chldrn.length; i++) {
+			JcrNode jcrNode = (JcrNode) chldrn[i];
+			if ("jcr:content".equals(jcrNode.getName())) {
+				if (jcrNode.properties!=null) {
+					Object propertyValue = jcrNode.properties.getValue(propertyKey);
+					if (propertyValue!=null) {
+						return String.valueOf(propertyValue);
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	public String getName() {
