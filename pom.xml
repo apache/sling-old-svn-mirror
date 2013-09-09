@@ -38,7 +38,7 @@
 
     <properties>
         <sling.java.version>6</sling.java.version>
-        <oak.version>0.8</oak.version>
+        <oak.version>0.9-SNAPSHOT</oak.version>
     </properties>
 
     <build>
