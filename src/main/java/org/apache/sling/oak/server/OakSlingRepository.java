@@ -32,20 +32,8 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
-import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
-import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexEditorProvider;
 import org.apache.jackrabbit.oak.plugins.index.lucene.LuceneIndexProvider;
-import org.apache.jackrabbit.oak.plugins.index.nodetype.NodeTypeIndexProvider;
-import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexEditorProvider;
-import org.apache.jackrabbit.oak.plugins.index.property.PropertyIndexProvider;
-import org.apache.jackrabbit.oak.plugins.name.NameValidatorProvider;
-import org.apache.jackrabbit.oak.plugins.name.NamespaceValidatorProvider;
-import org.apache.jackrabbit.oak.plugins.nodetype.RegistrationEditorProvider;
-import org.apache.jackrabbit.oak.plugins.nodetype.TypeEditorProvider;
-import org.apache.jackrabbit.oak.plugins.nodetype.write.InitialContent;
-import org.apache.jackrabbit.oak.plugins.version.VersionEditorProvider;
-import org.apache.jackrabbit.oak.spi.commit.EditorHook;
 import org.apache.jackrabbit.oak.spi.security.OpenSecurityProvider;
 import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
 import org.apache.jackrabbit.oak.spi.state.NodeStore;
@@ -59,7 +47,7 @@ import org.osgi.service.component.ComponentContext;
  */
 @Component(immediate = true, metatype = true)
 @Service(value = { SlingRepository.class, Repository.class })
-public class SlingRepositoryImpl extends AbstractNamespaceMappingRepository
+public class OakSlingRepository extends AbstractNamespaceMappingRepository
         implements SlingRepository {
 
     private Repository oakRepository;
@@ -69,34 +57,13 @@ public class SlingRepositoryImpl extends AbstractNamespaceMappingRepository
     
     @Activate
     protected void activate(ComponentContext ctx) {
-        // TODO OpenSecurityProvider does not check anything, should use 
-        // at least a SecurityProviderImpl, but that doesn't work with oak 0.8
-        // (LoginModule class not found)
         final SecurityProvider sp = new OpenSecurityProvider();
         
         oakRepository = new Jcr(new Oak(nodeStore))
         .with(sp)
-        .with(new InitialContent())
-
-        .with(JcrConflictHandler.JCR_CONFLICT_HANDLER)
-        .with(new EditorHook(new VersionEditorProvider()))
-
-        .with(new NameValidatorProvider())
-        .with(new NamespaceValidatorProvider())
-        .with(new TypeEditorProvider())
-        .with(new RegistrationEditorProvider())
-        .with(new ConflictValidatorProvider())
-
-        // index stuff
-        .with(new PropertyIndexEditorProvider())
-
-        .with(new PropertyIndexProvider())
-        .with(new NodeTypeIndexProvider())
-
         .with(new LuceneIndexEditorProvider())
         .with(new LuceneIndexProvider())
-
-        //.withAsyncIndexing() // TODO oak 0.9?
+        .withAsyncIndexing()
         .createRepository();
         
         setup(ctx.getBundleContext());
