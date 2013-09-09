@@ -54,7 +54,7 @@ public class SlingScriptAdapterFactory implements AdapterFactory, MimeTypeProvid
     private BundleContext bundleContext;
 
     /** The context string to use to select BindingsValuesProviders */
-    public static final String BINDINGS_CONTEXT = BindingsValuesProvidersByContext.DEFAULT_CONTEXT;
+    public static final String BINDINGS_CONTEXT = BindingsValuesProvider.DEFAULT_CONTEXT;
 
     /**
      * The service cache for script execution.
