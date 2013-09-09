@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import ch.qos.logback.classic.Level;
@@ -273,14 +274,15 @@ public class LogbackManager extends LoggerContextAwareBase {
                 + " listeners");
 
             // Attach a console appender to handle logging untill we configure
-            // one. This would be
-            // removed in LogConfigManager.reset
-            getLoggerContext().getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).addAppender(
-                logConfigManager.getDefaultAppender());
+            // one. This would be removed in LogConfigManager.reset
+            final Logger rootLogger = getLoggerContext().getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+            rootLogger.addAppender(logConfigManager.getDefaultAppender());
+            rootLogger.setLevel(Level.INFO);
 
             // Now record the time of reset with a default appender attached to
-            // root logger
-            resetStartTime = System.currentTimeMillis();
+            // root logger. We also add a milli second extra to account for logs which would have
+            // got fired in same duration
+            resetStartTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.toMillis(1);
 
             context.putObject(LogbackManager.class.getName(), LogbackManager.this);
             for (LogbackResetListener l : resetListeners) {
