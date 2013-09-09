@@ -73,6 +73,10 @@ public interface RequestParameter {
     /**
      * Returns an InputStream that can be used to retrieve the contents of the
      * file.
+     * <p>
+     * Each call to this method returns a new {@code InputStream} to the
+     * request parameter data. Make sure to close the stream to prevent
+     * leaking resources.
      *
      * @return An InputStream that can be used to retrieve the contents of the
      *         file.
