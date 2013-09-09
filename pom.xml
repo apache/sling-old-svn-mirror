@@ -61,9 +61,7 @@
                             javax.servlet.jsp.tagext;version=2.1
                         </Export-Package>
                         <Private-Package>
-                            org.apache.sling.scripting.jsp,
-                            !org.apache.sling.scripting.jsp.jasper.runtime,
-                            org.apache.sling.scripting.jsp.jasper.*,
+                            org.apache.sling.scripting.jsp.*,
                             org.apache.juli.logging
                         </Private-Package>
 
