@@ -387,7 +387,7 @@ public class JcrNode implements IAdaptable {
 		final String modifiedFilename;
 		if (jcrMimeType.equals("image/jpeg")) {
 			modifiedFilename = filename + ".jpg";
-		} else if (jcrMimeType.startsWith("image/")) {
+		} else if (jcrMimeType.contains("/")) {
 			modifiedFilename = filename + "." + (jcrMimeType.substring(jcrMimeType.indexOf("/")+1));
 		} else {
 			return null;
