@@ -43,6 +43,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.project.MavenUpdateRequest;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -167,6 +168,11 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		if (monitor.isCanceled()) {
 			return false;
 		}
+		IServer server = setupServerWizardPage.getOrCreateServer();
+		monitor.worked(1);
+		if (monitor.isCanceled()) {
+			return false;
+		}
 		
 		List<IProject> projects = MavenPlugin.getProjectConfigurationManager().createArchetypeProjects(
 				location, archetype, groupId, artifactId, version, javaPackage, properties, configuration, monitor);
@@ -207,7 +213,6 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 			}
 		}
 		
-		IServer server = setupServerWizardPage.getOrCreateServer();
 		monitor.worked(1);
 		if (monitor.isCanceled()) {
 			return false;
@@ -234,17 +239,12 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 			return false;
 		}
 		
-		updateProjectConfigurations(projects, monitor);
+		updateProjectConfigurations(projects, true, monitor);
 		monitor.worked(1);
 		if (monitor.isCanceled()) {
 			return false;
 		}
 		
-		monitor.worked(2);
-		if (monitor.isCanceled()) {
-			return false;
-		}
-
 		IServerWorkingCopy wc = server.createWorkingCopy();
 		// add the bundle and content projects, ie modules, to the server
 		List<IModule> modules = new LinkedList<IModule>();
@@ -288,6 +288,8 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 //		fp2.installProjectFacet(dynamicWebModule.getLatestVersion(), null, null);
 
 		monitor.worked(2);
+		updateProjectConfigurations(projects, false, monitor);
+		monitor.worked(1);
 		monitor.done();
 		return true;
 	}
@@ -297,10 +299,10 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		// nothing to be done by default - hook for subclasses
 	}
 	
-	protected void updateProjectConfigurations(List<IProject> projects, IProgressMonitor monitor) throws CoreException {
+	protected void updateProjectConfigurations(List<IProject> projects, boolean forceDependencyUpdate, IProgressMonitor monitor) throws CoreException {
 		for (Iterator<IProject> it = projects.iterator(); it.hasNext();) {
 			IProject project = it.next();
-			MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(project, monitor);
+			MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(new MavenUpdateRequest(project, /*mavenConfiguration.isOffline()*/false, forceDependencyUpdate), monitor);
 		}
 	}
 
