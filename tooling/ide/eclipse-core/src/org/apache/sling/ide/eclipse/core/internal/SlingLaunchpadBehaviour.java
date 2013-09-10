@@ -228,7 +228,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 	        IJavaProject javaProject = ProjectHelper.asJavaProject(project);
 	        IPath outputLocation = javaProject.getOutputLocation();
 			outputLocation = outputLocation.makeRelativeTo(project.getFullPath());
-	        method.addParameter("dir", project.getRawLocation().toString() + "/" + outputLocation.toString());
+	        IPath location = project.getRawLocation();
+	        if (location==null) {
+	        	location = project.getLocation();
+	        }
+			method.addParameter("dir", location.toString() + "/" + outputLocation.toString());
 	        monitor.worked(1);
             try {
 				httpClient.executeMethod(method);

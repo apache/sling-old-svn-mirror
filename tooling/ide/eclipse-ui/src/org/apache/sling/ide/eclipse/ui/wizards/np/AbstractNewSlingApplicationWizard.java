@@ -227,10 +227,12 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 			configureBundleProject(aBundleProject, projects, monitor);
 		}
 		
-		configureReactorProject(reactorProject, monitor);
-		monitor.worked(1);
-		if (monitor.isCanceled()) {
-			return false;
+		if (reactorProject!=null) {
+			configureReactorProject(reactorProject, monitor);
+			monitor.worked(1);
+			if (monitor.isCanceled()) {
+				return false;
+			}
 		}
 		
 		finishConfiguration(projects, server, monitor);
@@ -267,14 +269,16 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 			return false;
 		}
 		
-		ILaunchConfiguration launchConfig = 
-				DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(reactorProject.getFolder(".settings").getFolder(".launches").getFile("initial_install.launch"));
-		if (launchConfig!=null) {
-			ILaunch theLaunch = launchConfig.launch(ILaunchManager.RUN_MODE, monitor, true);
-			monitor.setTaskName("mvn install");
-			while(!theLaunch.isTerminated()) {
-				Thread.sleep(500);
-				monitor.worked(1);
+		if (reactorProject!=null) {
+			ILaunchConfiguration launchConfig = 
+					DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(reactorProject.getFolder(".settings").getFolder(".launches").getFile("initial_install.launch"));
+			if (launchConfig!=null) {
+				ILaunch theLaunch = launchConfig.launch(ILaunchManager.RUN_MODE, monitor, true);
+				monitor.setTaskName("mvn install");
+				while(!theLaunch.isTerminated()) {
+					Thread.sleep(500);
+					monitor.worked(1);
+				}
 			}
 		}
 		

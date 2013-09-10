@@ -253,6 +253,21 @@
       </wizard>
    </extension-->
    <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.apache.sling.ide.eclipse.ui"
+            name="Sling">
+      </category>
+      <wizard
+            category="org.apache.sling.ide.eclipse.ui"
+            class="org.apache.sling.ide.eclipse.ui.wizards.np.NewSlingBundleWizard"
+            icon="icons/obj16/sling.gif"
+            id="org.apache.sling.ide.eclipse.ui.wizards.np.NewSlingBundleWizard"
+            name="New Sling Bundle Project"
+            project="true">
+      </wizard>
+   </extension>
+   <extension
          point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
       <propertyContributor
             contributorId="org.apache.sling.ide.eclipse-ui.propertyContributor1"
