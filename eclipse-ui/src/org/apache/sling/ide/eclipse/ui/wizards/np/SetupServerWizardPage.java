@@ -209,9 +209,9 @@ public class SetupServerWizardPage extends WizardPage {
 		};
 		useExistingServer.addSelectionListener(radioListener);
 		setupNewServer.addSelectionListener(radioListener);
-	    useExistingServer.setSelection(true);
-	    setupNewServer.setSelection(false);
-	    installToolingSupportBundle.setSelection(false);
+	    useExistingServer.setSelection(false);
+	    setupNewServer.setSelection(true);
+	    installToolingSupportBundle.setSelection(true);
 	    
 	    ModifyListener ml = new ModifyListener() {
 			
@@ -383,20 +383,28 @@ public class SetupServerWizardPage extends WizardPage {
 				}
 			}
 			
-			if (installToolingSupportBundle.getSelection() && !containsToolingSupportBundle()) {
-				// then auto-install it if possible
-				try {
-					int status = installToolingSupportBundle();
-					
-					if (status!=HttpStatus.SC_OK) {
+			boolean installedLocally = false;
+			if (installToolingSupportBundle.getSelection()) {
+				if (containsToolingSupportBundle()) {
+					// then nothing to overwrite
+					installedLocally = true;
+				} else {
+					// then auto-install it if possible
+					try {
+						int status = installToolingSupportBundle();
+						
+						if (status!=HttpStatus.SC_OK) {
+							MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
+									"Could not install sling tooling support bundle: "+status);
+						} else {
+							installedLocally = true;
+						}
+					} catch (IOException e) {
+						//TODO proper logging
+						e.printStackTrace();
 						MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
-								"Could not install sling tooling support bundle: "+status);
+								"Could not install sling tooling support bundle: "+e.getMessage());
 					}
-				} catch (IOException e) {
-					//TODO proper logging
-					e.printStackTrace();
-					MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
-							"Could not install sling tooling support bundle: "+e.getMessage());
 				}
 			}
 			
@@ -409,6 +417,7 @@ public class SetupServerWizardPage extends WizardPage {
 				wc.setName(newServerName.getText() + " (external)");
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, Integer.parseInt(newServerDebugPort.getText()));
+				wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installedLocally);
 				wc.setAttribute("auto-publish-setting", 2); // 2: automatically publish when resources change
 				wc.setAttribute("auto-publish-time", 0);    // 0: zero delay after a resource change (and the builder was kicked, I guess)
 				wc.setRuntime(runtime);
