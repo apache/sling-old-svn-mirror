@@ -38,6 +38,8 @@ import org.eclipse.m2e.core.internal.archetype.ArchetypeManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -145,6 +147,12 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				dialogChanged();
+			}
+		});
+		knownArchetypesList.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseDoubleClick(MouseEvent e) {
+				getContainer().showPage(getNextPage());
 			}
 		});
 		
