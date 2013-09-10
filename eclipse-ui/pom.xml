@@ -40,6 +40,21 @@
                   <overWrite>false</overWrite>
                   <outputDirectory>${project.build.directory}/sling-tooling-support-install</outputDirectory>
                 </artifactItem>
+                <artifactItem>
+                  <groupId>org.apache.sling</groupId>
+                  <artifactId>sling-bundle-archetype</artifactId>
+                  <version>1.0.1-SNAPSHOT</version>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/archetypes</outputDirectory>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.apache.sling</groupId>
+                  <artifactId>sling-bundle-archetype</artifactId>
+                  <version>1.0.1-SNAPSHOT</version>
+                  <type>pom</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.directory}/archetypes</outputDirectory>
+                </artifactItem>
               </artifactItems>
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>true</overWriteSnapshots>

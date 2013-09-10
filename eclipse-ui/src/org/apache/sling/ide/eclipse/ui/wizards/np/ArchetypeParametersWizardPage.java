@@ -307,7 +307,7 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 	}
 
 	public String getArtifactId() {
-		return groupId.getText();
+		return artifactId.getText();
 	}
 
 	public String getVersion() {
