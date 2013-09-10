@@ -175,17 +175,19 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
         for (Object entryObject : bindings.entrySet()) {
             Entry<?, ?> entry = (Entry<?, ?>) entryObject;
             String name = (String) entry.getKey();
+            Object value = entry.getValue();
 
-            // get the current property value, if set
-            if (ScriptableObject.hasProperty(scope, name)) {
-                replacedProperties.put(name, ScriptableObject.getProperty(
-                    scope, name));
+            if (value != null) {
+                // get the current property value, if set
+                if (ScriptableObject.hasProperty(scope, name)) {
+                    replacedProperties.put(name, ScriptableObject.getProperty(
+                        scope, name));
+                }
+
+                // wrap the new value and set it
+                Object wrapped = ScriptRuntime.toObject(scope, value);
+                ScriptableObject.putProperty(scope, name, wrapped);
             }
-
-            // wrap the new value and set it
-            Object wrapped = ScriptRuntime.toObject(scope, entry.getValue());
-            ScriptableObject.putProperty(scope, (String) entry.getKey(),
-                wrapped);
         }
 
         return replacedProperties;
