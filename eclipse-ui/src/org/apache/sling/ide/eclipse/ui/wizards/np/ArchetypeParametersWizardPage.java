@@ -25,13 +25,18 @@ import org.apache.maven.archetype.metadata.RequiredProperty;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.eclipse.jface.dialogs.IDialogPage;
 import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.CellNavigationStrategy;
+import org.eclipse.jface.viewers.FocusCellOwnerDrawHighlighter;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerFocusCellManager;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
 import org.eclipse.m2e.core.internal.archetype.ArchetypeManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
@@ -55,6 +60,8 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 	private Text artifactId;
 	
 	private Text javaPackage;
+	
+	private boolean javaPackageModified;
 
 	private final AbstractNewSlingApplicationWizard parent;
 
@@ -92,6 +99,13 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 		groupId.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
+				if (!javaPackageModified) {
+					if (artifactId.getText().length()==0) {
+						javaPackage.setText(groupId.getText());
+					} else {
+						javaPackage.setText(groupId.getText()+"."+artifactId.getText());
+					}
+				}
 			}
 		});
 
@@ -104,6 +118,11 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 		artifactId.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
+				if (groupId.getText().length()==0) {
+					javaPackage.setText(artifactId.getText());
+				} else {
+					javaPackage.setText(groupId.getText()+"."+artifactId.getText());
+				}
 			}
 		});
 
@@ -113,6 +132,7 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 		version = new Text(container, SWT.BORDER | SWT.SINGLE);
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		version.setLayoutData(gd);
+		version.setText("0.0.1-SNAPSHOT");
 		version.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
@@ -125,6 +145,13 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 		javaPackage = new Text(container, SWT.BORDER | SWT.SINGLE);
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		javaPackage.setLayoutData(gd);
+		javaPackageModified = false;
+		javaPackage.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				javaPackageModified = true;
+			}
+		});
 		javaPackage.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
@@ -142,7 +169,12 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 	    propertiesTable.setLinesVisible(true);
 	    propertiesTable.setHeaderVisible(true);
 	    propertiesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 2));
-
+	    
+	    CellNavigationStrategy strategy = new CellNavigationStrategy();
+		TableViewerFocusCellManager focusCellMgr = new TableViewerFocusCellManager(propertiesViewer,
+	    		new FocusCellOwnerDrawHighlighter(propertiesViewer),
+	    		strategy);
+	    
 	    TableColumn propertiesTableNameColumn = new TableColumn(propertiesTable, SWT.NONE);
 	    propertiesTableNameColumn.setWidth(130);
 	    propertiesTableNameColumn.setText("Name");
