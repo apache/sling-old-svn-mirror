@@ -189,10 +189,14 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 				final String launchMemento = MavenLaunchHelper.createMavenLaunchConfigMemento(project.getLocation().toString(),
 						"sling:install", "bundle", false, null);
 				IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
-				dotLaunches.create(true, true, monitor);
+				if (!dotLaunches.exists()) {
+					dotLaunches.create(true, true, monitor);
+				}
 				IFile launchFile = dotLaunches.getFile("sling_install.launch");
 				InputStream in = new ByteArrayInputStream(launchMemento.getBytes());
-				launchFile.create(in, true, monitor);
+				if (!launchFile.exists()) {
+					launchFile.create(in, true, monitor);
+				}
 
 				ILaunchConfiguration launchConfig = 
 						DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(launchFile);
