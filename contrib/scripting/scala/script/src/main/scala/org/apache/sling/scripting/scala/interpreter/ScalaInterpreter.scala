@@ -75,7 +75,12 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
 
     def bind(arg: (String, AnyRef)) = {
       val views = bindings.getViews(arg._2.getClass)
-      val className = views.head.getName
+      val className =
+        // TODO some classloader roguery prevents c.q.l.c.Logger from being accessible
+        // when executing the script although the class is accessible here. As a work
+        // around special case to o.s.Logger here. See SLING-3053
+        if ("ch.qos.logback.classic.Logger" == views.head.getName) "org.slf4j.Logger"
+        else views.head.getName
       val implicits = 
         for {
           view <- views.tail
@@ -149,7 +154,11 @@ class ScalaInterpreter(settings: Settings, reporter: Reporter, classes: Array[Ab
    * @return  result of compilation
    */
   def compile(name: String, code: String, bindings: Bindings): Reporter =
-    compile(name, preProcess(name, code, bindings))
+    {
+      val process: String = preProcess(name, code, bindings)
+      println(process)
+      compile(name, process)
+    }
 
   /**
    * Compiles a single source file. No pre-processing takes place.
