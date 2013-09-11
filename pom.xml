@@ -38,7 +38,7 @@
 
     <properties>
         <sling.java.version>6</sling.java.version>
-        <oak.version>0.9-SNAPSHOT</oak.version>
+        <oak.version>0.8-r1520083</oak.version>
     </properties>
 
     <build>
@@ -57,8 +57,10 @@
                           org.apache.jackrabbit.test;resolution:=optional,
                           com.mongodb;resolution:=optional,
                           org.apache.jackrabbit.oak.security.user;resolution:=optional,
+                          org.apache.jackrabbit.oak.spi.security.authentication,
                           *
                         </Import-Package>
+                        <Embed-Dependency>oak-jcr</Embed-Dependency>
                         <Bundle-Activator>
                             org.apache.sling.oak.server.Activator
                         </Bundle-Activator>
