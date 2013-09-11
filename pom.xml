@@ -60,7 +60,10 @@
                           org.apache.jackrabbit.oak.spi.security.authentication,
                           *
                         </Import-Package>
+                        
+                        <!-- TODO embedding shouldn't be needed but avoids classloading issues -->
                         <Embed-Dependency>oak-jcr</Embed-Dependency>
+                        
                         <Bundle-Activator>
                             org.apache.sling.oak.server.Activator
                         </Bundle-Activator>
