@@ -17,8 +17,8 @@
 package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 
-import org.apache.maven.model.Model;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.eclipse.core.resources.IProject;
@@ -114,26 +114,30 @@ public class ConvertToContentPackageAction implements IObjectActionDelegate {
 		fSelection = selection;
 		if (selection instanceof IStructuredSelection) {
 			final IStructuredSelection iss = (IStructuredSelection) selection;
-			if (iss.toList().size()!=1) {
+			Iterator<Object> it = iss.iterator();
+			if (!it.hasNext()) {
 				action.setEnabled(false);
-			} else {
-				Object firstElement = iss.getFirstElement();
-				if (firstElement!=null && (firstElement instanceof IProject)) {
-					final IProject project = (IProject) firstElement;
+				return;
+			}
+			while(it.hasNext()) {
+				Object elem = it.next();
+				if (elem!=null && (elem instanceof IProject)) {
+					final IProject project = (IProject) elem;
 					if (ProjectHelper.isContentProject(project)) {
 						action.setEnabled(false);
+						return;
+					} else if (ProjectHelper.isPotentialContentProject(project)) {
+						continue;
 					} else {
-						Model mavenModel = MavenHelper.getMavenModel(project);
-						if (mavenModel!=null && "content-package".equals(mavenModel.getPackaging())) {
-							action.setEnabled(true);
-						} else {
-							action.setEnabled(false);
-						}
+						action.setEnabled(false);
+						return;
 					}
 				} else {
 					action.setEnabled(false);
+					return;
 				}
 			}
+			action.setEnabled(true);
 		} else {
 			action.setEnabled(false);
 		}
