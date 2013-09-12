@@ -16,8 +16,10 @@
  */
 package org.apache.sling.ide.impl.vlt.serialization;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -37,11 +39,14 @@ import org.apache.jackrabbit.vault.fs.Mounter;
 import org.apache.jackrabbit.vault.fs.api.Aggregate;
 import org.apache.jackrabbit.vault.fs.api.Aggregator;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
+import org.apache.jackrabbit.vault.fs.api.SerializationType;
 import org.apache.jackrabbit.vault.fs.api.VaultFile;
 import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.impl.aggregator.FileAggregator;
+import org.apache.jackrabbit.vault.fs.impl.aggregator.GenericAggregator;
 import org.apache.jackrabbit.vault.fs.impl.io.DocViewSerializer;
+import org.apache.jackrabbit.vault.fs.impl.io.XmlAnalyzer;
 import org.apache.jackrabbit.vault.util.Constants;
 import org.apache.jackrabbit.vault.util.JcrConstants;
 import org.apache.jackrabbit.vault.util.MimeTypes;
@@ -52,6 +57,7 @@ import org.apache.sling.ide.impl.vlt.VaultFsLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class VltSerializationManager implements SerializationManager {
@@ -86,7 +92,35 @@ public class VltSerializationManager implements SerializationManager {
 
     @Override
     public boolean isSerializationFile(String filePath) {
-        return new File(filePath).getName().equals(Constants.DOT_CONTENT_XML);
+        
+        File file = new File(filePath);
+        String fileName = file.getName();
+        if (fileName.equals(Constants.DOT_CONTENT_XML)) {
+            return true;
+        }
+
+        if (!fileName.endsWith(".xml")) {
+            return false;
+        }
+
+        // TODO - refrain from doing I/O here
+        // TODO - copied from TransactionImpl
+        InputStream in = null;
+        try {
+            in = new BufferedInputStream(new FileInputStream(file));
+            SerializationType serType = XmlAnalyzer.analyze(new InputSource(in));
+            return serType == SerializationType.XML_DOCVIEW;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    // don't care
+                }
+            }
+        }
     }
 
     @Override
@@ -175,7 +209,14 @@ public class VltSerializationManager implements SerializationManager {
                 if (!needsDir) {
                     return null;
                 }
+            } else if (aggregator instanceof GenericAggregator) {
+                // TODO - copy-pasted from GenericAggregator
+                if (aggregate.getNode().getPrimaryNodeType().getName().equals("nt:folder")
+                        && aggregate.getNode().getMixinNodeTypes().length == 0) {
+                    return null;
+                }
             }
+
 
             DocViewSerializer s = new DocViewSerializer(aggregate);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
