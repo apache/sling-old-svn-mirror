@@ -42,7 +42,7 @@ public class ListChildrenCommand extends JcrCommand<ResourceProxy> {
         while (nodes.hasNext()) {
             Node childNode = nodes.nextNode();
 
-            // do not descend into jcr:system
+            // TODO - this should not be needed if we obey the vlt filters
             if (childNode.getPath().equals("/jcr:system")) {
                 continue;
             }
