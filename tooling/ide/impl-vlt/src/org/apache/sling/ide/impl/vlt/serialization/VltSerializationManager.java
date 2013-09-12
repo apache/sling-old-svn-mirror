@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.jcr.Credentials;
+import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -34,12 +35,16 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.jackrabbit.vault.fs.Mounter;
 import org.apache.jackrabbit.vault.fs.api.Aggregate;
+import org.apache.jackrabbit.vault.fs.api.Aggregator;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.VaultFile;
 import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
+import org.apache.jackrabbit.vault.fs.impl.aggregator.FileAggregator;
 import org.apache.jackrabbit.vault.fs.impl.io.DocViewSerializer;
 import org.apache.jackrabbit.vault.util.Constants;
+import org.apache.jackrabbit.vault.util.JcrConstants;
+import org.apache.jackrabbit.vault.util.MimeTypes;
 import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.jackrabbit.vault.util.RepositoryProvider;
 import org.apache.sling.ide.impl.vlt.RepositoryUtils;
@@ -144,6 +149,33 @@ public class VltSerializationManager implements SerializationManager {
 
             if (aggregate == null)
                 throw new IllegalArgumentException("No aggregate found for path " + resource.getPath());
+
+            Aggregator aggregator = fs.getAggregateManager().getAggregator(aggregate.getNode(), null);
+            if (aggregator instanceof FileAggregator) {
+                // TODO - copy-pasted from FileAggregator, and really does not belong here...
+                Node content = aggregate.getNode();
+                if (content.isNodeType(JcrConstants.NT_FILE)) {
+                    content = content.getNode(JcrConstants.JCR_CONTENT);
+                }
+                String mimeType = null;
+                if (content.hasProperty(JcrConstants.JCR_MIMETYPE)) {
+                    try {
+                        mimeType = content.getProperty(JcrConstants.JCR_MIMETYPE).getString();
+                    } catch (RepositoryException e) {
+                        // ignore
+                    }
+                }
+                if (mimeType == null) {
+                    // guess mime type from name
+                    mimeType = MimeTypes.getMimeType(aggregate.getNode().getName(), MimeTypes.APPLICATION_OCTET_STREAM);
+                }
+
+                boolean needsDir = !MimeTypes.matches(aggregate.getNode().getName(), mimeType,
+                        MimeTypes.APPLICATION_OCTET_STREAM);
+                if (!needsDir) {
+                    return null;
+                }
+            }
 
             DocViewSerializer s = new DocViewSerializer(aggregate);
             ByteArrayOutputStream out = new ByteArrayOutputStream();

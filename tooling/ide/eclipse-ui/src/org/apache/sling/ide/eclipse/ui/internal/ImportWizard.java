@@ -167,7 +167,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
                             launchpad.setPublishState(oldPublishState, monitor);
                         }
                         monitor.done();
-                        }
+                    }
 
                 }
 
@@ -253,11 +253,22 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
         String serializationPath = serializationManager.getSerializationFilePath(path);
         switch (skm.getSerializationKind(primaryType)) {
-            case FILE:
+            case FILE: {
                 importFile(repository, path, project, projectRelativePath);
-                // TODO support ${filename}.dir serialization of properties
-                break;
 
+                ResourceProxy resourceToSerialize = executeCommand(repository.newGetNodeContentCommand(path));
+
+                String out = serializationManager.buildSerializationData(contentSyncRoot, resourceToSerialize,
+                        repository.getRepositoryInfo());
+                if (out != null) {
+                    IPath directoryPath = projectRelativePath.append(path + ".dir");
+                    createFolder(project, directoryPath);
+                    // TODO remove hardcoding of .content.xml name here
+                    createFile(project, directoryPath.append(".content.xml"), out.getBytes("UTF-8"));
+                }
+
+                break;
+            }
             case FOLDER:
             case METADATA_PARTIAL: {
                 createFolder(project, projectRelativePath.append(path));
