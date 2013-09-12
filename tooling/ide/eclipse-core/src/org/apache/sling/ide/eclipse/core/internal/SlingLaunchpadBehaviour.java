@@ -227,6 +227,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
 
         if (serializationManager().isSerializationFile(info.getLocation())) {
+
+            // TODO - we don't support files with different names, see the docview file ( ui.xml ) pathological case
+            if (!info.getName().equals(".content.xml")) {
+                return null;
+            }
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 InputStream contents = file.getContents();
