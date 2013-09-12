@@ -14,13 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.ui.wizards;
+package org.apache.sling.ide.eclipse.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
-import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;

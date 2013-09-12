@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.ui.wizards;
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.maven.model.Model;
+import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;

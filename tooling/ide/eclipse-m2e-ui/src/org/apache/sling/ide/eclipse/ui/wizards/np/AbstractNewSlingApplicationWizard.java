@@ -26,8 +26,8 @@ import java.util.Properties;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.model.Model;
+import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
-import org.apache.sling.ide.eclipse.ui.wizards.ConfigurationHelper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;

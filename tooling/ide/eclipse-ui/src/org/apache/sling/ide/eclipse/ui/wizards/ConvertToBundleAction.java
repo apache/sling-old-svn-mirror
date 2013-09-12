@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;

@@ -21,8 +21,8 @@ import java.net.URL;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.sling.ide.eclipse.core.EmbeddedArchetypeInstaller;
-import org.apache.sling.ide.eclipse.ui.internal.Activator;
-import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
+import org.apache.sling.ide.eclipse.m2e.internal.SharedImages;
 import org.eclipse.jface.resource.ImageDescriptor;
 
 public class NewSlingBundleWizard extends AbstractNewSlingApplicationWizard {

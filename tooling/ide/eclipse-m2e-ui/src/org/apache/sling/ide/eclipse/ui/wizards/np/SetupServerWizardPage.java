@@ -40,7 +40,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.PartSource;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
-import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
