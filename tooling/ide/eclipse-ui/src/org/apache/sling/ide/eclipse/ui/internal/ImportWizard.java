@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
+import org.apache.sling.ide.eclipse.ui.internal.SerializationKindManager.SerializationKind;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
@@ -247,12 +248,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
         String primaryType = (String) resource.getProperties().get(Repository.JCR_PRIMARY_TYPE);
  
-        System.out.println(primaryType + " -> " + skm.getSerializationKind(primaryType));
+        SerializationKind serializationKind = skm.getSerializationKind(primaryType);
+        System.out.println(primaryType + " -> " + serializationKind);
         
         // TODO we should know all node types for which to create files and folders
 
         String serializationPath = serializationManager.getSerializationFilePath(path);
-        switch (skm.getSerializationKind(primaryType)) {
+        switch (serializationKind) {
             case FILE: {
                 importFile(repository, path, project, projectRelativePath);
 
@@ -318,8 +320,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
         System.out.println("Children: " + resource.getChildren());
 
+        if (serializationKind == SerializationKind.METADATA_FULL) {
+            return;
+        }
+        
         for (ResourceProxy child : resource.getChildren()) {
 
+            // TODO - still needed?
             if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
                 continue;
             }
