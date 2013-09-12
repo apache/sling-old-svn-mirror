@@ -20,24 +20,26 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-
-import org.apache.jackrabbit.vault.fs.api.WorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
+import org.apache.jackrabbit.vault.fs.impl.AggregateManagerImpl;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.transport.RepositoryInfo;
 
 public class VltFilter implements Filter {
 
-    private WorkspaceFilter filter;
+    private DefaultWorkspaceFilter filter;
 
     public VltFilter(InputStream in) throws IOException, ConfigurationException {
 
-        DefaultWorkspaceFilter filter = new DefaultWorkspaceFilter();
-        filter.load(in);
+        if (in != null) {
+            filter = new DefaultWorkspaceFilter();
+            filter.load(in);
+        } else {
+            filter = AggregateManagerImpl.getDefaultWorkspaceFilter();
+        }
 
-        this.filter = filter;
     }
 
     @Override

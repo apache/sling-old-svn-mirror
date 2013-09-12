@@ -118,14 +118,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
                     }
 
                     Filter filter = null;
+
+                    FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
+                    InputStream contents = null;
+
                     if (filterFile != null && filterFile.exists()) {
-                        FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
-                        InputStream contents = null;
                         try {
                             contents = filterFile.getContents();
-                            filter = filterLocator.loadFilter(contents);
-                        } catch (IOException e) {
-                            throw new InvocationTargetException(e);
                         } catch (CoreException e) {
                             throw new InvocationTargetException(e);
                         } finally {
@@ -138,6 +137,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
                             }
                         }
                     }
+
+                    try {
+                        filter = filterLocator.loadFilter(contents);
+                    } catch (IOException e) {
+                        throw new InvocationTargetException(e);
+                    }
+
                     monitor.worked(5);
 
                     try {
