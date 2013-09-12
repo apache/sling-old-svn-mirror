@@ -17,23 +17,31 @@
 package org.apache.sling.ide.eclipse.ui.wizards;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
-import org.apache.maven.model.Model;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 
-public class ConvertToBundleAction  implements IObjectActionDelegate {
+public class ConvertToBundleAction implements IObjectActionDelegate {
 
 	private ISelection fSelection;
 
@@ -53,33 +61,77 @@ public class ConvertToBundleAction  implements IObjectActionDelegate {
 	 */
 	public void run(IAction action) {
 		if (fSelection instanceof IStructuredSelection) {
-			final IProject project = (IProject) ((IStructuredSelection) fSelection).getFirstElement();
-
-			boolean confirmed = MessageDialog.openConfirm(getDisplay().getActiveShell(), "Convert to Sling/OSGi Bundle Project", 
-					"Confirm the conversion of this project to a Sling/OSGi Bundle Project");
-			
-			if (confirmed) {
-				IRunnableWithProgress r = new IRunnableWithProgress() {
-					
-					@Override
-					public void run(IProgressMonitor monitor) throws InvocationTargetException,
-							InterruptedException {
-						try {
-							ConfigurationHelper.convertToBundleProject(project);
-						} catch (CoreException e) {
-							e.printStackTrace();
-							MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
-									e.getMessage());
-						}
-					}
-				};
-				try {
-					PlatformUI.getWorkbench().getProgressService().busyCursorWhile(r);
-				} catch (Exception e) {
-					e.printStackTrace();
-					MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
-							e.getMessage());
+			List<IProject> applicableProjects = new LinkedList<IProject>();
+			IProject[] allProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+			for (int i = 0; i < allProjects.length; i++) {
+				IProject p = allProjects[i];
+				if (p.isOpen() && !ProjectHelper.isBundleProject(p) && ProjectHelper.isPotentialBundleProject(p)) {
+					applicableProjects.add(p);
 				}
+			}
+			Object[] elems = ((IStructuredSelection) fSelection).toArray();
+			List<IProject> initialSelection = new ArrayList<IProject>(elems.length);
+
+			for (int i = 0; i < elems.length; i++) {
+				Object elem = elems[i];
+				IProject project = null;
+
+				if (elem instanceof IFile) {
+					IFile file = (IFile) elem;
+					project = file.getProject();
+				} else if (elem instanceof IProject) {
+					project = (IProject) elem;
+				} else if (elem instanceof IJavaProject) {
+					project = ((IJavaProject) elem).getProject();
+				}
+				if (project != null)
+					initialSelection.add(project);
+			}
+
+			ConvertProjectsWizard wizard = new ConvertProjectsWizard(applicableProjects, initialSelection, 
+					"Convert Project(s) to Sling/OSGi Bundle(s)",
+					"Select project(s) to convert to Sling/OSGi bundle project(s)");
+
+			final Display display = getDisplay();
+			final WizardDialog dialog = new WizardDialog(display.getActiveShell(), wizard);
+			BusyIndicator.showWhile(display, new Runnable() {
+				public void run() {
+					dialog.open();
+				}
+			});
+			if (dialog.getReturnCode()!=WizardDialog.OK) {
+				// user did not click OK
+				return;
+			}
+			final List<IProject> selectedProjects = wizard.getSelectedProjects();
+			if (selectedProjects == null || selectedProjects.size()==0) {
+				// no project was selected
+				return;
+			}
+			IRunnableWithProgress r = new IRunnableWithProgress() {
+				
+				@Override
+				public void run(IProgressMonitor monitor) throws InvocationTargetException,
+						InterruptedException {
+					try {
+						for (Iterator<IProject> it = selectedProjects.iterator(); it
+								.hasNext();) {
+							IProject project = it.next();
+							ConfigurationHelper.convertToBundleProject(project);
+						}
+					} catch (CoreException e) {
+						e.printStackTrace();
+						MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
+								e.getMessage());
+					}
+				}
+			};
+			try {
+				PlatformUI.getWorkbench().getProgressService().busyCursorWhile(r);
+			} catch (Exception e) {
+				e.printStackTrace();
+				MessageDialog.openError(getDisplay().getActiveShell(), "Could not convert project",
+						e.getMessage());
 			}
 		}
 	}
@@ -94,26 +146,30 @@ public class ConvertToBundleAction  implements IObjectActionDelegate {
 		fSelection = selection;
 		if (selection instanceof IStructuredSelection) {
 			final IStructuredSelection iss = (IStructuredSelection) selection;
-			if (iss.toList().size()!=1) {
+			Iterator<Object> it = iss.iterator();
+			if (!it.hasNext()) {
 				action.setEnabled(false);
-			} else {
-				Object firstElement = iss.getFirstElement();
-				if (firstElement!=null && (firstElement instanceof IProject)) {
-					final IProject project = (IProject) firstElement;
+				return;
+			}
+			while(it.hasNext()) {
+				Object elem = it.next();
+				if (elem!=null && (elem instanceof IProject)) {
+					final IProject project = (IProject) elem;
 					if (ProjectHelper.isBundleProject(project)) {
 						action.setEnabled(false);
+						return;
+					} else if (ProjectHelper.isPotentialBundleProject(project)) {
+						continue;
 					} else {
-						Model mavenModel = MavenHelper.getMavenModel(project);
-						if (mavenModel!=null && "bundle".equals(mavenModel.getPackaging())) {
-							action.setEnabled(true);
-						} else {
-							action.setEnabled(false);
-						}
+						action.setEnabled(false);
+						return;
 					}
 				} else {
 					action.setEnabled(false);
+					return;
 				}
 			}
+			action.setEnabled(true);
 		} else {
 			action.setEnabled(false);
 		}

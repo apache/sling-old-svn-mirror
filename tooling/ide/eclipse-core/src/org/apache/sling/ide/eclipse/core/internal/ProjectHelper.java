@@ -16,18 +16,32 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import org.apache.maven.model.Model;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
 import org.eclipse.wst.common.project.facet.core.IProjectFacet;
 import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
 
 public class ProjectHelper {
 
+	public static boolean isPotentialBundleProject(IProject project) {
+		Model mavenModel = getMavenModel(project);
+		return (mavenModel!=null && "bundle".equals(mavenModel.getPackaging()));
+	}
+	
+	public static boolean isPotentialContentProject(IProject project) {
+		Model mavenModel = ProjectHelper.getMavenModel(project);
+		return (mavenModel!=null && "content-package".equals(mavenModel.getPackaging()));
+	}
+	
 	public static boolean isBundleProject(IProject project) {
 		return containsFacet(project, SlingBundleModuleFactory.SLING_BUNDLE_FACET_ID);
 	}
@@ -56,6 +70,21 @@ public class ProjectHelper {
 			jps = model.getJavaProjects();
 			return jps;
 		} catch (JavaModelException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static Model getMavenModel(IProject project) {
+		IFile pomFile = project.getFile("pom.xml");
+		if (!pomFile.exists()) {
+			return null;
+		}
+		try {
+			Model model = MavenPlugin.getMavenModelManager().readMavenModel(pomFile);
+			return model;
+		} catch (CoreException e) {
+			// TODO proper logging
 			e.printStackTrace();
 			return null;
 		}
