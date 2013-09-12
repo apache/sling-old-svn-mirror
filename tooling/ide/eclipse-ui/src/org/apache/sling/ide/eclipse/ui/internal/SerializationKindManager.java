@@ -30,18 +30,7 @@ import org.apache.sling.ide.util.PathUtil;
 // TODO this should be made API after merging the vlt branch back to trunk
 public class SerializationKindManager {
 
-    // TODO this list should be picked up from the config.xml file, not hardcoded
     private final Set<String> fullMetadataNodeTypes = new HashSet<String>();
-    {
-        fullMetadataNodeTypes.add("rep:AccessControl");
-        fullMetadataNodeTypes.add("rep:Policy");
-        fullMetadataNodeTypes.add("cq:Widget");
-        fullMetadataNodeTypes.add("cq:EditConfig");
-        fullMetadataNodeTypes.add("cq:WorkflowModel");
-        fullMetadataNodeTypes.add("vlt:FullCoverage");
-        fullMetadataNodeTypes.add("mix:language");
-        fullMetadataNodeTypes.add("sling:OsgiConfig");
-    }
     private final Set<String> fileNodeTypes = new HashSet<String>();
     private final Set<String> folderNodeTypes = new HashSet<String>();
 
@@ -76,6 +65,8 @@ public class SerializationKindManager {
                 case FOLDER:
                     folderNodeTypes.add(nodeType);
                     break;
+                case METADATA_FULL:
+                    fullMetadataNodeTypes.add(nodeType);
                 default:
                     // don't care
                     break;
@@ -94,6 +85,12 @@ public class SerializationKindManager {
             return SerializationKind.FOLDER;
         }
 
+        if ("rep:accessControl".equals(nodeType) || "rep:Policy".equals(nodeType) || "cq:Widget".equals(nodeType)
+                || "cq:EditConfig".equals(nodeType) || "cq:WorkflowModel".equals(nodeType)
+                || "vlt:FullCoverage".equals(nodeType) || "mix:language".equals(nodeType)
+                || "sling:OsgiConfig".equals(nodeType)) {
+            return SerializationKind.METADATA_FULL;
+        }
         String[] parents = nodeTypesToParentNodeTypes.get(nodeType);
         if (parents == null)
             return null;
