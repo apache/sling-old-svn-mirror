@@ -32,4 +32,9 @@ public class PathUtil {
 
         throw new AssertionError("unreachable");
     }
+
+    public static String getName(String path) {
+
+        return path.substring(path.lastIndexOf('/') + 1);
+    }
 }

@@ -20,16 +20,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.jackrabbit.vault.fs.Mounter;
 import org.apache.jackrabbit.vault.fs.api.Aggregate;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.VaultFile;
@@ -37,6 +40,8 @@ import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.impl.io.DocViewSerializer;
 import org.apache.jackrabbit.vault.util.Constants;
+import org.apache.jackrabbit.vault.util.PlatformNameFormat;
+import org.apache.jackrabbit.vault.util.RepositoryProvider;
 import org.apache.sling.ide.impl.vlt.RepositoryUtils;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
@@ -45,6 +50,32 @@ import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.SAXException;
 
 public class VltSerializationManager implements SerializationManager {
+
+    public static void main(String[] args) throws RepositoryException, URISyntaxException, IOException {
+        RepositoryAddress address = new RepositoryAddress("http://localhost:8080/server/root");
+        Repository repo = new RepositoryProvider().getRepository(address);
+        Session session = repo.login(new SimpleCredentials("admin", "admin".toCharArray()));
+
+        VaultFileSystem fs = Mounter.mount(null, null, address, "/", session);
+
+        String[] attempts = new String[] { "/rep:policy", "/var" };
+
+        for (String attempt : attempts) {
+            VaultFile vaultFile = fs.getFile(attempt);
+
+            System.out.println(attempt + " -> " + vaultFile);
+        }
+
+        for (String attempt : attempts) {
+
+            attempt = PlatformNameFormat.getPlatformPath(attempt) + ".xml";
+
+            VaultFile vaultFile = fs.getFile(attempt);
+
+            System.out.println(attempt + " -> " + vaultFile);
+        }
+
+    }
 
     private VaultFsLocator fsLocator;
 
@@ -75,6 +106,8 @@ public class VltSerializationManager implements SerializationManager {
         this.fsLocator = null;
     }
 
+    // TODO - the return type could look like (byte[] contents, String nameHint, SerializationKind sk)
+
     @Override
     public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
 
@@ -95,12 +128,20 @@ public class VltSerializationManager implements SerializationManager {
 
             VaultFile vaultFile = fs.getFile(resource.getPath());
             if (vaultFile == null) {
-                // TODO proper logging ; discover if this is expected or not
-                System.err.println("No vaultFile at path " + resource.getPath());
-                return null;
+
+                // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
+                String platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + ".xml";
+                vaultFile = fs.getFile(platformPath);
+
+                if (vaultFile == null) {
+                    // TODO proper logging ; discover if this is expected or not
+                    System.err.println("No vaultFile at path " + resource.getPath());
+                    return null;
+                }
             }
 
             Aggregate aggregate = vaultFile.getAggregate();
+
             if (aggregate == null)
                 throw new IllegalArgumentException("No aggregate found for path " + resource.getPath());
 

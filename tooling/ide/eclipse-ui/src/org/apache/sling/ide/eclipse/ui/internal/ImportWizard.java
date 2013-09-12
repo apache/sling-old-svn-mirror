@@ -34,6 +34,7 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
+import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -42,6 +43,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -87,6 +89,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
         final String repositoryPath = mainPage.getRepositoryPath();
         final IFile filterFile = mainPage.getFilterFile();
         try {
+            // TODO the headless logic should move to the service layer of reuse and testing
             getContainer().run(false, true, new IRunnableWithProgress() {
 
                 @Override
@@ -103,6 +106,15 @@ public class ImportWizard extends Wizard implements IImportWizard {
                     // make too many calls after the import, functionality is not affected
                     if (server.canPublish().isOK() && oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
                         launchpad.setPublishState(ISlingLaunchpadServer.PUBLISH_STATE_NEVER, monitor);
+                    }
+
+                    SerializationKindManager skm;
+                    
+                    try {
+                        skm = new SerializationKindManager();
+                        skm.init(repository);
+                    } catch (RepositoryException e1) {
+                        throw new InvocationTargetException(e1);
                     }
 
                     Filter filter = null;
@@ -138,7 +150,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
                         // we create the root node and assume this is a folder
                         createRoot(project, projectRelativePath, repositoryPath);
 
-                        crawlChildrenAndImport(repository, filter, repositoryPath, project, projectRelativePath);
+                        crawlChildrenAndImport(repository, filter, repositoryPath, project, projectRelativePath, skm);
 
                         monitor.setTaskName("Import Complete");
                         monitor.worked(100);
@@ -210,6 +222,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
      * @param path the current path to import from
      * @param project the project to create resources in
      * @param projectRelativePath the path, relative to the project root, where the resources should be created
+     * @param skm 
      * @param tracer
      * @throws JSONException
      * @throws RepositoryException
@@ -218,7 +231,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
      */
 	// TODO: This probably should be pushed into the service layer	
     private void crawlChildrenAndImport(Repository repository, Filter filter, String path, IProject project,
-            IPath projectRelativePath) throws RepositoryException, CoreException, IOException {
+            IPath projectRelativePath, SerializationKindManager skm) throws RepositoryException, CoreException, IOException {
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
 
@@ -228,23 +241,63 @@ public class ImportWizard extends Wizard implements IImportWizard {
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
         String primaryType = (String) resource.getProperties().get(Repository.JCR_PRIMARY_TYPE);
  
-		if (Repository.NT_FILE.equals(primaryType)){
-            importFile(repository, path, project, projectRelativePath);
-		}else if (Repository.NT_FOLDER.equals(primaryType)){
-			createFolder(project, projectRelativePath.append(path));
-		}else if(Repository.NT_RESOURCE.equals(primaryType)){
-			//DO NOTHING
-        } else {
-			createFolder(project, projectRelativePath.append(path));
-            ResourceProxy resourceToSerialize = executeCommand(repository.newGetNodeContentCommand(path));
-            
-            String out = serializationManager.buildSerializationData(contentSyncRoot,
-                    resourceToSerialize, repository.getRepositoryInfo());
-            if (out != null) {
-                createFile(project, projectRelativePath.append(serializationManager.getSerializationFilePath(path)),
-                    out.getBytes("UTF-8"));
+        System.out.println(primaryType + " -> " + skm.getSerializationKind(primaryType));
+        
+        // TODO we should know all node types for which to create files and folders
+
+        String serializationPath = serializationManager.getSerializationFilePath(path);
+        switch (skm.getSerializationKind(primaryType)) {
+            case FILE:
+                importFile(repository, path, project, projectRelativePath);
+                // TODO support ${filename}.dir serialization of properties
+                break;
+
+            case FOLDER:
+            case METADATA_PARTIAL: {
+                createFolder(project, projectRelativePath.append(path));
+                ResourceProxy resourceToSerialize = executeCommand(repository.newGetNodeContentCommand(path));
+
+                String out = serializationManager.buildSerializationData(contentSyncRoot, resourceToSerialize,
+                        repository.getRepositoryInfo());
+                if (out != null) {
+                    createFile(project,
+                            projectRelativePath.append(serializationPath),
+                            out.getBytes("UTF-8"));
+                }
+                break;
             }
-		}
+
+            case METADATA_FULL: {
+                ResourceProxy resourceToSerialize = executeCommand(repository.newGetNodeContentCommand(path));
+
+                String out = serializationManager.buildSerializationData(contentSyncRoot, resourceToSerialize,
+                        repository.getRepositoryInfo());
+
+                if (out != null) {
+                    // TODO - picking the base name based on serialization kind is not supported by the API...
+                    // so for now this is one big hack to have vlt-compatible checkouts
+                    IPath serializationPathPath = Path.fromPortableString(serializationPath);
+                    if (!resourceToSerialize.getPath().equals("/") && serializationPath.endsWith(".content.xml")) {
+                        String name = PathUtil.getName(path);
+                        if (name.indexOf(':') != -1) {
+                            name = '_' + name.replace(':', '_');
+                        }
+                        name += ".xml";
+                        serializationPath = serializationPath.replace(".content.xml", name);
+
+                        // some of the logic should be reused from AbstractArtifact
+                        serializationPathPath = Path.fromPortableString(serializationPath).removeFirstSegments(1);
+                    }
+                    
+                    
+
+                    createFile(project,
+                            projectRelativePath.append(serializationPathPath),
+                            out.getBytes("UTF-8"));
+                }
+                break;
+            }
+        }
 
         System.out.println("Children: " + resource.getChildren());
 
@@ -263,7 +316,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
             }
 
             crawlChildrenAndImport(repository, filter, child.getPath(), project,
-                    projectRelativePath);
+                    projectRelativePath, skm);
 		}
 	}
 
