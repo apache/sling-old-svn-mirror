@@ -24,23 +24,31 @@ import java.util.Map;
 
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
-import org.eclipse.ui.views.properties.PropertyDescriptor;
+import org.eclipse.ui.views.properties.TextPropertyDescriptor;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
-public class ReadOnlyProperties implements IPropertySource {
+public class ModifiableProperties implements IPropertySource {
 	
 	private Map<String, String> properties = new HashMap<String, String>();
+	private JcrNode node;
+	private Node domNode;
+	private GenericJcrRootFile genericJcrRootFile;
 	
-	public ReadOnlyProperties() {
-		
+	public ModifiableProperties(JcrNode node) {
+		this.node = node;
 	}
 	
-	public ReadOnlyProperties(Map<String, String> properties) {
-		this.properties.putAll(properties);
+	public void setJcrNode(JcrNode node) {
+		if (node==null) {
+			throw new IllegalArgumentException("node must not be null");
+		}
+		this.node = node;
 	}
 	
 	@Override
 	public Object getEditableValue() {
-		return null;
+		return this;
 	}
 
 	@Override
@@ -48,12 +56,16 @@ public class ReadOnlyProperties implements IPropertySource {
 		final List<IPropertyDescriptor> result = new LinkedList<IPropertyDescriptor>();
 		for (Iterator<Map.Entry<String, String>> it = properties.entrySet().iterator(); it.hasNext();) {
 			Map.Entry<String, String> entry = it.next();
-			IPropertyDescriptor pd = new PropertyDescriptor(entry, entry.getKey());
+			TextPropertyDescriptor pd = new TextPropertyDescriptor(entry, entry.getKey());
 			result.add(pd);
 		}
 		return result.toArray(new IPropertyDescriptor[] {});
 	}
 
+	public String getValue(String key) {
+		return properties.get(key);
+	}
+	
 	@Override
 	public Object getPropertyValue(Object id) {
 		Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
@@ -72,11 +84,24 @@ public class ReadOnlyProperties implements IPropertySource {
 
 	@Override
 	public void setPropertyValue(Object id, Object value) {
-
+		Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
+		entry.setValue(String.valueOf(value));
+		NamedNodeMap attributes = domNode.getAttributes();
+		Node n = attributes.getNamedItem(entry.getKey());
+		n.setNodeValue(String.valueOf(value));
+		genericJcrRootFile.save();
 	}
 
-	public void add(String label, String value) {
-		properties.put(label, value);
+	public void setNode(GenericJcrRootFile genericJcrRootFile, Node domNode) {
+		this.domNode = domNode;
+		NamedNodeMap attributes = domNode.getAttributes();
+		if (attributes!=null) {
+			for(int i=0; i<attributes.getLength(); i++) {
+				Node attr = attributes.item(i);
+				properties.put(attr.getNodeName(), attr.getNodeValue());
+			}
+		}
+		this.genericJcrRootFile = genericJcrRootFile;
 	}
 
 }

@@ -10,4 +10,13 @@
   <artifactId>org.apache.sling.ide.eclipse-ui</artifactId>
   <packaging>eclipse-plugin</packaging>
   <name>Sling IDE Tools: Eclipse UI</name>
-</project>
+<build>
+    <resources>
+      <resource>
+        <directory>src/main/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+</build></project>

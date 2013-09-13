@@ -16,12 +16,25 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.filter.Filter;
@@ -45,7 +58,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.ui.DebugUITools;
+import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.IModuleResource;
@@ -55,20 +73,32 @@ import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     private SerializationManager serializationManager;
-
+	private ILaunch launch;
+	private JVMDebuggerConnection debuggerConnection;
+	
     @Override
     public void stop(boolean force) {
-
+    	if (debuggerConnection!=null) {
+    		debuggerConnection.stop(force);
+    	}
         setServerState(IServer.STATE_STOPPED);
     }
 
     public void start(IProgressMonitor monitor) throws CoreException {
 
         boolean success = false;
+        Result<ResourceProxy> result = null;
 
-        Command<ResourceProxy> command = ServerUtil.getRepository(getServer(), monitor).newListChildrenNodeCommand("/");
-        Result<ResourceProxy> result = command.execute();
-        success = result.isSuccess();
+        if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
+        	debuggerConnection = new JVMDebuggerConnection();
+        	success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+			
+        } else {
+	        
+        	Command<ResourceProxy> command = ServerUtil.getRepository(getServer(), monitor).newListChildrenNodeCommand("/");
+	        result = command.execute();
+	        success = result.isSuccess();
+        }
 
         if (success) {
             setServerState(IServer.STATE_STARTED);
@@ -87,6 +117,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     public void setupLaunch(ILaunch launch, String launchMode, IProgressMonitor monitor) throws CoreException {
         // TODO check that ports are free
 
+    	this.launch = launch;
         setServerRestartState(false);
         setServerState(IServer.STATE_STARTING);
         setMode(launchMode);
@@ -138,7 +169,95 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println(trace.toString());
 
-        Repository repository = ServerUtil.getRepository(getServer(), monitor);
+        if (ProjectHelper.isBundleProject(module[0].getProject())) {
+            String serverMode = getServer().getMode();
+            if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
+                // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
+                // otherwise, for run and profile modes we explicitly publish the bundle module
+                // TODO: make this configurable as part of the server config
+        		publishBundleModule(module, monitor);
+        	}
+        } else if (ProjectHelper.isContentProject(module[0].getProject())) {
+    		publishContentModule(kind, deltaKind, module, monitor); 
+        }
+    }
+
+	private void publishBundleModule(IModule[] module, IProgressMonitor monitor) throws CoreException {
+		final IProject project = module[0].getProject();
+        boolean installLocally = getServer().getAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, true);
+		if (!installLocally) {
+			try{
+				final String launchMemento = MavenLaunchHelper.createMavenLaunchConfigMemento(project.getLocation().toString(),
+						"sling:install", "bundle", false, null);
+				IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
+				if (!dotLaunches.exists()) {
+					dotLaunches.create(true, true, monitor);
+				}
+				IFile launchFile = dotLaunches.getFile("sling_install.launch");
+				InputStream in = new ByteArrayInputStream(launchMemento.getBytes());
+				if (!launchFile.exists()) {
+					launchFile.create(in, true, monitor);
+				}
+
+				ILaunchConfiguration launchConfig = 
+						DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(launchFile);
+				launchConfig.launch(ILaunchManager.RUN_MODE, monitor);
+			} catch(Exception e) {
+				// TODO proper logging
+				e.printStackTrace();
+			}
+		} else {
+			monitor.beginTask("deploying via local install", 5);
+	        HttpClient httpClient = new HttpClient();
+	        String hostname = getServer().getHost();
+	        int launchpadPort = getServer().getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
+	        PostMethod method = new PostMethod("http://"+hostname+":"+launchpadPort+"/system/sling/tooling/install");
+	        String username = getServer().getAttribute(ISlingLaunchpadServer.PROP_USERNAME, "admin");
+	        String password = getServer().getAttribute(ISlingLaunchpadServer.PROP_PASSWORD, "admin");
+	        String userInfo = username+":"+password;
+	        if (userInfo != null) {
+	        	Credentials c = new UsernamePasswordCredentials(userInfo);
+	        	try {
+					httpClient.getState().setCredentials(
+							new AuthScope(method.getURI().getHost(), method
+									.getURI().getPort()), c);
+				} catch (URIException e) {
+					// TODO proper logging
+					e.printStackTrace();
+				}
+	        }
+	        IJavaProject javaProject = ProjectHelper.asJavaProject(project);
+	        IPath outputLocation = javaProject.getOutputLocation();
+			outputLocation = outputLocation.makeRelativeTo(project.getFullPath());
+	        IPath location = project.getRawLocation();
+	        if (location==null) {
+	        	location = project.getLocation();
+	        }
+			method.addParameter("dir", location.toString() + "/" + outputLocation.toString());
+	        monitor.worked(1);
+            try {
+				httpClient.executeMethod(method);
+		        monitor.worked(4);
+		        setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+			} catch (HttpException e) {
+				// TODO proper logging
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO proper logging
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void publishContentModule(int kind, int deltaKind,
+			IModule[] module, IProgressMonitor monitor) throws CoreException {
+
+		if (runLaunchesIfExist(kind, deltaKind, module, monitor)) {
+			return;
+		}
+		// otherwise fallback to old behaviour
+		
+		Repository repository = ServerUtil.getRepository(getServer(), monitor);
 
         IModuleResource[] moduleResources = getResources(module);
         
@@ -205,7 +324,62 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         // set state to published
         super.publishModule(kind, deltaKind, module, monitor);
-    }
+        setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+//        setServerPublishState(IServer.PUBLISH_STATE_NONE);
+	}
+
+	private boolean runLaunchesIfExist(int kind, int deltaKind, IModule[] module,
+			IProgressMonitor monitor) throws CoreException {
+		final IProject project = module[0].getProject();
+		final IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
+		final List<IFile> launches = new LinkedList<IFile>();
+		if (dotLaunches.exists()) {
+			final IResource[] members = dotLaunches.members();
+			if (members!=null) {
+				for (int i = 0; i < members.length; i++) {
+					final IResource aMember = members[i];
+					if (aMember instanceof IFile) {
+						launches.add((IFile)aMember);
+					}
+				}
+			}
+		}
+		if (launches.size()>0) {
+			if (kind == IServer.PUBLISH_AUTO && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
+				// then nothing is to be done, there are no changes
+				return true;
+			}
+	        for (Iterator<IFile> it = launches.iterator(); it.hasNext();) {
+				IFile aLaunchFile = it.next();
+				try{
+//					@SuppressWarnings("restriction")
+//					IWorkbench workbench = DebugUIPlugin.getDefault().getWorkbench();
+//					if (workbench==null) {
+//						// we're not in the context of a workbench?
+//						System.err.println("We're not in the context of a workbench?");
+//					}
+//					IWorkbenchWindow aw = workbench.getActiveWorkbenchWindow();
+//					if (aw==null) {
+//						// we're not in the context of a workbench window?
+//					}
+					ILaunchConfiguration launchConfig = 
+							DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(aLaunchFile);
+					if (launchConfig!=null) {
+						DebugUITools.launch( launchConfig, ILaunchManager.RUN_MODE);
+					}
+				} catch(Exception e) {
+					// TODO logging
+					
+					e.printStackTrace();
+				}
+
+			}
+	        super.publishModule(kind, deltaKind, module, monitor);
+	        setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+	        return true;
+		}
+		return false;
+	}
 
     private void execute(Command<?> command) throws CoreException {
         if (command == null) {

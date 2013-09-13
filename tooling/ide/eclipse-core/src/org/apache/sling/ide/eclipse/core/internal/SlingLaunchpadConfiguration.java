@@ -28,6 +28,11 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
     public SlingLaunchpadConfiguration(SlingLaunchpadServer server) {
         this.server = server;
     }
+    
+    @Override
+    public boolean bundleInstallLocally() {
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, true);
+    }
 
     @Override
     public int getPort() {
@@ -35,6 +40,11 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
         return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
     }
 
+    @Override
+    public int getDebugPort() {
+        return workingCopy().getAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, 30303);
+    }
+    
     private IServerWorkingCopy workingCopy() {
         IServerWorkingCopy workingCopy = server.getServerWorkingCopy();
         server.getServer().createWorkingCopy();
@@ -45,6 +55,10 @@ public class SlingLaunchpadConfiguration implements ISlingLaunchpadConfiguration
 
     public void setPort(int port) {
         workingCopy().setAttribute(ISlingLaunchpadServer.PROP_PORT, port);
+    }
+    
+    public void setDebugPort(int debugPort) {
+    	workingCopy().setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, debugPort);
     }
 
     @Override

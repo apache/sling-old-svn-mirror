@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="org.apache.sling.ide.m2e-feature"
+      label="Sling IDE Tools, M2e-based"
+      version="0.0.1.qualifier"
+      provider-name="The Apache Foundation">
+
+   <plugin
+         id="org.apache.sling.ide.eclipse-m2e-ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>

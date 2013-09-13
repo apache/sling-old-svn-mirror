@@ -19,12 +19,12 @@ package org.apache.sling.ide.eclipse.ui.internal;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.eclipse.core.runtime.Plugin;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
-public class Activator extends Plugin {
+public class Activator extends AbstractUIPlugin {
 
     public static final String PLUGIN_ID = "org.apache.sling.ide.eclipse-core";
     public static Activator INSTANCE;

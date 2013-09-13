@@ -28,7 +28,10 @@ public interface ISlingLaunchpadServer {
     public static final String PROP_USERNAME = "launchpad.username";
     public static final String PROP_CONTEXT_PATH = "launchpad.contextPath";
     public static final String PROP_PORT = "launchpad.port";
+    public static final String PROP_DEBUG_PORT = "launchpad.debugPort";
 
+    public static final String PROP_INSTALL_LOCALLY = "launchpad.installLocally";
+    
     void setPublishState(int publishState, IProgressMonitor monitor);
 
     int getPublishState();

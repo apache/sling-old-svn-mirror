@@ -5,23 +5,49 @@ Bundle-Version: 0.0.1.qualifier
 Bundle-Activator: org.apache.sling.ide.eclipse.core.internal.Activator
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.equinox.ds;bundle-version="1.2.1",
- org.eclipse.osgi.services;bundle-version="3.2.100"
+ org.eclipse.osgi.services;bundle-version="3.2.100",
+ org.eclipse.core.resources,
+ org.eclipse.ui,
+ org.eclipse.m2e.core;bundle-version="1.4.0",
+ org.eclipse.m2e.archetype.common;bundle-version="1.4.0"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .
-Import-Package: org.apache.sling.ide.filter,
+Import-Package: org.apache.commons.httpclient;version="3.1.0",
+ org.apache.commons.httpclient.auth;version="3.1.0",
+ org.apache.commons.httpclient.methods;version="3.1.0",
+ org.apache.maven,
+ org.apache.maven.artifact,
+ org.apache.maven.artifact.handler,
+ org.apache.maven.artifact.installer,
+ org.apache.maven.artifact.repository,
+ org.apache.maven.execution,
+ org.apache.maven.model,
+ org.apache.maven.plugin,
+ org.apache.sling.ide.filter,
  org.apache.sling.ide.serialization,
  org.apache.sling.ide.transport,
+ org.codehaus.plexus,
  org.eclipse.core.commands,
  org.eclipse.core.commands.operations,
  org.eclipse.core.resources,
  org.eclipse.debug.core,
+ org.eclipse.debug.core.model,
+ org.eclipse.debug.core.sourcelookup,
+ org.eclipse.debug.core.sourcelookup.containers,
+ org.eclipse.debug.internal.ui,
+ org.eclipse.debug.ui,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.internal.launching,
  org.eclipse.jdt.launching,
+ org.eclipse.jdt.launching.sourcelookup.containers,
  org.eclipse.osgi.service.debug;version="1.2.0",
  org.eclipse.wst.common.project.facet.core,
  org.eclipse.wst.server.core,
  org.eclipse.wst.server.core.model,
  org.eclipse.wst.server.core.util,
- org.osgi.service.component;version="1.1.0"
-Export-Package: org.apache.sling.ide.eclipse.core
+ org.osgi.service.component;version="1.1.0",
+ org.sonatype.aether
+Export-Package: org.apache.sling.ide.eclipse.core,
+ org.apache.sling.ide.eclipse.core.internal
 Service-Component: OSGI-INF/Tracer.xml

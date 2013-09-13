@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import org.apache.sling.ide.eclipse.ui.internal.SharedImages;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.swt.graphics.Image;
 
@@ -31,6 +32,20 @@ public class SyncDir extends JcrNode {
 		}
 		this.folder = folder;
 		setResource(folder);
+	}
+	
+	@Override
+	public int hashCode() {
+		return folder.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof SyncDir) {
+			SyncDir other = (SyncDir) obj;
+			return folder.equals(other.folder);
+		}
+		return false;
 	}
 	
 	@Override
@@ -54,6 +69,11 @@ public class SyncDir extends JcrNode {
 	@Override
 	public String getName() {
 		return "/";
+	}
+	
+	@Override
+	public IFile getFileForEditor() {
+		return null;
 	}
 
 }

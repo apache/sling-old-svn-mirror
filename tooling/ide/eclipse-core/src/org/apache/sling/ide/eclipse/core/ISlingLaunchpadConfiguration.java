@@ -19,6 +19,8 @@ package org.apache.sling.ide.eclipse.core;
 public interface ISlingLaunchpadConfiguration {
 
     int getPort();
+    
+    int getDebugPort();
 
     String getContextPath();
 
@@ -26,4 +28,5 @@ public interface ISlingLaunchpadConfiguration {
 
     String getPassword();
 
+    boolean bundleInstallLocally();
 }

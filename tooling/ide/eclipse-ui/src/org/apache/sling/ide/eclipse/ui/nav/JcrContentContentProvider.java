@@ -17,18 +17,28 @@
 package org.apache.sling.ide.eclipse.ui.nav;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.apache.sling.ide.eclipse.ui.internal.Activator;
+import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.apache.sling.ide.eclipse.ui.nav.model.JcrNode;
 import org.apache.sling.ide.eclipse.ui.nav.model.SyncDir;
-import org.apache.sling.ide.serialization.SerializationManager;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.navigator.ICommonContentExtensionSite;
@@ -37,8 +47,51 @@ import org.eclipse.ui.navigator.PipelinedShapeModification;
 import org.eclipse.ui.navigator.PipelinedViewerUpdate;
 
 /** WIP: content provider for content package view in project explorer **/
-public class JcrContentContentProvider implements ITreeContentProvider, IPipelinedTreeContentProvider2 {
+public class JcrContentContentProvider implements ITreeContentProvider, IPipelinedTreeContentProvider2, IResourceChangeListener {
 
+	private Object input;
+	private TreeViewer viewer;
+
+	@Override
+	public void resourceChanged(IResourceChangeEvent event) {
+		try {
+			final List<IResource> toBeRefreshed = new LinkedList<IResource>();
+			event.getDelta().accept(new IResourceDeltaVisitor() {
+				
+				@Override
+				public boolean visit(IResourceDelta delta) throws CoreException {
+					if (delta.getResource() instanceof IContainer) {
+						return true;
+					}
+					IProject p = delta.getResource().getProject();
+					IFolder syncDir = getSyncDir(p);
+					if (syncDir==null) {
+						return false;
+					}
+					toBeRefreshed.add(syncDir.getProject());
+					return true;
+				}
+			});
+			if (toBeRefreshed.size()==0) {
+				return;
+			}
+			for (Iterator<IResource> it = toBeRefreshed.iterator(); it
+					.hasNext();) {
+				final IResource iResource = it.next();
+				viewer.getTree().getDisplay().asyncExec(new Runnable() {
+
+					@Override
+					public void run() {
+						viewer.refresh(iResource.getProject(), true);
+					}
+				});
+			}
+		} catch (CoreException e) {
+			//TODO proper logging
+			e.printStackTrace();
+		}
+	}
+	
 	@Override
 	public void dispose() {
 		// nothing to be done here
@@ -46,7 +99,8 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 
 	@Override
 	public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-		// nothing to be done here
+		this.input = newInput;
+		this.viewer = (TreeViewer)viewer;
 	}
 
 	@Override
@@ -76,8 +130,14 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 
 	@Override
 	public Object getParent(Object element) {
-		// TODO Auto-generated method stub
-		return null;
+		if (!(element instanceof JcrNode)) {
+			return null;
+		} else if (element instanceof SyncDir) {
+			SyncDir syncDir = (SyncDir) element;
+			return syncDir.getFolder().getProject();
+		}
+		JcrNode node = (JcrNode) element;
+		return node.getParent();
 	}
 
 	@Override
@@ -100,11 +160,7 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	}
 
 	private IFolder getSyncDir(IProject project) {
-		if (!project.isOpen()) {
-			return null;
-		}
-		IResource syncDir = project.findMember(ProjectUtil.getSyncDirectoryValue(project));
-		return (IFolder) syncDir;
+		return ProjectUtil.getSyncDirectory(project);
 	}
 
 	@Override
@@ -157,7 +213,9 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 
 	@Override
 	public void init(ICommonContentExtensionSite aConfig) {
-		// nothing to do here
+		ResourcesPlugin.getWorkspace().addResourceChangeListener(
+				this,
+				IResourceChangeEvent.POST_CHANGE);
 	}
 
 
@@ -175,7 +233,27 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	@Override
 	public void getPipelinedChildren(Object aParent, Set theCurrentChildren) {
 		if (aParent instanceof IProject) {
-			Object[] children = projectGetChildren((IProject)aParent);
+			IProject project = (IProject)aParent;
+			if (ProjectHelper.isContentProject(project)) {
+				for (Iterator it = theCurrentChildren.iterator(); it
+						.hasNext();) {
+					Object aChild = (Object) it.next();
+					if (aChild instanceof IPackageFragmentRoot) {
+						IPackageFragmentRoot ipfr = (IPackageFragmentRoot)aChild;
+						IResource res = ipfr.getResource();
+						IFolder syncDir = getSyncDir(project);
+						if (res!=null && syncDir!=null && res.equals(syncDir)) {
+							// then remove this one folder provided via j2ee content provider
+							// reason: we are showing it too via the sling content provider
+							it.remove();
+							// and we can break here since there's only one syncdir currently
+							break;
+						}
+						
+					}
+				}
+			}
+			Object[] children = projectGetChildren(project);
 			if (children!=null && children.length>0) {
 				theCurrentChildren.addAll(Arrays.asList(children));
 			}
@@ -192,7 +270,10 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 	@Override
 	public boolean hasPipelinedChildren(Object anInput,
 			boolean currentHasChildren) {
-		// TODO Auto-generated method stub
+		if (anInput instanceof IResource) {
+			// then typically the 'currentHasChildren' is correct
+			return currentHasChildren;
+		}
 		return true;
 	}
 

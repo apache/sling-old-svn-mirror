@@ -16,16 +16,26 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import org.eclipse.debug.internal.ui.DebugPluginImages;
+import org.eclipse.debug.ui.IDebugUIConstants;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.DecorationOverlayIcon;
+import org.eclipse.jface.viewers.IDecoration;
 
 /**
  * The <tt>SharedImages</tt> class contains references to images
  * 
  */
+@SuppressWarnings("restriction")
 public final class SharedImages {
     
     public static final ImageDescriptor SLING_LOG = ImageDescriptor.createFromFile(SharedImages.class, "sling-logo.png");
     public static final ImageDescriptor SLING_ICON = ImageDescriptor.createFromFile(SharedImages.class, "sling.gif");
+    
+    public static final ImageDescriptor DISCONNECT = DebugPluginImages.getImageDescriptor(IDebugUIConstants.IMG_LCL_DISCONNECT);
+    public static final ImageDescriptor RUN_CONNECT = new DecorationOverlayIcon(DebugPluginImages.getImageDescriptor(IDebugUIConstants.IMG_ACT_RUN).createImage(), ImageDescriptor.createFromFile(SharedImages.class, "connectOverlay.png"), IDecoration.BOTTOM_RIGHT);
+    public static final ImageDescriptor DEBUG_CONNECT = new DecorationOverlayIcon(DebugPluginImages.getImageDescriptor(IDebugUIConstants.IMG_ACT_DEBUG).createImage(), ImageDescriptor.createFromFile(SharedImages.class, "connectOverlay.png"), IDecoration.BOTTOM_RIGHT);
+	public static final ImageDescriptor SLING_DECORATION = ImageDescriptor.createFromFile(SharedImages.class, "slingDecoration.png");
 
     private SharedImages() {
     }
