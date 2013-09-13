@@ -5,13 +5,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.custommonkey.xmlunit.XMLUnit;
@@ -38,7 +39,8 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void emptySerializedData() throws SerializationException, SAXException {
 
-        String serializationData = sm.buildSerializationData(null, newResourceWithProperties(new HashMap<String, Object>()), null);
+        SerializationData serializationData = sm.buildSerializationData(null,
+                newResourceWithProperties(new HashMap<String, Object>()), null);
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -54,7 +56,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void nullSerializedData() throws SerializationException, SAXException {
 
-        String serializationData = sm.buildSerializationData(null, null, null);
+        SerializationData serializationData = sm.buildSerializationData(null, null, null);
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -66,19 +68,19 @@ public class SimpleXmlSerializationManagerTest {
         data.put("jcr:createdBy", "admin");
         data.put("jcr:lastModifiedBy", "author");
 
-        String serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
+        SerializationData serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
 
         String methodName = "stringSerializedData";
 
-        assertXmlOutputIsEqualTo(serializationData, methodName);
+        assertXmlOutputIsEqualTo(serializationData.getContents(), methodName);
     }
 
-    private void assertXmlOutputIsEqualTo(String serializationData, String methodName) throws SAXException,
+    private void assertXmlOutputIsEqualTo(byte[] serializationData, String methodName) throws SAXException,
             SerializationException, IOException {
 
         InputStream doc = readSerializationDataFile(methodName);
 
-        assertXMLEqual(new InputSource(doc), new InputSource(new StringReader(serializationData)));
+        assertXMLEqual(new InputSource(doc), new InputSource(new ByteArrayInputStream(serializationData)));
     }
 
     private InputStream readSerializationDataFile(String methodName) {
@@ -95,11 +97,11 @@ public class SimpleXmlSerializationManagerTest {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");
 
-        String serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
+        SerializationData serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
 
         String methodName = "serializedDataIsEscaped";
 
-        assertXmlOutputIsEqualTo(serializationData, methodName);
+        assertXmlOutputIsEqualTo(serializationData.getContents(), methodName);
     }
 
     @Test
