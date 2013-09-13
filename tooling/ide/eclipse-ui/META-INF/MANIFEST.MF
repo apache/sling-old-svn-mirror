@@ -81,7 +81,10 @@ Require-Bundle: org.eclipse.wst.common.project.facet.ui,
  org.eclipse.ui.console,
  org.eclipse.jdt.ui,
  org.apache.sling.ide.eclipse-core,
- org.eclipse.ui.views.properties.tabbed
+ org.eclipse.ui.views.properties.tabbed,
+ org.eclipse.ui.workbench,
+ org.eclipse.jface.text,
+ org.eclipse.ui.editors
 Service-Component: OSGI-INF/*.xml
 Export-Package: org.apache.sling.ide.eclipse.ui,
  org.apache.sling.ide.eclipse.ui.wizards

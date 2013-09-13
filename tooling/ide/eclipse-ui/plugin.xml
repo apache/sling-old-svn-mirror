@@ -337,11 +337,10 @@
    </extension>
 
    <extension
-         id="org.apache.sling.ide.eclipse.ui.pluginJcrNodeToolSet"
          point="org.eclipse.ui.popupMenus">
       <objectContribution
             adaptable="true"
-            id="org.apache.sling.ide.eclipse.ui.pluginJcrNodeToolSet"
+            id="org.apache.sling.ide.eclipse.ui.pluginDomNodeToolSet"
             objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
          <action
                class="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeAction"
@@ -367,6 +366,28 @@
          <visibility>
                <objectState
                      name="domNode"
+                     value="true">
+               </objectState>
+         </visibility>
+      </objectContribution>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="org.apache.sling.ide.eclipse.ui.pluginGeneralToolSet"
+            objectClass="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
+               label="&amp;Open .html (on server) in browser"
+               menubarPath="jcr">
+         </action>
+         <visibility>
+               <objectState
+                     name="browseableNode"
                      value="true">
                </objectState>
          </visibility>
@@ -400,6 +421,13 @@
                id="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteAction"
                label="&amp;Delete JCR Node"
                toolbarPath="common.new.menu/jcr">
+         </action>
+         <action
+               class="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserAction"
+               icon="icons/obj16/sling.gif"
+               id="org.apache.sling.ide.eclipse.ui.actionsOpenHtmlInBrowserAction"
+               label="&amp;Open .html (on server) in browser"
+               menubarPath="common.open.menu/jcr">
          </action>
          <visibility>
                <objectState
@@ -450,6 +478,14 @@
                </instanceof>
          </selectionEnablement>
       </linkHelper>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="org.apache.sling.ide.eclipse.ui.editors.WebBrowser"
+            id="org.apache.sling.ide.eclipse.ui.editors.WebBrowser"
+            name="WebBrowser">
+      </editor>
    </extension> 
    
 </plugin>    

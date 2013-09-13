@@ -32,6 +32,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -56,6 +57,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
+import org.eclipse.wst.server.core.IServer;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.Attributes;
@@ -154,6 +156,9 @@ public class JcrNode implements IAdaptable {
 				return resource.getFullPath().hashCode();
 			}
 		} else {
+			if (domNode==null) {
+				return underlying.hashCode();
+			}
 			return underlying.hashCode() + domNode.toString().hashCode();
 		}
 	}
@@ -459,6 +464,9 @@ public class JcrNode implements IAdaptable {
 					if ("nonDomNode".equals(name)) {
 						return node.domNode==null;	
 					}
+					if ("browseableNode".equals(name)) {
+						return node.isBrowsable();
+					}
 					return false;
 				}
 			};
@@ -553,6 +561,10 @@ public class JcrNode implements IAdaptable {
 		return null;
 	}
 
+	protected boolean isBrowsable() {
+		return true;
+	}
+
 	public IFile getFileForEditor() {
 		if (resource instanceof IFile) {
 //			if (!isVaultFile(resource)) {
@@ -635,6 +647,23 @@ public class JcrNode implements IAdaptable {
 			domNode.getParentNode().removeChild(domNode);
 		}
 		underlying.save();
+	}
+
+	public IProject getProject() {
+		if (resource!=null) {
+			return resource.getProject();
+		}
+		if (underlying!=null) {
+			return underlying.file.getProject();
+		}
+		return null;
+	}
+
+	public String getURLForBrowser(IServer server) {
+		final String host = server.getHost();
+		final int port = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
+        final String url = "http://"+host+":"+port+""+getJcrPath();
+		return url;
 	}
 
 }
