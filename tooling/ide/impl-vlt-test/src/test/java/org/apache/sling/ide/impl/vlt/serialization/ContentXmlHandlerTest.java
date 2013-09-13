@@ -46,7 +46,7 @@ public class ContentXmlHandlerTest {
 
         Map<String, Object> properties = parseContentXmlFile("simple-content.xml");
 
-        assertThat("properties.size", properties.size(), is(7));
+        assertThat("properties.size", properties.size(), is(11));
 
         assertThat("properties[jcr:primaryType]", properties, hasEntry("jcr:primaryType", (Object) "sling:Folder"));
         assertThat("properties[jcr:title]", properties, hasEntry("jcr:title", (Object) "Application folder"));
@@ -55,6 +55,8 @@ public class ContentXmlHandlerTest {
         assertThat("properties[indexDuration]", properties, hasEntry("indexDuration", (Object) BigDecimal.valueOf(500)));
         assertThat("properties[lastIndexTime]", (Calendar) properties.get("lastIndexTime"),
                 is(millis(1378292400000l)));
+        assertThat("properties[lastIndexId]", properties,
+                hasEntry("lastIndexId", (Object) Long.valueOf(7293120000000l)));
         assertThat("properties[lastIndexId]", properties,
                 hasEntry("lastIndexId", (Object) Long.valueOf(7293120000000l)));
 

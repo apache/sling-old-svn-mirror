@@ -22,6 +22,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.jcr.Credentials;
 import javax.jcr.Node;
@@ -98,6 +99,12 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
                 node.setProperty(entry.getKey(), (Long) entry.getValue());
             } else if (entry.getValue() instanceof Long[]) {
                 node.setProperty(entry.getKey(), toValueArray((Long[]) entry.getValue(), session));
+                // TODO - properly support weak vs strong references
+            } else if (entry.getValue() instanceof UUID) {
+                Node reference = session.getNodeByIdentifier(((UUID) entry.getValue()).toString());
+                node.setProperty(entry.getKey(), reference);
+            } else if (entry.getValue() instanceof UUID[]) {
+                node.setProperty(entry.getKey(), toValueArray((UUID[]) entry.getValue(), session));
             } else {
                 throw new IllegalArgumentException("Unable to handle value of type '"
                         + entry.getValue().getClass().getName() + "' for property '" + entry.getKey() + "'");
@@ -166,6 +173,20 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
 
         for (int i = 0; i < longs.length; i++) {
             values[i] = session.getValueFactory().createValue(longs[i]);
+        }
+
+        return values;
+    }
+
+    private Value[] toValueArray(UUID[] uuids, Session session) throws RepositoryException {
+
+        Value[] values = new Value[uuids.length];
+
+        for (int i = 0; i < uuids.length; i++) {
+
+            Node reference = session.getNodeByIdentifier(uuids[i].toString());
+
+            values[i] = session.getValueFactory().createValue(reference);
         }
 
         return values;

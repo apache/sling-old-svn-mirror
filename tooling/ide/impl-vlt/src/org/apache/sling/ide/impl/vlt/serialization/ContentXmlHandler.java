@@ -21,6 +21,7 @@ import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.jackrabbit.util.ISO8601;
 import org.xml.sax.Attributes;
@@ -126,6 +127,51 @@ public class ContentXmlHandler extends DefaultHandler {
                 }
                 return ret;
             }
+        },
+        NAME("Name") {
+
+            @Override
+            Object parseValues(String[] values) {
+                if (values.length == 1) {
+                    return values[0];
+                }
+
+                return values;
+            }
+        },
+        PATH("Path") {
+
+            @Override
+            Object parseValues(String[] values) {
+                return NAME.parseValues(values);
+            }
+
+        },
+        REFERENCE("Reference") {
+
+            @Override
+            Object parseValues(String[] values) {
+                if (values.length == 1) {
+                    return UUID.fromString(values[0]);
+                }
+
+                UUID[] refs = new UUID[values.length];
+                for (int i = 0; i < values.length; i++) {
+                    String value = values[i];
+                    refs[i] = UUID.fromString(value);
+                }
+
+                return refs;
+            }
+
+        },
+        WEAKREFERENCE("WeakReference") {
+
+            @Override
+            Object parseValues(String[] values) {
+                return REFERENCE.parseValues(values);
+            }
+
         };
 
         static Object parsePossiblyTypedValue(String value) {
