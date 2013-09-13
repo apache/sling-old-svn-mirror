@@ -32,6 +32,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.vault.util.PathUtil;
 import org.apache.jackrabbit.vault.util.PlatformNameFormat;
@@ -67,47 +68,98 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
         // TODO - review for completeness and filevault compatibility
         for (Map.Entry<String, Object> entry : serializationData.entrySet()) {
 
-            if (node.hasProperty(entry.getKey())) {
+            String propertyName = entry.getKey();
+            Object propertyValue = entry.getValue();
+            Property property = null;
 
-                Property prop = node.getProperty(entry.getKey());
-                if (prop.getDefinition().isProtected()) {
-                    continue;
-                }
+            if (node.hasProperty(propertyName)) {
+                property = node.getProperty(propertyName);
             }
 
-            if (entry.getValue() instanceof String) {
-                node.setProperty(entry.getKey(), (String) entry.getValue());
-            } else if (entry.getValue() instanceof String[]) {
-                node.setProperty(entry.getKey(), (String[]) entry.getValue());
-            } else if (entry.getValue() instanceof Boolean) {
-                node.setProperty(entry.getKey(), (Boolean) entry.getValue());
-            } else if (entry.getValue() instanceof Boolean[]) {
-                node.setProperty(entry.getKey(), toValueArray((Boolean[]) entry.getValue(), session));
-            } else if (entry.getValue() instanceof Calendar) {
-                node.setProperty(entry.getKey(), (Calendar) entry.getValue());
-            } else if (entry.getValue() instanceof Calendar[]) {
-                node.setProperty(entry.getKey(), toValueArray((Calendar[]) entry.getValue(), session));
-            } else if (entry.getValue() instanceof Double) {
-                node.setProperty(entry.getKey(), (Double) entry.getValue());
-            } else if (entry.getValue() instanceof Double[]) {
-                node.setProperty(entry.getKey(), toValueArray((Double[]) entry.getValue(), session));
-            } else if (entry.getValue() instanceof BigDecimal) {
-                node.setProperty(entry.getKey(), (BigDecimal) entry.getValue());
-            } else if (entry.getValue() instanceof BigDecimal[]) {
-                node.setProperty(entry.getKey(), toValueArray((BigDecimal[]) entry.getValue(), session));
-            } else if (entry.getValue() instanceof Long) {
-                node.setProperty(entry.getKey(), (Long) entry.getValue());
-            } else if (entry.getValue() instanceof Long[]) {
-                node.setProperty(entry.getKey(), toValueArray((Long[]) entry.getValue(), session));
-                // TODO - properly support weak vs strong references
-            } else if (entry.getValue() instanceof UUID) {
-                Node reference = session.getNodeByIdentifier(((UUID) entry.getValue()).toString());
-                node.setProperty(entry.getKey(), reference);
-            } else if (entry.getValue() instanceof UUID[]) {
-                node.setProperty(entry.getKey(), toValueArray((UUID[]) entry.getValue(), session));
+            if (property != null && property.getDefinition().isProtected()) {
+                continue;
+            }
+            
+            // TODO - we don't handle the case where the input no longer matches the property definition, e.g. type
+            // change or multiplicity change
+            
+            boolean isMultiple = property != null && property.getDefinition().isMultiple();
+
+            ValueFactory valueFactory = session.getValueFactory();
+            Value value = null;
+            Value[] values = null;
+
+            if (propertyValue instanceof String) {
+                if (isMultiple) {
+                    values = toValueArray(new String[] { (String) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue((String) propertyValue);
+                }
+            } else if (propertyValue instanceof String[]) {
+                values = toValueArray((String[]) propertyValue, session);
+            } else if (propertyValue instanceof Boolean) {
+                if (isMultiple) {
+                    values = toValueArray(new Boolean[] { (Boolean) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue((Boolean) propertyValue);
+                }
+            } else if (propertyValue instanceof Boolean[]) {
+                values = toValueArray((Boolean[]) propertyValue, session);
+            } else if (propertyValue instanceof Calendar) {
+                if (isMultiple) {
+                    values = toValueArray(new Calendar[] { (Calendar) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue((Calendar) propertyValue);
+                }
+            } else if (propertyValue instanceof Calendar[]) {
+                values = toValueArray((Calendar[]) propertyValue, session);
+            } else if (propertyValue instanceof Double) {
+                if (isMultiple) {
+                    values = toValueArray(new Double[] { (Double) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue((Double) propertyValue);
+                }
+            } else if (propertyValue instanceof Double[]) {
+                values = toValueArray((Double[]) propertyValue, session);
+            } else if (propertyValue instanceof BigDecimal) {
+                if (isMultiple) {
+                    values = toValueArray(new BigDecimal[] { (BigDecimal) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue((BigDecimal) propertyValue);
+                }
+            } else if (propertyValue instanceof BigDecimal[]) {
+                values = toValueArray((BigDecimal[]) propertyValue, session);
+            } else if (propertyValue instanceof Long) {
+                if (isMultiple) {
+                    values = toValueArray(new Long[] { (Long) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue((Long) propertyValue);
+                }
+            } else if (propertyValue instanceof Long[]) {
+                values = toValueArray((Long[]) propertyValue, session);
+                // TODO - distinguish between weak vs strong references
+            } else if (propertyValue instanceof UUID) {
+                Node reference = session.getNodeByIdentifier(((UUID) propertyValue).toString());
+                if (isMultiple) {
+                    values = toValueArray(new UUID[] { (UUID) propertyValue }, session);
+                } else {
+                    value = valueFactory.createValue(reference);
+                }
+
+            } else if (propertyValue instanceof UUID[]) {
+                values = toValueArray((UUID[]) propertyValue, session);
             } else {
-                throw new IllegalArgumentException("Unable to handle value of type '"
-                        + entry.getValue().getClass().getName() + "' for property '" + entry.getKey() + "'");
+                throw new IllegalArgumentException("Unable to handle value '" + propertyValue + "' for property '"
+                        + propertyName + "'");
+            }
+
+            if (value != null) {
+                node.setProperty(propertyName, value);
+            } else if (values != null) {
+                node.setProperty(propertyName, values);
+            } else {
+                throw new IllegalArgumentException("Unable to extract a value or a value array for property '"
+                        + propertyName + "' with value '" + propertyValue + "'");
             }
         }
         
@@ -121,6 +173,17 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
 
         return null;
 
+    }
+
+    private Value[] toValueArray(String[] strings, Session session) throws RepositoryException {
+
+        Value[] values = new Value[strings.length];
+
+        for (int i = 0; i < strings.length; i++) {
+            values[i] = session.getValueFactory().createValue(strings[i]);
+        }
+
+        return values;
     }
 
     private Value[] toValueArray(Boolean[] booleans, Session session) throws RepositoryException {
