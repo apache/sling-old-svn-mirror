@@ -666,14 +666,27 @@ public class SlingAuthenticator implements Authenticator,
 
     // ---------- internal
 
+    private String getPath(HttpServletRequest request) {
+        final StringBuilder sb = new StringBuilder();
+        if (request.getServletPath() != null) {
+            sb.append(request.getServletPath());
+        }
+        if (request.getPathInfo() != null) {
+            sb.append(request.getPathInfo());
+        }
+        return sb.toString();
+    }
+
     private AuthenticationInfo getAuthenticationInfo(HttpServletRequest request, HttpServletResponse response) {
 
         // Get the path used to select the authenticator, if the SlingServlet
         // itself has been requested without any more info, this will be null
         // and we assume the root (SLING-722)
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null || pathInfo.length() == 0) {
-            pathInfo = "/";
+        final String path = getPath(request);
+        if (path.length() == 0) {
+            // should not happen, be safe an return anonymous credentials
+            log.warn("get authentication info: request path is empty; assuming anonymous");
+            return getAnonymousCredentials();
         }
 
         final List<AbstractAuthenticationHandlerHolder>[] localArray = this.authHandlerCache.findApplicableHolder(request);
@@ -682,7 +695,7 @@ public class SlingAuthenticator implements Authenticator,
             if (local != null) {
                 for (int i = 0; i < local.size(); i++) {
                     AbstractAuthenticationHandlerHolder holder = local.get(i);
-                    if (pathInfo.startsWith(holder.path)) {
+                    if (path.startsWith(holder.path)) {
                         final AuthenticationInfo authInfo = holder.extractCredentials(
                             request, response);
 
@@ -864,9 +877,9 @@ public class SlingAuthenticator implements Authenticator,
 
     private boolean isAnonAllowed(HttpServletRequest request) {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null || pathInfo.length() == 0) {
-            pathInfo = "/";
+        final String path = getPath(request);
+        if (path.length() == 0) {
+            return false;
         }
 
         final List<AuthenticationRequirementHolder>[] holderListArray = authRequiredCache.findApplicableHolder(request);
@@ -875,15 +888,11 @@ public class SlingAuthenticator implements Authenticator,
             if ( holderList != null ) {
                 for (int i = 0; i < holderList.size(); i++) {
                     final AuthenticationRequirementHolder holder = holderList.get(i);
-                    if (pathInfo.startsWith(holder.path)) {
+                    if (path.startsWith(holder.path)) {
                         return !holder.requiresAuthentication();
                     }
                 }
             }
-        }
-
-        if (LoginServlet.SERVLET_PATH.equals(pathInfo)) {
-            return true;
         }
 
         // fallback to anonymous not allowed (aka authentication required)
