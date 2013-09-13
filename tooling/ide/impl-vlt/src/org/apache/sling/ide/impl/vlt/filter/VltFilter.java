@@ -46,6 +46,11 @@ public class VltFilter implements Filter {
     public FilterResult filter(File contentSyncRoot, String relativeFilePath, RepositoryInfo repositoryInfo) {
         // TODO - is this the right check? I _think_ that filter paths are repository-based, not fs-based
         // so this could be incorrect
+
+        if (relativeFilePath.length() > 0 && relativeFilePath.charAt(0) != '/') {
+            relativeFilePath = '/' + relativeFilePath;
+        }
+
         return filter.contains(relativeFilePath) ? FilterResult.ALLOW : FilterResult.DENY;
     }
 
