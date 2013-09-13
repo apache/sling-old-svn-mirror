@@ -12,6 +12,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Before;
@@ -35,7 +36,7 @@ public class SimpleXmlSerializationManagerTest {
     }
 
     @Test
-    public void emptySerializedData() throws IOException, SAXException {
+    public void emptySerializedData() throws SerializationException, SAXException {
 
         String serializationData = sm.buildSerializationData(null, newResourceWithProperties(new HashMap<String, Object>()), null);
 
@@ -51,7 +52,7 @@ public class SimpleXmlSerializationManagerTest {
     }
 
     @Test
-    public void nullSerializedData() throws IOException, SAXException {
+    public void nullSerializedData() throws SerializationException, SAXException {
 
         String serializationData = sm.buildSerializationData(null, null, null);
 
@@ -59,7 +60,7 @@ public class SimpleXmlSerializationManagerTest {
     }
 
     @Test
-    public void stringSerializedData() throws IOException, SAXException {
+    public void stringSerializedData() throws SerializationException, SAXException, IOException {
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:createdBy", "admin");
@@ -72,7 +73,8 @@ public class SimpleXmlSerializationManagerTest {
         assertXmlOutputIsEqualTo(serializationData, methodName);
     }
 
-    private void assertXmlOutputIsEqualTo(String serializationData, String methodName) throws SAXException, IOException {
+    private void assertXmlOutputIsEqualTo(String serializationData, String methodName) throws SAXException,
+            SerializationException, IOException {
 
         InputStream doc = readSerializationDataFile(methodName);
 
@@ -88,7 +90,7 @@ public class SimpleXmlSerializationManagerTest {
     }
 
     @Test
-    public void serializedDataIsEscaped() throws IOException, SAXException {
+    public void serializedDataIsEscaped() throws SerializationException, SAXException, IOException {
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");

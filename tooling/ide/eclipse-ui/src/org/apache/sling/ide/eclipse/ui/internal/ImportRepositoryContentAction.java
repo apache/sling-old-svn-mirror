@@ -25,10 +25,12 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
-import org.apache.sling.ide.eclipse.ui.internal.SerializationKindManager.SerializationKind;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
+import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.Repository;
@@ -136,7 +138,7 @@ public class ImportRepositoryContentAction {
             // we create the root node and assume this is a folder
             createRoot(project, projectRelativePath, repositoryPath);
 
-            crawlChildrenAndImport(repository, filter, repositoryPath, project, projectRelativePath, skm);
+            crawlChildrenAndImport(repository, filter, repositoryPath, project, projectRelativePath);
 
             monitor.setTaskName("Import Complete");
             monitor.worked(100);
@@ -169,7 +171,6 @@ public class ImportRepositoryContentAction {
      * @param project the project to create resources in
      * @param projectRelativePath the path, relative to the project root, where the resources should be
      *            created
-     * @param skm
      * @param tracer
      * @throws JSONException
      * @throws RepositoryException
@@ -178,8 +179,8 @@ public class ImportRepositoryContentAction {
      */
     // TODO: This probably should be pushed into the service layer
     private void crawlChildrenAndImport(Repository repository, Filter filter, String path,
-            IProject project, IPath projectRelativePath, SerializationKindManager skm)
-            throws RepositoryException, CoreException, IOException {
+            IProject project, IPath projectRelativePath)
+            throws RepositoryException, CoreException, IOException, SerializationException {
 
         File contentSyncRoot = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
 
@@ -189,7 +190,7 @@ public class ImportRepositoryContentAction {
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
         String primaryType = (String) resource.getProperties().get(Repository.JCR_PRIMARY_TYPE);
 
-        SerializationKind serializationKind = skm.getSerializationKind(primaryType);
+        SerializationKind serializationKind = serializationManager.getSerializationKind(primaryType);
         System.out.println(primaryType + " -> " + serializationKind);
 
         // TODO we should know all node types for which to create files and folders
@@ -282,7 +283,7 @@ public class ImportRepositoryContentAction {
                 }
             }
 
-            crawlChildrenAndImport(repository, filter, child.getPath(), project, projectRelativePath, skm);
+            crawlChildrenAndImport(repository, filter, child.getPath(), project, projectRelativePath);
         }
     }
 

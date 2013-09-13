@@ -34,6 +34,8 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -98,7 +100,8 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
+    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
+            throws SerializationException {
 
         if (resource == null) {
             return null;
@@ -163,6 +166,24 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     private void endElement(TransformerHandler handler, String tagName) throws SAXException {
 
         handler.endElement("", tagName, tagName);
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.sling.ide.serialization.SerializationManager#destroy()
+     */
+    public void destroy() {
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.sling.ide.serialization.SerializationManager#init(org.apache.sling.ide.transport.Repository, java.io.File)
+     */
+    public void init(org.apache.sling.ide.transport.Repository repository, File contentSyncRoot) throws SerializationException {
+    }
+
+    @Override
+    public SerializationKind getSerializationKind(String primaryType) {
+        // TODO - implement
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     static class SerializationDataHandler extends DefaultHandler {

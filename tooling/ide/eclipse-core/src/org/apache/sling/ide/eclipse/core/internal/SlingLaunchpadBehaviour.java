@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -40,11 +41,11 @@ import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
-import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.eclipse.core.resources.IFile;
@@ -169,16 +170,27 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println(trace.toString());
 
-        if (ProjectHelper.isBundleProject(module[0].getProject())) {
-            String serverMode = getServer().getMode();
-            if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
-                // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
-                // otherwise, for run and profile modes we explicitly publish the bundle module
-                // TODO: make this configurable as part of the server config
-        		publishBundleModule(module, monitor);
-        	}
-        } else if (ProjectHelper.isContentProject(module[0].getProject())) {
-    		publishContentModule(kind, deltaKind, module, monitor); 
+        try {
+            if (ProjectHelper.isBundleProject(module[0].getProject())) {
+                String serverMode = getServer().getMode();
+                if (!serverMode.equals(ILaunchManager.DEBUG_MODE)) {
+                    // in debug mode, we rely on the hotcode replacement feature of eclipse/jvm
+                    // otherwise, for run and profile modes we explicitly publish the bundle module
+                    // TODO: make this configurable as part of the server config
+            		publishBundleModule(module, monitor);
+            	}
+            } else if (ProjectHelper.isContentProject(module[0].getProject())) {
+                try {
+                    publishContentModule(kind, deltaKind, module, monitor);
+                } catch (SerializationException e) {
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
+                            + trace.toString(), e));
+                }
+            }
+        } finally {
+            if (serializationManager != null) {
+                serializationManager.destroy();
+            }
         }
     }
 
@@ -250,7 +262,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 	}
 
 	private void publishContentModule(int kind, int deltaKind,
-			IModule[] module, IProgressMonitor monitor) throws CoreException {
+			IModule[] module, IProgressMonitor monitor) throws CoreException, SerializationException {
 
 		if (runLaunchesIfExist(kind, deltaKind, module, monitor)) {
 			return;
@@ -391,16 +403,24 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
     }
 
-    private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException {
+    private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException,
+            SerializationException {
 
         FileInfo info = createFileInfo(resource, repository);
+
+        IResource res = getResource(resource);
+        if (res == null) {
+            return null;
+        }
 
         System.out.println("For " + resource + " build fileInfo " + info);
         if (info == null) {
             return null;
         }
 
-        if (serializationManager().isSerializationFile(info.getLocation())) {
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(res.getProject()).toFile();
+
+        if (serializationManager(repository, syncDirectoryAsFile).isSerializationFile(info.getLocation())) {
 
             // TODO - we don't support files with different names, see the docview file ( ui.xml ) pathological case
             if (!info.getName().equals(".content.xml")) {
@@ -409,7 +429,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 InputStream contents = file.getContents();
-                Map<String, Object> serializationData = serializationManager().readSerializationData(contents);
+                Map<String, Object> serializationData = serializationManager(repository, syncDirectoryAsFile)
+                        .readSerializationData(contents);
                 return repository.newUpdateContentNodeCommand(info, serializationData);
             } catch (IOException e) {
                 // TODO logging
@@ -421,17 +442,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
     }
 
-    private FileInfo createFileInfo(IModuleResource resource, Repository repository) {
+    private FileInfo createFileInfo(IModuleResource resource, Repository repository) throws SerializationException {
 
-        IResource file = (IFile) resource.getAdapter(IFile.class);
+        IResource file = getResource(resource);
         if (file == null) {
-            file = (IFolder) resource.getAdapter(IFolder.class);
-        }
-
-        if (file == null) {
-            // Usually happens on server startup, it seems to be safe to ignore for now
-            System.out.println("Got null '" + IFile.class.getSimpleName() + "' and '" + IFolder.class.getSimpleName()
-                    + "' for " + resource);
             return null;
         }
 
@@ -450,7 +464,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         if (filter != null) {
             FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
-                    repository.getRepositoryInfo());
+                    repository);
             if (filterResult == FilterResult.DENY) {
                 return null;
             }
@@ -465,20 +479,37 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return info;
     }
 
+    private IResource getResource(IModuleResource resource) {
+
+        IResource file = (IFile) resource.getAdapter(IFile.class);
+        if (file == null) {
+            file = (IFolder) resource.getAdapter(IFolder.class);
+        }
+
+        if (file == null) {
+            // Usually happens on server startup, it seems to be safe to ignore for now
+            System.out.println("Got null '" + IFile.class.getSimpleName() + "' and '" + IFolder.class.getSimpleName()
+                    + "' for " + resource);
+            return null;
+        }
+
+        return file;
+    }
+
     private FilterResult getFilterResult(IModuleResource resource, Filter filter, File contentSyncRoot,
-            RepositoryInfo repositoryInfo) {
+            Repository repository) throws SerializationException {
 
         String filePath = resource.getModuleRelativePath().toOSString();
-        if (serializationManager().isSerializationFile(filePath)) {
+        if (serializationManager(repository, contentSyncRoot).isSerializationFile(filePath)) {
             filePath = serializationManager.getBaseResourcePath(filePath);
         }
 
         System.out.println("Filtering by " + filePath + " for " + resource);
 
-        return filter.filter(contentSyncRoot, filePath, repositoryInfo);
+        return filter.filter(contentSyncRoot, filePath, repository.getRepositoryInfo());
     }
 
-    private Command<?> removeFileCommand(Repository repository, IModuleResource resource) {
+    private Command<?> removeFileCommand(Repository repository, IModuleResource resource) throws SerializationException {
 
         FileInfo info = createFileInfo(resource, repository);
 
@@ -517,9 +548,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return filter;
     }
 
-    private SerializationManager serializationManager() {
+    private SerializationManager serializationManager(Repository repository, File contentSyncRoot)
+            throws SerializationException {
         if (serializationManager == null) {
             serializationManager = Activator.getDefault().getSerializationManager();
+            serializationManager.init(repository, contentSyncRoot);
         }
 
         return serializationManager;

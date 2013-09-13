@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.ui.internal;
+package org.apache.sling.ide.serialization;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,7 +27,11 @@ import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.apache.sling.ide.util.PathUtil;
 
-// TODO this should be made API after merging the vlt branch back to trunk
+/**
+ * The <tt>SerializationKindManager</tt> is a helper class which implements common logic dealing with how to serialize
+ * repository contents on disk
+ * 
+ */
 public class SerializationKindManager {
 
     private final Set<String> fullMetadataNodeTypes = new HashSet<String>();
@@ -120,9 +124,5 @@ public class SerializationKindManager {
         }
 
         return SerializationKind.METADATA_PARTIAL;
-    }
-
-    enum SerializationKind {
-        FILE, FOLDER, METADATA_PARTIAL, METADATA_FULL;
     }
 }

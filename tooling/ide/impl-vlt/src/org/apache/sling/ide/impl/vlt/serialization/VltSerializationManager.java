@@ -54,6 +54,9 @@ import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.jackrabbit.vault.util.RepositoryProvider;
 import org.apache.sling.ide.impl.vlt.RepositoryUtils;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
+import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
+import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -89,6 +92,24 @@ public class VltSerializationManager implements SerializationManager {
     }
 
     private VaultFsLocator fsLocator;
+    private SerializationKindManager skm;
+
+    @Override
+    public void init(org.apache.sling.ide.transport.Repository repository, File contentSyncRoot)
+            throws SerializationException {
+
+        try {
+            this.skm = new SerializationKindManager();
+            this.skm.init(repository);
+        } catch (org.apache.sling.ide.transport.RepositoryException e) {
+            throw new SerializationException(e);
+        }
+    }
+
+    @Override
+    public void destroy() {
+
+    }
 
     @Override
     public boolean isSerializationFile(String filePath) {
@@ -153,7 +174,8 @@ public class VltSerializationManager implements SerializationManager {
     // TODO - the return type could look like (byte[] contents, String nameHint, SerializationKind sk)
 
     @Override
-    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo) throws IOException {
+    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
+            throws SerializationException {
 
         // TODO - there might be a performance problem with getting the session on-demand each time
         // the resolution might be to have a SerializationManager instance kept per 'transaction'
@@ -233,9 +255,11 @@ public class VltSerializationManager implements SerializationManager {
             return stringResult;
 
         } catch (RepositoryException e) {
-            throw new RuntimeException(e);
+            throw new SerializationException(e);
         } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
+            throw new SerializationException(e);
+        } catch (IOException e) {
+            throw new SerializationException(e);
         } finally {
             if (session != null) {
                 session.logout();
@@ -265,6 +289,10 @@ public class VltSerializationManager implements SerializationManager {
             // TODO proper error handling
             throw new IOException(e);
         }
+    }
 
+    @Override
+    public SerializationKind getSerializationKind(String primaryType) {
+        return skm.getSerializationKind(primaryType);
     }
 }

@@ -21,10 +21,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 
 public interface SerializationManager {
+
+    void init(Repository repository, File contentSyncRoot) throws SerializationException;
+
+    void destroy();
 
     boolean isSerializationFile(String filePath);
 
@@ -33,7 +38,9 @@ public interface SerializationManager {
     String getSerializationFilePath(String baseFilePath);
 
     String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
-            throws IOException;
+            throws SerializationException;
 
     Map<String, Object> readSerializationData(InputStream source) throws IOException;
+
+    SerializationKind getSerializationKind(String primaryType);
 }
