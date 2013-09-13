@@ -23,13 +23,12 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.vault.util.PathUtil;
 import org.apache.sling.ide.transport.FileInfo;
 
 public class DeleteNodeCommand extends JcrCommand<Void> {
 
     public DeleteNodeCommand(Repository repository, Credentials credentials, FileInfo fileInfo) {
-        super(repository, credentials, PathUtil.makePath(fileInfo.getRelativeLocation(), fileInfo.getName()));
+        super(repository, credentials, makePath(fileInfo));
     }
 
     @Override

@@ -23,12 +23,13 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.ide.transport.ResourceProxy;
 
 public class ListChildrenCommand extends JcrCommand<ResourceProxy> {
 
     public ListChildrenCommand(Repository repository, Credentials credentials, String path) {
-        super(repository, credentials, path);
+        super(repository, credentials, PlatformNameFormat.getRepositoryPath(path));
     }
 
     @Override

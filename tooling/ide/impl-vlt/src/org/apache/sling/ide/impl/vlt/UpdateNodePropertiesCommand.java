@@ -30,6 +30,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 
 import org.apache.jackrabbit.vault.util.PathUtil;
+import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.ide.transport.FileInfo;
 
 public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
@@ -39,8 +40,9 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
     public UpdateNodePropertiesCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
             Map<String, Object> serializationData) {
 
-        // intentional since the fileInfo refers to the .content.xml file ( TODO - should we change that )?
-        super(jcrRepo, credentials, PathUtil.makePath(fileInfo.getRelativeLocation(), ""));
+        // TODO - won't support serialization of full coverage nodes
+        super(jcrRepo, credentials, PlatformNameFormat.getRepositoryPath(PathUtil.makePath(
+                fileInfo.getRelativeLocation(), "")));
 
         this.serializationData = serializationData;
     }

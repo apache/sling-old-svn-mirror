@@ -29,7 +29,6 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.vault.util.PathUtil;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.ide.transport.FileInfo;
 
@@ -39,7 +38,7 @@ public class AddNodeCommand extends JcrCommand<Void> {
 
     public AddNodeCommand(Repository repository, Credentials credentials, FileInfo fileInfo) {
 
-        super(repository, credentials, PathUtil.makePath(fileInfo.getRelativeLocation(), fileInfo.getName()));
+        super(repository, credentials, makePath(fileInfo));
 
         this.fileInfo = fileInfo;
     }

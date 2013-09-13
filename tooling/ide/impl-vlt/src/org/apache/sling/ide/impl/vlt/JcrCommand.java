@@ -27,11 +27,22 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.vault.util.PathUtil;
+import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.ide.transport.Command;
+import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 
 public abstract class JcrCommand<T> implements Command<T> {
+
+    protected static String makePath(FileInfo fileInfo) {
+    
+        String platformPath = PathUtil.makePath(fileInfo.getRelativeLocation(), fileInfo.getName());
+    
+        return PlatformNameFormat.getRepositoryPath(platformPath);
+    }
+
 
     private final Credentials credentials;
     private final Repository repository;

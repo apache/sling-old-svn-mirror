@@ -29,10 +29,12 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.vault.util.PlatformNameFormat;
+
 public class GetNodeCommand extends JcrCommand<byte[]> {
     
     public GetNodeCommand(Repository repository, Credentials credentials, String path) {
-        super(repository, credentials, path);
+        super(repository, credentials, PlatformNameFormat.getRepositoryPath(path));
     }
 
     @Override
