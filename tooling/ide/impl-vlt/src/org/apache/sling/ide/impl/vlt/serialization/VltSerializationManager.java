@@ -125,8 +125,13 @@ public class VltSerializationManager implements SerializationManager {
 
     @Override
     public String getBaseResourcePath(String serializationFilePath) {
-        // TODO
-        return null;
+        // TODO actually calculate the resource path, this fails for full coverage aggregates
+        if (Constants.DOT_CONTENT_XML.equals(serializationFilePath)) {
+            return "";
+        }
+
+        return serializationFilePath.substring(0, serializationFilePath.length()
+                - (Constants.DOT_CONTENT_XML.length() + 1));
     }
 
     @Override
