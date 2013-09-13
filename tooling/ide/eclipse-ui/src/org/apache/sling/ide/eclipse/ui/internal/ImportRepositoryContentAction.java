@@ -28,6 +28,7 @@ import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
@@ -37,7 +38,6 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
-import org.apache.sling.ide.util.PathUtil;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -45,7 +45,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.wst.server.core.IServer;
 
 // intentionally does not implement IRunnableWithProgress to cut dependency on JFace
@@ -188,75 +187,47 @@ public class ImportRepositoryContentAction {
                 + projectRelativePath + ")");
 
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
-        String primaryType = (String) resource.getProperties().get(Repository.JCR_PRIMARY_TYPE);
-
-        SerializationKind serializationKind = serializationManager.getSerializationKind(primaryType);
-        System.out.println(primaryType + " -> " + serializationKind);
 
         // TODO we should know all node types for which to create files and folders
+        SerializationData serializationData = serializationManager.buildSerializationData(contentSyncRoot, resource,
+                repository.getRepositoryInfo());
+        System.out.println("For resource at path " + resource.getPath() + " got serialization data "
+                + serializationData);
 
-        String serializationPath = serializationManager.getSerializationFilePath(path);
-        switch (serializationKind) {
+        if (serializationData == null) {
+            System.err.println("Skipping resource at " + resource.getPath() + " since we got no serialization data.");
+            return;
+        }
+
+        IPath fileOrFolderPath = projectRelativePath.append(serializationData.getFileOrFolderNameHint());
+
+        switch (serializationData.getSerializationKind()) {
             case FILE: {
-                importFile(repository, path, project, projectRelativePath);
+                byte[] contents = executeCommand(repository.newGetNodeCommand(path));
+                importFile(project, fileOrFolderPath, contents);
 
-                ResourceProxy resourceToSerialize = executeCommand(repository
-                        .newGetNodeContentCommand(path));
-
-                String out = serializationManager.buildSerializationData(contentSyncRoot,
-                        resourceToSerialize, repository.getRepositoryInfo());
-                if (out != null) {
-                    IPath directoryPath = projectRelativePath.append(path + ".dir");
+                if (serializationData.hasContents()) {
+                    // TODO - should we abstract out .dir serialization?
+                    IPath directoryPath = fileOrFolderPath.addFileExtension("dir");
                     createFolder(project, directoryPath);
-                    // TODO remove hardcoding of .content.xml name here
-                    createFile(project, directoryPath.append(".content.xml"), out.getBytes("UTF-8"));
+                    createFile(project, directoryPath.append(serializationData.getNameHint()),
+                            serializationData.getContents());
                 }
-
                 break;
             }
             case FOLDER:
             case METADATA_PARTIAL: {
-                createFolder(project, projectRelativePath.append(path));
-                ResourceProxy resourceToSerialize = executeCommand(repository
-                        .newGetNodeContentCommand(path));
-
-                String out = serializationManager.buildSerializationData(contentSyncRoot,
-                        resourceToSerialize, repository.getRepositoryInfo());
-                if (out != null) {
-                    createFile(project, projectRelativePath.append(serializationPath),
-                            out.getBytes("UTF-8"));
+                createFolder(project, fileOrFolderPath);
+                if (serializationData.hasContents()) {
+                    createFile(project, fileOrFolderPath.append(serializationData.getNameHint()),
+                            serializationData.getContents());
                 }
                 break;
             }
 
             case METADATA_FULL: {
-                ResourceProxy resourceToSerialize = executeCommand(repository
-                        .newGetNodeContentCommand(path));
-
-                String out = serializationManager.buildSerializationData(contentSyncRoot,
-                        resourceToSerialize, repository.getRepositoryInfo());
-
-                if (out != null) {
-                    // TODO - picking the base name based on serialization kind is not supported by the
-                    // API...
-                    // so for now this is one big hack to have vlt-compatible checkouts
-                    IPath serializationPathPath = Path.fromPortableString(serializationPath);
-                    if (!resourceToSerialize.getPath().equals("/")
-                            && serializationPath.endsWith(".content.xml")) {
-                        String name = PathUtil.getName(path);
-                        if (name.indexOf(':') != -1) {
-                            name = '_' + name.replace(':', '_');
-                        }
-                        name += ".xml";
-                        serializationPath = serializationPath.replace(".content.xml", name);
-
-                        // some of the logic should be reused from AbstractArtifact
-                        serializationPathPath = Path.fromPortableString(serializationPath)
-                                .removeFirstSegments(1);
-                    }
-
-                    createFile(project, projectRelativePath.append(serializationPathPath),
-                            out.getBytes("UTF-8"));
+                if (serializationData.hasContents()) {
+                    createFile(project, fileOrFolderPath, serializationData.getContents());
                 }
                 break;
             }
@@ -264,7 +235,7 @@ public class ImportRepositoryContentAction {
 
         System.out.println("Children: " + resource.getChildren());
 
-        if (serializationKind == SerializationKind.METADATA_FULL) {
+        if (serializationData.getSerializationKind() == SerializationKind.METADATA_FULL) {
             return;
         }
 
@@ -293,13 +264,10 @@ public class ImportRepositoryContentAction {
         return result.get();
     }
 
-    private void importFile(Repository repository, String path, IProject project, IPath destinationPath)
-            throws RepositoryException, CoreException {
+    private void importFile(IProject project, IPath destinationPath, byte[] content)
+            throws CoreException {
 
-        System.out.println("importFile: " + path + " -> " + destinationPath);
-
-        byte[] node = executeCommand(repository.newGetNodeCommand(path));
-        createFile(project, destinationPath.append(path), node);
+        createFile(project, destinationPath, content);
     }
 
     private void createFolder(IProject project, IPath destinationPath) throws CoreException {

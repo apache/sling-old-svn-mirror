@@ -37,10 +37,8 @@ public interface SerializationManager {
 
     String getSerializationFilePath(String baseFilePath);
 
-    String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
+    SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
             throws SerializationException;
 
     Map<String, Object> readSerializationData(InputStream source) throws IOException;
-
-    SerializationKind getSerializationKind(String primaryType);
 }

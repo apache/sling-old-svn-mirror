@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.impl.vlt.serialization;
 
+import static org.apache.sling.ide.util.PathUtil.getName;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -54,6 +56,7 @@ import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.jackrabbit.vault.util.RepositoryProvider;
 import org.apache.sling.ide.impl.vlt.RepositoryUtils;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
+import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
@@ -171,11 +174,12 @@ public class VltSerializationManager implements SerializationManager {
         this.fsLocator = null;
     }
 
-    // TODO - the return type could look like (byte[] contents, String nameHint, SerializationKind sk)
-
     @Override
-    public String buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
-            throws SerializationException {
+    public SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource,
+            RepositoryInfo repositoryInfo) throws SerializationException {
+
+        // TODO - there is a small mismatch here since we're doing remote calls to the repository
+        // but taking a resourceProxy - not sure if we'll run into problems down the road or not
 
         // TODO - there might be a performance problem with getting the session on-demand each time
         // the resolution might be to have a SerializationManager instance kept per 'transaction'
@@ -193,23 +197,40 @@ public class VltSerializationManager implements SerializationManager {
             VaultFileSystem fs = fsLocator.getFileSystem(address, contentSyncRoot, session);
 
             VaultFile vaultFile = fs.getFile(resource.getPath());
+            String platformPath = resource.getPath();
             if (vaultFile == null) {
 
                 // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
-                String platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + ".xml";
+                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + ".xml";
                 vaultFile = fs.getFile(platformPath);
 
                 if (vaultFile == null) {
-                    // TODO proper logging ; discover if this is expected or not
+                    platformPath = PlatformNameFormat.getPlatformPath(resource.getPath());
+                    vaultFile = fs.getFile(platformPath);
+                }
+
+                if (vaultFile == null) {
+                    // TODO proper logging ; discover if this is expected or not and fail hard if it's not
                     System.err.println("No vaultFile at path " + resource.getPath());
                     return null;
                 }
             }
 
+            String nameHint = getName(platformPath);
+            String fileOrFolderPathHint = vaultFile.getPath();
+
             Aggregate aggregate = vaultFile.getAggregate();
 
             if (aggregate == null)
                 throw new IllegalArgumentException("No aggregate found for path " + resource.getPath());
+
+            SerializationKind serializationKind = skm.getSerializationKind(aggregate.getNode().getPrimaryNodeType()
+                    .getName());
+
+            if (resource.getPath().equals("/") || serializationKind == SerializationKind.METADATA_PARTIAL
+                    || serializationKind == SerializationKind.FILE || serializationKind == SerializationKind.FOLDER) {
+                nameHint = Constants.DOT_CONTENT_XML;
+            }
 
             Aggregator aggregator = fs.getAggregateManager().getAggregator(aggregate.getNode(), null);
             if (aggregator instanceof FileAggregator) {
@@ -234,13 +255,13 @@ public class VltSerializationManager implements SerializationManager {
                 boolean needsDir = !MimeTypes.matches(aggregate.getNode().getName(), mimeType,
                         MimeTypes.APPLICATION_OCTET_STREAM);
                 if (!needsDir) {
-                    return null;
+                    return SerializationData.empty(fileOrFolderPathHint, serializationKind);
                 }
             } else if (aggregator instanceof GenericAggregator) {
                 // TODO - copy-pasted from GenericAggregator
                 if (aggregate.getNode().getPrimaryNodeType().getName().equals("nt:folder")
                         && aggregate.getNode().getMixinNodeTypes().length == 0) {
-                    return null;
+                    return SerializationData.empty(fileOrFolderPathHint, serializationKind);
                 }
             }
 
@@ -249,10 +270,9 @@ public class VltSerializationManager implements SerializationManager {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             s.writeContent(out);
             
-            String stringResult = out.toString("UTF-8");
-            if (stringResult.isEmpty())
-                return null;
-            return stringResult;
+            byte[] result = out.toByteArray();
+
+            return new SerializationData(fileOrFolderPathHint, nameHint, result, serializationKind);
 
         } catch (RepositoryException e) {
             throw new SerializationException(e);
@@ -289,10 +309,5 @@ public class VltSerializationManager implements SerializationManager {
             // TODO proper error handling
             throw new IOException(e);
         }
-    }
-
-    @Override
-    public SerializationKind getSerializationKind(String primaryType) {
-        return skm.getSerializationKind(primaryType);
     }
 }
