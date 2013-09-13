@@ -98,6 +98,10 @@ public class ProjectHelper {
 	}
 
 	private static boolean containsFacet(IProject project, String facetId) {
+        // deleted modules can trigger a publish call without having an attached project
+        if (project == null) {
+            return false;
+        }
 		IFacetedProject facetedProject = (IFacetedProject) project.getAdapter(IFacetedProject.class);
 		if (facetedProject==null ) {
 			return false;
