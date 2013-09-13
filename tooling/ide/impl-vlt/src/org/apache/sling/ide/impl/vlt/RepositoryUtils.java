@@ -17,10 +17,12 @@
 package org.apache.sling.ide.impl.vlt;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
@@ -30,6 +32,7 @@ import org.apache.sling.ide.transport.RepositoryInfo;
 public abstract class RepositoryUtils {
 
     private static final RepositoryProvider REPOSITORY_PROVIDER = new RepositoryProvider();
+    private static final String[] WEBDAV_URL_LOCATIONS = new String[] { "server/-/jcr:root", "crx/-/jcr:root" };
 
     public static Repository getRepository(RepositoryInfo repositoryInfo) throws RepositoryException {
 
@@ -37,16 +40,30 @@ public abstract class RepositoryUtils {
     }
 
     public static RepositoryAddress getRepositoryAddress(RepositoryInfo repositoryInfo) {
-        RepositoryAddress address;
-        try {
-            // TODO proper error handling
-            String url = repositoryInfo.getUrl() + "server/-/jcr:root/";
-            // TODO this should be configurable, or even better - automatically discovered
-            address = new RepositoryAddress(url);
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+        for (String webDavUrlLocation : WEBDAV_URL_LOCATIONS) {
+            Session session = null;
+            try {
+                // TODO proper error handling
+                String url = repositoryInfo.getUrl() + webDavUrlLocation;
+                RepositoryAddress address = new RepositoryAddress(url);
+                Repository repository = REPOSITORY_PROVIDER.getRepository(address);
+                // TODO - this can be costly performance-wise ; we should cache this information
+                session = repository.login(new SimpleCredentials(repositoryInfo.getUsername(), repositoryInfo
+                        .getPassword().toCharArray()));
+                return address;
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            } catch (RepositoryException e) {
+                continue;
+            } finally {
+                if (session != null) {
+                    session.logout();
+                }
+            }
         }
-        return address;
+
+        throw new IllegalArgumentException("No repository found at " + repositoryInfo.getUrl() + " ; tried suffixes "
+                + Arrays.toString(WEBDAV_URL_LOCATIONS));
     }
 
     public static Credentials getCredentials(RepositoryInfo repositoryInfo) {
