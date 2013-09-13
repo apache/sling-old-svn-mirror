@@ -19,11 +19,14 @@ package org.apache.sling.ide.impl.vlt;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -51,6 +54,14 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
     protected Void execute0(Session session) throws RepositoryException, IOException {
 
         Node node = session.getNode(getPath());
+        
+        Set<String> propertiesToRemove = new HashSet<String>();
+        PropertyIterator properties = node.getProperties();
+        while ( properties.hasNext()) {
+            propertiesToRemove.add(properties.nextProperty().getName());
+        }
+        
+        propertiesToRemove.removeAll(serializationData.keySet());
 
         // TODO - review for completeness and filevault compatibility
         for (Map.Entry<String, Object> entry : serializationData.entrySet()) {
@@ -91,6 +102,14 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
                 throw new IllegalArgumentException("Unable to handle value of type '"
                         + entry.getValue().getClass().getName() + "' for property '" + entry.getKey() + "'");
             }
+        }
+        
+        for ( String propertyToRemove : propertiesToRemove ) {
+            Property prop = node.getProperty(propertyToRemove);
+            if (prop.getDefinition().isProtected()) {
+                continue;
+            }
+            prop.remove();
         }
 
         return null;
