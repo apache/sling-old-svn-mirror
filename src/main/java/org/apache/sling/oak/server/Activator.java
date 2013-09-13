@@ -67,7 +67,7 @@ public class Activator implements BundleActivator {
         // Else create a default NodeStore config
         final Hashtable<String, String> props = new Hashtable<String, String>();
         props.put("name", "Default NodeStore config from the oak-server bundle");
-        props.put("directory", "oak-server-default-NodeStore");
+        props.put("repository.home", "oak-server-default-NodeStore");
         Configuration config = ca.getConfiguration(nodeStoreServicePid);
         config.setBundleLocation(null);
         config.update(props);

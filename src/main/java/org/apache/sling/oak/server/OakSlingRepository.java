@@ -288,8 +288,8 @@ public class OakSlingRepository extends AbstractNamespaceMappingRepository
         userConfig.put(UserConstants.PARAM_GROUP_PATH, "/home/groups");
         userConfig.put(UserConstants.PARAM_USER_PATH, "/home/users");
         userConfig.put(UserConstants.PARAM_DEFAULT_DEPTH, 1);
-        userConfig.put(AccessControlAction.USER_PRIVILEGE_NAMES, PrivilegeConstants.JCR_ALL);
-        userConfig.put(AccessControlAction.GROUP_PRIVILEGE_NAMES, PrivilegeConstants.JCR_READ);
+        userConfig.put(AccessControlAction.USER_PRIVILEGE_NAMES, new String[] { PrivilegeConstants.JCR_ALL });
+        userConfig.put(AccessControlAction.GROUP_PRIVILEGE_NAMES, new String[] { PrivilegeConstants.JCR_READ });
         userConfig.put(ProtectedItemImporter.PARAM_IMPORT_BEHAVIOR, ImportBehavior.NAME_BESTEFFORT);
 
         Map<String, Object> config = new HashMap<String, Object>();
