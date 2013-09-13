@@ -16,7 +16,12 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
-import org.apache.maven.model.Model;
+import java.io.IOException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -25,21 +30,63 @@ import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
 import org.eclipse.wst.common.project.facet.core.IProjectFacet;
 import org.eclipse.wst.common.project.facet.core.ProjectFacetsManager;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 public class ProjectHelper {
 
 	public static boolean isPotentialBundleProject(IProject project) {
-		Model mavenModel = getMavenModel(project);
-		return (mavenModel!=null && "bundle".equals(mavenModel.getPackaging()));
+		String packaging = getMavenProperty(project, "packaging");
+		return (packaging!=null && "bundle".equals(packaging));
 	}
 	
 	public static boolean isPotentialContentProject(IProject project) {
-		Model mavenModel = ProjectHelper.getMavenModel(project);
-		return (mavenModel!=null && "content-package".equals(mavenModel.getPackaging()));
+		String packaging = getMavenProperty(project, "packaging");
+		return (packaging!=null && "content-package".equals(packaging));
+	}
+	
+	public static String getMavenProperty(IProject project, String name) {
+		try{
+			DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			IFile file = project.getFile("pom.xml");
+			if (file==null || !file.exists()) {
+				return null;
+			}
+			Document document = docBuilder.parse(file.getContents());
+			Element docElement = document.getDocumentElement();
+			NodeList children = docElement.getChildNodes();
+			for(int i=0; i<children.getLength(); i++) {
+				Node aChild = children.item(i);
+				if (aChild.getNodeName().equals(name)) {
+					Element e = (Element) aChild;
+					String text = e.getTextContent();
+					return text;
+				}
+			}
+		} catch (ParserConfigurationException e) {
+			//TODO proper logging
+			e.printStackTrace();
+			return null;
+		} catch (SAXException e) {
+			//TODO proper logging
+			e.printStackTrace();
+			return null;
+		} catch (IOException e) {
+			//TODO proper logging
+			e.printStackTrace();
+			return null;
+		} catch (CoreException e) {
+			//TODO proper logging
+			e.printStackTrace();
+			return null;
+		}
+		return null;
 	}
 	
 	public static boolean isBundleProject(IProject project) {
@@ -75,19 +122,4 @@ public class ProjectHelper {
 		}
 	}
 
-	public static Model getMavenModel(IProject project) {
-		IFile pomFile = project.getFile("pom.xml");
-		if (!pomFile.exists()) {
-			return null;
-		}
-		try {
-			Model model = MavenPlugin.getMavenModelManager().readMavenModel(pomFile);
-			return model;
-		} catch (CoreException e) {
-			// TODO proper logging
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
 }
