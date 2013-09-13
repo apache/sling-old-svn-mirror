@@ -106,7 +106,10 @@ public class ImportRepositoryContentAction {
         if (filterFile != null && filterFile.exists()) {
             try {
                 contents = filterFile.getContents();
+                filter = filterLocator.loadFilter(contents);
             } catch (CoreException e) {
+                throw new InvocationTargetException(e);
+            } catch (IOException e) {
                 throw new InvocationTargetException(e);
             } finally {
                 if (contents != null) {
@@ -117,12 +120,6 @@ public class ImportRepositoryContentAction {
                     }
                 }
             }
-        }
-
-        try {
-            filter = filterLocator.loadFilter(contents);
-        } catch (IOException e) {
-            throw new InvocationTargetException(e);
         }
 
         monitor.worked(5);
