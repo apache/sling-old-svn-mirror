@@ -170,6 +170,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         System.out.println(trace.toString());
 
+        if (kind == IServer.PUBLISH_FULL && deltaKind == ServerBehaviourDelegate.REMOVED) {
+            System.out.println("Ignoring request to unpublish all of the module resources");
+            return;
+        }
+
         try {
             if (ProjectHelper.isBundleProject(module[0].getProject())) {
                 String serverMode = getServer().getMode();
