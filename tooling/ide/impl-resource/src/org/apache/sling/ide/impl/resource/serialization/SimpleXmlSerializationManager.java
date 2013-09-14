@@ -78,7 +78,7 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public Map<String, Object> readSerializationData(InputStream source) throws IOException {
+    public ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException {
 
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -88,7 +88,7 @@ public class SimpleXmlSerializationManager implements SerializationManager {
 
             saxParser.parse(new InputSource(source), h);
 
-            return h.getResult();
+            return new ResourceProxy(filePath, h.getResult());
         } catch (ParserConfigurationException e) {
             // TODO proper exception handling
             throw new RuntimeException(e);

@@ -24,12 +24,17 @@ import java.util.Map;
 public class ResourceProxy {
 
     private final String path;
-    private final Map<String, Object> properties = new HashMap<String, Object>();
+    private final Map<String, Object> properties;
     private final List<ResourceProxy> children = new ArrayList<ResourceProxy>();
     private final Map<Class<?>, Object> adapted = new HashMap<Class<?>, Object>(1);
 
     public ResourceProxy(String path) {
+        this(path, new HashMap<String, Object>());
+    }
+
+    public ResourceProxy(String path, Map<String, Object> properties) {
         this.path = path;
+        this.properties = properties;
     }
 
     public void addChild(ResourceProxy child) {

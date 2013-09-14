@@ -108,7 +108,7 @@ public class SimpleXmlSerializationManagerTest {
     public void readSerializedData() throws IOException, SAXException {
 
         Map<String, Object> serializationData = sm
-                .readSerializationData(readSerializationDataFile("stringSerializedData"));
+                .readSerializationData(null, readSerializationDataFile("stringSerializedData")).getProperties();
 
         Map<String, Object> expected = new HashMap<String, Object>();
         expected.put("jcr:createdBy", "admin");

@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
@@ -440,9 +438,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 InputStream contents = file.getContents();
-                Map<String, Object> serializationData = serializationManager(repository, syncDirectoryAsFile)
-                        .readSerializationData(contents);
-                return repository.newUpdateContentNodeCommand(info, serializationData);
+                IFolder syncDirectory = ProjectUtil.getSyncDirectory(res.getProject());
+                String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toOSString();
+                ResourceProxy resourceProxy = serializationManager(repository, syncDirectoryAsFile)
+                        .readSerializationData(resourceLocation, contents);
+                return repository.newUpdateContentNodeCommand(info, resourceProxy);
             } catch (IOException e) {
                 // TODO logging
                 e.printStackTrace();

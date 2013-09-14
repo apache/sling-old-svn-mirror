@@ -34,22 +34,19 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
-import org.apache.jackrabbit.vault.util.PathUtil;
-import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.ResourceProxy;
 
 public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
 
     private final Map<String, Object> serializationData;
 
     public UpdateNodePropertiesCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
-            Map<String, Object> serializationData) {
+            ResourceProxy resource) {
 
-        // TODO - won't support serialization of full coverage nodes
-        super(jcrRepo, credentials, PlatformNameFormat.getRepositoryPath(PathUtil.makePath(
-                fileInfo.getRelativeLocation(), "")));
+        super(jcrRepo, credentials, resource.getPath());
 
-        this.serializationData = serializationData;
+        this.serializationData = resource.getProperties();
     }
 
     @Override

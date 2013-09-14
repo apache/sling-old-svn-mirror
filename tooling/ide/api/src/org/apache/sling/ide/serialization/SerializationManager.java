@@ -19,7 +19,6 @@ package org.apache.sling.ide.serialization;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
@@ -40,5 +39,5 @@ public interface SerializationManager {
     SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource, RepositoryInfo repositoryInfo)
             throws SerializationException;
 
-    Map<String, Object> readSerializationData(InputStream source) throws IOException;
+    ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException;
 }

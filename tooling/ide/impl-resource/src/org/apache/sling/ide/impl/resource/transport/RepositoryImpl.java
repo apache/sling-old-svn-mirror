@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.impl.resource.transport;
 
-import java.util.Map;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
@@ -62,9 +60,10 @@ public class RepositoryImpl extends AbstractRepository{
 	}
 	
 	@Override
-    public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, final Map<String, Object> properties) {
+    public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, ResourceProxy resource) {
 		
-        return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(), properties, fileInfo));
+        return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(),
+                resource.getProperties(), fileInfo));
 	}
 
     public void bindEventAdmin(EventAdmin eventAdmin) {

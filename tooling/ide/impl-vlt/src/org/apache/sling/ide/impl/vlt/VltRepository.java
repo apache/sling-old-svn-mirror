@@ -1,7 +1,5 @@
 package org.apache.sling.ide.impl.vlt;
 
-import java.util.Map;
-
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 
@@ -52,9 +50,9 @@ public class VltRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, Map<String, Object> serializationData) {
+    public Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, ResourceProxy resource) {
         // TODO implement
-        return TracingCommand.wrap(new UpdateNodePropertiesCommand(jcrRepo, credentials, fileInfo, serializationData),
+        return TracingCommand.wrap(new UpdateNodePropertiesCommand(jcrRepo, credentials, fileInfo, resource),
                 eventAdmin);
     }
 

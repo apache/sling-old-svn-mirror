@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.transport;
 
-import java.util.Map;
-
 public interface Repository {
 	
 	public static String JCR_PRIMARY_TYPE= "jcr:primaryType";
@@ -85,7 +83,7 @@ public interface Repository {
 
 	Command<Void> newAddNodeCommand(FileInfo fileInfo);
 	
-    Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, Map<String, Object> serializationData);
+    Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
 	
 	Command<Void> newDeleteNodeCommand(FileInfo fileInfo);
  

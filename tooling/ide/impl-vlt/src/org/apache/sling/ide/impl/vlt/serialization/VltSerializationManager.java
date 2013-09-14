@@ -25,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
-import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.Node;
@@ -68,6 +67,8 @@ import org.xml.sax.SAXException;
 
 public class VltSerializationManager implements SerializationManager {
 
+    private static final String EXTENSION_XML = ".xml";
+
     public static void main(String[] args) throws RepositoryException, URISyntaxException, IOException {
         RepositoryAddress address = new RepositoryAddress("http://localhost:8080/server/root");
         Repository repo = new RepositoryProvider().getRepository(address);
@@ -85,7 +86,7 @@ public class VltSerializationManager implements SerializationManager {
 
         for (String attempt : attempts) {
 
-            attempt = PlatformNameFormat.getPlatformPath(attempt) + ".xml";
+            attempt = PlatformNameFormat.getPlatformPath(attempt) + EXTENSION_XML;
 
             VaultFile vaultFile = fs.getFile(attempt);
 
@@ -123,7 +124,7 @@ public class VltSerializationManager implements SerializationManager {
             return true;
         }
 
-        if (!fileName.endsWith(".xml")) {
+        if (!fileName.endsWith(EXTENSION_XML)) {
             return false;
         }
 
@@ -201,7 +202,7 @@ public class VltSerializationManager implements SerializationManager {
             if (vaultFile == null) {
 
                 // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
-                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + ".xml";
+                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + EXTENSION_XML;
                 vaultFile = fs.getFile(platformPath);
 
                 if (vaultFile == null) {
@@ -288,10 +289,30 @@ public class VltSerializationManager implements SerializationManager {
     }
 
     @Override
-    public Map<String, Object> readSerializationData(InputStream source) throws IOException {
+    public ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException {
 
         if (source == null)
             return null;
+
+        String repositoryPath;
+        File file = new File(filePath);
+        if (file.getName().equals(Constants.DOT_CONTENT_XML)) {
+            repositoryPath = PlatformNameFormat.getRepositoryPath(file.getParent());
+        } else {
+            if (!filePath.endsWith(EXTENSION_XML)) {
+                throw new IllegalArgumentException("Don't know how to extract resource path from file named "
+                        + filePath);
+            }
+            repositoryPath = PlatformNameFormat.getRepositoryPath(filePath.substring(0,
+                    filePath.length() - EXTENSION_XML.length()));
+        }
+
+        // TODO extract into PathUtils
+        if (repositoryPath.length() > 0 && repositoryPath.charAt(0) != '/') {
+            repositoryPath = '/' + repositoryPath;
+        } else if (repositoryPath.length() == 0) {
+            repositoryPath = "/";
+        }
 
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -301,7 +322,7 @@ public class VltSerializationManager implements SerializationManager {
             ContentXmlHandler handler = new ContentXmlHandler();
             parser.parse(source, handler);
 
-            return handler.getProperties();
+            return new ResourceProxy(repositoryPath, handler.getProperties());
         } catch (SAXException e) {
             // TODO proper error handling
             throw new IOException(e);
