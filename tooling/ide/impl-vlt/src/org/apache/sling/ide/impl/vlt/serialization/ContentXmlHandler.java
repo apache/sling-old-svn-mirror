@@ -18,12 +18,13 @@ package org.apache.sling.ide.impl.vlt.serialization;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Deque;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
 import java.util.UUID;
 
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -31,12 +32,24 @@ import org.xml.sax.helpers.DefaultHandler;
 // TODO - worth investigating whether we can properly use org.apache.jackrabbit.vault.util.DocViewProperty instead
 public class ContentXmlHandler extends DefaultHandler {
 
-    private final Map<String, Object> properties = new HashMap<String, Object>();
+    private static final String JCR_ROOT = "jcr:root";
+    private final ResourceProxy root;
+    private final Deque<ResourceProxy> queue = new LinkedList<ResourceProxy>();
+
+    public ContentXmlHandler(String rootResourcePath) {
+        root = new ResourceProxy(rootResourcePath);
+    }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-        if (!qName.equals("jcr:root")) {
-            return;
+
+        ResourceProxy current;
+        if (qName.equals(JCR_ROOT)) {
+            current = root;
+        } else {
+            ResourceProxy parent = queue.peekLast();
+            current = new ResourceProxy(parent.getPath() + "/" + qName);
+            parent.addChild(current);
         }
 
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -45,16 +58,23 @@ public class ContentXmlHandler extends DefaultHandler {
             String value = attributes.getValue(i);
             Object typedValue = TypeHint.parsePossiblyTypedValue(value);
             
-            properties.put(attributeQName, typedValue);
+            current.addProperty(attributeQName, typedValue);
         }
+
+        queue.add(current);
     }
 
-    public Map<String, Object> getProperties() {
-        return properties;
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+
+        queue.removeLast();
+    }
+
+    public ResourceProxy getRoot() {
+        return root;
     }
     
     // TODO - validate that this is comprehensive
-    // TODO - does not handle correctly multi-valued properties which just one value - do we need to?
     static enum TypeHint {
         BOOLEAN("Boolean") {
             @Override

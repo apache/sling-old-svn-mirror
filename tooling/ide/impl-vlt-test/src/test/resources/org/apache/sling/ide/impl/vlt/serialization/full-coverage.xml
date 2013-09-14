@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:vlt="http://www.day.com/jcr/vault/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:mixinTypes="[vlt:FullCoverage]"
+    jcr:primaryType="sling:Folder"
+    jcr:title="Full coverage parent">
+    <parent-1
+        jcr:primaryType="sling:Folder"
+        jcr:title="Parent 1">
+        <child-1-1
+            jcr:primaryType="sling:Folder"
+            jcr:title="Child 1-1"/>
+        <child-1-2
+            jcr:primaryType="sling:Folder"
+            jcr:title="Child 1-2"/>
+    </parent-1>
+    <parent-2
+        jcr:primaryType="sling:Folder"
+        jcr:title="Parent 2">
+        <child-2-1
+            jcr:primaryType="sling:Folder"
+            jcr:title="Child 2-1"/>
+        <child-2-2
+            jcr:primaryType="sling:Folder"
+            jcr:title="Child 2-2"/>
+    </parent-2>
+</jcr:root>

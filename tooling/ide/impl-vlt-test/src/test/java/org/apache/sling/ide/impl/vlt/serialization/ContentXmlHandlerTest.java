@@ -30,11 +30,11 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -71,37 +71,10 @@ public class ContentXmlHandlerTest {
         factory.setNamespaceAware(true);
         factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
         SAXParser parser = factory.newSAXParser();
-        ContentXmlHandler handler = new ContentXmlHandler();
+        ContentXmlHandler handler = new ContentXmlHandler("/");
         parser.parse(source, handler);
 
-        return handler.getProperties();
-    }
-
-    @Test
-    @Ignore("Not implemented")
-    public void parseNameProperty() throws ParserConfigurationException, SAXException, IOException {
-
-        Map<String, Object> properties = parseContentXmlFile("name-content.xml");
-
-        assertThat("properties.size", properties.size(), is(2));
-    }
-
-    @Test
-    @Ignore("Not implemented")
-    public void parsePathProperty() throws ParserConfigurationException, SAXException, IOException {
-
-        Map<String, Object> properties = parseContentXmlFile("path-content.xml");
-
-        assertThat("properties.size", properties.size(), is(2));
-    }
-
-    @Test
-    @Ignore("Not implemented")
-    public void parseReferenceProperties() throws ParserConfigurationException, SAXException, IOException {
-        
-        Map<String, Object> properties = parseContentXmlFile("reference-content.xml");
-        
-        assertThat("properties.size", properties.size(), is(3));
+        return handler.getRoot().getProperties();
     }
 
     @Test
@@ -124,9 +97,42 @@ public class ContentXmlHandlerTest {
         assertThat("properties[dates]", (Calendar[]) properties.get("dates"), array(
                 millis(1377982800000l), millis(1378242000000l)));
     }
-    
+
+    @Test
+    public void parseFullCoverageXmlFile() throws ParserConfigurationException, SAXException, IOException {
+
+        InputSource source = new InputSource(getClass().getResourceAsStream("full-coverage.xml"));
+
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
+        SAXParser parser = factory.newSAXParser();
+        ContentXmlHandler handler = new ContentXmlHandler("/apps/full-coverage");
+        parser.parse(source, handler);
+
+        ResourceProxy root = handler.getRoot();
+
+        assertThat("full-coverage path", root.getPath(), is("/apps/full-coverage"));
+        assertThat("full-coverage properties.size", root.getProperties().size(), is(3));
+        assertThat("full-coverage properties[jcr:title]", root.getProperties(),
+                hasEntry("jcr:title", (Object) "Full coverage parent"));
+        assertThat("full-coverage children.size", root.getChildren().size(), is(2));
+
+        ResourceProxy parent1 = root.getChildren().get(0);
+        assertThat("parent-1 path", parent1.getPath(), is("/apps/full-coverage/parent-1"));
+        assertThat("parent-1 properties[jcr:title]", parent1.getProperties(),
+                hasEntry("jcr:title", (Object) "Parent 1"));
+        assertThat("parent-1 children.size", parent1.getChildren().size(), is(2));
+
+        ResourceProxy child11 = parent1.getChildren().get(0);
+        assertThat("child-1-1 path", child11.getPath(), is("/apps/full-coverage/parent-1/child-1-1"));
+        assertThat("child-1-1 properties[jcr:title]", child11.getProperties(),
+                hasEntry("jcr:title", (Object) "Child 1-1"));
+
+    }
+
     private static Matcher<Calendar> millis(long millis) {
-        
+
         return new CalendarTimeInMillisMatcher(millis);
     }
 

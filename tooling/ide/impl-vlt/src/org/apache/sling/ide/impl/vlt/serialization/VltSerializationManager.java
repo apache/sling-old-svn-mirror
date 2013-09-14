@@ -319,10 +319,10 @@ public class VltSerializationManager implements SerializationManager {
             factory.setNamespaceAware(true);
             factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
             SAXParser parser = factory.newSAXParser();
-            ContentXmlHandler handler = new ContentXmlHandler();
+            ContentXmlHandler handler = new ContentXmlHandler(repositoryPath);
             parser.parse(source, handler);
 
-            return new ResourceProxy(repositoryPath, handler.getProperties());
+            return handler.getRoot();
         } catch (SAXException e) {
             // TODO proper error handling
             throw new IOException(e);
