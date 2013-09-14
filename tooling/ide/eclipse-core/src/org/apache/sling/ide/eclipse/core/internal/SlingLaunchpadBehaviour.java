@@ -470,7 +470,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         if (filter != null) {
             FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
                     repository);
-            if (filterResult == FilterResult.DENY) {
+            if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
                 return null;
             }
         }

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
 import org.apache.jackrabbit.vault.fs.impl.AggregateManagerImpl;
@@ -51,7 +52,17 @@ public class VltFilter implements Filter {
             relativeFilePath = '/' + relativeFilePath;
         }
 
-        return filter.contains(relativeFilePath) ? FilterResult.ALLOW : FilterResult.DENY;
+        if (filter.contains(relativeFilePath)) {
+            return FilterResult.ALLOW;
+        }
+
+        for (PathFilterSet pathFilterSet : filter.getFilterSets()) {
+            if (pathFilterSet.getRoot().startsWith(relativeFilePath)) {
+                return FilterResult.PREREQUISITE;
+            }
+        }
+
+        return FilterResult.DENY;
     }
 
 }
