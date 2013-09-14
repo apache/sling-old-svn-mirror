@@ -175,6 +175,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return;
         }
 
+        if (kind == IServer.PUBLISH_AUTO && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
+            System.out
+                    .println("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
+            return;
+        }
+
         try {
             if (ProjectHelper.isBundleProject(module[0].getProject())) {
                 String serverMode = getServer().getMode();
