@@ -97,8 +97,8 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         // the bundle.
         final String userName = this.serviceUserMapper.getServiceUserID(this.usingBundle, subServiceName);
         if (userName == null) {
-            throw new LoginException("Cannot derive user name for service "
-                + this.usingBundle.getSymbolicName() + ":" + subServiceName);
+            throw new LoginException("Cannot derive user name for bundle "
+                + this.usingBundle + " and sub service " + subServiceName);
         }
 
         // ensure proper user name and service bundle
