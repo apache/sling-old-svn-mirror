@@ -39,13 +39,14 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 
 public class AppenderTracker extends ServiceTracker implements LogbackResetListener {
+
     private static final String PROP_LOGGER = "loggers";
 
     private final LoggerContext loggerContext;
 
     private final Map<ServiceReference, AppenderInfo> appenders = new ConcurrentHashMap<ServiceReference, AppenderInfo>();
 
-    public AppenderTracker(BundleContext context, LoggerContext loggerContext) throws InvalidSyntaxException {
+    public AppenderTracker(final BundleContext context, final LoggerContext loggerContext) throws InvalidSyntaxException {
         super(context, createFilter(), null);
         this.loggerContext = loggerContext;
         super.open();
@@ -53,28 +54,29 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object addingService(ServiceReference reference) {
-        Appender<ILoggingEvent> a = (Appender<ILoggingEvent>) super.addingService(reference);
+    public Object addingService(final ServiceReference reference) {
+        final Appender<ILoggingEvent> a = (Appender<ILoggingEvent>) super.addingService(reference);
         a.setContext(loggerContext);
         a.start();
 
-        AppenderInfo ai = new AppenderInfo(reference, a);
+        final AppenderInfo ai = new AppenderInfo(reference, a);
         appenders.put(reference, ai);
         attachAppender(ai);
+
         return ai;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void modifiedService(ServiceReference reference, Object service) {
-        AppenderInfo ai = appenders.remove(reference);
-        detachAppender(ai);
-        appenders.put(reference, new AppenderInfo(reference, (Appender<ILoggingEvent>) service));
-        attachAppender(ai);
+    public void modifiedService(final ServiceReference reference, final Object service) {
+        detachAppender(appenders.remove(reference));
+        final AppenderInfo nai = new AppenderInfo(reference, (Appender<ILoggingEvent>) service);
+        appenders.put(reference, nai);
+        attachAppender(nai);
     }
 
     @Override
-    public void removedService(ServiceReference reference, Object service) {
+    public void removedService(final ServiceReference reference, final Object service) {
         detachAppender(appenders.remove(reference));
         // Probably we should remove the context from appender
         super.removedService(reference, service);
@@ -86,8 +88,8 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
     private void detachAppender(final AppenderInfo ai) {
         if (ai != null) {
-            for (final String li : ai.loggers) {
-                final Logger logger = loggerContext.getLogger(li);
+            for (final String name : ai.loggers) {
+                final Logger logger = loggerContext.getLogger(name);
 
                 logger.detachAppender(ai.appender);
             }
@@ -95,25 +97,24 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
     }
 
     private void attachAppender(final AppenderInfo ai) {
-        if (ai == null) {
-            return;
-        }
-        for (final String li : ai.loggers) {
-            final Logger logger = loggerContext.getLogger(li);
+        if (ai != null) {
+            for (final String name : ai.loggers) {
+                final Logger logger = loggerContext.getLogger(name);
 
-            logger.addAppender(ai.appender);
+                logger.addAppender(ai.appender);
+            }
         }
     }
 
     @Override
-    public void onResetStart(LoggerContext context) {
+    public void onResetStart(final LoggerContext context) {
         for (AppenderInfo ai : appenders.values()) {
             attachAppender(ai);
         }
     }
 
     @Override
-    public void onResetComplete(LoggerContext context) {
+    public void onResetComplete(final LoggerContext context) {
 
     }
 
@@ -133,11 +134,8 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
         final Appender<ILoggingEvent> appender;
 
-        final ServiceReference serviceReference;
-
         public AppenderInfo(ServiceReference ref, Appender<ILoggingEvent> appender) {
             this.appender = appender;
-            this.serviceReference = ref;
 
             List<String> loggers = new ArrayList<String>();
             for (String logger : Util.toList(ref.getProperty(PROP_LOGGER))) {
