@@ -401,7 +401,7 @@ public class SlingLogPanel extends HttpServlet {
         } else if (ctx.isDynamicAppender(appender)) {
             final AppenderInfo ai = ctx.dynamicAppenders.get(appender);
 
-            final String pid = ai.serviceReference.getProperty(Constants.SERVICE_ID).toString();
+            final String pid = ai.pid;
             return createUrl(consoleAppRoot, "services", pid);
         } else {
             return "[others]";
