@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -77,8 +78,13 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
     @Override
     public void removedService(final ServiceReference reference, final Object service) {
-        detachAppender(appenders.remove(reference));
-        // Probably we should remove the context from appender
+        final AppenderInfo ai = appenders.remove(reference);
+        this.detachAppender(ai);
+        if ( ai != null ) {
+            ai.appender.stop();
+            // context can't be unset
+        }
+
         super.removedService(reference, service);
     }
 
@@ -134,9 +140,11 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
         final Appender<ILoggingEvent> appender;
 
-        public AppenderInfo(ServiceReference ref, Appender<ILoggingEvent> appender) {
-            this.appender = appender;
+        final String pid;
 
+        public AppenderInfo(final ServiceReference ref, Appender<ILoggingEvent> appender) {
+            this.appender = appender;
+            this.pid = ref.getProperty(Constants.SERVICE_ID).toString();
             List<String> loggers = new ArrayList<String>();
             for (String logger : Util.toList(ref.getProperty(PROP_LOGGER))) {
                 loggers.add(logger);
