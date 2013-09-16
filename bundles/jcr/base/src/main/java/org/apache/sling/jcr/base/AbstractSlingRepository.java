@@ -322,6 +322,10 @@ public abstract class AbstractSlingRepository
     final Session loginService(final Bundle usingBundle, final String subServiceName, final String workspace)
             throws LoginException, RepositoryException {
         final String userName = this.serviceUserMapper.getServiceUserID(usingBundle, subServiceName);
+        if (userName == null) {
+            throw new LoginException("Cannot derive user name for bundle "
+                + usingBundle + " and sub service " + subServiceName);
+        }
         final SimpleCredentials creds = new SimpleCredentials(userName, new char[0]);
 
         Session admin = null;
