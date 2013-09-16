@@ -84,7 +84,6 @@ public abstract class LogTestBase {
         return options(
             // the current project (the bundle under test)
             CoreOptions.bundle(bundleFile.toURI().toString()),
-            mavenBundle("org.ops4j.pax.tinybundles", "tinybundles").versionAsInProject(),
             mavenBundle("org.slf4j", "slf4j-api").versionAsInProject(), addPaxExamSpecificOptions(),
             addCodeCoverageOption(), addDebugOptions(), addExtraOptions(), addDefaultOptions());
     }

@@ -63,7 +63,9 @@ public class ConfigSourceTracker extends ServiceTracker implements LogbackResetL
         return inputSources.values();
     }
 
-    public void close() {
+    @Override
+    public synchronized void close() {
+        super.close();
         inputSources.clear();
     }
 
@@ -93,11 +95,16 @@ public class ConfigSourceTracker extends ServiceTracker implements LogbackResetL
     }
 
     // ~----------------------------------- LogbackResetListener
-
-    public void onReset(LoggerContext context) {
+    @Override
+    public void onResetStart(LoggerContext context) {
         // export the tracker instance. It would later be used in
         // OSGiInternalAction
         context.putObject(ConfigSourceTracker.class.getName(), this);
+    }
+
+    @Override
+    public void onResetComplete(LoggerContext context) {
+
     }
 
     // ~----------------------------------ConfigSourceInfo
