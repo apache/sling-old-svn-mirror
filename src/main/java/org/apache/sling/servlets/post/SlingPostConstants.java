@@ -552,5 +552,11 @@ public interface SlingPostConstants {
      * @since 2.3.4
      */
     public static final String NT_SLING_CHUNK_OFFSET = "sling:offset";
+    
+    /**
+     * Constant for prefix for sling:chunk node name.
+     * @since 2.3.4
+     */
+    public static final String CHUNK_NODE_NAME = "chunk";
 
 }

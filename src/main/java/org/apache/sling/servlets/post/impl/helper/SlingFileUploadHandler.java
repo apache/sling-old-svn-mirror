@@ -17,7 +17,6 @@
 package org.apache.sling.servlets.post.impl.helper;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,10 +24,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.SequenceInputStream;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -37,6 +40,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.servlet.ServletContext;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.resource.ModifiableValueMap;
@@ -44,6 +48,8 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.servlets.post.Modification;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles file uploads.
@@ -97,8 +103,8 @@ public class SlingFileUploadHandler {
     public static final String JCR_MIMETYPE = "jcr:mimeType";
     public static final String JCR_ENCODING = "jcr:encoding";
     public static final String JCR_DATA = "jcr:data";
-
-    private static final String CHUNK_NODE_NAME = "chunk";
+    
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The servlet context.
@@ -237,19 +243,20 @@ public class SlingFileUploadHandler {
      * Process chunk upload. For first and intermediate chunks request persists
      * chunks at jcr:content/chunk_start_end/jcr:data or
      * nt:resource/chunk_start_end/jcr:data. For last last chunk,
-     * merge all previous chunks and current chunk and replace binary at
+     * merge all previous chunks and last chunk and replace binary at
      * destination.
      */
     private void processChunk(final Resource resParent, final Node res,
             final RequestProperty prop, RequestParameter value,
             final List<Modification> changes) throws RepositoryException {
         try {
-            long chunkOffset = prop.getOffset();
+            long chunkOffset = prop.getChunk().getOffset();
             if (chunkOffset == 0) {
                 // first chunk
                 // check if another chunk upload is already in progress. throw
                 // exception
-                NodeIterator itr = res.getNodes(CHUNK_NODE_NAME + "*");
+                NodeIterator itr = res.getNodes(SlingPostConstants.CHUNK_NODE_NAME
+                    + "*");
                 if (itr.hasNext()) {
                     throw new RepositoryException(
                         "Chunk upload already in progress at {" + res.getPath()
@@ -270,7 +277,7 @@ public class SlingFileUploadHandler {
             }
             long currentLength = res.getProperty(
                 SlingPostConstants.NT_SLING_CHUNKS_LENGTH).getLong();
-            long totalLength = prop.getLength();
+            long totalLength = prop.getChunk().getLength();
             if (chunkOffset != currentLength) {
                 throw new RepositoryException("Chunk's offset {"
                     + chunkOffset
@@ -293,17 +300,17 @@ public class SlingFileUploadHandler {
                         totalLength);
                 }
             }
-            NodeIterator itr = res.getNodes(CHUNK_NODE_NAME + "_"
-                + String.valueOf(chunkOffset) + "*");
+            NodeIterator itr = res.getNodes(SlingPostConstants.CHUNK_NODE_NAME
+                + "_" + String.valueOf(chunkOffset) + "*");
             if (itr.hasNext()) {
                 throw new RepositoryException("Chunk already present at {"
                     + itr.nextNode().getPath() + "}");
             }
-            String nodeName = CHUNK_NODE_NAME + "_"
+            String nodeName = SlingPostConstants.CHUNK_NODE_NAME + "_"
                 + String.valueOf(chunkOffset) + "_"
                 + String.valueOf(chunkOffset + value.getSize() - 1);
             if (totalLength == (currentLength + value.getSize())
-                || prop.isCompleted()) {
+                || prop.getChunk().isCompleted()) {
                 File file = null;
                 InputStream fileIns = null;
                 try {
@@ -311,7 +318,8 @@ public class SlingFileUploadHandler {
                     fileIns = new FileInputStream(file);
                     changes.add(Modification.onModified(res.setProperty(
                         JCR_DATA, fileIns).getPath()));
-                    NodeIterator nodeItr = res.getNodes(CHUNK_NODE_NAME + "*");
+                    NodeIterator nodeItr = res.getNodes(SlingPostConstants.CHUNK_NODE_NAME
+                        + "*");
                     while (nodeItr.hasNext()) {
                         Node nodeRange = nodeItr.nextNode();
                         changes.add(Modification.onDeleted(nodeRange.getPath()));
@@ -363,15 +371,17 @@ public class SlingFileUploadHandler {
             final InputStream lastChunkStream) throws PersistenceException,
             RepositoryException {
         OutputStream out = null;
+        SequenceInputStream  mergeStrm = null;
         File file = null;
         try {
             file = File.createTempFile("tmp-", "-mergechunk");
-            out = new BufferedOutputStream(new FileOutputStream(file),
-                16 * 1024);
-            String startPattern = CHUNK_NODE_NAME + "_" + "0_*";
+            out = new FileOutputStream(file);
+            String startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_"
+                + "0_*";
             NodeIterator nodeItr = parentNode.getNodes(startPattern);
             InputStream ins = null;
             int i = 0;
+            Set<InputStream> inpStrmSet = new LinkedHashSet<InputStream>();
             while (nodeItr.hasNext()) {
                 if (nodeItr.getSize() > 1) {
                     throw new RepositoryException(
@@ -379,48 +389,26 @@ public class SlingFileUploadHandler {
                 }
                 Node rangeNode = nodeItr.nextNode();
 
-                try {
-                    InputStream in = rangeNode.getProperty(
-                        javax.jcr.Property.JCR_DATA).getBinary().getStream();
-                    ins = new BufferedInputStream(in, 16 * 1024);
-                    byte[] buf = new byte[16 * 1024];
-                    while ((i = ins.read(buf)) != -1) {
-                        out.write(buf, 0, i);
-                        out.flush();
-                    }
-
-                } finally {
-                    if (ins != null) {
-                        try {
-                            ins.close();
-                        } catch (IOException ignore) {
-
-                        }
-                    }
-                }
+                inpStrmSet.add(rangeNode.getProperty(
+                    javax.jcr.Property.JCR_DATA).getBinary().getStream());
+                log.debug("added chunk {} to merge stream", rangeNode.getName());
                 String[] indexBounds = rangeNode.getName().substring(
-                    (CHUNK_NODE_NAME + "_").length()).split("_");
-                startPattern = CHUNK_NODE_NAME + "_"
+                    (SlingPostConstants.CHUNK_NODE_NAME + "_").length()).split(
+                    "_");
+                startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_"
                     + String.valueOf(Long.valueOf(indexBounds[1]) + 1) + "_*";
                 nodeItr = parentNode.getNodes(startPattern);
             }
 
-            ins = new BufferedInputStream(lastChunkStream, 16 * 1024);
-            byte[] buf = new byte[16 * 1024];
-            while ((i = ins.read(buf)) != -1) {
-                out.write(buf, 0, i);
-                out.flush();
-            }
+            inpStrmSet.add(lastChunkStream);
+            mergeStrm = new SequenceInputStream(
+                Collections.enumeration(inpStrmSet));
+            IOUtils.copyLarge(mergeStrm, out);
         } catch (IOException e) {
             throw new PersistenceException("excepiton occured", e);
         } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException ignore) {
-
-                }
-            }
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(mergeStrm);
 
         }
         return file;
@@ -430,30 +418,75 @@ public class SlingFileUploadHandler {
      * Delete all chunks saved within a node. If no chunks exist, it is no-op.
      */
     public void deleteChunks(final Node node) throws RepositoryException {
-        Node chunkNode = null;
+        // parent node containing all chunks and has mixin sling:chunks applied
+        // on it.
+        Node chunkParent = null;
         Node jcrContentNode = null;
         if (hasChunks(node)) {
-            chunkNode = node;
+            chunkParent = node;
         } else if (node.hasNode(JCR_CONTENT)
             && hasChunks((jcrContentNode = node.getNode(JCR_CONTENT)))) {
-            chunkNode = jcrContentNode;
+            chunkParent = jcrContentNode;
 
         }
-        if (chunkNode != null) {
-            NodeIterator nodeItr = chunkNode.getNodes(CHUNK_NODE_NAME + "*");
+        if (chunkParent != null) {
+            NodeIterator nodeItr = chunkParent.getNodes(SlingPostConstants.CHUNK_NODE_NAME
+                + "*");
             while (nodeItr.hasNext()) {
                 Node rangeNode = nodeItr.nextNode();
                 rangeNode.remove();
             }
-            if (chunkNode.hasProperty(SlingPostConstants.NT_SLING_FILE_LENGTH)) {
-                chunkNode.getProperty(SlingPostConstants.NT_SLING_FILE_LENGTH).remove();
+            if (chunkParent.hasProperty(SlingPostConstants.NT_SLING_FILE_LENGTH)) {
+                chunkParent.getProperty(SlingPostConstants.NT_SLING_FILE_LENGTH).remove();
             }
-            if (chunkNode.hasProperty(SlingPostConstants.NT_SLING_CHUNKS_LENGTH)) {
-                chunkNode.getProperty(
+            if (chunkParent.hasProperty(SlingPostConstants.NT_SLING_CHUNKS_LENGTH)) {
+                chunkParent.getProperty(
                     SlingPostConstants.NT_SLING_CHUNKS_LENGTH).remove();
             }
-            chunkNode.removeMixin(SlingPostConstants.NT_SLING_CHUNK_MIXIN);
+            chunkParent.removeMixin(SlingPostConstants.NT_SLING_CHUNK_MIXIN);
         }
+    }
+
+    /**
+     * Get the last {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
+     * {@link Node}.
+     * 
+     * @param node {@link Node} containing
+     *            {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
+     *            {@link Node}s
+     * @return the {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} chunk
+     *         node.
+     * @throws RepositoryException
+     */
+    public Node getLastChunk(Node node) throws RepositoryException {
+        // parent node containing all chunks and has mixin sling:chunks applied
+        // on it.
+        Node chunkParent = null;
+        Node jcrContentNode = null;
+        if (hasChunks(node)) {
+            chunkParent = node;
+        } else if (node.hasNode(JCR_CONTENT)
+            && hasChunks((jcrContentNode = node.getNode(JCR_CONTENT)))) {
+            chunkParent = jcrContentNode;
+
+        }
+        String startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_" + "0_*";
+        NodeIterator nodeItr = chunkParent.getNodes(startPattern);
+        Node chunkNode = null;
+        while (nodeItr.hasNext()) {
+            if (nodeItr.getSize() > 1) {
+                throw new RepositoryException(
+                    "more than one node found for pattern: " + startPattern);
+            }
+            chunkNode = nodeItr.nextNode();
+
+            String[] indexBounds = chunkNode.getName().substring(
+                (SlingPostConstants.CHUNK_NODE_NAME + "_").length()).split("_");
+            startPattern = SlingPostConstants.CHUNK_NODE_NAME + "_"
+                + String.valueOf(Long.valueOf(indexBounds[1]) + 1) + "_*";
+            nodeItr = chunkParent.getNodes(startPattern);
+        }
+        return chunkNode;
     }
 
     /**

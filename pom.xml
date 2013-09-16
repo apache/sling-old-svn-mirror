@@ -70,6 +70,12 @@
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline=org/apache/jackrabbit/util/ISO8601.class|org/apache/jackrabbit/util/Text.class
                         </Embed-Dependency>
+                         <Sling-Namespaces>
+                            sling=http://sling.apache.org/jcr/sling/1.0
+                        </Sling-Namespaces>
+                        <Sling-Nodetypes>
+                            SLING-INF/nodetypes/chunk.cnd,
+                        </Sling-Nodetypes>
                     </instructions>
                 </configuration>
             </plugin>
@@ -129,6 +135,12 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.0.2-incubator</version>
+            <scope>provided</scope>
+        </dependency>
+         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
