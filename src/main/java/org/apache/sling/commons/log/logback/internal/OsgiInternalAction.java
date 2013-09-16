@@ -22,9 +22,16 @@ package org.apache.sling.commons.log.logback.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.joran.action.Action;
+import ch.qos.logback.core.joran.action.ActionConst;
+import ch.qos.logback.core.joran.event.EndEvent;
+import ch.qos.logback.core.joran.event.InPlayListener;
 import ch.qos.logback.core.joran.event.SaxEvent;
 import ch.qos.logback.core.joran.event.SaxEventRecorder;
 import ch.qos.logback.core.joran.spi.ActionException;
@@ -45,8 +52,16 @@ import static org.apache.sling.commons.log.logback.internal.ConfigSourceTracker.
 public class OsgiInternalAction extends Action {
     private static final String INCLUDED_TAG = "included";
 
+    private Map<String, Appender<ILoggingEvent>> appenderBag;
+
+    @SuppressWarnings("unchecked")
     @Override
     public void begin(InterpretationContext ec, String name, Attributes attributes) throws ActionException {
+        ec.addInPlayListener(new ConfigCompleteListener());
+
+        //Extract the appender bag from InterpretationContext. It would be used later
+        appenderBag = (HashMap<String, Appender<ILoggingEvent>>) ec.getObjectMap().get(ActionConst.APPENDER_BAG);
+
         populateSubstitutionProperties(ec);
 
         // TO CHECK Should we add the config fragment at end
@@ -118,4 +133,33 @@ public class OsgiInternalAction extends Action {
             saxEventList.remove(recorder.saxEventList.size() - 1);
         }
     }
+
+    /**
+     * Logback does not provide any standard hook point through which we can be
+     * notified of config complete. Hence as a work around we listen for EndEvent for
+     * 'configuration' tag and then fire the listeners
+     *
+     * Also Logback does not expose the configured appenders map which it maintains
+     * in InterpretationContext. ConfigCompleteListener would extract that map
+     * and would export it to LoggerContext Object map so that any
+     * listener can make use of that
+     */
+    private class ConfigCompleteListener implements InPlayListener {
+        private static final String CONFIG_TAG = "configuration";
+        @Override
+        public void inPlay(SaxEvent event) {
+            if(event instanceof EndEvent
+                    && event.qName.equalsIgnoreCase(CONFIG_TAG)){
+                //Export the appender bag to LoggerContext object
+                getContext().putObject(ActionConst.APPENDER_BAG,appenderBag);
+
+                getLogbackManager().fireResetCompleteListeners();
+
+                //Clear the appender bag entry
+                getContext().putObject(ActionConst.APPENDER_BAG,null);
+            }
+        }
+    }
+
+
 }

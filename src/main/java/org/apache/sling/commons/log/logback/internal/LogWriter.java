@@ -70,7 +70,10 @@ public class LogWriter {
 
     private final String logRotation;
 
-    public LogWriter(String configurationPID, String fileName, int logNumber, String logRotation) {
+    private final String appenderName;
+
+    public LogWriter(String configurationPID, String appenderName, int logNumber, String logRotation, String fileName) {
+        this.appenderName = appenderName;
         if (fileName == null || fileName.length() == 0) {
             fileName = FILE_NAME_CONSOLE;
         }
@@ -89,8 +92,8 @@ public class LogWriter {
         this.logRotation = logRotation;
     }
 
-    public LogWriter(String fileName, int logNumber, String logRotation) {
-        this(null, fileName, logNumber, logRotation);
+    public LogWriter(String appenderName,String fileName, int logNumber, String logRotation) {
+        this(null, appenderName, logNumber, logRotation, fileName);
     }
 
     public String getConfigurationPID() {
@@ -99,6 +102,10 @@ public class LogWriter {
 
     public String getFileName() {
         return fileName;
+    }
+
+    public String getAppenderName() {
+        return appenderName;
     }
 
     public int getLogNumber() {
@@ -185,7 +192,7 @@ public class LogWriter {
             }
 
             rollingAppender.setLogWriter(this);
-            rollingAppender.setName(getFileName());
+            rollingAppender.setName(getAppenderName());
 
             appender = rollingAppender;
         }

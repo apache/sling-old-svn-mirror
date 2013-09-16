@@ -23,5 +23,7 @@ import ch.qos.logback.classic.LoggerContext;
 
 public interface LogbackResetListener {
 
-    void onReset(LoggerContext context);
+    void onResetStart(LoggerContext context);
+
+    void onResetComplete(LoggerContext context);
 }

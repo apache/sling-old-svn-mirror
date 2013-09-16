@@ -19,6 +19,7 @@
 package org.apache.sling.commons.log.logback.internal;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,7 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.OutputStreamAppender;
+import ch.qos.logback.core.joran.action.ActionConst;
 import ch.qos.logback.core.util.ContextUtil;
 
 import org.apache.sling.commons.log.logback.internal.config.ConfigAdminSupport;
@@ -217,27 +219,55 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     // ---------- Logback reset listener
 
-    public void onReset(LoggerContext context) {
+    @Override
+    public void onResetStart(LoggerContext context) {
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void onResetComplete(LoggerContext context) {
+        //The OSGi config based appenders are attached on reset complete as by that time Logback config
+        // would have been parsed and various appenders and logger configured. Now we use the OSGi config
+        // 1. If an appender with same name as one defined by OSGi config is found then it takes precedence
+        // 2. If no existing appender is found then we create one use that
         Map<String, Appender<ILoggingEvent>> appendersByName = new HashMap<String, Appender<ILoggingEvent>>();
+
+        Map<String, Appender<ILoggingEvent>> configuredAppenders =
+                (Map<String, Appender<ILoggingEvent>>) context.getObject(ActionConst.APPENDER_BAG);
+
+        if(configuredAppenders == null){
+            configuredAppenders = Collections.emptyMap();
+        }
+
         Map<Appender, LoggerSpecificEncoder> encoders = new HashMap<Appender, LoggerSpecificEncoder>();
+
         for (LogConfig config : getLogConfigs()) {
             Appender<ILoggingEvent> appender = null;
             if (config.isAppenderDefined()) {
                 LogWriter lw = config.getLogWriter();
 
-                // TODO Need to see if we can refer to appenders which are
-                // already defined in LogBack config. Only issue is Listener are
-                // executed *before* config is parsed. So cannot refer to
-                // Appenders here
+                final String appenderName = lw.getAppenderName();
+                appender = appendersByName.get(appenderName);
 
-                appender = appendersByName.get(lw.getFileName());
+                if(appender == null){
+                    appender = configuredAppenders.get(appenderName);
+                    if(appender != null){
+                        contextUtil.addInfo("Found overriding configuration for appender "+ appenderName
+                                + " in Logback config. OSGi config would be ignored");
+                    }
+                }
+
                 if (appender == null) {
                     LoggerSpecificEncoder encoder = new LoggerSpecificEncoder(getDefaultLayout());
                     appender = lw.createAppender(loggerContext, encoder);
                     encoders.put(appender, encoder);
-                    appendersByName.put(lw.getFileName(), appender);
+                    appendersByName.put(appenderName, appender);
                 }
-                encoders.get(appender).addLogConfig(config);
+
+                if(encoders.containsKey(appender)){
+                    encoders.get(appender).addLogConfig(config);
+                }
             }
 
             for (String category : config.getCategories()) {
@@ -256,6 +286,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         // reset
         context.getLogger(Logger.ROOT_LOGGER_NAME).detachAppender(DEFAULT_CONSOLE_APPENDER_NAME);
     }
+
 
     // ---------- Configuration support
 
@@ -290,25 +321,25 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * <p>
      * The configuration object is expected to contain the following properties:
      * <dl>
-     * <dt>{@link java.util.logging.LogManager#LOG_FILE}</dt>
+     * <dt>{@link LogConfigManager#LOG_FILE}</dt>
      * <dd>The relative of absolute path/name of the file to log to. If this
      * property is missing or an empty string, the writer writes to standard
      * output</dd>
-     * <dt>{@link java.util.logging.LogManager#LOG_FILE_SIZE}</dt>
+     * <dt>{@link LogConfigManager#LOG_FILE_SIZE}</dt>
      * <dd>The maximum size of the log file to write before rotating the log
      * file. This property must be a number of be convertible to a number. The
      * actual value may also be suffixed by a size indicator <code>k</code>,
      * <code>kb</code>, <code>m</code>, <code>mb</code>, <code>g</code> or
      * <code>gb</code> representing the respective factors of kilo, mega and
      * giga.If this property is missing or cannot be converted to a number, the
-     * default value {@link java.util.logging.LogManager#LOG_FILE_SIZE_DEFAULT}
+     * default value {@link LogConfigManager#LOG_FILE_SIZE_DEFAULT}
      * is assumed. If the writer writes standard output this property is
      * ignored.</dd>
-     * <dt>{@link java.util.logging.LogManager#LOG_FILE_NUMBER}</dt>
+     * <dt>{@link LogConfigManager#LOG_FILE_NUMBER}</dt>
      * <dd>The maximum number of rotated log files to keep. This property must
      * be a number of be convertible to a number. If this property is missing or
      * cannot be converted to a number, the default value
-     * {@link java.util.logging.LogManager#LOG_FILE_NUMBER_DEFAULT} is assumed.
+     * {@link LogConfigManager#LOG_FILE_NUMBER_DEFAULT} is assumed.
      * If the writer writes standard output this property is ignored.</dd>
      * </dl>
      * 
@@ -372,7 +403,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 fileSize = fileSizeProp.toString();
             }
 
-            LogWriter newWriter = new LogWriter(pid, logFileName, fileNum, fileSize);
+            LogWriter newWriter = new LogWriter(pid, getAppnderName(logFileName), fileNum, fileSize, logFileName);
             if (oldWriter != null) {
                 writerByFileName.remove(oldWriter.getFileName());
             }
@@ -558,7 +589,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         if (defaultWriter == null) {
             throw new IllegalStateException("Default logger configuration must have been configured by now");
         }
-        return new LogWriter(logWriterName, defaultWriter.getLogNumber(), defaultWriter.getLogRotation());
+        return new LogWriter(getAppnderName(logWriterName),logWriterName, defaultWriter.getLogNumber(), defaultWriter.getLogRotation());
     }
 
     private LogWriter getDefaultWriter() {
@@ -604,6 +635,18 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         // return the correct log file name
         return logFileName;
     }
+
+    private String getAppnderName(String filePathAbsolute) {
+        String rootDirPath = rootDir.getAbsolutePath();
+
+        if(filePathAbsolute.startsWith(rootDirPath)){
+            //Make the fileName relative to the absolute dir
+            //Normalize the name to use '/'
+            return filePathAbsolute.substring(rootDirPath.length()).replace('\\','/');
+        }
+        return filePathAbsolute;
+    }
+
 
     /**
      * Decomposes the <code>loggers</code> configuration object into a set of

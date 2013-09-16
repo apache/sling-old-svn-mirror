@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.CoreConstants;
 import ch.qos.logback.core.FileAppender;
@@ -48,6 +49,7 @@ import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppend
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.apache.sling.commons.log.logback.internal.util.XmlUtil;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
@@ -93,11 +95,13 @@ public class SlingLogPanel extends HttpServlet {
         appendLoggerStatus(pw, ctx);
         appendLoggerData(pw, ctx);
         addAppenderData(pw, consoleAppRoot, ctx);
+        appendTurboFilterData(pw, consoleAppRoot,ctx);
         appendLogbackMainConfig(pw);
         appendLogbackFragments(pw, consoleAppRoot);
         appendLogbackStatus(pw, ctx);
         enablePrettifier(pw, pluginRoot);
     }
+
 
     private void enablePrettifier(PrintWriter pw, String pluginRoot) {
         pw.printf("<script type=\"text/javascript\" src=\"%s/res/ui/prettify.js\"></script>", pluginRoot);
@@ -121,6 +125,7 @@ public class SlingLogPanel extends HttpServlet {
         pw.println("<thead class='ui-widget-header'>");
         pw.println("<tr>");
         pw.println("<th>Log Level</th>");
+        pw.println("<th>Additivity</th>");
         pw.println("<th>Name</th>");
         pw.println("<th>Appender</th>");
         // pw.println("<th>" + cfgColTitle + "</th>");
@@ -131,6 +136,7 @@ public class SlingLogPanel extends HttpServlet {
         for (Logger logger : ctx.loggerInfos) {
             pw.println("<tr>");
             pw.println("<td>" + logger.getLevel() + "</td>");
+            pw.println("<td>" + Boolean.toString(logger.isAdditive()) + "</td>");
             pw.println("<td>" + logger.getName() + "</td>");
 
             pw.println("<td>");
@@ -179,6 +185,40 @@ public class SlingLogPanel extends HttpServlet {
         pw.println("</table>");
         pw.println("</div>");
     }
+
+    private void appendTurboFilterData(PrintWriter pw, String consoleAppRoot,LoggerStateContext ctx) {
+        if(ctx.loggerContext.getTurboFilterList().isEmpty()){
+            return;
+        }
+
+        pw.println("<div class='table'>");
+
+        pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Turbo Filters</div>");
+
+        pw.println("<table class='nicetable ui-widget'>");
+
+        pw.println("<thead class='ui-widget-header'>");
+        pw.println("<tr>");
+        pw.println("<th>Turbo Filter</th>");
+        pw.println("<th>" + getConfigColTitle(consoleAppRoot) + "</th>");
+        pw.println("</tr>");
+        pw.println("</thead>");
+        pw.println("<tbody class='ui-widget-content'>");
+
+
+        for(TurboFilter tf : ctx.loggerContext.getTurboFilterList()){
+            pw.println("<tr>");
+            pw.println("<td>" + getName(tf) + "</td>");
+            pw.println("<td>" + formatPid(consoleAppRoot, tf, ctx) + "</td>");
+            pw.println("</tr>");
+
+        }
+
+        pw.println("</tbody>");
+        pw.println("</table>");
+        pw.println("</div>");
+    }
+
 
     private void appendLogbackStatus(PrintWriter pw, LoggerStateContext ctx) {
         pw.println("<div class='table'>");
@@ -320,13 +360,26 @@ public class SlingLogPanel extends HttpServlet {
                 : null;
     }
 
-    private static String getName(Appender<ILoggingEvent> appender) {
-        // For legacy config based appender the appender name is the file
-        // name. So omit the appender name
-        if (appender instanceof SlingRollingFileAppender) {
-            return "File : " + ((FileAppender) appender).getFile();
+    private static String getName(TurboFilter tf) {
+        if(tf.getName() != null){
+            return String.format("%s (%s)", tf.getName(), tf.getClass().getName());
+        } else{
+            return tf.getClass().getName();
         }
+    }
 
+    private static String formatPid(final String consoleAppRoot, final TurboFilter tf,
+                                    final LoggerStateContext ctx) {
+        ServiceReference sr = ctx.getTurboFilterRef(tf);
+        if (sr != null) {
+            final String pid = sr.getProperty(Constants.SERVICE_ID).toString();
+            return createUrl(consoleAppRoot, "services", pid);
+        } else {
+            return "[config]";
+        }
+    }
+
+    private static String getName(Appender<ILoggingEvent> appender) {
         // For normal file appender we also display the name of appender
         if (appender instanceof FileAppender) {
             return String.format("File : [%s] %s", appender.getName(), ((FileAppender) appender).getFile());
