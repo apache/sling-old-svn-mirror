@@ -30,6 +30,7 @@ public interface JobExecutionContext {
     /**
      * Report an async result.
      * @throws IllegalStateException If the job is not processed asynchronously
+     *                               or if this method has already been called.
      */
     void asyncProcessingFinished(final JobStatus status);
 

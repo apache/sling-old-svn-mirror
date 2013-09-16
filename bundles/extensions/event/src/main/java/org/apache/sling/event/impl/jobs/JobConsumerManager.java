@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -35,12 +36,18 @@ import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.event.impl.support.TopicMatcher;
 import org.apache.sling.event.impl.support.TopicMatcherHelper;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobStatus;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -54,9 +61,14 @@ import org.slf4j.LoggerFactory;
            description="%job.consumermanager.description",
            metatype=true)
 @Service(value=JobConsumerManager.class)
-@Reference(referenceInterface=JobConsumer.class,
-           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-           policy=ReferencePolicy.DYNAMIC)
+@References({
+    @Reference(referenceInterface=JobConsumer.class,
+            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC),
+    @Reference(referenceInterface=JobExecutor.class,
+            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
+            policy=ReferencePolicy.DYNAMIC)
+})
 @Property(name="org.apache.sling.installer.configuration.persist", boolValue=false, propertyPrivate=true)
 public class JobConsumerManager {
 
@@ -154,22 +166,22 @@ public class JobConsumerManager {
     }
 
     /**
-     * Get the consumer for the topic.
+     * Get the executor for the topic.
      * @param topic The job topic
      * @return A consumer or <code>null</code>
      */
-    public JobConsumer getConsumer(final String topic) {
+    public JobExecutor getExecutor(final String topic) {
         synchronized ( this.topicToConsumerMap ) {
             final List<ConsumerInfo> consumers = this.topicToConsumerMap.get(topic);
             if ( consumers != null ) {
-                return consumers.get(0).getConsumer(this.bundleContext);
+                return consumers.get(0).getExecutor(this.bundleContext);
             }
             final int pos = topic.lastIndexOf('/');
             if ( pos > 0 ) {
                 final String category = topic.substring(0, pos + 1).concat("*");
                 final List<ConsumerInfo> categoryConsumers = this.topicToConsumerMap.get(category);
                 if ( categoryConsumers != null ) {
-                    return categoryConsumers.get(0).getConsumer(this.bundleContext);
+                    return categoryConsumers.get(0).getExecutor(this.bundleContext);
                 }
             }
         }
@@ -195,9 +207,42 @@ public class JobConsumerManager {
      * @param serviceReference The service reference to the consumer.
      */
     protected void bindJobConsumer(final ServiceReference serviceReference) {
+        this.bindService(serviceReference, true);
+    }
+
+    /**
+     * Unbind a consumer
+     * @param serviceReference The service reference to the consumer.
+     */
+    protected void unbindJobConsumer(final ServiceReference serviceReference) {
+        this.unbindService(serviceReference, true);
+    }
+
+    /**
+     * Bind a new executor
+     * @param serviceReference The service reference to the executor.
+     */
+    protected void bindJobExecutor(final ServiceReference serviceReference) {
+        this.bindService(serviceReference, false);
+    }
+
+    /**
+     * Unbind a executor
+     * @param serviceReference The service reference to the executor.
+     */
+    protected void unbindJobExecutor(final ServiceReference serviceReference) {
+        this.unbindService(serviceReference, false);
+    }
+
+    /**
+     * Bind a consumer or executor
+     * @param serviceReference The service reference to the consumer or executor.
+     * @param isConsumer Indicating whether this is a JobConsumer or JobExecutor
+     */
+    private void bindService(final ServiceReference serviceReference, final boolean isConsumer) {
         final String[] topics = PropertiesUtil.toStringArray(serviceReference.getProperty(JobConsumer.PROPERTY_TOPICS));
         if ( topics != null && topics.length > 0 ) {
-            final ConsumerInfo info = new ConsumerInfo(serviceReference);
+            final ConsumerInfo info = new ConsumerInfo(serviceReference, isConsumer);
             boolean changed = false;
             synchronized ( this.topicToConsumerMap ) {
                 for(final String t : topics) {
@@ -228,13 +273,14 @@ public class JobConsumerManager {
     }
 
     /**
-     * Unbind a consumer
-     * @param serviceReference The service reference to the consumer.
+     * Unbind a consumer or executor
+     * @param serviceReference The service reference to the consumer or executor.
+     * @param isConsumer Indicating whether this is a JobConsumer or JobExecutor
      */
-    protected void unbindJobConsumer(final ServiceReference serviceReference) {
+    private void unbindService(final ServiceReference serviceReference, final boolean isConsumer) {
         final String[] topics = PropertiesUtil.toStringArray(serviceReference.getProperty(JobConsumer.PROPERTY_TOPICS));
         if ( topics != null && topics.length > 0 ) {
-            final ConsumerInfo info = new ConsumerInfo(serviceReference);
+            final ConsumerInfo info = new ConsumerInfo(serviceReference, isConsumer);
             boolean changed = false;
             synchronized ( this.topicToConsumerMap ) {
                 for(final String t : topics) {
@@ -311,12 +357,14 @@ public class JobConsumerManager {
     private final static class ConsumerInfo implements Comparable<ConsumerInfo> {
 
         public final ServiceReference serviceReference;
-        private JobConsumer consumer;
+        private final boolean isConsumer;
+        private JobExecutor executor;
         public final int ranking;
         public final long serviceId;
 
-        public ConsumerInfo(final ServiceReference serviceReference) {
+        public ConsumerInfo(final ServiceReference serviceReference, final boolean isConsumer) {
             this.serviceReference = serviceReference;
+            this.isConsumer = isConsumer;
             final Object sr = serviceReference.getProperty(Constants.SERVICE_RANKING);
             if ( sr == null || !(sr instanceof Integer)) {
                 this.ranking = 0;
@@ -350,11 +398,70 @@ public class JobConsumerManager {
             return serviceReference.hashCode();
         }
 
-        public JobConsumer getConsumer(final BundleContext bundleContext) {
-            if ( consumer == null ) {
-                consumer = (JobConsumer) bundleContext.getService(this.serviceReference);
+        public JobExecutor getExecutor(final BundleContext bundleContext) {
+            if ( executor == null ) {
+                if ( this.isConsumer ) {
+                    executor = new JobConsumerWrapper((JobConsumer) bundleContext.getService(this.serviceReference));
+                } else {
+                    executor = (JobExecutor) bundleContext.getService(this.serviceReference);
+                }
             }
-            return consumer;
+            return executor;
+        }
+    }
+
+    private final static class JobConsumerWrapper implements JobExecutor {
+
+        private final JobConsumer consumer;
+
+        public JobConsumerWrapper(final JobConsumer consumer) {
+            this.consumer = consumer;
+        }
+
+        @Override
+        public JobStatus process(final Job job, final JobExecutionContext context) {
+            final JobConsumer.AsyncHandler asyncHandler =
+                    new JobConsumer.AsyncHandler() {
+
+                        final Object asyncLock = new Object();
+                        final AtomicBoolean asyncDone = new AtomicBoolean(false);
+
+                        private void check(final JobStatus result) {
+                            synchronized ( asyncLock ) {
+                                if ( !asyncDone.get() ) {
+                                    asyncDone.set(true);
+                                    context.asyncProcessingFinished(result);
+                                } else {
+                                    throw new IllegalStateException("Job is already marked as processed");
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void ok() {
+                            this.check(JobStatus.OK);
+                        }
+
+                        @Override
+                        public void failed() {
+                            this.check(JobStatus.FAILED);
+                        }
+
+                        @Override
+                        public void cancel() {
+                            this.check(JobStatus.CANCEL);
+                        }
+                    };
+            ((JobImpl)job).setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
+            final JobConsumer.JobResult result = this.consumer.process(job);
+            if ( result == JobResult.ASYNC ) {
+                return JobStatus.ASYNC;
+            } else if ( result == JobResult.FAILED) {
+                return JobStatus.FAILED;
+            } else if ( result == JobResult.OK) {
+                return JobStatus.OK;
+            }
+            return JobStatus.CANCEL;
         }
     }
 }

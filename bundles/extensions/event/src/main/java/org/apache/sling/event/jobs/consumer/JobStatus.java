@@ -29,7 +29,15 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public final class JobStatus {
 
-    enum JobState {
+    public static final JobStatus OK = new JobStatus(JobState.OK, null);
+
+    public static final JobStatus FAILED = new JobStatus(JobState.FAILED, null);
+
+    public static final JobStatus CANCEL = new JobStatus(JobState.CANCEL, null);
+
+    public static final JobStatus ASYNC = new JobStatus(JobState.ASYNC, null);
+
+    public enum JobState {
         OK,      // processing finished
         FAILED,  // processing failed, can be retried
         CANCEL,  // processing failed permanently
@@ -40,15 +48,16 @@ public final class JobStatus {
 
     private final String message;
 
-    private Long retryDelay;
-
-    public JobStatus(final JobState result) {
-        this(result, null);
-    }
+    private final Long retryDelay;
 
     public JobStatus(final JobState result, final String message) {
+        this(result, message, null);
+    }
+
+    public JobStatus(final JobState result, final String message, final Long retryDelayInMs) {
         this.state = result;
         this.message = message;
+        this.retryDelay = retryDelayInMs;
     }
 
     public JobState getState() {
@@ -66,7 +75,9 @@ public final class JobStatus {
         return this.retryDelay;
     }
 
-    public void setRetryDelayInMs(final Long value) {
-        this.retryDelay = value;
+    @Override
+    public String toString() {
+        return "JobStatus [state=" + state + ", message=" + message
+                + ", retryDelay=" + retryDelay + "]";
     }
 }

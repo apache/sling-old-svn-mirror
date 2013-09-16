@@ -77,7 +77,7 @@ import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -279,7 +279,7 @@ public class JobManagerImpl
      */
     void process(final JobImpl job) {
         // check if we still are able to process this job
-        final JobConsumer consumer = this.jobConsumerManager.getConsumer(job.getTopic());
+        final JobExecutor consumer = this.jobConsumerManager.getExecutor(job.getTopic());
         boolean reassign = false;
         String reassignTargetId = null;
         if ( consumer == null && (!job.isBridgedEvent() || !this.jobConsumerManager.supportsBridgedEvents())) {

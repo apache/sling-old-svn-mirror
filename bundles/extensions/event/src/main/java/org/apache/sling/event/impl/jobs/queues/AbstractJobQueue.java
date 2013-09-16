@@ -43,8 +43,9 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobStatus;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 import org.slf4j.Logger;
@@ -296,9 +297,9 @@ public abstract class AbstractJobQueue
         return ack != null;
     }
 
-    private boolean handleReschedule(final JobHandler jobEvent, final JobConsumer.JobResult result) {
+    private boolean handleReschedule(final JobHandler jobEvent, final JobStatus result) {
         boolean reschedule = false;
-        switch ( result ) {
+        switch ( result.getState() ) {
             case OK : // job is finished
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Finished job {}", Utility.toString(jobEvent.getJob()));
@@ -351,11 +352,11 @@ public abstract class AbstractJobQueue
     @Override
     public boolean finishedJob(final Event job, final boolean shouldReschedule) {
         final String location = (String)job.getProperty(JobUtil.JOB_ID);
-        return this.finishedJob(location, shouldReschedule ? JobResult.FAILED : JobResult.OK, false);
+        return this.finishedJob(location, shouldReschedule ? JobStatus.FAILED : JobStatus.OK, false);
     }
 
     private boolean finishedJob(final String jobId,
-                                final JobConsumer.JobResult result,
+                                final JobStatus result,
                                 final boolean isAsync) {
         if ( this.logger.isDebugEnabled() ) {
             this.logger.debug("Received finish for job {}, result={}", jobId, result);
@@ -487,7 +488,7 @@ public abstract class AbstractJobQueue
      */
     protected boolean executeJob(final JobHandler handler) {
         final JobImpl job = handler.getJob();
-        final JobConsumer consumer = this.jobConsumerManager.getConsumer(job.getTopic());
+        final JobExecutor consumer = this.jobConsumerManager.getExecutor(job.getTopic());
 
         if ( (consumer != null || (job.isBridgedEvent() && this.jobConsumerManager.supportsBridgedEvents())) ) {
             if ( handler.start() ) {
@@ -528,57 +529,71 @@ public abstract class AbstractJobQueue
                                                     break;
                                     }
                                 }
-                                JobConsumer.JobResult result = JobConsumer.JobResult.CANCEL;
-                                final JobConsumer.AsyncHandler asyncHandler =
-                                        new JobConsumer.AsyncHandler() {
+                                JobStatus result = JobStatus.CANCEL;
+                                final AtomicBoolean isAsync = new AtomicBoolean(false);
 
-                                            final Object asyncLock = new Object();
-                                            final AtomicBoolean asyncDone = new AtomicBoolean(false);
+                                try {
+                                    synchronized ( job ) {
+                                        result = consumer.process(job, new JobExecutionContext() {
 
-                                            private void check(final JobConsumer.JobResult result) {
-                                                synchronized ( asyncLock ) {
-                                                    if ( !asyncDone.get() ) {
-                                                        asyncDone.set(true);
-                                                        finishedJob(job.getId(), result, true);
+                                            @Override
+                                            public void update(long eta) {
+                                                // TODO Auto-generated method stub
+
+                                            }
+
+                                            @Override
+                                            public void startProgress(long eta) {
+                                                // TODO Auto-generated method stub
+
+                                            }
+
+                                            @Override
+                                            public void startProgress(int steps) {
+                                                // TODO Auto-generated method stub
+
+                                            }
+
+                                            @Override
+                                            public void setProgress(int step) {
+                                                // TODO Auto-generated method stub
+
+                                            }
+
+                                            @Override
+                                            public void log(String message, Object... args) {
+                                                // TODO Auto-generated method stub
+
+                                            }
+
+                                            @Override
+                                            public void asyncProcessingFinished(final JobStatus status) {
+                                                synchronized ( job ) {
+                                                    if ( isAsync.compareAndSet(true, false) ) {
+                                                        finishedJob(job.getId(), status, true);
                                                         asyncCounter.decrementAndGet();
                                                     } else {
-                                                        throw new IllegalStateException("Job is already marked as processed");
+                                                        throw new IllegalStateException("Job is not processed async " + job.getId());
                                                     }
                                                 }
                                             }
-
-                                            @Override
-                                            public void ok() {
-                                                this.check(JobConsumer.JobResult.OK);
-                                            }
-
-                                            @Override
-                                            public void failed() {
-                                                this.check(JobConsumer.JobResult.FAILED);
-                                            }
-
-                                            @Override
-                                            public void cancel() {
-                                                this.check(JobConsumer.JobResult.CANCEL);
-                                            }
-                                        };
-                                job.setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
-                                try {
-                                    result = consumer.process(job);
+                                        });
+                                        if ( result.getState() == JobStatus.JobState.ASYNC ) {
+                                            asyncCounter.incrementAndGet();
+                                            notifyFinished(null);
+                                            isAsync.set(true);
+                                        }
+                                    }
                                 } catch (final Throwable t) { //NOSONAR
                                     logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
                                     // we don't reschedule if an exception occurs
-                                    result = JobConsumer.JobResult.CANCEL;
+                                    result = JobStatus.CANCEL;
                                 } finally {
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
-                                    if ( result != JobConsumer.JobResult.ASYNC ) {
+                                    if ( result.getState() != JobStatus.JobState.ASYNC ) {
                                         finishedJob(job.getId(), result, false);
                                     }
-                                }
-                                if ( result == JobConsumer.JobResult.ASYNC ) {
-                                    asyncCounter.incrementAndGet();
-                                    notifyFinished(null);
                                 }
                             }
 
