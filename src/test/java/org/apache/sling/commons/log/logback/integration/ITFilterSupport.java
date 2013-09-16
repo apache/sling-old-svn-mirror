@@ -18,15 +18,16 @@
  */
 package org.apache.sling.commons.log.logback.integration;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.turbo.MatchingFilter;
-import ch.qos.logback.classic.turbo.TurboFilter;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.AppenderBase;
-import ch.qos.logback.core.filter.Filter;
-import ch.qos.logback.core.spi.FilterReply;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -36,15 +37,15 @@ import org.osgi.framework.ServiceRegistration;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotNull;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.turbo.MatchingFilter;
+import ch.qos.logback.classic.turbo.TurboFilter;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AppenderBase;
+import ch.qos.logback.core.filter.Filter;
+import ch.qos.logback.core.spi.FilterReply;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -142,9 +143,13 @@ public class ITFilterSupport extends LogTestBase{
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         String[] loggers = {
-                prefix + ".foo.bar:DEBUG",
-                prefix + ".foo.baz:INFO",
+                prefix + ".foo.bar",
+                prefix + ".foo.baz",
         };
+        ch.qos.logback.classic.Logger bar = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(loggers[0]);
+        bar.setLevel(Level.DEBUG);
+        ch.qos.logback.classic.Logger baz = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(loggers[1]);
+        baz.setLevel(Level.INFO);
 
         props.put("loggers", loggers);
         ServiceRegistration sr = bundleContext.registerService(Appender.class.getName(), ta, props);

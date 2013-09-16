@@ -19,6 +19,8 @@
 
 package org.apache.sling.commons.log.logback.integration;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -26,11 +28,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.AppenderBase;
-
-import org.apache.sling.commons.log.logback.integration.LogTestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.junit.PaxExam;
@@ -38,12 +35,12 @@ import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AppenderBase;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -64,7 +61,7 @@ public class ITAppenderServices extends LogTestBase {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         String[] loggers = {
-            "foo.bar:DEBUG", "foo.baz:INFO",
+            "foo.bar", "foo.baz",
         };
 
         props.put("loggers", loggers);
@@ -72,11 +69,10 @@ public class ITAppenderServices extends LogTestBase {
 
         delay();
 
-        Logger bar = LoggerFactory.getLogger("foo.bar");
-        assertTrue(bar.isDebugEnabled());
-
-        Logger baz = LoggerFactory.getLogger("foo.baz");
-        assertTrue(baz.isInfoEnabled());
+        ch.qos.logback.classic.Logger bar = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger("foo.bar");
+        bar.setLevel(Level.DEBUG);
+        ch.qos.logback.classic.Logger baz = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger("foo.baz");
+        baz.setLevel(Level.INFO);
 
         bar.debug("Test message");
         baz.debug("Test message"); // Would not be logged
@@ -89,7 +85,6 @@ public class ITAppenderServices extends LogTestBase {
         sr.unregister();
         delay();
 
-        assertFalse(bar.isDebugEnabled());
     }
 
     private static class TestAppender extends AppenderBase<ILoggingEvent> {

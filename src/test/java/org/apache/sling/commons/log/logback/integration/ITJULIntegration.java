@@ -19,17 +19,19 @@
 
 package org.apache.sling.commons.log.logback.integration;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.ops4j.pax.exam.CoreOptions.composite;
+import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.List;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.AppenderBase;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.sling.commons.log.logback.integration.LogTestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -39,11 +41,10 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.CoreOptions.composite;
-import static org.ops4j.pax.exam.CoreOptions.frameworkProperty;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.AppenderBase;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -79,8 +80,10 @@ public class ITJULIntegration extends LogTestBase {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         String[] loggers = {
-            "foo.jul.1:INFO",
+            "foo.jul.1",
         };
+        ch.qos.logback.classic.Logger bar = (ch.qos.logback.classic.Logger)LoggerFactory.getLogger(loggers[0]);
+        bar.setLevel(Level.INFO);
 
         props.put("loggers", loggers);
         ServiceRegistration sr = bundleContext.registerService(Appender.class.getName(), ta, props);
