@@ -25,12 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -38,6 +32,11 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 
 public class AppenderTracker extends ServiceTracker implements LogbackResetListener {
     private static final String PROP_LOGGER = "loggers";
@@ -85,38 +84,22 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
         return appenders.values();
     }
 
-    private void detachAppender(AppenderInfo ai) {
+    private void detachAppender(final AppenderInfo ai) {
         if (ai != null) {
-            for (LoggerInfo li : ai.loggers) {
-                Logger logger = loggerContext.getLogger(li.name);
-
-                // Reset values back to old ones if they match the
-                // ones we modified to
-                if (li.level.equals(logger.getLevel())) {
-                    logger.setLevel(li.oldLevel);
-                }
-
-                if (logger.isAdditive() == li.additive) {
-                    logger.setAdditive(li.oldAdditive);
-                }
+            for (final String li : ai.loggers) {
+                final Logger logger = loggerContext.getLogger(li);
 
                 logger.detachAppender(ai.appender);
             }
         }
     }
 
-    private void attachAppender(AppenderInfo ai) {
+    private void attachAppender(final AppenderInfo ai) {
         if (ai == null) {
             return;
         }
-        for (LoggerInfo li : ai.loggers) {
-            Logger logger = loggerContext.getLogger(li.name);
-
-            li.oldLevel = logger.getLevel();
-            li.oldAdditive = logger.isAdditive();
-
-            logger.setLevel(li.level);
-            logger.setAdditive(li.additive);
+        for (final String li : ai.loggers) {
+            final Logger logger = loggerContext.getLogger(li);
 
             logger.addAppender(ai.appender);
         }
@@ -146,7 +129,7 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
     }
 
     static class AppenderInfo {
-        final List<LoggerInfo> loggers;
+        final List<String> loggers;
 
         final Appender<ILoggingEvent> appender;
 
@@ -156,51 +139,12 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
             this.appender = appender;
             this.serviceReference = ref;
 
-            List<LoggerInfo> loggers = new ArrayList<LoggerInfo>();
+            List<String> loggers = new ArrayList<String>();
             for (String logger : Util.toList(ref.getProperty(PROP_LOGGER))) {
-                loggers.add(new LoggerInfo(logger));
+                loggers.add(logger);
             }
 
             this.loggers = loggers;
         }
     }
-
-    private static class LoggerInfo {
-        final Level level;
-
-        final String name;
-
-        final boolean additive;
-
-        Level oldLevel;
-
-        boolean oldAdditive;
-
-        public LoggerInfo(String loggerSpec) {
-            String[] parts = loggerSpec.split(":");
-
-            Level level = Level.INFO;
-            if (parts.length >= 2) {
-                level = Level.valueOf(safeTrim(parts[1]));
-            }
-
-            boolean additive = false;
-            if (parts.length >= 3) {
-                additive = Boolean.valueOf(parts[2]);
-            }
-
-            this.level = level;
-            this.name = safeTrim(parts[0]);
-            this.additive = additive;
-        }
-
-    }
-
-    private static String safeTrim(String s) {
-        if (s != null) {
-            return s.trim();
-        }
-        return null;
-    }
-
 }
