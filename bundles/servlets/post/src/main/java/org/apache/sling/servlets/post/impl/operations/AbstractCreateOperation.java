@@ -46,6 +46,7 @@ import org.apache.sling.servlets.post.NodeNameGenerator;
 import org.apache.sling.servlets.post.PostResponse;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.servlets.post.VersioningConfiguration;
+import org.apache.sling.servlets.post.impl.helper.Chunk;
 import org.apache.sling.servlets.post.impl.helper.DefaultNodeNameGenerator;
 import org.apache.sling.servlets.post.impl.helper.RequestProperty;
 
@@ -372,7 +373,12 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                         reqProperties, propPath,
                         SlingPostConstants.SUFFIX_OFFSET);
                 if (e.getValue().length == 1) {
-                    prop.setOffsetValue(Long.parseLong(e.getValue()[0].toString()));
+                    Chunk chunk = prop.getChunk();
+                    if(chunk == null){
+                        chunk = new Chunk();
+                    }
+                    chunk.setOffsetValue(Long.parseLong(e.getValue()[0].toString()));
+                    prop.setChunk(chunk);
                 }
                 continue;
             }
@@ -382,7 +388,12 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                         reqProperties, propPath,
                         SlingPostConstants.SUFFIX_COMPLETED);
                 if (e.getValue().length == 1) {
-                    prop.setCompleted(Boolean.parseBoolean((e.getValue()[0].toString())));
+                    Chunk chunk = prop.getChunk();
+                    if(chunk == null){
+                        chunk = new Chunk();
+                    }
+                    chunk.setCompleted(Boolean.parseBoolean((e.getValue()[0].toString())));
+                    prop.setChunk(chunk);
                 }
                 continue;
             }
@@ -392,7 +403,12 @@ abstract class AbstractCreateOperation extends AbstractPostOperation {
                         reqProperties, propPath,
                         SlingPostConstants.SUFFIX_LENGTH);
                 if (e.getValue().length == 1) {
-                    prop.setLength(Long.parseLong(e.getValue()[0].toString()));
+                    Chunk chunk = prop.getChunk();
+                    if(chunk == null){
+                        chunk = new Chunk();
+                    }
+                    chunk.setLength(Long.parseLong(e.getValue()[0].toString()));
+                    prop.setChunk(chunk);
                 }
                 continue;
             }

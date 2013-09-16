@@ -65,13 +65,7 @@ public class RequestProperty {
 
     private boolean patch = false;
 
-    private long offset;
-
-    private long length;
-
-    private boolean completed;
-
-    private boolean chunkUpload;
+    private Chunk chunk;
 
     public RequestProperty(String path) {
         assert path.startsWith("/");
@@ -309,55 +303,17 @@ public class RequestProperty {
     }
 
     /**
-     * Return offset of the chunk.
-     */
-    public long getOffset() {
-        return offset;
-    }
-
-    /**
-     * Set offset value.
-     *
-     */
-    public void setOffsetValue(long offset) {
-        this.offset = offset;
-        this.chunkUpload = true;
-    }
-
-    /**
-     * Return length of the file parameter.
-     */
-    public long getLength() {
-        return length;
-    }
-
-    /**
-     * Set length of file parameter.
-     */
-    public void setLength(long length) {
-        this.length = length;
-    }
-
-    /**
-     * Return true if request contains last chunk as a result
-     * upload should be finished. It is useful in scenarios where
-     * file streaming where file size is not known in advance.
-     */
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    /**
-     * Set complete flag
-     */
-    public void setCompleted(boolean complete) {
-        this.completed = complete;
-    }
-
-    /**
      *  Return true if request is chunk upload.
      */
     public boolean isChunkUpload() {
-        return chunkUpload;
+        return chunk != null;
+    }
+
+    public Chunk getChunk() {
+        return chunk;
+    }
+
+    public void setChunk(Chunk chunk) {
+        this.chunk = chunk;
     }
 }
