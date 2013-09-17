@@ -29,7 +29,6 @@ import java.util.TreeSet;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
-import org.apache.sling.event.jobs.Job;
 import org.osgi.service.event.EventAdmin;
 
 /**
@@ -169,10 +168,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     protected JobHandler reschedule(final JobHandler handler) {
         // we just sleep for the delay time - if none, we continue and retry
         // this job again
-        long delay = this.configuration.getRetryDelayInMs();
-        if ( handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY) != null ) {
-            delay = handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY, Long.class);
-        }
+        final long delay = this.getRetryDelay(handler);
         if ( delay > 0 ) {
             synchronized ( this.sleepLock ) {
                 this.sleepLock.sleepingSince = System.currentTimeMillis();

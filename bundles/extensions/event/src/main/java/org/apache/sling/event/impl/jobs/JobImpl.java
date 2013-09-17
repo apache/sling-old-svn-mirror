@@ -42,6 +42,9 @@ public class JobImpl implements Job {
     /** Internal job property if this is an bridged event (event admin). */
     public static final String PROPERTY_BRIDGED_EVENT = "slingevent:eventadmin";
 
+    /** Internal job property containing optional delay override. */
+    public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
+
     private final ValueMap properties;
 
     private final String topic;
@@ -228,6 +231,13 @@ public class JobImpl implements Job {
         } else {
             this.properties.put(name, value);
         }
+    }
+
+    /**
+     * Prepare a new job execution
+     */
+    public void prepare() {
+        this.properties.remove(JobImpl.PROPERTY_DELAY_OVERRIDE);
     }
 
     @Override
