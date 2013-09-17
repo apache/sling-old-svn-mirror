@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -39,20 +40,44 @@ import org.apache.sling.ide.transport.ResourceProxy;
 
 public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
 
-    private final Map<String, Object> serializationData;
+    private ResourceProxy resource;
 
-    public UpdateNodePropertiesCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
+	public UpdateNodePropertiesCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
             ResourceProxy resource) {
 
         super(jcrRepo, credentials, resource.getPath());
-
-        this.serializationData = resource.getProperties();
+        
+        this.resource = resource;
     }
 
     @Override
     protected Void execute0(Session session) throws RepositoryException, IOException {
 
-        Node node = session.getNode(getPath());
+    	update(resource, session);
+        return null;
+    }
+    
+    private void update(ResourceProxy resource, Session session) throws RepositoryException, IOException {
+        String resPath = resource.getPath();
+		updatePath(resPath, resource.getProperties(), session);
+        Iterator<ResourceProxy> it = resource.getChildren().iterator();
+        while(it.hasNext()) {
+        	update(it.next(), session);
+        }
+	}
+
+	private void updatePath(final String path, final Map<String, Object> serializationData, final Session session) throws RepositoryException, IOException {
+		if (!session.nodeExists(path)) {
+			// then create the node
+			Object primaryType = serializationData.get("jcr:primaryType");
+			String relPath = path.startsWith("/") ? path.substring(1) : path;
+			if (primaryType!=null) {
+				session.getRootNode().addNode(relPath, String.valueOf(primaryType));
+			} else {
+				session.getRootNode().addNode(relPath);
+			}
+		}
+        Node node = session.getNode(path);
         
         Set<String> propertiesToRemove = new HashSet<String>();
         PropertyIterator properties = node.getProperties();
@@ -167,8 +192,6 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
             }
             prop.remove();
         }
-
-        return null;
 
     }
 
