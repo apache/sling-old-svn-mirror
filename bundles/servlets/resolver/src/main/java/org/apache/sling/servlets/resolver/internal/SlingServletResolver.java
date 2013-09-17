@@ -1155,6 +1155,7 @@ public class SlingServletResolver
             props.put("felix.webconsole.label", "servletresolver");
             props.put("felix.webconsole.title", "Sling Servlet Resolver");
             props.put("felix.webconsole.css", "/servletresolver/res/ui/styles.css");
+            props.put("felix.webconsole.category", "Sling");
 
             service = context.registerService(
                     new String[] { "javax.servlet.Servlet" }, this, props);
@@ -1249,12 +1250,12 @@ public class SlingServletResolver
                         servlets = Collections.singleton(resource);
                     } else {
                         final ResourceCollector locationUtil = ResourceCollector.create(
-                                resource, 
-                                defaultWorkspaceName, 
-                                requestPathInfo.getExtension(), 
-                                executionPaths, 
-                                defaultExtensions, 
-                                method, 
+                                resource,
+                                defaultWorkspaceName,
+                                requestPathInfo.getExtension(),
+                                executionPaths,
+                                defaultExtensions,
+                                method,
                                 requestPathInfo.getSelectors());
                         servlets = locationUtil.getServlets(resourceResolver);
                     }
