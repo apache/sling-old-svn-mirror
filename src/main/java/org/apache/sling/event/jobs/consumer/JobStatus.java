@@ -18,58 +18,79 @@
  */
 package org.apache.sling.event.jobs.consumer;
 
-import aQute.bnd.annotation.ProviderType;
-
-
-
 /**
+ * The status of a job after it has been processed by a {@link JobExecutor}.
  *
  * @since 1.1
  */
-@ProviderType
 public final class JobStatus {
 
+    /** Constant for the {@link JobState#OK} status. */
     public static final JobStatus OK = new JobStatus(JobState.OK, null);
 
+    /** Constant for the {@link JobState#FAILED} status. */
     public static final JobStatus FAILED = new JobStatus(JobState.FAILED, null);
 
+    /** Constant for the {@link JobState#CANCEL} status. */
     public static final JobStatus CANCEL = new JobStatus(JobState.CANCEL, null);
 
-    public static final JobStatus ASYNC = new JobStatus(JobState.ASYNC, null);
-
-    public enum JobState {
-        OK,      // processing finished
-        FAILED,  // processing failed, can be retried
-        CANCEL,  // processing failed permanently
-        ASYNC    // processing will be done async
-    }
-
+    /** The state of the job after processing. */
     private final JobState state;
 
+    /** Optional message for this processing of the job. */
     private final String message;
 
+    /** Optional override for the retry delay. */
     private final Long retryDelay;
 
-    public JobStatus(final JobState result, final String message) {
-        this(result, message, null);
+    /**
+     * Create a new job status with a state and a message.
+     * @param state   The job state
+     * @param message The message
+     * @throws IllegalArgumentException If state is null
+     */
+    public JobStatus(final JobState state, final String message) {
+        this(state, message, null);
     }
 
-    public JobStatus(final JobState result, final String message, final Long retryDelayInMs) {
-        this.state = result;
+    /**
+     * Create a new job status with a state, a message and an override for the retry delay
+     * @param state   The job state
+     * @param message The message
+     * @param retryDelayInMs The new retry delay in ms.
+     * @throws IllegalArgumentException If state is null or if retryDelayInMs is negative.
+     */
+    public JobStatus(final JobState state, final String message, final Long retryDelayInMs) {
+        if ( state == null ) {
+            throw new IllegalArgumentException("State must not be null.");
+        }
+        if ( retryDelayInMs != null && retryDelayInMs < 0 ) {
+            throw new IllegalArgumentException("Retry delay must not be negative.");
+        }
+        this.state = state;
         this.message = message;
         this.retryDelay = retryDelayInMs;
     }
 
+    /**
+     * Return the state of the job
+     * @return The job state.
+     */
     public JobState getState() {
         return this.state;
     }
 
+    /**
+     * Return the optional message.
+     * @return The message or <code>null</code>
+     */
     public String getMessage() {
         return this.message;
     }
 
     /**
      * Return the retry delay in ms
+     * @return The new retry delay (>= 0) or <code>null</code>
      */
     public Long getRetryDelayInMs() {
         return this.retryDelay;
