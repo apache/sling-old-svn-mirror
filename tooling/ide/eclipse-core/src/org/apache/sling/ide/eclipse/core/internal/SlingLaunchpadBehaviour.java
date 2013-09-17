@@ -21,9 +21,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
@@ -173,12 +175,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return;
         }
 
-        if (kind == IServer.PUBLISH_AUTO && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
-            System.out
-                    .println("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
-            return;
-        }
-
         try {
             if (ProjectHelper.isBundleProject(module[0].getProject())) {
                 String serverMode = getServer().getMode();
@@ -189,6 +185,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             		publishBundleModule(module, monitor);
             	}
             } else if (ProjectHelper.isContentProject(module[0].getProject())) {
+                if (kind == IServer.PUBLISH_AUTO && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
+                    System.out
+                            .println("Ignoring request to publish the module when no resources have changed; most likely another module has changed");
+                    return;
+                }
                 try {
                     publishContentModule(kind, deltaKind, module, monitor);
                 } catch (SerializationException e) {
@@ -279,8 +280,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 		// otherwise fallback to old behaviour
 		
 		Repository repository = ServerUtil.getRepository(getServer(), monitor);
-
-        IModuleResource[] moduleResources = getResources(module);
         
         // TODO it would be more efficient to have a module -> filter mapping
         // it would be simpler to implement this in SlingContentModuleAdapter, but
@@ -289,8 +288,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         switch (deltaKind) {
             case ServerBehaviourDelegate.CHANGED:
-                IModuleResourceDelta[] publishedResourceDelta = getPublishedResourceDelta(module);
-                for (IModuleResourceDelta resourceDelta : publishedResourceDelta) {
+                List<IModuleResourceDelta> publishedResourceDelta = 
+                	Arrays.asList(getPublishedResourceDelta(module));
+                
+                List<IModuleResourceDelta> adjustedPublishedResourceDelta = filterContentXmlParents(publishedResourceDelta);
+
+                for (IModuleResourceDelta resourceDelta : adjustedPublishedResourceDelta) {
 
                     StringBuilder deltaTrace = new StringBuilder();
                     deltaTrace.append("- processing delta kind ");
@@ -331,12 +334,15 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
             case ServerBehaviourDelegate.ADDED:
             case ServerBehaviourDelegate.NO_CHANGE: // TODO is this correct ?
-                for (IModuleResource resource : moduleResources) {
+                IModuleResource[] moduleResources1 = getResources(module);
+                List<IModuleResource> adjustedModuleResourcesList = filterContentXmlParents(moduleResources1);
+                for (IModuleResource resource : adjustedModuleResourcesList) {
                     execute(addFileCommand(repository, resource));
                 }
                 break;
             case ServerBehaviourDelegate.REMOVED:
-                for (IModuleResource resource : moduleResources) {
+                IModuleResource[] moduleResources2 = getResources(module);
+                for (IModuleResource resource : moduleResources2) {
                     execute(removeFileCommand(repository, resource));
                 }
                 break;
@@ -347,6 +353,63 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         super.publishModule(kind, deltaKind, module, monitor);
         setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
+	}
+
+	private List<IModuleResourceDelta> filterContentXmlParents(
+			List<IModuleResourceDelta> publishedResourceDelta) {
+		List<IModuleResourceDelta> adjustedPublishedResourceDelta = new LinkedList<IModuleResourceDelta>();
+		Map<String,IModuleResourceDelta> map = new HashMap<String, IModuleResourceDelta>();
+		for (IModuleResourceDelta resourceDelta : publishedResourceDelta) {
+			map.put(resourceDelta.getModuleRelativePath().toString(), resourceDelta);
+		}
+		for (Iterator<IModuleResourceDelta> it = publishedResourceDelta.iterator(); it
+				.hasNext();) {
+			IModuleResourceDelta iModuleResourceDelta = it.next();
+			String resPath = iModuleResourceDelta.getModuleRelativePath().toString();
+			if (resPath.contains(".dir")) {
+				// filter those for the moment
+				continue;
+			}
+			IModuleResourceDelta originalEntry = map.get(resPath);
+			IModuleResourceDelta detailedEntry = map.remove(
+					resPath+"/.content.xml");
+			if (detailedEntry!=null) {
+				adjustedPublishedResourceDelta.add(detailedEntry);
+			} else if (originalEntry!=null) {
+				adjustedPublishedResourceDelta.add(originalEntry);
+			}
+		}
+		return adjustedPublishedResourceDelta;
+	}
+
+	private List<IModuleResource> filterContentXmlParents(
+			IModuleResource[] moduleResources) {
+		List<IModuleResource> moduleResourcesList = Arrays.asList(moduleResources);
+        List<IModuleResource> adjustedModuleResourcesList = new LinkedList<IModuleResource>();
+        Map<String,IModuleResource> map1 = new HashMap<String, IModuleResource>();
+        for (Iterator<IModuleResource> it = moduleResourcesList.iterator(); it
+				.hasNext();) {
+        	IModuleResource r = it.next();
+        	map1.put(r.getModuleRelativePath().toString(), r);
+        }
+        for (Iterator<IModuleResource> it = moduleResourcesList.iterator(); it
+				.hasNext();) {
+			IModuleResource iModuleResource = it.next();
+			String resPath = iModuleResource.getModuleRelativePath().toString();
+			if (resPath.contains(".dir")) {
+				continue;
+			}
+			IModuleResource originalEntry = map1.get(resPath);
+			IModuleResource detailedEntry = map1.remove(resPath+"/.content.xml");
+        	if (detailedEntry!=null) {
+        		adjustedModuleResourcesList.add(detailedEntry);
+        	} else if (originalEntry!=null){
+        		adjustedModuleResourcesList.add(originalEntry);
+        	} else {
+        		// entry was already added at filter time
+        	}
+		}
+		return adjustedModuleResourcesList;
 	}
 
 	private boolean runLaunchesIfExist(int kind, int deltaKind, IModule[] module,
