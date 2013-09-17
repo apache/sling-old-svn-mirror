@@ -455,7 +455,7 @@ public class JobConsumerManager {
             ((JobImpl)job).setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
             final JobConsumer.JobResult result = this.consumer.process(job);
             if ( result == JobResult.ASYNC ) {
-                return JobStatus.ASYNC;
+                return null;
             } else if ( result == JobResult.FAILED) {
                 return JobStatus.FAILED;
             } else if ( result == JobResult.OK) {

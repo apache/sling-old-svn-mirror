@@ -19,6 +19,7 @@
 package org.apache.sling.event.jobs.consumer;
 
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
 
 import aQute.bnd.annotation.ConsumerType;
 
@@ -26,6 +27,9 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * A job consumer consumes a job.
+ *
+ * If the job consumer needs more features like providing progress information or adding
+ * more information of the processing, {@link JobExecutor} should be implemented instead.
  *
  * A job consumer registers itself with the {@link #PROPERTY_TOPICS} service registration
  * property. The value of this property defines which topics a consumer is able to process.
@@ -35,7 +39,7 @@ import aQute.bnd.annotation.ConsumerType;
  * "org/apache/sling/jobs/a" and "org/apache/sling/jobs/b" but neither
  * "org/apache/sling/jobs" nor "org/apache/sling/jobs/subcategory/a"
  *
- * If there is more than one job consumer registered for a job topic, the selection is as
+ * If there is more than one job consumer or executor registered for a job topic, the selection is as
  * follows:
  * - If there is a single consumer registering for the exact topic, this one is used
  * - If there is more than a single consumer registering for the exact topic, the one

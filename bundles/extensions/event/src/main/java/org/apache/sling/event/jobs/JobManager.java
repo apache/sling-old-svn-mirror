@@ -81,7 +81,7 @@ public interface JobManager {
      * allowed characters are letters, numbers and the underscore.
      *
      * @param topic The required job topic.
-     * @param properties Optional job properties
+     * @param properties Optional job properties. The properties must be serializable.
      * @return The new job - or <code>null</code> if the job could not be created.
      * @since 1.2
      */
@@ -102,7 +102,7 @@ public interface JobManager {
      *
      * @param topic The required job topic.
      * @param name  Optional unique job name
-     * @param properties Optional job properties
+     * @param properties Optional job properties. The properties must be serializable.
      * @return The new job - or <code>null</code> if the job could not be created.
      * @since 1.2
      */

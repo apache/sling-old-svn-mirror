@@ -339,8 +339,6 @@ public abstract class AbstractJobQueue
                 this.cancelledJob();
                 Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.getJob(), null);
                 break;
-            case ASYNC: // nothing to do here
-                break;
         }
 
         return reschedule;
@@ -578,7 +576,7 @@ public abstract class AbstractJobQueue
                                                 }
                                             }
                                         });
-                                        if ( result.getState() == JobStatus.JobState.ASYNC ) {
+                                        if ( result == null ) { // ASYNC processing
                                             asyncCounter.incrementAndGet();
                                             notifyFinished(null);
                                             isAsync.set(true);
@@ -591,7 +589,7 @@ public abstract class AbstractJobQueue
                                 } finally {
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
-                                    if ( result.getState() != JobStatus.JobState.ASYNC ) {
+                                    if ( result != null ) {
                                         finishedJob(job.getId(), result, false);
                                     }
                                 }

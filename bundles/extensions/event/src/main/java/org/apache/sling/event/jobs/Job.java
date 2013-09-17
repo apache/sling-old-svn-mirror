@@ -23,6 +23,8 @@ import java.util.Set;
 
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * A job
  *
@@ -43,6 +45,7 @@ import org.apache.sling.event.jobs.consumer.JobConsumer;
  *
  * @since 1.2
  */
+@ProviderType
 public interface Job {
 
     /**
