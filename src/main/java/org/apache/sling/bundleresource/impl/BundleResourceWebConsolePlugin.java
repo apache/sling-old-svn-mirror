@@ -179,6 +179,7 @@ class BundleResourceWebConsolePlugin extends HttpServlet {
         props.put(Constants.SERVICE_PID, getClass().getName());
         props.put("felix.webconsole.label", LABEL);
         props.put("felix.webconsole.title", "Bundle Resource Provider");
+        props.put("felix.webconsole.category", "Sling");
 
         serviceRegistration = context.registerService(
             Servlet.class.getName(), this, props);
