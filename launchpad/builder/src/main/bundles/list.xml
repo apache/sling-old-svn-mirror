@@ -425,7 +425,7 @@
         <bundle>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.metatype</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.8</version>
         </bundle>
         <bundle>
             <groupId>org.apache.tika</groupId>
