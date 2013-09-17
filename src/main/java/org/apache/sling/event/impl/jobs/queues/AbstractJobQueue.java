@@ -532,34 +532,35 @@ public abstract class AbstractJobQueue
 
                                 try {
                                     synchronized ( job ) {
+                                        job.prepare();
                                         result = consumer.process(job, new JobExecutionContext() {
 
                                             @Override
-                                            public void update(long eta) {
+                                            public void update(final long eta) {
                                                 // TODO Auto-generated method stub
 
                                             }
 
                                             @Override
-                                            public void startProgress(long eta) {
+                                            public void startProgress(final long eta) {
                                                 // TODO Auto-generated method stub
 
                                             }
 
                                             @Override
-                                            public void startProgress(int steps) {
+                                            public void startProgress(final int steps) {
                                                 // TODO Auto-generated method stub
 
                                             }
 
                                             @Override
-                                            public void setProgress(int step) {
+                                            public void setProgress(final int step) {
                                                 // TODO Auto-generated method stub
 
                                             }
 
                                             @Override
-                                            public void log(String message, Object... args) {
+                                            public void log(final String message, Object... args) {
                                                 // TODO Auto-generated method stub
 
                                             }
@@ -590,6 +591,9 @@ public abstract class AbstractJobQueue
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
                                     if ( result != null ) {
+                                        if ( result.getRetryDelayInMs() != null ) {
+                                            job.setProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, result.getRetryDelayInMs());
+                                        }
                                         finishedJob(job.getId(), result, false);
                                     }
                                 }
@@ -781,6 +785,16 @@ public abstract class AbstractJobQueue
     public Object getState(final String key) {
         // not supported for now
         return null;
+    }
+
+    protected long getRetryDelay(final JobHandler handler) {
+        long delay = this.configuration.getRetryDelayInMs();
+        if ( handler.getJob().getProperty(JobImpl.PROPERTY_DELAY_OVERRIDE) != null ) {
+            delay = handler.getJob().getProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, Long.class);
+        } else  if ( handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY) != null ) {
+            delay = handler.getJob().getProperty(Job.PROPERTY_JOB_RETRY_DELAY, Long.class);
+        }
+        return delay;
     }
 
     /**
