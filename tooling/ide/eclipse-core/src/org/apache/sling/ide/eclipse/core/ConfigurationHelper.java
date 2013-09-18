@@ -39,13 +39,13 @@ public class ConfigurationHelper {
 		ProjectUtil.setSyncDirectoryPath(aContentProject, jcr_root);
 		
 		// temp hack: install the launch file
-		IFolder dotLaunches = aContentProject.getFolder(".settings").getFolder(".launches");
-		dotLaunches.create(true, true, monitor);
-		IFile launchFile = dotLaunches.getFile("clean_package_content_package_install.launch");
-		String l = MavenLaunchHelper.createMavenLaunchConfigMemento(aContentProject.getLocation().toOSString(), 
-				"clean package content-package:install", null, false, null);
-		InputStream in = new ByteArrayInputStream(l.getBytes());
-		launchFile.create(in, true, monitor);
+//		IFolder dotLaunches = aContentProject.getFolder(".settings").getFolder(".launches");
+//		dotLaunches.create(true, true, monitor);
+//		IFile launchFile = dotLaunches.getFile("clean_package_content_package_install.launch");
+//		String l = MavenLaunchHelper.createMavenLaunchConfigMemento(aContentProject.getLocation().toOSString(), 
+//				"clean package content-package:install", null, false, null);
+//		InputStream in = new ByteArrayInputStream(l.getBytes());
+//		launchFile.create(in, true, monitor);
 	}
 
 	public static void convertToBundleProject(IProject aBundleProject)
