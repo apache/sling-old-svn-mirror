@@ -79,7 +79,7 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
                 try {
                     Repository repository = ServerUtil.getRepository(server, monitor);
-                    serializationManager.init(repository, ProjectUtil.getSyncDirectoryFullPath(project).toFile());
+                    serializationManager.init(repository, ProjectUtil.getSyncDirectoryFile(project));
 
                     new ImportRepositoryContentAction(repositoryPath, server, filterFile, projectRelativePath, project,
                             serializationManager).run(monitor);

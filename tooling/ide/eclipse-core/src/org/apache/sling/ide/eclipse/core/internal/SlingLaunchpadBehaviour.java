@@ -522,7 +522,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         IProject project = file.getProject();
 
         String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
-        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(project).toFile();
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(project);
 
         Filter filter = null;
         try {
@@ -570,7 +570,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             Repository repository) throws SerializationException {
 
         String filePath = resource.getModuleRelativePath().toOSString();
-        if (serializationManager(repository, contentSyncRoot).isSerializationFile(filePath)) {
+		String absFilePath = new File(contentSyncRoot, filePath).getAbsolutePath();
+        if (serializationManager(repository, contentSyncRoot).isSerializationFile(absFilePath)) {
             filePath = serializationManager.getBaseResourcePath(filePath);
         }
 
