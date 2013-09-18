@@ -210,6 +210,7 @@ public class SetupServerWizardPage extends WizardPage {
 		useExistingServer.addSelectionListener(radioListener);
 		setupNewServer.addSelectionListener(radioListener);
 	    useExistingServer.setSelection(false);
+	    existingServerCombo.setEnabled(false);
 	    setupNewServer.setSelection(true);
 	    installToolingSupportBundle.setSelection(true);
 	    
