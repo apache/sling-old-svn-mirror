@@ -72,7 +72,8 @@ public interface JobExecutionContext {
 
     /**
      * Log a message.
-     * The message might contain place holders for additional arguments.
+     * The message and the arguments are passed to the {@link java.text.MessageFormat}
+     * class.
      * @param message A message
      * @param args Additional arguments
      */

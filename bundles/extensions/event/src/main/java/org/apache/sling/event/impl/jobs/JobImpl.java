@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import java.text.MessageFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,21 @@ public class JobImpl implements Job {
 
     /** Internal job property containing optional delay override. */
     public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
+
+    /** Property for log statements. */
+    public static final String PROPERTY_LOG = "slingevent:log";
+
+    /** Property for ETA. */
+    public static final String PROPERTY_ETA = "slingevent:eta";
+
+    /** Property for Steps. */
+    public static final String PROPERTY_STEPS = "slingevent:steps";
+
+    /** Property for Step. */
+    public static final String PROPERTY_STEP = "slingevent:step";
+
+    /** Property for final message. */
+    public static final String PROPERTY_MESSAGE = "slingevent:message";
 
     private final ValueMap properties;
 
@@ -238,6 +254,45 @@ public class JobImpl implements Job {
      */
     public void prepare() {
         this.properties.remove(JobImpl.PROPERTY_DELAY_OVERRIDE);
+        this.properties.remove(JobImpl.PROPERTY_LOG);
+        this.properties.remove(JobImpl.PROPERTY_ETA);
+        this.properties.remove(JobImpl.PROPERTY_STEPS);
+        this.properties.remove(JobImpl.PROPERTY_STEP);
+        this.properties.remove(JobImpl.PROPERTY_MESSAGE);
+    }
+
+    public String update(final long eta) {
+        this.setProperty(JobImpl.PROPERTY_ETA, eta);
+        return JobImpl.PROPERTY_ETA;
+    }
+
+    public String startProgress(final long eta) {
+        this.setProperty(JobImpl.PROPERTY_ETA, eta);
+        return JobImpl.PROPERTY_ETA;
+    }
+
+    public String startProgress(final int steps) {
+        this.setProperty(JobImpl.PROPERTY_STEPS, steps);
+        return JobImpl.PROPERTY_STEPS;
+    }
+
+    public String setProgress(final int step) {
+        this.setProperty(JobImpl.PROPERTY_STEP, step);
+        return JobImpl.PROPERTY_STEP;
+    }
+
+    public String log(final String message, Object... args) {
+        final String logEntry = MessageFormat.format(message, args);
+        final String[] entries = this.getProperty(JobImpl.PROPERTY_LOG, String[].class);
+        if ( entries == null ) {
+            this.setProperty(JobImpl.PROPERTY_LOG, new String[] {logEntry});
+        } else {
+            final String[] newEntries = new String[entries.length + 1];
+            System.arraycopy(entries, 0, newEntries, 0, entries.length);
+            newEntries[entries.length] = logEntry;
+            this.setProperty(JobImpl.PROPERTY_LOG, newEntries);
+        }
+        return JobImpl.PROPERTY_LOG;
     }
 
     @Override

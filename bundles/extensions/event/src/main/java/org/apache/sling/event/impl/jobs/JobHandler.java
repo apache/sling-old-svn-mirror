@@ -41,6 +41,7 @@ public class JobHandler {
     }
 
     public boolean start() {
+        this.job.prepare();
         return this.jobManager.start(this);
     }
 
@@ -76,5 +77,10 @@ public class JobHandler {
     @Override
     public String toString() {
         return "JobHandler(" + this.job.getId() + ")";
+    }
+
+    public void updateProperty(final String propName) {
+        this.jobManager.updateProperty(this.job, propName);
+
     }
 }
