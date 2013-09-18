@@ -18,11 +18,8 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.lang.reflect.InvocationTargetException;
 
-import org.apache.sling.ide.eclipse.core.ProjectUtil;
-import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.apache.sling.ide.transport.Repository;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -78,9 +75,6 @@ public class ImportWizard extends Wizard implements IImportWizard {
             public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 
                 try {
-                    Repository repository = ServerUtil.getRepository(server, monitor);
-                    serializationManager.init(repository, ProjectUtil.getSyncDirectoryFile(project));
-
                     new ImportRepositoryContentAction(repositoryPath, server, filterFile, projectRelativePath, project,
                             serializationManager).run(monitor);
                 } catch (SerializationException e) {

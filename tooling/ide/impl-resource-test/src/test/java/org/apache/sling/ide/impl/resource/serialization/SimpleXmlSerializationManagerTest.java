@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.sling.ide.impl.resource.serialization;
 
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
@@ -39,8 +55,8 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void emptySerializedData() throws SerializationException, SAXException {
 
-        SerializationData serializationData = sm.buildSerializationData(null,
-                newResourceWithProperties(new HashMap<String, Object>()), null);
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null,
+                newResourceWithProperties(new HashMap<String, Object>()));
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -56,7 +72,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void nullSerializedData() throws SerializationException, SAXException {
 
-        SerializationData serializationData = sm.buildSerializationData(null, null, null);
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, null);
 
         assertThat(serializationData, is(nullValue()));
     }
@@ -68,7 +84,7 @@ public class SimpleXmlSerializationManagerTest {
         data.put("jcr:createdBy", "admin");
         data.put("jcr:lastModifiedBy", "author");
 
-        SerializationData serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, newResourceWithProperties(data));
 
         String methodName = "stringSerializedData";
 
@@ -97,7 +113,7 @@ public class SimpleXmlSerializationManagerTest {
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");
 
-        SerializationData serializationData = sm.buildSerializationData(null, newResourceWithProperties(data), null);
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, newResourceWithProperties(data));
 
         String methodName = "serializedDataIsEscaped";
 

@@ -623,7 +623,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             throws SerializationException {
         if (serializationManager == null) {
             serializationManager = Activator.getDefault().getSerializationManager();
-            serializationManager.init(repository, contentSyncRoot);
+//            serializationManager.init(repository, contentSyncRoot);
         }
 
         return serializationManager;

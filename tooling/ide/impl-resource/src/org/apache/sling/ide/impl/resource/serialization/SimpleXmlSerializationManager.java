@@ -35,9 +35,10 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.sling.ide.serialization.SerializationData;
+import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.apache.sling.ide.transport.RepositoryInfo;
+import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -45,7 +46,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class SimpleXmlSerializationManager implements SerializationManager {
+public class SimpleXmlSerializationManager implements SerializationManager, SerializationDataBuilder {
 
     private static final String TAG_PROPERTY = "property";
     private static final String ATT_PROPERTY_NAME = "name";
@@ -98,10 +99,15 @@ public class SimpleXmlSerializationManager implements SerializationManager {
         }
 
     }
+    
+    @Override
+    public SerializationDataBuilder newBuilder(Repository repository,
+    		File contentSyncRoot) throws SerializationException {
+    	return this;
+    }
 
     @Override
-    public SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource,
-            RepositoryInfo repositoryInfo)
+    public SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource)
             throws SerializationException {
 
         if (resource == null) {
@@ -174,12 +180,6 @@ public class SimpleXmlSerializationManager implements SerializationManager {
      * @see org.apache.sling.ide.serialization.SerializationManager#destroy()
      */
     public void destroy() {
-    }
-
-    /* (non-Javadoc)
-     * @see org.apache.sling.ide.serialization.SerializationManager#init(org.apache.sling.ide.transport.Repository, java.io.File)
-     */
-    public void init(org.apache.sling.ide.transport.Repository repository, File contentSyncRoot) throws SerializationException {
     }
 
     static class SerializationDataHandler extends DefaultHandler {

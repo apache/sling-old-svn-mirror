@@ -17,23 +17,14 @@
 package org.apache.sling.ide.serialization;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 
-import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.ResourceProxy;
 
-public interface SerializationManager {
+public interface SerializationDataBuilder {
+
+    SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource)
+            throws SerializationException;
 
     void destroy();
-
-    boolean isSerializationFile(String filePath);
-
-    String getBaseResourcePath(String serializationFilePath);
-
-    String getSerializationFilePath(String baseFilePath);
-
-    SerializationDataBuilder newBuilder(Repository repository, File contentSyncRoot) throws SerializationException;
-
-    ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException;
+    
 }

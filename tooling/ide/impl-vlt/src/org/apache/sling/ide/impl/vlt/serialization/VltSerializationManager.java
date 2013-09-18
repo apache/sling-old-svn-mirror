@@ -16,18 +16,13 @@
  */
 package org.apache.sling.ide.impl.vlt.serialization;
 
-import static org.apache.sling.ide.util.PathUtil.getName;
-
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
-import javax.jcr.Credentials;
-import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -37,37 +32,25 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.jackrabbit.vault.fs.Mounter;
-import org.apache.jackrabbit.vault.fs.api.Aggregate;
-import org.apache.jackrabbit.vault.fs.api.Aggregator;
 import org.apache.jackrabbit.vault.fs.api.RepositoryAddress;
 import org.apache.jackrabbit.vault.fs.api.SerializationType;
 import org.apache.jackrabbit.vault.fs.api.VaultFile;
 import org.apache.jackrabbit.vault.fs.api.VaultFileSystem;
-import org.apache.jackrabbit.vault.fs.config.ConfigurationException;
-import org.apache.jackrabbit.vault.fs.impl.aggregator.FileAggregator;
-import org.apache.jackrabbit.vault.fs.impl.aggregator.GenericAggregator;
-import org.apache.jackrabbit.vault.fs.impl.io.DocViewSerializer;
 import org.apache.jackrabbit.vault.fs.impl.io.XmlAnalyzer;
 import org.apache.jackrabbit.vault.util.Constants;
-import org.apache.jackrabbit.vault.util.JcrConstants;
-import org.apache.jackrabbit.vault.util.MimeTypes;
 import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.jackrabbit.vault.util.RepositoryProvider;
-import org.apache.sling.ide.impl.vlt.RepositoryUtils;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
-import org.apache.sling.ide.serialization.SerializationData;
+import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
-import org.apache.sling.ide.serialization.SerializationKind;
-import org.apache.sling.ide.serialization.SerializationKindManager;
 import org.apache.sling.ide.serialization.SerializationManager;
-import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class VltSerializationManager implements SerializationManager {
 
-    private static final String EXTENSION_XML = ".xml";
+    static final String EXTENSION_XML = ".xml";
 
     public static void main(String[] args) throws RepositoryException, URISyntaxException, IOException {
         RepositoryAddress address = new RepositoryAddress("http://localhost:8080/server/root");
@@ -93,21 +76,6 @@ public class VltSerializationManager implements SerializationManager {
             System.out.println(attempt + " -> " + vaultFile);
         }
 
-    }
-
-    private VaultFsLocator fsLocator;
-    private SerializationKindManager skm;
-
-    @Override
-    public void init(org.apache.sling.ide.transport.Repository repository, File contentSyncRoot)
-            throws SerializationException {
-
-        try {
-            this.skm = new SerializationKindManager();
-            this.skm.init(repository);
-        } catch (org.apache.sling.ide.transport.RepositoryException e) {
-            throw new SerializationException(e);
-        }
     }
 
     @Override
@@ -167,125 +135,30 @@ public class VltSerializationManager implements SerializationManager {
 
     protected void bindVaultFsLocator(VaultFsLocator fsLocator) {
 
-        this.fsLocator = fsLocator;
+        getBuilder().fsLocator = fsLocator;
     }
 
     protected void unbindVaultFsLocator(VaultFsLocator fsLocator) {
 
-        this.fsLocator = null;
+    	getBuilder().fsLocator = null;
     }
-
+    
+    private VltSerializationDataBuilder builder;
+    
+    private VltSerializationDataBuilder getBuilder() {
+    	if (builder==null) {
+    		builder = new VltSerializationDataBuilder();
+    	}
+    	return builder;
+    }
+    
     @Override
-    public SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource,
-            RepositoryInfo repositoryInfo) throws SerializationException {
-
-        // TODO - there is a small mismatch here since we're doing remote calls to the repository
-        // but taking a resourceProxy - not sure if we'll run into problems down the road or not
-
-        // TODO - there might be a performance problem with getting the session on-demand each time
-        // the resolution might be to have a SerializationManager instance kept per 'transaction'
-        // which is stateful, with init(RepositoryInfo) and destroy() methods
-        Session session = null;
-        try {
-            
-            Repository repo = RepositoryUtils.getRepository(repositoryInfo);
-            Credentials credentials = RepositoryUtils.getCredentials(repositoryInfo);
-            
-            session = repo.login(credentials);
-
-            RepositoryAddress address = RepositoryUtils.getRepositoryAddress(repositoryInfo);
-
-            VaultFileSystem fs = fsLocator.getFileSystem(address, contentSyncRoot, session);
-
-            VaultFile vaultFile = fs.getFile(resource.getPath());
-            String platformPath = resource.getPath();
-            if (vaultFile == null) {
-
-                // TODO - not sure why we need to try both ... not a performance impact but ugly nonetheless
-                platformPath = PlatformNameFormat.getPlatformPath(resource.getPath()) + EXTENSION_XML;
-                vaultFile = fs.getFile(platformPath);
-
-                if (vaultFile == null) {
-                    platformPath = PlatformNameFormat.getPlatformPath(resource.getPath());
-                    vaultFile = fs.getFile(platformPath);
-                }
-
-                if (vaultFile == null) {
-                    // TODO proper logging ; discover if this is expected or not and fail hard if it's not
-                    System.err.println("No vaultFile at path " + resource.getPath());
-                    return null;
-                }
-            }
-
-            String nameHint = getName(platformPath);
-            String fileOrFolderPathHint = vaultFile.getPath();
-
-            Aggregate aggregate = vaultFile.getAggregate();
-
-            if (aggregate == null)
-                throw new IllegalArgumentException("No aggregate found for path " + resource.getPath());
-
-            SerializationKind serializationKind = skm.getSerializationKind(aggregate.getNode().getPrimaryNodeType()
-                    .getName());
-
-            if (resource.getPath().equals("/") || serializationKind == SerializationKind.METADATA_PARTIAL
-                    || serializationKind == SerializationKind.FILE || serializationKind == SerializationKind.FOLDER) {
-                nameHint = Constants.DOT_CONTENT_XML;
-            }
-
-            Aggregator aggregator = fs.getAggregateManager().getAggregator(aggregate.getNode(), null);
-            if (aggregator instanceof FileAggregator) {
-                // TODO - copy-pasted from FileAggregator, and really does not belong here...
-                Node content = aggregate.getNode();
-                if (content.isNodeType(JcrConstants.NT_FILE)) {
-                    content = content.getNode(JcrConstants.JCR_CONTENT);
-                }
-                String mimeType = null;
-                if (content.hasProperty(JcrConstants.JCR_MIMETYPE)) {
-                    try {
-                        mimeType = content.getProperty(JcrConstants.JCR_MIMETYPE).getString();
-                    } catch (RepositoryException e) {
-                        // ignore
-                    }
-                }
-                if (mimeType == null) {
-                    // guess mime type from name
-                    mimeType = MimeTypes.getMimeType(aggregate.getNode().getName(), MimeTypes.APPLICATION_OCTET_STREAM);
-                }
-
-                boolean needsDir = !MimeTypes.matches(aggregate.getNode().getName(), mimeType,
-                        MimeTypes.APPLICATION_OCTET_STREAM);
-                if (!needsDir) {
-                    return SerializationData.empty(fileOrFolderPathHint, serializationKind);
-                }
-            } else if (aggregator instanceof GenericAggregator) {
-                // TODO - copy-pasted from GenericAggregator
-                if (aggregate.getNode().getPrimaryNodeType().getName().equals("nt:folder")
-                        && aggregate.getNode().getMixinNodeTypes().length == 0) {
-                    return SerializationData.empty(fileOrFolderPathHint, serializationKind);
-                }
-            }
-
-
-            DocViewSerializer s = new DocViewSerializer(aggregate);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            s.writeContent(out);
-            
-            byte[] result = out.toByteArray();
-
-            return new SerializationData(fileOrFolderPathHint, nameHint, result, serializationKind);
-
-        } catch (RepositoryException e) {
-            throw new SerializationException(e);
-        } catch (ConfigurationException e) {
-            throw new SerializationException(e);
-        } catch (IOException e) {
-            throw new SerializationException(e);
-        } finally {
-            if (session != null) {
-                session.logout();
-            }
-        }
+    public SerializationDataBuilder newBuilder(
+    		org.apache.sling.ide.transport.Repository repository,
+    		File contentSyncRoot) throws SerializationException {
+    	VltSerializationDataBuilder b = getBuilder();
+    	b.init(repository, contentSyncRoot);
+    	return b;
     }
 
     @Override

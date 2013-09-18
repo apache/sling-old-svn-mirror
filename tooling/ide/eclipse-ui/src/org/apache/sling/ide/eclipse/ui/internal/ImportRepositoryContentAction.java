@@ -29,6 +29,7 @@ import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationData;
+import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationKindManager;
@@ -56,6 +57,7 @@ public class ImportRepositoryContentAction {
     private final IPath projectRelativePath;
     private final IProject project;
     private SerializationManager serializationManager;
+	private SerializationDataBuilder builder;
 
     /**
      * @param repositoryPath
@@ -63,9 +65,10 @@ public class ImportRepositoryContentAction {
      * @param filterFile
      * @param projectRelativePath
      * @param project
+     * @throws SerializationException 
      */
     public ImportRepositoryContentAction(String repositoryPath, IServer server, IFile filterFile,
-            IPath projectRelativePath, IProject project, SerializationManager serializationManager) {
+            IPath projectRelativePath, IProject project, SerializationManager serializationManager) throws SerializationException {
         this.repositoryPath = repositoryPath;
         this.server = server;
         this.filterFile = filterFile;
@@ -74,8 +77,11 @@ public class ImportRepositoryContentAction {
         this.serializationManager = serializationManager;
     }
 
-    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException, SerializationException {
         Repository repository = ServerUtil.getRepository(server, monitor);
+
+        this.builder = serializationManager.newBuilder(
+        		repository, ProjectUtil.getSyncDirectoryFile(project));
 
         monitor.setTaskName("Loading configuration...");
         ISlingLaunchpadServer launchpad = (ISlingLaunchpadServer) server.loadAdapter(
@@ -144,6 +150,10 @@ public class ImportRepositoryContentAction {
             if (oldPublishState != ISlingLaunchpadServer.PUBLISH_STATE_NEVER) {
                 launchpad.setPublishState(oldPublishState, monitor);
             }
+            if (builder!=null) {
+            	builder.destroy();
+            	builder = null;
+            }
             monitor.done();
         }
 
@@ -186,8 +196,7 @@ public class ImportRepositoryContentAction {
         ResourceProxy resource = executeCommand(repository.newListChildrenNodeCommand(path));
 
         // TODO we should know all node types for which to create files and folders
-        SerializationData serializationData = serializationManager.buildSerializationData(contentSyncRoot, resource,
-                repository.getRepositoryInfo());
+        SerializationData serializationData = builder.buildSerializationData(contentSyncRoot, resource);
         System.out.println("For resource at path " + resource.getPath() + " got serialization data "
                 + serializationData);
 
