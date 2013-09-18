@@ -84,6 +84,8 @@ public class AddNodeCommand extends JcrCommand<Void> {
             
             Binary binary = session.getValueFactory().createBinary(new FileInputStream(file));
             contentNode.setProperty(JCR_DATA, binary);
+            //TODO: might have to be done differently since the client and server's clocks can differ
+            // and the last_modified should maybe be taken from the server's time..
             contentNode.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
         }
 
