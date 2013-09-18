@@ -21,6 +21,7 @@ import static org.apache.jackrabbit.vault.util.JcrConstants.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Calendar;
 
 import javax.jcr.Binary;
 import javax.jcr.Credentials;
@@ -83,6 +84,7 @@ public class AddNodeCommand extends JcrCommand<Void> {
             
             Binary binary = session.getValueFactory().createBinary(new FileInputStream(file));
             contentNode.setProperty(JCR_DATA, binary);
+            contentNode.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
         }
 
         return null;
