@@ -1122,6 +1122,11 @@ public class JobManagerImpl
                 mvm.put(Job.PROPERTY_JOB_QUEUE_NAME, info.getJob().getQueueName());
                 mvm.put(Job.PROPERTY_JOB_RETRIES, info.getJob().getNumberOfRetries());
                 mvm.put(Job.PROPERTY_JOB_PRIORITY, info.getJob().getJobPriority().name());
+                mvm.remove(JobImpl.PROPERTY_ETA);
+                mvm.remove(JobImpl.PROPERTY_STEPS);
+                mvm.remove(JobImpl.PROPERTY_STEP);
+                mvm.remove(JobImpl.PROPERTY_LOG);
+                mvm.remove(JobImpl.PROPERTY_MESSAGE);
                 resolver.commit();
 
                 return true;
@@ -1353,5 +1358,26 @@ public class JobManagerImpl
 
     public TopologyCapabilities getTopologyCapabilities() {
         return this.topologyCapabilities;
+    }
+
+    public void updateProperty(final JobImpl job, final String propName) {
+        ResourceResolver resolver = null;
+        try {
+            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+            final Resource jobResource = resolver.getResource(job.getResourcePath());
+            if ( jobResource != null ) {
+                final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
+                mvm.put(propName, job.getProperty(propName));
+                resolver.commit();
+            }
+        } catch ( final PersistenceException ignore ) {
+            this.ignoreException(ignore);
+        } catch ( final LoginException ignore ) {
+            this.ignoreException(ignore);
+        } finally {
+            if ( resolver != null ) {
+                resolver.close();
+            }
+        }
     }
 }

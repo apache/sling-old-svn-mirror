@@ -511,6 +511,7 @@ public abstract class AbstractJobQueue
                              */
                             @Override
                             public void run() {
+                                final Object lock = new Object();
                                 final Thread currentThread = Thread.currentThread();
                                 // update priority and name
                                 final String oldName = currentThread.getName();
@@ -531,43 +532,37 @@ public abstract class AbstractJobQueue
                                 final AtomicBoolean isAsync = new AtomicBoolean(false);
 
                                 try {
-                                    synchronized ( job ) {
-                                        job.prepare();
+                                    synchronized ( lock ) {
                                         result = consumer.process(job, new JobExecutionContext() {
 
                                             @Override
                                             public void update(final long eta) {
-                                                // TODO Auto-generated method stub
-
+                                                handler.updateProperty(job.update(eta));
                                             }
 
                                             @Override
                                             public void startProgress(final long eta) {
-                                                // TODO Auto-generated method stub
-
+                                                handler.updateProperty(job.startProgress(eta));
                                             }
 
                                             @Override
                                             public void startProgress(final int steps) {
-                                                // TODO Auto-generated method stub
-
+                                                handler.updateProperty(job.startProgress(steps));
                                             }
 
                                             @Override
                                             public void setProgress(final int step) {
-                                                // TODO Auto-generated method stub
-
+                                                handler.updateProperty(job.setProgress(step));
                                             }
 
                                             @Override
                                             public void log(final String message, Object... args) {
-                                                // TODO Auto-generated method stub
-
+                                                handler.updateProperty(job.log(message, args));
                                             }
 
                                             @Override
                                             public void asyncProcessingFinished(final JobStatus status) {
-                                                synchronized ( job ) {
+                                                synchronized ( lock ) {
                                                     if ( isAsync.compareAndSet(true, false) ) {
                                                         finishedJob(job.getId(), status, true);
                                                         asyncCounter.decrementAndGet();
@@ -606,8 +601,7 @@ public abstract class AbstractJobQueue
                             pool.execute(task);
                         } else {
                             // if we don't have a thread pool, we create the thread directly
-                            // (this should never happen for jobs, but is a safe fallback and
-                            // allows to call this method for other background processing.
+                            // (this should never happen for jobs, but is a safe fallback)
                             new Thread(task).start();
                         }
 
