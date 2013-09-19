@@ -81,6 +81,10 @@ public class SerializationKindManager {
         if (Repository.NT_FILE.equals(nodeType)) {
             return SerializationKind.FILE;
         }
+        
+        if (Repository.NT_RESOURCE.equals(nodeType)) {
+        	return SerializationKind.FILE;
+        }
 
         if (Repository.NT_FOLDER.equals(nodeType)) {
             return SerializationKind.FOLDER;

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Iterator;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
@@ -39,6 +40,7 @@ import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -200,57 +202,65 @@ public class ImportRepositoryContentAction {
         System.out.println("For resource at path " + resource.getPath() + " got serialization data "
                 + serializationData);
 
-        if (serializationData == null) {
-            System.err.println("Skipping resource at " + resource.getPath() + " since we got no serialization data.");
-            return;
-        }
-
-        IPath fileOrFolderPath = projectRelativePath.append(serializationData.getFileOrFolderNameHint());
-
-        switch (serializationData.getSerializationKind()) {
-            case FILE: {
-                byte[] contents = executeCommand(repository.newGetNodeCommand(path));
-                importFile(project, fileOrFolderPath, contents);
-
-                if (serializationData.hasContents()) {
-                    // TODO - should we abstract out .dir serialization?
-                    IPath directoryPath = fileOrFolderPath.addFileExtension("dir");
-                    createFolder(project, directoryPath);
-                    createFile(project, directoryPath.append(serializationData.getNameHint()),
-                            serializationData.getContents());
-                }
-                break;
-            }
-            case FOLDER:
-            case METADATA_PARTIAL: {
-                createFolder(project, fileOrFolderPath);
-                if (serializationData.hasContents()) {
-                    createFile(project, fileOrFolderPath.append(serializationData.getNameHint()),
-                            serializationData.getContents());
-                }
-                break;
-            }
-
-            case METADATA_FULL: {
-                if (serializationData.hasContents()) {
-                    createFile(project, fileOrFolderPath, serializationData.getContents());
-                }
-                break;
-            }
-        }
-
-        System.out.println("Children: " + resource.getChildren());
-
-        if (serializationData.getSerializationKind() == SerializationKind.METADATA_FULL) {
-            return;
+        if (serializationData != null) {
+	
+	        IPath fileOrFolderPath = projectRelativePath.append(serializationData.getFileOrFolderNameHint());
+	
+	        switch (serializationData.getSerializationKind()) {
+	            case FILE: {
+	                byte[] contents = executeCommand(repository.newGetNodeCommand(path));
+	                importFile(project, fileOrFolderPath, contents);
+	
+	                if (serializationData.hasContents()) {
+	                    // TODO - should we abstract out .dir serialization?
+	                    IPath directoryPath = fileOrFolderPath.addFileExtension("dir");
+	                    createFolder(project, directoryPath);
+	                    createFile(project, directoryPath.append(serializationData.getNameHint()),
+	                            serializationData.getContents());
+	                    
+	                    // filter out the child of type Repository.NT_RESOURCE
+	                    for (Iterator<ResourceProxy> it = resource.getChildren().iterator(); it
+								.hasNext();) {
+	                    	ResourceProxy child = it.next();
+	                        if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
+	                        	it.remove();
+	                        	break;
+	                        }
+						}
+	                }
+	                break;
+	            }
+	            case FOLDER:
+	            case METADATA_PARTIAL: {
+	                createFolder(project, fileOrFolderPath);
+	                if (serializationData.hasContents()) {
+	                    createFile(project, fileOrFolderPath.append(serializationData.getNameHint()),
+	                            serializationData.getContents());
+	                }
+	                break;
+	            }
+	
+	            case METADATA_FULL: {
+	                if (serializationData.hasContents()) {
+	                    createFile(project, fileOrFolderPath, serializationData.getContents());
+	                }
+	                break;
+	            }
+	        }
+	
+	        System.out.println("Children: " + resource.getChildren());
+	
+	        if (serializationData.getSerializationKind() == SerializationKind.METADATA_FULL) {
+	            return;
+	        }
         }
 
         for (ResourceProxy child : resource.getChildren()) {
 
             // TODO - still needed?
-            if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
-                continue;
-            }
+//            if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
+//                continue;
+//            }
 
             if (filter != null) {
                 FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath(),
@@ -296,7 +306,23 @@ public class ImportRepositoryContentAction {
             destinationFile.setContents(new ByteArrayInputStream(node), IResource.KEEP_HISTORY, null);
         } else {
             /* TODO progress monitor */
-            destinationFile.create(new ByteArrayInputStream(node), true, null);
+        	if (!destinationFile.getParent().exists()) {
+        		createParents(destinationFile.getParent());
+        	}
+        	destinationFile.create(new ByteArrayInputStream(node), true, null);
         }
     }
+    
+    private void createParents(IContainer container) throws CoreException {
+    	if (container.exists()) {
+    		return;
+    	}
+    	if (!(container instanceof IFolder)) {
+    		return;
+    	}
+    	createParents(container.getParent());
+    	IFolder parentFolder = (IFolder)container;
+    	parentFolder.create(true, true, null);
+    }
+
 }

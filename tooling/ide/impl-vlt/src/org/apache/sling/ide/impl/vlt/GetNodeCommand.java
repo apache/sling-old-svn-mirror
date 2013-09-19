@@ -42,17 +42,22 @@ public class GetNodeCommand extends JcrCommand<byte[]> {
 
         Node node = session.getNode(getPath());
 
-        if (!node.hasNode("jcr:content")) {
-            return null;
+        Property property;
+        if (node.hasProperty("jcr:data")) {
+        	property = node.getProperty("jcr:data");
+        } else {
+	        if (!node.hasNode("jcr:content")) {
+	            return null;
+	        }
+	
+	        Node contentNode = node.getNode("jcr:content");
+	
+	        if (!contentNode.hasProperty("jcr:data")) {
+	            return null;
+	        }
+	
+	        property = contentNode.getProperty("jcr:data");
         }
-
-        Node contentNode = node.getNode("jcr:content");
-
-        if (!contentNode.hasProperty("jcr:data")) {
-            return null;
-        }
-
-        Property property = contentNode.getProperty("jcr:data");
 
         if (property.getType() == PropertyType.BINARY) {
             Binary binary = property.getBinary();

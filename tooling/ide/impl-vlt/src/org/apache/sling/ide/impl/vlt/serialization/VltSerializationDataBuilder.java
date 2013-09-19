@@ -139,8 +139,10 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
 
             Aggregate aggregate = vaultFile.getAggregate();
 
-            if (aggregate == null)
-                throw new IllegalArgumentException("No aggregate found for path " + resource.getPath());
+            if (aggregate == null) {
+            	System.err.println("No aggregate found for path " + resource.getPath());
+            	return null;
+            }
 
             NodeType[] mixinNodeTypes = aggregate.getNode().getMixinNodeTypes();
             List<String> mixinNodeTypeNames = new ArrayList<String>(mixinNodeTypes.length);

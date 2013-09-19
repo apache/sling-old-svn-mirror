@@ -79,7 +79,11 @@ public class AddNodeCommand extends JcrCommand<Void> {
             if ( node.hasNode(JCR_CONTENT)) {
                 contentNode = node.getNode(JCR_CONTENT);
             } else {
-                contentNode = node.addNode(JCR_CONTENT, NT_RESOURCE);
+            	if (node.getProperty(JCR_PRIMARYTYPE).getString().equals(NT_RESOURCE)) {
+            		contentNode = node;
+            	} else {
+            		contentNode = node.addNode(JCR_CONTENT, NT_RESOURCE);
+            	}
             }
             
             Binary binary = session.getValueFactory().createBinary(new FileInputStream(file));
