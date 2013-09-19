@@ -48,7 +48,13 @@ public class ContentXmlHandler extends DefaultHandler {
             current = root;
         } else {
             ResourceProxy parent = queue.peekLast();
-            current = new ResourceProxy(parent.getPath() + "/" + qName);
+
+            StringBuilder path = new StringBuilder(parent.getPath());
+            if (path.charAt(path.length() - 1) != '/')
+                path.append('/');
+            path.append(qName);
+
+            current = new ResourceProxy(path.toString());
             parent.addChild(current);
         }
 

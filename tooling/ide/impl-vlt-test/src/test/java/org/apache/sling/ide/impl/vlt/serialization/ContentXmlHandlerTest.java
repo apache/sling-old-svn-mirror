@@ -19,6 +19,7 @@ package org.apache.sling.ide.impl.vlt.serialization;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.array;
 import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class ContentXmlHandlerTest {
     @Test
     public void simpleContentXml() throws ParserConfigurationException, SAXException, IOException {
 
-        Map<String, Object> properties = parseContentXmlFile("simple-content.xml");
+        Map<String, Object> properties = parseContentXmlFile("simple-content.xml", "/").getProperties();
 
         assertThat("properties.size", properties.size(), is(11));
 
@@ -62,7 +63,8 @@ public class ContentXmlHandlerTest {
 
     }
 
-    private Map<String, Object> parseContentXmlFile(String fileName) throws ParserConfigurationException, SAXException,
+    private ResourceProxy parseContentXmlFile(String fileName, String rootResourcePath)
+            throws ParserConfigurationException, SAXException,
             IOException {
 
         InputSource source = new InputSource(getClass().getResourceAsStream(fileName));
@@ -71,17 +73,17 @@ public class ContentXmlHandlerTest {
         factory.setNamespaceAware(true);
         factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
         SAXParser parser = factory.newSAXParser();
-        ContentXmlHandler handler = new ContentXmlHandler("/");
+        ContentXmlHandler handler = new ContentXmlHandler(rootResourcePath);
         parser.parse(source, handler);
 
-        return handler.getRoot().getProperties();
+        return handler.getRoot();
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void parseMultiValuedProperties() throws ParserConfigurationException, SAXException, IOException {
 
-        Map<String, Object> properties = parseContentXmlFile("multivalued-properties-content.xml");
+        Map<String, Object> properties = parseContentXmlFile("multivalued-properties-content.xml", "/").getProperties();
 
         assertThat("properties.size", properties.size(), is(7));
         assertThat("properties[values]", (String[]) properties.get("values"),
@@ -101,16 +103,7 @@ public class ContentXmlHandlerTest {
     @Test
     public void parseFullCoverageXmlFile() throws ParserConfigurationException, SAXException, IOException {
 
-        InputSource source = new InputSource(getClass().getResourceAsStream("full-coverage.xml"));
-
-        SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
-        SAXParser parser = factory.newSAXParser();
-        ContentXmlHandler handler = new ContentXmlHandler("/apps/full-coverage");
-        parser.parse(source, handler);
-
-        ResourceProxy root = handler.getRoot();
+        ResourceProxy root = parseContentXmlFile("full-coverage.xml", "/apps/full-coverage");
 
         assertThat("full-coverage path", root.getPath(), is("/apps/full-coverage"));
         assertThat("full-coverage properties.size", root.getProperties().size(), is(3));
@@ -131,9 +124,22 @@ public class ContentXmlHandlerTest {
 
     }
 
+    @Test
+    public void parseRootContentXml() throws ParserConfigurationException, SAXException, IOException {
+
+        ResourceProxy root = parseContentXmlFile("root-content.xml", "/");
+
+        assertThat("root contains /jcr:system", root.getChildren(), hasItem(path("/jcr:system")));
+    }
+
     private static Matcher<Calendar> millis(long millis) {
 
         return new CalendarTimeInMillisMatcher(millis);
+    }
+
+    private static Matcher<ResourceProxy> path(String path) {
+
+        return new ResourcePathMatcher(path);
     }
 
     static class CalendarTimeInMillisMatcher extends TypeSafeMatcher<Calendar> {
@@ -154,5 +160,25 @@ public class ContentXmlHandlerTest {
             return timeInMillis == item.getTimeInMillis();
         }
 
+    }
+
+    static class ResourcePathMatcher extends TypeSafeMatcher<ResourceProxy> {
+
+        private final String resourcePath;
+
+        private ResourcePathMatcher(String resourcePath) {
+
+            this.resourcePath = resourcePath;
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("Resource with path ").appendValue(resourcePath);
+        }
+
+        @Override
+        protected boolean matchesSafely(ResourceProxy item) {
+            return resourcePath.equals(item.getPath());
+        }
     }
 }
