@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
@@ -202,7 +204,8 @@ public class ImportRepositoryContentAction {
         System.out.println("For resource at path " + resource.getPath() + " got serialization data "
                 + serializationData);
 
-        if (serializationData != null) {
+        final List<ResourceProxy> resourceChildren = new LinkedList<ResourceProxy>(resource.getChildren());
+		if (serializationData != null) {
 	
 	        IPath fileOrFolderPath = projectRelativePath.append(serializationData.getFileOrFolderNameHint());
 	
@@ -219,7 +222,7 @@ public class ImportRepositoryContentAction {
 	                            serializationData.getContents());
 	                    
 	                    // filter out the child of type Repository.NT_RESOURCE
-	                    for (Iterator<ResourceProxy> it = resource.getChildren().iterator(); it
+	                    for (Iterator<ResourceProxy> it = resourceChildren.iterator(); it
 								.hasNext();) {
 	                    	ResourceProxy child = it.next();
 	                        if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
@@ -248,19 +251,14 @@ public class ImportRepositoryContentAction {
 	            }
 	        }
 	
-	        System.out.println("Children: " + resource.getChildren());
+	        System.out.println("Children: " + resourceChildren);
 	
 	        if (serializationData.getSerializationKind() == SerializationKind.METADATA_FULL) {
 	            return;
 	        }
         }
 
-        for (ResourceProxy child : resource.getChildren()) {
-
-            // TODO - still needed?
-//            if (Repository.NT_RESOURCE.equals(child.getProperties().get(Repository.JCR_PRIMARY_TYPE))) {
-//                continue;
-//            }
+        for (ResourceProxy child : resourceChildren) {
 
             if (filter != null) {
                 FilterResult filterResult = filter.filter(contentSyncRoot, child.getPath(),

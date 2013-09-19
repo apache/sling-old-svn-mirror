@@ -140,6 +140,9 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             Aggregate aggregate = vaultFile.getAggregate();
 
             if (aggregate == null) {
+            	//TODO: there are valid cases apparently when aggregate is null and yet there
+            	// are children which must be honored.. so we can't throw an exception here
+            	// but we should review why this aggregate is null here and if that's valid.
             	System.err.println("No aggregate found for path " + resource.getPath());
             	return null;
             }
