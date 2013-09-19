@@ -42,6 +42,9 @@ public class LinkHelper implements ILinkHelper {
 	@Override
 	public IStructuredSelection findSelection(IEditorInput anInput) {
 		IFile file = ResourceUtil.getFile(anInput);
+        if (file == null) {
+            return null;
+        }
 		IProject project = file.getProject();
 		if (!ProjectHelper.isContentProject(project)) {
 			return null;
