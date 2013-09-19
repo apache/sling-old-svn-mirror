@@ -22,7 +22,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
@@ -68,7 +70,9 @@ public class ServerSideTestClient extends SlingClient {
     public TestResults runTests(String testPackageOrClassName) throws Exception {
         final RemoteTestHttpClient testClient = new RemoteTestHttpClient(serverBaseUrl + "/system/sling/junit",serverUsername,serverPassword,true);
         final TestResults r = new TestResults();
-        final RequestExecutor executor = testClient.runTests(testPackageOrClassName, null, "json");
+        final Map<String, String> options = new HashMap<String, String>();
+        options.put("forceReload", "true");
+        final RequestExecutor executor = testClient.runTests(testPackageOrClassName, null, "json", options);
         executor.assertContentType("application/json");
         String content = executor.getContent();
         final JSONArray json = new JSONArray(new JSONTokener(content));
