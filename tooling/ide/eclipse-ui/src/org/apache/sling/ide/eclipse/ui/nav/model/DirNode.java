@@ -84,6 +84,19 @@ public class DirNode extends JcrNode {
 	
 	@Override
 	protected void addChild(JcrNode jcrNode) {
+		JcrNode effectiveSibling = getEffectiveSibling();
+		if (effectiveSibling!=null) {
+			// excellent, the parent contains a child which 
+			// matches the .dir/_jcr_content pattern, so add this child there
+			effectiveSibling.addChild(jcrNode);
+			// but also hide this node from my parent
+			effectiveSibling.getParent().hide(this);
+			return;
+		}
+		super.addChild(jcrNode);
+	}
+	
+	JcrNode getEffectiveSibling() {
 		final String decodedName = getDecodedName();
 		JcrNode nonDirNodeParent = parent;
 		outerloop:while(nonDirNodeParent!=null && (nonDirNodeParent instanceof DirNode)) {
@@ -104,17 +117,12 @@ public class DirNode extends JcrNode {
 		for (Iterator<JcrNode> it = c.iterator(); it.hasNext();) {
 			JcrNode node = it.next();
 			if (node.getName().equals(decodedName)) {
-				// excellent, the parent contains a child which 
-				// matches the .dir/_jcr_content pattern, so add this child there
-				node.addChild(jcrNode);
-				// but also hide this node from my parent
-				nonDirNodeParent.hide(this);
-				return;
+				return node;
 			}
 		}
-		super.addChild(jcrNode);
+		return null;
 	}
-	
+
 	@Override
 	public IFile getFileForEditor() {
 		return null;
