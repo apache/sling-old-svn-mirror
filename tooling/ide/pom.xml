@@ -11,6 +11,7 @@
 	<modules>
 		<module>target-definition</module>
 		<module>api</module>
+		<module>api-test</module>
 		<module>impl-resource</module>
         <module>impl-resource-test</module>
 		<module>vlt-wrapper</module>                

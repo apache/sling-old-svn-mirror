@@ -18,6 +18,7 @@ package org.apache.sling.ide.serialization;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,10 +48,6 @@ public class SerializationKindManager {
         for (ResourceProxy child : jcrSystem.get().getChildren()) {
             String nodeType = PathUtil.getName(child.getPath());
             String[] superTypes = (String[]) child.getProperties().get("jcr:supertypes");
-
-            if (superTypes.length == 0) {
-                continue;
-            }
 
             nodeTypesToParentNodeTypes.put(nodeType, superTypes);
         }
@@ -109,7 +106,33 @@ public class SerializationKindManager {
         return null;
     }
 
-    public SerializationKind getSerializationKind(String nodeTypeName) {
+    public SerializationKind getSerializationKind(String nodeTypeName, List<String> mixinNodeTypeNames) {
+
+        SerializationKind kind = null;
+
+        // 1. check mixins
+        for (String mixinNodeType : mixinNodeTypeNames) {
+            kind = getSerializationKind0(mixinNodeType);
+            if (kind != null) {
+                return kind;
+            }
+        }
+
+        // 2. check node type
+        kind = getSerializationKind0(nodeTypeName);
+        if (kind != null) {
+            return kind;
+        }
+
+        // 3. default to partial
+        return SerializationKind.METADATA_PARTIAL;
+    }
+
+    private SerializationKind getSerializationKind0(String nodeTypeName) {
+
+        if (fullMetadataNodeTypes.contains(nodeTypeName)) {
+            return SerializationKind.METADATA_FULL;
+        }
 
         if (fileNodeTypes.contains(nodeTypeName)) {
             return SerializationKind.FILE;
@@ -119,10 +142,6 @@ public class SerializationKindManager {
             return SerializationKind.FOLDER;
         }
 
-        if (fullMetadataNodeTypes.contains(nodeTypeName)) {
-            return SerializationKind.METADATA_FULL;
-        }
-
-        return SerializationKind.METADATA_PARTIAL;
+        return null;
     }
 }

@@ -21,12 +21,15 @@ import static org.apache.sling.ide.util.PathUtil.getName;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.vault.fs.api.Aggregate;
 import org.apache.jackrabbit.vault.fs.api.Aggregator;
@@ -139,8 +142,13 @@ public class VltSerializationDataBuilder implements SerializationDataBuilder {
             if (aggregate == null)
                 throw new IllegalArgumentException("No aggregate found for path " + resource.getPath());
 
+            NodeType[] mixinNodeTypes = aggregate.getNode().getMixinNodeTypes();
+            List<String> mixinNodeTypeNames = new ArrayList<String>(mixinNodeTypes.length);
+            for (NodeType nodeType : mixinNodeTypes)
+                mixinNodeTypeNames.add(nodeType.getName());
+
             SerializationKind serializationKind = skm.getSerializationKind(aggregate.getNode().getPrimaryNodeType()
-                    .getName());
+                    .getName(), mixinNodeTypeNames);
 
             if (resource.getPath().equals("/") || serializationKind == SerializationKind.METADATA_PARTIAL
                     || serializationKind == SerializationKind.FILE || serializationKind == SerializationKind.FOLDER) {
