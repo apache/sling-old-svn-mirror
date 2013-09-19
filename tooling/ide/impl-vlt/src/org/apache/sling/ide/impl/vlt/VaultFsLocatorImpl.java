@@ -54,7 +54,9 @@ public class VaultFsLocatorImpl implements VaultFsLocator {
             if (vaultDir.isDirectory()) {
 
                 File configFile = new File(vaultDir, Constants.CONFIG_XML);
-                config = AbstractVaultFsConfig.load(configFile);
+                if (configFile.exists()) {
+                    config = AbstractVaultFsConfig.load(configFile);
+                }
             }
         }
 
