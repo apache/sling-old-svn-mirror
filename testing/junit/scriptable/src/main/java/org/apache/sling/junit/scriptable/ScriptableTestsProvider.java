@@ -160,7 +160,12 @@ public class ScriptableTestsProvider implements TestsProvider {
         if(!testName.equals(TEST_CLASS_NAME)) {
             throw new ClassNotFoundException(testName + " - the only valid name is " + TEST_CLASS_NAME);
         }
-        maybeQueryTestResources();
+        
+        try {
+            maybeQueryTestResources();
+        } catch(Exception e) {
+            throw new RuntimeException("Exception in maybeQueryTestResources()", e);
+        }
         
         if(testPaths.size() == 0) {
             return ExplainTests.class;
@@ -183,38 +188,36 @@ public class ScriptableTestsProvider implements TestsProvider {
         return result;
     }
     
-    private List<String> maybeQueryTestResources() {
+    private List<String> maybeQueryTestResources() throws RepositoryException {
         if(lastModified <= lastReloaded) {
             log.debug("No changes detected, keeping existing list of {} test resources", testPaths.size());
             return testPaths;
         }
         
         log.info("Changes detected, reloading list of test resources");
-        lastReloaded = System.currentTimeMillis();
+        final long reloadTime = System.currentTimeMillis();
         final List<String> newList = new LinkedList<String>();
         
-        try {
-            for(String root : allowedRoots) {
-                final String statement = "/jcr:root" + root + "/element(*, " + SLING_TEST_NODETYPE + ")";
-                log.debug("Querying for test nodes: {}", statement);
-                final Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
-                final NodeIterator it = q.execute().getNodes();
-                while(it.hasNext()) {
-                    final String path = it.nextNode().getPath();
-                    newList.add(path);
-                    log.debug("Test resource found: {}", path);
-                }
+        for(String root : allowedRoots) {
+            final String statement = "/jcr:root" + root + "/element(*, " + SLING_TEST_NODETYPE + ")";
+            log.debug("Querying for test nodes: {}", statement);
+            final Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
+            final NodeIterator it = q.execute().getNodes();
+            while(it.hasNext()) {
+                final String path = it.nextNode().getPath();
+                newList.add(path);
+                log.debug("Test resource found: {}", path);
             }
-            log.info("List of test resources updated, {} resource(s) found under {}", 
-                    newList.size(), Arrays.asList(allowedRoots));
-        } catch(RepositoryException re) {
-            log.warn("RepositoryException in getTestNames()", re);
         }
+        log.info("List of test resources updated, {} resource(s) found under {}", 
+                newList.size(), Arrays.asList(allowedRoots));
 
         synchronized (testPaths) {
             testPaths.clear();
             testPaths.addAll(newList);
         }
+        
+        lastReloaded = reloadTime;
         
         return testPaths;
     }
