@@ -201,6 +201,7 @@ public class ScriptableTestsProvider implements TestsProvider {
         for(String root : allowedRoots) {
             final String statement = "/jcr:root" + root + "/element(*, " + SLING_TEST_NODETYPE + ")";
             log.debug("Querying for test nodes: {}", statement);
+            session.refresh(true);
             final Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
             final NodeIterator it = q.execute().getNodes();
             while(it.hasNext()) {
