@@ -52,6 +52,8 @@ public class VltSerializationManager implements SerializationManager {
 
     static final String EXTENSION_XML = ".xml";
 
+    private VltSerializationDataBuilder builder;
+
     public static void main(String[] args) throws RepositoryException, URISyntaxException, IOException {
         RepositoryAddress address = new RepositoryAddress("http://localhost:8080/server/root");
         Repository repo = new RepositoryProvider().getRepository(address);
@@ -142,8 +144,6 @@ public class VltSerializationManager implements SerializationManager {
 
     	getBuilder().fsLocator = null;
     }
-    
-    private VltSerializationDataBuilder builder;
     
     private VltSerializationDataBuilder getBuilder() {
     	if (builder==null) {

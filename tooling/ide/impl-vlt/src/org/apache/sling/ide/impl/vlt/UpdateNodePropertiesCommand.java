@@ -59,6 +59,13 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
     
     private void update(ResourceProxy resource, Session session) throws RepositoryException, IOException {
         String resPath = resource.getPath();
+
+        // TODO - this is a workaround for partial coverage nodes being sent here
+        // when a .content.xml file with partial coverage is added here, the children are listed with no properties
+        // and get all their properties deleted
+        if (resource.getProperties().isEmpty()) {
+            return;
+        }
 		updatePath(resPath, resource.getProperties(), session);
         Iterator<ResourceProxy> it = resource.getChildren().iterator();
         while(it.hasNext()) {
