@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** Upload many different scripts in sequence and verify that they are immediately
  *  available to render content.
@@ -24,6 +25,13 @@ import java.io.IOException;
 public class ImmediateScriptActivationTest extends AbstractSlingResourceTypeRenderingTest {
 
     public static final int LOOP_COUNT = 10;
+    private final AtomicInteger counter = new AtomicInteger();
+    
+    @Override
+    protected void setUp() throws Exception {
+        slingResourceType = getClass().getSimpleName() + "." + counter.incrementAndGet();
+        super.setUp();
+    }
     
     private void assertScriptActivation(String testId, String testScript, String extension, String expectedContent) throws IOException {
         final String testUrl = displayUrl + "." + testId + ".html";
