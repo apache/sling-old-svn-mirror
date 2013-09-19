@@ -132,6 +132,13 @@ public class ContentXmlHandlerTest {
         assertThat("root contains /jcr:system", root.getChildren(), hasItem(path("/jcr:system")));
     }
 
+    @Test
+    public void parseContentXmlWithEscapedNames() throws ParserConfigurationException, SAXException, IOException {
+
+        ResourceProxy root = parseContentXmlFile("full-coverage-escaped-names.xml", "/");
+        assertThat("node contains /50-50", root.getChildren(), hasItem(path("/50-50")));
+    }
+
     private static Matcher<Calendar> millis(long millis) {
 
         return new CalendarTimeInMillisMatcher(millis);

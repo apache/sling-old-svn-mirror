@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import java.util.UUID;
 
 import org.apache.jackrabbit.util.ISO8601;
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -54,7 +55,8 @@ public class ContentXmlHandler extends DefaultHandler {
                 path.append('/');
             path.append(qName);
 
-            current = new ResourceProxy(path.toString());
+
+            current = new ResourceProxy(ISO9075.decode(path.toString()));
             parent.addChild(current);
         }
 
