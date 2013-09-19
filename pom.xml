@@ -54,6 +54,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            org.apache.sling.jcr.jackrabbit.server.*;resolution:=optional,
+                            *
+                        </Import-Package>
                         <Export-Package>
                           org.apache.sling.launchpad.testservices.exported.*
                         </Export-Package>
