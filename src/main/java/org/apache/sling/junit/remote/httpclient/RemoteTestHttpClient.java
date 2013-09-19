@@ -17,10 +17,16 @@
 package org.apache.sling.junit.remote.httpclient;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.sling.testing.tools.http.Request;
 import org.apache.sling.testing.tools.http.RequestBuilder;
 import org.apache.sling.testing.tools.http.RequestCustomizer;
@@ -70,7 +76,12 @@ public class RemoteTestHttpClient {
         requestCustomizer = c;
     }
     
-    public RequestExecutor runTests(String testClassesSelector, String testMethodSelector, String extension) 
+    public RequestExecutor runTests(String testClassesSelector, String testMethodSelector, String extension)
+    throws ClientProtocolException, IOException {
+        return runTests(testClassesSelector, testMethodSelector, extension, null);
+    }
+    
+    public RequestExecutor runTests(String testClassesSelector, String testMethodSelector, String extension, Map<String, String> requestOptions) 
     throws ClientProtocolException, IOException {
         final RequestBuilder builder = new RequestBuilder(junitServletUrl);
 
@@ -104,13 +115,22 @@ public class RemoteTestHttpClient {
             subpath.append(DOT);
         }
         subpath.append(extension);
+
+        // Request options if any
+        final List<NameValuePair> opt = new ArrayList<NameValuePair>();
+        if(requestOptions != null) {
+            for(Map.Entry<String, String> e : requestOptions.entrySet()) {
+                opt.add(new BasicNameValuePair(e.getKey(), e.getValue()));
+            }
+        }
         
         log.info("Executing test remotely, path={} JUnit servlet URL={}",
                 subpath, junitServletUrl);
         final Request r = builder
         .buildPostRequest(subpath.toString())
         .withCredentials(username, password)
-        .withCustomizer(requestCustomizer);
+        .withCustomizer(requestCustomizer)
+        .withEntity(new UrlEncodedFormEntity(opt));
         executor.execute(r).assertStatus(200);
 
         return executor;
