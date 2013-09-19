@@ -25,6 +25,12 @@ public interface TestsManager {
      */
     public Collection<String> getTestNames(TestSelector selector);
     
+    /** Clear our internal caches. Useful in automated testing, to make
+     *  sure changes introduced by recent uploads or configuration or bundles
+     *  changes are taken into account immediately. 
+     */
+    public void clearCaches();
+    
     /** Instantiate test class for specified test */
     public Class<?> getTestClass(String testName) throws ClassNotFoundException;
     

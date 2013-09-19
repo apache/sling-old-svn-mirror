@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
@@ -50,7 +51,7 @@ public class TestsManagerImpl implements TestsManager {
     private List<TestsProvider> providers = new ArrayList<TestsProvider>();
     
     // Map of test names to their provider's PID
-    private Map<String, String> tests = new HashMap<String, String>();
+    private Map<String, String> tests = new ConcurrentHashMap<String, String>();
     
     // Last-modified values for each provider
     private Map<String, Long> lastModified = new HashMap<String, Long>();
@@ -69,7 +70,14 @@ public class TestsManagerImpl implements TestsManager {
         bundleContext = null;
     }
     
-    /** inheritDoc */
+    /** @inheritDoc */
+    public void clearCaches() {
+        log.debug("Clearing internal caches");
+        lastModified.clear();
+        lastTrackingCount = -1;
+    }
+    
+    /** @inheritDoc */
     public Class<?> getTestClass(String testName) throws ClassNotFoundException {
         maybeUpdateProviders();
 

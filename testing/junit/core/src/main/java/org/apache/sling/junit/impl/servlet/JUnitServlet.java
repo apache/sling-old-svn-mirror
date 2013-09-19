@@ -51,6 +51,7 @@ public class JUnitServlet extends HttpServlet {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public static final String CSS = "junit.css";
+    public static final String FORCE_RELOAD_PARAM = "forceReload";
     
     @Property(value="/system/sling/junit")
     static final String SERVLET_PATH_NAME = "servlet.path";
@@ -100,8 +101,11 @@ public class JUnitServlet extends HttpServlet {
     /** Return sorted list of available tests
      * @param prefix optionally select only names that match this prefix
      */
-    private List<String> getTestNames(TestSelector selector) {
+    private List<String> getTestNames(TestSelector selector, boolean forceReload) {
         final List<String> result = new LinkedList<String>();
+        if(forceReload) {
+            log.debug("{} is true, clearing TestsManager caches", FORCE_RELOAD_PARAM);
+        }
         result.addAll(testsManager.getTestNames(selector));
         Collections.sort(result);
         return result;
@@ -123,10 +127,17 @@ public class JUnitServlet extends HttpServlet {
         }
     }
     
+    private boolean getForceReloadOption(HttpServletRequest request) {
+        final boolean forceReload = "true".equalsIgnoreCase(request.getParameter(FORCE_RELOAD_PARAM));
+        log.debug("{} option is set to {}", FORCE_RELOAD_PARAM, forceReload);
+        return forceReload;
+    }
+    
     /** GET request lists available tests */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
+        final boolean forceReload = getForceReloadOption(request);
         
         // Redirect to / if called without it, and serve CSS if requested 
         {
@@ -150,7 +161,7 @@ public class JUnitServlet extends HttpServlet {
         renderer.info("info", "Test selector: " + selector); 
         
         // Any test classes?
-        final List<String> testNames = getTestNames(selector); 
+        final List<String> testNames = getTestNames(selector, forceReload); 
         if(testNames.isEmpty()) {
             renderer.info(
                     "warning",
@@ -175,7 +186,9 @@ public class JUnitServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
     throws ServletException, IOException {
         final TestSelector selector = getTestSelector(request);
-        log.info("POST request, executing tests: {}", selector);
+        final boolean forceReload = getForceReloadOption(request);
+        log.info("POST request, executing tests: {}, {}={}", 
+                new Object[] { selector, FORCE_RELOAD_PARAM, forceReload});
         
         final Renderer renderer = rendererSelector.getRenderer(selector);
         if(renderer == null) {
@@ -183,7 +196,7 @@ public class JUnitServlet extends HttpServlet {
         }
         renderer.setup(response, getClass().getSimpleName());
         
-        final List<String> testNames = getTestNames(selector);
+        final List<String> testNames = getTestNames(selector, forceReload);
         if(testNames.isEmpty()) {
             response.sendError(
                     HttpServletResponse.SC_NOT_FOUND, 
