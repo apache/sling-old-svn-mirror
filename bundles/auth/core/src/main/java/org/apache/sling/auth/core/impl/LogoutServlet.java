@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
@@ -41,12 +42,15 @@ import org.slf4j.LoggerFactory;
  * The <code>LogoutServlet</code> lets the Authenticator
  * do the logout.
  */
-@Component()
+@Component(metatype=true, label="Apache Sling Authentication Logout Servlet",
+           description="Servlet for logging out users through the authenticator service.")
 @Service(value = Servlet.class)
 @Properties( {
     @Property(name = Constants.SERVICE_DESCRIPTION, value = "Authenticator Logout Servlet"),
     @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = "sling.servlet.methods", value = { "GET", "POST" }) })
+    @Property(name = "sling.servlet.methods", value = { "GET", "POST" } ,
+              label = "Method", description = "Supported Methdos", unbounded=PropertyUnbounded.ARRAY)
+})
 public class LogoutServlet extends SlingAllMethodsServlet {
 
     /** serialization UID */
