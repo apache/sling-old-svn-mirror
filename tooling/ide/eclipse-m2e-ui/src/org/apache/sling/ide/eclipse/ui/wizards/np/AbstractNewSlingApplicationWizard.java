@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,16 +25,12 @@ import java.util.Properties;
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.model.Model;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
-import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchManager;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -269,19 +263,6 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 			return false;
 		}
 		
-		if (reactorProject!=null) {
-			ILaunchConfiguration launchConfig = 
-					DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(reactorProject.getFolder(".settings").getFolder(".launches").getFile("initial_install.launch"));
-			if (launchConfig!=null) {
-				ILaunch theLaunch = launchConfig.launch(ILaunchManager.RUN_MODE, monitor, true);
-				monitor.setTaskName("mvn install");
-				while(!theLaunch.isTerminated()) {
-					Thread.sleep(500);
-					monitor.worked(1);
-				}
-			}
-		}
-		
 		wc.getOriginal().publish(IServer.PUBLISH_FULL, monitor);
 		
 		// also add 'java 1.6' and 'jst.ejb 3.1'
@@ -307,6 +288,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		for (Iterator<IProject> it = projects.iterator(); it.hasNext();) {
 			IProject project = it.next();
 			MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(new MavenUpdateRequest(project, /*mavenConfiguration.isOffline()*/false, forceDependencyUpdate), monitor);
+			project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
 		}
 	}
 
@@ -321,14 +303,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	}
 	
 	protected void configureReactorProject(IProject reactorProject, IProgressMonitor monitor) throws CoreException {
-		// temp hack: install the launch file
-		IFolder dotLaunches = reactorProject.getFolder(".settings").getFolder(".launches");
-		dotLaunches.create(true, true, monitor);
-		IFile launchFile = dotLaunches.getFile("initial_install.launch");
-		String l = MavenLaunchHelper.createMavenLaunchConfigMemento(reactorProject.getLocation().toOSString(), 
-				"install", null, false, null);
-		InputStream in = new ByteArrayInputStream(l.getBytes());
-		launchFile.create(in, true, monitor);
+		// nothing to be done
 	}
 	
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
