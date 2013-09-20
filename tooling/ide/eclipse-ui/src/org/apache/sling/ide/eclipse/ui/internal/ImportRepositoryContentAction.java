@@ -55,7 +55,6 @@ import org.eclipse.wst.server.core.IServer;
 // intentionally does not implement IRunnableWithProgress to cut dependency on JFace
 public class ImportRepositoryContentAction {
 
-    private final String repositoryPath;
     private final IServer server;
     private final IFile filterFile;
     private final IPath projectRelativePath;
@@ -64,16 +63,14 @@ public class ImportRepositoryContentAction {
 	private SerializationDataBuilder builder;
 
     /**
-     * @param repositoryPath
      * @param server
      * @param filterFile
      * @param projectRelativePath
      * @param project
      * @throws SerializationException 
      */
-    public ImportRepositoryContentAction(String repositoryPath, IServer server, IFile filterFile,
-            IPath projectRelativePath, IProject project, SerializationManager serializationManager) throws SerializationException {
-        this.repositoryPath = repositoryPath;
+    public ImportRepositoryContentAction(IServer server, IFile filterFile, IPath projectRelativePath,
+            IProject project, SerializationManager serializationManager) throws SerializationException {
         this.server = server;
         this.filterFile = filterFile;
         this.projectRelativePath = projectRelativePath;
@@ -141,10 +138,7 @@ public class ImportRepositoryContentAction {
             monitor.setTaskName("Importing...");
             monitor.worked(10);
 
-            // we create the root node and assume this is a folder
-            createRoot(project, projectRelativePath, repositoryPath);
-
-            crawlChildrenAndImport(repository, filter, repositoryPath, project, projectRelativePath);
+            crawlChildrenAndImport(repository, filter, "/", project, projectRelativePath);
 
             monitor.setTaskName("Import Complete");
             monitor.worked(100);
@@ -161,15 +155,6 @@ public class ImportRepositoryContentAction {
             monitor.done();
         }
 
-    }
-
-    private void createRoot(final IProject project, final IPath projectRelativePath,
-            final String repositoryPath) throws CoreException {
-
-        IPath rootImportPath = projectRelativePath.append(repositoryPath);
-
-        for (int i = rootImportPath.segmentCount() - 1; i > 0; i--)
-            createFolder(project, rootImportPath.removeLastSegments(i));
     }
 
     /**

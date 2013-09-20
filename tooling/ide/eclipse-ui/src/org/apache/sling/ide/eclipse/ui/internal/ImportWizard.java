@@ -68,14 +68,13 @@ public class ImportWizard extends Wizard implements IImportWizard {
 
         final IProject project = ResourcesPlugin.getWorkspace().getRoot().getProject(destinationPath.segments()[0]);
         final IPath projectRelativePath = destinationPath.removeFirstSegments(1);
-        final String repositoryPath = mainPage.getRepositoryPath();
         final IFile filterFile = mainPage.getFilterFile();
         IRunnableWithProgress runnable = new IRunnableWithProgress() {
             @Override
             public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 
                 try {
-                    new ImportRepositoryContentAction(repositoryPath, server, filterFile, projectRelativePath, project,
+                    new ImportRepositoryContentAction(server, filterFile, projectRelativePath, project,
                             serializationManager).run(monitor);
                 } catch (SerializationException e) {
                     throw new InvocationTargetException(e);

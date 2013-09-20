@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
-
 import java.io.File;
 import java.util.List;
 
@@ -35,8 +34,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -61,14 +58,6 @@ import org.eclipse.wst.server.core.ServerCore;
  */
 public class ImportWizardPage extends WizardDataTransferPage {
 
-	private Text path;
-	private ModifyListener modifyListener = new ModifyListener() {
-		@Override
-		public void modifyText(ModifyEvent event) {
-            determinePageCompletion();
-            updateWidgetEnablements();
-		}
-	};
     private Combo repositoryCombo;
     private Label importLabel;
 	private Button containerBrowseButton;
@@ -160,12 +149,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
 		});
         updateRepositoryList();
 
-        Label pathLabel = new Label(container, SWT.NONE);
-        pathLabel.setText("Repository Path:");
-        path = new Text(container, SWT.BORDER);
-        path.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-        path.addModifyListener(modifyListener);
-        
         Composite containerGroup = new Composite(composite, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 3;
@@ -207,7 +190,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
         Link openPropertiesLink = new Link(composite, SWT.NONE);
         openPropertiesLink.setText("<a>Modify location here</a>");
         openPropertiesLink.addSelectionListener(new SelectionAdapter() {
-			
 			public void widgetSelected(SelectionEvent e) {
 				PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(getShell(), project, 
 						"org.apache.sling.ide.projectPropertyPage", 
@@ -223,7 +205,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
         
         setControl(composite);
 
-        setPageComplete(false);
+        updateWidgetEnablements();
 	}
 
 	private void updateRepositoryList() {
@@ -241,14 +223,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
         }
 	}
 
-    /**
-	 * Returns the path from which to import from the Sling Repository.
-	 * 
-	 * @return the repository path
-	 */
-	public String getRepositoryPath() {
-		return path != null ? path.getText() : null;
-	}
 
 	public void handleEvent(Event event) {
 		if (event.widget == containerBrowseButton) {
@@ -327,12 +301,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
             setErrorMessage("Please select a valid index");
 			return false;
 		}
-		
-		if ( !getRepositoryPath().startsWith("/") ) {
-			setErrorMessage("The repository path needs to be absolute");
-			return false;
-		}
-		
+
         String syncDirectoryPath = ProjectUtil.getSyncDirectoryValue(project);
         IFolder syncFolder = project.getFolder(syncDirectoryPath);
 
@@ -424,11 +393,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
         	setErrorMessage("Please select a repository");
         	return false;
         }
-		if (getRepositoryPath() == null
-				|| getRepositoryPath().trim().length() == 0) {
-			setErrorMessage("Please enter a valid Sling Repository path");
-			return false;
-		}
 		return true;
 	}
 
