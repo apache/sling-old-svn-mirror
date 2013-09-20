@@ -16,86 +16,136 @@
  */
 package org.apache.sling.ide.impl.vlt;
 
+import static org.apache.jackrabbit.vault.util.JcrConstants.JCR_CONTENT;
+import static org.apache.jackrabbit.vault.util.JcrConstants.JCR_DATA;
+import static org.apache.jackrabbit.vault.util.JcrConstants.JCR_LASTMODIFIED;
+import static org.apache.jackrabbit.vault.util.JcrConstants.JCR_PRIMARYTYPE;
+import static org.apache.jackrabbit.vault.util.JcrConstants.NT_RESOURCE;
+import static org.apache.sling.ide.transport.Repository.NT_FILE;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.nodetype.NodeType;
 
+import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.util.PathUtil;
 
-public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
+public class AddOrUpdateNodeCommand extends JcrCommand<Void> {
 
     private ResourceProxy resource;
+    private FileInfo fileInfo;
 
-	public UpdateNodePropertiesCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
+	public AddOrUpdateNodeCommand(Repository jcrRepo, Credentials credentials, FileInfo fileInfo,
             ResourceProxy resource) {
 
         super(jcrRepo, credentials, resource.getPath());
         
+        this.fileInfo = fileInfo;
         this.resource = resource;
     }
 
     @Override
     protected Void execute0(Session session) throws RepositoryException, IOException {
 
-    	update(resource, session);
+        update(resource, session);
         return null;
     }
     
-    private void update(ResourceProxy resource, Session session) throws RepositoryException, IOException {
-        String resPath = resource.getPath();
+    private void update(ResourceProxy resource, Session session) throws RepositoryException,
+            IOException {
 
-        // TODO - this is a workaround for partial coverage nodes being sent here
-        // when a .content.xml file with partial coverage is added here, the children are listed with no properties
-        // and get all their properties deleted
-        if (resource.getProperties().isEmpty()) {
-            return;
+        String path = resource.getPath();
+        boolean nodeExists = session.nodeExists(path);
+
+        Node node;
+        if (nodeExists) {
+            node = session.getNode(path);
+        } else {
+            node = createNode(resource, session);
         }
-		updatePath(resPath, resource.getProperties(), session);
-        Iterator<ResourceProxy> it = resource.getChildren().iterator();
-        while(it.hasNext()) {
-        	update(it.next(), session);
+
+        updateNode(node, resource);
+        for (ResourceProxy child : resource.getChildren()) {
+            // TODO - this is a workaround for partial coverage nodes being sent here
+            // when a .content.xml file with partial coverage is added here, the children are listed with no properties
+            // and get all their properties deleted
+            if (child.getProperties().isEmpty()) {
+                continue;
+            }
+            update(child, session);
         }
+
+        // TODO - does not handle deletion of nodes which no longer have a matching resource
 	}
 
-	private void updatePath(final String path, final Map<String, Object> serializationData, final Session session) throws RepositoryException, IOException {
-		if (!session.nodeExists(path)) {
-			// then create the node
-			Object primaryType = serializationData.get("jcr:primaryType");
-			String relPath = path.startsWith("/") ? path.substring(1) : path;
-			if (primaryType!=null) {
-				session.getRootNode().addNode(relPath, String.valueOf(primaryType));
-			} else {
-				session.getRootNode().addNode(relPath);
-			}
-		}
-        Node node = session.getNode(path);
-        
+    private Node createNode(ResourceProxy resource, Session session) throws RepositoryException, FileNotFoundException {
+
+        String parentLocation = Text.getRelativeParent(resource.getPath(), 1);
+        if (parentLocation.isEmpty()) {
+            parentLocation = "/";
+        }
+
+        if (!session.nodeExists(parentLocation)) {
+            throw new RepositoryException("No parent found at " + parentLocation + " ; it's needed to create node at "
+                    + resource.getPath());
+        }
+
+        String primaryType = (String) resource.getProperties().get(JCR_PRIMARYTYPE);
+
+        if (primaryType == null) {
+            throw new IllegalArgumentException("Missing " + JCR_PRIMARYTYPE + " for ResourceProxy at path "
+                    + resource.getPath());
+        }
+
+        return session.getNode(parentLocation).addNode(PathUtil.getName(resource.getPath()), primaryType);
+    }
+
+    private void updateNode(Node node, ResourceProxy resource) throws RepositoryException, IOException {
+
+        if (node.getPath().equals(getPath())) {
+            updateFileLikeNodeTypes(node);
+        }
+
         Set<String> propertiesToRemove = new HashSet<String>();
         PropertyIterator properties = node.getProperties();
         while ( properties.hasNext()) {
-            propertiesToRemove.add(properties.nextProperty().getName());
+            Property property = properties.nextProperty();
+            if (property.getDefinition().isProtected()
+                    || property.getDefinition().getRequiredType() == PropertyType.BINARY) {
+                continue;
+            }
+            propertiesToRemove.add(property.getName());
         }
         
-        propertiesToRemove.removeAll(serializationData.keySet());
+        propertiesToRemove.removeAll(resource.getProperties().keySet());
+
+
+        Session session = node.getSession();
 
         // TODO - review for completeness and filevault compatibility
-        for (Map.Entry<String, Object> entry : serializationData.entrySet()) {
+        for (Map.Entry<String, Object> entry : resource.getProperties().entrySet()) {
 
             String propertyName = entry.getKey();
             Object propertyValue = entry.getValue();
@@ -193,13 +243,63 @@ public class UpdateNodePropertiesCommand extends JcrCommand<Void> {
         }
         
         for ( String propertyToRemove : propertiesToRemove ) {
-            Property prop = node.getProperty(propertyToRemove);
-            if (prop.getDefinition().isProtected()) {
-                continue;
-            }
-            prop.remove();
+            node.getProperty(propertyToRemove).remove();
         }
 
+    }
+
+    private void updateFileLikeNodeTypes(Node node) throws RepositoryException, IOException {
+        // TODO - better handling of file-like nodes - perhaps we need to know the SerializationKind here
+        // TODO - avoid IO
+        File file = new File(fileInfo.getLocation());
+
+        if (!storeFileInfo(node)) {
+            return;
+        }
+
+        Node contentNode;
+
+        if (node.hasNode(JCR_CONTENT)) {
+            contentNode = node.getNode(JCR_CONTENT);
+        } else {
+            if (node.getProperty(JCR_PRIMARYTYPE).getString().equals(NT_RESOURCE)) {
+                contentNode = node;
+            } else {
+                contentNode = node.addNode(JCR_CONTENT, NT_RESOURCE);
+            }
+        }
+
+        FileInputStream inputStream = new FileInputStream(file);
+        try {
+            Binary binary = node.getSession().getValueFactory().createBinary(inputStream);
+            contentNode.setProperty(JCR_DATA, binary);
+            // TODO: might have to be done differently since the client and server's clocks can differ
+            // and the last_modified should maybe be taken from the server's time..
+            contentNode.setProperty(JCR_LASTMODIFIED, Calendar.getInstance());
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                // don't care
+            }
+        }
+    }
+
+    private boolean storeFileInfo(Node node) throws RepositoryException {
+
+        String nodeTypeName = node.getPrimaryNodeType().getName();
+        if (nodeTypeName.equals(NT_FILE) || nodeTypeName.equals(NT_RESOURCE)) {
+            return true;
+        }
+
+        for (NodeType supertype : node.getPrimaryNodeType().getSupertypes()) {
+            String superTypeName = supertype.getName();
+            if (superTypeName.equals(NT_FILE) || superTypeName.equals(NT_RESOURCE)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private Value[] toValueArray(String[] strings, Session session) throws RepositoryException {

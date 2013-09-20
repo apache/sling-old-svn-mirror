@@ -28,12 +28,6 @@ public class RepositoryImpl extends AbstractRepository{
     private final HttpClient httpClient = new HttpClient();
     private EventAdmin eventAdmin;
 
-	@Override
-	public Command<Void> newAddNodeCommand(final FileInfo fileInfo) {
-        return wrap(new AddNodeCommand(fileInfo, repositoryInfo, httpClient));
-	}
-
-
     private <T> Command<T> wrap(AbstractCommand<T> command) {
         return new TracingCommand<T>(command, eventAdmin);
     }
@@ -60,7 +54,7 @@ public class RepositoryImpl extends AbstractRepository{
 	}
 	
 	@Override
-    public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, ResourceProxy resource) {
+    public Command<Void> newAddOrUpdateNodeCommand(final FileInfo fileInfo, ResourceProxy resource) {
 		
         return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(),
                 resource.getProperties(), fileInfo));

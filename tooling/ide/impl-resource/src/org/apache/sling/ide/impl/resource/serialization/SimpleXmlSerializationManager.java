@@ -37,6 +37,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.ResourceProxy;
@@ -60,7 +61,7 @@ public class SimpleXmlSerializationManager implements SerializationManager, Seri
     }
 
     @Override
-    public String getSerializationFilePath(String baseFilePath) {
+    public String getSerializationFilePath(String baseFilePath, SerializationKind serializationKind) {
         return baseFilePath + File.separatorChar + CONTENT_XML;
     }
 

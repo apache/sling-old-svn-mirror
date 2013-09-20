@@ -43,6 +43,7 @@ import org.apache.jackrabbit.vault.util.RepositoryProvider;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.InputSource;
@@ -130,9 +131,19 @@ public class VltSerializationManager implements SerializationManager {
     }
 
     @Override
-    public String getSerializationFilePath(String baseFilePath) {
-        // TODO - validate if this is correct
-        return baseFilePath + File.separatorChar + Constants.DOT_CONTENT_XML;
+    public String getSerializationFilePath(String baseFilePath, SerializationKind serializationKind) {
+
+        switch (serializationKind) {
+            case FOLDER:
+            case METADATA_PARTIAL:
+                return baseFilePath + File.separatorChar + Constants.DOT_CONTENT_XML;
+            case METADATA_FULL:
+                return baseFilePath;
+            case FILE:
+                return baseFilePath + ".dir" + File.separatorChar + Constants.DOT_CONTENT_XML;
+        }
+
+        throw new IllegalArgumentException("Unsupported serialization kind " + serializationKind);
     }
 
     protected void bindVaultFsLocator(VaultFsLocator fsLocator) {
@@ -170,7 +181,12 @@ public class VltSerializationManager implements SerializationManager {
         String repositoryPath;
         File file = new File(filePath);
         if (file.getName().equals(Constants.DOT_CONTENT_XML)) {
-            repositoryPath = PlatformNameFormat.getRepositoryPath(file.getParent());
+            // TODO - generalize instead of special-casing the parent name
+            String parentPath = file.getParent();
+            if (parentPath != null && parentPath.endsWith(".dir")) {
+                parentPath = parentPath.substring(0, parentPath.length() - ".dir".length());
+            }
+            repositoryPath = PlatformNameFormat.getRepositoryPath(parentPath);
         } else {
             if (!filePath.endsWith(EXTENSION_XML)) {
                 throw new IllegalArgumentException("Don't know how to extract resource path from file named "

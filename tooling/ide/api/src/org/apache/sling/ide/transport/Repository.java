@@ -81,9 +81,7 @@ public interface Repository {
 
     RepositoryInfo getRepositoryInfo();
 
-	Command<Void> newAddNodeCommand(FileInfo fileInfo);
-	
-    Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
+    Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
 	
 	Command<Void> newDeleteNodeCommand(FileInfo fileInfo);
  

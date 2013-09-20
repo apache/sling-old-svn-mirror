@@ -31,9 +31,15 @@ public interface SerializationManager {
 
     String getBaseResourcePath(String serializationFilePath);
 
-    String getSerializationFilePath(String baseFilePath);
+    String getSerializationFilePath(String baseFilePath, SerializationKind serializationKind);
 
     SerializationDataBuilder newBuilder(Repository repository, File contentSyncRoot) throws SerializationException;
 
+    /**
+     * @param filePath The filePath, in OS format, relative to the local content sync root
+     * @param source
+     * @return
+     * @throws IOException
+     */
     ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException;
 }

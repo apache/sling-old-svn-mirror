@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -42,6 +43,7 @@ import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
@@ -195,6 +197,9 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 } catch (SerializationException e) {
                     throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
                             + trace.toString(), e));
+                } catch (IOException e) {
+                    throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "IO error for "
+                            + trace.toString(), e));
                 }
             }
         } finally {
@@ -271,8 +276,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 		}
 	}
 
-	private void publishContentModule(int kind, int deltaKind,
-			IModule[] module, IProgressMonitor monitor) throws CoreException, SerializationException {
+    private void publishContentModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)
+            throws CoreException, SerializationException, IOException {
 
 		if (runLaunchesIfExist(kind, deltaKind, module, monitor)) {
 			return;
@@ -355,8 +360,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 //        setServerPublishState(IServer.PUBLISH_STATE_NONE);
 	}
 
-	private List<IModuleResourceDelta> filterContentXmlParents(
-			List<IModuleResourceDelta> publishedResourceDelta) {
+    // TODO - this needs to be revisited, as it potentially prevents empty folders ( nt:folder node type) from being
+    // created
+    // TODO - we shouldn't hardcode knowledge of .content.xml here
+    private List<IModuleResourceDelta> filterContentXmlParents(List<IModuleResourceDelta> publishedResourceDelta) {
 		List<IModuleResourceDelta> adjustedPublishedResourceDelta = new LinkedList<IModuleResourceDelta>();
 		Map<String,IModuleResourceDelta> map = new HashMap<String, IModuleResourceDelta>();
 		for (IModuleResourceDelta resourceDelta : publishedResourceDelta) {
@@ -366,10 +373,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 				.hasNext();) {
 			IModuleResourceDelta iModuleResourceDelta = it.next();
 			String resPath = iModuleResourceDelta.getModuleRelativePath().toString();
-			if (resPath.contains(".dir")) {
-				// filter those for the moment
-				continue;
-			}
 			IModuleResourceDelta originalEntry = map.get(resPath);
 			IModuleResourceDelta detailedEntry = map.remove(
 					resPath+"/.content.xml");
@@ -382,8 +385,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 		return adjustedPublishedResourceDelta;
 	}
 
-	private List<IModuleResource> filterContentXmlParents(
-			IModuleResource[] moduleResources) {
+    // TODO - this needs to be revisited, as it potentially prevents empty folders ( nt:folder node type) from being
+    // created
+    // TODO - we shouldn't hardcode knowledge of .content.xml here
+    private List<IModuleResource> filterContentXmlParents(IModuleResource[] moduleResources) {
 		List<IModuleResource> moduleResourcesList = Arrays.asList(moduleResources);
         List<IModuleResource> adjustedModuleResourcesList = new LinkedList<IModuleResource>();
         Map<String,IModuleResource> map1 = new HashMap<String, IModuleResource>();
@@ -396,9 +401,6 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 				.hasNext();) {
 			IModuleResource iModuleResource = it.next();
 			String resPath = iModuleResource.getModuleRelativePath().toString();
-			if (resPath.contains(".dir")) {
-				continue;
-			}
 			IModuleResource originalEntry = map1.get(resPath);
 			IModuleResource detailedEntry = map1.remove(resPath+"/.content.xml");
         	if (detailedEntry!=null) {
@@ -471,12 +473,16 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         Result<?> result = command.execute();
 
-        if (!result.isSuccess()) // TODO proper logging
-            throw new CoreException(new Status(Status.ERROR, "some.plugin", result.toString()));
+        if (!result.isSuccess()) {
+            // TODO - proper error logging
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, "Failed publishing "
+                    + result.toString()));
+        }
+
     }
 
     private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException,
-            SerializationException {
+            SerializationException, IOException {
 
         FileInfo info = createFileInfo(resource, repository);
 
@@ -491,25 +497,94 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
 
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFullPath(res.getProject()).toFile();
+        IFolder syncDirectory = ProjectUtil.getSyncDirectory(res.getProject());
 
         if (serializationManager(repository, syncDirectoryAsFile).isSerializationFile(info.getLocation())) {
-
+            InputStream contents = null;
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
-                InputStream contents = file.getContents();
-                IFolder syncDirectory = ProjectUtil.getSyncDirectory(res.getProject());
+                contents = file.getContents();
                 String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toOSString();
                 ResourceProxy resourceProxy = serializationManager(repository, syncDirectoryAsFile)
                         .readSerializationData(resourceLocation, contents);
-                return repository.newUpdateContentNodeCommand(info, resourceProxy);
+                // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
+                // .serialization file, since for nt:file/nt:resource nodes this will overwrite the file contents
+                String primaryType = (String) resourceProxy.getProperties().get(Repository.JCR_PRIMARY_TYPE);
+                if (Repository.NT_FILE.equals(primaryType) || Repository.NT_RESOURCE.equals(primaryType)) {
+                    // TODO move logic to serializationManager
+                    File locationFile = new File(info.getLocation());
+                    String locationFileParent = locationFile.getParent();
+                    int endIndex = locationFileParent.length() - ".dir".length();
+                    File actualFile = new File(locationFileParent.substring(0, endIndex));
+                    String newLocation = actualFile.getAbsolutePath();
+                    String newName = actualFile.getName();
+                    String newRelativeLocation = actualFile.getAbsolutePath().substring(
+                            syncDirectoryAsFile.getAbsolutePath().length());
+                    info = new FileInfo(newLocation, newRelativeLocation, newName);
+                }
+
+                return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
             } catch (IOException e) {
                 // TODO logging
                 e.printStackTrace();
                 return null;
+            } finally {
+                if (contents != null) {
+                    contents.close();
+                }
             }
         } else {
-            return repository.newAddNodeCommand(info);
+
+            IFile file = (IFile) resource.getAdapter(IFile.class);
+            IFolder folder = (IFolder) resource.getAdapter(IFolder.class);
+            ResourceProxy resourceProxy = null;
+
+            IResource changedResource = file != null ? file : folder;
+            if (changedResource == null) {
+                System.err.println("Could not find a file or a folder for " + info);
+                return null;
+            }
+
+            SerializationKind serializationKind;
+            String fallbackNodeType;
+            if (changedResource.getType() == IResource.FILE) {
+                serializationKind = SerializationKind.FILE;
+                fallbackNodeType = Repository.NT_FILE;
+            } else { // i.e. IResource.FOLDER
+                serializationKind = SerializationKind.FOLDER;
+                fallbackNodeType = Repository.NT_FOLDER;
+            }
+
+            String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
+                    .toPortableString();
+            String serializationFilePath = serializationManager.getSerializationFilePath(resourceLocation,
+                    serializationKind);
+            IResource serializationResource = syncDirectory.findMember(serializationFilePath);
+            resourceProxy = buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
+
+            return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
         }
+    }
+
+    private ResourceProxy buildResourceProxy(String resourceLocation, IResource serializationResource,
+            IFolder syncDirectory, String fallbackPrimaryType) throws IOException, CoreException {
+        if (serializationResource instanceof IFile) {
+            IFile serializationFile = (IFile) serializationResource;
+            InputStream contents = null;
+            try {
+                contents = serializationFile.getContents();
+                String serializationFilePath = serializationResource.getFullPath()
+                        .makeRelativeTo(syncDirectory.getFullPath()).toOSString();
+                return serializationManager.readSerializationData(serializationFilePath, contents);
+            } finally {
+                if (contents != null) {
+                    contents.close();
+                }
+            }
+        }
+
+        return new ResourceProxy(resourceLocation, Collections.singletonMap(Repository.JCR_PRIMARY_TYPE,
+                    (Object) fallbackPrimaryType));
     }
 
     private FileInfo createFileInfo(IModuleResource resource, Repository repository) throws SerializationException {

@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.sling.ide.serialization.SerializationData;
 import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Before;
@@ -150,7 +151,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void serializationFileLocation() {
         
-        String serializationFilePath = sm.getSerializationFilePath("jcr_root");
+        String serializationFilePath = sm.getSerializationFilePath("jcr_root", SerializationKind.FOLDER);
         
         assertThat(serializationFilePath, is("jcr_root" + File.separatorChar + ".content.xml"));
     }

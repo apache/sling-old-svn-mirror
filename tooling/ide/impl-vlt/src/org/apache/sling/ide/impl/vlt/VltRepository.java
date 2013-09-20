@@ -45,14 +45,9 @@ public class VltRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newAddNodeCommand(FileInfo fileInfo) {
-        return TracingCommand.wrap(new AddNodeCommand(jcrRepo, credentials, fileInfo), eventAdmin);
-    }
-
-    @Override
-    public Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, ResourceProxy resource) {
+    public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resource) {
         // TODO implement
-        return TracingCommand.wrap(new UpdateNodePropertiesCommand(jcrRepo, credentials, fileInfo, resource),
+        return TracingCommand.wrap(new AddOrUpdateNodeCommand(jcrRepo, credentials, fileInfo, resource),
                 eventAdmin);
     }
 

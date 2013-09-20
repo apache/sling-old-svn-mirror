@@ -30,11 +30,6 @@ public class StubRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy) {
-        return null;
-    }
-
-    @Override
     public Command<ResourceProxy> newListChildrenNodeCommand(final String path) {
 
         if ("/jcr:system/jcr:nodeTypes".equals(path)) {
@@ -125,7 +120,7 @@ public class StubRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newAddNodeCommand(FileInfo fileInfo) {
+    public Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceInfo) {
         return null;
     }
 
