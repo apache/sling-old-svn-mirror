@@ -220,6 +220,16 @@
            policy="InvokeAlwaysRegardlessOfSuppressedExt"
            suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
      </override>
+     <commonSorter
+           class="org.apache.sling.ide.eclipse.ui.nav.Sorter">
+        <parentExpression>
+           <or>
+              <adapt
+                    type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+              </adapt>
+           </or>
+        </parentExpression>
+     </commonSorter>
         
       </navigatorContent>
    </extension>

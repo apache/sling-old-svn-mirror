@@ -114,7 +114,7 @@ public class JcrContentContentProvider implements ITreeContentProvider, IPipelin
 			return projectGetChildren((IProject)parentElement);
 		} else if (parentElement instanceof JcrNode) {
 			JcrNode node = (JcrNode)parentElement;
-			return node.getChildren();
+			return node.getChildren(true);
 		} else {
 			return null;
 		}

@@ -100,7 +100,7 @@ public class JcrNode implements IAdaptable {
 
 	JcrNode parent;
 
-	final Set<JcrNode> children = new HashSet<JcrNode>();
+	final List<JcrNode> children = new LinkedList<JcrNode>();
 
 	Node domNode;
 
@@ -140,7 +140,7 @@ public class JcrNode implements IAdaptable {
 	
 	@Override
 	public String toString() {
-		return "JcrNode[dom:"+domNode+", file:"+resource+"]";
+		return "JcrNode[dom:"+domNode+", file:"+resource+", jcrPath:"+getJcrPath()+"]";
 	}
 	
 	@Override
@@ -201,7 +201,19 @@ public class JcrNode implements IAdaptable {
 	}
 
 	protected void addChild(JcrNode jcrNode) {
-		children.add(jcrNode);
+		if (!children.contains(jcrNode)) {
+			// check to see if there is a same-named node though
+			// that is the dom/resource case
+			for (Iterator<JcrNode> it = children.iterator(); it.hasNext();) {
+				JcrNode existingChild = it.next();
+				if (existingChild.getName().equals(jcrNode.getName())) {
+					// then merge the two
+					existingChild.setResource(jcrNode.resource);
+					return;
+				}
+			}
+			children.add(jcrNode);
+		}
 	}
 
 	/** shown in the navigator (project explorer) as the label of this element **/
@@ -236,26 +248,60 @@ public class JcrNode implements IAdaptable {
 		hiddenChildren.add(node);
 	}
 
-	Object[] filterHiddenChildren(final Collection<JcrNode> collection) {
-		final Collection<JcrNode> values = new HashSet<JcrNode>(collection);
+	Object[] filterHiddenChildren(final Collection<JcrNode> collection, boolean hideEmptyNodes) {
+		final Collection<JcrNode> values = new LinkedList<JcrNode>(collection);
 		
 		for (Iterator<JcrNode> it = hiddenChildren.iterator(); it.hasNext();) {
 			final JcrNode hiddenNode = it.next();
 			values.remove(hiddenNode);
 		}
+		if (hideEmptyNodes) {
+			for (Iterator<JcrNode> it = values.iterator(); it.hasNext();) {
+				JcrNode jcrNode = it.next();
+				if (jcrNode.isEmptyNode()) {
+					it.remove();
+				}
+			}
+		}
 		
 		return values.toArray();
 	}
 	
-	public Object[] getChildren() {
+	private boolean isEmptyNode() {
+		if (resource!=null) {
+			return false;
+		}
+		if (children.size()!=0) {
+			return false;
+		}
+		if (domNode==null) {
+			return true;
+		}
+		if (domNode.hasChildNodes()) {
+			return false;
+		}
+		if (domNode.getAttributes().getLength()!=0) {
+			return false;
+		}
+		return true;
+	}
+
+	public Object[] getChildren(boolean hideEmptyNodes) {
+		if (!resourceChildrenAdded) {
+			initChildren();
+		}
+		return filterHiddenChildren(children, true);
+	}
+	
+	void initChildren() {
 		try {
 			if (resourceChildrenAdded) {
-				return filterHiddenChildren(children);
+				throw new IllegalStateException("Children already loaded");
 			}
-			Map<String,JcrNode> resultMap = new HashMap<String, JcrNode>();
+			Set<String> childrenNames = new HashSet<String>();
 			for (Iterator it = children.iterator(); it.hasNext();) {
 				JcrNode node = (JcrNode) it.next();
-				resultMap.put(node.getName(), node);
+				childrenNames.add(node.getName());
 			}
 			
 			if (resource!=null && resource instanceof IFolder) {
@@ -276,14 +322,15 @@ public class JcrNode implements IAdaptable {
 							for (Iterator it3 = children.iterator(); it3
 									.hasNext();) {
 								JcrNode node = (JcrNode) it3.next();
-								if (!resultMap.containsKey(node.getName())) {
-									resultMap.put(node.getName(), node);
+								if (!childrenNames.contains(node.getName())) {
+									childrenNames.add(node.getName());
 								}
 							}
 							
 							continue outerLoop;
 						}
 					}
+					List<JcrNode> newNodes = new LinkedList<JcrNode>();
 					for (Iterator it = membersList.iterator(); it.hasNext();) {
 						IResource iResource = (IResource) it.next();
 						JcrNode node;
@@ -292,29 +339,27 @@ public class JcrNode implements IAdaptable {
 						} else {
 							node = new JcrNode(this, (Node)null, iResource);
 						}
-//						node.setResource(iResource);
-						// load the children - to make sure we get vault files loaded too
-						node.getChildren();
-						resultMap.put(node.getName(), node);
+						childrenNames.add(node.getName());
+						newNodes.add(node);
 						it.remove();
+					}
+					for (Iterator<JcrNode> it = newNodes.iterator(); it
+							.hasNext();) {
+						JcrNode jcrNode = it.next();
+						// load the children - to make sure we get vault files loaded too
+						jcrNode.initChildren();
 					}
 				}
 			}
 			resourceChildrenAdded = true;
-			
-			return filterHiddenChildren(resultMap.values());
 		} catch (CoreException e) {
 			e.printStackTrace();
-			return new Object[0];
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
-			return new Object[0];
 		} catch (SAXException e) {
 			e.printStackTrace();
-			return new Object[0];
 		} catch (IOException e) {
 			e.printStackTrace();
-			return new Object[0];
 		}
 	}
 
@@ -401,7 +446,7 @@ public class JcrNode implements IAdaptable {
 	}
 
 	private String getJcrContentProperty(String propertyKey) {
-		final Object[] chldrn = getChildren();
+		final Object[] chldrn = getChildren(false);
 		for (int i = 0; i < chldrn.length; i++) {
 			JcrNode jcrNode = (JcrNode) chldrn[i];
 			if ("jcr:content".equals(jcrNode.getName())) {
@@ -601,7 +646,17 @@ public class JcrNode implements IAdaptable {
 	public JcrNode getParent() {
 		return parent;
 	}
-	
+
+	JcrNode getChild(String name) {
+		for (Iterator<JcrNode> it = children.iterator(); it.hasNext();) {
+			JcrNode aChild = it.next();
+			if (aChild.getName().equals(name)) {
+				return aChild;
+			}
+		}
+		return null;
+	}
+
 	IResource getResource() {
 		return resource;
 	}

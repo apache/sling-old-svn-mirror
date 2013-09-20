@@ -148,14 +148,6 @@ public class GenericJcrRootFile extends JcrNode {
 			// ignore
 			return;
 		}
-		if (domNode.getAttributes().getLength() == 0) {
-			// then ignore this empty node 
-			// either there is a file or a folder corresponding to this element
-			// (in which case it will show up again anyway) 
-			// or just an empty node without any further attributes such
-			// as primaryType doesn't help a lot
-			return;
-		}
 		JcrNode childJcrNode = new JcrNode(parent, domNode, this, null);
 		handleProperties(domNode, childJcrNode.properties);
 		NodeList children = domNode.getChildNodes();

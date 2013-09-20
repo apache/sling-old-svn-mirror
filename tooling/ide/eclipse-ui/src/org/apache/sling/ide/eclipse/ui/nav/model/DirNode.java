@@ -85,7 +85,7 @@ public class DirNode extends JcrNode {
 	@Override
 	protected void addChild(JcrNode jcrNode) {
 		JcrNode effectiveSibling = getEffectiveSibling();
-		if (effectiveSibling!=null) {
+		if (effectiveSibling!=this && effectiveSibling!=null) {
 			// excellent, the parent contains a child which 
 			// matches the .dir/_jcr_content pattern, so add this child there
 			effectiveSibling.addChild(jcrNode);
@@ -113,14 +113,7 @@ public class DirNode extends JcrNode {
 			}
 			nonDirNodeParent = nonDirNodeParent.parent;
 		}
-		Set<JcrNode> c = new HashSet<JcrNode>(nonDirNodeParent.children);
-		for (Iterator<JcrNode> it = c.iterator(); it.hasNext();) {
-			JcrNode node = it.next();
-			if (node.getName().equals(decodedName)) {
-				return node;
-			}
-		}
-		return null;
+		return nonDirNodeParent.getChild(decodedName);
 	}
 
 	@Override
