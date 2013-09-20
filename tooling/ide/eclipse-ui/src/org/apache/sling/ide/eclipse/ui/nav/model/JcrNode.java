@@ -20,12 +20,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -33,6 +31,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -48,7 +47,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionFilter;
@@ -391,46 +389,46 @@ public class JcrNode implements IAdaptable {
 	}
 
 	public Image getImage() {
-		if (resource!=null) {
-			if (resource instanceof IFolder) {
-				Image folderImage = workbenchLabelProvider.getImage(resource);
-				if (domNode==null && false) {
-					// then make it greyscale
-					folderImage = new
-							Image(folderImage.getDevice(), folderImage,SWT.IMAGE_GRAY);
-				}
-				return folderImage;
-			} else
-				try {
-					if (!isVaultFile(resource)){
-						final String jcrMimeType = getJcrContentProperty("jcr:mimeType");
-						if (jcrMimeType!=null && jcrMimeType.length()!=0) {
-							ImageDescriptor desc = getImageDescriptor(resource.getName(), jcrMimeType);
-							if (desc!=null) {
-								return desc.createImage();
-							}
-						}
-						return workbenchLabelProvider.getImage(resource);
-					}
-				} catch (ParserConfigurationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (SAXException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		}
-		//if (domNode!=null && children!=null && children.size()>0) {
-		//	return workbenchLabelProvider.getImage(domNode);
-		//}
+		boolean plainFolder = resource!=null && (resource instanceof IFolder);
+		String primaryType = getProperty("jcr:primaryType");
+		boolean typeFolder = primaryType!=null && ((primaryType.equals("nt:folder") || primaryType.equals("sling:Folder")));
+		boolean typeFile = primaryType!=null && ((primaryType.equals("nt:file") || primaryType.equals("nt:resource") || primaryType.equals("sling:File")));
+		boolean typeUnstructured = primaryType!=null && ((primaryType.equals("nt:unstructured")));
 		
-		return WhitelabelSupport.JCR_NODE_ICON.createImage();
+		boolean isVaultFile = false;
+		try {
+			isVaultFile = resource!=null && !isVaultFile(resource);
+		} catch (Exception e) {
+			// this empty catch is okay
+		}
+		
+		String mimeType = null;
+		if (isVaultFile) {
+			mimeType = getJcrContentProperty("jcr:mimeType");
+			if (mimeType == null) {
+				mimeType = getProperty("jcr:mimeType");
+			}
+		}
+		
+		if (typeUnstructured) {
+			return WhitelabelSupport.JCR_NODE_ICON.createImage();
+		} else if (plainFolder || typeFolder) {
+			return workbenchLabelProvider.getImage(ProjectUtil.getSyncDirectory(getProject()));
+		} else if (typeFile && resource!=null) {
+			if (mimeType!=null && mimeType.length()!=0) {
+				ImageDescriptor desc = getImageDescriptor(resource.getName(), mimeType);
+				if (desc!=null) {
+					return desc.createImage();
+				}
+			}
+			if (isVaultFile) {
+				return WhitelabelSupport.JCR_NODE_ICON.createImage();
+			}
+			return workbenchLabelProvider.getImage(resource);
+		} else {
+			return WhitelabelSupport.JCR_NODE_ICON.createImage();
+		}
+		
 	}
 
 	private ImageDescriptor getImageDescriptor(String filename, String jcrMimeType) {
@@ -450,12 +448,17 @@ public class JcrNode implements IAdaptable {
 		for (int i = 0; i < chldrn.length; i++) {
 			JcrNode jcrNode = (JcrNode) chldrn[i];
 			if ("jcr:content".equals(jcrNode.getName())) {
-				if (jcrNode.properties!=null) {
-					Object propertyValue = jcrNode.properties.getValue(propertyKey);
-					if (propertyValue!=null) {
-						return String.valueOf(propertyValue);
-					}
-				}
+				return jcrNode.getProperty(propertyKey);
+			}
+		}
+		return null;
+	}
+
+	private String getProperty(String propertyKey) {
+		if (properties!=null) {
+			Object propertyValue = properties.getValue(propertyKey);
+			if (propertyValue!=null) {
+				return String.valueOf(propertyValue);
 			}
 		}
 		return null;
