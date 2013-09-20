@@ -18,6 +18,9 @@
  */
 package org.apache.sling.auth.core;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * The <code>AuthConstants</code> provides a collection of constants used to
  * configure and customize the Sling authentication infrastructure.
@@ -98,6 +101,16 @@ public final class AuthConstants {
      * properties.
      */
     public static final String TOPIC_LOGIN = "org/apache/sling/auth/core/Authenticator/LOGIN";
+
+    /**
+     * Any OSGi service may provide a sling.auth.requirements registration property which is used
+     * to dynamically extend the authentication requirements from the Authentication Requirements
+     * configuration. This may for example be set by AuthenticationHandler implementations providing
+     * a login form to ensure access to the login form does not require authentication. The value
+     * of this property is a single string, an array of strings or a Collection of strings and is
+     * formatted in the same way as the Authentication Requirements configuration property.
+     */
+    public static final String AUTH_REQUIREMENTS = "sling.auth.requirements";
 
     private AuthConstants() {
     }

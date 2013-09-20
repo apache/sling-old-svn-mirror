@@ -118,7 +118,7 @@ public class SlingAuthenticator implements Authenticator,
     public static final String PAR_ANONYMOUS_ALLOWED = "auth.annonymous";
 
     @Property(cardinality = 2147483647)
-    private static final String PAR_AUTH_REQ = "sling.auth.requirements";
+    private static final String PAR_AUTH_REQ = AuthConstants.AUTH_REQUIREMENTS;
 
     @Property()
     private static final String PAR_ANONYMOUS_USER = "sling.auth.anonymous.user";
@@ -1457,7 +1457,7 @@ public class SlingAuthenticator implements Authenticator,
             SlingAuthenticatorServiceListener listener = new SlingAuthenticatorServiceListener(
                 authenticator);
             try {
-                final String filter = "(" + PAR_AUTH_REQ + "=*)";
+                final String filter = "(" + AuthConstants.AUTH_REQUIREMENTS + "=*)";
                 context.addServiceListener(listener, filter);
                 ServiceReference[] refs = context.getAllServiceReferences(null,
                     filter);
