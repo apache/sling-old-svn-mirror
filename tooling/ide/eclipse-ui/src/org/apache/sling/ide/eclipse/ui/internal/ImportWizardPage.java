@@ -39,6 +39,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -183,12 +184,15 @@ public class ImportWizardPage extends WizardDataTransferPage {
         	setErrorMessage("Select a project first");
         }
         
-        adjustJcrRootText = new Label(composite, SWT.NONE);
+        Composite adjustComposite = new Composite(composite, SWT.NONE);
+        adjustComposite.setLayout(new RowLayout());
+
+        adjustJcrRootText = new Label(adjustComposite, SWT.NONE);
         adjustJcrRootText.setFont(containerGroup.getFont());
         adjustJcrRootText();
         
-        Link openPropertiesLink = new Link(composite, SWT.NONE);
-        openPropertiesLink.setText("<a>Modify location here</a>");
+        Link openPropertiesLink = new Link(adjustComposite, SWT.NONE);
+        openPropertiesLink.setText("(<a>change</a>)");
         openPropertiesLink.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(getShell(), project, 
@@ -198,8 +202,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
 				updateWidgetEnablements();
 			}
 		});
-        
-        
         
         createOptionsGroup(composite);
         
@@ -382,7 +384,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 		}
         if (project!=null && adjustJcrRootText!=null) {
             adjustJcrRootText();
-            adjustJcrRootText.pack();
+            adjustJcrRootText.getParent().pack();
         }
         if (repositoryCombo.getItemCount() == 0 && project != null) {
         	setErrorMessage("The selected project is not configured with/added to any Sling server");
