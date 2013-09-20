@@ -30,6 +30,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
@@ -217,9 +218,9 @@ public class JcrNode implements IAdaptable {
 	/** shown in the navigator (project explorer) as the label of this element **/
 	public String getLabel() {
 		if (domNode!=null && resource!=null) {
-			return domNode.getNodeName();// + "[domnode+file]";
+			return ISO9075.decode(domNode.getNodeName());// + "[domnode+file]";
 		} else if (domNode!=null && resource==null) {
-			return domNode.getNodeName();// + "[domnode]";
+			return ISO9075.decode(domNode.getNodeName());// + "[domnode]";
 		} else if (resource!=null) {
 			return resource.getName();//+" [file]";
 		} else {
@@ -466,7 +467,7 @@ public class JcrNode implements IAdaptable {
 
 	public String getName() {
 		if (domNode!=null) {
-			return domNode.getNodeName();
+			return ISO9075.decode(domNode.getNodeName());
 		} else if (resource!=null) {
 			return resource.getName();
 		} else {
