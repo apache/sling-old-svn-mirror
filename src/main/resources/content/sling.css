@@ -70,8 +70,7 @@ a:hover {
     right: 1px;
     top: 25px;
     height: 81px;
-    background: url(http://sling.apache.org/site/media.data/gradient.png)
-        repeat-x;
+    background: url(gradient.png) repeat-x;
     background-position: bottom;
 }
 
