@@ -171,14 +171,6 @@ public class JcrNode implements IAdaptable {
 			return false;
 		}
 		JcrNode other = (JcrNode) obj;
-		if (other.underlying==null && underlying!=null) {
-			return false;
-		} else if (other.underlying!=null && underlying==null) {
-			return false;
-		}
-		if (underlying!=null && !underlying.equals(other.underlying)) {
-			return false;
-		}
 		if (resource!=null && other.resource!=null) {
 			if (resource.equals(other.resource)) {
 				return true;
@@ -188,6 +180,14 @@ public class JcrNode implements IAdaptable {
 		} else if (resource!=null && other.resource==null) {
 			return false;
 		} else if (resource==null && other.resource!=null) {
+			return false;
+		}
+		if (other.underlying==null && underlying!=null) {
+			return false;
+		} else if (other.underlying!=null && underlying==null) {
+			return false;
+		}
+		if (underlying!=null && !underlying.equals(other.underlying)) {
 			return false;
 		}
 		if (parent!=null && other.parent!=null) {
@@ -427,6 +427,9 @@ public class JcrNode implements IAdaptable {
 			}
 			return workbenchLabelProvider.getImage(resource);
 		} else {
+			if (resource!=null) {
+				return workbenchLabelProvider.getImage(resource);
+			}
 			return WhitelabelSupport.JCR_NODE_ICON.createImage();
 		}
 		
@@ -618,9 +621,7 @@ public class JcrNode implements IAdaptable {
 		if (resource instanceof IFile) {
 //			if (!isVaultFile(resource)) {
 			return (IFile)resource;
-		} else if (resource instanceof IContainer) {
-			return null;
-		} else if (underlying!=null && underlying.file!=null) {
+		} else if (underlying!=null && underlying.file!=null && domNode!=null) {
 			return underlying.file;
 		} else {
 			return null;
