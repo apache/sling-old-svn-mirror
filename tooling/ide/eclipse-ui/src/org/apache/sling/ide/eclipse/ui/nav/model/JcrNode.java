@@ -394,21 +394,20 @@ public class JcrNode implements IAdaptable {
 		String primaryType = getProperty("jcr:primaryType");
 		boolean typeFolder = primaryType!=null && ((primaryType.equals("nt:folder") || primaryType.equals("sling:Folder")));
 		boolean typeFile = primaryType!=null && ((primaryType.equals("nt:file") || primaryType.equals("nt:resource") || primaryType.equals("sling:File")));
+		typeFile |= (resource!=null && primaryType==null);
 		boolean typeUnstructured = primaryType!=null && ((primaryType.equals("nt:unstructured")));
 		
 		boolean isVaultFile = false;
 		try {
-			isVaultFile = resource!=null && !isVaultFile(resource);
+			isVaultFile = resource!=null && isVaultFile(resource);
 		} catch (Exception e) {
 			// this empty catch is okay
 		}
 		
 		String mimeType = null;
-		if (isVaultFile) {
-			mimeType = getJcrContentProperty("jcr:mimeType");
-			if (mimeType == null) {
-				mimeType = getProperty("jcr:mimeType");
-			}
+		mimeType = getJcrContentProperty("jcr:mimeType");
+		if (mimeType == null) {
+			mimeType = getProperty("jcr:mimeType");
 		}
 		
 		if (typeUnstructured) {
@@ -427,7 +426,7 @@ public class JcrNode implements IAdaptable {
 			}
 			return workbenchLabelProvider.getImage(resource);
 		} else {
-			if (resource!=null) {
+			if (resource!=null && !isVaultFile) {
 				return workbenchLabelProvider.getImage(resource);
 			}
 			return WhitelabelSupport.JCR_NODE_ICON.createImage();
@@ -488,7 +487,11 @@ public class JcrNode implements IAdaptable {
 				prefix = prefix + "/";
 			}
 		}
-		return prefix + getName();
+		return prefix + getJcrPathName();
+	}
+
+	String getJcrPathName() {
+		return getName();
 	}
 
 	@Override

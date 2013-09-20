@@ -83,6 +83,11 @@ public class DirNode extends JcrNode {
 	}
 	
 	@Override
+	String getJcrPathName() {
+		return getDecodedName();
+	}
+	
+	@Override
 	protected void addChild(JcrNode jcrNode) {
 		JcrNode effectiveSibling = getEffectiveSibling();
 		if (effectiveSibling!=this && effectiveSibling!=null) {
