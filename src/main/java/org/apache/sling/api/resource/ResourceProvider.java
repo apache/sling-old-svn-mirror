@@ -117,6 +117,12 @@ public interface ResourceProvider {
      * the resource provider cannot find it. The path should have one of the {@link #ROOTS}
      * strings as its prefix.
      *
+     * The resource provider must not return cached instances for a resource as
+     * the resource resolver will update the resource metadata of the resource
+     * at the end of the resolution process and this metadata might be different
+     * depending on the full path of resource resolution passed into the
+     * resource resolver.
+     *
      * @param resourceResolver
      *            The {@link ResourceResolver} to which the returned {@link Resource} is attached.
      * @return <code>null</code> If this provider does not have a resource for
@@ -142,6 +148,9 @@ public interface ResourceProvider {
      *  to traverse the resource
      * tree. Such resources SHOULD be {@link SyntheticResource} objects whose resource type MUST be set to
      * {@link #RESOURCE_TYPE_SYNTHETIC}.
+     *
+     * As with {@link #getResource(ResourceResolver, String)} the returned Resource objects must
+     * not be cached objects.
      *
      * @param parent
      *            The {@link Resource Resource} whose children are requested.

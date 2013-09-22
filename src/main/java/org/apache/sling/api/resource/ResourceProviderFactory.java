@@ -47,7 +47,7 @@ public interface ResourceProviderFactory {
     String PROPERTY_REQUIRED = "required";
 
     /**
-     * The authentication information property referrring to the bundle
+     * The authentication information property referring to the bundle
      * providing a service for which a resource provider is to be retrieved. If
      * this property is provided, the
      * {@link ResourceResolverFactory#SUBSERVICE} property may also be
@@ -128,7 +128,7 @@ public interface ResourceProviderFactory {
      *             issues. Implementations may implement this method at their
      *             discretion but must support the new service based resource
      *             provider generation in the {@link #getResourceProvider(Map)}
-     *             method honouring the {@link #SERVICE_BUNDLE} and
+     *             method honoring the {@link #SERVICE_BUNDLE} and
      *             {@link ResourceResolverFactory#SUBSERVICE} properties.
      */
     @Deprecated
