@@ -16,9 +16,14 @@
  */
 package org.apache.sling.resourceresolver.impl.mapping;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +67,7 @@ public class MapEntriesTest {
         MockitoAnnotations.initMocks(this);
 
         when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
+        when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenReturn(
                 Collections.<Resource> emptySet().iterator());
 
@@ -150,13 +156,13 @@ public class MapEntriesTest {
         when(justVanityPath.getName()).thenReturn("justVanityPath");
         when(justVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/target/justVanityPath"));
         resources.add(justVanityPath);
-        
+
         Resource badVanityPath = mock(Resource.class);
         when(badVanityPath.getPath()).thenReturn("/badVanityPath");
         when(badVanityPath.getName()).thenReturn("badVanityPath");
         when(badVanityPath.adaptTo(ValueMap.class)).thenReturn(buildValueMap("sling:vanityPath", "/content/mypage/en-us-{132"));
         resources.add(badVanityPath);
-                
+
 
         Resource redirectingVanityPath = mock(Resource.class);
         when(redirectingVanityPath.getPath()).thenReturn("/redirectingVanityPath");
