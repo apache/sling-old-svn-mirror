@@ -23,7 +23,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 /**
  * Internal interface representing the additional methods
  * MapEntries needs from the ResourceResolverFactory.
- * 
+ *
  * Exists primarily to facilitate mocking of the ResourceResolverFactory
  * when testing MapEntries.
  */
@@ -37,4 +37,5 @@ public interface MapConfigurationProvider extends ResourceResolverFactory {
 
     int getDefaultVanityPathRedirectStatus();
 
+    boolean isVanityPathEnabled();
 }

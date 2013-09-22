@@ -77,16 +77,16 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
 
     // ---------- Resource Resolver Factory ------------------------------------
 
-    public ResourceResolver getServiceResourceResolver(Map<String, Object> authenticationInfo) throws LoginException {
-
-        // clean authentication from password and get service info
+    public ResourceResolver getServiceResourceResolver(final Map<String, Object> passedAuthenticationInfo) throws LoginException {
+        // create a copy of the passed authentication info as we modify the map
+        final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
         final String subServiceName;
-        if (authenticationInfo != null) {
+        if ( passedAuthenticationInfo != null ) {
+            authenticationInfo.putAll(passedAuthenticationInfo);
             authenticationInfo.remove(PASSWORD);
-            final Object info = authenticationInfo.get(SUBSERVICE);
+            final Object info = passedAuthenticationInfo.get(SUBSERVICE);
             subServiceName = (info instanceof String) ? (String) info : null;
         } else {
-            authenticationInfo = new HashMap<String, Object>();
             subServiceName = null;
         }
 
@@ -108,10 +108,12 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         return getResourceResolverInternal(authenticationInfo, false);
     }
 
-    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
-
-        // make sure there is no leaking of service bundle and info props
-        if (authenticationInfo != null) {
+    public ResourceResolver getAdministrativeResourceResolver(final Map<String, Object> passedAuthenticationInfo) throws LoginException {
+        // create a copy of the passed authentication info as we modify the map
+        final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        if ( passedAuthenticationInfo != null ) {
+            authenticationInfo.putAll(passedAuthenticationInfo);
+            // make sure there is no leaking of service bundle and info props
             authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
@@ -119,10 +121,12 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         return getResourceResolverInternal(authenticationInfo, true);
     }
 
-    public ResourceResolver getResourceResolver(final Map<String, Object> authenticationInfo) throws LoginException {
-
-        // make sure there is no leaking of service bundle and info props
-        if (authenticationInfo != null) {
+    public ResourceResolver getResourceResolver(final Map<String, Object> passedAuthenticationInfo) throws LoginException {
+        // create a copy of the passed authentication info as we modify the map
+        final Map<String, Object> authenticationInfo = new HashMap<String, Object>();
+        if ( passedAuthenticationInfo != null ) {
+            authenticationInfo.putAll(passedAuthenticationInfo);
+            // make sure there is no leaking of service bundle and info props
             authenticationInfo.remove(ResourceProviderFactory.SERVICE_BUNDLE);
             authenticationInfo.remove(SUBSERVICE);
         }
@@ -224,6 +228,10 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
 
     public int getDefaultVanityPathRedirectStatus() {
         return this.activator.getDefaultVanityPathRedirectStatus();
+    }
+
+    public boolean isVanityPathEnabled() {
+        return this.activator.isVanityPathEnabled();
     }
 
     /**
