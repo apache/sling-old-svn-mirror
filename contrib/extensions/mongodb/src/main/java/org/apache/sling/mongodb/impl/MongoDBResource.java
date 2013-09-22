@@ -58,6 +58,13 @@ public class MongoDBResource extends AbstractResource {
         this.provider = provider;
     }
 
+    public MongoDBResource(final MongoDBResource source) {
+        this.resourceResolver = source.resourceResolver;
+        this.resourcePath = source.resourcePath;
+        this.collection = source.collection;
+        this.dbObject = source.dbObject;
+        this.provider = source.provider;
+    }
     /**
      * @see org.apache.sling.api.resource.Resource#getPath()
      */

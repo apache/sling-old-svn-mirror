@@ -230,7 +230,7 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
             return null;
         }
         if ( this.changedResources.containsKey(path) ) {
-            return this.changedResources.get(path);
+            return new MongoDBResource(this.changedResources.get(path));
         }
         final String[] info = this.extractResourceInfo(path);
         if ( info != null ) {
@@ -366,12 +366,12 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
         return names.contains(name) && !this.context.isFilterCollectionName(name);
     }
 
-    
+
     /**
      * Check if a collection with a given name exists and return it
      */
     protected DBCollection getCollection(final String name) {
-        if ( this.hasCollection(name) ) {            
+        if ( this.hasCollection(name) ) {
             return this.context.getDatabase().getCollection(name);
         }
         return null;
@@ -418,19 +418,19 @@ public class MongoDBResourceProvider implements ResourceProvider, ModifyingResou
         }
         return dbObj;
     }
-    
+
     protected Set<String> getDeletedResources() {
         return this.deletedResources;
     }
-    
+
     protected Map<String, MongoDBResource> getChangedResources() {
         return this.changedResources;
     }
-    
+
     protected MongoDBContext getContext() {
         return this.context;
     }
-    
+
     protected String getPROP_PATH() {
         return PROP_PATH;
     }
