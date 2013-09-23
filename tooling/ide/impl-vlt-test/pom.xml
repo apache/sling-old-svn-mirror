@@ -80,20 +80,6 @@
           <scope>test</scope>
       </dependency>
   </dependencies>
-  
-  <build>
-      <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <configuration>
-                <!-- Tycho targets 1.6 by default, so we need that as well -->
-                <source>1.6</source>
-                <target>1.6</target>
-              </configuration>
-          </plugin>
-      </plugins>
-  </build>
 
     <properties>
         <jackrabbit.version>2.4.0</jackrabbit.version>
