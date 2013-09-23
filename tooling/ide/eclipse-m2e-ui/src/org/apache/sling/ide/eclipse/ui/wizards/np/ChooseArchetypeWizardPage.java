@@ -25,10 +25,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.archetype.catalog.Archetype;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
@@ -230,11 +233,11 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 				}
 			});
 		} catch (InvocationTargetException e) {
-			// TODO proper logging
-			e.printStackTrace();
+		    Throwable targetException = e.getTargetException();
+            setMessage("Initialization failed: " + targetException.getClass().getName() + " - "  + targetException.getMessage(), ERROR);
+            Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Archetype initialization failed " + e.getMessage(), e));
 		} catch (InterruptedException e) {
-			// TODO proper logging
-			e.printStackTrace();
+		    Thread.currentThread().interrupt();
 		}
 	}
 
