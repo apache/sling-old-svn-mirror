@@ -206,6 +206,10 @@ public class ContentXmlHandler extends DefaultHandler {
 
             String rawValue;
             int hintEnd = -1;
+            
+            if (value.isEmpty()) {
+            	return value;
+            }
 
             if (value.charAt(0) != '{') {
                 rawValue = value;

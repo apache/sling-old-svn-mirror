@@ -3,6 +3,7 @@
     jcr:primaryType="sling:Folder"
     jcr:title="Application folder"
     indexDuration="{Decimal}500"
+    emptyValue=""
     indexed="{Boolean}true"
     indexRatio="{Double}2.54"
     lastIndexId="{Long}7293120000000"
