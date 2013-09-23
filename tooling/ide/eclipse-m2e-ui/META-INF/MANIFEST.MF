@@ -53,6 +53,5 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.osgi.framework;version="1.6.0",
  org.sonatype.aether
 Bundle-ActivationPolicy: lazy
-Service-Component: OSGI-INF/*.xml
 Export-Package: org.apache.sling.ide.eclipse.m2e,
  org.apache.sling.ide.eclipse.ui.wizards.np
