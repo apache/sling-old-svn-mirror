@@ -64,8 +64,8 @@ import org.osgi.service.event.EventAdmin;
  */
 @Component(
      name = "org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl",
-     label = "Apache Sling Resource Resolver Factory",
-     description = "Configures the Resource Resolver for request URL and resource path rewriting.",
+     label = "%resource.resolver.name",
+     description = "%resource.resolver.description",
      specVersion = "1.1",
      metatype = true)
 @Properties({
@@ -83,12 +83,7 @@ public class ResourceResolverFactoryActivator {
         public volatile ServiceRegistration factoryRegistration;
     }
 
-    @Property(value = { "/apps", "/libs" },
-              label = "Resource Search Path",
-              description = "The list of absolute path prefixes " +
-                            "applied to find resources whose path is just specified with a relative path. " +
-                            "The default value is [ \"/apps\", \"/libs\" ]. If an empty path is specified a " +
-                            "single entry path of [ \"/\" ] is assumed.")
+    @Property(value = { "/apps", "/libs" })
     public static final String PROP_PATH = "resource.resolver.searchpath";
 
     /**
@@ -108,33 +103,13 @@ public class ResourceResolverFactoryActivator {
      * The default value of this property if no configuration is provided is <code>true</code>.
      *
      */
-    @Property(boolValue = true,
-              label = "Namespace Mangling",
-              description = "Defines whether namespace " +
-                            "prefixes of resource names inside the path (e.g. \"jcr:\" in \"/home/path/jcr:content\") " +
-                            "are mangled or not. Mangling means that any namespace prefix contained in the " +
-                            "path is replaced as per the generic substitution pattern \"/([^:]+):/_$1_/\" " +
-                            "when calling the \"map\" method of the resource resolver. Likewise the " +
-                            "\"resolve\" methods will unmangle such namespace prefixes according to the " +
-                            "substituation pattern \"/_([^_]+)_/$1:/\". This feature is provided since " +
-                            "there may be systems out there in the wild which cannot cope with URLs " +
-                            "containing colons, even though they are perfectly valid characters in the " +
-                            "path part of URI references with a scheme. The default value of this property " +
-                            "if no configuration is provided is \"true\".")
+    @Property(boolValue = true)
     private static final String PROP_MANGLE_NAMESPACES = "resource.resolver.manglenamespaces";
 
-    @Property(boolValue = true,
-              label = "Allow Direct Mapping",
-              description = "Whether to add a direct URL mapping to the front of the mapping list.")
+    @Property(boolValue = true)
     private static final String PROP_ALLOW_DIRECT = "resource.resolver.allowDirect";
 
-    @Property(unbounded=PropertyUnbounded.ARRAY,
-              value = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory",
-              label = "Required Providers",
-              description = "A resource resolver factory is only " +
-                             "available (registered) if all resource providers mentioned in this configuration " +
-                             "are available. Each entry is either a service PID or a filter expression.  " +
-                             "Invalid filters are ignored.")
+    @Property(unbounded=PropertyUnbounded.ARRAY, value = "org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory")
     private static final String PROP_REQUIRED_PROVIDERS = "resource.resolver.required.providers";
 
     /**
@@ -143,44 +118,17 @@ public class ResourceResolverFactoryActivator {
      * multivalue properties at the moment. So we just add a dummy direct
      * mapping.
      */
-    @Property(value = "/:/", unbounded = PropertyUnbounded.ARRAY,
-              label = "Virtual URLs",
-              description = "List of virtual URLs and there mappings to real URLs. " +
-                            "Format is <externalURL>:<internalURL>. Mappings are " +
-                            "applied on the complete request URL only.")
+    @Property(value = "/:/", unbounded = PropertyUnbounded.ARRAY)
     private static final String PROP_VIRTUAL = "resource.resolver.virtual";
 
-    @Property(value = { "/:/", "/content/:/", "/system/docroot/:/" },
-              label = "URL Mappings",
-              description = "List of mappings to apply to paths. Incoming mappings are " +
-                            "applied to request paths to map to resource paths, " +
-                            "outgoing mappings are applied to map resource paths to paths used on subsequent " +
-                            "requests. Form is <internalPathPrefix><op><externalPathPrefix> where <op> is " +
-                            "\">\" for incoming mappings, \"<\" for outgoing mappings and \":\" for mappings " +
-                            "applied in both directions. Mappings are applied in configuration order by " +
-                            "comparing and replacing URL prefixes. Note: The use of \"-\" as the <op> value " +
-                            "indicating a mapping in both directions is deprecated.")
+    @Property(value = { "/:/", "/content/:/", "/system/docroot/:/" })
     private static final String PROP_MAPPING = "resource.resolver.mapping";
 
-    @Property(value = MapEntries.DEFAULT_MAP_ROOT,
-              label = "Mapping Location",
-              description = "The path to the root of the configuration to setup and configure " +
-                            "the ResourceResolver mapping. The default value is /etc/map.")
+    @Property(value = MapEntries.DEFAULT_MAP_ROOT)
     private static final String PROP_MAP_LOCATION = "resource.resolver.map.location";
 
-    @Property(intValue = MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS,
-              label = "Default Vanity Path Redirect Status",
-              description = "The default status code used when a sling:vanityPath is configured to redirect " +
-                            "and does not have a specific status code associated with it " +
-                            "(via a sling:redirectStatus property)")
+    @Property(intValue = MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS)
     private static final String PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS = "resource.resolver.default.vanity.redirect.status";
-
-    private static final boolean DEFAULT_ENABLE_VANITY_PATH = true;
-    @Property(boolValue = DEFAULT_ENABLE_VANITY_PATH,
-              label = "Enable Vanity Paths",
-              description = "This flag controls whether all resources with a sling:vanityPath property " +
-                            "are processed and added to the mappoing table.")
-    private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
 
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
@@ -218,9 +166,6 @@ public class ResourceResolverFactoryActivator {
     private volatile ComponentContext componentContext;
 
     private int defaultVanityPathRedirectStatus;
-
-    /** vanityPath enabled? */
-    private boolean enableVanityPath = DEFAULT_ENABLE_VANITY_PATH;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -274,10 +219,6 @@ public class ResourceResolverFactoryActivator {
 
     public int getDefaultVanityPathRedirectStatus() {
         return defaultVanityPathRedirectStatus;
-    }
-
-    public boolean isVanityPathEnabled() {
-        return this.enableVanityPath;
     }
 
     // ---------- SCR Integration ---------------------------------------------
@@ -342,7 +283,6 @@ public class ResourceResolverFactoryActivator {
 
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
-        this.enableVanityPath = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_VANITY_PATH), DEFAULT_ENABLE_VANITY_PATH);
 
         final BundleContext bc = componentContext.getBundleContext();
 
