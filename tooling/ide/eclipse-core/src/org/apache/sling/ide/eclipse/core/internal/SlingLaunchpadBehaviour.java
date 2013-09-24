@@ -93,14 +93,21 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         Result<ResourceProxy> result = null;
 
         if (getServer().getMode().equals(ILaunchManager.DEBUG_MODE)) {
-        	debuggerConnection = new JVMDebuggerConnection();
-        	success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
-			
+            debuggerConnection = new JVMDebuggerConnection();
+            success = debuggerConnection.connectInDebugMode(launch, getServer(), monitor);
+
         } else {
-	        
-        	Command<ResourceProxy> command = ServerUtil.getRepository(getServer(), monitor).newListChildrenNodeCommand("/");
-	        result = command.execute();
-	        success = result.isSuccess();
+
+            Repository repository;
+            try {
+                repository = ServerUtil.getRepository(getServer(), monitor);
+            } catch (CoreException e) {
+                setServerState(IServer.STATE_STOPPED);
+                throw e;
+            }
+            Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
+            result = command.execute();
+            success = result.isSuccess();
         }
 
         if (success) {
@@ -111,8 +118,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             if (result != null) {
                 message += " (" + result.toString() + ")";
             }
-            throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.ide.eclipse.wst",
-                    message));
+            throw new CoreException(new Status(IStatus.ERROR, "org.apache.sling.ide.eclipse.wst", message));
         }
     }
 

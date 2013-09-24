@@ -23,12 +23,14 @@ import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadServer;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IServer;
 
 public abstract class ServerUtil {
 
-    public static Repository getRepository(IServer server, IProgressMonitor monitor) {
+    public static Repository getRepository(IServer server, IProgressMonitor monitor) throws CoreException {
 
         ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class,
                 monitor);
@@ -44,7 +46,9 @@ public abstract class ServerUtil {
                     configuration.getPassword(), uri.toString());
             repository.setRepositoryInfo(repositoryInfo);
         } catch (URISyntaxException e) {
-            // TODO handle error
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        } catch (RuntimeException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
         }
         return repository;
     }

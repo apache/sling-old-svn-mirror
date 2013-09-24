@@ -79,7 +79,12 @@ public class ImportRepositoryContentAction {
     }
 
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException, SerializationException {
-        Repository repository = ServerUtil.getRepository(server, monitor);
+        Repository repository;
+        try {
+            repository = ServerUtil.getRepository(server, monitor);
+        } catch (CoreException e) {
+            throw new InvocationTargetException(e);
+        }
 
         this.builder = serializationManager.newBuilder(
         		repository, ProjectUtil.getSyncDirectoryFile(project));
