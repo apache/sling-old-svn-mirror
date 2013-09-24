@@ -42,8 +42,9 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -85,6 +86,11 @@ public class SetupServerWizardPage extends WizardPage {
 		setDescription("This step defines which server to use with the new Sling application.");
 		setImageDescriptor(parent.getLogo());
 	}
+
+    @Override
+    public AbstractNewSlingApplicationWizard getWizard() {
+        return (AbstractNewSlingApplicationWizard) super.getWizard();
+    }
 
 	public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
@@ -293,8 +299,7 @@ public class SetupServerWizardPage extends WizardPage {
         try {
 			return getHttpClient("admin", "admin").executeMethod(method) == 200;
 		} catch (IOException e) {
-			// TODO proper logging
-			e.printStackTrace();
+            getWizard().reportError(e);
 			return false;
 		}
     }
@@ -395,21 +400,21 @@ public class SetupServerWizardPage extends WizardPage {
 						int status = installToolingSupportBundle();
 						
 						if (status!=HttpStatus.SC_OK) {
-							MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
-									"Could not install sling tooling support bundle: "+status);
+                            getWizard().reportError(
+                                    new CoreException(new Status(IStatus.WARNING, Activator.PLUGIN_ID,
+                                            "Could not install sling tooling support bundle: " + status)));
 						} else {
 							installedLocally = true;
 						}
 					} catch (IOException e) {
-						//TODO proper logging
-						e.printStackTrace();
-						MessageDialog.openError(getShell(), "Could not install sling tooling support bundle", 
-								"Could not install sling tooling support bundle: "+e.getMessage());
+                        getWizard().reportError(e);
+                        return null;
 					}
 				}
 			}
 			
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
+            // TODO progress monitor
 			try {
 				IRuntime runtime = serverRuntime.createRuntime(null, new NullProgressMonitor());
 				runtime = runtime.createWorkingCopy().save(true, new NullProgressMonitor());
@@ -424,8 +429,7 @@ public class SetupServerWizardPage extends WizardPage {
 				wc.setRuntime(runtime);
 				return wc.save(true, new NullProgressMonitor());
 			} catch (CoreException e) {
-				// TODO proper logging
-				e.printStackTrace();
+                getWizard().reportError(e);
 			}
 			return null;
 		}

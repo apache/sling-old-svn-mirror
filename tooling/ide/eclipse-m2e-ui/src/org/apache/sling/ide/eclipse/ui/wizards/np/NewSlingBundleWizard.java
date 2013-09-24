@@ -23,6 +23,7 @@ import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.sling.ide.eclipse.m2e.EmbeddedArchetypeInstaller;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.apache.sling.ide.eclipse.m2e.internal.SharedImages;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.resource.ImageDescriptor;
 
 public class NewSlingBundleWizard extends AbstractNewSlingApplicationWizard {
@@ -52,9 +53,10 @@ public class NewSlingBundleWizard extends AbstractNewSlingApplicationWizard {
 			
 			archetypeInstaller.installArchetype();
 		} catch (IOException e) {
-			// TODO proper logging
-			e.printStackTrace();
-		}
+            reportError(e);
+        } catch (CoreException e) {
+            reportError(e);
+        }
 	}
 
 	@Override

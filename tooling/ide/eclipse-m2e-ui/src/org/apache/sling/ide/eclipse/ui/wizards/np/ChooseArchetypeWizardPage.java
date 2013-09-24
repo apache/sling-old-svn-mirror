@@ -20,19 +20,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.maven.archetype.catalog.Archetype;
-import org.apache.sling.ide.eclipse.m2e.internal.Activator;
+import org.apache.maven.archetype.catalog.ArchetypeCatalog;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.debug.internal.ui.DebugUIPlugin;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
@@ -54,8 +51,6 @@ import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.progress.IProgressService;
 
 @SuppressWarnings("restriction")
 public class ChooseArchetypeWizardPage extends WizardPage {
@@ -66,15 +61,18 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 	private Button useDefaultWorkspaceLocationButton;
 	private Label locationLabel;
 	private Combo locationCombo;
-	private final AbstractNewSlingApplicationWizard parent;
 
 	public ChooseArchetypeWizardPage(AbstractNewSlingApplicationWizard parent) {
 		super("chooseArchetypePage");
-		this.parent = parent;
 		setTitle("Choose Project Location and Archetype");
 		setDescription("This step defines the project location and archetype");
 		setImageDescriptor(parent.getLogo());
 	}
+
+    @Override
+    public AbstractNewSlingApplicationWizard getWizard() {
+        return (AbstractNewSlingApplicationWizard) super.getWizard();
+    }
 
 	public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NULL);
@@ -159,7 +157,6 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 			}
 		});
 		
-		initialize();
 		setPageComplete(false);
 		setControl(container);
 	}
@@ -174,12 +171,25 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 		return a;
 	}
 	
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.eclipse.jface.dialogs.DialogPage#setVisible(boolean)
+     */
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible && knownArchetypesList.getItemCount() == 0) {
+            // initialize as late as possible to take advantage of the error reporting
+            // and progress from the parent wizard
+            initialize();
+        }
+    }
+
 	private void initialize() {
 		knownArchetypesList.add(LOADING_PLEASE_WAIT);
-		IWorkbench workbench = DebugUIPlugin.getDefault().getWorkbench();
-		IProgressService progressService = workbench.getProgressService();
 		try {
-			progressService.run(true, false, new IRunnableWithProgress() {
+            getContainer().run(true, false, new IRunnableWithProgress() {
 					
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException,
@@ -189,42 +199,46 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 				    monitor.worked(1);
 					
 				    // optionally allow the parent to install any archetypes
-				    parent.installArchetypes();
+                    getWizard().installArchetypes();
 				    
 				    Collection<ArchetypeCatalogFactory> archetypeCatalogs = manager.getArchetypeCatalogs();
 				    monitor.worked(2);
 				    ArrayList<Archetype> list = new ArrayList<Archetype>();
-				    for(ArchetypeCatalogFactory catalog : archetypeCatalogs) {
+                    for (ArchetypeCatalogFactory catalogFactory : archetypeCatalogs) {
 				        try {
-						  @SuppressWarnings("unchecked")
-						  java.util.List<Archetype> arcs = catalog.getArchetypeCatalog().getArchetypes();
+                            ArchetypeCatalog catalog = catalogFactory.getArchetypeCatalog();
+                            @SuppressWarnings("unchecked")
+                            java.util.List<Archetype> arcs = catalog.getArchetypes();
+                            for (Archetype a : arcs) {
+                                if (a.getVersion().endsWith("SNAPSHOT")) {
+                                    System.out.println("got SNAPSHOT archetype " + a);
+                                }
+                            }
+
 				          if(arcs != null) {
 				            list.addAll(arcs);
 				          }
-				        } catch(Exception ce) {
-				        	ce.printStackTrace();
+                        } catch (CoreException ce) {
+                            throw new InvocationTargetException(ce);
 				        }
 				      }
 				    monitor.worked(1);
-				    for (Iterator<Archetype> it = list
-							.iterator(); it.hasNext();) {
-						Archetype archetype2 = it.next();
-						if (parent.acceptsArchetype(archetype2)) {
-							String key = keyFor(archetype2);
-							archetypesMap.put(key, archetype2);
-						}
-						
-					}
+                    for (Archetype archetype2 : list) {
+                        if (getWizard().acceptsArchetype(archetype2)) {
+                            String key = keyFor(archetype2);
+                            System.out.println("Got archetype match for archetype " + archetype2 + ", key " + key);
+                            archetypesMap.put(key, archetype2);
+                        }
+                    }
+
 				    monitor.worked(1);
 			        Display.getDefault().asyncExec(new Runnable() {
 			            public void run() {
 			            	Set<String> keys = archetypesMap.keySet();
 			            	knownArchetypesList.removeAll();
-			            	for (Iterator<String> it = keys.iterator(); it
-									.hasNext();) {
-								String aKey = it.next();
-								knownArchetypesList.add(aKey);
-							}
+                            for (String aKey : keys) {
+                                knownArchetypesList.add(aKey);
+                            }
 			            	knownArchetypesList.pack();
 			            }
 			          });
@@ -233,9 +247,7 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 				}
 			});
 		} catch (InvocationTargetException e) {
-		    Throwable targetException = e.getTargetException();
-            setMessage("Initialization failed: " + targetException.getClass().getName() + " - "  + targetException.getMessage(), ERROR);
-            Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Archetype initialization failed " + e.getMessage(), e));
+            getWizard().reportError(e.getTargetException());
 		} catch (InterruptedException e) {
 		    Thread.currentThread().interrupt();
 		}
@@ -268,6 +280,7 @@ public class ChooseArchetypeWizardPage extends WizardPage {
 		setErrorMessage(message);
 		setPageComplete(message == null);
 	}
+
 
 	public IPath getLocation() {
 		if (!useDefaultWorkspaceLocationButton.getSelection() && 
