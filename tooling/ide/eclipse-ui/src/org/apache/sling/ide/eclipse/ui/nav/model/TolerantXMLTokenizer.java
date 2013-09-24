@@ -74,7 +74,7 @@ final class TolerantXMLTokenizer extends XMLTokenizer {
 	        c = source.charAt (pos);
 	        if (c == endChar)
 	            break;
-	        if (c == '<' || c == '>') {
+	        if (c == '<') {
 	        	Location l = new Location(source, pos);
 	            System.err.println("Illegal character in attribute value: '"+c+"' in "+file.getFullPath()+" at "+l);
 	        }
