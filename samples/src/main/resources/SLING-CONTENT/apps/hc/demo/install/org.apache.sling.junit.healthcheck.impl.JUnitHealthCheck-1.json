@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "hc.name" : "JUnit Health Check Sample", 
+    "hc.tags" : [junit],
+    "test.package.or.class" : "org.apache.sling.hc",
+    "hc.mbean.name" : "JUnitHealthCheck" 
+}
