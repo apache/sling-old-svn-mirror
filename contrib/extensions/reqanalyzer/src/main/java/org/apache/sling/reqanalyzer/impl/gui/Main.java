@@ -21,6 +21,8 @@ package org.apache.sling.reqanalyzer.impl.gui;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -54,6 +56,14 @@ public class Main {
 
         MainFrame frame = new MainFrame(file, limit, screenSize);
         frame.setVisible(true);
+
+        // exit the application if the main frame is closed
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
     }
 
 }

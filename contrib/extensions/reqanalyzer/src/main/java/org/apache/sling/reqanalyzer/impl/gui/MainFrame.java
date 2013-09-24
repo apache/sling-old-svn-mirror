@@ -20,8 +20,6 @@ package org.apache.sling.reqanalyzer.impl.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,7 +47,7 @@ public class MainFrame extends JFrame {
         JTextPane text = Util.showStartupDialog("Reading from " + file, screenSize);
 
         final RequestTrackerFile dm = new RequestTrackerFile(file, limit, text);
-        
+
         final JTable table = new JTable(dm);
         table.setAutoCreateRowSorter(true);
         table.setGridColor(Color.GRAY);
@@ -64,14 +62,6 @@ public class MainFrame extends JFrame {
         add(new JScrollPane(table));
 
         setTitle(file.getPath());
-
-        // exit the application if the main frame is closed
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                System.exit(0);
-            }
-        });
 
         // setup location and size and ensure updating preferences
         Util.setupComponentLocationSize(this, MAIN_X, MAIN_Y, MAIN_WIDTH, MAIN_HEIGHT, (int) screenSize.getWidth() / 4,

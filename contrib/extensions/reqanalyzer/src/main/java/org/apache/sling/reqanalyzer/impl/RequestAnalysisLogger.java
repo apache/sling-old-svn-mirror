@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Hashtable;
 import java.util.Iterator;
 
 import javax.servlet.Filter;
@@ -45,7 +46,9 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.EngineConstants;
 import org.apache.sling.settings.SlingSettingsService;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 
 @Component(metatype = false)
 @Service
@@ -59,18 +62,40 @@ public class RequestAnalysisLogger implements Filter {
 
     private BufferedWriter logFile;
 
-    @SuppressWarnings("unused")
+    private RequestAnalyzerWebConsole requestAnalyzerWebConsole;
+    private ServiceRegistration webConsolePlugin;
+
+    @SuppressWarnings({ "serial" })
     @Activate
-    private void activate() throws IOException {
+    private void activate(final BundleContext ctx) throws IOException {
         final File logFile = new File(settings.getSlingHomePath(), "logs/requesttracker.txt");
         logFile.getParentFile().mkdirs();
         final FileOutputStream out = new FileOutputStream(logFile, true);
         this.logFile = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+
+        this.requestAnalyzerWebConsole = new RequestAnalyzerWebConsole(logFile);
+        this.webConsolePlugin = ctx.registerService("javax.servlet.Servlet", this.requestAnalyzerWebConsole,
+                new Hashtable<String, Object>() {
+                    {
+                        put("felix.webconsole.label", "requestanalyzer");
+                        put("felix.webconsole.title", "Request Analyzer");
+                        put("felix.webconsole.category", "Sling");
+                    }
+                });
     }
 
-    @SuppressWarnings("unused")
     @Deactivate
     private void deactivate() throws IOException {
+        if (this.webConsolePlugin != null) {
+            this.webConsolePlugin.unregister();
+            this.webConsolePlugin = null;
+        }
+
+        if (this.requestAnalyzerWebConsole != null) {
+            this.requestAnalyzerWebConsole.dispose();
+            this.requestAnalyzerWebConsole = null;
+        }
+
         if (this.logFile != null) {
             this.logFile.close();
             this.logFile = null;
