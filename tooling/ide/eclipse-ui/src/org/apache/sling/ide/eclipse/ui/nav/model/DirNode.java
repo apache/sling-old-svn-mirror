@@ -24,7 +24,8 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
-import org.w3c.dom.Node;
+
+import de.pdark.decentxml.Element;
 
 public class DirNode extends JcrNode {
 	
@@ -66,7 +67,7 @@ public class DirNode extends JcrNode {
 		return true;
 	}
 	
-	DirNode(JcrNode parent, Node domNode, IResource resource) {
+	DirNode(JcrNode parent, Element domNode, IResource resource) {
 		super(parent, domNode, resource);
 		if (!isDirNode(resource)) {
 			throw new IllegalArgumentException("resource is not a DirNode: "+resource);

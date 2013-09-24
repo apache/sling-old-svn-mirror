@@ -35,7 +35,8 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.ui.navigator.ILinkHelper;
-import org.w3c.dom.Node;
+
+import de.pdark.decentxml.Element;
 
 public class LinkHelper implements ILinkHelper {
 
@@ -83,7 +84,7 @@ public class LinkHelper implements ILinkHelper {
 		if (parent==null) {
 			return null;
 		}
-		Node domNode = null;
+		Element domNode = null;
 		JcrNode selectedNode = new JcrNode(parent, domNode, resource);
 		return selectedNode;
 	}

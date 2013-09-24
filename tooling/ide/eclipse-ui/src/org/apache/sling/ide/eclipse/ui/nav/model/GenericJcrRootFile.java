@@ -17,30 +17,27 @@
 package org.apache.sling.ide.eclipse.ui.nav.model;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import de.pdark.decentxml.Document;
+import de.pdark.decentxml.Element;
+import de.pdark.decentxml.XMLParser;
+import de.pdark.decentxml.XMLSource;
+import de.pdark.decentxml.XMLStringSource;
+import de.pdark.decentxml.XMLTokenizer;
+import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a [.content.xml] shown in the content package view in project explorer **/
 public class GenericJcrRootFile extends JcrNode {
@@ -48,7 +45,7 @@ public class GenericJcrRootFile extends JcrNode {
 	final IFile file;
 	private final Document document;
 
-	public GenericJcrRootFile(JcrNode parent, IFile file) throws ParserConfigurationException, SAXException, IOException, CoreException {
+	public GenericJcrRootFile(JcrNode parent, final IFile file) throws ParserConfigurationException, SAXException, IOException, CoreException {
 		if (file==null) {
 			throw new IllegalArgumentException("file must not be null");
 		}
@@ -58,11 +55,20 @@ public class GenericJcrRootFile extends JcrNode {
 			throw new IllegalArgumentException("parent must not be null");
 		}
 		this.parent = parent;
-		this.domNode = null;
+		this.domElement = null;
 		
-		DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		this.document = docBuilder.parse(file.getContents());
-		handleJcrRoot(this.document.getFirstChild());
+		XMLParser parser = new XMLParser () {
+			@Override
+			protected XMLTokenizer createTokenizer(XMLSource source) {
+				XMLTokenizer tolerantTokenizerIgnoringEntities = new TolerantXMLTokenizer(source, file);
+				tolerantTokenizerIgnoringEntities.setTreatEntitiesAsText (this.isTreatEntitiesAsText());
+		        return tolerantTokenizerIgnoringEntities;
+			}
+		};
+		InputStream in = file.getContents();
+		String xml = IOUtils.toString(in);
+		this.document = parser.parse (new XMLStringSource (xml));	
+		handleJcrRoot(this.document.getRootElement());
 	}
 	
 	@Override
@@ -78,29 +84,30 @@ public class GenericJcrRootFile extends JcrNode {
 		}
 		return false;
 	}
-
-	private void handleJcrRoot(Node domNode) {
-		NodeList children = domNode.getChildNodes();
+	
+	private void handleJcrRoot(Element element) {
+		List<Element> children = element.getChildren();
 		final JcrNode effectiveParent;
 		if (isRootContentXml()) {
 			if (parent instanceof DirNode) {
 				DirNode dirNodeParent = (DirNode)parent;
 				JcrNode dirNodeParentParent = dirNodeParent.getParent();
 				JcrNode effectiveSibling = dirNodeParent.getEffectiveSibling();
-				handleProperties(domNode, effectiveSibling.properties);
+				handleProperties(element, effectiveSibling.properties);
 				effectiveParent = parent;
 				dirNodeParentParent.hide(parent);
 			} else {
-				handleProperties(domNode, parent.properties);
+				handleProperties(element, parent.properties);
 				effectiveParent = parent;
 			}
 		} else {
-			handleProperties(domNode, properties);
+			handleProperties(element, properties);
 			effectiveParent = this;
 			parent.addChild(this);
 		}
-		for(int i=0; i<children.getLength(); i++) {
-			handleChild(effectiveParent, children.item(i));
+		for (Iterator<Element> it = children.iterator(); it.hasNext();) {
+			Element aChild = it.next();
+			handleChild(effectiveParent, aChild);
 		}
 	}
 
@@ -108,7 +115,7 @@ public class GenericJcrRootFile extends JcrNode {
 		return file.getName().equals(".content.xml");
 	}
 	
-	private void handleProperties(Node domNode, ModifiableProperties properties) {
+	private void handleProperties(Element domNode, ModifiableProperties properties) {
 		properties.setNode(this, domNode);
 //		NamedNodeMap attributes = domNode.getAttributes();
 //		for(int i=0; i<attributes.getLength(); i++) {
@@ -143,16 +150,17 @@ public class GenericJcrRootFile extends JcrNode {
 		}
 	}
 
-	private void handleChild(JcrNode parent, Node domNode) {
-		if (domNode.getNodeType() == Node.TEXT_NODE) {
+	private void handleChild(JcrNode parent, Element domNode) {
+		if (domNode.getType() == Type.TEXT) {
 			// ignore
 			return;
 		}
 		JcrNode childJcrNode = new JcrNode(parent, domNode, this, null);
 		handleProperties(domNode, childJcrNode.properties);
-		NodeList children = domNode.getChildNodes();
-		for(int i=0; i<children.getLength(); i++) {
-			handleChild(childJcrNode, children.item(i));
+		List<Element> children = domNode.getChildren();
+		for (Iterator<Element> it = children.iterator(); it.hasNext();) {
+			Element element = it.next();
+			handleChild(childJcrNode, element);
 		}
 	}
 
@@ -186,28 +194,13 @@ public class GenericJcrRootFile extends JcrNode {
 	
 	@Override
 	public void createChild(String nodeName) {
-		Element element = document.createElement(nodeName);
-		element.setAttribute("jcr:primaryType", "nt:unstructured");
-		Node childDomNode = document.getFirstChild().appendChild(element);
-		JcrNode childNode = new JcrNode(this, childDomNode, null);
-		underlying.save();
+		createChild(nodeName, document.getRootElement());
 	}
 	
 	public void save() {
 		try {
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			Transformer transformer = transformerFactory.newTransformer();
-			DOMSource source = new DOMSource(document);
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			StreamResult result = new StreamResult(out);
-			transformer.transform(source, result);
-			file.setContents(new ByteArrayInputStream(out.toByteArray()), true, true, new NullProgressMonitor());
-		} catch (TransformerConfigurationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (TransformerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String xml = document.toXML();
+			file.setContents(new ByteArrayInputStream(xml.getBytes()), true, true, new NullProgressMonitor());
 		} catch (CoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
