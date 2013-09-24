@@ -504,7 +504,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             try {
                 IFile file = (IFile) resource.getAdapter(IFile.class);
                 contents = file.getContents();
-                String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toOSString();
+                String resourceLocation = file.getFullPath().makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
                 ResourceProxy resourceProxy = serializationManager(repository, syncDirectoryAsFile)
                         .readSerializationData(resourceLocation, contents);
                 // TODO - not sure if this 100% correct, but we definitely should not refer to the FileInfo as the
@@ -574,7 +574,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             try {
                 contents = serializationFile.getContents();
                 String serializationFilePath = serializationResource.getFullPath()
-                        .makeRelativeTo(syncDirectory.getFullPath()).toOSString();
+                        .makeRelativeTo(syncDirectory.getFullPath()).toPortableString();
                 return serializationManager.readSerializationData(serializationFilePath, contents);
             } finally {
                 if (contents != null) {
@@ -649,10 +649,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         if (serializationManager(repository, contentSyncRoot).isSerializationFile(absFilePath)) {
             filePath = serializationManager.getBaseResourcePath(filePath);
         }
+        
+        String repositoryPath = resource.getModuleRelativePath().toPortableString();
 
-        System.out.println("Filtering by " + filePath + " for " + resource);
+        System.out.println("Filtering by " + repositoryPath + " for " + resource);
 
-        return filter.filter(contentSyncRoot, filePath, repository.getRepositoryInfo());
+        return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
     }
 
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource) throws SerializationException {

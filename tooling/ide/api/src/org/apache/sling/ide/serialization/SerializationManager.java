@@ -36,7 +36,7 @@ public interface SerializationManager {
     SerializationDataBuilder newBuilder(Repository repository, File contentSyncRoot) throws SerializationException;
 
     /**
-     * @param filePath The filePath, in OS format, relative to the local content sync root
+     * @param filePath The filePath, in repository format
      * @param source
      * @return
      * @throws IOException

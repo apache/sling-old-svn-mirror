@@ -40,6 +40,7 @@ import org.apache.jackrabbit.vault.fs.impl.io.XmlAnalyzer;
 import org.apache.jackrabbit.vault.util.Constants;
 import org.apache.jackrabbit.vault.util.PlatformNameFormat;
 import org.apache.jackrabbit.vault.util.RepositoryProvider;
+import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.ide.impl.vlt.VaultFsLocator;
 import org.apache.sling.ide.serialization.SerializationDataBuilder;
 import org.apache.sling.ide.serialization.SerializationException;
@@ -179,10 +180,10 @@ public class VltSerializationManager implements SerializationManager {
             return null;
 
         String repositoryPath;
-        File file = new File(filePath);
-        if (file.getName().equals(Constants.DOT_CONTENT_XML)) {
+        String name = Text.getName(filePath);
+        if (name.equals(Constants.DOT_CONTENT_XML)) {
             // TODO - generalize instead of special-casing the parent name
-            String parentPath = file.getParent();
+            String parentPath = Text.getRelativeParent(filePath, 1);
             if (parentPath != null && parentPath.endsWith(".dir")) {
                 parentPath = parentPath.substring(0, parentPath.length() - ".dir".length());
             }
