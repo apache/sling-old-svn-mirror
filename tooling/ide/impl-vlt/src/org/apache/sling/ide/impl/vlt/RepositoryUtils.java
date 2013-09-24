@@ -17,7 +17,6 @@
 package org.apache.sling.ide.impl.vlt;
 
 import java.net.URISyntaxException;
-import java.util.Arrays;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
@@ -40,6 +39,7 @@ public abstract class RepositoryUtils {
     }
 
     public static RepositoryAddress getRepositoryAddress(RepositoryInfo repositoryInfo) {
+        StringBuilder errors = new StringBuilder();
         for (String webDavUrlLocation : WEBDAV_URL_LOCATIONS) {
             Session session = null;
             try {
@@ -54,6 +54,7 @@ public abstract class RepositoryUtils {
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             } catch (RepositoryException e) {
+                errors.append(webDavUrlLocation).append(" : ").append(e.getMessage()).append('\n');
                 continue;
             } finally {
                 if (session != null) {
@@ -62,8 +63,10 @@ public abstract class RepositoryUtils {
             }
         }
 
-        throw new IllegalArgumentException("No repository found at " + repositoryInfo.getUrl() + " ; tried suffixes "
-                + Arrays.toString(WEBDAV_URL_LOCATIONS));
+        errors.deleteCharAt(errors.length() - 1);
+
+        throw new IllegalArgumentException("No repository found at " + repositoryInfo.getUrl() + "\n"
+                + errors.toString());
     }
 
     public static Credentials getCredentials(RepositoryInfo repositoryInfo) {
