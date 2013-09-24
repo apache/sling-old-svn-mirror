@@ -150,7 +150,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
             Thread.currentThread().interrupt();
         	return false;
 		} catch (InvocationTargetException e) {
-            reportError(e);
+            reportError(e.getTargetException());
             return false;
 		}
 	}
