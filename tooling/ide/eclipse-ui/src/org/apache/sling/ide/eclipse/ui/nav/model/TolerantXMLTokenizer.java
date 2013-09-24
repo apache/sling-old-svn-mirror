@@ -27,10 +27,10 @@ import de.pdark.decentxml.XMLTokenizer;
 /**
  * In parts inspired by/copied from de.pdark.decentxml.XMLTokenizer.
  * <p>
- * Note: this variant of the XMLTokenizer became necessary since in some
- * rare cases, the vault does not correctly escape '>' and '<' inside
- * an xml attribute. 
- * TODO: reproduce and file an appropriate bug with vault.
+ * Note: this variant of the XMLTokenizer became necessary since 
+ * XMLTokenizer incorrectly complains when encountering a '>' inside
+ * an xml attribute value. The '>' is valid though.
+ * TODO: file a bug with decentXml and remove this class as soon as fixed
  */
 final class TolerantXMLTokenizer extends XMLTokenizer {
 	private final IFile file;
