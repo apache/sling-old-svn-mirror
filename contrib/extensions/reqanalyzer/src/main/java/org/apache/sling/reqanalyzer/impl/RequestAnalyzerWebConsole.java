@@ -33,14 +33,15 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -64,18 +65,17 @@ public class RequestAnalyzerWebConsole extends HttpServlet {
 
     private final File logFile;
 
-    private final Set<MainFrame> frames;
+    private MainFrame frame;
 
     RequestAnalyzerWebConsole(final File logFile) {
         this.logFile = logFile;
-        this.frames = new HashSet<MainFrame>();
     }
 
     void dispose() {
-        final Set<MainFrame> frames = new HashSet<MainFrame>(this.frames);
-        this.frames.clear();
-        for (MainFrame mainFrame : frames) {
-            AWTEvent e = new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING);
+        if (this.frame != null) {
+            MainFrame frame = this.frame;
+            this.frame = null;
+            AWTEvent e = new WindowEvent(frame, WindowEvent.WINDOW_CLOSING);
             Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(e);
         }
     }
@@ -123,12 +123,14 @@ public class RequestAnalyzerWebConsole extends HttpServlet {
 
             resp.flushBuffer();
 
-        } else if (req.getRequestURI().endsWith(WINDOW_MARKER) && !GraphicsEnvironment.isHeadless()) {
+        } else if (req.getRequestURI().endsWith(WINDOW_MARKER)) {
+
+            if (canOpenSwingGui(req)) {
+                showWindow();
+            }
 
             String target = req.getRequestURI();
             target = target.substring(0, target.length() - WINDOW_MARKER.length());
-
-            showWindow();
             resp.sendRedirect(target);
             resp.flushBuffer();
 
@@ -163,7 +165,7 @@ public class RequestAnalyzerWebConsole extends HttpServlet {
         pw.printf("<td>%s</td><td>%s</td>", new Date(this.logFile.lastModified()), fileSize);
 
         pw.println("<td><ul class='icons ui-widget'>");
-        if (!GraphicsEnvironment.isHeadless()) {
+        if (canOpenSwingGui(req)) {
             pw.printf(
                     "<li title='Analyze Now' class='dynhover ui-state-default ui-corner-all'><a href='${pluginRoot}%s'><span class='ui-icon ui-icon-wrench'></span></a></li>%n",
                     WINDOW_MARKER);
@@ -177,25 +179,42 @@ public class RequestAnalyzerWebConsole extends HttpServlet {
 
     }
 
-    private void showWindow() throws ServletException, IOException {
-        final File toAnalyze = this.getLogFileCopy();
+    private synchronized void showWindow() throws ServletException, IOException {
+        if (this.frame == null) {
+            final File toAnalyze = this.getLogFileCopy();
 
-        final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        MainFrame frame = new MainFrame(toAnalyze, Integer.MAX_VALUE, screenSize);
-        frame.setVisible(true);
-        frame.toFront();
+            final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            MainFrame frame = new MainFrame(toAnalyze, Integer.MAX_VALUE, screenSize);
 
-        // exit the application if the main frame is closed
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                if (toAnalyze.exists()) {
-                    toAnalyze.delete();
+            // exit the application if the main frame is closed
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    // remove the tmp file we showed
+                    if (toAnalyze.exists()) {
+                        toAnalyze.delete();
+                    }
+                    // clear the window reference
+                    RequestAnalyzerWebConsole.this.frame = null;
                 }
-            }
-        });
+            });
 
-        this.frames.add(frame);
+            this.frame = frame;
+        }
+
+        // make sure the window is visible, try to bring to the front
+        this.frame.setVisible(true);
+        this.frame.toFront();
+    }
+
+    private boolean canOpenSwingGui(final ServletRequest request) {
+        try {
+            return !GraphicsEnvironment.isHeadless()
+                    && InetAddress.getByName(request.getLocalAddr()).isLoopbackAddress();
+        } catch (UnknownHostException e) {
+            // unexpected, but still fall back to fail-safe false
+            return false;
+        }
     }
 
     private final File getLogFileCopy() throws ServletException {
