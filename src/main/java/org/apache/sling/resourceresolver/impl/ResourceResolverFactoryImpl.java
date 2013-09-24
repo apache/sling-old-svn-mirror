@@ -230,10 +230,6 @@ public class ResourceResolverFactoryImpl implements ResourceResolverFactory, Map
         return this.activator.getDefaultVanityPathRedirectStatus();
     }
 
-    public boolean isVanityPathEnabled() {
-        return this.activator.isVanityPathEnabled();
-    }
-
     /**
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */

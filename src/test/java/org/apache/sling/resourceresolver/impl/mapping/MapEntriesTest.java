@@ -67,7 +67,6 @@ public class MapEntriesTest {
         MockitoAnnotations.initMocks(this);
 
         when(resourceResolverFactory.getAdministrativeResourceResolver(null)).thenReturn(resourceResolver);
-        when(resourceResolverFactory.isVanityPathEnabled()).thenReturn(true);
         when(resourceResolver.findResources(anyString(), eq("sql"))).thenReturn(
                 Collections.<Resource> emptySet().iterator());
 
