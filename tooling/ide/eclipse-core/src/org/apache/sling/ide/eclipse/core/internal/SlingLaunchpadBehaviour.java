@@ -491,6 +491,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             return null;
         }
 
+        if (res.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
+            return null;
+        }
+
         System.out.println("For " + resource + " build fileInfo " + info);
         if (info == null) {
             return null;
@@ -662,6 +666,15 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         FileInfo info = createFileInfo(resource, repository);
 
         if (info == null) {
+            return null;
+        }
+
+        IResource res = getResource(resource);
+        if (res == null) {
+            return null;
+        }
+
+        if (res.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
             return null;
         }
 
