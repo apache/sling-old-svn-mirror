@@ -23,12 +23,12 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.sling.ide.transport.FileInfo;
+import org.apache.sling.ide.transport.ResourceProxy;
 
 public class DeleteNodeCommand extends JcrCommand<Void> {
 
-    public DeleteNodeCommand(Repository repository, Credentials credentials, FileInfo fileInfo) {
-        super(repository, credentials, makePath(fileInfo));
+    public DeleteNodeCommand(Repository repository, Credentials credentials, ResourceProxy resource) {
+        super(repository, credentials, resource.getPath());
     }
 
     @Override

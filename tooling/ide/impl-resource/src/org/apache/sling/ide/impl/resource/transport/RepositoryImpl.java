@@ -33,8 +33,8 @@ public class RepositoryImpl extends AbstractRepository{
     }
 
 	@Override
-	public Command<Void> newDeleteNodeCommand(final FileInfo fileInfo) {
-        return wrap(new DeleteNodeCommand(fileInfo, repositoryInfo, httpClient));
+	public Command<Void> newDeleteNodeCommand(final ResourceProxy resource) {
+        return wrap(new DeleteNodeCommand(resource, repositoryInfo, httpClient));
 	}
 	
 	@Override

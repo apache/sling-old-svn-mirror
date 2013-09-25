@@ -545,36 +545,40 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             }
         } else {
 
-            IFile file = (IFile) resource.getAdapter(IFile.class);
-            IFolder folder = (IFolder) resource.getAdapter(IFolder.class);
-            ResourceProxy resourceProxy = null;
-
-            IResource changedResource = file != null ? file : folder;
-            if (changedResource == null) {
-                System.err.println("Could not find a file or a folder for " + info);
-                return null;
-            }
-
-            SerializationKind serializationKind;
-            String fallbackNodeType;
-            if (changedResource.getType() == IResource.FILE) {
-                serializationKind = SerializationKind.FILE;
-                fallbackNodeType = Repository.NT_FILE;
-            } else { // i.e. IResource.FOLDER
-                serializationKind = SerializationKind.FOLDER;
-                fallbackNodeType = Repository.NT_FOLDER;
-            }
-
-            String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
-                    .toPortableString();
-            String serializationFilePath = serializationManager.getSerializationFilePath(resourceLocation,
-                    serializationKind);
-            IResource serializationResource = syncDirectory.findMember(serializationFilePath);
-            resourceProxy = buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
+            ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder( resource, syncDirectory);
 
             return repository.newAddOrUpdateNodeCommand(info, resourceProxy);
         }
     }
+
+	private ResourceProxy buildResourceProxyForPlainFileOrFolder( IModuleResource resource, IFolder syncDirectory)
+			throws IOException, CoreException {
+		IFile file = (IFile) resource.getAdapter(IFile.class);
+		IFolder folder = (IFolder) resource.getAdapter(IFolder.class);
+
+		IResource changedResource = file != null ? file : folder;
+		if (changedResource == null) {
+		    System.err.println("Could not find a file or a folder for " + resource);
+		    return null;
+		}
+
+		SerializationKind serializationKind;
+		String fallbackNodeType;
+		if (changedResource.getType() == IResource.FILE) {
+		    serializationKind = SerializationKind.FILE;
+		    fallbackNodeType = Repository.NT_FILE;
+		} else { // i.e. IResource.FOLDER
+		    serializationKind = SerializationKind.FOLDER;
+		    fallbackNodeType = Repository.NT_FOLDER;
+		}
+
+		String resourceLocation = '/' + changedResource.getFullPath().makeRelativeTo(syncDirectory.getFullPath())
+		        .toPortableString();
+		String serializationFilePath = serializationManager.getSerializationFilePath(resourceLocation,
+		        serializationKind);
+		IResource serializationResource = syncDirectory.findMember(serializationFilePath);
+		return buildResourceProxy(resourceLocation, serializationResource, syncDirectory, fallbackNodeType);
+	}
 
     private ResourceProxy buildResourceProxy(String resourceLocation, IResource serializationResource,
             IFolder syncDirectory, String fallbackPrimaryType) throws IOException, CoreException {
@@ -667,24 +671,23 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         return filter.filter(contentSyncRoot, repositoryPath, repository.getRepositoryInfo());
     }
 
-    private Command<?> removeFileCommand(Repository repository, IModuleResource resource) throws SerializationException {
-
-        FileInfo info = createFileInfo(resource, repository);
-
-        if (info == null) {
+    private Command<?> removeFileCommand(Repository repository, IModuleResource resource) throws SerializationException, IOException, CoreException {
+    	
+        IResource deletedResource = getResource(resource);
+        
+        if ( deletedResource == null ) {
+        	return null;
+        }
+        
+        if (deletedResource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
             return null;
         }
+        
+        IFolder syncDirectory = ProjectUtil.getSyncDirectory(deletedResource.getProject());
+        
+        ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
 
-        IResource res = getResource(resource);
-        if (res == null) {
-            return null;
-        }
-
-        if (res.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
-            return null;
-        }
-
-        return repository.newDeleteNodeCommand(info);
+        return repository.newDeleteNodeCommand(resourceProxy);
     }
 
     private Filter loadFilter(IProject project, final IFolder syncFolder) throws CoreException {

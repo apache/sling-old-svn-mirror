@@ -115,7 +115,7 @@ public class StubRepository implements Repository {
     }
 
     @Override
-    public Command<Void> newDeleteNodeCommand(FileInfo fileInfo) {
+    public Command<Void> newDeleteNodeCommand(ResourceProxy resource) {
         return null;
     }
 
