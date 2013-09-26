@@ -18,7 +18,7 @@
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Support Components</name>
+    <name>Apache Sling Health Check Support Components</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
