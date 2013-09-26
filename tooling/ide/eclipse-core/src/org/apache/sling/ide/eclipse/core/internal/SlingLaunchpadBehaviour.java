@@ -46,7 +46,6 @@ import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
-import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
@@ -119,7 +118,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             RepositoryInfo repositoryInfo;
             try {
                 repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
-                OsgiClient client = new OsgiClientFactory().createOsgiClient(repositoryInfo);
+                OsgiClient client = Activator.getDefault().getOsgiClientFactory().createOsgiClient(repositoryInfo);
                 Version bundleVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
                 
                 ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,

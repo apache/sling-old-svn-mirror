@@ -78,6 +78,7 @@ public class InstallEditorSection extends ServerEditorSection {
     private Label supportBundleVersionLabel;
     private Composite actionArea;
     private EmbeddedArtifactLocator artifactLocator;
+    private OsgiClientFactory osgiClientFactory;
 
     @Override
     public void createSection(Composite parent) {
@@ -157,6 +158,7 @@ public class InstallEditorSection extends ServerEditorSection {
         }
 
         artifactLocator = Activator.getDefault().getArtifactLocator();
+        osgiClientFactory = Activator.getDefault().getOsgiClientFactory();
     }
 
     private void initialize() {
@@ -207,7 +209,7 @@ public class InstallEditorSection extends ServerEditorSection {
                             try {
                                 RepositoryInfo repositoryInfo = ServerUtil.getRepositoryInfo(server.getOriginal(),
                                         monitor);
-                                OsgiClient client = new OsgiClientFactory().createOsgiClient(repositoryInfo);
+                                OsgiClient client = osgiClientFactory.createOsgiClient(repositoryInfo);
                                 remoteVersion = client
                                         .getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
                                 deployedVersion = remoteVersion;

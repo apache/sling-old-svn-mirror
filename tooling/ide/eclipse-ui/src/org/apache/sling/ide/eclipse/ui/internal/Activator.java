@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.ui.internal;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.filter.FilterLocator;
+import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -34,6 +35,7 @@ public class Activator extends AbstractUIPlugin {
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
     private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
+    private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
 
     public static Activator getDefault() {
 
@@ -57,6 +59,10 @@ public class Activator extends AbstractUIPlugin {
         artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
+        osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
+                null);
+        osgiClientFactory.open();
+
         INSTANCE = this;
     }
 
@@ -67,6 +73,7 @@ public class Activator extends AbstractUIPlugin {
         filterLocator.close();
         eventAdmin.close();
         artifactLocator.close();
+        osgiClientFactory.close();
 
         super.stop(context);
     }
@@ -86,5 +93,9 @@ public class Activator extends AbstractUIPlugin {
     public EmbeddedArtifactLocator getArtifactLocator() {
 
         return ServiceUtil.getNotNull(artifactLocator);
+    }
+
+    public OsgiClientFactory getOsgiClientFactory() {
+        return ServiceUtil.getNotNull(osgiClientFactory);
     }
 }

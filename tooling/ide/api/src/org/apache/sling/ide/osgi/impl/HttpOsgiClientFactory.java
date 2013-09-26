@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.osgi;
+package org.apache.sling.ide.osgi.impl;
 
+import org.apache.sling.ide.osgi.OsgiClient;
+import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
 
-/**
- * The <tt>OsgiClientFactory</tt> creates <tt>OsgiClient</tt> instances
- * 
- */
-public interface OsgiClientFactory {
-
-    OsgiClient createOsgiClient(RepositoryInfo repositoryInfo);
+public class HttpOsgiClientFactory implements OsgiClientFactory {
+    public OsgiClient createOsgiClient(RepositoryInfo repositoryInfo) {
+        return new HttpOsgiClient(repositoryInfo);
+    }
 }

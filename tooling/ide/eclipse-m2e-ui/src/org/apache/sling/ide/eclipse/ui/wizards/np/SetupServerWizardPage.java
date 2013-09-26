@@ -289,7 +289,7 @@ public class SetupServerWizardPage extends WizardPage {
         String hostname = getHostname();
         int launchpadPort = getPort();
 
-        OsgiClientFactory factory = new OsgiClientFactory();
+        OsgiClientFactory factory = Activator.getDefault().getOsgiClientFactory();
 
         // TODO remove credential hardcoding
         return factory.createOsgiClient(new RepositoryInfo("admin", "admin", "http://" + hostname + ":" + launchpadPort
