@@ -28,6 +28,13 @@
     <properties>
         <sling.java.version>6</sling.java.version>
     </properties>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/support</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/support</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck/support</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
