@@ -13,7 +13,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.reactor</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2</version>
 
     <name>Apache Sling Health Check Reactor POM</name>
     <inceptionYear>2013</inceptionYear>
@@ -23,9 +23,9 @@
     </prerequisites>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.core-1.0.2/bundles/extensions/healthcheck</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.core-1.0.2/bundles/extensions/healthcheck</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hc.core-1.0.2/bundles/extensions/healthcheck</url>
     </scm>
     
     <modules>
