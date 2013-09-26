@@ -28,16 +28,16 @@
     </parent>
 
     <artifactId>org.apache.sling.junit.healthcheck</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.4</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling JUnit Health Checks</name>
     <description>Sling Health Check services that run JUnit tests</description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/remote</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.healthcheck-1.0.4</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.junit.healthcheck-1.0.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.junit.healthcheck-1.0.4</url>
     </scm>
 
     <build>
