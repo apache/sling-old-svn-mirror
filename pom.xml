@@ -181,11 +181,13 @@
         <module>bundles/extensions/webconsolesecurityprovider</module>
         <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
+        <module>bundles/extensions/healthcheck</module>
         
         <!-- Testing Support -->
         <module>testing/tools</module>
         <module>testing/junit/core</module>
         <module>testing/junit/scriptable</module>
+        <module>testing/junit/healthcheck</module>
         <module>testing/junit/remote</module>
         <module>testing/resourceresolver-mock</module>
         
