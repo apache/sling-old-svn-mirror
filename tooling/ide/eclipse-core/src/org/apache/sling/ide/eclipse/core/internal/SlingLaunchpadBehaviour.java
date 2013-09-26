@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +36,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.sling.ide.eclipse.core.EmbeddedArtifacts;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
@@ -42,12 +44,16 @@ import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.filter.FilterResult;
+import org.apache.sling.ide.osgi.OsgiClient;
+import org.apache.sling.ide.osgi.OsgiClientException;
+import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationException;
 import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.RepositoryInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 import org.eclipse.core.resources.IFile;
@@ -72,6 +78,7 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.model.IModuleResource;
 import org.eclipse.wst.server.core.model.IModuleResourceDelta;
 import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
+import org.osgi.framework.Version;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
@@ -108,6 +115,24 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             Command<ResourceProxy> command = repository.newListChildrenNodeCommand("/");
             result = command.execute();
             success = result.isSuccess();
+            
+            RepositoryInfo repositoryInfo;
+            try {
+                repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
+                OsgiClient client = new OsgiClientFactory().createOsgiClient(repositoryInfo);
+                Version bundleVersion = client.getBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                
+                ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
+                        monitor);
+                launchpadServer.setBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME, bundleVersion, monitor);
+                
+            } catch (URISyntaxException e) {
+                Activator.getDefault().getLog().log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 
+                        "Failed retrieving information about the installation support bundle", e));
+            } catch (OsgiClientException e) {
+                Activator.getDefault().getLog().log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 
+                        "Failed retrieving information about the installation support bundle", e));
+            }
         }
 
         if (success) {
@@ -498,6 +523,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
 
         if (res.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
+            Activator.getDefault().getLog()
+                    .log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Skipping team-private resource " + res));
             return null;
         }
 
@@ -680,6 +707,11 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         
         if (deletedResource.isTeamPrivateMember(IResource.CHECK_ANCESTORS)) {
+            Activator
+                    .getDefault()
+                    .getLog()
+                    .log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Skipping team-private resource "
+                            + deletedResource));
             return null;
         }
         

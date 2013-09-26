@@ -172,7 +172,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		}
 		IServer server = setupServerWizardPage.getOrCreateServer();
 		monitor.worked(1);
-		if (monitor.isCanceled()) {
+        if (monitor.isCanceled() || server == null) {
 			return false;
 		}
 		

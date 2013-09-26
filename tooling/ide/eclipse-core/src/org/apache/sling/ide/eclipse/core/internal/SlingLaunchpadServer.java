@@ -25,6 +25,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.model.ServerDelegate;
+import org.osgi.framework.Version;
 
 public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunchpadServer {
 
@@ -151,5 +152,25 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
 		} catch (CoreException e) {
 			throw new RuntimeException(e);
 		}
+    }
+
+    @Override
+    public Version getBundleVersion(String bundleSymbolicName) {
+
+        return new Version(getAttribute(String.format(PROP_BUNDLE_VERSION_FORMAT, bundleSymbolicName), (String) null));
+    }
+
+    @Override
+    public void setBundleVersion(String bundleSymbolicName, Version version, IProgressMonitor monitor) {
+
+        String stringVersion = version != null ? version.toString() : null;
+
+        IServerWorkingCopy wc = getServer().createWorkingCopy();
+        wc.setAttribute(String.format(PROP_BUNDLE_VERSION_FORMAT, bundleSymbolicName), stringVersion);
+        try {
+            wc.save(false, monitor);
+        } catch (CoreException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

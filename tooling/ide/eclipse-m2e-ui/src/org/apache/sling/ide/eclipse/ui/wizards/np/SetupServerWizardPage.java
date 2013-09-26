@@ -16,35 +16,22 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.multipart.ByteArrayPartSource;
-import org.apache.commons.httpclient.methods.multipart.FilePart;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.PartSource;
-import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.eclipse.core.EmbeddedArtifacts;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
+import org.apache.sling.ide.osgi.OsgiClient;
+import org.apache.sling.ide.osgi.OsgiClientException;
+import org.apache.sling.ide.osgi.OsgiClientFactory;
+import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -66,10 +53,11 @@ import org.eclipse.wst.server.core.IServer;
 import org.eclipse.wst.server.core.IServerType;
 import org.eclipse.wst.server.core.IServerWorkingCopy;
 import org.eclipse.wst.server.core.ServerCore;
+import org.osgi.framework.Version;
 
 public class SetupServerWizardPage extends WizardPage {
 	
-	private Button useExistingServer;
+    private Button useExistingServer;
 	private Combo existingServerCombo;
 	private Button setupNewServer;
 	private Text newServerName;
@@ -291,86 +279,36 @@ public class SetupServerWizardPage extends WizardPage {
 	}
 	
 
-	private boolean containsToolingSupportBundle() {
-        String hostname = getHostname();
-        int launchpadPort = getPort();
-        GetMethod method = new GetMethod("http://"+hostname+":"+launchpadPort+"/system/console/bundles/org.apache.sling.tooling.support.install");
-        
-        try {
-			return getHttpClient("admin", "admin").executeMethod(method) == 200;
-		} catch (IOException e) {
-            getWizard().reportError(e);
-			return false;
-		}
+    private Version getToolingSupportBundleVersion() throws OsgiClientException {
+
+        return newOsgiClient().getBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME);
     }
     
-    /**
-     * Get the http client
-     * @param user 
-     * @param password 
-     */
-    protected HttpClient getHttpClient(String user, String password) {
-        final HttpClient client = new HttpClient();
-        client.getHttpConnectionManager().getParams().setConnectionTimeout(
-            5000);
-
-        // authentication stuff
-        client.getParams().setAuthenticationPreemptive(true);
-        Credentials defaultcreds = new UsernamePasswordCredentials(user,
-            password);
-        client.getState().setCredentials(AuthScope.ANY, defaultcreds);
-
-        return client;
-    }
-
-    protected int post(String targetURL, String user, String passwd, InputStream in, String fileName) throws IOException {
-        // append pseudo path after root URL to not get redirected for nothing
-        final PostMethod filePost = new PostMethod(targetURL + "/install");
-
-        try {
-            // set referrer
-            filePost.setRequestHeader("referer", "about:blank");
-
-            List<Part> partList = new ArrayList<Part>();
-            partList.add(new StringPart("action", "install"));
-            partList.add(new StringPart("_noredir_", "_noredir_"));
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            copyStream(in, baos);
-			PartSource partSource = new ByteArrayPartSource(fileName, baos.toByteArray());
-            partList.add(new FilePart("bundlefile", partSource));
-            partList.add(new StringPart("bundlestart", "start"));
-
-            Part[] parts = partList.toArray(new Part[partList.size()]);
-
-            filePost.setRequestEntity(new MultipartRequestEntity(parts,
-                filePost.getParams()));
-
-            int status = getHttpClient(user, passwd).executeMethod(filePost);
-            return status;
-        } finally {
-            filePost.releaseConnection();
-        }
-    }
-
-    private void copyStream(InputStream in, OutputStream os) throws IOException {
-		final byte[] bytes = new byte[4*1024];
-		while (true) {
-			final int numRead = in.read(bytes);
-			if (numRead < 0) {
-				break;
-			}
-			os.write(bytes, 0, numRead);
-		}
-	}
-
-    private int installToolingSupportBundle() throws IOException {
-        String hostname = getHostname();
-        int launchpadPort = getPort();
-        String targetURL = "http://"+hostname+":"+launchpadPort+"/system/console";
+    private void installToolingSupportBundle() throws OsgiClientException, IOException {
+        // TODO centralize version and resource lookup
     	String fileName = "org.apache.sling.tooling.support.install-0.0.1-SNAPSHOT.jar";
 		URL jarUrl = Activator.getDefault().getBundle().getResource(
     			"target/sling-tooling-support-install/"+fileName);
-		return post(targetURL, "admin", "admin", jarUrl.openStream(), fileName);
+
+        InputStream contents = null;
+        try {
+            contents = jarUrl.openStream();
+            newOsgiClient().installBundle(contents, fileName);
+        } finally {
+            IOUtils.closeQuietly(contents);
+        }
+    }
+
+    private OsgiClient newOsgiClient() {
+
+        String hostname = getHostname();
+        int launchpadPort = getPort();
+
+        OsgiClientFactory factory = new OsgiClientFactory();
+
+        // TODO remove credential hardcoding
+        return factory.createOsgiClient(new RepositoryInfo("admin", "admin", "http://" + hostname + ":" + launchpadPort
+                + "/"));
     }
 	
 	IServer getOrCreateServer() {
@@ -389,33 +327,34 @@ public class SetupServerWizardPage extends WizardPage {
 				}
 			}
 			
-			boolean installedLocally = false;
 			if (installToolingSupportBundle.getSelection()) {
-				if (containsToolingSupportBundle()) {
-					// then nothing to overwrite
-					installedLocally = true;
-				} else {
+                // TODO - read from manifest instead of hardcoding
+                Version ourVersion = new Version(0, 0, 1, "SNAPSHOT");
+                Version installedVersion;
+                try {
+                    installedVersion = getToolingSupportBundleVersion();
+                } catch (OsgiClientException e) {
+                    getWizard().reportError(e);
+                    return null;
+                }
+                if (installedVersion == null || ourVersion.compareTo(installedVersion) > 0) {
 					// then auto-install it if possible
 					try {
-						int status = installToolingSupportBundle();
-						
-						if (status!=HttpStatus.SC_OK) {
-                            getWizard().reportError(
-                                    new CoreException(new Status(IStatus.WARNING, Activator.PLUGIN_ID,
-                                            "Could not install sling tooling support bundle: " + status)));
-						} else {
-							installedLocally = true;
-						}
+                        installToolingSupportBundle();
 					} catch (IOException e) {
                         getWizard().reportError(e);
                         return null;
-					}
+                    } catch (OsgiClientException e) {
+                        getWizard().reportError(e);
+                        return null;
+                    }
 				}
 			}
 			
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
             // TODO progress monitor
 			try {
+                // TODO pass in username and password
 				IRuntime runtime = serverRuntime.createRuntime(null, new NullProgressMonitor());
 				runtime = runtime.createWorkingCopy().save(true, new NullProgressMonitor());
 				IServerWorkingCopy wc = serverType.createServer(null, null, runtime, new NullProgressMonitor());
@@ -423,7 +362,7 @@ public class SetupServerWizardPage extends WizardPage {
 				wc.setName(newServerName.getText() + " (external)");
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, Integer.parseInt(newServerDebugPort.getText()));
-				wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installedLocally);
+                wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installToolingSupportBundle.getSelection());
 				wc.setAttribute("auto-publish-setting", 2); // 2: automatically publish when resources change
 				wc.setAttribute("auto-publish-time", 0);    // 0: zero delay after a resource change (and the builder was kicked, I guess)
 				wc.setRuntime(runtime);
