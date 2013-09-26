@@ -1,0 +1,6 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "hc.name" : "Asynchronous Health Check sample", 
+    "hc.tags" : [async],
+    "hc.mbean.name" : "AsyncHealthCheckSample" 
+}
