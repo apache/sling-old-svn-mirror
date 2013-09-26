@@ -30,12 +30,17 @@ import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.eclipse.core.SetBundleInstallLocallyCommand;
+import org.apache.sling.ide.eclipse.core.SetBundleVersionCommand;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -72,6 +77,7 @@ public class InstallEditorSection extends ServerEditorSection {
     private PropertyChangeListener serverListener;
     private Label supportBundleVersionLabel;
     private Composite actionArea;
+    private EmbeddedArtifactLocator artifactLocator;
 
     @Override
     public void createSection(Composite parent) {
@@ -129,6 +135,14 @@ public class InstallEditorSection extends ServerEditorSection {
                 if (ISlingLaunchpadServer.PROP_INSTALL_LOCALLY.equals(evt.getPropertyName())) {
             		quickLocalInstallButton.setSelection((Boolean)evt.getNewValue());
             		mvnSlingInstallButton.setSelection(!(Boolean)evt.getNewValue());
+                } else if (evt.getPropertyName().equals(
+                        String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,
+                                EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME))) {
+
+                    Version launchpadVersion = new Version((String) evt.getNewValue());
+                    Version embeddedVersion = new Version(artifactLocator.loadToolingSupportBundle().getVersion());
+
+                    updateActionArea(launchpadVersion, embeddedVersion);
                 }
             }
         };
@@ -141,6 +155,8 @@ public class InstallEditorSection extends ServerEditorSection {
             launchpadServer = (ISlingLaunchpadServer) server.loadAdapter(ISlingLaunchpadServer.class,
                     new NullProgressMonitor());
         }
+
+        artifactLocator = Activator.getDefault().getArtifactLocator();
     }
 
     private void initialize() {
@@ -161,28 +177,12 @@ public class InstallEditorSection extends ServerEditorSection {
         quickLocalInstallButton.addSelectionListener(listener);
         mvnSlingInstallButton.addSelectionListener(listener);
 
-        Version version;
-        final EmbeddedArtifact supportBundle;
-        try {
-            version = launchpadServer.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-            EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
-            supportBundle = artifactLocator.loadToolingSupportBundle();
-        } catch (RuntimeException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-            throw e2;
-        }
+        Version serverVersion = launchpadServer.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+        final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
 
         final Version embeddedVersion = new Version(supportBundle.getVersion());
 
-        if (version == null || embeddedVersion.compareTo(version) > 0) {
-            supportBundleVersionLabel
-                    .setText("Installation support bundle is not present our outdated, local deployment will not work");
-            installOrUpdateSupportBundleLink.setEnabled(true);
-        } else {
-            supportBundleVersionLabel.setText("Installation support bundle is present and up to date.");
-            installOrUpdateSupportBundleLink.setEnabled(false);
-        }
+        updateActionArea(serverVersion, embeddedVersion);
 
         installOrUpdateSupportBundleLink.addHyperlinkListener(new HyperlinkAdapter() {
 
@@ -198,10 +198,11 @@ public class InstallEditorSection extends ServerEditorSection {
                         public void run(IProgressMonitor monitor) throws InvocationTargetException,
                                 InterruptedException {
                             final Version remoteVersion;
-                            monitor.beginTask("Installing support bundle", 2);
+                            monitor.beginTask("Installing support bundle", 3);
                             // double-check, just in case
                             monitor.setTaskName("Getting remote bundle version");
 
+                            Version deployedVersion;
                             final String message;
                             try {
                                 RepositoryInfo repositoryInfo = ServerUtil.getRepositoryInfo(server.getOriginal(),
@@ -209,6 +210,7 @@ public class InstallEditorSection extends ServerEditorSection {
                                 OsgiClient client = new OsgiClientFactory().createOsgiClient(repositoryInfo);
                                 remoteVersion = client
                                         .getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                                deployedVersion = remoteVersion;
 
                                 monitor.worked(1);
 
@@ -225,9 +227,27 @@ public class InstallEditorSection extends ServerEditorSection {
                                     } finally {
                                         IOUtils.closeQuietly(contents);
                                     }
+                                    deployedVersion = embeddedVersion;
                                     message = "Bundle version " + embeddedVersion + " installed";
 
                                 }
+                                monitor.worked(1);
+
+                                monitor.setTaskName("Updating server configuration");
+                                final Version finalDeployedVersion = deployedVersion;
+                                Display.getDefault().syncExec(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        execute(new SetBundleVersionCommand(server,
+                                                EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME,
+                                                finalDeployedVersion.toString()));
+                                        try {
+                                            server.save(false, new NullProgressMonitor());
+                                        } catch (CoreException e) {
+                                            Activator.getDefault().getLog().log(e.getStatus());
+                                        }
+                                    }
+                                });
                                 monitor.worked(1);
 
                             } catch (OsgiClientException e) {
@@ -250,14 +270,31 @@ public class InstallEditorSection extends ServerEditorSection {
                         }
                     });
                 } catch (InvocationTargetException e1) {
-                    // TODO error reporting
-                    e1.printStackTrace();
+
+                    IStatus status = new Status(Status.ERROR, Activator.PLUGIN_ID,
+                            "Error while installing support bundle: " + e1.getTargetException().getMessage(), e1
+                                    .getTargetException());
+
+                    ErrorDialog.openError(getShell(), "Error while installing support bundle", e1.getMessage(), status);
                 } catch (InterruptedException e1) {
                     Thread.currentThread().interrupt();
                     return;
                 }
             }
         });
+    }
+
+    private void updateActionArea(Version serverVersion, final Version embeddedVersion) {
+        if (serverVersion == null || embeddedVersion.compareTo(serverVersion) > 0) {
+            supportBundleVersionLabel
+                    .setText("Installation support bundle is not present our outdated, local deployment will not work");
+            installOrUpdateSupportBundleLink.setEnabled(true);
+        } else {
+            supportBundleVersionLabel.setText("Installation support bundle is present and up to date.");
+            installOrUpdateSupportBundleLink.setEnabled(false);
+        }
+
+        actionArea.pack();
     }
 
     /*
