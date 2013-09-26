@@ -40,6 +40,7 @@ import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
+import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
 import org.apache.sling.ide.filter.Filter;
 import org.apache.sling.ide.filter.FilterLocator;
@@ -519,6 +520,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
         IResource res = getResource(resource);
         if (res == null) {
+            return null;
+        }
+
+        Object ignoreNextUpdate = res.getSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE);
+        if (ignoreNextUpdate != null) {
+            res.setSessionProperty(ResourceUtil.QN_IGNORE_NEXT_CHANGE, null);
             return null;
         }
 
