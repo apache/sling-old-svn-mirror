@@ -18,7 +18,7 @@
     <packaging>jar</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Integration Tests</name>
+    <name>Apache Sling Health Check Integration Tests</name>
     <inceptionYear>2013</inceptionYear>
 
     <properties>
