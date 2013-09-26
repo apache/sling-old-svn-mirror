@@ -35,9 +35,9 @@
     <description>Sling Health Check services that run JUnit tests</description>
     
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</connection>
-        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/remote</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/remote</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/junit/healthcheck</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/junit/healthcheck</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/junit/healthcheck</url>
     </scm>
 
     <build>
