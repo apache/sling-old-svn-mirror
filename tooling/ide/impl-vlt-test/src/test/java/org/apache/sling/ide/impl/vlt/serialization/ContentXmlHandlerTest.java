@@ -134,6 +134,14 @@ public class ContentXmlHandlerTest {
     }
 
     @Test
+    public void encodedChildContentXml() throws ParserConfigurationException, SAXException, IOException {
+
+        ResourceProxy root = parseContentXmlFile("encoded-child-content.xml", "/ROOT");
+
+        assertThat("/ROOT contains /_jcr_content", root.getChildren(), hasItem(path("/ROOT/_jcr_content")));
+    }
+
+    @Test
     public void parseContentXmlWithEscapedNames() throws ParserConfigurationException, SAXException, IOException {
 
         ResourceProxy root = parseContentXmlFile("full-coverage-escaped-names.xml", "/");
