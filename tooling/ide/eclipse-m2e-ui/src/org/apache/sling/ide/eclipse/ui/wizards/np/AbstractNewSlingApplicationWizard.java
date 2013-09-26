@@ -131,6 +131,9 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	 * using wizard as execution context.
 	 */
 	public boolean performFinish() {
+
+        // TODO - should probably rely on exception handling here
+        final boolean[] success = new boolean[0];
         try {
 			getContainer().run(false, true, new IRunnableWithProgress() {
 
@@ -138,14 +141,14 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 				public void run(IProgressMonitor monitor)
 						throws InvocationTargetException, InterruptedException {
 					try {
-						performFinish(monitor);
+                        success[0] = performFinish(monitor);
 					} catch (Exception e) {
                         throw new InvocationTargetException(e);
 					}
 				}
 				
 			});
-			return true;
+            return success[0];
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         	return false;
@@ -170,7 +173,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		if (monitor.isCanceled()) {
 			return false;
 		}
-		IServer server = setupServerWizardPage.getOrCreateServer();
+        IServer server = setupServerWizardPage.getOrCreateServer(monitor);
 		monitor.worked(1);
         if (monitor.isCanceled() || server == null) {
 			return false;

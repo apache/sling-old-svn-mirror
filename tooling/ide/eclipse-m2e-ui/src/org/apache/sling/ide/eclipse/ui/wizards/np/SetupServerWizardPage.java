@@ -18,7 +18,6 @@ package org.apache.sling.ide.eclipse.ui.wizards.np;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +31,7 @@ import org.apache.sling.ide.osgi.OsgiClientException;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
@@ -285,20 +284,6 @@ public class SetupServerWizardPage extends WizardPage {
         return newOsgiClient().getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
     }
     
-    private void installToolingSupportBundle() throws OsgiClientException, IOException {
-
-        EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
-        EmbeddedArtifact toolingSupportBundle = artifactsLocator.loadToolingSupportBundle();
-
-        InputStream contents = null;
-        try {
-            contents = toolingSupportBundle.openInputStream();
-            newOsgiClient().installBundle(contents, toolingSupportBundle.getName());
-        } finally {
-            IOUtils.closeQuietly(contents);
-        }
-    }
-
     private OsgiClient newOsgiClient() {
 
         String hostname = getHostname();
@@ -311,7 +296,7 @@ public class SetupServerWizardPage extends WizardPage {
                 + "/"));
     }
 	
-	IServer getOrCreateServer() {
+    IServer getOrCreateServer(IProgressMonitor monitor) {
 		if (useExistingServer.getSelection()) {
 			String key = existingServerCombo.getItem(existingServerCombo.getSelectionIndex());
 			return serversMap.get(key);
@@ -327,9 +312,9 @@ public class SetupServerWizardPage extends WizardPage {
 				}
 			}
 			
+            Version finalVersion = null;
+			
 			if (installToolingSupportBundle.getSelection()) {
-                // TODO - read from manifest instead of hardcoding
-                Version ourVersion = new Version(0, 0, 1, "SNAPSHOT");
                 Version installedVersion;
                 try {
                     installedVersion = getToolingSupportBundleVersion();
@@ -337,10 +322,23 @@ public class SetupServerWizardPage extends WizardPage {
                     getWizard().reportError(e);
                     return null;
                 }
+                finalVersion = installedVersion;
+                EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
+                EmbeddedArtifact toolingSupportBundle = artifactsLocator.loadToolingSupportBundle();
+                Version ourVersion = new Version(toolingSupportBundle.getVersion());
+
                 if (installedVersion == null || ourVersion.compareTo(installedVersion) > 0) {
 					// then auto-install it if possible
 					try {
-                        installToolingSupportBundle();
+
+                        InputStream contents = null;
+                        try {
+                            contents = toolingSupportBundle.openInputStream();
+                            newOsgiClient().installBundle(contents, toolingSupportBundle.getName());
+                        } finally {
+                            IOUtils.closeQuietly(contents);
+                        }
+                        finalVersion = ourVersion;
 					} catch (IOException e) {
                         getWizard().reportError(e);
                         return null;
@@ -352,21 +350,25 @@ public class SetupServerWizardPage extends WizardPage {
 			}
 			
 			IRuntimeType serverRuntime = ServerCore.findRuntimeType("org.apache.sling.ide.launchpadRuntimeType");
-            // TODO progress monitor
 			try {
                 // TODO pass in username and password
-				IRuntime runtime = serverRuntime.createRuntime(null, new NullProgressMonitor());
-				runtime = runtime.createWorkingCopy().save(true, new NullProgressMonitor());
-				IServerWorkingCopy wc = serverType.createServer(null, null, runtime, new NullProgressMonitor());
+                // TODO there should be a nicer API for creating this, and also a central place for defaults
+                IRuntime runtime = serverRuntime.createRuntime(null, monitor);
+                runtime = runtime.createWorkingCopy().save(true, monitor);
+                IServerWorkingCopy wc = serverType.createServer(null, null, runtime, monitor);
 				wc.setHost(getHostname());
 				wc.setName(newServerName.getText() + " (external)");
 				wc.setAttribute(ISlingLaunchpadServer.PROP_PORT, getPort());
 				wc.setAttribute(ISlingLaunchpadServer.PROP_DEBUG_PORT, Integer.parseInt(newServerDebugPort.getText()));
                 wc.setAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, installToolingSupportBundle.getSelection());
-				wc.setAttribute("auto-publish-setting", 2); // 2: automatically publish when resources change
-				wc.setAttribute("auto-publish-time", 0);    // 0: zero delay after a resource change (and the builder was kicked, I guess)
+                wc.setAttribute("auto-publish-setting", ISlingLaunchpadServer.PUBLISH_STATE_RESOURCE_CHANGE);
+                wc.setAttribute("auto-publish-time", 0);
+                if (finalVersion != null) {
+                    wc.setAttribute(String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,
+                        EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME), finalVersion.toString());
+                }
 				wc.setRuntime(runtime);
-				return wc.save(true, new NullProgressMonitor());
+                return wc.save(true, monitor);
 			} catch (CoreException e) {
                 getWizard().reportError(e);
 			}
