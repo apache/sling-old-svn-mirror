@@ -18,7 +18,7 @@
     <packaging>bundle</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>Sling Health Check Core</name>
+    <name>Apache Sling Health Check Core</name>
     <inceptionYear>2013</inceptionYear>
     
     <description>
