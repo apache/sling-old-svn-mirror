@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.eclipse.core;
+package org.apache.sling.ide.artifacts;
 
-public class EmbeddedArtifacts {
+public interface EmbeddedArtifactLocator {
 
     public static final String SUPPORT_BUNDLE_SYMBOLIC_NAME = "org.apache.sling.tooling.support.install";
-    public static final String SUPPORT_BUNDLE_VERSION = "0.0.1.SNAPSHOT"; // TODO - remove version hardcoding
+
+    EmbeddedArtifact loadToolingSupportBundle();
 
 }

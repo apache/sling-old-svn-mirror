@@ -23,6 +23,8 @@ import org.apache.sling.ide.transport.RepositoryInfo;
  * The <tt>OsgiClientFactory</tt> creates <tt>OsgiClient</tt> instances
  * 
  */
+// TODO - this should be a declarative service, but this can't be done with a Require-Bundle on the
+// org.eclipse.equinox.ds bundle
 public class OsgiClientFactory {
 
     public OsgiClient createOsgiClient(RepositoryInfo repositoryInfo) {

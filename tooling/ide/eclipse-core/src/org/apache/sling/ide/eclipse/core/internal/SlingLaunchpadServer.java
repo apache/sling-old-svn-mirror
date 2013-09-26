@@ -157,7 +157,9 @@ public class SlingLaunchpadServer extends ServerDelegate implements ISlingLaunch
     @Override
     public Version getBundleVersion(String bundleSymbolicName) {
 
-        return new Version(getAttribute(String.format(PROP_BUNDLE_VERSION_FORMAT, bundleSymbolicName), (String) null));
+        String rawValue = getAttribute(String.format(PROP_BUNDLE_VERSION_FORMAT, bundleSymbolicName), (String) null);
+
+        return rawValue != null ? new Version(rawValue) : null;
     }
 
     @Override

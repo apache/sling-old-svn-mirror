@@ -36,7 +36,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.sling.ide.eclipse.core.EmbeddedArtifacts;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
@@ -120,11 +120,12 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             try {
                 repositoryInfo = ServerUtil.getRepositoryInfo(getServer(), monitor);
                 OsgiClient client = new OsgiClientFactory().createOsgiClient(repositoryInfo);
-                Version bundleVersion = client.getBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                Version bundleVersion = client.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
                 
                 ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) getServer().loadAdapter(SlingLaunchpadServer.class,
                         monitor);
-                launchpadServer.setBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME, bundleVersion, monitor);
+                launchpadServer.setBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME, bundleVersion,
+                        monitor);
                 
             } catch (URISyntaxException e) {
                 Activator.getDefault().getLog().log(new Status(IStatus.WARNING, Activator.PLUGIN_ID, 

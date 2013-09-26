@@ -23,7 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.ide.eclipse.core.EmbeddedArtifacts;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
+import org.apache.sling.ide.artifacts.EmbeddedArtifact;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.apache.sling.ide.osgi.OsgiClient;
@@ -281,19 +282,18 @@ public class SetupServerWizardPage extends WizardPage {
 
     private Version getToolingSupportBundleVersion() throws OsgiClientException {
 
-        return newOsgiClient().getBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+        return newOsgiClient().getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
     }
     
     private void installToolingSupportBundle() throws OsgiClientException, IOException {
-        // TODO centralize version and resource lookup
-    	String fileName = "org.apache.sling.tooling.support.install-0.0.1-SNAPSHOT.jar";
-		URL jarUrl = Activator.getDefault().getBundle().getResource(
-    			"target/sling-tooling-support-install/"+fileName);
+
+        EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
+        EmbeddedArtifact toolingSupportBundle = artifactsLocator.loadToolingSupportBundle();
 
         InputStream contents = null;
         try {
-            contents = jarUrl.openStream();
-            newOsgiClient().installBundle(contents, fileName);
+            contents = toolingSupportBundle.openInputStream();
+            newOsgiClient().installBundle(contents, toolingSupportBundle.getName());
         } finally {
             IOUtils.closeQuietly(contents);
         }

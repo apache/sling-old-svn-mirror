@@ -14,6 +14,7 @@ Bundle-ClassPath: .
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
  org.apache.commons.httpclient.methods;version="3.1.0",
+ org.apache.sling.ide.artifacts,
  org.apache.sling.ide.filter,
  org.apache.sling.ide.osgi,
  org.apache.sling.ide.serialization,

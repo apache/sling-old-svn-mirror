@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.filter.FilterLocator;
 import org.apache.sling.ide.serialization.SerializationManager;
@@ -32,6 +33,7 @@ public class Activator extends AbstractUIPlugin {
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
     private ServiceTracker<EventAdmin, EventAdmin> eventAdmin;
+    private ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator> artifactLocator;
 
     public static Activator getDefault() {
 
@@ -52,6 +54,9 @@ public class Activator extends AbstractUIPlugin {
         eventAdmin = new ServiceTracker<EventAdmin, EventAdmin>(context, EventAdmin.class, null);
         eventAdmin.open();
 
+        artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
+        artifactLocator.open();
+
         INSTANCE = this;
     }
 
@@ -61,6 +66,7 @@ public class Activator extends AbstractUIPlugin {
         serializationManager.close();
         filterLocator.close();
         eventAdmin.close();
+        artifactLocator.close();
 
         super.stop(context);
     }
@@ -75,5 +81,10 @@ public class Activator extends AbstractUIPlugin {
 
     public EventAdmin getEventAdmin() {
         return ServiceUtil.getNotNull(eventAdmin);
+    }
+
+    public EmbeddedArtifactLocator getArtifactLocator() {
+
+        return ServiceUtil.getNotNull(artifactLocator);
     }
 }

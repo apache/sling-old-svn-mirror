@@ -107,6 +107,15 @@ public class HttpOsgiClient implements OsgiClient {
 
     @Override
     public void installBundle(InputStream in, String fileName) throws OsgiClientException {
+
+        if (in == null) {
+            throw new IllegalArgumentException("in may not be null");
+        }
+
+        if (fileName == null) {
+            throw new IllegalArgumentException("fileName may not be null");
+        }
+
         // append pseudo path after root URL to not get redirected for nothing
         final PostMethod filePost = new PostMethod(repositoryInfo.getUrl()+"system/console/install");
 

@@ -18,10 +18,14 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 
-import org.apache.sling.ide.eclipse.core.EmbeddedArtifacts;
+import org.apache.commons.io.IOUtils;
+import org.apache.sling.ide.artifacts.EmbeddedArtifact;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadConfiguration;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
@@ -156,19 +160,28 @@ public class InstallEditorSection extends ServerEditorSection {
 
         quickLocalInstallButton.addSelectionListener(listener);
         mvnSlingInstallButton.addSelectionListener(listener);
-        
 
-        Version version = launchpadServer.getBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME);
-        final Version embeddedVersion = new Version(EmbeddedArtifacts.SUPPORT_BUNDLE_VERSION);
+        Version version;
+        final EmbeddedArtifact supportBundle;
+        try {
+            version = launchpadServer.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+            EmbeddedArtifactLocator artifactLocator = Activator.getDefault().getArtifactLocator();
+            supportBundle = artifactLocator.loadToolingSupportBundle();
+        } catch (RuntimeException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+            throw e2;
+        }
+
+        final Version embeddedVersion = new Version(supportBundle.getVersion());
+
         if (version == null || embeddedVersion.compareTo(version) > 0) {
             supportBundleVersionLabel
                     .setText("Installation support bundle is not present our outdated, local deployment will not work");
             installOrUpdateSupportBundleLink.setEnabled(true);
-            // actionArea.setVisible(true);
         } else {
             supportBundleVersionLabel.setText("Installation support bundle is present and up to date.");
             installOrUpdateSupportBundleLink.setEnabled(false);
-            // actionArea.setVisible(false);
         }
 
         installOrUpdateSupportBundleLink.addHyperlinkListener(new HyperlinkAdapter() {
@@ -194,7 +207,8 @@ public class InstallEditorSection extends ServerEditorSection {
                                 RepositoryInfo repositoryInfo = ServerUtil.getRepositoryInfo(server.getOriginal(),
                                         monitor);
                                 OsgiClient client = new OsgiClientFactory().createOsgiClient(repositoryInfo);
-                                remoteVersion = client.getBundleVersion(EmbeddedArtifacts.SUPPORT_BUNDLE_SYMBOLIC_NAME);
+                                remoteVersion = client
+                                        .getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
 
                                 monitor.worked(1);
 
@@ -204,13 +218,23 @@ public class InstallEditorSection extends ServerEditorSection {
                                     message = "Bundle is already installed and up to date";
                                 } else {
                                     monitor.setTaskName("Installing bundle");
-                                    message = "!!! Installation not yet supported";
+                                    InputStream contents = null;
+                                    try {
+                                        contents = supportBundle.openInputStream();
+                                        client.installBundle(contents, supportBundle.getName());
+                                    } finally {
+                                        IOUtils.closeQuietly(contents);
+                                    }
+                                    message = "Bundle version " + embeddedVersion + " installed";
+
                                 }
                                 monitor.worked(1);
 
                             } catch (OsgiClientException e) {
                                 throw new InvocationTargetException(e);
                             } catch (URISyntaxException e) {
+                                throw new InvocationTargetException(e);
+                            } catch (IOException e) {
                                 throw new InvocationTargetException(e);
                             } finally {
                                 monitor.done();
