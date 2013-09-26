@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project 
-    xmlns="http://maven.apache.org/POM/4.0.0" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     
     <modelVersion>4.0.0</modelVersion>
 
@@ -16,7 +13,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.support</artifactId>
     <packaging>bundle</packaging>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Apache Sling Health Check Support Components</name>
     <inceptionYear>2013</inceptionYear>
@@ -30,9 +27,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/support</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/support</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck/support</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.core-1.0.0/bundles/extensions/healthcheck/support</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.core-1.0.0/bundles/extensions/healthcheck/support</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hc.core-1.0.0/bundles/extensions/healthcheck/support</url>
     </scm>
 
     <build>
@@ -62,7 +59,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.hc.core</artifactId>
-            <version>0.0.2-SNAPSHOT</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
