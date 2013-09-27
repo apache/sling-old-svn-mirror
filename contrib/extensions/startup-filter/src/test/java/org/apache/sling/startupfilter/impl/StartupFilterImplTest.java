@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -121,6 +123,8 @@ public class StartupFilterImplTest {
     private StringWriter messageWriter;
     private AtomicInteger activeFilterCount;
     private ServiceRegistration serviceRegistration;
+    private String requestPath;
+    private static final String CONSOLE_ROOT = "/test/system/console";
 
     @Before
     public void setup() {
@@ -131,6 +135,7 @@ public class StartupFilterImplTest {
         chain = mockery.mock(FilterChain.class);
         serviceRegistration = mockery.mock(ServiceRegistration.class);
         filter = new TestFilterImpl();
+        requestPath = "/NO_PATH_YET";
     }
     
     private void setProvider(final TestProvider provider) throws Exception {
@@ -170,7 +175,9 @@ public class StartupFilterImplTest {
             will(returnValue(providerRefs));
             allowing(bundleContext).getService(with(any(ServiceReference.class)));
             will(returnValue(provider));
-            allowing(bundleContext).getProperty(with(any(String.class)));
+            
+            allowing(bundleContext).getProperty(with("felix.webconsole.manager.root"));
+            will(returnValue(CONSOLE_ROOT));
 
             allowing(bundleContext).registerService(with(Filter.class.getName()), with(any(Object.class)), with(any(Dictionary.class)));
             will(new DoAllAction(
@@ -189,9 +196,18 @@ public class StartupFilterImplTest {
             
             allowing(serviceRegistration).unregister();
             will(new ChangeInteger(activeFilterCount, false));
+            
+            allowing(request).getPathInfo();
+            will(returnValue(getRequestPath()));
+            
+            allowing(chain).doFilter(with(any(ServletRequest.class)), with(any(ServletResponse.class)));
         }});
         
         filter.setup(componentContext);
+    }
+    
+    private String getRequestPath() {
+        return requestPath;
     }
     
     private void assertRequest(final int expectedStatus, final String expectedMessage) throws Exception {
@@ -213,6 +229,20 @@ public class StartupFilterImplTest {
         setProvider(null);
         assertEquals("Initially expecting the default status message", 1, activeFilterCount.get());
         assertRequest(503, StartupFilterImpl.DEFAULT_MESSAGE);
+    }
+
+    @Test
+    public void testBypassRoot() throws Exception {
+        requestPath = CONSOLE_ROOT;
+        setProvider(null);
+        assertRequest(-1, "");
+    }
+
+    @Test
+    public void testBypassSubpath() throws Exception {
+        requestPath = CONSOLE_ROOT + "/something";
+        setProvider(null);
+        assertRequest(-1, "");
     }
 
     @Test

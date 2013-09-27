@@ -29,6 +29,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Activate;
@@ -93,6 +94,16 @@ public class StartupFilterImpl implements StartupFilter, Filter {
             disable();
             chain.doFilter(request, sr);
             return;
+        }
+        
+        // Bypass for the managerRoot path
+        if(request instanceof HttpServletRequest) {
+            final String pathInfo = ((HttpServletRequest)request).getPathInfo();
+            if(managerRoot != null && managerRoot.length() > 0 && pathInfo.startsWith(managerRoot)) {
+                log.debug("Bypassing filter for path {} which starts with {}", pathInfo, managerRoot);
+                chain.doFilter(request, sr);
+                return;
+            }
         }
         
         updateProviders();
@@ -165,7 +176,7 @@ public class StartupFilterImpl implements StartupFilter, Filter {
         if(defaultFilterActive) {
             enable();
         }
-        log.info("Activated, enabled={}", isEnabled());
+        log.info("Activated, enabled={}, managerRoot={}", isEnabled(), managerRoot);
     }
     
     @Deactivate
@@ -179,7 +190,7 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     
     public synchronized void enable() {
         if(filterServiceRegistration == null) {
-            final String pattern = "^(?!"+ managerRoot +")(.+)";
+            final String pattern = "/";
             final Hashtable<String, Object> params = new Hashtable<String, Object>();
             params.put(Constants.SERVICE_RANKING, 0x9000); // run before RequestLoggerFilter (0x8000)
             params.put("filter.scope", "REQUEST");
