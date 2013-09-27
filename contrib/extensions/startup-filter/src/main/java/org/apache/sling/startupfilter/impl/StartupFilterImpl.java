@@ -79,7 +79,7 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private StartupFilterDisabler startupFilterDisabler;
 
-    private final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root";
+    private static final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root";
     static final String DEFAULT_MANAGER_ROOT = "/system/console";
     private String managerRoot;
     
@@ -179,12 +179,13 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     
     public synchronized void enable() {
         if(filterServiceRegistration == null) {
+            final String pattern = "^(?!"+ managerRoot +")(.+)";
             final Hashtable<String, Object> params = new Hashtable<String, Object>();
             params.put(Constants.SERVICE_RANKING, 0x9000); // run before RequestLoggerFilter (0x8000)
             params.put("filter.scope", "REQUEST");
-            params.put("pattern", "^(?!"+ managerRoot +")(.+)");
+            params.put("pattern", pattern);
             filterServiceRegistration = bundleContext.registerService(Filter.class.getName(), this, params);
-            log.info("Registered {} as a Filter service", this);
+            log.info("Registered {} as a Filter service with pattern {}", this, pattern);
         }
     }
     
