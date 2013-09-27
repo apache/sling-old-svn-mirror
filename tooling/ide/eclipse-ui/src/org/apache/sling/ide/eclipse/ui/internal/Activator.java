@@ -56,7 +56,8 @@ public class Activator extends AbstractUIPlugin {
         eventAdmin = new ServiceTracker<EventAdmin, EventAdmin>(context, EventAdmin.class, null);
         eventAdmin.open();
 
-        artifactLocator = new ServiceTracker<>(context, EmbeddedArtifactLocator.class, null);
+        artifactLocator = new ServiceTracker<EmbeddedArtifactLocator, EmbeddedArtifactLocator>(context,
+                EmbeddedArtifactLocator.class, null);
         artifactLocator.open();
 
         osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
