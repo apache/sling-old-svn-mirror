@@ -78,6 +78,10 @@ public class JobManagerConfiguration {
 
     private boolean disabledDistribution;
 
+    private String storedCancelledJobsPath;
+
+    private String storedSuccessfulJobsPath;
+
     public JobManagerConfiguration(final Map<String, Object> props) {
         this.update(props);
         this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH),
@@ -95,6 +99,8 @@ public class JobManagerConfiguration {
         this.previousVersionAnonPath = this.jobsBasePathWithSlash + "anon";
         this.previousVersionIdentifiedPath = this.jobsBasePathWithSlash + "identified";
 
+        this.storedCancelledJobsPath = this.jobsBasePathWithSlash + "cancelled";
+        this.storedSuccessfulJobsPath = this.jobsBasePathWithSlash + "finished";
     }
 
     /**
@@ -218,5 +224,26 @@ public class JobManagerConfiguration {
 
     public boolean disableDistribution() {
         return this.disabledDistribution;
+    }
+
+    public String getStoragePath(final JobImpl finishedJob, final boolean isSuccess) {
+        final String topicName = (finishedJob.isBridgedEvent() ? JobImpl.PROPERTY_BRIDGED_EVENT : finishedJob.getTopic().replace('/', '.'));
+        final StringBuilder sb = new StringBuilder();
+        if ( isSuccess ) {
+            sb.append(this.storedSuccessfulJobsPath);
+        } else {
+            sb.append(this.storedCancelledJobsPath);
+        }
+        sb.append('/');
+        sb.append(topicName);
+        sb.append('/');
+        sb.append(finishedJob.getId());
+
+        return sb.toString();
+
+    }
+
+    public boolean isStoragePath(final String path) {
+        return path.startsWith(this.storedCancelledJobsPath) || path.startsWith(this.storedSuccessfulJobsPath);
     }
 }

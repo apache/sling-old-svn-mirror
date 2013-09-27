@@ -162,6 +162,12 @@ public interface JobManager {
     Collection<Job> findJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
 
     /**
+     * Stop a job
+     * @since 1.3
+     */
+    void stopJobById(String jobId);
+
+    /**
      * Return all jobs either running or scheduled.
      *
      * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.

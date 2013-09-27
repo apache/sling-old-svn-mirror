@@ -35,6 +35,13 @@ public interface JobExecutionContext {
     void asyncProcessingFinished(final JobStatus status);
 
     /**
+     * If a job is stoppable, it should periodically check this method
+     * and stop processing if the method return <code>true</code>.
+     * @return Whether this job has been stopped from the outside.
+     */
+    boolean isStopped();
+
+    /**
      * Indicate that the job executor is able to report the progress
      * by providing a step count.
      * This method should only be called once, consecutive calls
