@@ -170,7 +170,8 @@ public class StartupFilterImplTest {
             will(returnValue(providerRefs));
             allowing(bundleContext).getService(with(any(ServiceReference.class)));
             will(returnValue(provider));
-            
+            allowing(bundleContext).getProperty(with(any(String.class)));
+
             allowing(bundleContext).registerService(with(Filter.class.getName()), with(any(Object.class)), with(any(Dictionary.class)));
             will(new DoAllAction(
                     new ChangeInteger(activeFilterCount, true),

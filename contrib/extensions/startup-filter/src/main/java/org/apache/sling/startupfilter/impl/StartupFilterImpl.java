@@ -43,6 +43,7 @@ import org.apache.sling.startupfilter.StartupFilter;
 import org.apache.sling.startupfilter.StartupFilterDisabler;
 import org.apache.sling.startupfilter.StartupInfoProvider;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
@@ -74,9 +75,13 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     @Property(value=DEFAULT_MESSAGE)
     public static final String DEFAULT_MESSAGE_PROP = "default.message";
     private String defaultMessage;
-    
+
     @Reference(cardinality=ReferenceCardinality.OPTIONAL_UNARY, policy=ReferencePolicy.DYNAMIC)
     private StartupFilterDisabler startupFilterDisabler;
+
+    private final String FRAMEWORK_PROP_MANAGER_ROOT = "felix.webconsole.manager.root";
+    static final String DEFAULT_MANAGER_ROOT = "/system/console";
+    private String managerRoot;
     
     /** @inheritDoc */
     public void doFilter(ServletRequest request, ServletResponse sr, FilterChain chain) throws IOException, ServletException {
@@ -153,6 +158,10 @@ public class StartupFilterImpl implements StartupFilter, Filter {
                 
         prop = ctx.getProperties().get(ACTIVE_BY_DEFAULT_PROP);
         defaultFilterActive = (prop instanceof Boolean ? (Boolean)prop : false);
+
+        prop = bundleContext.getProperty(FRAMEWORK_PROP_MANAGER_ROOT);
+        managerRoot = prop == null ? DEFAULT_MANAGER_ROOT : prop.toString();
+
         if(defaultFilterActive) {
             enable();
         }
@@ -171,8 +180,9 @@ public class StartupFilterImpl implements StartupFilter, Filter {
     public synchronized void enable() {
         if(filterServiceRegistration == null) {
             final Hashtable<String, Object> params = new Hashtable<String, Object>();
+            params.put(Constants.SERVICE_RANKING, 0x9000); // run before RequestLoggerFilter (0x8000)
             params.put("filter.scope", "REQUEST");
-            params.put("filter.order", Integer.MIN_VALUE);
+            params.put("pattern", "^(?!"+ managerRoot +")(.+)");
             filterServiceRegistration = bundleContext.registerService(Filter.class.getName(), this, params);
             log.info("Registered {} as a Filter service", this);
         }
