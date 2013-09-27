@@ -29,6 +29,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.sling.commons.log.logback.internal.config.ConfigAdminSupport;
+import org.apache.sling.commons.log.logback.internal.config.ConfigurationException;
+import org.apache.sling.commons.log.logback.internal.util.LoggerSpecificEncoder;
+import org.apache.sling.commons.log.logback.internal.util.Util;
+import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
@@ -39,14 +47,6 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.joran.action.ActionConst;
 import ch.qos.logback.core.util.ContextUtil;
-
-import org.apache.sling.commons.log.logback.internal.config.ConfigAdminSupport;
-import org.apache.sling.commons.log.logback.internal.config.ConfigurationException;
-import org.apache.sling.commons.log.logback.internal.util.LoggerSpecificEncoder;
-import org.apache.sling.commons.log.logback.internal.util.Util;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LogConfigManager implements LogbackResetListener, LogConfig.LogWriterProvider {
 
@@ -65,6 +65,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     public static final String LOG_PATTERN_DEFAULT = "%d{dd.MM.yyyy HH:mm:ss.SSS} *%level* [%thread] %logger %msg%n";
 
     public static final String LOG_LOGGERS = "org.apache.sling.commons.log.names";
+
+    public static final String LOG_ADDITIV = "org.apache.sling.commons.log.additiv";
 
     public static final String LOG_LEVEL_DEFAULT = "INFO";
 
@@ -189,6 +191,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     // ---------- SlingLogPanel support
 
+    @Override
     public LogWriter getLogWriter(String logWriterName) {
         LogWriter lw = writerByFileName.get(logWriterName);
         if (lw == null) {
@@ -274,9 +277,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 ch.qos.logback.classic.Logger logger = loggerContext.getLogger(category);
                 logger.setLevel(config.getLogLevel());
                 if (appender != null) {
-                    //If an appender is explicitly defined then set additive to false
-                    //to be compatible with earlier Sling Logging behaviour
-                    logger.setAdditive(false);
+                    logger.setAdditive(config.isAdditive());
                     logger.addAppender(appender);
                 }
             }
@@ -342,7 +343,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * {@link LogConfigManager#LOG_FILE_NUMBER_DEFAULT} is assumed.
      * If the writer writes standard output this property is ignored.</dd>
      * </dl>
-     * 
+     *
      * @param pid The identifier of the log writer to update or remove
      * @param configuration New configuration setting for the log writer or
      *            <code>null</code> to indicate to remove the log writer.
@@ -457,21 +458,29 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * configured for any log writer or it may be the configuration PID of such
      * a writer. If this property is missing or empty or does not refer to an
      * existing log writer configuration, the default log writer is used.</dd>
-     * 
+     *
      * @param pid The name of the configuration to update or remove.
      * @param configuration The configuration object.
      * @throws ConfigurationException If the log level and logger names
      *             properties are not configured for the given configuration.
      */
-    public void updateLoggerConfiguration(String pid, Dictionary<?, ?> configuration, boolean performRefresh)
-            throws ConfigurationException {
+    public void updateLoggerConfiguration(final String pid, final Dictionary<?, ?> configuration, final boolean performRefresh)
+    throws ConfigurationException {
 
         if (configuration != null) {
 
             String pattern = (String) configuration.get(LogConfigManager.LOG_PATTERN);
-            String level = (String) configuration.get(LogConfigManager.LOG_LEVEL);
+            final String level = (String) configuration.get(LogConfigManager.LOG_LEVEL);
             String fileName = (String) configuration.get(LogConfigManager.LOG_FILE);
-            Set<String> categories = toCategoryList(configuration.get(LogConfigManager.LOG_LOGGERS));
+            final Set<String> categories = toCategoryList(configuration.get(LogConfigManager.LOG_LOGGERS));
+            final boolean additiv;
+            if ( configuration.get(LogConfigManager.LOG_ADDITIV) != null ) {
+                additiv = Boolean.valueOf(configuration.get(LogConfigManager.LOG_ADDITIV).toString());
+            } else {
+                // If an appender is explicitly defined then set additive to false
+                // to be compatible with earlier Sling Logging behavior
+                additiv = false;
+            }
 
             // verify categories
             if (categories == null) {
@@ -480,8 +489,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
             }
 
             // verify no other configuration has any of the categories
-            for (String cat : categories) {
-                LogConfig cfg = configByCategory.get(cat);
+            for (final String cat : categories) {
+                final LogConfig cfg = configByCategory.get(cat);
                 if (cfg != null && !pid.equals(cfg.getConfigPid())) {
                     throw new ConfigurationException(LogConfigManager.LOG_LOGGERS, "Category " + cat
                         + " already defined by configuration " + pid);
@@ -493,7 +502,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 throw new ConfigurationException(LogConfigManager.LOG_LEVEL, "Value required");
             }
             // TODO: support numeric levels !
-            Level logLevel = Level.toLevel(level);
+            final Level logLevel = Level.toLevel(level);
             if (logLevel == null) {
                 throw new ConfigurationException(LogConfigManager.LOG_LEVEL, "Unsupported value: " + level);
             }
@@ -510,7 +519,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
             }
 
             // create or modify existing configuration object
-            LogConfig newConfig = new LogConfig(this, pattern, categories, logLevel, fileName, pid, loggerContext);
+            final LogConfig newConfig = new LogConfig(this, pattern, categories, logLevel, fileName, additiv, pid, loggerContext);
             LogConfig oldConfig = configByPid.get(pid);
             if (oldConfig != null) {
                 configByCategory.keySet().removeAll(oldConfig.getCategories());
@@ -614,7 +623,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * unmodified. Otherwise it is made absolute by resolving it relative to the
      * root directory set on this instance by the {@link #setRoot(String)}
      * method.
-     * 
+     *
      * @throws NullPointerException if <code>logFileName</code> is
      *             <code>null</code>.
      */
@@ -654,7 +663,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
      * array of strings or a collection of strings. Each string may in turn be a
      * comma-separated list of strings. Each entry makes up an entry in the
      * resulting set.
-     * 
+     *
      * @param loggers The configuration object to be decomposed. If this is
      *            <code>null</code>, <code>null</code> is returned immediately
      * @return The set of logger names provided by the <code>loggers</code>

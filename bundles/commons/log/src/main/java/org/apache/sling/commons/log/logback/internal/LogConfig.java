@@ -46,8 +46,10 @@ public class LogConfig {
 
     private final LoggerContext loggerContext;
 
+    private final boolean isAdditiv;
+
     LogConfig(LogWriterProvider logWriterProvider, final String pattern, Set<String> categories, Level logLevel,
-            String logWriterName, String configPid, LoggerContext loggerContext) {
+            String logWriterName, final boolean isAdditiv, String configPid, LoggerContext loggerContext) {
         this.logWriterProvider = logWriterProvider;
         this.configPid = configPid;
         this.pattern = pattern;
@@ -55,6 +57,7 @@ public class LogConfig {
         this.logLevel = logLevel;
         this.logWriterName = logWriterName;
         this.loggerContext = loggerContext;
+        this.isAdditiv = isAdditiv;
     }
 
     public String getConfigPid() {
@@ -75,6 +78,10 @@ public class LogConfig {
 
     public boolean isAppenderDefined() {
         return logWriterName != null;
+    }
+
+    public boolean isAdditive() {
+        return this.isAdditiv;
     }
 
     public LogWriter getLogWriter() {
