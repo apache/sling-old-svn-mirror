@@ -242,7 +242,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         boolean installLocally = getServer().getAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, true);
 		if (!installLocally) {
             final String launchMemento = MavenLaunchHelper.createMavenLaunchConfigMemento(project.getLocation()
-                    .toString(), "package sling:install", null, false, null);
+                    .toString(), "package org.apache.sling:maven-sling-plugin:install", null, false, null);
             IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
             if (!dotLaunches.exists()) {
                 dotLaunches.create(true, true, monitor);
