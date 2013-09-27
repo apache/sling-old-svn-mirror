@@ -439,7 +439,7 @@ public class JobConsumerManager {
 
                         @Override
                         public void ok() {
-                            this.check(JobStatus.OK);
+                            this.check(JobStatus.SUCCEEDED);
                         }
 
                         @Override
@@ -449,7 +449,7 @@ public class JobConsumerManager {
 
                         @Override
                         public void cancel() {
-                            this.check(JobStatus.CANCEL);
+                            this.check(JobStatus.CANCELLED);
                         }
                     };
             ((JobImpl)job).setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
@@ -459,9 +459,9 @@ public class JobConsumerManager {
             } else if ( result == JobResult.FAILED) {
                 return JobStatus.FAILED;
             } else if ( result == JobResult.OK) {
-                return JobStatus.OK;
+                return JobStatus.SUCCEEDED;
             }
-            return JobStatus.CANCEL;
+            return JobStatus.CANCELLED;
         }
     }
 }

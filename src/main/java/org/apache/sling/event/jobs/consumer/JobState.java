@@ -24,7 +24,7 @@ package org.apache.sling.event.jobs.consumer;
  */
 public enum JobState {
 
-    OK,      // processing finished successfully
-    FAILED,  // processing failed, can be retried
-    CANCEL   // processing failed permanently
+    SUCCEEDED,  // processing finished successfully
+    FAILED,     // processing failed, can be retried
+    CANCELLED   // processing failed permanently
 }

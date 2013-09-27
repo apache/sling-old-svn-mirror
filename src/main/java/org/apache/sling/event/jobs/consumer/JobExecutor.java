@@ -63,10 +63,10 @@ public interface JobExecutor {
     /**
      * Execute the job.
      *
-     * If the job has been processed successfully, {@link JobStatus.OK} should be returned.
+     * If the job has been processed successfully, {@link JobStatus.SUCCEEDED} should be returned.
      * If the job has not been processed completely, but might be rescheduled {@link JobStatus.FAILED}
      * should be returned.
-     * If the job processing failed and should not be rescheduled, {@link JobStatus.CANCEL} should
+     * If the job processing failed and should not be rescheduled, {@link JobStatus.CANCELLED} should
      * be returned.
      *
      * If the executor decides to process the job asynchronously it should return <code>null</code>
@@ -74,7 +74,7 @@ public interface JobExecutor {
      * method.
      *
      * If the processing fails with throwing an exception/throwable, the process will not be rescheduled
-     * and treated like the method would have returned {@link JobStatus.CANCEL}.
+     * and treated like the method would have returned {@link JobStatus.CANCELLED}.
      *
      * Instead of the constants from the JobStatus class, this method can return a custom instance containing
      * additional information.

@@ -45,6 +45,7 @@ import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobState;
 import org.apache.sling.event.jobs.consumer.JobStatus;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -297,16 +298,20 @@ public abstract class AbstractJobQueue
         return ack != null;
     }
 
-    private boolean handleReschedule(final JobHandler jobEvent, final JobStatus result) {
-        boolean reschedule = false;
+    private static final class RescheduleInfo {
+        public boolean reschedule = false;
+        public long    processingTime;
+    }
+
+    private RescheduleInfo handleReschedule(final JobHandler jobEvent, final JobStatus result) {
+        final RescheduleInfo info = new RescheduleInfo();
         switch ( result.getState() ) {
-            case OK : // job is finished
+            case SUCCEEDED : // job is finished
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Finished job {}", Utility.toString(jobEvent.getJob()));
                 }
-                final long processingTime = System.currentTimeMillis() - jobEvent.started;
-                this.finishedJob(processingTime);
-                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, jobEvent.getJob(), processingTime);
+                info.processingTime = System.currentTimeMillis() - jobEvent.started;
+                this.finishedJob(info.processingTime);
                 break;
             case FAILED : // check if we exceeded the number of retries
                 int retries = (Integer) jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
@@ -314,14 +319,12 @@ public abstract class AbstractJobQueue
 
                 retryCount++;
                 if ( retries != -1 && retryCount > retries ) {
-                    reschedule = false;
                     if ( this.logger.isDebugEnabled() ) {
                         this.logger.debug("Cancelled job {}", Utility.toString(jobEvent.getJob()));
                     }
                     this.cancelledJob();
-                    Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.getJob(), null);
                 } else {
-                    reschedule = true;
+                    info.reschedule = true;
                     // update event with retry count and retries
                     jobEvent.getJob().retry();
                     if ( this.logger.isDebugEnabled() ) {
@@ -329,19 +332,17 @@ public abstract class AbstractJobQueue
                     }
                     this.failedJob();
                     jobEvent.queued = System.currentTimeMillis();
-                    Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FAILED, jobEvent.getJob(), null);
                 }
                 break;
-            case CANCEL : // consumer cancelled the job
+            case CANCELLED : // consumer cancelled the job
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", Utility.toString(jobEvent.getJob()));
                 }
                 this.cancelledJob();
-                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobEvent.getJob(), null);
                 break;
         }
 
-        return reschedule;
+        return info;
     }
 
     /**
@@ -350,7 +351,7 @@ public abstract class AbstractJobQueue
     @Override
     public boolean finishedJob(final Event job, final boolean shouldReschedule) {
         final String location = (String)job.getProperty(JobUtil.JOB_ID);
-        return this.finishedJob(location, shouldReschedule ? JobStatus.FAILED : JobStatus.OK, false);
+        return this.finishedJob(location, shouldReschedule ? JobStatus.FAILED : JobStatus.SUCCEEDED, false);
     }
 
     private boolean finishedJob(final String jobId,
@@ -367,9 +368,9 @@ public abstract class AbstractJobQueue
         }
 
         // get job handler
-        final JobHandler info;
+        final JobHandler handler;
         synchronized ( this.processsingJobsLists ) {
-            info = this.processsingJobsLists.remove(jobId);
+            handler = this.processsingJobsLists.remove(jobId);
         }
 
         if ( !this.running ) {
@@ -377,7 +378,7 @@ public abstract class AbstractJobQueue
             return false;
         }
 
-        if ( info == null ) {
+        if ( handler == null ) {
             if ( this.logger.isDebugEnabled() ) {
                 this.logger.debug("This job has never been started by this queue: {}", jobId);
             }
@@ -385,35 +386,40 @@ public abstract class AbstractJobQueue
         }
 
         // handle the reschedule, a new job might be returned with updated reschedule info!
-        final boolean reschedule = this.handleReschedule(info, result);
+        final RescheduleInfo rescheduleInfo = this.handleReschedule(handler, result);
 
         // if this is set after the synchronized block we have an error
         final boolean finishSuccessful;
 
-        if ( !reschedule ) {
-            info.finished();
+        if ( !rescheduleInfo.reschedule ) {
+            handler.finished(result.getState());
             finishSuccessful = true;
+            if ( result.getState() == JobState.SUCCEEDED ) {
+                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, handler.getJob(), rescheduleInfo.processingTime);
+            } else {
+                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, handler.getJob(), null);
+            }
         } else {
-            finishSuccessful = info.reschedule();
+            finishSuccessful = handler.reschedule();
+            Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FAILED, handler.getJob(), null);
         }
 
         if ( !isAsync ) {
-            if ( !finishSuccessful || !reschedule ) {
+            if ( !finishSuccessful || !rescheduleInfo.reschedule ) {
                 checkForNotify(null);
                 return false;
             }
-            checkForNotify(info);
-            return true;
+            checkForNotify(handler);
         } else {
             // async result
-            if ( finishSuccessful && reschedule ) {
-                final JobHandler reprocessHandler = this.reschedule(info);
+            if ( finishSuccessful && rescheduleInfo.reschedule ) {
+                final JobHandler reprocessHandler = this.reschedule(handler);
                 if ( reprocessHandler != null ) {
                     this.put(reprocessHandler);
                 }
             }
-            return true;
         }
+        return true;
     }
 
     private void checkForNotify(final JobHandler info) {
@@ -528,7 +534,7 @@ public abstract class AbstractJobQueue
                                                     break;
                                     }
                                 }
-                                JobStatus result = JobStatus.CANCEL;
+                                JobStatus result = JobStatus.CANCELLED;
                                 final AtomicBoolean isAsync = new AtomicBoolean(false);
 
                                 try {
@@ -561,6 +567,11 @@ public abstract class AbstractJobQueue
                                             }
 
                                             @Override
+                                            public boolean isStopped() {
+                                                return false;
+                                            }
+
+                                            @Override
                                             public void asyncProcessingFinished(final JobStatus status) {
                                                 synchronized ( lock ) {
                                                     if ( isAsync.compareAndSet(true, false) ) {
@@ -581,7 +592,7 @@ public abstract class AbstractJobQueue
                                 } catch (final Throwable t) { //NOSONAR
                                     logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
                                     // we don't reschedule if an exception occurs
-                                    result = JobStatus.CANCEL;
+                                    result = JobStatus.CANCELLED;
                                 } finally {
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);

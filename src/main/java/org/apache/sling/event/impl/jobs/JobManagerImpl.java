@@ -78,6 +78,7 @@ import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobState;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -964,6 +965,9 @@ public class JobManagerImpl
                 buf.append(ISO9075.encode(Job.PROPERTY_JOB_STARTED_TIME));
                 buf.append(")");
             }
+            buf.append(" and not(@");
+            buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED));
+            buf.append(")");
             if ( templates != null && templates.length > 0 ) {
                 buf.append(" and (");
                 int index = 0;
@@ -1022,21 +1026,47 @@ public class JobManagerImpl
         return result;
     }
 
-    public void finished(final JobHandler info) {
+    /**
+     * Finish a job
+     * @param info  The job handler
+     * @param state The state of the processing
+     */
+    public void finished(final JobHandler handler, final JobState state, final boolean keepJobInHistory) {
+        final boolean isSuccess = (state == JobState.SUCCEEDED);
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final Resource jobResource = resolver.getResource(info.getJob().getResourcePath());
+            final Resource jobResource = resolver.getResource(handler.getJob().getResourcePath());
             if ( jobResource != null ) {
                 try {
+                    String newPath = null;
+                    if ( keepJobInHistory ) {
+                        final ValueMap vm = ResourceHelper.getValueMap(jobResource);
+                        newPath = this.configuration.getStoragePath(handler.getJob(), isSuccess);
+                        final Map<String, Object> props = new HashMap<String, Object>(vm);
+                        props.put(JobImpl.PROPERTY_FINISHED, isSuccess);
+
+                        ResourceHelper.getOrCreateResource(resolver, newPath, props);
+                    }
                     resolver.delete(jobResource);
                     resolver.commit();
+
+                    if ( keepJobInHistory && logger.isDebugEnabled() ) {
+                        if ( isSuccess ) {
+                            logger.debug("Kept successful job {} at {}", Utility.toString(handler.getJob()), newPath);
+                        } else {
+                            logger.debug("Moved cancelled job {} to {}", Utility.toString(handler.getJob()), newPath);
+                        }
+                    }
                 } catch ( final PersistenceException pe ) {
-                    // ignore
+                    this.ignoreException(pe);
+                } catch (final InstantiationException ie) {
+                    // something happened with the resource in the meantime
+                    this.ignoreException(ie);
                 }
             }
-        } catch ( final LoginException ignore ) {
-            // ignore
+        } catch (final LoginException ignore) {
+            this.ignoreException(ignore);
         } finally {
             if ( resolver != null ) {
                 resolver.close();
@@ -1356,10 +1386,16 @@ public class JobManagerImpl
         }
     }
 
+    /**
+     * Get the current capabilities
+     */
     public TopologyCapabilities getTopologyCapabilities() {
         return this.topologyCapabilities;
     }
 
+    /**
+     * Update the property of a job in the resource tree
+     */
     public void updateProperty(final JobImpl job, final String propName) {
         ResourceResolver resolver = null;
         try {
@@ -1379,5 +1415,14 @@ public class JobManagerImpl
                 resolver.close();
             }
         }
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#stopJobById(java.lang.String)
+     */
+    @Override
+    public void stopJobById(final String jobId) {
+        // not implemented yet
+
     }
 }

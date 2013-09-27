@@ -18,6 +18,8 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import org.apache.sling.event.jobs.consumer.JobState;
+
 
 /**
  * This object adds actions to a {@link JobImpl}.
@@ -45,10 +47,19 @@ public class JobHandler {
         return this.jobManager.start(this);
     }
 
-    public void finished() {
-        this.jobManager.finished(this);
+    /**
+     * Finish the processing of the job
+     * @param state The state of processing
+     */
+    public void finished(final JobState state) {
+        // for now we just keep cancelled jobs
+        this.jobManager.finished(this, state, state != JobState.SUCCEEDED);
     }
 
+    /**
+     * Reschedule the job
+     * @return <code>true</code> if rescheduling was successful, <code>false</code> otherwise.
+     */
     public boolean reschedule() {
         return this.jobManager.reschedule(this);
     }

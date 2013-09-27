@@ -25,14 +25,14 @@ package org.apache.sling.event.jobs.consumer;
  */
 public final class JobStatus {
 
-    /** Constant for the {@link JobState#OK} status. */
-    public static final JobStatus OK = new JobStatus(JobState.OK, null);
+    /** Constant for the {@link JobState#SUCCEEDED} status. */
+    public static final JobStatus SUCCEEDED = new JobStatus(JobState.SUCCEEDED, null);
 
     /** Constant for the {@link JobState#FAILED} status. */
     public static final JobStatus FAILED = new JobStatus(JobState.FAILED, null);
 
-    /** Constant for the {@link JobState#CANCEL} status. */
-    public static final JobStatus CANCEL = new JobStatus(JobState.CANCEL, null);
+    /** Constant for the {@link JobState#CANCELLED} status. */
+    public static final JobStatus CANCELLED = new JobStatus(JobState.CANCELLED, null);
 
     /** The state of the job after processing. */
     private final JobState state;
