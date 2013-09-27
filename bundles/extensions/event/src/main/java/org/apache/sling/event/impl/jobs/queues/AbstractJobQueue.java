@@ -542,23 +542,20 @@ public abstract class AbstractJobQueue
                                         result = consumer.process(job, new JobExecutionContext() {
 
                                             @Override
-                                            public void update(final long eta) {
-                                                handler.updateProperty(job.update(eta));
-                                            }
-
-                                            @Override
-                                            public void startProgress(final long eta) {
+                                            public void initProgress(final int steps,
+                                                    final long eta) {
+                                                handler.updateProperty(job.startProgress(steps));
                                                 handler.updateProperty(job.startProgress(eta));
                                             }
 
                                             @Override
-                                            public void startProgress(final int steps) {
-                                                handler.updateProperty(job.startProgress(steps));
+                                            public void incrementProgressCount(final int steps) {
+                                                handler.updateProperty(job.setProgress(steps));
                                             }
 
                                             @Override
-                                            public void setProgress(final int step) {
-                                                handler.updateProperty(job.setProgress(step));
+                                            public void updateProgress(final long eta) {
+                                                handler.updateProperty(job.update(eta));
                                             }
 
                                             @Override
