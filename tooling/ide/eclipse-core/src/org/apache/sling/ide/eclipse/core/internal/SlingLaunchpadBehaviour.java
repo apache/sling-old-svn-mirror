@@ -248,26 +248,21 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 		final IProject project = module[0].getProject();
         boolean installLocally = getServer().getAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, true);
 		if (!installLocally) {
-			try{
-				final String launchMemento = MavenLaunchHelper.createMavenLaunchConfigMemento(project.getLocation().toString(),
-						"sling:install", "bundle", false, null);
-				IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
-				if (!dotLaunches.exists()) {
-					dotLaunches.create(true, true, monitor);
-				}
-				IFile launchFile = dotLaunches.getFile("sling_install.launch");
-				InputStream in = new ByteArrayInputStream(launchMemento.getBytes());
-				if (!launchFile.exists()) {
-					launchFile.create(in, true, monitor);
-				}
+            final String launchMemento = MavenLaunchHelper.createMavenLaunchConfigMemento(project.getLocation()
+                    .toString(), "package sling:install", null, false, null);
+            IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
+            if (!dotLaunches.exists()) {
+                dotLaunches.create(true, true, monitor);
+            }
+            IFile launchFile = dotLaunches.getFile("sling_install.launch");
+            InputStream in = new ByteArrayInputStream(launchMemento.getBytes());
+            if (!launchFile.exists()) {
+                launchFile.create(in, true, monitor);
+            }
 
-				ILaunchConfiguration launchConfig = 
-						DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(launchFile);
-				launchConfig.launch(ILaunchManager.RUN_MODE, monitor);
-			} catch(Exception e) {
-				// TODO proper logging
-				e.printStackTrace();
-			}
+            ILaunchConfiguration launchConfig = DebugPlugin.getDefault().getLaunchManager()
+                    .getLaunchConfiguration(launchFile);
+            launchConfig.launch(ILaunchManager.RUN_MODE, monitor);
 		} else {
 			monitor.beginTask("deploying via local install", 5);
 	        HttpClient httpClient = new HttpClient();
