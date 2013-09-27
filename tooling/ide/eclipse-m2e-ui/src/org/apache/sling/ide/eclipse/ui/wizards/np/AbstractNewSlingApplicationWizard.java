@@ -133,7 +133,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	public boolean performFinish() {
 
         // TODO - should probably rely on exception handling here
-        final boolean[] success = new boolean[0];
+        final boolean[] success = new boolean[1];
         try {
 			getContainer().run(false, true, new IRunnableWithProgress() {
 
