@@ -37,45 +37,51 @@ public interface JobExecutionContext {
     /**
      * If a job is stoppable, it should periodically check this method
      * and stop processing if the method return <code>true</code>.
+     * If a job is stopped and the job executor detects this, its up
+     * to the implementation to decide the result of such a state.
+     * There might be use cases where the job returns {@link JobStatus#SUCCEEDED}
+     * although it didn't process everything, or {@link JobStatus#FAILED}
+     * to retry later on or {@link JobStatus#CANCELLED}.
      * @return Whether this job has been stopped from the outside.
      */
     boolean isStopped();
 
     /**
-     * Indicate that the job executor is able to report the progress
-     * by providing a step count.
+     * Indicate that the job executor is able to report the progress.
+     * The progress can either be reported by a step count,
+     * assuming that all steps take roughly the same amount of time.
+     * Or the progress can be reported by an ETA containing the number
+     * of seconds the job needs to finish.
      * This method should only be called once, consecutive calls
-     * or a call to {@link #startProgress(long)} have no effect.
+     * have no effect.
+     * By using a step count of 100, the progress can be displayed
+     * in percentage.
      * @param steps Number of total steps or -1 if the number of
      *              steps is unknown.
-     */
-    void startProgress(final int steps);
-
-    /**
-     * Indicate that the job executor is able to report the progress
-     * by providing an ETA.
-     * This method should only be called once, consecutive calls
-     * or a call to {@link #startProgress(int)} have no effect.
      * @param eta Number of seconds the process should take or
      *        -1 of it's not known now.
      */
-    void startProgress(final long eta);
+    void initProgress(final int steps, final long eta);
 
     /**
-     * Update the progress to the current finished step.
-     * This method has only effect if {@link #startProgress(int)}
-     * has been called first.
-     * @param step The current step.
+     * Update the progress by additionally marking the provided
+     * number of steps as finished. If the total number of finished
+     * steps is equal or higher to the initial number of steps
+     * reported in {@link #initProgress(int, long)}, then the
+     * job progress is assumed to be 100%.
+     * This method has only effect if {@link #initProgress(int, long)}
+     * has been called first with a positive number for steps
+     * @param step The number of finished steps since the last call.
      */
-    void setProgress(final int step);
+    void incrementProgressCount(final int steps);
 
     /**
      * Update the progress to the new ETA.
-     * This method has only effect if {@link #startProgress(long)}
+     * This method has only effect if {@link #initProgress(int, long)}
      * has been called first.
      * @param eta The new ETA
      */
-    void update(final long eta);
+    void updateProgress(final long eta);
 
     /**
      * Log a message.
