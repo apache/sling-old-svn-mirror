@@ -19,14 +19,15 @@
 
 package org.apache.sling.commons.log.logback.internal;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Collections;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.LoggerContext;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 
 public class TestLogConfig {
 
@@ -48,7 +49,7 @@ public class TestLogConfig {
 
     private LogConfig createConfig(String pattern) {
         return new LogConfig(new DummyLogWriterProvider(), pattern, Collections.<String> emptySet(), Level.DEBUG,
-            "test", null, (LoggerContext) LoggerFactory.getILoggerFactory());
+            "test", false, null, (LoggerContext) LoggerFactory.getILoggerFactory());
     }
 
     private static class DummyLogWriterProvider implements LogConfig.LogWriterProvider {
