@@ -14,6 +14,7 @@ Bundle-ClassPath: .
 Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.apache.commons.httpclient.auth;version="3.1.0",
  org.apache.commons.httpclient.methods;version="3.1.0",
+ org.apache.commons.httpclient.params;version="3.1.0",
  org.apache.sling.ide.artifacts,
  org.apache.sling.ide.filter,
  org.apache.sling.ide.osgi,
@@ -37,6 +38,7 @@ Import-Package: org.apache.commons.httpclient;version="3.1.0",
  org.eclipse.wst.server.core,
  org.eclipse.wst.server.core.model,
  org.eclipse.wst.server.core.util,
+ org.json,
  org.osgi.service.component;version="1.1.0"
 Export-Package: org.apache.sling.ide.eclipse.core,
  org.apache.sling.ide.eclipse.core.internal

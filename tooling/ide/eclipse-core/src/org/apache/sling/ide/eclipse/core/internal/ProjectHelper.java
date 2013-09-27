@@ -110,7 +110,7 @@ public class ProjectHelper {
 		return facetedProject.hasProjectFacet(facet);
 	}
 	
-	static IJavaProject asJavaProject(IProject project) {
+	public static IJavaProject asJavaProject(IProject project) {
 		return JavaCore.create(project);
 	}
 	

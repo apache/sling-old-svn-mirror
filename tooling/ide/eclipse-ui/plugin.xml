@@ -469,6 +469,20 @@
             </and>
          </enablement>
       </decorator>
+      <decorator
+            adaptable="true"
+            class="org.apache.sling.ide.eclipse.ui.internal.ServerModuleDecorator"
+            id="org.apache.sling.ide.eclipse-ui.serverModuleDecorator"
+            label="ServerModule Decorator"
+            lightweight="true"
+            location="BOTTOM_LEFT"
+            state="true">
+         <enablement>
+           <objectClass
+                 name="org.eclipse.wst.server.ui.IServerModule">
+           </objectClass>
+         </enablement>
+      </decorator>
    </extension>
    <extension
          point="org.eclipse.ui.navigator.linkHelper">

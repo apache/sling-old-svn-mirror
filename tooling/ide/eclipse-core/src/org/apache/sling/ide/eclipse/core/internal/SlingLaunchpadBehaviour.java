@@ -217,6 +217,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                     // otherwise, for run and profile modes we explicitly publish the bundle module
                     // TODO: make this configurable as part of the server config
             		publishBundleModule(module, monitor);
+					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
             	}
             } else if (ProjectHelper.isContentProject(module[0].getProject())) {
                 if ((kind == IServer.PUBLISH_AUTO || kind == IServer.PUBLISH_INCREMENTAL) && deltaKind == ServerBehaviourDelegate.NO_CHANGE) {
@@ -226,6 +227,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 }
                 try {
                     publishContentModule(kind, deltaKind, module, monitor);
+					BundleStateHelper.resetBundleState(getServer(), module[0].getProject());
                 } catch (SerializationException e) {
                     throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Serialization error for "
                             + trace.toString(), e));
