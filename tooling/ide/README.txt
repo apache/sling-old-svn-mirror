@@ -56,7 +56,7 @@ After the projects are imported, you need to set your target environment to
 ensure that all dependencies are met and that you are working against the
 project's declared baseline. To do that, open the following file in Eclipse
 
-    target-definition/org.apache.sling.ide.target-definition.target
+    target-definition/org.apache.sling.ide.target-definition-dev.target
 
 In the target editor which appears, click 'Set as Target Platform'. Once
 the target platform is set up, you can create a new launch configuration.
@@ -65,23 +65,6 @@ the target platform is set up, you can create a new launch configuration.
   on the file and choosing File -> Open With -> Target Editor. If you don't
   see that option, you don't have PDE installed.
 
-The final step is to create an Eclipse launch configuration which includes
-all the Sling bundles. From the toolbar, access Run -> Run configurations...
-and create a new Eclipse Application. By default, this configuration will
-contain all the plugins from the target platform and the plugin projects that
-you have in your workspace. If this setup is enough for you, you can save the
-the launch configuration and run it. If you're looking to trim down the plugin
-list for faster startup you can switch to the 'Plug-ins' tab and make the 
-following changes:
-
-    1. Select 'Launch with plug-ins selected below only'
-    2. In the filter text box, type 'org.apache.sling.ide'
-    3. Select org plugins which appear in the Workspace section.
-    4. Clear the selection
-    5. Click 'Add Required Plug-ins'
-    6. Type 'application' in the filter text box
-    7. Select the org.eclipse.ui.ide.application plug-in
-    8. Click 'Validate Plug-ins'
-
-Eclipse should report no errors, and you should be able to save the launch 
-configuration and run it.
+Now you can use the 'Sling IDE Tooling' launch configuration which is present 
+in the org.apache.sling.ide.target-definition project to launch a local instance
+of Eclipse with Sling IDE Tooling plug-ins picked up from the local workspace.  
