@@ -30,4 +30,16 @@ public interface OsgiClient {
 
     void installBundle(InputStream in, String fileName) throws OsgiClientException;
 
+    /**
+     * Installs a bundle from a local directory
+     * 
+     * <p>
+     * The Sling launchpad instance must have filesystem access to the specified <tt>explodedBundleLocation</tt>
+     * </p>
+     * 
+     * @param explodedBundleLocation
+     * @throws OsgiClientException
+     */
+    void installLocalBundle(String explodedBundleLocation) throws OsgiClientException;
+
 }

@@ -23,8 +23,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.ws.http.HTTPException;
-
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -138,13 +136,36 @@ public class HttpOsgiClient implements OsgiClient {
 
             int status = getHttpClient().executeMethod(filePost);
             if (status != 200) {
-                throw new HTTPException(status);
+                throw new OsgiClientException("Method execution returned status " + status);
             }
         } catch (IOException e) {
             throw new OsgiClientException(e);
         } finally {
             filePost.releaseConnection();
         }
+    }
+
+    @Override
+    public void installLocalBundle(String explodedBundleLocation) throws OsgiClientException {
+
+        if (explodedBundleLocation == null) {
+            throw new IllegalArgumentException("explodedBundleLocation may not be null");
+        }
+
+        PostMethod method = new PostMethod(repositoryInfo.getUrl() + "system/sling/tooling/install");
+        method.addParameter("dir", explodedBundleLocation);
+
+        try {
+            int status = getHttpClient().executeMethod(method);
+            if (status != 200) {
+                throw new OsgiClientException("Method execution returned status " + status);
+            }
+        } catch (IOException e) {
+            throw new OsgiClientException(e);
+        } finally {
+            method.releaseConnection();
+        }
+
     }
 
 }

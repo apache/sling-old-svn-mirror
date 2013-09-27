@@ -29,13 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.apache.commons.httpclient.auth.AuthScope;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
@@ -265,44 +258,29 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
             launchConfig.launch(ILaunchManager.RUN_MODE, monitor);
 		} else {
 			monitor.beginTask("deploying via local install", 5);
-	        HttpClient httpClient = new HttpClient();
-	        String hostname = getServer().getHost();
-	        int launchpadPort = getServer().getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
-	        PostMethod method = new PostMethod("http://"+hostname+":"+launchpadPort+"/system/sling/tooling/install");
-	        String username = getServer().getAttribute(ISlingLaunchpadServer.PROP_USERNAME, "admin");
-	        String password = getServer().getAttribute(ISlingLaunchpadServer.PROP_PASSWORD, "admin");
-	        String userInfo = username+":"+password;
-	        if (userInfo != null) {
-	        	Credentials c = new UsernamePasswordCredentials(userInfo);
-	        	try {
-					httpClient.getState().setCredentials(
-							new AuthScope(method.getURI().getHost(), method
-									.getURI().getPort()), c);
-				} catch (URIException e) {
-					// TODO proper logging
-					e.printStackTrace();
-				}
-	        }
-	        IJavaProject javaProject = ProjectHelper.asJavaProject(project);
-	        IPath outputLocation = javaProject.getOutputLocation();
-			outputLocation = outputLocation.makeRelativeTo(project.getFullPath());
-	        IPath location = project.getRawLocation();
-	        if (location==null) {
-	        	location = project.getLocation();
-	        }
-			method.addParameter("dir", location.toString() + "/" + outputLocation.toString());
-	        monitor.worked(1);
+
             try {
-				httpClient.executeMethod(method);
-		        monitor.worked(4);
-		        setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
-			} catch (HttpException e) {
-				// TODO proper logging
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO proper logging
-				e.printStackTrace();
-			}
+                OsgiClient osgiClient = Activator.getDefault().getOsgiClientFactory()
+                        .createOsgiClient(ServerUtil.getRepositoryInfo(getServer(), monitor));
+
+                IJavaProject javaProject = ProjectHelper.asJavaProject(project);
+
+                IPath outputLocation = project.getWorkspace().getRoot().findMember(javaProject.getOutputLocation())
+                        .getLocation();
+                monitor.worked(1);
+
+                osgiClient.installLocalBundle(outputLocation.toOSString());
+                monitor.worked(4);
+                setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+
+            } catch (URISyntaxException e1) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
+            } catch (OsgiClientException e1) {
+                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed installing bundle : "
+                        + e1.getMessage(), e1));
+            } finally {
+                monitor.done();
+            }
 		}
 	}
 
