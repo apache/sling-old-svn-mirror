@@ -36,6 +36,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
 import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
@@ -637,7 +638,8 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                     (Object) fallbackPrimaryType));
     }
 
-    private FileInfo createFileInfo(IModuleResource resource, Repository repository) throws SerializationException {
+    private FileInfo createFileInfo(IModuleResource resource, Repository repository) throws SerializationException,
+            CoreException {
 
         IResource file = getResource(resource);
         if (file == null) {
@@ -649,13 +651,7 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         String syncDirectory = ProjectUtil.getSyncDirectoryValue(project);
         File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(project);
 
-        Filter filter = null;
-        try {
-            filter = loadFilter(project, project.getFolder(syncDirectory));
-        } catch (CoreException e) {
-            // TODO error handling
-            e.printStackTrace();
-        }
+        Filter filter = loadFilter(project.getFolder(syncDirectory));
 
         if (filter != null) {
             FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile,
@@ -725,13 +721,23 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
         }
         
         IFolder syncDirectory = ProjectUtil.getSyncDirectory(deletedResource.getProject());
+        File syncDirectoryAsFile = ProjectUtil.getSyncDirectoryFile(deletedResource.getProject());
         
+        Filter filter = loadFilter(syncDirectory);
+
+        if (filter != null) {
+            FilterResult filterResult = getFilterResult(resource, filter, syncDirectoryAsFile, repository);
+            if (filterResult == FilterResult.DENY || filterResult == FilterResult.PREREQUISITE) {
+                return null;
+            }
+        }
+
         ResourceProxy resourceProxy = buildResourceProxyForPlainFileOrFolder(resource, syncDirectory);
 
         return repository.newDeleteNodeCommand(resourceProxy);
     }
 
-    private Filter loadFilter(IProject project, final IFolder syncFolder) throws CoreException {
+    private Filter loadFilter(final IFolder syncFolder) throws CoreException {
         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
         File filterLocation = filterLocator.findFilterLocation(syncFolder.getLocation().toFile());
         if (filterLocation == null) {
@@ -746,14 +752,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
                 filter = filterLocator.loadFilter(contents);
             } catch (IOException e) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
-                        "Failed loading filter file for project " + project.getName() + " from location " + filterFile,
-                        e));
+                        "Failed loading filter file for project " + syncFolder.getProject().getName()
+                                + " from location " + filterFile, e));
             } finally {
-                try {
-                    contents.close();
-                } catch (IOException e) {
-                    // TODO exception handling
-                }
+                IOUtils.closeQuietly(contents);
             }
         }
         return filter;
