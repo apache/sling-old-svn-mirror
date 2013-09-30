@@ -207,6 +207,14 @@ public interface JobManager {
     void stopJobById(String jobId);
 
     /**
+     * Fluent API to create, start and schedule new jobs
+     * @param topic Required topic
+     * @return A job builder
+     * @since 1.3
+     */
+    JobBuilder createJob(final String topic);
+
+    /**
      * Return all jobs either running or scheduled.
      *
      * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.

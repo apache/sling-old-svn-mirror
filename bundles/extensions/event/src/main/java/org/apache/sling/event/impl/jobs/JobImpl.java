@@ -47,6 +47,13 @@ public class JobImpl implements Job {
     /** Internal job property containing optional delay override. */
     public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
 
+    /**
+     * This property contains the finished state of a job once it's marked as finished.
+     * The value is either "CANCELLED" or "SUCCEEDED".
+     * This property is read-only and can't be specified when the job is created.
+     */
+    public static final String PROPERTY_FINISHED_STATE = "slingevent:finishedState";
+
     private final ValueMap properties;
 
     private final String topic;
@@ -305,6 +312,64 @@ public class JobImpl implements Job {
             this.setProperty(Job.PROPERTY_JOB_PROGRESS_LOG, newEntries);
         }
         return Job.PROPERTY_JOB_PROGRESS_LOG;
+    }
+
+    @Override
+    public JobType getJobType() {
+        final String enumValue = this.getProperty(JobImpl.PROPERTY_FINISHED_STATE, String.class);
+        if ( enumValue == null ) {
+            // TODO - find out active
+            return JobType.QUEUED;
+        }
+        return JobType.valueOf(enumValue);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Job#getFinishedDate()
+     */
+    @Override
+    public Calendar getFinishedDate() {
+        return this.getProperty(Job.PROPERTY_FINISHED_DATE, Calendar.class);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Job#getResultMessage()
+     */
+    @Override
+    public String getResultMessage() {
+        return this.getProperty(Job.PROPERTY_RESULT_MESSAGE, String.class);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Job#getProgressLog()
+     */
+    @Override
+    public String[] getProgressLog() {
+        return this.getProperty(Job.PROPERTY_JOB_PROGRESS_LOG, String[].class);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Job#getProgressStepCount()
+     */
+    @Override
+    public int getProgressStepCount() {
+        return this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEPS, -1);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Job#getCurrentProgressStep()
+     */
+    @Override
+    public int getCurrentProgressStep() {
+        return this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEP, 0);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.Job#getProgressETA()
+     */
+    @Override
+    public Calendar getProgressETA() {
+        return this.getProperty(Job.PROPERTY_JOB_PROGRESS_ETA, Calendar.class);
     }
 
     @Override
