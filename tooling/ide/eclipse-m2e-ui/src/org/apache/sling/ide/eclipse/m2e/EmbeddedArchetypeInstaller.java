@@ -84,6 +84,10 @@ public class EmbeddedArchetypeInstaller {
 	public void addResource(String fileExtension, URL origin) throws IOException {
 		origins.put(fileExtension, origin.openStream());
 	}
+
+    public void addResource(String fileExtension, InputStream inputStream) throws IOException {
+        origins.put(fileExtension, inputStream);
+    }
 	
 	public void addResource(String fileExtension, File origin) throws FileNotFoundException {
 		origins.put(fileExtension, new FileInputStream(origin));

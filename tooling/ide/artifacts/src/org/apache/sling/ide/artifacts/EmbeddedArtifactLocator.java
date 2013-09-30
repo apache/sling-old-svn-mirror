@@ -22,4 +22,9 @@ public interface EmbeddedArtifactLocator {
 
     EmbeddedArtifact loadToolingSupportBundle();
 
+    /**
+     * @return a two-element array, where the first element is the pom artifact, and the second element is the jar
+     *         artifact
+     */
+    EmbeddedArtifact[] loadSlingBundleArchetype();
 }
