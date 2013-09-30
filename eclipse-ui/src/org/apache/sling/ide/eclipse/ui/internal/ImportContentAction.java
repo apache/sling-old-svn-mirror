@@ -56,6 +56,10 @@ public class ImportContentAction implements IObjectActionDelegate, IExecutableEx
 
                 IModule module = ServerUtil.getModule(project);
 
+                if (module == null) {
+                    continue;
+                }
+
                 if (!module.getModuleType().getId().equals("sling.content")) {
                     continue;
                 }

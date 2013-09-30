@@ -20,20 +20,20 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.apache.jackrabbit.util.ISO9075;
+import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
+import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.ui.WhitelabelSupport;
-import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -47,7 +47,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IActionFilter;
@@ -56,12 +55,18 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
+import org.eclipse.wst.server.core.IServer;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import de.pdark.decentxml.Element;
+import de.pdark.decentxml.Namespace;
+import de.pdark.decentxml.Node;
+import de.pdark.decentxml.Text;
+import de.pdark.decentxml.XMLParseException;
+import de.pdark.decentxml.XMLTokenizer.Type;
 
 /** WIP: model object for a jcr node shown in the content package view in project explorer **/
 public class JcrNode implements IAdaptable {
@@ -98,9 +103,9 @@ public class JcrNode implements IAdaptable {
 
 	JcrNode parent;
 
-	final Set<JcrNode> children = new HashSet<JcrNode>();
+	final List<JcrNode> children = new LinkedList<JcrNode>();
 
-	Node domNode;
+	Element domElement;
 
 	private IResource resource;
 	
@@ -119,18 +124,18 @@ public class JcrNode implements IAdaptable {
 		}
 	}
 	
-	JcrNode(JcrNode parent, Node domNode, IResource resource) {
-		this(parent, domNode, parent.underlying, resource);
+	JcrNode(JcrNode parent, Element domElement, IResource resource) {
+		this(parent, domElement, parent.underlying, resource);
 	}
 	
 	
-	JcrNode(JcrNode parent, Node domNode, GenericJcrRootFile underlying, IResource resource) {
+	JcrNode(JcrNode parent, Element domElement, GenericJcrRootFile underlying, IResource resource) {
 		if (parent == null) {
 			throw new IllegalArgumentException("parent must not be null");
 		}
 		this.parent = parent;
-		// domNode can be null
-		this.domNode = domNode;
+		// domElement can be null
+		this.domElement = domElement;
 		this.underlying = underlying;
 		this.resource = resource;
 		parent.addChild(this);
@@ -138,23 +143,26 @@ public class JcrNode implements IAdaptable {
 	
 	@Override
 	public String toString() {
-		return "JcrNode[dom:"+domNode+", file:"+resource+"]";
+		return "JcrNode[dom:"+domElement+", file:"+resource+", jcrPath:"+getJcrPath()+"]";
 	}
 	
 	@Override
 	public int hashCode() {
 		if (underlying==null) {
 			if (resource==null) {
-				if (domNode==null) {
+				if (domElement==null) {
 					return toString().hashCode();
 				} else {
-					return domNode.toString().hashCode() + parent.hashCode();
+					return domElement.toString().hashCode() + parent.hashCode();
 				}
 			} else {
 				return resource.getFullPath().hashCode();
 			}
 		} else {
-			return underlying.hashCode() + domNode.toString().hashCode();
+			if (domElement==null) {
+				return underlying.hashCode();
+			}
+			return underlying.hashCode() + domElement.toString().hashCode();
 		}
 	}
 	
@@ -167,14 +175,6 @@ public class JcrNode implements IAdaptable {
 			return false;
 		}
 		JcrNode other = (JcrNode) obj;
-		if (other.underlying==null && underlying!=null) {
-			return false;
-		} else if (other.underlying!=null && underlying==null) {
-			return false;
-		}
-		if (underlying!=null && !underlying.equals(other.underlying)) {
-			return false;
-		}
 		if (resource!=null && other.resource!=null) {
 			if (resource.equals(other.resource)) {
 				return true;
@@ -186,25 +186,45 @@ public class JcrNode implements IAdaptable {
 		} else if (resource==null && other.resource!=null) {
 			return false;
 		}
+		if (other.underlying==null && underlying!=null) {
+			return false;
+		} else if (other.underlying!=null && underlying==null) {
+			return false;
+		}
+		if (underlying!=null && !underlying.equals(other.underlying)) {
+			return false;
+		}
 		if (parent!=null && other.parent!=null) {
 			if (!parent.equals(other.parent)) {
 				return false;
 			}
-			return domNode.toString().equals(other.domNode.toString());
+			return domElement.toString().equals(other.domElement.toString());
 		}
 		return toString().equals(obj.toString());
 	}
 
 	protected void addChild(JcrNode jcrNode) {
-		children.add(jcrNode);
+		if (!children.contains(jcrNode)) {
+			// check to see if there is a same-named node though
+			// that is the dom/resource case
+			for (Iterator<JcrNode> it = children.iterator(); it.hasNext();) {
+				JcrNode existingChild = it.next();
+				if (existingChild.getName().equals(jcrNode.getName())) {
+					// then merge the two
+					existingChild.setResource(jcrNode.resource);
+					return;
+				}
+			}
+			children.add(jcrNode);
+		}
 	}
 
 	/** shown in the navigator (project explorer) as the label of this element **/
 	public String getLabel() {
-		if (domNode!=null && resource!=null) {
-			return domNode.getNodeName();// + "[domnode+file]";
-		} else if (domNode!=null && resource==null) {
-			return domNode.getNodeName();// + "[domnode]";
+		if (domElement!=null && resource!=null) {
+			return ISO9075.decode(getDomName());// + "[domnode+file]";
+		} else if (domElement!=null && resource==null) {
+			return ISO9075.decode(getDomName());// + "[domnode]";
 		} else if (resource!=null) {
 			return resource.getName();//+" [file]";
 		} else {
@@ -231,26 +251,60 @@ public class JcrNode implements IAdaptable {
 		hiddenChildren.add(node);
 	}
 
-	Object[] filterHiddenChildren(final Collection<JcrNode> collection) {
-		final Collection<JcrNode> values = new HashSet<JcrNode>(collection);
+	Object[] filterHiddenChildren(final Collection<JcrNode> collection, boolean hideEmptyNodes) {
+		final Collection<JcrNode> values = new LinkedList<JcrNode>(collection);
 		
 		for (Iterator<JcrNode> it = hiddenChildren.iterator(); it.hasNext();) {
 			final JcrNode hiddenNode = it.next();
 			values.remove(hiddenNode);
 		}
+		if (hideEmptyNodes) {
+			for (Iterator<JcrNode> it = values.iterator(); it.hasNext();) {
+				JcrNode jcrNode = it.next();
+				if (jcrNode.isEmptyNode()) {
+					it.remove();
+				}
+			}
+		}
 		
 		return values.toArray();
 	}
 	
-	public Object[] getChildren() {
+	private boolean isEmptyNode() {
+		if (resource!=null) {
+			return false;
+		}
+		if (children.size()!=0) {
+			return false;
+		}
+		if (domElement==null) {
+			return true;
+		}
+		if (domElement.hasChildren()) {
+			return false;
+		}
+		if (domElement.getAttributes().size()!=0) {
+			return false;
+		}
+		return true;
+	}
+
+	public Object[] getChildren(boolean hideEmptyNodes) {
+		if (!resourceChildrenAdded) {
+			initChildren();
+		}
+		return filterHiddenChildren(children, true);
+	}
+	
+	void initChildren() {
 		try {
 			if (resourceChildrenAdded) {
-				return filterHiddenChildren(children);
+				throw new IllegalStateException("Children already loaded");
 			}
-			Map<String,JcrNode> resultMap = new HashMap<String, JcrNode>();
+			Set<String> childrenNames = new HashSet<String>();
 			for (Iterator it = children.iterator(); it.hasNext();) {
 				JcrNode node = (JcrNode) it.next();
-				resultMap.put(node.getName(), node);
+				childrenNames.add(node.getName());
 			}
 			
 			if (resource!=null && resource instanceof IFolder) {
@@ -271,45 +325,44 @@ public class JcrNode implements IAdaptable {
 							for (Iterator it3 = children.iterator(); it3
 									.hasNext();) {
 								JcrNode node = (JcrNode) it3.next();
-								if (!resultMap.containsKey(node.getName())) {
-									resultMap.put(node.getName(), node);
+								if (!childrenNames.contains(node.getName())) {
+									childrenNames.add(node.getName());
 								}
 							}
 							
 							continue outerLoop;
 						}
 					}
+					List<JcrNode> newNodes = new LinkedList<JcrNode>();
 					for (Iterator it = membersList.iterator(); it.hasNext();) {
 						IResource iResource = (IResource) it.next();
 						JcrNode node;
 						if (DirNode.isDirNode(iResource)) {
-							node = new DirNode(this, (Node)null, iResource);
+							node = new DirNode(this, (Element)null, iResource);
 						} else {
-							node = new JcrNode(this, (Node)null, iResource);
+							node = new JcrNode(this, (Element)null, iResource);
 						}
-//						node.setResource(iResource);
-						// load the children - to make sure we get vault files loaded too
-						node.getChildren();
-						resultMap.put(node.getName(), node);
+						childrenNames.add(node.getName());
+						newNodes.add(node);
 						it.remove();
+					}
+					for (Iterator<JcrNode> it = newNodes.iterator(); it
+							.hasNext();) {
+						JcrNode jcrNode = it.next();
+						// load the children - to make sure we get vault files loaded too
+						jcrNode.initChildren();
 					}
 				}
 			}
 			resourceChildrenAdded = true;
-			
-			return filterHiddenChildren(resultMap.values());
 		} catch (CoreException e) {
 			e.printStackTrace();
-			return new Object[0];
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
-			return new Object[0];
 		} catch (SAXException e) {
 			e.printStackTrace();
-			return new Object[0];
 		} catch (IOException e) {
 			e.printStackTrace();
-			return new Object[0];
 		}
 	}
 
@@ -341,46 +394,48 @@ public class JcrNode implements IAdaptable {
 	}
 
 	public Image getImage() {
-		if (resource!=null) {
-			if (resource instanceof IFolder) {
-				Image folderImage = workbenchLabelProvider.getImage(resource);
-				if (domNode==null && false) {
-					// then make it greyscale
-					folderImage = new
-							Image(folderImage.getDevice(), folderImage,SWT.IMAGE_GRAY);
-				}
-				return folderImage;
-			} else
-				try {
-					if (!isVaultFile(resource)){
-						final String jcrMimeType = getJcrContentProperty("jcr:mimeType");
-						if (jcrMimeType!=null && jcrMimeType.length()!=0) {
-							ImageDescriptor desc = getImageDescriptor(resource.getName(), jcrMimeType);
-							if (desc!=null) {
-								return desc.createImage();
-							}
-						}
-						return workbenchLabelProvider.getImage(resource);
-					}
-				} catch (ParserConfigurationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (SAXException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		}
-		//if (domNode!=null && children!=null && children.size()>0) {
-		//	return workbenchLabelProvider.getImage(domNode);
-		//}
+		boolean plainFolder = resource!=null && (resource instanceof IFolder);
+		String primaryType = getProperty("jcr:primaryType");
+		boolean typeFolder = primaryType!=null && ((primaryType.equals("nt:folder") || primaryType.equals("sling:Folder")));
+		boolean typeFile = primaryType!=null && ((primaryType.equals("nt:file") || primaryType.equals("nt:resource") || primaryType.equals("sling:File")));
+		typeFile |= (resource!=null && primaryType==null);
+		boolean typeUnstructured = primaryType!=null && ((primaryType.equals("nt:unstructured")));
 		
-		return WhitelabelSupport.JCR_NODE_ICON.createImage();
+		boolean isVaultFile = false;
+		try {
+			isVaultFile = resource!=null && isVaultFile(resource);
+		} catch (Exception e) {
+			// this empty catch is okay
+		}
+		
+		String mimeType = null;
+		mimeType = getJcrContentProperty("jcr:mimeType");
+		if (mimeType == null) {
+			mimeType = getProperty("jcr:mimeType");
+		}
+		
+		if (typeUnstructured) {
+			return WhitelabelSupport.JCR_NODE_ICON.createImage();
+		} else if (plainFolder || typeFolder) {
+			return workbenchLabelProvider.getImage(ProjectUtil.getSyncDirectory(getProject()));
+		} else if (typeFile && resource!=null) {
+			if (mimeType!=null && mimeType.length()!=0) {
+				ImageDescriptor desc = getImageDescriptor(resource.getName(), mimeType);
+				if (desc!=null) {
+					return desc.createImage();
+				}
+			}
+			if (isVaultFile) {
+				return WhitelabelSupport.JCR_NODE_ICON.createImage();
+			}
+			return workbenchLabelProvider.getImage(resource);
+		} else {
+			if (resource!=null && !isVaultFile) {
+				return workbenchLabelProvider.getImage(resource);
+			}
+			return WhitelabelSupport.JCR_NODE_ICON.createImage();
+		}
+		
 	}
 
 	private ImageDescriptor getImageDescriptor(String filename, String jcrMimeType) {
@@ -396,29 +451,46 @@ public class JcrNode implements IAdaptable {
 	}
 
 	private String getJcrContentProperty(String propertyKey) {
-		final Object[] chldrn = getChildren();
+		final Object[] chldrn = getChildren(false);
 		for (int i = 0; i < chldrn.length; i++) {
 			JcrNode jcrNode = (JcrNode) chldrn[i];
 			if ("jcr:content".equals(jcrNode.getName())) {
-				if (jcrNode.properties!=null) {
-					Object propertyValue = jcrNode.properties.getValue(propertyKey);
-					if (propertyValue!=null) {
-						return String.valueOf(propertyValue);
-					}
-				}
+				return jcrNode.getProperty(propertyKey);
+			}
+		}
+		return null;
+	}
+
+	private String getProperty(String propertyKey) {
+		if (properties!=null) {
+			Object propertyValue = properties.getValue(propertyKey);
+			if (propertyValue!=null) {
+				return String.valueOf(propertyValue);
 			}
 		}
 		return null;
 	}
 
 	public String getName() {
-		if (domNode!=null) {
-			return domNode.getNodeName();
+		if (domElement!=null) {
+			return ISO9075.decode(getDomName());
 		} else if (resource!=null) {
 			return resource.getName();
 		} else {
 			return "";
 		}
+	}
+
+	private String getDomName() {
+		String domName = domElement.getName();
+		Namespace ns = domElement.getNamespace();
+		if (ns!=null) {
+			String prefix = ns.getPrefix();
+			if (!prefix.isEmpty()) {
+				domName = prefix + ":" + domName;
+			}
+		}
+		return domName;
 	}
 		
 	String getJcrPath() {
@@ -431,7 +503,11 @@ public class JcrNode implements IAdaptable {
 				prefix = prefix + "/";
 			}
 		}
-		return prefix + getName();
+		return prefix + getJcrPathName();
+	}
+
+	String getJcrPathName() {
+		return getName();
 	}
 
 	@Override
@@ -454,10 +530,13 @@ public class JcrNode implements IAdaptable {
 					}
 					final JcrNode node = (JcrNode)target;
 					if ("domNode".equals(name)) {
-						return node.domNode!=null;	
+						return node.domElement!=null;	
 					}
 					if ("nonDomNode".equals(name)) {
-						return node.domNode==null;	
+						return node.domElement==null;	
+					}
+					if ("browseableNode".equals(name)) {
+						return node.isBrowsable();
 					}
 					return false;
 				}
@@ -553,13 +632,21 @@ public class JcrNode implements IAdaptable {
 		return null;
 	}
 
+	protected boolean isBrowsable() {
+		return true;
+	}
+
 	public IFile getFileForEditor() {
 		if (resource instanceof IFile) {
 //			if (!isVaultFile(resource)) {
 			return (IFile)resource;
-		} else if (resource instanceof IContainer) {
-			return null;
-		} else if (underlying!=null && underlying.file!=null) {
+		} else if (underlying!=null && underlying.file!=null && domElement!=null) {
+			if (properties!=null) {
+				GenericJcrRootFile propUnderlying = properties.getUnderlying();
+				if (propUnderlying!=null) {
+					return propUnderlying.file;
+				}
+			}
 			return underlying.file;
 		} else {
 			return null;
@@ -567,8 +654,8 @@ public class JcrNode implements IAdaptable {
 	}
 
 	public void rename(String string) {
-		if (domNode!=null && underlying!=null) {
-			domNode.getOwnerDocument().renameNode(domNode, domNode.getNamespaceURI(), string);
+		if (domElement!=null && underlying!=null) {
+			domElement.setName(string);
 			underlying.save();
 		}
 	}
@@ -577,8 +664,8 @@ public class JcrNode implements IAdaptable {
 		if (resource!=null) {
 			return false;
 		}
-		if (domNode!=null && underlying!=null) {
-			if (domNode.getNodeName().equals("jcr:content")) {
+		if (domElement!=null && underlying!=null) {
+			if (getDomName().equals("jcr:content")) {
 				return false;
 			}
 			return true;
@@ -589,16 +676,26 @@ public class JcrNode implements IAdaptable {
 	public JcrNode getParent() {
 		return parent;
 	}
-	
+
+	JcrNode getChild(String name) {
+		for (Iterator<JcrNode> it = children.iterator(); it.hasNext();) {
+			JcrNode aChild = it.next();
+			if (aChild.getName().equals(name)) {
+				return aChild;
+			}
+		}
+		return null;
+	}
+
 	IResource getResource() {
 		return resource;
 	}
 
 	public void createChild(String nodeName) {
-		if (domNode==null) {
+		if (domElement==null) {
 			// then we're not in the context of a .content.xml file yet
 			// so we need to create one
-			final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><jcr:root xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\" xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"/>";
+			final String minimalContentXml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jcr:root\n    xmlns:sling=\"http://sling.apache.org/jcr/sling/1.0\"\n    xmlns:jcr=\"http://www.jcp.org/jcr/1.0\"/>";
 			if (resource instanceof IFolder) {
 				IFolder folder = (IFolder)resource;
 				IFile file = folder.getFile(nodeName+".xml");
@@ -614,15 +711,34 @@ public class JcrNode implements IAdaptable {
 			}
 		} else {
 			try{
-				Element element = domNode.getOwnerDocument().createElement(nodeName);
-				element.setAttribute("jcr:primaryType", "nt:unstructured");
-				Node childDomNode = domNode.appendChild(element);
-				JcrNode childNode = new JcrNode(this, childDomNode, null);
-				underlying.save();
+				createChild(nodeName, domElement);
 			} catch(Exception e) {
 				MessageDialog.openError(Display.getDefault().getActiveShell(), "Error creating new JCR node", "The following error occurred: "+e.getMessage());
 			}
 		}
+	}
+
+	protected void createChild(String nodeName,
+			Element domElement) {
+		if (domElement==null) {
+			throw new IllegalArgumentException("domNode must not be null");
+		}
+		if (underlying==null) {
+			throw new IllegalArgumentException("underlying must not be null");
+		}
+		Element element = new Element(nodeName);
+		element.addAttribute("jcr:primaryType", "nt:unstructured");
+		StringBuffer indent = new StringBuffer();
+		Element parElement = domElement.getParentElement();
+		while(parElement!=null) {
+			indent.append("    ");
+			parElement = parElement.getParentElement();
+		}
+		domElement.addNode(new Text("\n    "+indent.toString()));
+		element = domElement.addNode(element);
+		domElement.addNode(new Text("\n"+indent.toString()));
+		JcrNode childNode = new JcrNode(this, element, null);
+		underlying.save();
 	}
 
 	public void delete() {
@@ -631,10 +747,49 @@ public class JcrNode implements IAdaptable {
 			return;
 		}
 		parent.children.remove(this);
-		if (domNode!=null) {
-			domNode.getParentNode().removeChild(domNode);
+		if (domElement!=null) {
+			Element parentNode = domElement.getParentElement();
+			domElement.remove();
+			if (parentNode!=null) {
+				List<Node> allChildNodes = parentNode.getNodes();
+				boolean nonTextChild = false;
+				for (Iterator<Node> it = allChildNodes.iterator(); it
+						.hasNext();) {
+					Node node = it.next();
+					if (node.getType()!=Type.TEXT) {
+						nonTextChild = true;
+					}					
+				}
+				if (!nonTextChild) {
+					for (Iterator<Node> it = allChildNodes.iterator(); it
+							.hasNext();) {
+						Node node = it.next();
+						it.remove();
+					}
+					if (!parentNode.hasNodes()) {
+						parentNode.setCompactEmpty(true);
+					}
+				}
+			}
 		}
 		underlying.save();
+	}
+
+	public IProject getProject() {
+		if (resource!=null) {
+			return resource.getProject();
+		}
+		if (underlying!=null) {
+			return underlying.file.getProject();
+		}
+		return null;
+	}
+
+	public String getURLForBrowser(IServer server) {
+		final String host = server.getHost();
+		final int port = server.getAttribute(ISlingLaunchpadServer.PROP_PORT, 8080);
+        final String url = "http://"+host+":"+port+""+getJcrPath();
+		return url;
 	}
 
 }

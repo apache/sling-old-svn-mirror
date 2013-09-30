@@ -17,6 +17,7 @@
 package org.apache.sling.ide.eclipse.core;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.osgi.framework.Version;
 
 public interface ISlingLaunchpadServer {
 
@@ -31,10 +32,15 @@ public interface ISlingLaunchpadServer {
     public static final String PROP_DEBUG_PORT = "launchpad.debugPort";
 
     public static final String PROP_INSTALL_LOCALLY = "launchpad.installLocally";
+    public static final String PROP_BUNDLE_VERSION_FORMAT = "launchpad.bundle.%s.version";
     
     void setPublishState(int publishState, IProgressMonitor monitor);
 
     int getPublishState();
 
     ISlingLaunchpadConfiguration getConfiguration();
+
+    void setBundleVersion(String bundleSymbolicName, Version version, IProgressMonitor monitor);
+
+    Version getBundleVersion(String bundleSymbolicName);
 }

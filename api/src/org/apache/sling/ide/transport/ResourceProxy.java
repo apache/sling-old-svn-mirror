@@ -24,11 +24,17 @@ import java.util.Map;
 public class ResourceProxy {
 
     private final String path;
-    private final Map<String, Object> properties = new HashMap<String, Object>();
+    private final Map<String, Object> properties;
     private final List<ResourceProxy> children = new ArrayList<ResourceProxy>();
+    private final Map<Class<?>, Object> adapted = new HashMap<Class<?>, Object>(1);
 
     public ResourceProxy(String path) {
+        this(path, new HashMap<String, Object>());
+    }
+
+    public ResourceProxy(String path, Map<String, Object> properties) {
         this.path = path;
+        this.properties = properties;
     }
 
     public void addChild(ResourceProxy child) {
@@ -53,6 +59,19 @@ public class ResourceProxy {
         return properties;
     }
 
+    public <T> void addAdapted(Class<T> klazz, T adaptedInstance) {
+
+        adapted.put(klazz, adaptedInstance);
+    }
+
+    public <T> T adaptTo(Class<T> klazz) {
+
+        // OK to suppress warnings since type safety is insured by addAdapted
+        @SuppressWarnings("unchecked")
+        T res = (T) adapted.get(klazz);
+
+        return res;
+    }
 
     @Override
     public String toString() {

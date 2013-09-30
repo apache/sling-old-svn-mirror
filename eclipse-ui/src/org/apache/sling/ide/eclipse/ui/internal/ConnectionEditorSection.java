@@ -54,6 +54,7 @@ public class ConnectionEditorSection extends ServerEditorSection {
     private Text passwordText;
     private ISlingLaunchpadServer launchpadServer;
     private PropertyChangeListener serverListener;
+    private boolean updating = false;
 
     @Override
     public void createSection(Composite parent) {
@@ -128,18 +129,25 @@ public class ConnectionEditorSection extends ServerEditorSection {
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-
-                if (ISlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
-                    portText.setText(((Integer) evt.getNewValue()).toString());
-                } else if (ISlingLaunchpadServer.PROP_DEBUG_PORT.equals(evt.getPropertyName())) {
-                    debugPortText.setText(((Integer) evt.getNewValue()).toString());
-                } else if (ISlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
-                    contextPathText.setText((String) evt.getNewValue());
-                } else if (ISlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
-                    usernameText.setText((String) evt.getNewValue());
-                } else if (ISlingLaunchpadServer.PROP_PASSWORD.equals(evt.getPropertyName())) {
-                    passwordText.setText((String) evt.getNewValue());
-                }
+            	if (updating) {
+            		return;
+            	}
+            	updating = true;
+            	try{
+	                if (ISlingLaunchpadServer.PROP_PORT.equals(evt.getPropertyName())) {
+	                    portText.setText(((Integer) evt.getNewValue()).toString());
+	                } else if (ISlingLaunchpadServer.PROP_DEBUG_PORT.equals(evt.getPropertyName())) {
+	                    debugPortText.setText(((Integer) evt.getNewValue()).toString());
+	                } else if (ISlingLaunchpadServer.PROP_CONTEXT_PATH.equals(evt.getPropertyName())) {
+	                    contextPathText.setText((String) evt.getNewValue());
+	                } else if (ISlingLaunchpadServer.PROP_USERNAME.equals(evt.getPropertyName())) {
+	                    usernameText.setText((String) evt.getNewValue());
+	                } else if (ISlingLaunchpadServer.PROP_PASSWORD.equals(evt.getPropertyName())) {
+	                    passwordText.setText((String) evt.getNewValue());
+	                }
+            	} finally {
+            		updating = false;
+            	}
             }
         };
 
@@ -167,28 +175,36 @@ public class ConnectionEditorSection extends ServerEditorSection {
         ModifyListener listener = new ModifyListener() {
             @Override
             public void modifyText(ModifyEvent e) {
-            	if (e.getSource() == portText) {
-                    try {
-                        int port = Integer.parseInt(portText.getText());
-                        execute(new SetServerPortCommand(server, port));
-                    } catch (NumberFormatException ex) {
-                        // shucks
-                    }
-                } else if (e.getSource() == debugPortText) {
-                    try {
-                        int debugPort = Integer.parseInt(debugPortText.getText());
-                        execute(new SetServerDebugPortCommand(server, debugPort));
-                    } catch (NumberFormatException ex) {
-                        // shucks
-                    	ex.printStackTrace();
-                    }
-                } else if (e.getSource() == contextPathText) {
-                    execute(new SetServerContextPathCommand(server, contextPathText.getText()));
-                } else if (e.getSource() == usernameText) {
-                    execute(new SetServerUsernameCommand(server, usernameText.getText()));
-                } else if (e.getSource() == passwordText) {
-                    execute(new SetServerPasswordCommand(server, passwordText.getText()));
-                }
+            	if (updating) {
+            		return;
+            	}
+            	updating = true;
+            	try{
+	            	if (e.getSource() == portText) {
+	                    try {
+	                        int port = Integer.parseInt(portText.getText());
+	                        execute(new SetServerPortCommand(server, port));
+	                    } catch (NumberFormatException ex) {
+	                        // shucks
+	                    }
+	                } else if (e.getSource() == debugPortText) {
+	                    try {
+	                        int debugPort = Integer.parseInt(debugPortText.getText());
+	                        execute(new SetServerDebugPortCommand(server, debugPort));
+	                    } catch (NumberFormatException ex) {
+	                        // shucks
+	                    	ex.printStackTrace();
+	                    }
+	                } else if (e.getSource() == contextPathText) {
+	                    execute(new SetServerContextPathCommand(server, contextPathText.getText()));
+	                } else if (e.getSource() == usernameText) {
+	                    execute(new SetServerUsernameCommand(server, usernameText.getText()));
+	                } else if (e.getSource() == passwordText) {
+	                    execute(new SetServerPasswordCommand(server, passwordText.getText()));
+	                }
+            	} finally {
+            		updating = false;
+            	}
             }
         };
 

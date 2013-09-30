@@ -11,8 +11,13 @@
 	<modules>
 		<module>target-definition</module>
 		<module>api</module>
+        <module>api-test</module>
+        <module>artifacts</module>
 		<module>impl-resource</module>
         <module>impl-resource-test</module>
+		<module>vlt-wrapper</module>                
+		<module>impl-vlt</module>
+		<module>impl-vlt-test</module>
 		<module>eclipse-core</module>
 		<module>eclipse-ui</module>
 		<module>feature</module>
@@ -44,6 +49,19 @@
 				</configuration>
 			</plugin>
 		</plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.1</version>
+                    <configuration>
+                      <source>1.6</source>
+                      <target>1.6</target>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 	</build>
 
 	<properties>

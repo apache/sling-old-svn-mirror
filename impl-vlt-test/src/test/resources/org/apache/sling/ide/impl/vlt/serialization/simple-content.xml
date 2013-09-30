@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jcr:root xmlns:sling="http://sling.apache.org/jcr/sling/1.0" xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    jcr:primaryType="sling:Folder"
+    jcr:title="Application folder"
+    indexDuration="{Decimal}500"
+    emptyValue=""
+    indexed="{Boolean}true"
+    indexRatio="{Double}2.54"
+    lastIndexId="{Long}7293120000000"
+    someName="{Name}some-name"
+    somePath="{Path}/libs/sling"
+    someReference="{Reference}485aa3ec-06a6-420c-8b48-3e59333272ee"
+    someWeakReference="{WeakReference}22ac25bd-982a-4d53-89e7-da015637d5b5"
+    lastIndexTime="{Date}2013-09-04T14:00:00.000+03:00"/>

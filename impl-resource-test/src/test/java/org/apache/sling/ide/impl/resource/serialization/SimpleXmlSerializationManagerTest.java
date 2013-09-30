@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.sling.ide.impl.resource.serialization;
 
 import static org.custommonkey.xmlunit.XMLAssert.assertXMLEqual;
@@ -5,13 +21,17 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.sling.ide.serialization.SerializationData;
+import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.custommonkey.xmlunit.XMLUnit;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,40 +54,50 @@ public class SimpleXmlSerializationManagerTest {
     }
 
     @Test
-    public void emptySerializedData() throws IOException, SAXException {
+    public void emptySerializedData() throws SerializationException, SAXException {
 
-        String serializationData = sm.buildSerializationData(new HashMap<String, Object>());
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null,
+                newResourceWithProperties(new HashMap<String, Object>()));
+
+        assertThat(serializationData, is(nullValue()));
+    }
+
+    private ResourceProxy newResourceWithProperties(Map<String, Object> properties) {
+        ResourceProxy resource = new ResourceProxy("/");
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            resource.addProperty(entry.getKey(), entry.getValue());
+        }
+        return resource;
+    }
+
+    @Test
+    public void nullSerializedData() throws SerializationException, SAXException {
+
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, null);
 
         assertThat(serializationData, is(nullValue()));
     }
 
     @Test
-    public void nullSerializedData() throws IOException, SAXException {
-
-        String serializationData = sm.buildSerializationData(null);
-
-        assertThat(serializationData, is(nullValue()));
-    }
-
-    @Test
-    public void stringSerializedData() throws IOException, SAXException {
+    public void stringSerializedData() throws SerializationException, SAXException, IOException {
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:createdBy", "admin");
         data.put("jcr:lastModifiedBy", "author");
 
-        String serializationData = sm.buildSerializationData(data);
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, newResourceWithProperties(data));
 
         String methodName = "stringSerializedData";
 
-        assertXmlOutputIsEqualTo(serializationData, methodName);
+        assertXmlOutputIsEqualTo(serializationData.getContents(), methodName);
     }
 
-    private void assertXmlOutputIsEqualTo(String serializationData, String methodName) throws SAXException, IOException {
+    private void assertXmlOutputIsEqualTo(byte[] serializationData, String methodName) throws SAXException,
+            SerializationException, IOException {
 
         InputStream doc = readSerializationDataFile(methodName);
 
-        assertXMLEqual(new InputSource(doc), new InputSource(new StringReader(serializationData)));
+        assertXMLEqual(new InputSource(doc), new InputSource(new ByteArrayInputStream(serializationData)));
     }
 
     private InputStream readSerializationDataFile(String methodName) {
@@ -79,23 +109,23 @@ public class SimpleXmlSerializationManagerTest {
     }
 
     @Test
-    public void serializedDataIsEscaped() throws IOException, SAXException {
+    public void serializedDataIsEscaped() throws SerializationException, SAXException, IOException {
 
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("jcr:description", "<p class=\"active\">Welcome</p>");
 
-        String serializationData = sm.buildSerializationData(data);
+        SerializationData serializationData = sm.newBuilder(null, null).buildSerializationData(null, newResourceWithProperties(data));
 
         String methodName = "serializedDataIsEscaped";
 
-        assertXmlOutputIsEqualTo(serializationData, methodName);
+        assertXmlOutputIsEqualTo(serializationData.getContents(), methodName);
     }
 
     @Test
     public void readSerializedData() throws IOException, SAXException {
 
         Map<String, Object> serializationData = sm
-                .readSerializationData(readSerializationDataFile("stringSerializedData"));
+                .readSerializationData(null, readSerializationDataFile("stringSerializedData")).getProperties();
 
         Map<String, Object> expected = new HashMap<String, Object>();
         expected.put("jcr:createdBy", "admin");
@@ -121,7 +151,7 @@ public class SimpleXmlSerializationManagerTest {
     @Test
     public void serializationFileLocation() {
         
-        String serializationFilePath = sm.getSerializationFilePath("jcr_root");
+        String serializationFilePath = sm.getSerializationFilePath("jcr_root", SerializationKind.FOLDER);
         
         assertThat(serializationFilePath, is("jcr_root" + File.separatorChar + ".content.xml"));
     }

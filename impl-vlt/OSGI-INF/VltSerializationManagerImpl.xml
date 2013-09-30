@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false">
+   <implementation class="org.apache.sling.ide.impl.vlt.serialization.VltSerializationManager"/>
+   <service>
+      <provide interface="org.apache.sling.ide.serialization.SerializationManager"/>
+   </service>
+   <reference bind="bindVaultFsLocator" cardinality="1..1" interface="org.apache.sling.ide.impl.vlt.VaultFsLocator" name="VaultFsLocator" policy="static" unbind="unbindVaultFsLocator"/>
+   <property name="service.ranking" type="Integer" value="100"/>   
+</scr:component>

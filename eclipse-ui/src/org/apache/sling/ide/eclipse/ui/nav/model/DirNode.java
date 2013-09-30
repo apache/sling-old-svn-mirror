@@ -24,7 +24,8 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
-import org.w3c.dom.Node;
+
+import de.pdark.decentxml.Element;
 
 public class DirNode extends JcrNode {
 	
@@ -66,7 +67,7 @@ public class DirNode extends JcrNode {
 		return true;
 	}
 	
-	DirNode(JcrNode parent, Node domNode, IResource resource) {
+	DirNode(JcrNode parent, Element domNode, IResource resource) {
 		super(parent, domNode, resource);
 		if (!isDirNode(resource)) {
 			throw new IllegalArgumentException("resource is not a DirNode: "+resource);
@@ -83,7 +84,25 @@ public class DirNode extends JcrNode {
 	}
 	
 	@Override
+	String getJcrPathName() {
+		return getDecodedName();
+	}
+	
+	@Override
 	protected void addChild(JcrNode jcrNode) {
+		JcrNode effectiveSibling = getEffectiveSibling();
+		if (effectiveSibling!=this && effectiveSibling!=null) {
+			// excellent, the parent contains a child which 
+			// matches the .dir/_jcr_content pattern, so add this child there
+			effectiveSibling.addChild(jcrNode);
+			// but also hide this node from my parent
+			effectiveSibling.getParent().hide(this);
+			return;
+		}
+		super.addChild(jcrNode);
+	}
+	
+	JcrNode getEffectiveSibling() {
 		final String decodedName = getDecodedName();
 		JcrNode nonDirNodeParent = parent;
 		outerloop:while(nonDirNodeParent!=null && (nonDirNodeParent instanceof DirNode)) {
@@ -100,21 +119,9 @@ public class DirNode extends JcrNode {
 			}
 			nonDirNodeParent = nonDirNodeParent.parent;
 		}
-		Set<JcrNode> c = new HashSet<JcrNode>(nonDirNodeParent.children);
-		for (Iterator<JcrNode> it = c.iterator(); it.hasNext();) {
-			JcrNode node = it.next();
-			if (node.getName().equals(decodedName)) {
-				// excellent, the parent contains a child which 
-				// matches the .dir/_jcr_content pattern, so add this child there
-				node.addChild(jcrNode);
-				// but also hide this node from my parent
-				nonDirNodeParent.hide(this);
-				return;
-			}
-		}
-		super.addChild(jcrNode);
+		return nonDirNodeParent.getChild(decodedName);
 	}
-	
+
 	@Override
 	public IFile getFileForEditor() {
 		return null;

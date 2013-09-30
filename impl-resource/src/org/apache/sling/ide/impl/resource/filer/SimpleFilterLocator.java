@@ -53,12 +53,14 @@ public class SimpleFilterLocator implements FilterLocator {
     public Filter loadFilter(InputStream filterFileContents) throws IOException {
 
         List<String> filters = new ArrayList<String>();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(filterFileContents));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (line.charAt(0) == '#')
-                continue;
-            filters.add(line);
+        if (filterFileContents != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(filterFileContents));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.charAt(0) == '#')
+                    continue;
+                filters.add(line);
+            }
         }
 
         return new SimpleFilter(filters);

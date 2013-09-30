@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -27,27 +25,27 @@ import java.util.Properties;
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.model.Model;
 import org.apache.sling.ide.eclipse.core.ConfigurationHelper;
-import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.debug.core.DebugPlugin;
-import org.eclipse.debug.core.ILaunch;
-import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.project.MavenUpdateRequest;
 import org.eclipse.m2e.core.project.ProjectImportConfiguration;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.wst.server.core.IModule;
@@ -89,6 +87,40 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		addPage(setupServerWizardPage);
 	}
 	
+    /**
+     * 
+     * @return the current wizard page, possibly null
+     */
+    protected WizardPage getCurrentWizardPage() {
+        IWizardPage currentPage = getContainer().getCurrentPage();
+        if (currentPage instanceof WizardPage) {
+            return (WizardPage) currentPage;
+        }
+
+        return null;
+    }
+
+    protected void reportError(CoreException e) {
+        WizardPage currentPage = getCurrentWizardPage();
+        if (currentPage != null) {
+            currentPage.setMessage(e.getMessage(), IMessageProvider.ERROR);
+        } else {
+            MessageDialog.openError(getShell(), "Unexpected error", e.getMessage());
+        }
+
+        Activator.getDefault().getLog().log(e.getStatus());
+    }
+
+    protected void reportError(Throwable t) {
+        if ( t instanceof CoreException ) {
+            reportError((CoreException) t);
+            return;
+        }
+        
+        IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, t.getMessage(), t);
+        reportError(new CoreException(status));
+    }
+
 	public ChooseArchetypeWizardPage getChooseArchetypePage() {
 		return chooseArchetypePage;
 	}
@@ -99,6 +131,9 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	 * using wizard as execution context.
 	 */
 	public boolean performFinish() {
+
+        // TODO - should probably rely on exception handling here
+        final boolean[] success = new boolean[1];
         try {
 			getContainer().run(false, true, new IRunnableWithProgress() {
 
@@ -106,50 +141,20 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 				public void run(IProgressMonitor monitor)
 						throws InvocationTargetException, InterruptedException {
 					try {
-						performFinish(monitor);
+                        success[0] = performFinish(monitor);
 					} catch (Exception e) {
-						// TODO proper logging
-						e.printStackTrace();
-						MessageBox messageBox = new MessageBox(Display.getDefault().getActiveShell(), 
-			                    SWT.OK | SWT.ICON_ERROR);
-			            messageBox.setText("Creating application failed");
-			            StringBuffer sb = new StringBuffer();
-			            Throwable t = e;
-			            while(t!=null) {
-			            	if (sb.length()!=0) {
-			            		sb.append(System.getProperty("line.separator"));
-			            	}
-			            	sb.append(t.getMessage());
-			            	t = t.getCause();
-			            }
-			            messageBox.setMessage(sb.toString());
-			            messageBox.open();
+                        throw new InvocationTargetException(e);
 					}
 				}
 				
 			});
-			return true;
+            return success[0];
         } catch (InterruptedException e) {
-        	// that's fine, the user interrupted - dont complain
+            Thread.currentThread().interrupt();
         	return false;
 		} catch (InvocationTargetException e) {
-			// TODO proper logging
-			e.printStackTrace();
-			MessageBox messageBox = new MessageBox(Display.getDefault().getActiveShell(), 
-                    SWT.OK | SWT.ICON_ERROR);
-            messageBox.setText("Creating application failed");
-            StringBuffer sb = new StringBuffer();
-            Throwable t = e;
-            while(t!=null) {
-            	if (sb.length()!=0) {
-            		sb.append(System.getProperty("line.separator"));
-            	}
-            	sb.append(t.getMessage());
-            	t = t.getCause();
-            }
-            messageBox.setMessage(sb.toString());
-            messageBox.open();
-			return false;
+            reportError(e.getTargetException());
+            return false;
 		}
 	}
         
@@ -168,9 +173,9 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		if (monitor.isCanceled()) {
 			return false;
 		}
-		IServer server = setupServerWizardPage.getOrCreateServer();
+        IServer server = setupServerWizardPage.getOrCreateServer(monitor);
 		monitor.worked(1);
-		if (monitor.isCanceled()) {
+        if (monitor.isCanceled() || server == null) {
 			return false;
 		}
 		
@@ -269,19 +274,6 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 			return false;
 		}
 		
-		if (reactorProject!=null) {
-			ILaunchConfiguration launchConfig = 
-					DebugPlugin.getDefault().getLaunchManager().getLaunchConfiguration(reactorProject.getFolder(".settings").getFolder(".launches").getFile("initial_install.launch"));
-			if (launchConfig!=null) {
-				ILaunch theLaunch = launchConfig.launch(ILaunchManager.RUN_MODE, monitor, true);
-				monitor.setTaskName("mvn install");
-				while(!theLaunch.isTerminated()) {
-					Thread.sleep(500);
-					monitor.worked(1);
-				}
-			}
-		}
-		
 		wc.getOriginal().publish(IServer.PUBLISH_FULL, monitor);
 		
 		// also add 'java 1.6' and 'jst.ejb 3.1'
@@ -307,6 +299,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 		for (Iterator<IProject> it = projects.iterator(); it.hasNext();) {
 			IProject project = it.next();
 			MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(new MavenUpdateRequest(project, /*mavenConfiguration.isOffline()*/false, forceDependencyUpdate), monitor);
+			project.build(IncrementalProjectBuilder.CLEAN_BUILD, monitor);
 		}
 	}
 
@@ -321,14 +314,7 @@ public abstract class AbstractNewSlingApplicationWizard extends Wizard implement
 	}
 	
 	protected void configureReactorProject(IProject reactorProject, IProgressMonitor monitor) throws CoreException {
-		// temp hack: install the launch file
-		IFolder dotLaunches = reactorProject.getFolder(".settings").getFolder(".launches");
-		dotLaunches.create(true, true, monitor);
-		IFile launchFile = dotLaunches.getFile("initial_install.launch");
-		String l = MavenLaunchHelper.createMavenLaunchConfigMemento(reactorProject.getLocation().toOSString(), 
-				"install", null, false, null);
-		InputStream in = new ByteArrayInputStream(l.getBytes());
-		launchFile.create(in, true, monitor);
+		// nothing to be done
 	}
 	
 	public void init(IWorkbench workbench, IStructuredSelection selection) {

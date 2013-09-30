@@ -19,4 +19,6 @@ package org.apache.sling.ide.transport;
 public interface Command<T> {
 
 	Result<T> execute();
+
+    String getPath();
 }

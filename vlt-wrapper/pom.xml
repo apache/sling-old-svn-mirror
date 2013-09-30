@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.sling.ide</groupId>
+    <artifactId>reactor</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>org.apache.sling.ide.vlt-wrapper</artifactId>
+  <packaging>eclipse-plugin</packaging>
+  <name>Sling IDE Tools: FileVault wrapper</name>
+
+    <profiles>
+        <profile>
+            <id>refresh-embedded-deps</id>
+            <!-- 
+                We embed most dependencies required by vlt since they are not available in a p2 repo
+                To refresh them, execute
+                mvn -pl vlt-wrapper -Prefresh-embedded-deps dependency:copy
+                
+                Those dependencies which are available as bundles ( commons-collections, commons-httpclient etc )
+                need to be managed using the bundle's manifest.
+                  
+            -->
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <configuration>
+                            <artifactItems>
+                                <!-- START JCR dependencies -->
+                                <artifactItem>
+                                    <groupId>javax.jcr</groupId>
+                                    <artifactId>jcr</artifactId>
+                                    <version>2.0</version>
+                                </artifactItem>
+                                <!-- END JCR dependencies -->
+                                                            
+                                <!-- START Apache Jackrabbit dependencies -->
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-webdav</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-spi-commons</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-jcr-commons</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-jcr2spi</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-jcr-client</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-spi</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit</groupId>
+                                    <artifactId>jackrabbit-spi2dav</artifactId>
+                                    <version>${jackrabbit.version}</version>
+                                </artifactItem>
+                                <!-- END Apache Jackrabbit dependencies -->
+                                
+                                <!-- START Apache Jackrabbit FileVault dependencies -->
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit.vault</groupId>
+                                    <artifactId>vault-davex</artifactId>
+                                    <version>${vault.version}</version>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.apache.jackrabbit.vault</groupId>
+                                    <artifactId>org.apache.jackrabbit.vault</artifactId>
+                                    <version>${vault.version}</version>
+                                </artifactItem>
+                                <!-- END Apache Jackrabbit FileVault dependencies -->                                
+                                
+                            </artifactItems>
+                            <outputDirectory>lib</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>copy</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <properties>
+        <jackrabbit.version>2.4.0</jackrabbit.version>
+        <vault.version>3.0.0</vault.version>
+    </properties>
+</project>

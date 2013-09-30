@@ -16,6 +16,8 @@
  */
 package org.apache.sling.ide.eclipse.core;
 
+import java.io.File;
+
 import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.ProjectHelper;
 import org.eclipse.core.resources.IFolder;
@@ -75,6 +77,10 @@ public abstract class ProjectUtil {
             value = PROPERTY_SYNC_ROOT_DEFAULT_VALUE;
 
         return value;
+    }
+    
+    public static File getSyncDirectoryFile(IProject project) {
+    	return new File(project.getLocation().toFile(), getSyncDirectoryValue(project));
     }
 
     public static IPath getSyncDirectoryFullPath(IProject project) {

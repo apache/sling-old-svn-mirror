@@ -27,6 +27,10 @@ public abstract class AbstractRepository implements Repository{
 		this.repositoryInfo=repositoryInfo;
 	}
 
+    @Override
+    public RepositoryInfo getRepositoryInfo() {
+        return repositoryInfo;
+    }
 
 	@Override
 	public String toString() {

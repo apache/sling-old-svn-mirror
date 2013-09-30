@@ -147,7 +147,7 @@ public class ConvertToBundleAction implements IObjectActionDelegate {
 		fSelection = selection;
 		if (selection instanceof IStructuredSelection) {
 			final IStructuredSelection iss = (IStructuredSelection) selection;
-			Iterator<Object> it = iss.iterator();
+			Iterator<?> it = iss.iterator();
 			if (!it.hasNext()) {
 				action.setEnabled(false);
 				return;

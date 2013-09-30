@@ -48,7 +48,7 @@ public class MavenLaunchHelper {
 					"	<stringAttribute key=\"M2_RUNTIME\" value=\"EMBEDDED\"/>"+ NL+
 					"	<booleanAttribute key=\"M2_SKIP_TESTS\" value=\"true\"/>"+ NL+
 					"	<intAttribute key=\"M2_THREADS\" value=\"1\"/>"+ NL+
-					"	<booleanAttribute key=\"M2_UPDATE_SNAPSHOTS\" value=\"true\"/>"+ NL+
+					"	<booleanAttribute key=\"M2_UPDATE_SNAPSHOTS\" value=\"false\"/>"+ NL+
 					"	<booleanAttribute key=\"M2_WORKSPACE_RESOLUTION\" value=\"false\"/>"+ NL+
 					"	<stringAttribute key=\"org.eclipse.jdt.launching.WORKING_DIRECTORY\" value=\""+location+"\"/>"+ NL+
 					"	</launchConfiguration>";

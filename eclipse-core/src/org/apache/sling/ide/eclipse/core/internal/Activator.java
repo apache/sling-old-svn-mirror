@@ -18,6 +18,7 @@ package org.apache.sling.ide.eclipse.core.internal;
 
 import org.apache.sling.ide.eclipse.core.ServiceUtil;
 import org.apache.sling.ide.filter.FilterLocator;
+import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.serialization.SerializationManager;
 import org.apache.sling.ide.transport.Repository;
 import org.eclipse.core.runtime.Plugin;
@@ -43,6 +44,7 @@ public class Activator extends Plugin {
     private ServiceTracker<Repository, Repository> repository;
     private ServiceTracker<SerializationManager, SerializationManager> serializationManager;
     private ServiceTracker<FilterLocator, FilterLocator> filterLocator;
+    private ServiceTracker<OsgiClientFactory, OsgiClientFactory> osgiClientFactory;
 
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
@@ -57,6 +59,10 @@ public class Activator extends Plugin {
 
         filterLocator = new ServiceTracker<FilterLocator, FilterLocator>(context, FilterLocator.class, null);
         filterLocator.open();
+
+        osgiClientFactory = new ServiceTracker<OsgiClientFactory, OsgiClientFactory>(context, OsgiClientFactory.class,
+                null);
+        osgiClientFactory.open();
 	}
 
 	/*
@@ -67,6 +73,7 @@ public class Activator extends Plugin {
         repository.close();
         serializationManager.close();
         filterLocator.close();
+        osgiClientFactory.close();
 
         plugin = null;
 		super.stop(context);
@@ -92,5 +99,9 @@ public class Activator extends Plugin {
 
     public FilterLocator getFilterLocator() {
         return ServiceUtil.getNotNull(filterLocator);
+    }
+
+    public OsgiClientFactory getOsgiClientFactory() {
+        return ServiceUtil.getNotNull(osgiClientFactory);
     }
 }

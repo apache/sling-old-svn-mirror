@@ -16,19 +16,30 @@
  */
 package org.apache.sling.ide.serialization;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
+
+import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.ResourceProxy;
 
 public interface SerializationManager {
+
+    void destroy();
 
     boolean isSerializationFile(String filePath);
 
     String getBaseResourcePath(String serializationFilePath);
 
-    String getSerializationFilePath(String baseFilePath);
+    String getSerializationFilePath(String baseFilePath, SerializationKind serializationKind);
 
-    String buildSerializationData(Map<String, Object> content) throws IOException;
+    SerializationDataBuilder newBuilder(Repository repository, File contentSyncRoot) throws SerializationException;
 
-    Map<String, Object> readSerializationData(InputStream source) throws IOException;
+    /**
+     * @param filePath The filePath, in repository format
+     * @param source
+     * @return
+     * @throws IOException
+     */
+    ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException;
 }

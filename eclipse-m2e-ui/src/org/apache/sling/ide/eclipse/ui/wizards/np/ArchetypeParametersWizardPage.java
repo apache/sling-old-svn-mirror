@@ -19,6 +19,7 @@ package org.apache.sling.ide.eclipse.ui.wizards.np;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import org.apache.maven.archetype.catalog.Archetype;
 import org.apache.maven.archetype.metadata.RequiredProperty;
@@ -101,9 +102,9 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 				dialogChanged();
 				if (!javaPackageModified) {
 					if (artifactId.getText().length()==0) {
-						javaPackage.setText(groupId.getText());
+						javaPackage.setText(getDefaultJavaPackage(groupId.getText(), ""));
 					} else {
-						javaPackage.setText(groupId.getText()+"."+artifactId.getText());
+						javaPackage.setText(getDefaultJavaPackage(groupId.getText(), artifactId.getText()));
 					}
 				}
 			}
@@ -118,10 +119,13 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 		artifactId.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				dialogChanged();
+				if (javaPackageModified) {
+					return;
+				}
 				if (groupId.getText().length()==0) {
-					javaPackage.setText(artifactId.getText());
+					javaPackage.setText(getDefaultJavaPackage("", artifactId.getText()));
 				} else {
-					javaPackage.setText(groupId.getText()+"."+artifactId.getText());
+					javaPackage.setText(getDefaultJavaPackage(groupId.getText(), artifactId.getText()));
 				}
 			}
 		});
@@ -326,6 +330,26 @@ public class ArchetypeParametersWizardPage extends WizardPage {
 			p.put(item.getText(0), item.getText(1));
 		}
 		return p;
+	}
+	
+	public static String getDefaultJavaPackage(String groupId, String artifactId) {
+		String name = (artifactId.isEmpty()) ? groupId : groupId+"."+artifactId;
+		StringBuffer sb = new StringBuffer();
+		StringTokenizer st = new StringTokenizer(name.replaceAll("-", "_"), ".");
+		while(st.hasMoreTokens()) {
+			String part = st.nextToken();
+			while(part.length()>0 && !Character.isJavaIdentifierStart(part.charAt(0))) {
+				part = part.substring(1);
+			}
+			if (part.length()==0) {
+				continue;
+			}
+			if (sb.length()!=0) {
+				sb.append(".");
+			}
+			sb.append(part);
+		}
+		return sb.toString();
 	}
 
 }

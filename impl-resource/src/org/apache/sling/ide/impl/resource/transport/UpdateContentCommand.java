@@ -16,6 +16,7 @@
  */
 package org.apache.sling.ide.impl.resource.transport;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
@@ -65,6 +67,10 @@ class UpdateContentCommand extends AbstractCommand<Void> {
                             + property.getValue().getClass());
                 }
     		}
+            File f = new File(fileInfo.getLocation());
+            if (f.isFile()) {
+                parts.add(new FilePart(fileInfo.getName(), f));
+            }
             post.setRequestEntity(new MultipartRequestEntity(parts.toArray(new Part[parts.size()]), post
                     .getParams()));
     		httpClient.getState().setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(repositoryInfo.getUsername(),repositoryInfo.getPassword()));

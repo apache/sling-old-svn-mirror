@@ -25,14 +25,15 @@ import java.util.Map;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.TextPropertyDescriptor;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
+
+import de.pdark.decentxml.Attribute;
+import de.pdark.decentxml.Element;
 
 public class ModifiableProperties implements IPropertySource {
 	
 	private Map<String, String> properties = new HashMap<String, String>();
 	private JcrNode node;
-	private Node domNode;
+	private Element domElement;
 	private GenericJcrRootFile genericJcrRootFile;
 	
 	public ModifiableProperties(JcrNode node) {
@@ -44,6 +45,10 @@ public class ModifiableProperties implements IPropertySource {
 			throw new IllegalArgumentException("node must not be null");
 		}
 		this.node = node;
+	}
+	
+	public GenericJcrRootFile getUnderlying() {
+		return genericJcrRootFile;
 	}
 	
 	@Override
@@ -86,19 +91,18 @@ public class ModifiableProperties implements IPropertySource {
 	public void setPropertyValue(Object id, Object value) {
 		Map.Entry<String, String> entry = (Map.Entry<String, String>)id;
 		entry.setValue(String.valueOf(value));
-		NamedNodeMap attributes = domNode.getAttributes();
-		Node n = attributes.getNamedItem(entry.getKey());
-		n.setNodeValue(String.valueOf(value));
+		Attribute a = domElement.getAttribute(entry.getKey());
+		a.setValue(String.valueOf(value));
 		genericJcrRootFile.save();
 	}
 
-	public void setNode(GenericJcrRootFile genericJcrRootFile, Node domNode) {
-		this.domNode = domNode;
-		NamedNodeMap attributes = domNode.getAttributes();
+	public void setNode(GenericJcrRootFile genericJcrRootFile, Element domNode) {
+		this.domElement = domNode;
+		List<Attribute> attributes = domNode.getAttributes();
 		if (attributes!=null) {
-			for(int i=0; i<attributes.getLength(); i++) {
-				Node attr = attributes.item(i);
-				properties.put(attr.getNodeName(), attr.getNodeValue());
+			for (Iterator<Attribute> it = attributes.iterator(); it.hasNext();) {
+				Attribute a = it.next();
+				properties.put(a.getName(), a.getValue());
 			}
 		}
 		this.genericJcrRootFile = genericJcrRootFile;

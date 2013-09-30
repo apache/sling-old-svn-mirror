@@ -16,11 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -37,15 +32,6 @@ public class ConfigurationHelper {
 		fp2.installProjectFacet(slingContentFacet.getLatestVersion(), null, null);
 		
 		ProjectUtil.setSyncDirectoryPath(aContentProject, jcr_root);
-		
-		// temp hack: install the launch file
-		IFolder dotLaunches = aContentProject.getFolder(".settings").getFolder(".launches");
-		dotLaunches.create(true, true, monitor);
-		IFile launchFile = dotLaunches.getFile("clean_package_content_package_install.launch");
-		String l = MavenLaunchHelper.createMavenLaunchConfigMemento(aContentProject.getLocation().toOSString(), 
-				"clean package content-package:install", null, false, null);
-		InputStream in = new ByteArrayInputStream(l.getBytes());
-		launchFile.create(in, true, monitor);
 	}
 
 	public static void convertToBundleProject(IProject aBundleProject)

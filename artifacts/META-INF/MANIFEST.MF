@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: org.apache.sling.ide.artifacts
+Bundle-Version: 0.0.1.qualifier
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.osgi.service.component,
+  org.osgi.framework
+Require-Bundle: org.eclipse.equinox.ds;bundle-version="1.3.1",
+ org.eclipse.osgi.services;bundle-version="3.2.100"
+Service-Component: OSGI-INF/*.xml
+Export-Package: org.apache.sling.ide.artifacts
