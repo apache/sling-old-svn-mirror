@@ -12,4 +12,4 @@ ssh people.apache.org "rm -rf $SITE_LOCATION/*"
 scp p2update/target/*.zip people.apache.org:$SITE_LOCATION
 
 # 4. Unzip the new update site
-ssh people.apache.org "cd $SITE_LOCATION && unzip *.zip && rm -f *.zip"
+ssh people.apache.org "cd $SITE_LOCATION && unzip -o *.zip && rm -f *.zip"
