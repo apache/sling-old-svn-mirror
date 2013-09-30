@@ -17,9 +17,10 @@
 package org.apache.sling.ide.eclipse.ui.wizards.np;
 
 import java.io.IOException;
-import java.net.URL;
 
 import org.apache.maven.archetype.catalog.Archetype;
+import org.apache.sling.ide.artifacts.EmbeddedArtifact;
+import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.m2e.EmbeddedArchetypeInstaller;
 import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.apache.sling.ide.eclipse.m2e.internal.SharedImages;
@@ -40,16 +41,18 @@ public class NewSlingBundleWizard extends AbstractNewSlingApplicationWizard {
 
 	@Override
 	public void installArchetypes() {
-		// embedding the 1.0.1-SNAPSHOT cos the 1.0.0 doesn't include the pom
+
+        EmbeddedArtifactLocator artifactsLocator = Activator.getDefault().getArtifactsLocator();
+
+        // TODO - should we remove the special slingclipse-embedded artifact and simply install our version?
 	    EmbeddedArchetypeInstaller archetypeInstaller = new EmbeddedArchetypeInstaller(
 	    		"org.apache.sling", "sling-bundle-archetype", "slingclipse-embedded");
 	    try {
-	    	URL jarUrl = Activator.getDefault().getBundle().getResource(
-	    			"target/archetypes/sling-bundle-archetype-1.0.1-SNAPSHOT.jar");
-			archetypeInstaller.addResource("jar", jarUrl);
-			URL pomUrl = Activator.getDefault().getBundle().getResource(
-					"target/archetypes/sling-bundle-archetype-1.0.1-SNAPSHOT.pom");
-			archetypeInstaller.addResource("pom", pomUrl);
+
+            EmbeddedArtifact[] archetypeArtifacts = artifactsLocator.loadSlingBundleArchetype();
+
+            archetypeInstaller.addResource("pom", archetypeArtifacts[0].openInputStream());
+            archetypeInstaller.addResource("jar", archetypeArtifacts[1].openInputStream());
 			
 			archetypeInstaller.installArchetype();
 		} catch (IOException e) {

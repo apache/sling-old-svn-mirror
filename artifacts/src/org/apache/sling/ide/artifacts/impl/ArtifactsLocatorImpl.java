@@ -25,6 +25,8 @@ import org.osgi.service.component.ComponentContext;
 
 public class ArtifactsLocatorImpl implements EmbeddedArtifactLocator {
 
+    private static final String ARTIFACTS_LOCATION = "target/artifacts";
+
     private ComponentContext context;
 
     protected void activate(ComponentContext context) {
@@ -38,16 +40,47 @@ public class ArtifactsLocatorImpl implements EmbeddedArtifactLocator {
 
         BundleContext bundleContext = context.getBundleContext();
 
+        String version = "0.0.1.SNAPSHOT"; // TODO - remove version hardcoding
         String artifactId = "org.apache.sling.tooling.support.install";
         String extension = "jar";
-        String resourceLocation = "target/sling-tooling-support-install/" + artifactId + "." + extension;
-        URL jarUrl = bundleContext.getBundle().getResource(resourceLocation);
-        String version = "0.0.1.SNAPSHOT"; // TODO - remove version hardcoding
-        if (jarUrl == null) {
-            throw new RuntimeException("Unable to locate bundle resource " + resourceLocation);
-        }
+
+        URL jarUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/sling-tooling-support-install/" + artifactId
+                + "." + extension);
 
         return new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version, jarUrl);
+    }
+
+    @Override
+    public EmbeddedArtifact[] loadSlingBundleArchetype() {
+
+        BundleContext bundleContext = context.getBundleContext();
+
+        String version = "1.0.1-SNAPSHOT"; // TODO - remove version hardcoding
+        String artifactId = "sling-bundle-archetype";
+        String extension = "jar";
+
+        URL resourceUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/archetypes/" + artifactId + "."
+                + extension);
+
+        EmbeddedArtifact jarArtifact = new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version,
+                resourceUrl);
+
+        extension = "pom";
+        resourceUrl = loadResource(bundleContext, ARTIFACTS_LOCATION + "/archetypes/" + artifactId + "." + extension);
+
+        EmbeddedArtifact pomArtifact = new EmbeddedArtifact(artifactId + "-" + version + "." + extension, version,
+                resourceUrl);
+
+        return new EmbeddedArtifact[] { pomArtifact, jarArtifact };
+    }
+
+    private URL loadResource(BundleContext bundleContext, String resourceLocation) {
+
+        URL resourceUrl = bundleContext.getBundle().getResource(resourceLocation);
+        if (resourceUrl == null) {
+            throw new RuntimeException("Unable to locate bundle resource " + resourceLocation);
+        }
+        return resourceUrl;
     }
 
 }
