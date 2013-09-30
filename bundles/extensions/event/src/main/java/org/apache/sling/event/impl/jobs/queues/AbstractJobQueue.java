@@ -543,26 +543,34 @@ public abstract class AbstractJobQueue
                                     synchronized ( lock ) {
                                         result = consumer.process(job, new JobExecutionContext() {
 
+                                            private boolean hasInit = false;
+
                                             @Override
                                             public void initProgress(final int steps,
                                                     final long eta) {
-                                                handler.updateProperty(job.startProgress(steps));
-                                                handler.updateProperty(job.startProgress(eta));
+                                                if ( !hasInit ) {
+                                                    handler.persistJobProperties(job.startProgress(steps, eta));
+                                                    hasInit = true;
+                                                }
                                             }
 
                                             @Override
                                             public void incrementProgressCount(final int steps) {
-                                                handler.updateProperty(job.setProgress(steps));
+                                                if ( hasInit ) {
+                                                    handler.persistJobProperties(job.setProgress(steps));
+                                                }
                                             }
 
                                             @Override
                                             public void updateProgress(final long eta) {
-                                                handler.updateProperty(job.update(eta));
+                                                if ( hasInit ) {
+                                                    handler.persistJobProperties(job.update(eta));
+                                                }
                                             }
 
                                             @Override
                                             public void log(final String message, Object... args) {
-                                                handler.updateProperty(job.log(message, args));
+                                                handler.persistJobProperties(job.log(message, args));
                                             }
 
                                             @Override
@@ -598,6 +606,9 @@ public abstract class AbstractJobQueue
                                     if ( result != null ) {
                                         if ( result.getRetryDelayInMs() != null ) {
                                             job.setProperty(JobImpl.PROPERTY_DELAY_OVERRIDE, result.getRetryDelayInMs());
+                                        }
+                                        if ( result.getMessage() != null ) {
+                                           job.setProperty(Job.PROPERTY_RESULT_MESSAGE, result.getMessage());
                                         }
                                         finishedJob(job.getId(), result, false);
                                     }
