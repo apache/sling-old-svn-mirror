@@ -71,6 +71,7 @@ import org.apache.sling.event.impl.jobs.stats.TopicStatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobUtil.JobPriority;
@@ -1417,5 +1418,13 @@ public class JobManagerImpl
     public void stopJobById(final String jobId) {
         // TODO not implemented yet
         throw new IllegalStateException("Not implemented yet...");
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#createJob(java.lang.String)
+     */
+    @Override
+    public JobBuilder createJob(final String topic) {
+        return new JobBuilderImpl(this, topic);
     }
 }
