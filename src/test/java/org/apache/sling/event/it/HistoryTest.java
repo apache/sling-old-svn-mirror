@@ -20,6 +20,7 @@ package org.apache.sling.event.it;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobState;
 import org.apache.sling.event.jobs.consumer.JobStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -100,9 +102,9 @@ public class HistoryTest extends AbstractJobHandlingTest {
                         sleep(5L);
                         final long count = job.getProperty(PROP_COUNTER, Long.class);
                         if ( count == 2 || count == 5 || count == 7 ) {
-                            return JobStatus.CANCELLED;
+                            return new JobStatus(JobState.CANCELLED, JobState.CANCELLED.name());
                         }
-                        return JobStatus.SUCCEEDED;
+                        return new JobStatus(JobState.SUCCEEDED, JobState.SUCCEEDED.name());
                     }
 
                 });
@@ -119,11 +121,18 @@ public class HistoryTest extends AbstractJobHandlingTest {
             assertEquals(10, col.size());
             assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.CANCELLED, TOPIC, -1, (Map<String, Object>[])null).size());
             assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, TOPIC, -1, (Map<String, Object>[])null).size());
-            // verify order
+            // verify order, message and state
             long last = 9;
             for(final Job j : col) {
+                assertNotNull(j.getFinishedDate());
                 final long count = j.getProperty(PROP_COUNTER, Long.class);
                 assertEquals(last, count);
+                if ( count == 2 || count == 5 || count == 7 ) {
+                    assertEquals(Job.JobType.CANCELLED, j.getJobType());
+                } else {
+                    assertEquals(Job.JobType.SUCCEEDED, j.getJobType());
+                }
+                assertEquals(j.getJobType().name(), j.getResultMessage());
                 last--;
             }
         } finally {

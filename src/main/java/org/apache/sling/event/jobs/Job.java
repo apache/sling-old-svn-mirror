@@ -159,20 +159,19 @@ public interface Job {
     String PROPERTY_RESULT_MESSAGE = "slingevent:resultMessage";
 
     /**
-     * This property contains the finished state of a job once it's marked as finished.
-     * TODO - DOCUMENT
-     * This property is read-only and can't be specified when the job is created.
-     * @since 1.3
-     */
-    String PROPERTY_FINISHED_STATE = "slingevent:finishedState";
-
-    /**
      * This property contains the finished date once a job is marked as finished.
      * The value of this property is a {@link Calendar} object.
      * This property is read-only and can't be specified when the job is created.
      * @since 1.3
      */
     String PROPERTY_FINISHED_DATE = "slingevent:finishedDate";
+
+    enum JobType {
+        QUEUED,
+        ACTIVE,
+        SUCCEEDED,
+        CANCELLED
+    };
 
     /**
      * The job topic.
@@ -288,4 +287,50 @@ public interface Job {
      * of the instance where this job has been created.
      */
     String getCreatedInstance();
+
+    /**
+     * Get the job type
+     * @since 1.3
+     */
+    JobType getJobType();
+
+    /**
+     * If the job is cancelled or succeeded, this method will return the finish date.
+     * @return The finish date or <code>null</code>
+     * @since 1.3
+     */
+    Calendar getFinishedDate();
+
+    /**
+     * This method returns the message from the last job processing, regardless
+     * whether the processing failed, succeeded or was cancelled. The message
+     * is optional and can be set by a job consumer.
+     * @return The result message or <code>null</code>
+     * @since 1.3
+     */
+    String getResultMessage();
+
+    /**
+     * TODO
+     * @since 1.3
+     */
+    String[] getProgressLog();
+
+    /**
+     * TODO
+     * @since 1.3
+     */
+    int getProgressStepCount();
+
+    /**
+     * TODO
+     * @since 1.3
+     */
+    int getCurrentProgressStep();
+
+    /**
+     * TODO
+     * @since 1.3
+     */
+    Calendar getProgressETA();
 }

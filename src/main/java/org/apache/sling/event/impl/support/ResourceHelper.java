@@ -72,7 +72,7 @@ public abstract class ResourceHelper {
         Job.PROPERTY_JOB_PROGRESS_STEP,
         Job.PROPERTY_JOB_PROGRESS_STEPS,
         Job.PROPERTY_FINISHED_DATE,
-        Job.PROPERTY_FINISHED_STATE,
+        JobImpl.PROPERTY_FINISHED_STATE,
         Job.PROPERTY_RESULT_MESSAGE
     };
 
