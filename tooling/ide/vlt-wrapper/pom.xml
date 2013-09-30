@@ -107,6 +107,6 @@
 
     <properties>
         <jackrabbit.version>2.4.0</jackrabbit.version>
-        <vault.version>3.0.0-SNAPSHOT</vault.version>
+        <vault.version>3.0.0</vault.version>
     </properties>
 </project>
