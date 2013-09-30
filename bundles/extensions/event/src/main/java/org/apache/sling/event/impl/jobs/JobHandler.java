@@ -51,9 +51,9 @@ public class JobHandler {
      * Finish the processing of the job
      * @param state The state of processing
      */
-    public void finished(final JobState state) {
+    public void finished(final JobState state, final boolean keepJobInHistory) {
         // for now we just keep cancelled jobs
-        this.jobManager.finished(this, state, state != JobState.SUCCEEDED);
+        this.jobManager.finishJob(this.job, state, keepJobInHistory);
     }
 
     /**
@@ -61,15 +61,15 @@ public class JobHandler {
      * @return <code>true</code> if rescheduling was successful, <code>false</code> otherwise.
      */
     public boolean reschedule() {
-        return this.jobManager.reschedule(this);
+        return this.jobManager.reschedule(this.job);
     }
 
-    public boolean remove() {
-        return this.jobManager.remove(this.job);
+    public void cancel() {
+        this.jobManager.finishJob(this.job, JobState.CANCELLED, true);
     }
 
     public void reassign() {
-        this.jobManager.reassign(this);
+        this.jobManager.reassign(this.job);
     }
 
     @Override

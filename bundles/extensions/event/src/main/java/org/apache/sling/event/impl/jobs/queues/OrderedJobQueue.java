@@ -184,7 +184,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                 this.sleepLock.jobHandler = null;
 
                 if ( result == null ) {
-                    handler.remove();
+                    handler.cancel();
                 }
                 return result;
             }

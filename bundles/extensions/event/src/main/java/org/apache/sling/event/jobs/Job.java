@@ -34,7 +34,7 @@ import aQute.bnd.annotation.ProviderType;
  * In general all scalar types and all serializable classes are supported as
  * property types. However, in order for deseralizing classes these must be
  * exported. Serializable classes are not searchable in the query either.
- * Due to the above to potential problems, it is advisable to not use
+ * Due to the above mentioned potential problems, it is advisable to not use
  * custom classes as job properties, but rather use out of the box supported
  * types in combination with collections.
  *

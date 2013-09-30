@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -296,7 +297,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.remove(job);
+            this.finishJob(job, JobState.CANCELLED, false);
         } else if ( config.getType() == QueueConfiguration.Type.IGNORE ) {
             if ( !reassign ) {
                 if ( logger.isDebugEnabled() ) {
@@ -332,7 +333,7 @@ public class JobManagerImpl
                         if ( queue == null ) {
                             // this is just a sanity check, actually we can never get here
                             logger.warn("Ignoring event due to unknown queue type of queue {} : {}", queueInfo.queueName, Utility.toString(job));
-                            this.remove(job);
+                            this.finishJob(job, JobState.CANCELLED, false);
                         } else {
                             queues.put(queueInfo.queueName, queue);
                             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
@@ -729,39 +730,51 @@ public class JobManagerImpl
      */
     @Override
     public boolean removeJob(final String jobId) {
+        return this.internalRemoveJobJobById(jobId, false);
+    }
+
+    private boolean internalRemoveJobJobById(final String jobId, final boolean forceRemove) {
         logger.debug("Trying to remove job {}", jobId);
         boolean result = true;
-        final Job job = this.getJobById(jobId);
-        logger.debug("Found removal job: {}", job);
+        final JobImpl job = (JobImpl)this.getJobById(jobId);
         if ( job != null ) {
+            logger.debug("Found removal job: {}", job);
             // currently running?
-            if ( job.getProcessingStarted() != null ) {
+            if ( !forceRemove && job.getProcessingStarted() != null ) {
                 logger.debug("Unable to remove job - job is started: {}", job);
                 result = false;
             } else {
-                ResourceResolver resolver = null;
-                try {
-                    resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-                    final Resource jobResource = resolver.getResource(((JobImpl)job).getResourcePath());
-                    if ( jobResource != null ) {
-                        resolver.delete(jobResource);
-                        resolver.commit();
-                        logger.debug("Removed job with id: {}", jobId);
-                    } else {
-                        logger.debug("Unable to remove job with id - resource already removed: {}", jobId);
+                final boolean isHistoryJob = this.configuration.isStoragePath(job.getResourcePath());
+                // if history job, simply remove - otherwise move to history!
+                if ( isHistoryJob ) {
+                    ResourceResolver resolver = null;
+                    try {
+                        resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+                        final Resource jobResource = resolver.getResource(job.getResourcePath());
+                        if ( jobResource != null ) {
+                            resolver.delete(jobResource);
+                            resolver.commit();
+                            logger.debug("Removed job with id: {}", jobId);
+                        } else {
+                            logger.debug("Unable to remove job with id - resource already removed: {}", jobId);
+                        }
+                    } catch ( final LoginException le ) {
+                        this.ignoreException(le);
+                        result = false;
+                    } catch ( final PersistenceException pe) {
+                        this.ignoreException(pe);
+                        result = false;
+                    } finally {
+                        if ( resolver != null ) {
+                            resolver.close();
+                        }
                     }
-                } catch ( final LoginException le ) {
-                    this.ignoreException(le);
-                    result = false;
-                } catch ( final PersistenceException pe) {
-                    this.ignoreException(pe);
-                    result = false;
-                } finally {
-                    if ( resolver != null ) {
-                        resolver.close();
-                    }
+                } else {
+                    this.finishJob(job, JobState.CANCELLED, true);
                 }
             }
+        } else {
+            logger.debug("Job for removal does not exist (anymore): {}", jobId);
         }
         return result;
     }
@@ -771,7 +784,7 @@ public class JobManagerImpl
      */
     @Override
     public void forceRemoveJob(final String jobId) {
-        this.removeJobById(jobId);
+        this.internalRemoveJobJobById(jobId, true);
     }
 
     /**
@@ -791,6 +804,15 @@ public class JobManagerImpl
         if ( errorMessage != null ) {
             logger.warn("{}", errorMessage);
             return null;
+        }
+        if ( properties != null ) {
+            for(final Object val : properties.values()) {
+                if ( val != null && !(val instanceof Serializable) ) {
+                    logger.warn("Discarding job - properties must be serializable: {} {} : {}",
+                            new Object[] {topic, name, properties});
+                    return null;
+                }
+            }
         }
         Job result = this.addJobInteral(topic, name, properties);
         if ( result == null && name != null ) {
@@ -908,31 +930,8 @@ public class JobManagerImpl
      * @see org.apache.sling.event.jobs.JobManager#removeJobById(java.lang.String)
      */
     @Override
-    public boolean removeJobById(String jobId) {
-        boolean result = true;
-        final Job job = this.getJobById(jobId);
-        if ( job != null ) {
-            ResourceResolver resolver = null;
-            try {
-                resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-                final Resource jobResource = resolver.getResource(((JobImpl)job).getResourcePath());
-                if ( jobResource != null ) {
-                    resolver.delete(jobResource);
-                    resolver.commit();
-                }
-            } catch ( final LoginException le ) {
-                this.ignoreException(le);
-                result = false;
-            } catch ( final PersistenceException pe) {
-                this.ignoreException(pe);
-                result = false;
-            } finally {
-                if ( resolver != null ) {
-                    resolver.close();
-                }
-            }
-        }
-        return result;
+    public boolean removeJobById(final String jobId) {
+        return this.internalRemoveJobJobById(jobId, true);
     }
 
     /**
@@ -943,6 +942,7 @@ public class JobManagerImpl
             final String topic,
             final long limit,
             final Map<String, Object>... templates) {
+        final boolean isHistoryQuery = type == QueryType.HISTORY || type == QueryType.SUCCEEDED || type == QueryType.CANCELLED;
         final List<Job> result = new ArrayList<Job>();
         ResourceResolver resolver = null;
         try {
@@ -957,17 +957,34 @@ public class JobManagerImpl
             buf.append(" = '");
             buf.append(topic);
             buf.append("'");
-            if ( type == QueryType.ACTIVE ) {
+
+            // restricting on the type - history or unfinished
+            if ( isHistoryQuery ) {
                 buf.append(" and @");
-                buf.append(ISO9075.encode(Job.PROPERTY_JOB_STARTED_TIME));
-            } else if ( type == QueryType.QUEUED ) {
+                buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
+                if ( type == QueryType.SUCCEEDED ) {
+                    buf.append(" = '");
+                    buf.append(JobState.SUCCEEDED.name());
+                    buf.append("'");
+                } else if ( type == QueryType.CANCELLED ) {
+                    buf.append(" = '");
+                    buf.append(JobState.CANCELLED.name());
+                    buf.append("'");
+                }
+            } else {
                 buf.append(" and not(@");
-                buf.append(ISO9075.encode(Job.PROPERTY_JOB_STARTED_TIME));
+                buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
                 buf.append(")");
+                if ( type == QueryType.ACTIVE ) {
+                    buf.append(" and @");
+                    buf.append(ISO9075.encode(Job.PROPERTY_JOB_STARTED_TIME));
+                } else if ( type == QueryType.QUEUED ) {
+                    buf.append(" and not(@");
+                    buf.append(ISO9075.encode(Job.PROPERTY_JOB_STARTED_TIME));
+                    buf.append(")");
+                }
             }
-            buf.append(" and not(@");
-            buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED));
-            buf.append(")");
+
             if ( templates != null && templates.length > 0 ) {
                 buf.append(" and (");
                 int index = 0;
@@ -998,8 +1015,13 @@ public class JobManagerImpl
                 buf.append(')');
             }
             buf.append("] order by @");
-            buf.append(Job.PROPERTY_JOB_CREATED);
-            buf.append(" ascending");
+            if ( isHistoryQuery ) {
+                buf.append(JobImpl.PROPERTY_FINISHED_DATE);
+                buf.append(" descending");
+            } else {
+                buf.append(Job.PROPERTY_JOB_CREATED);
+                buf.append(" ascending");
+            }
             final Iterator<Resource> iter = resolver.findResources(buf.toString(), "xpath");
             long count = 0;
 
@@ -1031,20 +1053,21 @@ public class JobManagerImpl
      * @param info  The job handler
      * @param state The state of the processing
      */
-    public void finished(final JobHandler handler, final JobState state, final boolean keepJobInHistory) {
+    public void finishJob(final JobImpl job, final JobState state, final boolean keepJobInHistory) {
         final boolean isSuccess = (state == JobState.SUCCEEDED);
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final Resource jobResource = resolver.getResource(handler.getJob().getResourcePath());
+            final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 try {
                     String newPath = null;
                     if ( keepJobInHistory ) {
                         final ValueMap vm = ResourceHelper.getValueMap(jobResource);
-                        newPath = this.configuration.getStoragePath(handler.getJob(), isSuccess);
+                        newPath = this.configuration.getStoragePath(job, isSuccess);
                         final Map<String, Object> props = new HashMap<String, Object>(vm);
-                        props.put(JobImpl.PROPERTY_FINISHED, isSuccess);
+                        props.put(JobImpl.PROPERTY_FINISHED_STATE, isSuccess ? JobState.SUCCEEDED.name() : JobState.CANCELLED.name());
+                        props.put(JobImpl.PROPERTY_FINISHED_DATE, Calendar.getInstance());
 
                         ResourceHelper.getOrCreateResource(resolver, newPath, props);
                     }
@@ -1053,9 +1076,9 @@ public class JobManagerImpl
 
                     if ( keepJobInHistory && logger.isDebugEnabled() ) {
                         if ( isSuccess ) {
-                            logger.debug("Kept successful job {} at {}", Utility.toString(handler.getJob()), newPath);
+                            logger.debug("Kept successful job {} at {}", Utility.toString(job), newPath);
                         } else {
-                            logger.debug("Moved cancelled job {} to {}", Utility.toString(handler.getJob()), newPath);
+                            logger.debug("Moved cancelled job {} to {}", Utility.toString(job), newPath);
                         }
                     }
                 } catch ( final PersistenceException pe ) {
@@ -1078,17 +1101,17 @@ public class JobManagerImpl
      * Reschedule a job.
      *
      * Update the retry count and remove the started time.
-     * @param info The job info
+     * @param job The job
      * @return true if the job could be updated.
      */
-    public boolean reschedule(final JobHandler info) {
+    public boolean reschedule(final JobImpl job) {
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final Resource jobResource = resolver.getResource(info.getJob().getResourcePath());
+            final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
-                mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, info.getJob().getProperty(Job.PROPERTY_JOB_RETRY_COUNT));
+                mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT));
                 mvm.remove(Job.PROPERTY_JOB_STARTED_TIME);
                 try {
                     resolver.commit();
@@ -1106,36 +1129,6 @@ public class JobManagerImpl
         }
 
         return false;
-    }
-
-    /**
-     * Remove the job.
-     * @param info
-     * @return
-     */
-    public boolean remove(final JobImpl job) {
-        ResourceResolver resolver = null;
-        try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final Resource jobResource = resolver.getResource(job.getResourcePath());
-            if ( jobResource != null ) {
-                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, job, null);
-                try {
-                    resolver.delete(jobResource);
-                    resolver.commit();
-                } catch ( final PersistenceException pe ) {
-                    // ignore
-                }
-            }
-        } catch ( final LoginException ignore ) {
-            // ignore
-        } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
-        }
-
-        return true;
     }
 
     /**
@@ -1245,7 +1238,6 @@ public class JobManagerImpl
      * @param jobProperties The optional job properties
      * @return The persisted job or <code>null</code>.
      */
-
     private Job addJobInteral(final String jobTopic, final String jobName, final Map<String, Object> jobProperties) {
         final QueueInfo info = this.queueConfigManager.getQueueInfo(jobTopic);
         if ( info.queueConfiguration.getType() == QueueConfiguration.Type.DROP ) {
@@ -1365,24 +1357,23 @@ public class JobManagerImpl
         return new JobImpl(jobTopic, jobName, jobId, properties);
     }
 
-    public void reassign(final JobHandler handler) {
-        final JobImpl job = handler.getJob();
+    public void reassign(final JobImpl job) {
         final QueueInfo queueInfo = queueConfigManager.getQueueInfo(job.getTopic());
         final InternalQueueConfiguration config = queueInfo.queueConfiguration;
 
         // Sanity check if queue configuration has changed
         if ( config.getType() == QueueConfiguration.Type.DROP ) {
             if ( logger.isDebugEnabled() ) {
-                logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(handler.getJob()));
+                logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            handler.remove();
+            this.finishJob(job, JobState.CANCELLED, false); // DROP means complete removal
         } else {
             String targetId = null;
             if ( config.getType() != QueueConfiguration.Type.IGNORE ) {
                 final TopologyCapabilities caps = this.topologyCapabilities;
                 targetId = (caps == null ? null : caps.detectTarget(job.getTopic(), job.getProperties(), queueInfo));
             }
-            this.maintenanceTask.reassignJob(handler.getJob(), targetId);
+            this.maintenanceTask.reassignJob(job, targetId);
         }
     }
 

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -242,6 +243,14 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             assertNotNull(e2);
             assertTrue(jobManager.removeJob((String)e2.getProperty(JobUtil.JOB_ID)));
             assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
+            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, "sling/test", -1, (Map<String, Object>[])null);
+            try {
+                assertEquals(1, col.size());
+            } finally {
+                for(final Job j : col) {
+                    jobManager.removeJobById(j.getId());
+                }
+            }
         } finally {
             jcReg.unregister();
         }
@@ -276,6 +285,14 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             jobManager.forceRemoveJob((String)e.getProperty(JobUtil.JOB_ID));
             // the job is now removed
             assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, "sling/test", -1, (Map<String, Object>[])null).size());
+            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, "sling/test", -1, (Map<String, Object>[])null);
+            try {
+                assertEquals(1, col.size());
+            } finally {
+                for(final Job j : col) {
+                    jobManager.removeJobById(j.getId());
+                }
+            }
         } finally {
             jcReg.unregister();
         }
@@ -309,7 +326,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                 });
         try {
             final JobManager jobManager = this.getJobManager();
-            jobManager.addJob(TOPIC, null, null);
+            final Job job = jobManager.addJob(TOPIC, null, null);
 
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
@@ -322,6 +339,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             cb.reset();
             assertFalse("Unexpected event received in the given time.", cb.block(5));
             assertEquals("Unexpected number of retries", 3, retryCountList.size());
+
+            jobManager.removeJobById(job.getId());
         } finally {
             jcReg.unregister();
         }
@@ -417,8 +436,8 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
                     }
                 });
 
+        final JobManager jobManager = this.getJobManager();
         try {
-            final JobManager jobManager = this.getJobManager();
             jobManager.addJob(TOPIC, "1", null);
             jobManager.addJob(TOPIC, "2", null);
             jobManager.addJob(TOPIC, "3", null);
@@ -439,6 +458,10 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
             assertEquals("Started count", 10, started.size());
             assertEquals("Failed count", 5, failed.size());
         } finally {
+            final Collection<Job> col = jobManager.findJobs(JobManager.QueryType.HISTORY, "sling/test", -1, (Map<String, Object>[])null);
+            for(final Job j : col) {
+                jobManager.removeJobById(j.getId());
+            }
             jcReg.unregister();
             eh1Reg.unregister();
             eh2Reg.unregister();

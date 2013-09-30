@@ -392,7 +392,9 @@ public abstract class AbstractJobQueue
         final boolean finishSuccessful;
 
         if ( !rescheduleInfo.reschedule ) {
-            handler.finished(result.getState());
+            // we keep cancelled jobs and succeeded jobs if the queue is configured like this.
+            final boolean keepJobs = result.getState() != JobState.SUCCEEDED || this.configuration.isKeepJobs();
+            handler.finished(result.getState(), keepJobs);
             finishSuccessful = true;
             if ( result.getState() == JobState.SUCCEEDED ) {
                 Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, handler.getJob(), rescheduleInfo.processingTime);
@@ -760,10 +762,11 @@ public abstract class AbstractJobQueue
                 @Override
                 public void run() {
                     for(final JobHandler job : events) {
-                        job.remove();
+                        job.cancel();
+                        Utility.sendNotification(eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, job.getJob(), null);
                     }
                 }
-            }, "Queue RemoveAll Thread for " + this.queueName);
+            }, "Apache Sling Queue RemoveAll Thread for " + this.queueName);
         t.setDaemon(true);
         t.start();
         // start queue again

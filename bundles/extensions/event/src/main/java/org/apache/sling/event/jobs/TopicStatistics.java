@@ -18,12 +18,15 @@
  */
 package org.apache.sling.event.jobs;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * Statistic information about a topic.
  * This information is not preserved between restarts of the service.
  * Once a service is restarted, the counters start at zero!
  * @since 3.0
  */
+@ProviderType
 public interface TopicStatistics {
 
     /**

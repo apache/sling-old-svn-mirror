@@ -18,11 +18,14 @@
  */
 package org.apache.sling.event.jobs;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * The configuration of a queue.
  * @since 3.0
  */
+@ProviderType
 public interface QueueConfiguration {
 
     /** The queue type. */
@@ -75,6 +78,13 @@ public interface QueueConfiguration {
      * The list of topics this queue is bound to.
      */
     String[] getTopics();
+
+    /**
+     * Whether successful jobs are kept for a complete history
+     * @return <code>true</code> if successful jobs are kept.
+     * @since 1.3
+     */
+    boolean isKeepJobs();
 
     /**
      * Get the ranking of this configuration.
