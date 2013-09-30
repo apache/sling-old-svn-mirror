@@ -36,6 +36,7 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.EventConstants;
@@ -65,7 +66,14 @@ public abstract class ResourceHelper {
         JobUtil.PROPERTY_NOTIFICATION_JOB,
         JobStatusNotifier.CONTEXT_PROPERTY_NAME,
         JobImpl.PROPERTY_DELAY_OVERRIDE,
-        JobConsumer.PROPERTY_JOB_ASYNC_HANDLER
+        JobConsumer.PROPERTY_JOB_ASYNC_HANDLER,
+        Job.PROPERTY_JOB_LOG,
+        Job.PROPERTY_JOB_PROGRESS_ETA,
+        Job.PROPERTY_JOB_PROGRESS_STEP,
+        Job.PROPERTY_JOB_PROGRESS_STEPS,
+        Job.PROPERTY_FINISHED_DATE,
+        Job.PROPERTY_FINISHED_STATE,
+        Job.PROPERTY_RESULT_MESSAGE
     };
 
     /**

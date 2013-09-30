@@ -46,27 +46,6 @@ public class JobImpl implements Job {
     /** Internal job property containing optional delay override. */
     public static final String PROPERTY_DELAY_OVERRIDE = ":slingevent:delayOverride";
 
-    /** Property for log statements. */
-    public static final String PROPERTY_LOG = "slingevent:log";
-
-    /** Property for ETA. */
-    public static final String PROPERTY_ETA = "slingevent:eta";
-
-    /** Property for Steps. */
-    public static final String PROPERTY_STEPS = "slingevent:steps";
-
-    /** Property for Step. */
-    public static final String PROPERTY_STEP = "slingevent:step";
-
-    /** Property for final message. */
-    public static final String PROPERTY_MESSAGE = "slingevent:message";
-
-    /** Property for finished jobs. */
-    public static final String PROPERTY_FINISHED_STATE = "slingevent:finishedState";
-
-    /** Property for finished jobs. */
-    public static final String PROPERTY_FINISHED_DATE = "slingevent:finishedDate";
-
     private final ValueMap properties;
 
     private final String topic;
@@ -260,45 +239,56 @@ public class JobImpl implements Job {
      */
     public void prepare() {
         this.properties.remove(JobImpl.PROPERTY_DELAY_OVERRIDE);
-        this.properties.remove(JobImpl.PROPERTY_LOG);
-        this.properties.remove(JobImpl.PROPERTY_ETA);
-        this.properties.remove(JobImpl.PROPERTY_STEPS);
-        this.properties.remove(JobImpl.PROPERTY_STEP);
-        this.properties.remove(JobImpl.PROPERTY_MESSAGE);
+        this.properties.remove(Job.PROPERTY_JOB_LOG);
+        this.properties.remove(Job.PROPERTY_JOB_PROGRESS_ETA);
+        this.properties.remove(Job.PROPERTY_JOB_PROGRESS_STEPS);
+        this.properties.remove(Job.PROPERTY_JOB_PROGRESS_STEP);
+        this.properties.remove(Job.PROPERTY_RESULT_MESSAGE);
     }
 
-    public String update(final long eta) {
-        this.setProperty(JobImpl.PROPERTY_ETA, eta);
-        return JobImpl.PROPERTY_ETA;
-    }
-
-    public String startProgress(final long eta) {
-        this.setProperty(JobImpl.PROPERTY_ETA, eta);
-        return JobImpl.PROPERTY_ETA;
-    }
-
-    public String startProgress(final int steps) {
-        this.setProperty(JobImpl.PROPERTY_STEPS, steps);
-        return JobImpl.PROPERTY_STEPS;
+    public String[] startProgress(final int steps, final long eta) {
+        if ( steps > 0 ) {
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_STEPS, steps);
+        }
+        if ( eta > 0 ) {
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, eta);
+        }
+        return new String[] {Job.PROPERTY_JOB_PROGRESS_ETA, PROPERTY_JOB_PROGRESS_STEPS};
     }
 
     public String setProgress(final int step) {
-        this.setProperty(JobImpl.PROPERTY_STEP, step);
-        return JobImpl.PROPERTY_STEP;
+        final int steps = this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEPS, -1);
+        if ( steps > 0 && step > 0 ) {
+            int current = this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEP, 0);
+            current += step;
+            if ( current > steps ) {
+                current = steps;
+            }
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_STEP, current);
+
+            // TODO - recalculate ETA
+            return Job.PROPERTY_JOB_PROGRESS_STEP;
+        }
+        return null;
     }
 
-    public String log(final String message, Object... args) {
+    public String update(final long eta) {
+        this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, eta);
+        return Job.PROPERTY_JOB_PROGRESS_ETA;
+    }
+
+    public String log(final String message, final Object... args) {
         final String logEntry = MessageFormat.format(message, args);
-        final String[] entries = this.getProperty(JobImpl.PROPERTY_LOG, String[].class);
+        final String[] entries = this.getProperty(Job.PROPERTY_JOB_LOG, String[].class);
         if ( entries == null ) {
-            this.setProperty(JobImpl.PROPERTY_LOG, new String[] {logEntry});
+            this.setProperty(Job.PROPERTY_JOB_LOG, new String[] {logEntry});
         } else {
             final String[] newEntries = new String[entries.length + 1];
             System.arraycopy(entries, 0, newEntries, 0, entries.length);
             newEntries[entries.length] = logEntry;
-            this.setProperty(JobImpl.PROPERTY_LOG, newEntries);
+            this.setProperty(Job.PROPERTY_JOB_LOG, newEntries);
         }
-        return JobImpl.PROPERTY_LOG;
+        return Job.PROPERTY_JOB_LOG;
     }
 
     @Override

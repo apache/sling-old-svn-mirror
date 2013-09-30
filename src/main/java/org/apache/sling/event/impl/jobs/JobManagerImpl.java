@@ -506,7 +506,12 @@ public class JobManagerImpl
                     jobProperties.put(Job.PROPERTY_JOB_RETRIES, vm.get(Job.PROPERTY_JOB_RETRIES, Integer.class));
                     jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
                     jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, JobPriority.NORM.name())));
-
+                    if ( vm.get(Job.PROPERTY_JOB_PROGRESS_STEPS) != null ) {
+                        jobProperties.put(Job.PROPERTY_JOB_PROGRESS_STEPS, vm.get(Job.PROPERTY_JOB_PROGRESS_STEPS, Integer.class));
+                    }
+                    if ( vm.get(Job.PROPERTY_JOB_PROGRESS_STEP) != null ) {
+                        jobProperties.put(Job.PROPERTY_JOB_PROGRESS_STEP, vm.get(Job.PROPERTY_JOB_PROGRESS_STEP, Integer.class));
+                    }
                     @SuppressWarnings("unchecked")
                     final List<Exception> readErrorList = (List<Exception>) jobProperties.get(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
                     if ( readErrorList != null ) {
@@ -1068,7 +1073,9 @@ public class JobManagerImpl
                         final Map<String, Object> props = new HashMap<String, Object>(vm);
                         props.put(JobImpl.PROPERTY_FINISHED_STATE, isSuccess ? JobState.SUCCEEDED.name() : JobState.CANCELLED.name());
                         props.put(JobImpl.PROPERTY_FINISHED_DATE, Calendar.getInstance());
-
+                        if ( job.getProperty(Job.PROPERTY_RESULT_MESSAGE) != null ) {
+                            props.put(Job.PROPERTY_RESULT_MESSAGE, job.getProperty(Job.PROPERTY_RESULT_MESSAGE));
+                        }
                         ResourceHelper.getOrCreateResource(resolver, newPath, props);
                     }
                     resolver.delete(jobResource);
@@ -1112,6 +1119,9 @@ public class JobManagerImpl
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
                 mvm.put(Job.PROPERTY_JOB_RETRY_COUNT, job.getProperty(Job.PROPERTY_JOB_RETRY_COUNT));
+                if ( job.getProperty(Job.PROPERTY_RESULT_MESSAGE) != null ) {
+                    mvm.put(Job.PROPERTY_RESULT_MESSAGE, job.getProperty(Job.PROPERTY_RESULT_MESSAGE));
+                }
                 mvm.remove(Job.PROPERTY_JOB_STARTED_TIME);
                 try {
                     resolver.commit();
@@ -1145,11 +1155,11 @@ public class JobManagerImpl
                 mvm.put(Job.PROPERTY_JOB_QUEUE_NAME, info.getJob().getQueueName());
                 mvm.put(Job.PROPERTY_JOB_RETRIES, info.getJob().getNumberOfRetries());
                 mvm.put(Job.PROPERTY_JOB_PRIORITY, info.getJob().getJobPriority().name());
-                mvm.remove(JobImpl.PROPERTY_ETA);
-                mvm.remove(JobImpl.PROPERTY_STEPS);
-                mvm.remove(JobImpl.PROPERTY_STEP);
-                mvm.remove(JobImpl.PROPERTY_LOG);
-                mvm.remove(JobImpl.PROPERTY_MESSAGE);
+                mvm.remove(Job.PROPERTY_JOB_PROGRESS_ETA);
+                mvm.remove(Job.PROPERTY_JOB_PROGRESS_STEPS);
+                mvm.remove(Job.PROPERTY_JOB_PROGRESS_STEP);
+                mvm.remove(Job.PROPERTY_JOB_LOG);
+                mvm.remove(Job.PROPERTY_RESULT_MESSAGE);
                 resolver.commit();
 
                 return true;
@@ -1387,14 +1397,19 @@ public class JobManagerImpl
     /**
      * Update the property of a job in the resource tree
      */
-    public void updateProperty(final JobImpl job, final String propName) {
+    public void persistJobProperties(final JobImpl job, final String... propNames) {
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final Resource jobResource = resolver.getResource(job.getResourcePath());
             if ( jobResource != null ) {
                 final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
-                mvm.put(propName, job.getProperty(propName));
+                for(final String propName : propNames) {
+                    final Object val = job.getProperty(propName);
+                    if ( val != null ) {
+                        mvm.put(propName, job.getProperty(propName));
+                    }
+                }
                 resolver.commit();
             }
         } catch ( final PersistenceException ignore ) {
@@ -1413,7 +1428,7 @@ public class JobManagerImpl
      */
     @Override
     public void stopJobById(final String jobId) {
-        // not implemented yet
-
+        // TODO not implemented yet
+        throw new IllegalStateException("Not implemented yet...");
     }
 }

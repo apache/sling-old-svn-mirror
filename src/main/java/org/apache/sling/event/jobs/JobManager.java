@@ -85,6 +85,9 @@ public interface JobManager {
      * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
      * allowed characters are letters, numbers and the underscore.
      *
+     * The returned job object is a snapshot of the job state taken at the time of creation. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
      * @param topic The required job topic.
      * @param properties Optional job properties. The properties must be serializable.
      * @return The new job - or <code>null</code> if the job could not be created.
@@ -107,6 +110,9 @@ public interface JobManager {
      * dealing with this situation and as jobs with name come with a heavy processing overhead
      * these should be avoided.
      *
+     * The returned job object is a snapshot of the job state taken at the time of creation. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
      * @param topic The required job topic.
      * @param name  Optional unique job name
      * @param properties Optional job properties. The properties must be serializable.
@@ -116,12 +122,22 @@ public interface JobManager {
     Job addJob(String topic, String name, Map<String, Object> properties);
 
     /**
+     * Return a job based on the unique job name.
+     *
+     * The returned job object is a snapshot of the job state taken at the time of the call. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
      * @return A job or <code>null</code>
      * @since 1.2
      */
     Job getJobByName(String name);
 
     /**
+     * Return a job based on the unique id.
+     *
+     * The returned job object is a snapshot of the job state taken at the time of the call. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
      * @param jobId The unique identifier from {@link Job#getId()}
      * @return A job or <code>null</code>
      * @since 1.2
@@ -130,9 +146,11 @@ public interface JobManager {
 
     /**
      * Removes the job even if it is currently in processing.
+     *
      * If the job exists and is not in processing, it gets removed from the processing queue.
      * If the job exists and is in processing, it is removed from the persistence layer,
      * however processing is not stopped.
+     *
      * @param jobId The unique identifier from {@link Job#getId()}
      * @return <code>true</code> if the job could be removed or does not exist anymore.
      *         <code>false</code> otherwise.
@@ -142,8 +160,12 @@ public interface JobManager {
 
     /**
      * Find a job - either scheduled or active.
+     *
      * This method searches for an event with the given topic and filter properties. If more than one
      * job matches, the first one found is returned which could be any of the matching jobs.
+     *
+     * The returned job object is a snapshot of the job state taken at the time of the call. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
      *
      * @param topic Topic is required.
      * @param template The map acts like a template. The searched job
@@ -162,6 +184,9 @@ public interface JobManager {
      * queued jobs, started jobs or the combination can be returned.
      * If the history is returned, the result set is sorted in descending order, listening the newest entry
      * first. For unfinished jobs, the result set is sorted in ascending order.
+     *
+     * The returned job objects are a snapshot of the jobs state taken at the time of the call. Updates
+     * to the job states are not reflected and the client needs to get new job objects.
      *
      * @param type Required parameter for the type. See above.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.

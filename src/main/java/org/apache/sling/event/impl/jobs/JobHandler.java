@@ -72,6 +72,12 @@ public class JobHandler {
         this.jobManager.reassign(this.job);
     }
 
+    public void persistJobProperties(final String... propNames) {
+        if ( propNames != null ) {
+            this.jobManager.persistJobProperties(this.job, propNames);
+        }
+    }
+
     @Override
     public int hashCode() {
         return this.job.getId().hashCode();
@@ -88,10 +94,5 @@ public class JobHandler {
     @Override
     public String toString() {
         return "JobHandler(" + this.job.getId() + ")";
-    }
-
-    public void updateProperty(final String propName) {
-        this.jobManager.updateProperty(this.job, propName);
-
     }
 }

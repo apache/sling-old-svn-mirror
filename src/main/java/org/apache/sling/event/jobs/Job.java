@@ -1,5 +1,5 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
+ 1   * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -114,6 +114,58 @@ public interface Job {
      * in charge.
      */
     String PROPERTY_JOB_RETRY_DELAY = "event.job.retrydelay";
+
+    /**
+     * This property contains the optional output log of a job consumer.
+     * The value of this property is a string array.
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_JOB_LOG = "slingevent:log";
+
+    /**
+     * This property contains the optional ETA for a job.
+     * The value of this property is a {@link Calendar} object.
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_JOB_PROGRESS_ETA = "slingevent:progressETA";
+
+    /**
+     * This property contains optional progress information about a job,
+     * the number of steps the job consumer will perform. Each step is
+     * assumed to consume roughly the same amount if time.
+     * The value of this property is an integer.
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_JOB_PROGRESS_STEPS = "slingevent:progressSteps";
+
+    /**
+     * This property contains optional progress information about a job,
+     * the number of completed steps.
+     * The value of this property is an integer.
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_JOB_PROGRESS_STEP = "slingevent:progressStep";
+
+    /**
+     * This property contains the optional result message of a job consumer.
+     * The value of this property is a string.
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_RESULT_MESSAGE = "slingevent:resultMessage";
+
+    /**
+     * This property contains the finished state of a job once it's marked as finished.
+     * TODO - DOCUMENT
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_FINISHED_STATE = "slingevent:finishedState";
+
+    /**
+     * This property contains the finished date once a job is marked as finished.
+     * The value of this property is a {@link Calendar} object.
+     * This property is read-only and can't be specified when the job is created.
+     */
+    String PROPERTY_FINISHED_DATE = "slingevent:finishedDate";
 
     /**
      * The job topic.
