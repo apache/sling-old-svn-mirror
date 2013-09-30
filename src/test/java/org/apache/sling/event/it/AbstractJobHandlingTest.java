@@ -35,6 +35,7 @@ import javax.inject.Inject;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
 import org.apache.sling.launchpad.api.StartupHandler;
 import org.apache.sling.launchpad.api.StartupMode;
 import org.ops4j.pax.exam.Configuration;
@@ -208,6 +209,18 @@ public abstract class AbstractJobHandlingTest {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(JobConsumer.PROPERTY_TOPICS, topic);
         final ServiceRegistration reg = this.bc.registerService(JobConsumer.class.getName(),
+                handler, props);
+        return reg;
+    }
+
+    /**
+     * Helper method to register a job executor
+     */
+    protected ServiceRegistration registerJobExecutor(final String topic,
+            final JobExecutor handler) {
+        final Dictionary<String, Object> props = new Hashtable<String, Object>();
+        props.put(JobConsumer.PROPERTY_TOPICS, topic);
+        final ServiceRegistration reg = this.bc.registerService(JobExecutor.class.getName(),
                 handler, props);
         return reg;
     }

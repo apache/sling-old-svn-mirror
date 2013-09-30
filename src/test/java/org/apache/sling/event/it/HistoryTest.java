@@ -32,7 +32,9 @@ import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.QueueConfiguration;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutor;
+import org.apache.sling.event.jobs.consumer.JobStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,17 +92,17 @@ public class HistoryTest extends AbstractJobHandlingTest {
      */
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testHistory() throws Exception {
-        final ServiceRegistration reg = this.registerJobConsumer(TOPIC,
-                new JobConsumer() {
+        final ServiceRegistration reg = this.registerJobExecutor(TOPIC,
+                new JobExecutor() {
 
                     @Override
-                    public JobResult process(final Job job) {
+                    public JobStatus process(Job job, JobExecutionContext context) {
                         sleep(5L);
                         final long count = job.getProperty(PROP_COUNTER, Long.class);
                         if ( count == 2 || count == 5 || count == 7 ) {
-                            return JobResult.CANCEL;
+                            return JobStatus.CANCELLED;
                         }
-                        return JobResult.OK;
+                        return JobStatus.SUCCEEDED;
                     }
 
                 });

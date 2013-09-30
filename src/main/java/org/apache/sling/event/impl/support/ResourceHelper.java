@@ -67,7 +67,7 @@ public abstract class ResourceHelper {
         JobStatusNotifier.CONTEXT_PROPERTY_NAME,
         JobImpl.PROPERTY_DELAY_OVERRIDE,
         JobConsumer.PROPERTY_JOB_ASYNC_HANDLER,
-        Job.PROPERTY_JOB_LOG,
+        Job.PROPERTY_JOB_PROGRESS_LOG,
         Job.PROPERTY_JOB_PROGRESS_ETA,
         Job.PROPERTY_JOB_PROGRESS_STEP,
         Job.PROPERTY_JOB_PROGRESS_STEPS,

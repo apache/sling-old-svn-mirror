@@ -18,6 +18,8 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+
+import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.consumer.JobState;
 
 
@@ -42,18 +44,17 @@ public class JobHandler {
         return this.job;
     }
 
-    public boolean start() {
-        this.job.prepare();
-        return this.jobManager.start(this);
+    public boolean startProcessing(final Queue queue) {
+        return this.jobManager.persistJobProperties(this.job, this.job.prepare(queue));
     }
 
     /**
      * Finish the processing of the job
      * @param state The state of processing
      */
-    public void finished(final JobState state, final boolean keepJobInHistory) {
+    public void finished(final JobState state, final boolean keepJobInHistory, final long duration) {
         // for now we just keep cancelled jobs
-        this.jobManager.finishJob(this.job, state, keepJobInHistory);
+        this.jobManager.finishJob(this.job, state, keepJobInHistory, duration);
     }
 
     /**
@@ -65,7 +66,7 @@ public class JobHandler {
     }
 
     public void cancel() {
-        this.jobManager.finishJob(this.job, JobState.CANCELLED, true);
+        this.jobManager.finishJob(this.job, JobState.CANCELLED, true, -1);
     }
 
     public void reassign() {

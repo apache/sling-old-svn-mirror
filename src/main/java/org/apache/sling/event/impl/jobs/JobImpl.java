@@ -20,6 +20,7 @@ package org.apache.sling.event.impl.jobs;
 
 import java.text.MessageFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -237,13 +238,18 @@ public class JobImpl implements Job {
     /**
      * Prepare a new job execution
      */
-    public void prepare() {
+    public String[] prepare(final Queue queue) {
+        this.updateQueueInfo(queue);
         this.properties.remove(JobImpl.PROPERTY_DELAY_OVERRIDE);
-        this.properties.remove(Job.PROPERTY_JOB_LOG);
+        this.properties.remove(Job.PROPERTY_JOB_PROGRESS_LOG);
         this.properties.remove(Job.PROPERTY_JOB_PROGRESS_ETA);
         this.properties.remove(Job.PROPERTY_JOB_PROGRESS_STEPS);
         this.properties.remove(Job.PROPERTY_JOB_PROGRESS_STEP);
         this.properties.remove(Job.PROPERTY_RESULT_MESSAGE);
+        this.properties.put(Job.PROPERTY_JOB_STARTED_TIME, Calendar.getInstance());
+        return new String[] {Job.PROPERTY_JOB_QUEUE_NAME, Job.PROPERTY_JOB_RETRIES, Job.PROPERTY_JOB_PRIORITY,
+                Job.PROPERTY_JOB_PROGRESS_LOG, Job.PROPERTY_JOB_PROGRESS_ETA, PROPERTY_JOB_PROGRESS_STEPS,
+                PROPERTY_JOB_PROGRESS_STEP, Job.PROPERTY_RESULT_MESSAGE, Job.PROPERTY_JOB_STARTED_TIME};
     }
 
     public String[] startProgress(final int steps, final long eta) {
@@ -251,7 +257,10 @@ public class JobImpl implements Job {
             this.setProperty(Job.PROPERTY_JOB_PROGRESS_STEPS, steps);
         }
         if ( eta > 0 ) {
-            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, eta);
+            final Date finishDate = new Date(System.currentTimeMillis() + eta * 1000);
+            final Calendar finishCal = Calendar.getInstance();
+            finishCal.setTime(finishDate);
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, finishCal);
         }
         return new String[] {Job.PROPERTY_JOB_PROGRESS_ETA, PROPERTY_JOB_PROGRESS_STEPS};
     }
@@ -273,22 +282,29 @@ public class JobImpl implements Job {
     }
 
     public String update(final long eta) {
-        this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, eta);
+        if ( eta > 0 ) {
+            final Date finishDate = new Date(System.currentTimeMillis() + eta * 1000);
+            final Calendar finishCal = Calendar.getInstance();
+            finishCal.setTime(finishDate);
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, eta);
+        } else {
+            this.properties.remove(Job.PROPERTY_JOB_PROGRESS_ETA);
+        }
         return Job.PROPERTY_JOB_PROGRESS_ETA;
     }
 
     public String log(final String message, final Object... args) {
         final String logEntry = MessageFormat.format(message, args);
-        final String[] entries = this.getProperty(Job.PROPERTY_JOB_LOG, String[].class);
+        final String[] entries = this.getProperty(Job.PROPERTY_JOB_PROGRESS_LOG, String[].class);
         if ( entries == null ) {
-            this.setProperty(Job.PROPERTY_JOB_LOG, new String[] {logEntry});
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_LOG, new String[] {logEntry});
         } else {
             final String[] newEntries = new String[entries.length + 1];
             System.arraycopy(entries, 0, newEntries, 0, entries.length);
             newEntries[entries.length] = logEntry;
-            this.setProperty(Job.PROPERTY_JOB_LOG, newEntries);
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_LOG, newEntries);
         }
-        return Job.PROPERTY_JOB_LOG;
+        return Job.PROPERTY_JOB_PROGRESS_LOG;
     }
 
     @Override
