@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -297,7 +298,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.finishJob(job, JobState.CANCELLED, false);
+            this.finishJob(job, JobState.CANCELLED, false, -1);
         } else if ( config.getType() == QueueConfiguration.Type.IGNORE ) {
             if ( !reassign ) {
                 if ( logger.isDebugEnabled() ) {
@@ -333,7 +334,7 @@ public class JobManagerImpl
                         if ( queue == null ) {
                             // this is just a sanity check, actually we can never get here
                             logger.warn("Ignoring event due to unknown queue type of queue {} : {}", queueInfo.queueName, Utility.toString(job));
-                            this.finishJob(job, JobState.CANCELLED, false);
+                            this.finishJob(job, JobState.CANCELLED, false, -1);
                         } else {
                             queues.put(queueInfo.queueName, queue);
                             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
@@ -775,7 +776,7 @@ public class JobManagerImpl
                         }
                     }
                 } else {
-                    this.finishJob(job, JobState.CANCELLED, true);
+                    this.finishJob(job, JobState.CANCELLED, true, -1);
                 }
             }
         } else {
@@ -1058,7 +1059,10 @@ public class JobManagerImpl
      * @param info  The job handler
      * @param state The state of the processing
      */
-    public void finishJob(final JobImpl job, final JobState state, final boolean keepJobInHistory) {
+    public void finishJob(final JobImpl job,
+                          final JobState state,
+                          final boolean keepJobInHistory,
+                          final long duration) {
         final boolean isSuccess = (state == JobState.SUCCEEDED);
         ResourceResolver resolver = null;
         try {
@@ -1072,7 +1076,17 @@ public class JobManagerImpl
                         newPath = this.configuration.getStoragePath(job, isSuccess);
                         final Map<String, Object> props = new HashMap<String, Object>(vm);
                         props.put(JobImpl.PROPERTY_FINISHED_STATE, isSuccess ? JobState.SUCCEEDED.name() : JobState.CANCELLED.name());
-                        props.put(JobImpl.PROPERTY_FINISHED_DATE, Calendar.getInstance());
+                        if ( isSuccess ) {
+                            // we set the finish date to start date + duration
+                            final Date finishDate = new Date();
+                            finishDate.setTime(job.getProcessingStarted().getTime().getTime() + duration);
+                            final Calendar finishCal = Calendar.getInstance();
+                            finishCal.setTime(finishDate);
+                            props.put(JobImpl.PROPERTY_FINISHED_DATE, finishCal);
+                        } else {
+                            // current time is good enough
+                            props.put(JobImpl.PROPERTY_FINISHED_DATE, Calendar.getInstance());
+                        }
                         if ( job.getProperty(Job.PROPERTY_RESULT_MESSAGE) != null ) {
                             props.put(Job.PROPERTY_RESULT_MESSAGE, job.getProperty(Job.PROPERTY_RESULT_MESSAGE));
                         }
@@ -1132,42 +1146,6 @@ public class JobManagerImpl
             }
         } catch ( final LoginException ignore ) {
             // ignore
-        } finally {
-            if ( resolver != null ) {
-                resolver.close();
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Try to start the job
-     */
-    public boolean start(final JobHandler info) {
-        ResourceResolver resolver = null;
-        try {
-            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-            final Resource jobResource = resolver.getResource(info.getJob().getResourcePath());
-            if ( jobResource != null ) {
-                final ModifiableValueMap mvm = jobResource.adaptTo(ModifiableValueMap.class);
-                mvm.put(Job.PROPERTY_JOB_STARTED_TIME, Calendar.getInstance());
-                mvm.put(Job.PROPERTY_JOB_QUEUE_NAME, info.getJob().getQueueName());
-                mvm.put(Job.PROPERTY_JOB_RETRIES, info.getJob().getNumberOfRetries());
-                mvm.put(Job.PROPERTY_JOB_PRIORITY, info.getJob().getJobPriority().name());
-                mvm.remove(Job.PROPERTY_JOB_PROGRESS_ETA);
-                mvm.remove(Job.PROPERTY_JOB_PROGRESS_STEPS);
-                mvm.remove(Job.PROPERTY_JOB_PROGRESS_STEP);
-                mvm.remove(Job.PROPERTY_JOB_LOG);
-                mvm.remove(Job.PROPERTY_RESULT_MESSAGE);
-                resolver.commit();
-
-                return true;
-            }
-        } catch ( final PersistenceException ignore ) {
-            this.ignoreException(ignore);
-        } catch ( final LoginException ignore ) {
-            this.ignoreException(ignore);
         } finally {
             if ( resolver != null ) {
                 resolver.close();
@@ -1376,7 +1354,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.finishJob(job, JobState.CANCELLED, false); // DROP means complete removal
+            this.finishJob(job, JobState.CANCELLED, false, -1); // DROP means complete removal
         } else {
             String targetId = null;
             if ( config.getType() != QueueConfiguration.Type.IGNORE ) {
@@ -1397,7 +1375,7 @@ public class JobManagerImpl
     /**
      * Update the property of a job in the resource tree
      */
-    public void persistJobProperties(final JobImpl job, final String... propNames) {
+    public boolean persistJobProperties(final JobImpl job, final String... propNames) {
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -1407,10 +1385,18 @@ public class JobManagerImpl
                 for(final String propName : propNames) {
                     final Object val = job.getProperty(propName);
                     if ( val != null ) {
-                        mvm.put(propName, job.getProperty(propName));
+                        if ( val.getClass().isEnum() ) {
+                            mvm.put(propName, val.toString());
+                        } else {
+                            mvm.put(propName, val);
+                        }
+                    } else {
+                        mvm.remove(propName);
                     }
                 }
                 resolver.commit();
+
+                return true;
             }
         } catch ( final PersistenceException ignore ) {
             this.ignoreException(ignore);
@@ -1421,6 +1407,7 @@ public class JobManagerImpl
                 resolver.close();
             }
         }
+        return false;
     }
 
     /**

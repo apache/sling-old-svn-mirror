@@ -354,6 +354,9 @@ public abstract class AbstractJobQueue
         return this.finishedJob(location, shouldReschedule ? JobStatus.FAILED : JobStatus.SUCCEEDED, false);
     }
 
+    /**
+     * Handle job finish and determine whether to reschedule or cancel the job
+     */
     private boolean finishedJob(final String jobId,
                                 final JobStatus result,
                                 final boolean isAsync) {
@@ -394,7 +397,7 @@ public abstract class AbstractJobQueue
         if ( !rescheduleInfo.reschedule ) {
             // we keep cancelled jobs and succeeded jobs if the queue is configured like this.
             final boolean keepJobs = result.getState() != JobState.SUCCEEDED || this.configuration.isKeepJobs();
-            handler.finished(result.getState(), keepJobs);
+            handler.finished(result.getState(), keepJobs, rescheduleInfo.processingTime);
             finishSuccessful = true;
             if ( result.getState() == JobState.SUCCEEDED ) {
                 Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, handler.getJob(), rescheduleInfo.processingTime);
@@ -497,7 +500,7 @@ public abstract class AbstractJobQueue
         final JobExecutor consumer = this.jobConsumerManager.getExecutor(job.getTopic());
 
         if ( (consumer != null || (job.isBridgedEvent() && this.jobConsumerManager.supportsBridgedEvents())) ) {
-            if ( handler.start() ) {
+            if ( handler.startProcessing(this) ) {
                 if ( logger.isDebugEnabled() ) {
                     logger.debug("Starting job {}", Utility.toString(job));
                 }
