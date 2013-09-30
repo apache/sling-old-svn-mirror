@@ -24,10 +24,12 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
@@ -75,6 +77,12 @@ import org.eclipse.wst.server.core.model.ServerBehaviourDelegate;
 import org.osgi.framework.Version;
 
 public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
+
+    private final Set<String> ignoredFileNames = new HashSet<String>();
+    {
+        ignoredFileNames.add(".vlt");
+        ignoredFileNames.add(".vltignore");
+    }
 
     private SerializationManager serializationManager;
 	private ILaunch launch;
@@ -492,6 +500,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
     private Command<?> addFileCommand(Repository repository, IModuleResource resource) throws CoreException,
             SerializationException, IOException {
 
+        if (ignoredFileNames.contains(resource.getName())) {
+            return null;
+        }
+
         FileInfo info = createFileInfo(resource, repository);
 
         IResource res = getResource(resource);
@@ -678,6 +690,10 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 
     private Command<?> removeFileCommand(Repository repository, IModuleResource resource) throws SerializationException, IOException, CoreException {
     	
+        if (ignoredFileNames.contains(resource.getName())) {
+            return null;
+        }
+
         IResource deletedResource = getResource(resource);
         
         if ( deletedResource == null ) {
