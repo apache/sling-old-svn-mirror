@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.ui.internal;
 
-
 import java.io.File;
 import java.util.List;
 
@@ -35,13 +34,12 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -61,14 +59,6 @@ import org.eclipse.wst.server.core.ServerCore;
  */
 public class ImportWizardPage extends WizardDataTransferPage {
 
-	private Text path;
-	private ModifyListener modifyListener = new ModifyListener() {
-		@Override
-		public void modifyText(ModifyEvent event) {
-            determinePageCompletion();
-            updateWidgetEnablements();
-		}
-	};
     private Combo repositoryCombo;
     private Label importLabel;
 	private Button containerBrowseButton;
@@ -160,12 +150,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
 		});
         updateRepositoryList();
 
-        Label pathLabel = new Label(container, SWT.NONE);
-        pathLabel.setText("Repository Path:");
-        path = new Text(container, SWT.BORDER);
-        path.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-        path.addModifyListener(modifyListener);
-        
         Composite containerGroup = new Composite(composite, SWT.NONE);
         GridLayout layout = new GridLayout();
         layout.numColumns = 3;
@@ -200,14 +184,16 @@ public class ImportWizardPage extends WizardDataTransferPage {
         	setErrorMessage("Select a project first");
         }
         
-        adjustJcrRootText = new Label(composite, SWT.NONE);
+        Composite adjustComposite = new Composite(composite, SWT.NONE);
+        adjustComposite.setLayout(new RowLayout());
+
+        adjustJcrRootText = new Label(adjustComposite, SWT.NONE);
         adjustJcrRootText.setFont(containerGroup.getFont());
         adjustJcrRootText();
         
-        Link openPropertiesLink = new Link(composite, SWT.NONE);
-        openPropertiesLink.setText("<a>Modify location here</a>");
+        Link openPropertiesLink = new Link(adjustComposite, SWT.NONE);
+        openPropertiesLink.setText("(<a>change</a>)");
         openPropertiesLink.addSelectionListener(new SelectionAdapter() {
-			
 			public void widgetSelected(SelectionEvent e) {
 				PreferenceDialog dialog = PreferencesUtil.createPropertyDialogOn(getShell(), project, 
 						"org.apache.sling.ide.projectPropertyPage", 
@@ -217,13 +203,11 @@ public class ImportWizardPage extends WizardDataTransferPage {
 			}
 		});
         
-        
-        
         createOptionsGroup(composite);
         
         setControl(composite);
 
-        setPageComplete(false);
+        updateWidgetEnablements();
 	}
 
 	private void updateRepositoryList() {
@@ -241,14 +225,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
         }
 	}
 
-    /**
-	 * Returns the path from which to import from the Sling Repository.
-	 * 
-	 * @return the repository path
-	 */
-	public String getRepositoryPath() {
-		return path != null ? path.getText() : null;
-	}
 
 	public void handleEvent(Event event) {
 		if (event.widget == containerBrowseButton) {
@@ -327,12 +303,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
             setErrorMessage("Please select a valid index");
 			return false;
 		}
-		
-		if ( !getRepositoryPath().startsWith("/") ) {
-			setErrorMessage("The repository path needs to be absolute");
-			return false;
-		}
-		
+
         String syncDirectoryPath = ProjectUtil.getSyncDirectoryValue(project);
         IFolder syncFolder = project.getFolder(syncDirectoryPath);
 
@@ -373,8 +344,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
         if (filterFile!=null && filterFile.exists()) {
             importLabel.setText("Will apply import filter from /" + filterFile.getProjectRelativePath() + ".");
         } else {
-            importLabel.setText("No filter found at /" + filterFile.getProjectRelativePath()
-                    + ", will import all resources.");
+            importLabel.setText("No filter definition found, will import all resources.");
         }
         importLabel.setVisible(true);
         importLabel.getParent().layout();
@@ -394,6 +364,9 @@ public class ImportWizardPage extends WizardDataTransferPage {
 
         FilterLocator filterLocator = Activator.getDefault().getFilterLocator();
         File filterLocation = filterLocator.findFilterLocation(syncLocation.getLocation().toFile());
+        if (filterLocation == null) {
+            return null;
+        }
         IPath filterPath = Path.fromOSString(filterLocation.getAbsolutePath());
         return ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(filterPath);
     }
@@ -411,7 +384,7 @@ public class ImportWizardPage extends WizardDataTransferPage {
 		}
         if (project!=null && adjustJcrRootText!=null) {
             adjustJcrRootText();
-            adjustJcrRootText.pack();
+            adjustJcrRootText.getParent().pack();
         }
         if (repositoryCombo.getItemCount() == 0 && project != null) {
         	setErrorMessage("The selected project is not configured with/added to any Sling server");
@@ -422,11 +395,6 @@ public class ImportWizardPage extends WizardDataTransferPage {
         	setErrorMessage("Please select a repository");
         	return false;
         }
-		if (getRepositoryPath() == null
-				|| getRepositoryPath().trim().length() == 0) {
-			setErrorMessage("Please enter a valid Sling Repository path");
-			return false;
-		}
 		return true;
 	}
 

@@ -22,6 +22,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 public class WhitelabelSupport {
 
 	// allow customization of the JCR NODE ICON
-    public static ImageDescriptor JCR_NODE_ICON = SharedImages.SLING_ICON;
+    public static ImageDescriptor JCR_NODE_ICON = SharedImages.NT_UNSTRUCTURED_ICON;
 
 }

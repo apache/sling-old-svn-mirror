@@ -16,10 +16,10 @@
  */
 package org.apache.sling.ide.impl.resource.serialization;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,14 +34,20 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.sling.ide.serialization.SerializationData;
+import org.apache.sling.ide.serialization.SerializationDataBuilder;
+import org.apache.sling.ide.serialization.SerializationException;
+import org.apache.sling.ide.serialization.SerializationKind;
 import org.apache.sling.ide.serialization.SerializationManager;
+import org.apache.sling.ide.transport.Repository;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
-public class SimpleXmlSerializationManager implements SerializationManager {
+public class SimpleXmlSerializationManager implements SerializationManager, SerializationDataBuilder {
 
     private static final String TAG_PROPERTY = "property";
     private static final String ATT_PROPERTY_NAME = "name";
@@ -55,7 +61,7 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public String getSerializationFilePath(String baseFilePath) {
+    public String getSerializationFilePath(String baseFilePath, SerializationKind serializationKind) {
         return baseFilePath + File.separatorChar + CONTENT_XML;
     }
 
@@ -74,7 +80,7 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     }
 
     @Override
-    public Map<String, Object> readSerializationData(InputStream source) throws IOException {
+    public ResourceProxy readSerializationData(String filePath, InputStream source) throws IOException {
 
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -84,7 +90,7 @@ public class SimpleXmlSerializationManager implements SerializationManager {
 
             saxParser.parse(new InputSource(source), h);
 
-            return h.getResult();
+            return new ResourceProxy(filePath, h.getResult());
         } catch (ParserConfigurationException e) {
             // TODO proper exception handling
             throw new RuntimeException(e);
@@ -94,9 +100,22 @@ public class SimpleXmlSerializationManager implements SerializationManager {
         }
 
     }
+    
+    @Override
+    public SerializationDataBuilder newBuilder(Repository repository,
+    		File contentSyncRoot) throws SerializationException {
+    	return this;
+    }
 
     @Override
-    public String buildSerializationData(Map<String, Object> content) throws IOException {
+    public SerializationData buildSerializationData(File contentSyncRoot, ResourceProxy resource)
+            throws SerializationException {
+
+        if (resource == null) {
+            return null;
+        }
+
+        Map<String, Object> content = resource.getProperties();
 
         if (content == null || content.isEmpty()) {
             return null;
@@ -105,8 +124,8 @@ public class SimpleXmlSerializationManager implements SerializationManager {
         try {
             SAXTransformerFactory f = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
 
-            StringWriter sw = new StringWriter();
-            StreamResult sr = new StreamResult(sw);
+            ByteArrayOutputStream result = new ByteArrayOutputStream();
+            StreamResult sr = new StreamResult(result);
 
             TransformerHandler handler = f.newTransformerHandler();
             Transformer t = handler.getTransformer();
@@ -134,7 +153,8 @@ public class SimpleXmlSerializationManager implements SerializationManager {
             endElement(handler, TAG_RESOURCE);
             handler.endDocument();
 
-            return sw.toString();
+            // TODO - also add the serialization type
+            return new SerializationData(resource.getPath(), CONTENT_XML, result.toByteArray(), null);
         } catch (TransformerConfigurationException e) {
             // TODO proper exception handling
             throw new RuntimeException(e);
@@ -155,6 +175,12 @@ public class SimpleXmlSerializationManager implements SerializationManager {
     private void endElement(TransformerHandler handler, String tagName) throws SAXException {
 
         handler.endElement("", tagName, tagName);
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.sling.ide.serialization.SerializationManager#destroy()
+     */
+    public void destroy() {
     }
 
     static class SerializationDataHandler extends DefaultHandler {

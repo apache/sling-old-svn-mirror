@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0">
+    <implementation class="org.apache.sling.ide.artifacts.impl.ArtifactsLocatorImpl" />
+    <service>
+       <provide interface="org.apache.sling.ide.artifacts.EmbeddedArtifactLocator"/>
+    </service>
+</scr:component>

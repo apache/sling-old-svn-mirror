@@ -23,30 +23,40 @@ import org.apache.sling.ide.eclipse.core.internal.Activator;
 import org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadServer;
 import org.apache.sling.ide.transport.Repository;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.server.core.IServer;
 
 public abstract class ServerUtil {
 
-    public static Repository getRepository(IServer server, IProgressMonitor monitor) {
+    public static Repository getRepository(IServer server, IProgressMonitor monitor) throws CoreException {
+
+
+        Repository repository = Activator.getDefault().getRepository();
+        try {
+            RepositoryInfo repositoryInfo = getRepositoryInfo(server, monitor);
+            repository.setRepositoryInfo(repositoryInfo);
+        } catch (URISyntaxException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        } catch (RuntimeException e) {
+            throw new CoreException(new Status(Status.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        }
+        return repository;
+    }
+
+    public static RepositoryInfo getRepositoryInfo(IServer server, IProgressMonitor monitor) throws URISyntaxException {
 
         ISlingLaunchpadServer launchpadServer = (ISlingLaunchpadServer) server.loadAdapter(SlingLaunchpadServer.class,
                 monitor);
 
         ISlingLaunchpadConfiguration configuration = launchpadServer.getConfiguration();
 
-        Repository repository = Activator.getDefault().getRepository();
-        try {
-            // TODO configurable scheme?
-            URI uri = new URI("http", null, server.getHost(), configuration.getPort(), configuration.getContextPath(),
-                    null, null);
-            RepositoryInfo repositoryInfo = new RepositoryInfo(configuration.getUsername(),
-                    configuration.getPassword(), uri.toString());
-            repository.setRepositoryInfo(repositoryInfo);
-        } catch (URISyntaxException e) {
-            // TODO handle error
-        }
-        return repository;
+        // TODO configurable scheme?
+        URI uri = new URI("http", null, server.getHost(), configuration.getPort(), configuration.getContextPath(),
+                null, null);
+        return new RepositoryInfo(configuration.getUsername(),
+                configuration.getPassword(), uri.toString());
     }
 
     private ServerUtil() {

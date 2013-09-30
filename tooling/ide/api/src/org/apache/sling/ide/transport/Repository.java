@@ -16,8 +16,6 @@
  */
 package org.apache.sling.ide.transport;
 
-import java.util.Map;
-
 public interface Repository {
 	
 	public static String JCR_PRIMARY_TYPE= "jcr:primaryType";
@@ -81,15 +79,27 @@ public interface Repository {
     // FIXME this is not thread-safe and with multiple sling servers will fail intermitently
 	public void setRepositoryInfo(RepositoryInfo repositoryInfo);
 
-	Command<Void> newAddNodeCommand(FileInfo fileInfo);
+    RepositoryInfo getRepositoryInfo();
+
+    Command<Void> newAddOrUpdateNodeCommand(FileInfo fileInfo, ResourceProxy resourceProxy);
 	
-    Command<Void> newUpdateContentNodeCommand(FileInfo fileInfo, Map<String, Object> serializationData);
-	
-	Command<Void> newDeleteNodeCommand(FileInfo fileInfo);
+	Command<Void> newDeleteNodeCommand(ResourceProxy resourceProxy);
  
+    /**
+     * Retrieves information about the resource located at <tt>path</tt> and its direct descendants
+     * 
+     * @param path
+     * @return a <tt>ResourceProxy</tt> rooted at <tt>path</tt> and its direct descendants
+     */
     Command<ResourceProxy> newListChildrenNodeCommand(String path);
  	
-    Command<Map<String, Object>> newGetNodeContentCommand(String path);
+    /**
+     * Retrieves all properties of a resource located at <tt>path</tt>
+     * 
+     * @param path
+     * @return all properties for the resource located at <tt>path</tt>
+     */
+    Command<ResourceProxy> newGetNodeContentCommand(String path);
 
 	Command<byte[]> newGetNodeCommand(String path);
 }

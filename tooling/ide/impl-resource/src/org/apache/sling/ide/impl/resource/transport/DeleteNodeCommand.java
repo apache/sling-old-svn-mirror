@@ -23,18 +23,16 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
-import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.RepositoryException;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.apache.sling.ide.transport.ResourceProxy;
 import org.apache.sling.ide.transport.Result;
 
 class DeleteNodeCommand extends AbstractCommand<Void> {
 
-    private final FileInfo fileInfo;
 
-    DeleteNodeCommand(FileInfo fileInfo, RepositoryInfo repositoryInfo, HttpClient httpClient) {
-        super(repositoryInfo, httpClient, fileInfo.getRelativeLocation() + "/" + fileInfo.getName());
-        this.fileInfo = fileInfo;
+    DeleteNodeCommand(ResourceProxy resource, RepositoryInfo repositoryInfo, HttpClient httpClient) {
+        super(repositoryInfo, httpClient, resource.getPath());
     }
 
     @Override
@@ -57,6 +55,6 @@ class DeleteNodeCommand extends AbstractCommand<Void> {
 
     @Override
     public String toString() {
-    	return String.format("%8s %s", "DELETE", fileInfo.getRelativeLocation() + "/" + fileInfo.getName());
+    	return String.format("%8s %s", "DELETE", getPath());
     }
 }

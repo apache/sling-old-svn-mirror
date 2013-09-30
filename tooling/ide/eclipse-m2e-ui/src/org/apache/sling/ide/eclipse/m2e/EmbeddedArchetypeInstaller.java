@@ -44,7 +44,11 @@ import org.apache.maven.execution.MavenExecutionRequest;
 import org.apache.maven.execution.MavenExecutionResult;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.LegacySupport;
+import org.apache.sling.ide.eclipse.m2e.internal.Activator;
 import org.codehaus.plexus.PlexusContainer;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.internal.MavenPluginActivator;
@@ -85,62 +89,63 @@ public class EmbeddedArchetypeInstaller {
 		origins.put(fileExtension, new FileInputStream(origin));
 	}
 	
-	public void installArchetype() {
-		IMaven maven = MavenPlugin.getMaven();
-		try{
-			// first get the plexus container
-		    PlexusContainer container = ((MavenImpl) MavenPlugin.getMaven()).getPlexusContainer();
-		    
-		    // then get the DefaultMaven
-		    DefaultMaven mvn = (DefaultMaven) container.lookup(Maven.class);
+    public void installArchetype() throws CoreException {
+        try {
+            IMaven maven = MavenPlugin.getMaven();
+            // first get the plexus container
+            PlexusContainer container = ((MavenImpl) MavenPlugin.getMaven()).getPlexusContainer();
 
-		    // now create a RepositorySystemSession
-		    MavenExecutionRequest request = new DefaultMavenExecutionRequest();
-		    request.setLocalRepository(maven.getLocalRepository());
-		    RepositorySystemSession repositorySession = mvn.newRepositorySession(request);
-		    
-		    // set the MavenSession on the LegacySupport
-	        MavenExecutionResult result = new DefaultMavenExecutionResult();
-			MavenSession session = new MavenSession( container, repositorySession, request, result );
-			LegacySupport legacy = container.lookup(LegacySupport.class);
-			legacy.setSession(session);
-		    
-			// then lookup the DefaultArtifactInstaller
-		    DefaultArtifactInstaller dai = (DefaultArtifactInstaller) container.lookup(ArtifactInstaller.class);
+            // then get the DefaultMaven
+            DefaultMaven mvn = (DefaultMaven) container.lookup(Maven.class);
 
-		    final Set<Entry<String, InputStream>> entries = origins.entrySet();
-		    for (Iterator<Entry<String, InputStream>> it = entries.iterator(); it.hasNext();) {
-				final Entry<String, InputStream> entry = it.next();
-				final String fileExtension = entry.getKey();
-				final InputStream in = entry.getValue();
-				File tmpFile = File.createTempFile("slingClipseTmp", fileExtension);
-				FileOutputStream fos = new FileOutputStream(tmpFile);
-				copyStream(in, fos);
-				fos.close();
-				in.close();
-				Artifact jarArtifact = new DefaultArtifact(
-						groupId, 
-						artifactId, 
-						version,
-						"", fileExtension, "", 
-						new DefaultArtifactHandler());
-				dai.install(tmpFile, jarArtifact, maven.getLocalRepository());
-				tmpFile.delete();
-			}
+            // now create a RepositorySystemSession
+            MavenExecutionRequest request = new DefaultMavenExecutionRequest();
+            request.setLocalRepository(maven.getLocalRepository());
+            RepositorySystemSession repositorySession = mvn.newRepositorySession(request);
 
-			Archetype archetype = new Archetype();
-			archetype.setGroupId(groupId);			            
-			archetype.setArtifactId(artifactId);
-			archetype.setVersion(version);
-			org.apache.maven.archetype.Archetype archetyper = MavenPluginActivator.getDefault().getArchetype();
-			archetyper.updateLocalCatalog(archetype);
+            // set the MavenSession on the LegacySupport
+            MavenExecutionResult result = new DefaultMavenExecutionResult();
+            MavenSession session = new MavenSession(container, repositorySession, request, result);
+            LegacySupport legacy = container.lookup(LegacySupport.class);
+            legacy.setSession(session);
+
+            // then lookup the DefaultArtifactInstaller
+            DefaultArtifactInstaller dai = (DefaultArtifactInstaller) container.lookup(ArtifactInstaller.class);
+
+            final Set<Entry<String, InputStream>> entries = origins.entrySet();
+            for (Iterator<Entry<String, InputStream>> it = entries.iterator(); it.hasNext();) {
+                final Entry<String, InputStream> entry = it.next();
+                final String fileExtension = entry.getKey();
+                final InputStream in = entry.getValue();
+                File tmpFile = File.createTempFile("slingClipseTmp", fileExtension);
+                FileOutputStream fos = new FileOutputStream(tmpFile);
+                copyStream(in, fos);
+                // TODO - close in case of exceptions
+                fos.close();
+                in.close();
+                Artifact jarArtifact = new DefaultArtifact(groupId, artifactId, version, "", fileExtension, "",
+                        new DefaultArtifactHandler());
+                dai.install(tmpFile, jarArtifact, maven.getLocalRepository());
+                tmpFile.delete();
+            }
+
+            Archetype archetype = new Archetype();
+            archetype.setGroupId(groupId);
+            archetype.setArtifactId(artifactId);
+            archetype.setVersion(version);
+            org.apache.maven.archetype.Archetype archetyper = MavenPluginActivator.getDefault().getArchetype();
+            archetyper.updateLocalCatalog(archetype);
+        } catch (CoreException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
+        }
 
 //			ArchetypeCatalog defaultLocalCatalog = archetyper.getDefaultLocalCatalog();
 //			defaultLocalCatalog.addArchetype(archetype);
 //			manager.readCatalogs();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
 
 //		try {
 //			ArtifactRepository localRepo = maven.getLocalRepository();
@@ -170,6 +175,7 @@ public class EmbeddedArchetypeInstaller {
 
 	}
 
+    // TODO - replace with commons-io
 	private void copyStream(InputStream in, OutputStream os) throws IOException {
 		final byte[] bytes = new byte[4*1024];
 		while (true) {

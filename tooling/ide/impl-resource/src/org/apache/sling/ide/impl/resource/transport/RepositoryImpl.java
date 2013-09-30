@@ -16,12 +16,11 @@
  */
 package org.apache.sling.ide.impl.resource.transport;
 
-import java.util.Map;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.sling.ide.transport.Command;
 import org.apache.sling.ide.transport.FileInfo;
 import org.apache.sling.ide.transport.ResourceProxy;
+import org.apache.sling.ide.transport.TracingCommand;
 import org.osgi.service.event.EventAdmin;
 
 public class RepositoryImpl extends AbstractRepository{
@@ -29,19 +28,13 @@ public class RepositoryImpl extends AbstractRepository{
     private final HttpClient httpClient = new HttpClient();
     private EventAdmin eventAdmin;
 
-	@Override
-	public Command<Void> newAddNodeCommand(final FileInfo fileInfo) {
-        return wrap(new AddNodeCommand(fileInfo, repositoryInfo, httpClient));
-	}
-
-
     private <T> Command<T> wrap(AbstractCommand<T> command) {
         return new TracingCommand<T>(command, eventAdmin);
     }
 
 	@Override
-	public Command<Void> newDeleteNodeCommand(final FileInfo fileInfo) {
-        return wrap(new DeleteNodeCommand(fileInfo, repositoryInfo, httpClient));
+	public Command<Void> newDeleteNodeCommand(final ResourceProxy resource) {
+        return wrap(new DeleteNodeCommand(resource, repositoryInfo, httpClient));
 	}
 	
 	@Override
@@ -56,14 +49,15 @@ public class RepositoryImpl extends AbstractRepository{
 	}
 	
 	@Override
-    public Command<Map<String, Object>> newGetNodeContentCommand(final String path) {
+    public Command<ResourceProxy> newGetNodeContentCommand(final String path) {
         return wrap(new GetNodeContentCommand(repositoryInfo, httpClient, path + ".json"));
 	}
 	
 	@Override
-    public Command<Void> newUpdateContentNodeCommand(final FileInfo fileInfo, final Map<String, Object> properties) {
+    public Command<Void> newAddOrUpdateNodeCommand(final FileInfo fileInfo, ResourceProxy resource) {
 		
-        return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(), properties, fileInfo));
+        return wrap(new UpdateContentCommand(repositoryInfo, httpClient, fileInfo.getRelativeLocation(),
+                resource.getProperties(), fileInfo));
 	}
 
     public void bindEventAdmin(EventAdmin eventAdmin) {

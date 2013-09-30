@@ -36,6 +36,9 @@ public class FileInfo {
 		this.relativeLocation = relativeLocation;
 	}
 
+    /**
+     * @return the absolute location of the file on the filesystem
+     */
 	public String getLocation() {
 		return location;
 	}
@@ -44,6 +47,9 @@ public class FileInfo {
 		return name;
 	}
 
+    /**
+     * @return the location of the file relative to the repository root
+     */
 	public String getRelativeLocation() {
 		return relativeLocation;
 	}

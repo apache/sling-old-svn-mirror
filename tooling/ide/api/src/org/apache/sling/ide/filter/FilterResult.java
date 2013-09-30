@@ -17,5 +17,17 @@
 package org.apache.sling.ide.filter;
 
 public enum FilterResult {
-    ALLOW, DENY;
+    /**
+     * Signals that the resource is allowed by the filter
+     */
+    ALLOW,
+    /**
+     * Signals that the resource is not allowed by the filter
+     */
+    DENY,
+    /**
+     * Signals that the resources is not explicitly included in the filter definitions but it is a parent of a resource
+     * which is allowed
+     */
+    PREREQUISITE;
 }

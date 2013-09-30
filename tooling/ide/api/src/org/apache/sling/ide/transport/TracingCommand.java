@@ -14,24 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.ide.impl.resource.transport;
+package org.apache.sling.ide.transport;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.ide.transport.Command;
-import org.apache.sling.ide.transport.CommandExecutionProperties;
-import org.apache.sling.ide.transport.RepositoryException;
-import org.apache.sling.ide.transport.Result;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
 
-class TracingCommand<T> implements Command<T> {
+public class TracingCommand<T> implements Command<T> {
 
-    private final AbstractCommand<T> command;
+    public static <T> TracingCommand<T> wrap(Command<T> command, EventAdmin eventAdmin) {
+        return new TracingCommand<T>(command, eventAdmin);
+    }
+
+    private final Command<T> command;
     private final EventAdmin eventAdmin;
 
-    public TracingCommand(AbstractCommand<T> command, EventAdmin eventAdmin) {
+    public TracingCommand(Command<T> command, EventAdmin eventAdmin) {
         this.command = command;
         this.eventAdmin = eventAdmin;
     }
@@ -60,6 +60,10 @@ class TracingCommand<T> implements Command<T> {
         }
 
         return result;
+    }
+
+    public String getPath() {
+        return command.getPath();
     }
 
 }
