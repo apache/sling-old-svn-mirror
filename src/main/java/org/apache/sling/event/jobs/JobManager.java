@@ -58,12 +58,15 @@ public interface JobManager {
 
     /**
      * The requested job types for the query.
-     * This can either be all jobs, all activated (started) or all queued jobs.
+     * This can either be all (unfinished) jobs, all activated (started) or all queued jobs.
      */
     enum QueryType {
-        ALL,
+        ALL,      // all means all active and all queued
         ACTIVE,
-        QUEUED
+        QUEUED,
+        HISTORY,  // returns the complete history of cancelled and succeeded jobs (if available)
+        CANCELLED,// history of cancelled jobs
+        SUCCEEDED // history of succeeded jobs
     }
 
     /**
@@ -77,6 +80,8 @@ public interface JobManager {
      * Add a new job
      *
      * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
+     * If properties are provided, all of them must be serializable. If there are non serializable
+     * objects in the properties, no job is created and <code>null</code> is returned.
      * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
      * allowed characters are letters, numbers and the underscore.
      *
@@ -91,6 +96,8 @@ public interface JobManager {
      * Add a new job
      *
      * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
+     * If properties are provided, all of them must be serializable. If there are non serializable
+     * objects in the properties, no job is created and <code>null</code> is returned.
      * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
      * allowed characters are letters, numbers and the underscore.
      *
@@ -147,9 +154,16 @@ public interface JobManager {
     Job getJob(String topic, Map<String, Object> template);
 
     /**
-     * Return all jobs either running or scheduled.
+     * Return all jobs of a given type.
      *
-     * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
+     * Based on the type parameter, either the history of jobs can be returned or unfinished jobs. The type
+     * parameter can further specify which category of jobs should be returned: for the history either
+     * succeeded jobs, cancelled jobs or both in combination can be returned. For unfinished jobs, either
+     * queued jobs, started jobs or the combination can be returned.
+     * If the history is returned, the result set is sorted in descending order, listening the newest entry
+     * first. For unfinished jobs, the result set is sorted in ascending order.
+     *
+     * @param type Required parameter for the type. See above.
      * @param topic Topic can be used as a filter, if it is non-null, only jobs with this topic will be returned.
      * @param limit A positive number indicating the maximum number of jobs returned by the iterator. A value
      *              of zero or less indicates that all jobs should be returned.
@@ -176,7 +190,7 @@ public interface JobManager {
      *                    must match the template (AND query). By providing several maps, different filters
      *                    are possible (OR query).
      * @return A non null collection.
-     * @deprecated
+     * @deprecated Use {@link #findJobs(QueryType, String, long, Map...)}
      */
     @Deprecated
     JobsIterator queryJobs(QueryType type, String topic, Map<String, Object>... templates);
@@ -192,7 +206,7 @@ public interface JobManager {
      *                    are possible (OR query).
      * @return A non null collection.
      * @since 1.1
-     * @deprecated
+     * @deprecated Use {@link #findJobs(QueryType, String, long, Map...)}
      */
     @Deprecated
     JobsIterator queryJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
@@ -206,7 +220,7 @@ public interface JobManager {
      * @param template The map acts like a template. The searched job
      *                    must match the template (AND query).
      * @return An event or <code>null</code>
-     * @deprecated
+     * @deprecated Use {@link #getJob(String, Map)}
      */
     @Deprecated
     Event findJob(String topic, Map<String, Object> template);
@@ -217,7 +231,7 @@ public interface JobManager {
      * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
      * @return <code>true</code> if the job could be cancelled or does not exist anymore.
      *         <code>false</code> otherwise.
-     * @deprecated
+     * @deprecated Use {@link #removeJobById(String)}
      */
     @Deprecated
     boolean removeJob(String jobId);
@@ -228,7 +242,7 @@ public interface JobManager {
      * for a job to finish. The job will be removed when this method returns - however
      * this method blocks until the job is finished!
      * @param jobId The unique identifier as found in the property {@link JobUtil#JOB_ID}.
-     * @deprecated
+     * @deprecated Use {@link #removeJobById(String)}
      */
     @Deprecated
     void forceRemoveJob(String jobId);

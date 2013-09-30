@@ -18,11 +18,14 @@
  */
 package org.apache.sling.event.jobs;
 
+import aQute.bnd.annotation.ProviderType;
+
 
 /**
  * This is a job queue processing job events.
  * @since 3.0
  */
+@ProviderType
 public interface Queue {
 
     /**
@@ -75,7 +78,7 @@ public interface Queue {
 
     /**
      * Remove all outstanding jobs and delete them. This actually cancels
-     * all outstanding jobs (but no notifications are send).
+     * all outstanding jobs.
      */
     void removeAll();
 

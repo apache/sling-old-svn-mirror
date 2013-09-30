@@ -62,7 +62,10 @@ public class JobImpl implements Job {
     public static final String PROPERTY_MESSAGE = "slingevent:message";
 
     /** Property for finished jobs. */
-    public static final String PROPERTY_FINISHED = "slingevent:finished";
+    public static final String PROPERTY_FINISHED_STATE = "slingevent:finishedState";
+
+    /** Property for finished jobs. */
+    public static final String PROPERTY_FINISHED_DATE = "slingevent:finishedDate";
 
     private final ValueMap properties;
 

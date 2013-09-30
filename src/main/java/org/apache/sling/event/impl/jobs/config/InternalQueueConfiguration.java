@@ -62,6 +62,8 @@ import org.osgi.framework.Constants;
             options={@PropertyOption(name="NORM",value="Norm"),
                      @PropertyOption(name="MIN",value="Min"),
                      @PropertyOption(name="MAX",value="Max")}),
+    @Property(name=ConfigurationConstants.PROP_KEEP_JOBS,
+              boolValue=ConfigurationConstants.DEFAULT_KEEP_JOBS),
     @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
               label="%queue.ranking.name", description="%queue.ranking.description")
 })
@@ -94,6 +96,9 @@ public class InternalQueueConfiguration
 
     /** The configured topics. */
     private String[] topics;
+
+    /** Keep jobs. */
+    private boolean keepJobs;
 
     /** Valid flag. */
     private boolean valid = false;
@@ -132,6 +137,7 @@ public class InternalQueueConfiguration
         } else {
             this.topics = topicsParam;
         }
+        this.keepJobs = PropertiesUtil.toBoolean(params.get(ConfigurationConstants.PROP_KEEP_JOBS), ConfigurationConstants.DEFAULT_KEEP_JOBS);
         this.serviceRanking = PropertiesUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
         this.pid = (String)params.get(Constants.SERVICE_PID);
         this.valid = this.checkIsValid();
@@ -271,6 +277,11 @@ public class InternalQueueConfiguration
     }
 
     @Override
+    public boolean isKeepJobs() {
+        return this.keepJobs;
+    }
+
+    @Override
     public String toString() {
         return "Queue-Configuration(" + this.hashCode() + ") : {" +
             "name=" + this.name +
@@ -278,7 +289,8 @@ public class InternalQueueConfiguration
             ", topics=" + (this.matchers == null ? "[]" : Arrays.toString(this.matchers)) +
             ", maxParallelProcesses=" + this.maxParallelProcesses +
             ", retries=" + this.retries +
-            ", retryDelayInMs= " + this.retryDelay +
+            ", retryDelayInMs=" + this.retryDelay +
+            ", keepJobs=" + this.keepJobs +
             ", serviceRanking=" + this.serviceRanking +
             ", pid=" + this.pid +
             ", isValid=" + this.isValid() + "}";
