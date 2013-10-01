@@ -130,15 +130,49 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
             throws IOException {
         String form = getRawForm();
 
-        form = form.replace("${resource}", escapeXml(getResource(request)));
-        form = form.replace("${j_reason}", escapeXml(getReason(request)));
-        form = form.replace("${requestContextPath}", escapeXml(getContextPath(request)));
-        form = form.replace("${contextPath}", escapeXml(request.getContextPath()));
+        final String resource = cleanse(request, getResource(request));
+        final String reason = getReason(request);
+        final String resourceContextPath = cleanse(request, getContextPath(request));
+        final String contextPath = request.getContextPath();
+
+        // replace form placeholders with checked and filtered values
+        form = form.replace("${resource}", escape(resource));
+        form = form.replace("${j_reason}", escape(reason));
+        form = form.replace("${requestContextPath}", escape(resourceContextPath));
+        form = form.replace("${contextPath}", escape(contextPath));
 
         return form;
     }
 
-    private static String escapeXml(final String input) {
+    /**
+     * Makes sure the given {@code target} is not pointing to some absolute
+     * location outside of the given {@code request} context. If so, the target
+     * must be ignored and an empty string is returned.
+     * <p>
+     * This method uses the
+     * {@link AuthUtil#isRedirectValid(HttpServletRequest, String)} method.
+     *
+     * @param request The {@code HttpServletRequest} to test the {@code target}
+     *            against.
+     * @param target The target location (URL) to test for validity.
+     * @return The target location if not pointing outside of the current
+     *         request or an empty string.
+     */
+    private static String cleanse(final HttpServletRequest request, final String target) {
+        if (target.length() > 0 && !AuthUtil.isRedirectValid(request, target)) {
+            return "";
+        }
+        return target;
+    }
+
+    /**
+     * Escape the output.
+     * This method does a simple XML escaping for '<', '>' and '&'
+     * and also escapes single and double quotes.
+     * As these characters should never occur in a url this encoding should
+     * be fine.
+     */
+    private static String escape(final String input) {
         if (input == null) {
             return null;
         }
@@ -148,10 +182,14 @@ public abstract class AbstractAuthenticationFormServlet extends HttpServlet {
             final char c = input.charAt(i);
             if(c == '&') {
                 b.append("&amp;");
-            } else if(c == '<') {
+            } else if (c == '<') {
                 b.append("&lt;");
-            } else if(c == '>') {
+            } else if (c == '>') {
                 b.append("&gt;");
+            } else if (c == '"') {
+                b.append("%22");
+            } else if (c == '\'') {
+                b.append("%27");
             } else {
                 b.append(c);
             }
