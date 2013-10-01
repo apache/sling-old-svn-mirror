@@ -15,7 +15,9 @@ http://www.infoq.com/articles/webber-rest-workflow
 
 HOW TO INSTALL
 --------------
-Build this bundle and install it in Sling.
+Build this bundle and install it in Sling. See
+http://sling.apache.org/documentation/development/getting-and-building-sling.html
+for how to do that.
 
 For example, if Sling is running on port 8080 (which happens if you start 
 the launchpad/testing module with "mvn jetty:run"), this will build and 
