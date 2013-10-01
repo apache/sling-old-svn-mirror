@@ -34,9 +34,9 @@
     <name>Apache Sling Inventory Printer Based on Resources</name>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resourceinventory</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resourceinventory</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/resourceinventory</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resource-inventory</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/resource-inventory</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/resource-inventory</url>
     </scm>
 
     <build>
