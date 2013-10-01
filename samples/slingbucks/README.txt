@@ -28,7 +28,11 @@ list the "org.apache.sling.samples.slingbucks" bundle as active.
 
 HOW TO TEST
 -----------
-Start at 
+On a default Sling trunk instance you usually need to first disable the 
+"Allow Anonymous Access" option at 
+http://localhost:8080/system/console/configMgr/org.apache.sling.engine.impl.auth.SlingAuthenticator
+
+Then, start at 
 
   http://localhost:8080/content/slingbucks/public/orders.html 
   
