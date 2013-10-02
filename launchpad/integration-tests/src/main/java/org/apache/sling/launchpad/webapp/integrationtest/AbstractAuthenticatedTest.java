@@ -227,7 +227,8 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
         postParams.add(new NameValuePair("pwd", "testPwd"));
         postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-        assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		final String msg = "Unexpected status while attempting to create test user at " + postUrl; 
+        assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, msg);
 
         return testUserId;
     }
