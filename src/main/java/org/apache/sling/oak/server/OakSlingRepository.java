@@ -18,7 +18,6 @@
 package org.apache.sling.oak.server;
 
 import static com.google.common.collect.ImmutableSet.of;
-import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.singleton;
 import static org.apache.jackrabbit.oak.plugins.index.IndexConstants.INDEX_DEFINITIONS_NAME;
 import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefinition;
@@ -26,8 +25,10 @@ import static org.apache.jackrabbit.oak.plugins.index.IndexUtils.createIndexDefi
 import java.security.Principal;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,17 +38,23 @@ import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.security.Privilege;
 import javax.security.auth.Subject;
 import javax.security.auth.login.Configuration;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
+import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.api.AuthInfo;
 import org.apache.jackrabbit.oak.api.ContentRepository;
+import org.apache.jackrabbit.oak.api.Root;
 import org.apache.jackrabbit.oak.jcr.repository.RepositoryImpl;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
@@ -74,6 +81,8 @@ import org.apache.jackrabbit.oak.spi.security.SecurityProvider;
 import org.apache.jackrabbit.oak.spi.security.authentication.AuthInfoImpl;
 import org.apache.jackrabbit.oak.spi.security.authentication.ConfigurationUtil;
 import org.apache.jackrabbit.oak.spi.security.principal.AdminPrincipal;
+import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
+import org.apache.jackrabbit.oak.spi.security.privilege.PrivilegeConfiguration;
 import org.apache.jackrabbit.oak.spi.security.privilege.PrivilegeConstants;
 import org.apache.jackrabbit.oak.spi.security.user.UserConfiguration;
 import org.apache.jackrabbit.oak.spi.security.user.UserConstants;
@@ -88,6 +97,8 @@ import org.apache.jackrabbit.oak.spi.xml.ProtectedItemImporter;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.base.AbstractNamespaceMappingRepository;
 import org.osgi.service.component.ComponentContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Sling repository implementation that wraps the Oak OSGi repository
@@ -98,14 +109,21 @@ import org.osgi.service.component.ComponentContext;
 public class OakSlingRepository extends AbstractNamespaceMappingRepository
         implements SlingRepository {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private RepositoryImpl jcrRepository;
     private SecurityProvider securityProvider;
     
     @Reference
     private NodeStore nodeStore;
     
+    @Property(
+            boolValue=true,
+            label="Allow anonymous reads",
+            description="If true, the anonymous user has read access to the whole repository (for backwards compatibility)")
+    public static final String ANONYMOUS_READ_PROP = "anonymous.read.all";
+    
     @Activate
-    protected void activate(ComponentContext ctx) {
+    protected void activate(ComponentContext ctx) throws RepositoryException {
         // FIXME GRANITE-2315
         Configuration.setConfiguration(ConfigurationUtil.getJackrabbit2Configuration(ConfigurationParameters.EMPTY));
 
@@ -145,6 +163,29 @@ public class OakSlingRepository extends AbstractNamespaceMappingRepository
         jcrRepository = new JcrRepositoryHacks(contentRepository, whiteboard, securityProvider);
         
         setup(ctx.getBundleContext());
+        
+        final Object o = ctx.getProperties().get(ANONYMOUS_READ_PROP);
+        if(o != null) {
+            if(Boolean.valueOf(o.toString())) {
+                log.warn("{} is true, granting anonymous user read access on /", ANONYMOUS_READ_PROP);
+                final Session s = loginAdministrative(getDefaultWorkspace());
+                try {
+                    // TODO do we need to go via PrivilegeManager for the names? See OAK-1016 example.
+                    final String [] privileges = new String[] { Privilege.JCR_READ };
+                    AccessControlUtils.addAccessControlEntry(
+                            s, 
+                            "/", 
+                            EveryonePrincipal.getInstance(), 
+                            privileges, 
+                            true);
+                    s.save();
+                } finally {
+                    s.logout();
+                }
+            } else {
+                log.warn("TODO: should disable anonymous access when {} becomes false", ANONYMOUS_READ_PROP);
+            }
+        }
     }
     
     @Deactivate
@@ -154,7 +195,7 @@ public class OakSlingRepository extends AbstractNamespaceMappingRepository
     
     private static NodeAggregator getNodeAggregator() {
         return new SimpleNodeAggregator()
-            .newRuleWithName("nt:file", newArrayList("jcr:content"))
+            .newRuleWithName("nt:file", Arrays.asList(new String [] {"jcr:content"}))
             ;
     }
     
@@ -298,4 +339,24 @@ public class OakSlingRepository extends AbstractNamespaceMappingRepository
                 new ConfigurationParameters(userConfig));
         return new ConfigurationParameters(config);
     }
+
+    @Override
+    public boolean isStandardDescriptor(String key) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public boolean isSingleValueDescriptor(String key) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Value getDescriptorValue(String key) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
+
+    @Override
+    public Value[] getDescriptorValues(String key) {
+        throw new UnsupportedOperationException("Not implemented yet");
+    }    
 }
