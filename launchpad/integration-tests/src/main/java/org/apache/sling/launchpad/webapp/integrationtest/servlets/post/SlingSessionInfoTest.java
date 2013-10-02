@@ -32,7 +32,7 @@ public class SlingSessionInfoTest extends HttpTestBase {
         // assume workspace name contains "default", might not
         // always be the case as the default workspace is selected
         // by the JCR implementation due to SLING-256
-        assertJavascript("admin.true", content, "out.println(data.userID + '.' + (data.workspace.indexOf('default') >= 0) )");
+        assertJavascript("admin.string.string", content, "out.println(data.userID + '.' + typeof data.workspace + '.' + typeof data.authType)");
     }
 
     public void testNonexistentSlingUrl() throws IOException {
