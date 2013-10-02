@@ -182,7 +182,8 @@ public void testPostPathIsUnique() throws IOException {
 
         content = getContent(location + ".json", CONTENT_TYPE_JSON);
         json = new JSONObject(content);
-        assertTrue("no jcr:mixinTypes expected after clearing it", !json.has("jcr:mixinTypes"));
+        final boolean noMixins = !json.has("jcr:mixinTypes") || json.getJSONArray("jcr:mixinTypes").length() == 0;
+        assertTrue("no jcr:mixinTypes expected after clearing it", noMixins);
     }
 
     public void testUpdatingNodetype() throws IOException, JSONException {
