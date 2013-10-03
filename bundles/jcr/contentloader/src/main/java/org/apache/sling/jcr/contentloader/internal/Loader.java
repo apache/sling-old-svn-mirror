@@ -218,9 +218,9 @@ public class Loader extends BaseImportLoader {
         final DefaultContentCreator contentCreator = new DefaultContentCreator(this.contentLoaderService);
         try {
             while (pathIter.hasNext()) {
-                final PathEntry entry = pathIter.next();
-                if (!contentAlreadyLoaded || entry.isOverwrite()) {
-                    String workspace = entry.getWorkspace();
+                final PathEntry pathEntry = pathIter.next();
+                if (!contentAlreadyLoaded || pathEntry.isOverwrite()) {
+                    String workspace = pathEntry.getWorkspace();
                     final Session targetSession;
                     if (workspace != null) {
                         if (createdSessions.containsKey(workspace)) {
@@ -233,10 +233,10 @@ public class Loader extends BaseImportLoader {
                         targetSession = defaultSession;
                     }
 
-                    final Node targetNode = getTargetNode(targetSession, entry.getTarget());
+                    final Node targetNode = getTargetNode(targetSession, pathEntry.getTarget());
 
                     if (targetNode != null) {
-                        installFromPath(bundle, entry.getPath(), entry, targetNode, entry.isUninstall() ? createdNodes : null, contentCreator);
+                        installFromPath(bundle, pathEntry.getPath(), pathEntry, targetNode, pathEntry.isUninstall() ? createdNodes : null, contentCreator);
                     }
                 }
             }
