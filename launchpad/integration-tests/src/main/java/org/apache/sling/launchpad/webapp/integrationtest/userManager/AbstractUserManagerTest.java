@@ -44,7 +44,8 @@ public abstract class AbstractUserManagerTest extends AbstractAuthenticatedTest 
 		postParams.add(new NameValuePair(":member", testUserId));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		final String info = "Adding user " + testUserId + " to group via " + postUrl;
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, info);
 	}
 
 	/**
@@ -59,7 +60,8 @@ public abstract class AbstractUserManagerTest extends AbstractAuthenticatedTest 
 		postParams.add(new NameValuePair(":member@Delete", testUserId));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+        final String info = "Removing user " + testUserId + " from group via " + postUrl;
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, info);
 	}
 
 	/**
