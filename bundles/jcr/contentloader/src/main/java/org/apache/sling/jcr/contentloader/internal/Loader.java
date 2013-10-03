@@ -358,7 +358,7 @@ public class Loader extends BaseImportLoader {
                 if (nodeDescriptor != null) {
                     node = processedEntries.get(nodeDescriptor);
                     if (node == null) {
-                        node = createNode(parent, name, nodeDescriptor, configuration, contentCreator);
+                        node = createNode(parent, name, nodeDescriptor, contentCreator);
                         processedEntries.put(nodeDescriptor.toString(), node);
                     }
                 } else {
@@ -412,7 +412,7 @@ public class Loader extends BaseImportLoader {
 
             Node node = null;
             if (foundProvider) {
-                node = createNode(parent, name, file, configuration, contentCreator);
+                node = createNode(parent, name, file, contentCreator);
                 if (node != null) {
                     log.debug("Created node as {} {}", node.getPath(), name);
                     processedEntries.put(file.toString(), node);
@@ -437,7 +437,7 @@ public class Loader extends BaseImportLoader {
             if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null) {
                 try {
                     contentCreator.setIgnoreOverwriteFlag(true);
-                    node = createNode(parent, name, nodeDescriptor, configuration, contentCreator);
+                    node = createNode(parent, name, nodeDescriptor, contentCreator);
                     processedEntries.put(nodeDescriptor.toString(), node);
                 } finally {
                     contentCreator.setIgnoreOverwriteFlag(false);
@@ -455,12 +455,11 @@ public class Loader extends BaseImportLoader {
      * @param parent         The parent node
      * @param name           The name of the new content node
      * @param resourceUrl    The resource url.
-     * @param configuration
      * @param contentCreator
      * @return
      * @throws RepositoryException
      */
-    private Node createNode(Node parent, String name, URL resourceUrl, PathEntry configuration, final DefaultContentCreator contentCreator) throws RepositoryException {
+    private Node createNode(Node parent, String name, URL resourceUrl, final DefaultContentCreator contentCreator) throws RepositoryException {
 
         final String resourcePath = resourceUrl.getPath().toLowerCase();
         try {
