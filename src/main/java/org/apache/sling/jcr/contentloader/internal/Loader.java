@@ -138,7 +138,7 @@ public class Loader extends BaseImportLoader {
                 boolean isBundleUpdated = false;
                 Calendar lastLoadedAt = (Calendar) bundleContentInfo.get(ContentLoaderService.PROPERTY_CONTENT_LOADED_AT);
                 if (lastLoadedAt != null) {
-                    // this assumes that the bundle has been installed  or updated after the content has been loaded
+                    // this assumes that the bundle has been installed or updated after the content has been loaded
                     if (lastLoadedAt.getTimeInMillis() < bundle.getLastModified()) {
                         isBundleUpdated = true;
                     }
@@ -265,7 +265,7 @@ public class Loader extends BaseImportLoader {
                 session.save();
             }
 
-            // finally checkin versionable nodes
+            // finally check in versionable nodes
             for (final Node versionable : contentCreator.getVersionables()) {
                 versionable.checkin();
             }
@@ -339,7 +339,7 @@ public class Loader extends BaseImportLoader {
             log.debug("Processing initial content entry {} in bundle {}", entry, bundle.getSymbolicName());
             if (entry.endsWith("/")) {
 
-                // dir, check for node descriptor , else create dir
+                // dir, check for node descriptor, else create dir
                 final String base = entry.substring(0, entry.length() - 1);
 
                 URL nodeDescriptor = null;
@@ -516,8 +516,11 @@ public class Loader extends BaseImportLoader {
     /**
      * Create a file from the given url.
      *
+     * @param configuration
      * @param parent
      * @param source
+     * @param createdNodes
+     * @param contentCreator
      * @throws IOException
      * @throws RepositoryException
      */
@@ -551,7 +554,7 @@ public class Loader extends BaseImportLoader {
      * such as colon (<code>:</code>), names may be URL encoded (see
      * <code>java.net.URLEncoder</code>) using the <i>UTF-8</i> character
      * encoding. In this case, this method decodes the name using the
-     * <code>java.netURLDecoder</code> class with the <i>UTF-8</i> character
+     * <code>java.net.URLDecoder</code> class with the <i>UTF-8</i> character
      * encoding.
      *
      * @param path The path from which to extract the name part.
@@ -582,7 +585,7 @@ public class Loader extends BaseImportLoader {
 
     private Node getTargetNode(Session session, String path) throws RepositoryException {
 
-        // not specyfied path directive
+        // not specified path directive
         if (path == null) return session.getRootNode();
 
         int firstSlash = path.indexOf("/");
@@ -676,7 +679,7 @@ public class Loader extends BaseImportLoader {
      * @param nodeXML The URL to the XML file to import
      * @return <code>true</code> if the import succeeds, <code>false</code>
      *         if the import fails due to XML format errors.
-     * @throws IOException If an IO error occurrs reading the XML file.
+     * @throws IOException If an IO error occurs reading the XML file.
      */
     private Node importSystemView(Node parent, String name, URL nodeXML) throws IOException {
 
@@ -698,7 +701,7 @@ public class Loader extends BaseImportLoader {
             // additionally check whether the expected child node exists
             return (parent.hasNode(name)) ? parent.getNode(name) : null;
         } catch (InvalidSerializedDataException isde) {
-            // the xml might not be System or Document View export, fall back
+            // the XML might not be system or document view export, fall back
             // to old-style XML reading
             log.info("importSystemView: XML {} does not seem to be system view export, trying old style; cause: {}", nodeXML, isde.toString());
             return null;
