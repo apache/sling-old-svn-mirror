@@ -329,7 +329,7 @@ public class Loader extends BaseImportLoader {
         }
 
         // potential parent node import/extension
-        URL parentNodeDescriptor = importParentNode(parent.getSession(), bundle, path, parent, contentCreator);
+        URL parentNodeDescriptor = importParentNode(bundle, path, parent, contentCreator);
         if (parentNodeDescriptor != null) {
             processedEntries.put(parentNodeDescriptor.toString(), parent);
         }
@@ -755,7 +755,7 @@ public class Loader extends BaseImportLoader {
      * Imports mixin nodes and properties (and optionally child nodes) of the
      * parent node.
      */
-    private URL importParentNode(Session session, Bundle bundle, String path, Node parent, final DefaultContentCreator contentCreator) throws RepositoryException {
+    private URL importParentNode(Bundle bundle, String path, Node parent, final DefaultContentCreator contentCreator) throws RepositoryException {
 
         final Descriptor descriptor = getParentNodeDescriptor(bundle, path, contentCreator);
         // no parent descriptor (ROOT) found
