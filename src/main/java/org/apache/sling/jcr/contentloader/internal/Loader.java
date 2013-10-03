@@ -53,7 +53,7 @@ import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
  */
 public class Loader extends BaseImportLoader {
 
-    public static final String PARENT_DESCRIPTOR = "/ROOT";
+    public static final String PARENT_DESCRIPTOR = "ROOT";
 
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
@@ -737,7 +737,14 @@ public class Loader extends BaseImportLoader {
 
         for (Map.Entry<String, ImportProvider> entry : contentCreator.getImportProviders().entrySet()) {
             if (entry.getValue() != null) {
-                URL url = bundle.getEntry(path + PARENT_DESCRIPTOR + entry.getKey());
+                final StringBuilder filePath = new StringBuilder(path);
+                if (!path.endsWith("/")) {
+                    filePath.append("/");
+                }
+                filePath.append(PARENT_DESCRIPTOR);
+                // add file extension, e.g. .jcr.xml, .xml, .zip (see BaseImportLoader)
+                filePath.append(entry.getKey());
+                URL url = bundle.getEntry(filePath.toString());
                 if (url != null) {
                     try {
                         final Descriptor descriptor = new Descriptor();
