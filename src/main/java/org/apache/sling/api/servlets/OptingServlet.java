@@ -29,6 +29,11 @@ import aQute.bnd.annotation.ConsumerType;
  * <code>Servlets</code> used by Sling which may choose to not handle all
  * requests for which they would be selected based on their registration
  * properties.
+ *
+ * Note that servlets implementing this interface can have an impact
+ * on system performance, as their resolution cannot be cached: the 
+ * resolver has no insight into which parts of the request cause
+ * {@link #accepts} to return true.
  */
 @ConsumerType
 public interface OptingServlet extends Servlet {
