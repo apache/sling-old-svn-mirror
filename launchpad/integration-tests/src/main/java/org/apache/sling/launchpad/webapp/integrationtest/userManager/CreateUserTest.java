@@ -34,8 +34,7 @@ import org.apache.sling.commons.json.JSONObject;
  */
 public class CreateUserTest extends AbstractUserManagerTest {
     private static Random random = new Random(System.currentTimeMillis());
-
-	String testUserId = null;
+    private String testUserId;
 
 	@Override
 	protected void tearDown() throws Exception {
@@ -57,26 +56,37 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		</form>
 	 */
 	public void testCreateUser() throws IOException, JSONException {
+	    testUserId = "testUser" + random.nextInt() + System.currentTimeMillis();
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
-
-		testUserId = "testUser" + random.nextInt();
-		List<NameValuePair> postParams = new ArrayList<NameValuePair>();
+		final List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair(":name", testUserId));
 		postParams.add(new NameValuePair("marker", testUserId));
 		postParams.add(new NameValuePair("pwd", "testPwd"));
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
-		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
+		final Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
-		//fetch the user profile json to verify the settings
-		String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
-		assertNotNull(json);
-		JSONObject jsonObj = new JSONObject(json);
-		assertEquals(testUserId, jsonObj.getString("marker"));
-		assertFalse(jsonObj.has(":name"));
-		assertFalse(jsonObj.has("pwd"));
-		assertFalse(jsonObj.has("pwdConfirm"));
+		{
+	        // fetch the user profile json to verify the settings
+	        final String getUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".json";
+	        final String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+	        assertNotNull(json);
+	        final JSONObject jsonObj = new JSONObject(json);
+	        assertEquals(testUserId, jsonObj.getString("marker"));
+	        assertFalse(jsonObj.has(":name"));
+	        assertFalse(jsonObj.has("pwd"));
+	        assertFalse(jsonObj.has("pwdConfirm"));
+		}
+		
+        {
+            // fetch the session info to verify that the user can log in
+            final Credentials newUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
+            final String getUrl = HTTP_BASE_URL + "/system/sling/info.sessionInfo.json";
+            final String json = getAuthenticatedContent(newUserCreds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+            assertNotNull(json);
+            final JSONObject jsonObj = new JSONObject(json);
+            assertEquals(testUserId, jsonObj.getString("userID"));
+        }
 	}
 
 	public void testCreateUserMissingUserId() throws IOException {
@@ -216,7 +226,8 @@ public class CreateUserTest extends AbstractUserManagerTest {
 		postParams.add(new NameValuePair("pwdConfirm", "testPwd"));
 
 		Credentials creds = new UsernamePasswordCredentials(testUserId, "testPwd");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		final String msg = "Expecting user " + testUserId + " to be able to create another user";
+		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, msg);
 	}
 	
 }
