@@ -412,14 +412,15 @@ public class Loader extends BaseImportLoader {
 
             Node node = null;
             if (foundProvider) {
-                if ((node = createNode(parent, name, file, configuration, contentCreator)) != null) {
-                    log.debug("Created node as {} {} ", node.getPath(), name);
+                node = createNode(parent, name, file, configuration, contentCreator);
+                if (node != null) {
+                    log.debug("Created node as {} {}", node.getPath(), name);
                     processedEntries.put(file.toString(), node);
                 } else {
-                    log.warn("No node created for file {} {} ", file, name);
+                    log.warn("No node created for file {} {}", file, name);
                 }
             } else {
-                log.debug("Can't find provider for entry {} at {} ", entry, name);
+                log.debug("Can't find provider for entry {} at {}", entry, name);
             }
 
             // otherwise just place as file
