@@ -295,11 +295,11 @@ public class Loader extends BaseImportLoader {
     /**
      * Handle content installation for a single path.
      *
-     * @param bundle       The bundle containing the content.
-     * @param path         The path
-     * @param overwrite    Should the content be overwritten.
-     * @param parent       The parent node.
-     * @param createdNodes An optional list to store all new nodes. This list is used for an uninstall
+     * @param bundle        The bundle containing the content.
+     * @param path          The path
+     * @param configuration
+     * @param parent        The parent node.
+     * @param createdNodes  An optional list to store all new nodes. This list is used for an uninstall
      * @throws RepositoryException
      */
     private void installFromPath(final Bundle bundle, final String path, final PathEntry configuration, final Node parent, final List<String> createdNodes, final DefaultContentCreator contentCreator) throws RepositoryException {
@@ -381,7 +381,6 @@ public class Loader extends BaseImportLoader {
      * Handle a file entry.
      *
      * @param entry
-     * @param file             The url to the content file.
      * @param bundle
      * @param processedEntries
      * @param configuration
@@ -414,13 +413,13 @@ public class Loader extends BaseImportLoader {
             Node node = null;
             if (foundProvider) {
                 if ((node = createNode(parent, name, file, configuration, contentCreator)) != null) {
-                    log.debug("Created Node as {} {} ", node.getPath(), name);
+                    log.debug("Created node as {} {} ", node.getPath(), name);
                     processedEntries.put(file.toString(), node);
                 } else {
-                    log.warn("No Node created for file {} {} ", file, name);
+                    log.warn("No node created for file {} {} ", file, name);
                 }
             } else {
-                log.debug("Cant find provider for Entry {} at {} ", entry, name);
+                log.debug("Can't find provider for entry {} at {} ", entry, name);
             }
 
             // otherwise just place as file
@@ -444,7 +443,7 @@ public class Loader extends BaseImportLoader {
                 }
             }
         } catch (RepositoryException e) {
-            log.error("Failed to process process file {} from {}", file, name);
+            log.error("Failed to process file {} from {}", file, name);
             throw e;
         }
     }
@@ -452,12 +451,11 @@ public class Loader extends BaseImportLoader {
     /**
      * Create a new node from a content resource found in the bundle.
      *
-     * @param parent       The parent node
-     * @param name         The name of the new content node
-     * @param resourceUrl  The resource url.
-     * @param overwrite    Should the content be overwritten?
-     * @param versionables
-     * @param checkin
+     * @param parent         The parent node
+     * @param name           The name of the new content node
+     * @param resourceUrl    The resource url.
+     * @param configuration
+     * @param contentCreator
      * @return
      * @throws RepositoryException
      */
@@ -571,7 +569,7 @@ public class Loader extends BaseImportLoader {
                 return URLDecoder.decode(name, "UTF-8");
             } catch (UnsupportedEncodingException uee) {
                 // actually unexpected because UTF-8 is required by the spec
-                log.error("Cannot decode " + name + " beause the platform has no support for UTF-8, using undecoded");
+                log.error("Cannot decode " + name + " because the platform has no support for UTF-8, using undecoded");
             } catch (Exception e) {
                 // IllegalArgumentException or failure to decode
                 log.error("Cannot decode " + name + ", using undecoded", e);
@@ -660,7 +658,7 @@ public class Loader extends BaseImportLoader {
                     }
                 }
             } catch (RepositoryException re) {
-                log.warn("Failure to rollback uninstaling initial content for bundle {}", bundle.getSymbolicName(), re);
+                log.warn("Failure to rollback uninstalling initial content for bundle {}", bundle.getSymbolicName(), re);
             }
 
             for (Session session : createdSessions.values()) {
@@ -689,7 +687,7 @@ public class Loader extends BaseImportLoader {
                 name = name.substring(0, name.length() - EXT_JCR_XML.length());
             }
             if (parent.hasNode(name)) {
-                log.debug("importSystemView: Node {} for XML {} already exists, nothing to to", name, nodeXML);
+                log.debug("importSystemView: Node {} for XML {} already exists, nothing to do", name, nodeXML);
                 return parent.getNode(name);
             }
 
