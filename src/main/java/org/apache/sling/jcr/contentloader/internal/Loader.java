@@ -53,7 +53,7 @@ import static javax.jcr.ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW;
  */
 public class Loader extends BaseImportLoader {
 
-    public static final String ROOT_DESCRIPTOR = "/ROOT";
+    public static final String PARENT_DESCRIPTOR = "/ROOT";
 
     private final Logger log = LoggerFactory.getLogger(Loader.class);
 
@@ -721,25 +721,25 @@ public class Loader extends BaseImportLoader {
 
     protected static final class Descriptor {
 
-        public URL rootNodeDescriptor;
+        public URL url;
 
-        public ContentReader nodeReader;
+        public ContentReader contentReader;
 
     }
 
     /**
-     * Return the root node descriptor.
+     * Return the parent node descriptor (ROOT).
      */
-    private Descriptor getRootNodeDescriptor(final Bundle bundle, final String path, final DefaultContentCreator contentCreator) {
+    private Descriptor getParentNodeDescriptor(final Bundle bundle, final String path, final DefaultContentCreator contentCreator) {
 
         for (Map.Entry<String, ImportProvider> entry : contentCreator.getImportProviders().entrySet()) {
             if (entry.getValue() != null) {
-                URL rootNodeDescriptor = bundle.getEntry(path + ROOT_DESCRIPTOR + entry.getKey());
-                if (rootNodeDescriptor != null) {
+                URL url = bundle.getEntry(path + PARENT_DESCRIPTOR + entry.getKey());
+                if (url != null) {
                     try {
                         final Descriptor descriptor = new Descriptor();
-                        descriptor.rootNodeDescriptor = rootNodeDescriptor;
-                        descriptor.nodeReader = entry.getValue().getReader();
+                        descriptor.url = url;
+                        descriptor.contentReader = entry.getValue().getReader();
                         return descriptor;
                     } catch (IOException ioe) {
                         log.error("Unable to setup node reader for " + entry.getKey(), ioe);
@@ -757,16 +757,16 @@ public class Loader extends BaseImportLoader {
      */
     private URL importParentNode(Session session, Bundle bundle, String path, Node parent, final DefaultContentCreator contentCreator) throws RepositoryException {
 
-        final Descriptor descriptor = getRootNodeDescriptor(bundle, path, contentCreator);
-        // no root descriptor found
+        final Descriptor descriptor = getParentNodeDescriptor(bundle, path, contentCreator);
+        // no parent descriptor (ROOT) found
         if (descriptor == null) {
             return null;
         }
 
         try {
             contentCreator.prepareParsing(parent, null);
-            descriptor.nodeReader.parse(descriptor.rootNodeDescriptor, contentCreator);
-            return descriptor.rootNodeDescriptor;
+            descriptor.contentReader.parse(descriptor.url, contentCreator);
+            return descriptor.url;
         } catch (RepositoryException re) {
             throw re;
         } catch (Throwable t) {
