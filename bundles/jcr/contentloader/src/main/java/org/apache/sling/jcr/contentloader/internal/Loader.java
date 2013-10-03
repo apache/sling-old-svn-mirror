@@ -586,12 +586,16 @@ public class Loader extends BaseImportLoader {
     private Node getTargetNode(Session session, String path) throws RepositoryException {
 
         // not specified path directive
-        if (path == null) return session.getRootNode();
+        if (path == null) {
+            return session.getRootNode();
+        }
 
         int firstSlash = path.indexOf("/");
 
         // it's a relative path
-        if (firstSlash != 0) path = "/" + path;
+        if (firstSlash != 0) {
+            path = "/" + path;
+        }
 
         if (!session.itemExists(path)) {
             Node currentNode = session.getRootNode();
