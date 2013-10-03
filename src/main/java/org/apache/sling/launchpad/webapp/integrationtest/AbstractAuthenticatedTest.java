@@ -229,6 +229,10 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 		final String msg = "Unexpected status while attempting to create test user at " + postUrl; 
         assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, msg);
+        
+        final String sessionInfoUrl = HTTP_BASE_URL + "/system/sling/info.sessionInfo.json";
+        assertAuthenticatedHttpStatus(creds, sessionInfoUrl, HttpServletResponse.SC_OK, 
+                "session info failed for user " + testUserId);
 
         return testUserId;
     }
