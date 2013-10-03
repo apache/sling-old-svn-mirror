@@ -590,10 +590,8 @@ public class Loader extends BaseImportLoader {
             return session.getRootNode();
         }
 
-        int firstSlash = path.indexOf("/");
-
-        // it's a relative path
-        if (firstSlash != 0) {
+        if (!path.startsWith("/")) {
+            // make relative path absolute
             path = "/" + path;
         }
 
