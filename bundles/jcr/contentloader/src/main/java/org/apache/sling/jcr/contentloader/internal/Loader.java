@@ -356,7 +356,7 @@ public class Loader extends BaseImportLoader {
                 final String name = getName(base);
                 Node node = null;
                 if (nodeDescriptor != null) {
-                    node = processedEntries.get(nodeDescriptor);
+                    node = processedEntries.get(nodeDescriptor.toString());
                     if (node == null) {
                         node = createNode(parent, name, nodeDescriptor, contentCreator);
                         processedEntries.put(nodeDescriptor.toString(), node);
@@ -393,7 +393,7 @@ public class Loader extends BaseImportLoader {
         final URL file = bundle.getEntry(entry);
         final String name = getName(entry);
         try {
-            if (processedEntries.containsKey(file)) {
+            if (processedEntries.containsKey(file.toString())) {
                 // this is a consumed node descriptor
                 return;
             }
@@ -434,7 +434,7 @@ public class Loader extends BaseImportLoader {
             }
             // if we have a descriptor, which has not been processed yet,
             // process it
-            if (nodeDescriptor != null && processedEntries.get(nodeDescriptor) == null) {
+            if (nodeDescriptor != null && processedEntries.containsKey(nodeDescriptor.toString())) {
                 try {
                     contentCreator.setIgnoreOverwriteFlag(true);
                     node = createNode(parent, name, nodeDescriptor, contentCreator);
