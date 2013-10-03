@@ -30,6 +30,7 @@
 
   <artifactId>org.apache.sling.launchpad.karaf-integration-tests</artifactId>
   <version>0.1.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
 
   <name>Apache Sling Launchpad Karaf - Integration Tests</name>
   <description>Integration Tests for Apache Sling Launchpad Karaf</description>
@@ -37,10 +38,23 @@
   <dependencies>
     <!-- javax -->
     <dependency>
+      <groupId>javax.inject</groupId>
+      <artifactId>javax.inject</artifactId>
+      <version>1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
       <version>2.0</version>
       <scope>test</scope>
+    </dependency>
+    <!-- Apache Karaf -->
+    <dependency>
+      <groupId>org.apache.karaf.features</groupId>
+      <artifactId>org.apache.karaf.features.core</artifactId>
+      <version>3.0.0.RC1</version>
+      <scope>provided</scope>
     </dependency>
     <!-- Apache Sling -->
     <dependency>
@@ -59,14 +73,13 @@
     <!-- testing -->
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-junit4</artifactId>
-      <version>3.1.0</version>
-      <scope>test</scope>
+      <artifactId>pax-exam-container-karaf</artifactId>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-karaf</artifactId>
-      <version>3.1.0</version>
+      <artifactId>pax-exam-junit4</artifactId>
+      <version>3.2.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -95,5 +108,47 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Category>sling</Bundle-Category>
+            <Bundle-Description>${project.description}</Bundle-Description>
+            <Bundle-DocURL>http://sling.apache.org</Bundle-DocURL>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>2.15</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

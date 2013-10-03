@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.launchpad.karaf;
+package org.apache.sling.launchpad.karaf.tests;
 
 import java.io.File;
 
 import javax.inject.Inject;
 
 import org.apache.sling.jcr.api.SlingRepository;
-import org.junit.Ignore;
+import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -35,6 +35,7 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.util.Filter;
 
 import static org.junit.Assert.assertNotNull;
+import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
@@ -44,10 +45,10 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class BootstrapTest extends KarafTestSupport {
+public class BootstrapIT extends KarafTestSupport {
 
     @Inject
-    @Filter(timeout = 120000)
+    @Filter(timeout = 300000)
     public SlingRepository slingRepository;
 
     @Configuration
@@ -58,11 +59,11 @@ public class BootstrapTest extends KarafTestSupport {
             logLevel(LogLevelOption.LogLevel.INFO),
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.0-SNAPSHOT/xml/features"),
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", ",sling-karaf"),
-            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "log4j.rootLogger=DEBUG, sift, osgi:*")
+            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "log4j.rootLogger=DEBUG, sift, osgi:*"),
+            bundle("file:target/org.apache.sling.launchpad.karaf-integration-tests-0.1.0-SNAPSHOT.jar")
         };
     }
 
-    @Ignore
     @Test
     public void testSlingRepository() throws Exception {
         assertNotNull(slingRepository);

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.launchpad.karaf;
+package org.apache.sling.launchpad.karaf.testing;
 
 import javax.inject.Inject;
 
@@ -34,7 +34,7 @@ public abstract class KarafTestSupport {
     public static final String KARAF_NAME = "Apache Karaf";
 
     @Inject
-    @Filter(timeout = 120000)
+    @Filter(timeout = 300000)
     BootFinished bootFinished;
 
     protected KarafTestSupport() {
