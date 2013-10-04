@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
@@ -121,7 +122,7 @@ public class TimedEventReceiver implements EventHandler {
         // stop background threads by putting empty objects into the queue
         this.running = false;
         try {
-            this.writeQueue.put(new Event("some", (Dictionary<String, Object>)null));
+            this.writeQueue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
         }

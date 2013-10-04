@@ -59,6 +59,7 @@ import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.TimedEventStatusProvider;
+import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobUtil;
@@ -154,7 +155,7 @@ public class TimedEventSender
         // stop background threads by putting empty objects into the queue
         this.queue.clear();
         try {
-            this.queue.put(new Event("some", (Dictionary<String, Object>)null));
+            this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
         }
@@ -234,7 +235,7 @@ public class TimedEventSender
                     }
                     event = null;
 
-                } else {
+                } else if ( !Utility.TOPIC_STOPPED.equals(event.getTopic()) ) {
                     ScheduleInfo scheduleInfo = null;
                     try {
                         scheduleInfo = new ScheduleInfo(event);

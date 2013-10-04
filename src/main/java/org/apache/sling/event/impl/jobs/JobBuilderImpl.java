@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import java.util.Date;
 import java.util.Map;
 
 import org.apache.sling.event.jobs.Job;
@@ -62,5 +63,42 @@ public class JobBuilderImpl implements JobBuilder {
     @Override
     public ScheduleBuilder schedule(final String name) {
         return null;
+    }
+
+    public final class ScheduleBuilderImpl implements ScheduleBuilder {
+
+        @Override
+        public boolean periodically(int minutes) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        @Override
+        public TimeBuilder daily() {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public TimeBuilder weekly(int day) {
+            // TODO Auto-generated method stub
+            return null;
+        }
+
+        @Override
+        public boolean at(Date date) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        public final class TimeBuilderImpl implements TimeBuilder {
+
+            @Override
+            public boolean at(int hour, int minute) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+        }
     }
 }
