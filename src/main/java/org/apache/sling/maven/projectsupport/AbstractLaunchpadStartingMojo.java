@@ -300,7 +300,7 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
                 File tmp = null;
                 try {
                     tmp = File.createTempFile("sling", "props");
-                    mavenFileFilter.copyFile(propertiesFile, tmp, true, project, null, true,
+                    mavenFileFilter.copyFile(propertiesFile, tmp, true, project, Collections.EMPTY_LIST, true,
                             System.getProperty("file.encoding"), mavenSession);
                     Properties loadedProps = PropertyUtils.loadPropertyFile(tmp, null);
                     for (Object key : loadedProps.keySet()) {
