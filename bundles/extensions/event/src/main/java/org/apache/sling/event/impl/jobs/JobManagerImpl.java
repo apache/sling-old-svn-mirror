@@ -78,6 +78,7 @@ import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.JobsIterator;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
+import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -1416,6 +1417,8 @@ public class JobManagerImpl
      */
     @Override
     public void stopJobById(final String jobId) {
+        // 1. check if the job is running locally - stop directly
+        // 2. if running remote, send an event via event admin to stop
         // TODO not implemented yet
         throw new IllegalStateException("Not implemented yet...");
     }
@@ -1426,5 +1429,17 @@ public class JobManagerImpl
     @Override
     public JobBuilder createJob(final String topic) {
         return new JobBuilderImpl(this, topic);
+    }
+
+    @Override
+    public Collection<ScheduledJobInfo> getScheduledJobs() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ScheduledJobInfo getScheduledJob(String name) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

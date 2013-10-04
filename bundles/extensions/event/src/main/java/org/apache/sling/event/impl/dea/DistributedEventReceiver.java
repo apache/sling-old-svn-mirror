@@ -45,6 +45,7 @@ import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
@@ -135,7 +136,7 @@ public class DistributedEventReceiver
         // stop background threads by putting empty objects into the queue
         this.running = false;
         try {
-            this.writeQueue.put(new Event("some", (Dictionary<String, Object>)null));
+            this.writeQueue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
         }

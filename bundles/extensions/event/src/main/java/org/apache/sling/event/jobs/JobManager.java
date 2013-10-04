@@ -215,6 +215,16 @@ public interface JobManager {
     JobBuilder createJob(final String topic);
 
     /**
+     * @since 1.3
+     */
+    Collection<ScheduledJobInfo> getScheduledJobs();
+
+    /**
+     * @since 1.3
+     */
+    ScheduledJobInfo getScheduledJob(final String name);
+
+    /**
      * Return all jobs either running or scheduled.
      *
      * @param type Required parameter for the type: either all jobs, only queued or only started can be returned.
