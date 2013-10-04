@@ -69,14 +69,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private static final String MANGLE_NAMESPACE_IN_PREFIX = "/_";
 
-    private static final String MANGLE_NAMESPACE_IN = "/_([^_/]+)_";
+    private static final Pattern MANGLE_NAMESPACE_IN_PATTERN = Pattern.compile("/_([^_/]+)_");
 
     private static final String MANGLE_NAMESPACE_OUT_SUFFIX = ":";
 
     private static final String MANGLE_NAMESPACE_OUT_PREFIX = "/";
 
-    private static final String MANGLE_NAMESPACE_OUT = "/([^:/]+):";
-
+    private static final Pattern MANLE_NAMESPACE_OUT_PATTERN = Pattern.compile("/([^:/]+):");
 
     public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
 
@@ -123,7 +122,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
 
         // create new context
-        final ResourceResolverContext newContext = new ResourceResolverContext(this.context.isAdmin(), 
+        final ResourceResolverContext newContext = new ResourceResolverContext(this.context.isAdmin(),
                 newAuthenticationInfo, factory.getResourceAccessSecurityTracker() );
         this.factory.getRootProviderEntry().loginToRequiredFactories(newContext);
 
@@ -968,8 +967,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private String mangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath != null && absPath.contains(MANGLE_NAMESPACE_OUT_SUFFIX)) {
-            final Pattern p = Pattern.compile(MANGLE_NAMESPACE_OUT);
-            final Matcher m = p.matcher(absPath);
+            final Matcher m = MANLE_NAMESPACE_OUT_PATTERN.matcher(absPath);
 
             final StringBuffer buf = new StringBuffer();
             while (m.find()) {
@@ -987,8 +985,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
     private String unmangleNamespaces(String absPath) {
         if (factory.isMangleNamespacePrefixes() && absPath.contains(MANGLE_NAMESPACE_IN_PREFIX)) {
-            final Pattern p = Pattern.compile(MANGLE_NAMESPACE_IN);
-            final Matcher m = p.matcher(absPath);
+            final Matcher m = MANGLE_NAMESPACE_IN_PATTERN.matcher(absPath);
             final StringBuffer buf = new StringBuffer();
             while (m.find()) {
                 final String namespace = m.group(1);
