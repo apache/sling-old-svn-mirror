@@ -130,7 +130,7 @@ public class ContentXmlHandlerTest {
 
         ResourceProxy root = parseContentXmlFile("root-content.xml", "/");
 
-        assertThat("root contains /jcr:system", root.getChildren(), hasItem(path("/jcr:system")));
+        assertThat("root contains /jcr:system", root.getChildren(), hasChildPath("/jcr:system"));
     }
 
     @Test
@@ -138,14 +138,14 @@ public class ContentXmlHandlerTest {
 
         ResourceProxy root = parseContentXmlFile("encoded-child-content.xml", "/ROOT");
 
-        assertThat("/ROOT contains /_jcr_content", root.getChildren(), hasItem(path("/ROOT/_jcr_content")));
+        assertThat("/ROOT contains /_jcr_content", root.getChildren(), hasChildPath("/ROOT/_jcr_content"));
     }
 
     @Test
     public void parseContentXmlWithEscapedNames() throws ParserConfigurationException, SAXException, IOException {
 
         ResourceProxy root = parseContentXmlFile("full-coverage-escaped-names.xml", "/");
-        assertThat("node contains /50-50", root.getChildren(), hasItem(path("/50-50")));
+        assertThat("node contains /50-50", root.getChildren(), hasChildPath("/50-50"));
     }
 
     private static Matcher<Calendar> millis(long millis) {
@@ -153,9 +153,9 @@ public class ContentXmlHandlerTest {
         return new CalendarTimeInMillisMatcher(millis);
     }
 
-    private static Matcher<ResourceProxy> path(String path) {
+    private static Matcher<Iterable<? extends ResourceProxy>> hasChildPath(String path) {
 
-        return new ResourcePathMatcher(path);
+        return new ResourceChildPathMatcher(path);
     }
 
     static class CalendarTimeInMillisMatcher extends TypeSafeMatcher<Calendar> {
@@ -178,11 +178,11 @@ public class ContentXmlHandlerTest {
 
     }
 
-    static class ResourcePathMatcher extends TypeSafeMatcher<ResourceProxy> {
+    static class ResourceChildPathMatcher extends TypeSafeMatcher<Iterable<? extends ResourceProxy>> {
 
         private final String resourcePath;
 
-        private ResourcePathMatcher(String resourcePath) {
+        private ResourceChildPathMatcher(String resourcePath) {
 
             this.resourcePath = resourcePath;
         }
@@ -193,8 +193,13 @@ public class ContentXmlHandlerTest {
         }
 
         @Override
-        protected boolean matchesSafely(ResourceProxy item) {
-            return resourcePath.equals(item.getPath());
+        protected boolean matchesSafely(Iterable<? extends ResourceProxy> item) {
+            for (ResourceProxy resource : item) {
+                if (resourcePath.equals(resource.getPath())) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
