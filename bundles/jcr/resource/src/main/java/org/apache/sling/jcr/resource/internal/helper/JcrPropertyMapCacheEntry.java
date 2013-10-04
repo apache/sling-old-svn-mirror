@@ -28,6 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
 
 public class JcrPropertyMapCacheEntry {
@@ -91,7 +92,7 @@ public class JcrPropertyMapCacheEntry {
         this.defaultValue = value;
         if ( value.getClass().isArray() ) {
             this.isMulti = true;
-            final Object[] values = (Object[])value;
+            final Object[] values = convertToObject(value);;
             this.values = new Value[values.length];
             for(int i=0; i<values.length; i++) {
                 this.values[i] = this.createValue(values[i], session);
@@ -106,6 +107,32 @@ public class JcrPropertyMapCacheEntry {
                 throw new IllegalArgumentException("Value can't be stored in the repository: " + value);
             }
         }
+    }
+
+    private Object[] convertToObject(final Object value) {
+        final Object[] values;
+        if (value instanceof long[]) {
+            values = ArrayUtils.toObject((long[])value);
+        } else if (value instanceof int[]) {
+            values = ArrayUtils.toObject((int[])value);
+        } else if (value instanceof double[]) {
+            values = ArrayUtils.toObject((double[])value);
+        } else if (value instanceof byte[]) {
+            values = ArrayUtils.toObject((byte[])value);
+        } else if (value instanceof float[]) {
+            values = ArrayUtils.toObject((float[])value);
+        } else if (value instanceof short[]) {
+            values = ArrayUtils.toObject((short[])value);
+        } else if (value instanceof long[]) {
+            values = ArrayUtils.toObject((long[])value);
+        } else if (value instanceof boolean[]) {
+            values = ArrayUtils.toObject((boolean[])value);
+        } else if (value instanceof char[]) {
+            values = ArrayUtils.toObject((char[])value);
+        } else {
+            values = (Object[]) value;
+        }
+        return values;
     }
 
     public Object getDefaultValue() throws RepositoryException {
