@@ -22,7 +22,7 @@ import java.io.File;
 
 import javax.inject.Inject;
 
-import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.launchpad.karaf.testing.KarafTestSupport;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,18 +38,17 @@ import static org.junit.Assert.assertNotNull;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class BootstrapIT extends KarafTestSupport {
+public class BootstrapSlingIT extends KarafTestSupport {
 
     @Inject
     @Filter(timeout = 300000)
-    public SlingRepository slingRepository;
+    public SlingRequestProcessor slingRequestProcessor;
 
     @Configuration
     public Option[] configuration() {
@@ -57,16 +56,15 @@ public class BootstrapIT extends KarafTestSupport {
             karafDistributionConfiguration().frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz")).karafVersion(karafVersion()).name(karafName()).unpackDirectory(new File("target/paxexam/")),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.0-SNAPSHOT/xml/features"),
-            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", ",sling-karaf"),
-            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg", "log4j.rootLogger", "log4j.rootLogger=DEBUG, sift, osgi:*"),
-            bundle("file:target/org.apache.sling.launchpad.karaf-integration-tests-0.1.0-SNAPSHOT.jar")
+            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features"),
+            editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", ",sling"),
+            bundle("file:target/org.apache.sling.launchpad.karaf-integration-tests-0.1.1-SNAPSHOT.jar")
         };
     }
 
     @Test
-    public void testSlingRepository() throws Exception {
-        assertNotNull(slingRepository);
+    public void testSlingRequestProcessor() throws Exception {
+        assertNotNull(slingRequestProcessor);
     }
 
 }

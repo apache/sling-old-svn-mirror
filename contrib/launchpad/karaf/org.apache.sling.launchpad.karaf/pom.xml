@@ -29,7 +29,7 @@
   </parent>
 
   <artifactId>org.apache.sling.launchpad.karaf</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.1-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Apache Sling Launchpad Karaf</name>
@@ -56,7 +56,6 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.scr.annotations</artifactId>
-      <version>1.9.4</version>
       <scope>provided</scope>
     </dependency>
     <!-- logging -->
@@ -76,15 +75,17 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-Category>sling</Bundle-Category>
             <Bundle-Description>${project.description}</Bundle-Description>
+            <Bundle-DocURL>http://sling.apache.org</Bundle-DocURL>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Vendor>The Apache Software Foundation</Bundle-Vendor>
           </instructions>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-scr-plugin</artifactId>
-        <version>1.13.0</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
