@@ -18,7 +18,6 @@
  */
 package org.apache.sling.event.impl.jobs;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -70,6 +69,7 @@ import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
 import org.apache.sling.event.impl.jobs.stats.TopicStatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.impl.support.ScheduleInfo;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
@@ -99,12 +99,14 @@ import org.slf4j.LoggerFactory;
            name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
 @Service(value={JobManager.class, EventHandler.class, TopologyEventListener.class, Runnable.class})
 @Properties({
-    @Property(name=JobManagerConfiguration.CONFIG_PROPERTY_REPOSITORY_PATH,
+    @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
           value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH),
     @Property(name="scheduler.period", longValue=60),
     @Property(name="scheduler.concurrent", boolValue=false),
     @Property(name=EventConstants.EVENT_TOPIC,
               value={SlingConstants.TOPIC_RESOURCE_ADDED,
+                     SlingConstants.TOPIC_RESOURCE_CHANGED,
+                     SlingConstants.TOPIC_RESOURCE_REMOVED,
                      "org/apache/sling/event/notification/job/*",
                      ResourceHelper.BUNDLE_EVENT_STARTED,
                      ResourceHelper.BUNDLE_EVENT_UPDATED})
@@ -166,6 +168,9 @@ public class JobManagerImpl
     /** Set of paths directly added as jobs - these will be ignored during observation handling. */
     private final Set<String> directlyAddedPaths = new HashSet<String>();
 
+    /** Job Scheduler. */
+    private JobSchedulerImpl jobScheduler;
+
     /**
      * Activate this component.
      * @param props Configuration properties
@@ -173,6 +178,7 @@ public class JobManagerImpl
     @Activate
     protected void activate(final Map<String, Object> props) throws LoginException {
         this.configuration = new JobManagerConfiguration(props);
+        this.jobScheduler = new JobSchedulerImpl(this.configuration, this.resourceResolverFactory, this.scheduler, this);
         this.maintenanceTask = new MaintenanceTask(this.configuration, this.resourceResolverFactory);
         this.backgroundLoader = new BackgroundLoader(this, this.configuration, this.resourceResolverFactory);
 
@@ -210,6 +216,8 @@ public class JobManagerImpl
     @Deactivate
     protected void deactivate() {
         logger.info("Apache Sling Job Manager stopping on instance {}", Environment.APPLICATION_ID);
+        this.jobScheduler.deactivate();
+
         this.backgroundLoader.deactivate();
         this.backgroundLoader = null;
 
@@ -459,9 +467,14 @@ public class JobManagerImpl
                 }
                 this.backgroundLoader.loadJob(path);
             }
+            this.jobScheduler.handleEvent(event);
         } else if ( ResourceHelper.BUNDLE_EVENT_STARTED.equals(event.getTopic())
                  || ResourceHelper.BUNDLE_EVENT_UPDATED.equals(event.getTopic()) ) {
             this.backgroundLoader.tryToReloadUnloadedJobs();
+            this.jobScheduler.handleEvent(event);
+        } else if ( SlingConstants.TOPIC_RESOURCE_CHANGED.equals(event.getTopic())
+                 || SlingConstants.TOPIC_RESOURCE_REMOVED.equals(event.getTopic()) ) {
+            this.jobScheduler.handleEvent(event);
         } else {
             if ( EventUtil.isLocal(event) ) {
                 // job notifications
@@ -602,6 +615,7 @@ public class JobManagerImpl
 
             this.startProcessing(event.getNewView());
         }
+        this.jobScheduler.handleTopologyEvent(event);
     }
 
     /**
@@ -738,10 +752,15 @@ public class JobManagerImpl
      */
     @Override
     public boolean removeJob(final String jobId) {
-        return this.internalRemoveJobJobById(jobId, false);
+        return this.internalRemoveJobById(jobId, false);
     }
 
-    private boolean internalRemoveJobJobById(final String jobId, final boolean forceRemove) {
+    /**
+     * Remove a job.
+     * If the job is already in the storage area, it's removed forever.
+     * Otherwise it's moved to the storage area.
+     */
+    private boolean internalRemoveJobById(final String jobId, final boolean forceRemove) {
         logger.debug("Trying to remove job {}", jobId);
         boolean result = true;
         final JobImpl job = (JobImpl)this.getJobById(jobId);
@@ -792,7 +811,7 @@ public class JobManagerImpl
      */
     @Override
     public void forceRemoveJob(final String jobId) {
-        this.internalRemoveJobJobById(jobId, true);
+        this.internalRemoveJobById(jobId, true);
     }
 
     /**
@@ -808,19 +827,10 @@ public class JobManagerImpl
      */
     @Override
     public Job addJob(final String topic, final String name, final Map<String, Object> properties) {
-        final String errorMessage = Utility.checkJobTopic(topic);
+        final String errorMessage = Utility.checkJob(topic, properties);
         if ( errorMessage != null ) {
             logger.warn("{}", errorMessage);
             return null;
-        }
-        if ( properties != null ) {
-            for(final Object val : properties.values()) {
-                if ( val != null && !(val instanceof Serializable) ) {
-                    logger.warn("Discarding job - properties must be serializable: {} {} : {}",
-                            new Object[] {topic, name, properties});
-                    return null;
-                }
-            }
         }
         Job result = this.addJobInteral(topic, name, properties);
         if ( result == null && name != null ) {
@@ -939,7 +949,7 @@ public class JobManagerImpl
      */
     @Override
     public boolean removeJobById(final String jobId) {
-        return this.internalRemoveJobJobById(jobId, true);
+        return this.internalRemoveJobById(jobId, true);
     }
 
     /**
@@ -1428,7 +1438,7 @@ public class JobManagerImpl
      */
     @Override
     public JobBuilder createJob(final String topic) {
-        return new JobBuilderImpl(this, topic);
+        return new JobBuilderImpl(this, this.logger, topic);
     }
 
     @Override
@@ -1442,4 +1452,18 @@ public class JobManagerImpl
         // TODO Auto-generated method stub
         return null;
     }
+
+    public boolean addScheduledJob(final String topic,
+            final String jobName,
+            final Map<String, Object> properties,
+            final String scheduleName,
+            final ScheduleInfo scheduleInfo) {
+        try {
+            return this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, scheduleInfo);
+        } catch ( final PersistenceException pe) {
+            logger.warn("Unable to persist scheduled job", pe);
+        }
+        return false;
+    }
+
 }

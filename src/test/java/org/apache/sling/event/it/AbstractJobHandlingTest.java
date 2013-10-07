@@ -167,7 +167,7 @@ public abstract class AbstractJobHandlingTest {
         // set load delay to 3 sec
         final org.osgi.service.cm.Configuration c2 = this.configAdmin.getConfiguration("org.apache.sling.event.impl.jobs.jcr.PersistenceHandler", null);
         Dictionary<String, Object> p2 = new Hashtable<String, Object>();
-        p2.put(JobManagerConfiguration.CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY, 3L);
+        p2.put(JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY, 3L);
         c2.update(p2);
 
         final StartupHandler handler = new StartupHandler() {

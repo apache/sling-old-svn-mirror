@@ -49,9 +49,15 @@ public abstract class ResourceHelper {
 
     public static final String RESOURCE_TYPE_EVENT = "slingevent:Event";
 
+    /** We use the same resource type as for timed events. */
+    public static final String RESOURCE_TYPE_SCHEDULED_JOB = "slingevent:TimedEvent";
+
     public static final String BUNDLE_EVENT_UPDATED = "org/osgi/framework/BundleEvent/UPDATED";
 
     public static final String BUNDLE_EVENT_STARTED = "org/osgi/framework/BundleEvent/STARTED";
+
+    public static final String PROPERTY_SCHEDULER_NAME = "slingevent:schedulerName";
+    public static final String PROPERTY_SCHEDULER_INFO = "slingevent:schedulerInfo";
 
     /** List of ignored properties to write to the repository. */
     @SuppressWarnings("deprecation")
@@ -73,7 +79,9 @@ public abstract class ResourceHelper {
         Job.PROPERTY_JOB_PROGRESS_STEPS,
         Job.PROPERTY_FINISHED_DATE,
         JobImpl.PROPERTY_FINISHED_STATE,
-        Job.PROPERTY_RESULT_MESSAGE
+        Job.PROPERTY_RESULT_MESSAGE,
+        PROPERTY_SCHEDULER_INFO,
+        PROPERTY_SCHEDULER_NAME
     };
 
     /**

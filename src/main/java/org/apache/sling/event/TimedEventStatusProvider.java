@@ -25,7 +25,9 @@ import org.osgi.service.event.Event;
 
 /**
  * This service provides the current timed events status.
+ * @deprecated Use scheduled jobs instead
  */
+@Deprecated
 public interface TimedEventStatusProvider {
 
     /**

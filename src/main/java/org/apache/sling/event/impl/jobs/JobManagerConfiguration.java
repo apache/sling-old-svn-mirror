@@ -31,23 +31,29 @@ import org.apache.sling.event.impl.support.Environment;
  */
 public class JobManagerConfiguration {
 
-    /** Default repository path. */
+    /** Default resource path for jobs. */
     public static final String DEFAULT_REPOSITORY_PATH = "/var/eventing/jobs";
-
-    /** The path where all jobs are stored. */
-    public static final String CONFIG_PROPERTY_REPOSITORY_PATH = "repository.path";
 
     /** Default background load delay. */
     public static final long DEFAULT_BACKGROUND_LOAD_DELAY = 30;
 
-    /** The background loader waits this time of seconds after startup before loading events from the repository. (in secs) */
-    public static final String CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
-
     /** Default for disabling the distribution. */
     public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
 
+    /** Default resource path for scheduled jobs. */
+    private static final String DEFAULT_SCHEDULED_JOBS_PATH = "/var/eventing/scheduled-jobs";
+
+    /** The path where all jobs are stored. */
+    public static final String PROPERTY_REPOSITORY_PATH = "repository.path";
+
+    /** The background loader waits this time of seconds after startup before loading events from the repository. (in secs) */
+    public static final String PROPERTY_BACKGROUND_LOAD_DELAY = "load.delay";
+
     /** Configuration switch for distributing the jobs. */
     public static final String PROPERTY_DISABLE_DISTRIBUTION = "job.consumermanager.disableDistribution";
+
+    /** Configuration property for the scheduled jobs path. */
+    private static final String PROPERTY_SCHEDULED_JOBS_PATH = "job.scheduled.jobs.path";
 
     /** The jobs base path with a slash. */
     private String jobsBasePathWithSlash;
@@ -82,9 +88,15 @@ public class JobManagerConfiguration {
 
     private String storedSuccessfulJobsPath;
 
+    /** The resource path where scheduled jobs are stored. */
+    private String scheduledJobsPath;
+
+    /** The resource path where scheduled jobs are stored - ending with a slash. */
+    private String scheduledJobsPathWithSlash;
+
     public JobManagerConfiguration(final Map<String, Object> props) {
         this.update(props);
-        this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(CONFIG_PROPERTY_REPOSITORY_PATH),
+        this.jobsBasePathWithSlash = PropertiesUtil.toString(props.get(PROPERTY_REPOSITORY_PATH),
                             DEFAULT_REPOSITORY_PATH) + '/';
 
         // create initial resources
@@ -101,6 +113,10 @@ public class JobManagerConfiguration {
 
         this.storedCancelledJobsPath = this.jobsBasePathWithSlash + "cancelled";
         this.storedSuccessfulJobsPath = this.jobsBasePathWithSlash + "finished";
+
+        this.scheduledJobsPath = PropertiesUtil.toString(props.get(PROPERTY_SCHEDULED_JOBS_PATH),
+                DEFAULT_SCHEDULED_JOBS_PATH);
+        this.scheduledJobsPathWithSlash = this.scheduledJobsPath + "/";
     }
 
     /**
@@ -108,7 +124,7 @@ public class JobManagerConfiguration {
      */
     public void update(final Map<String, Object> props) {
         this.disabledDistribution = PropertiesUtil.toBoolean(props.get(PROPERTY_DISABLE_DISTRIBUTION), DEFAULT_DISABLE_DISTRIBUTION);
-        this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(CONFIG_PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
+        this.backgroundLoadDelay = PropertiesUtil.toLong(props.get(PROPERTY_BACKGROUND_LOAD_DELAY), DEFAULT_BACKGROUND_LOAD_DELAY);
     }
 
     /**
@@ -226,6 +242,12 @@ public class JobManagerConfiguration {
         return this.disabledDistribution;
     }
 
+    /**
+     * Get the storage path for finished jobs.
+     * @param finishedJob The finished job
+     * @param isSuccess Whether processing was successful or not
+     * @return The complete storage path
+     */
     public String getStoragePath(final JobImpl finishedJob, final boolean isSuccess) {
         final String topicName = (finishedJob.isBridgedEvent() ? JobImpl.PROPERTY_BRIDGED_EVENT : finishedJob.getTopic().replace('/', '.'));
         final StringBuilder sb = new StringBuilder();
@@ -243,7 +265,18 @@ public class JobManagerConfiguration {
 
     }
 
+    /**
+     * Check whether this is a storage path.
+     */
     public boolean isStoragePath(final String path) {
         return path.startsWith(this.storedCancelledJobsPath) || path.startsWith(this.storedSuccessfulJobsPath);
+    }
+
+    public String getScheduledJobsPath() {
+        return this.scheduledJobsPath;
+    }
+
+    public String getScheduledJobsPathWithSlash() {
+        return this.scheduledJobsPathWithSlash;
     }
 }
