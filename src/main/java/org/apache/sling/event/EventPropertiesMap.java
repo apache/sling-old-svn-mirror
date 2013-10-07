@@ -33,7 +33,9 @@ import org.osgi.service.event.Event;
  * An implementation of a map that helps in dealing with properties
  * of an OSGi event.
  * This map implements both, the map and the dictionary interfaces.
+ * @deprecated EventAdmin supports creating events with maps now as well.
  */
+@Deprecated
 public class EventPropertiesMap
     extends Dictionary<String, Object>
     implements Map<String, Object>, Serializable {

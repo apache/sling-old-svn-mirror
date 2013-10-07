@@ -20,12 +20,15 @@ package org.apache.sling.event;
 
 import org.osgi.service.event.Event;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * A job processor processes a job in the background.
  * It is used by {@link EventUtil#processJob(Event, JobProcessor)}.
  * @deprecated Use org.apache.sling.event.jobs.JobProcessor
  */
 @Deprecated
+@ConsumerType
 public interface JobProcessor extends org.apache.sling.event.jobs.JobProcessor {
 
     // just for compatibility

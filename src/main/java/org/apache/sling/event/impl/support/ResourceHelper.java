@@ -58,6 +58,7 @@ public abstract class ResourceHelper {
 
     public static final String PROPERTY_SCHEDULER_NAME = "slingevent:schedulerName";
     public static final String PROPERTY_SCHEDULER_INFO = "slingevent:schedulerInfo";
+    public static final String PROPERTY_SCHEDULER_SUSPENDED = "slingevent:schedulerSuspended";
 
     /** List of ignored properties to write to the repository. */
     @SuppressWarnings("deprecation")
@@ -81,7 +82,8 @@ public abstract class ResourceHelper {
         JobImpl.PROPERTY_FINISHED_STATE,
         Job.PROPERTY_RESULT_MESSAGE,
         PROPERTY_SCHEDULER_INFO,
-        PROPERTY_SCHEDULER_NAME
+        PROPERTY_SCHEDULER_NAME,
+        PROPERTY_SCHEDULER_SUSPENDED
     };
 
     /**

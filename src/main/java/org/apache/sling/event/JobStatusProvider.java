@@ -23,11 +23,14 @@ import java.util.Map;
 
 import org.osgi.service.event.Event;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This service provides the current job processing status.
  * @deprecated
  */
 @Deprecated
+@ProviderType
 public interface JobStatusProvider {
 
     /**

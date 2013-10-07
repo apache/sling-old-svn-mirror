@@ -1461,9 +1461,10 @@ public class JobManagerImpl
             final String jobName,
             final Map<String, Object> properties,
             final String scheduleName,
+            final boolean isSuspended,
             final ScheduleInfo scheduleInfo) {
         try {
-            return this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, scheduleInfo);
+            return this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, isSuspended, scheduleInfo);
         } catch ( final PersistenceException pe) {
             logger.warn("Unable to persist scheduled job", pe);
         }
