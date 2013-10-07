@@ -65,6 +65,11 @@ public interface JobBuilder {
     public interface ScheduleBuilder {
 
         /**
+         * Suspend this scheduling by default
+         */
+        ScheduleBuilder suspend(final boolean flag);
+
+        /**
          * Schedule the job periodically every N minutes.
          * If the minutes argument is less than 1, the job can't be scheduled.
          * @param minutes Positive number of minutes

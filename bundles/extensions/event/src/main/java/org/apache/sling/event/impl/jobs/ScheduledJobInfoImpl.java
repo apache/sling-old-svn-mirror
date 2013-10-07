@@ -19,8 +19,10 @@
 package org.apache.sling.event.impl.jobs;
 
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.sling.event.impl.support.ScheduleInfo;
 import org.apache.sling.event.jobs.Job;
@@ -39,85 +41,174 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
 
     private final Map<String, Object> jobProperties;
 
-    private final ScheduleInfo scheduleInfo;
-
     private final JobSchedulerImpl jobScheduler;
+
+    private ScheduleInfo scheduleInfo;
+
+    private AtomicBoolean isSuspended;
 
     public ScheduledJobInfoImpl(final JobSchedulerImpl jobScheduler,
             final String jobTopic,
             final String jobName,
             final Map<String, Object> jobProperties,
-            final String scheduleName,
-            final ScheduleInfo scheduleInfo) {
+            final String scheduleName) {
         this.jobScheduler = jobScheduler;
         this.scheduleName = scheduleName;
         this.jobName = jobName;
         this.jobTopic = jobTopic;
         this.jobProperties = jobProperties;
-        this.scheduleInfo = scheduleInfo;
     }
 
+    public void update(final boolean isSuspended,
+            final ScheduleInfo scheduleInfo) {
+        this.scheduleInfo = scheduleInfo;
+        this.isSuspended = new AtomicBoolean(isSuspended);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getName()
+     */
     @Override
     public String getName() {
         return this.scheduleName;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getScheduleType()
+     */
     @Override
     public ScheduleType getScheduleType() {
         return this.scheduleInfo.getScheduleType();
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getNextScheduledExecution()
+     */
     @Override
     public Date getNextScheduledExecution() {
-        if ( this.scheduleInfo.getScheduleType() == ScheduleType.DATE ) {
-            return this.scheduleInfo.getAt();
+        final Calendar now = Calendar.getInstance();
+        switch ( this.scheduleInfo.getScheduleType() ) {
+            case DATE : return this.scheduleInfo.getAt();
+            case DAILY : final Calendar next = Calendar.getInstance();
+                         next.set(Calendar.HOUR_OF_DAY, this.getHourOfDay());
+                         next.set(Calendar.MINUTE, this.getMinuteOfHour());
+                         if ( next.before(now) ) {
+                             next.add(Calendar.DAY_OF_WEEK, 1);
+                         }
+                         return next.getTime();
+            case WEEKLY : final Calendar nextW = Calendar.getInstance();
+                          nextW.set(Calendar.HOUR_OF_DAY, this.getHourOfDay());
+                          nextW.set(Calendar.MINUTE, this.getMinuteOfHour());
+                          nextW.set(Calendar.DAY_OF_WEEK, this.getDayOfWeek());
+                          if ( nextW.before(now) ) {
+                              nextW.add(Calendar.WEEK_OF_YEAR, 1);
+                          }
+                          return nextW.getTime();
+            case PERIODICALLY : final Calendar nextP = Calendar.getInstance();
+                                nextP.add(Calendar.MINUTE, this.getPeriod()); // TODO - this is not correct
+                                return nextP.getTime();
         }
         return null;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getDayOfWeek()
+     */
     @Override
     public int getDayOfWeek() {
         return this.scheduleInfo.getDayOfWeek();
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getHourOfDay()
+     */
     @Override
     public int getHourOfDay() {
         return this.scheduleInfo.getHourOfDay();
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getMinuteOfHour()
+     */
     @Override
     public int getMinuteOfHour() {
         return this.scheduleInfo.getPeriod();
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getPeriod()
+     */
     @Override
     public int getPeriod() {
         return this.scheduleInfo.getPeriod();
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getJobTopic()
+     */
     @Override
     public String getJobTopic() {
         return this.jobTopic;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getJobName()
+     */
     @Override
     public String getJobName() {
         return this.jobName;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getJobProperties()
+     */
     @Override
     public Map<String, Object> getJobProperties() {
         return this.jobProperties;
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#unschedule()
+     */
     @Override
     public void unschedule() {
         this.jobScheduler.unschedule(this);
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#reschedule()
+     */
     @Override
     public ScheduleBuilder reschedule() {
         return this.jobScheduler.createJobBuilder(this);
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#suspend()
+     */
+    @Override
+    public void suspend() {
+        if ( this.isSuspended.compareAndSet(false, true) ) {
+            this.jobScheduler.setSuspended(this, true);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#resume()
+     */
+    @Override
+    public void resume() {
+        if ( this.isSuspended.compareAndSet(true, false) ) {
+            this.jobScheduler.setSuspended(this, false);
+        }
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#isSuspended()
+     */
+    @Override
+    public boolean isSuspended() {
+        return this.isSuspended.get();
     }
 
     /**

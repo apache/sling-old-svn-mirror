@@ -38,6 +38,7 @@ import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.ModifiableValueMap;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.QuerySyntaxException;
 import org.apache.sling.api.resource.Resource;
@@ -196,12 +197,19 @@ public class JobSchedulerImpl
                     final String jobTopic = (String) properties.remove(JobUtil.PROPERTY_JOB_TOPIC);
                     final String jobName = (String) properties.remove(JobUtil.PROPERTY_JOB_NAME);
                     final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULER_NAME);
-                    final ScheduleInfo scheduleInfo = (ScheduleInfo)  properties.remove(ResourceHelper.PROPERTY_SCHEDULER_INFO);
-
+                    final ScheduleInfo scheduleInfo = (ScheduleInfo) properties.remove(ResourceHelper.PROPERTY_SCHEDULER_INFO);
+                    final boolean isSuspended = properties.remove(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED) != null;
                     // and now schedule
-                    final ScheduledJobInfoImpl info = new ScheduledJobInfoImpl(this, jobTopic, jobName, properties, schedulerName, scheduleInfo);
+                    final String key = ResourceHelper.filterName(schedulerName);
+                    ScheduledJobInfoImpl info;
                     synchronized ( this.scheduledJobs ) {
-                        this.scheduledJobs.put(ResourceHelper.filterName(schedulerName), info);
+                        info = this.scheduledJobs.get(key);
+                        if ( info == null ) {
+                            info = new ScheduledJobInfoImpl(this, jobTopic, jobName,
+                                    properties, schedulerName);
+                            this.scheduledJobs.put(key, info);
+                        }
+                        info.update(isSuspended, scheduleInfo);
                     }
                     if ( this.active ) {
                         this.startScheduledJob(info);
@@ -257,27 +265,29 @@ public class JobSchedulerImpl
     }
 
     private void startScheduledJob(final ScheduledJobInfoImpl info) {
-        // Create configuration for scheduled job
-        final Map<String, Serializable> config = new HashMap<String, Serializable>();
-        config.put(PROPERTY_READ_JOB, info);
+        if ( !info.isSuspended() ) {
+            // Create configuration for scheduled job
+            final Map<String, Serializable> config = new HashMap<String, Serializable>();
+            config.put(PROPERTY_READ_JOB, info);
 
-        logger.debug("Adding scheduled job: {}", info.getName());
-        try {
-            switch ( info.getScheduleType() ) {
-                case DAILY:
-                case WEEKLY:
-                    this.scheduler.addJob(info.getSchedulerJobId(), this, config, info.getCronExpression(), false);
-                    break;
-                case DATE:
-                    this.scheduler.fireJobAt(info.getSchedulerJobId(), this, config, info.getNextScheduledExecution());
-                    break;
-                case PERIODICALLY:
-                    this.scheduler.addPeriodicJob(info.getSchedulerJobId(), this, config, info.getPeriod() * 1000, false);
-                    break;
-                }
-        } catch (final Exception e) {
-            // we ignore it if scheduled fails...
-            this.ignoreException(e);
+            logger.debug("Adding scheduled job: {}", info.getName());
+            try {
+                switch ( info.getScheduleType() ) {
+                    case DAILY:
+                    case WEEKLY:
+                        this.scheduler.addJob(info.getSchedulerJobId(), this, config, info.getCronExpression(), false);
+                        break;
+                    case DATE:
+                        this.scheduler.fireJobAt(info.getSchedulerJobId(), this, config, info.getNextScheduledExecution());
+                        break;
+                    case PERIODICALLY:
+                        this.scheduler.addPeriodicJob(info.getSchedulerJobId(), this, config, info.getPeriod() * 1000, false);
+                        break;
+                    }
+            } catch (final Exception e) {
+                // we ignore it if scheduled fails...
+                this.ignoreException(e);
+            }
         }
     }
 
@@ -497,6 +507,7 @@ public class JobSchedulerImpl
             final String jobName,
             final Map<String, Object> jobProperties,
             final String schedulerName,
+            final boolean suspend,
             final ScheduleInfo scheduleInfo)
     throws PersistenceException {
         ResourceResolver resolver = null;
@@ -525,6 +536,9 @@ public class JobSchedulerImpl
             // put scheduler name and scheduler info
             properties.put(ResourceHelper.PROPERTY_SCHEDULER_NAME, schedulerName);
             properties.put(ResourceHelper.PROPERTY_SCHEDULER_INFO, scheduleInfo);
+            if ( suspend ) {
+                properties.put(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED, Boolean.TRUE);
+            }
 
             // create path and resource
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB);
@@ -590,7 +604,8 @@ public class JobSchedulerImpl
 
     public JobBuilder.ScheduleBuilder createJobBuilder(final ScheduledJobInfoImpl info) {
         final JobBuilder builder = this.jobManager.createJob(info.getJobTopic()).name(info.getJobTopic()).properties(info.getJobProperties());
-        return builder.schedule(info.getName());
+        final JobBuilder.ScheduleBuilder sb = builder.schedule(info.getName());
+        return sb.suspend(info.isSuspended());
     }
 
     public Collection<ScheduledJobInfo> getScheduledJobs() {
@@ -606,6 +621,37 @@ public class JobSchedulerImpl
     public ScheduledJobInfo getScheduledJob(final String name) {
         synchronized ( this.scheduledJobs ) {
             return this.scheduledJobs.get(ResourceHelper.filterName(name));
+        }
+    }
+
+    public void setSuspended(final ScheduledJobInfoImpl info, final boolean flag) {
+        ResourceResolver resolver = null;
+        try {
+            resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
+            final StringBuilder sb = new StringBuilder(this.config.getScheduledJobsPathWithSlash());
+            sb.append('/');
+            sb.append(ResourceHelper.filterName(info.getName()));
+            final String path = sb.toString();
+
+            final Resource eventResource = resolver.getResource(path);
+            if ( eventResource != null ) {
+                final ModifiableValueMap mvm = eventResource.adaptTo(ModifiableValueMap.class);
+                if ( flag ) {
+                    mvm.put(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED, Boolean.TRUE);
+                } else {
+                    mvm.remove(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED);
+                }
+                resolver.commit();
+            }
+        } catch (final LoginException le) {
+            this.ignoreException(le);
+        } catch (final PersistenceException pe) {
+            // we ignore the exception if removing fails
+            ignoreException(pe);
+        } finally {
+            if ( resolver != null ) {
+                resolver.close();
+            }
         }
     }
 }

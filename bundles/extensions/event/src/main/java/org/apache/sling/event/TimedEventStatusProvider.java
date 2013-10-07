@@ -23,11 +23,14 @@ import java.util.Map;
 
 import org.osgi.service.event.Event;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This service provides the current timed events status.
  * @deprecated Use scheduled jobs instead
  */
 @Deprecated
+@ProviderType
 public interface TimedEventStatusProvider {
 
     /**

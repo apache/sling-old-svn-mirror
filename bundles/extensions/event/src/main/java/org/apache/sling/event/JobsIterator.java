@@ -20,6 +20,8 @@ package org.apache.sling.event;
 
 import org.osgi.service.event.Event;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * This <code>Iterator</code> allows to iterate over {@link Event}s.
  * In addition to an iterator it might return the number of elements
@@ -30,6 +32,7 @@ import org.osgi.service.event.Event;
  * @deprecated
  */
 @Deprecated
+@ProviderType
 public interface JobsIterator extends org.apache.sling.event.jobs.JobsIterator {
 
     /**

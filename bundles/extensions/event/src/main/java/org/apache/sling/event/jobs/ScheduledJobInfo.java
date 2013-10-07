@@ -103,7 +103,26 @@ public interface ScheduledJobInfo {
 
     /**
      * Reschedule this job with a new rescheduling information.
-     * If rescheduling fails, the job will be unscheduled.
+     * If rescheduling fails (due to wrong arguments), the job
+     * schedule is left as is.
      */
     JobBuilder.ScheduleBuilder reschedule();
+
+    /**
+     * Suspend this job scheduling.
+     * Job scheduling can be resumed with {@link #resume()}.
+     * This information is persisted and survives a restart.
+     */
+    void suspend();
+
+    /**
+     * Resume job processing. {@link #suspend()}. If the queue is not
+     * suspended, calling this method has no effect.
+     */
+    void resume();
+
+    /**
+     * Is the processing currently suspended?
+     */
+    boolean isSuspended();
 }

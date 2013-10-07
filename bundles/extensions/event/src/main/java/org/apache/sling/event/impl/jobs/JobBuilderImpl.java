@@ -74,6 +74,8 @@ public class JobBuilderImpl implements JobBuilder {
 
         private final String scheduleName;
 
+        private boolean suspend = false;
+
         public ScheduleBuilderImpl(final String name) {
             this.scheduleName = name;
         }
@@ -96,7 +98,7 @@ public class JobBuilderImpl implements JobBuilder {
             if ( check() ) {
                 if ( minutes > 0 ) {
                     final ScheduleInfo info = ScheduleInfo.PERIODIC(minutes);
-                    return jobManager.addScheduledJob(topic, name, properties, scheduleName, info);
+                    return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
                 }
                 logger.warn("Discarding scheduled job - period must be higher than 0 : {}", minutes);
             }
@@ -118,11 +120,17 @@ public class JobBuilderImpl implements JobBuilder {
             if ( check() ) {
                 if ( date != null && date.getTime() > System.currentTimeMillis() ) {
                     final ScheduleInfo info = ScheduleInfo.AT(date);
-                    return jobManager.addScheduledJob(topic, name, properties, scheduleName, info);
+                    return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
                 }
                 logger.warn("Discarding scheduled job - date must be in the future : {}", date);
             }
             return false;
+        }
+
+        @Override
+        public ScheduleBuilder suspend(final boolean flag) {
+            this.suspend = flag;
+            return this;
         }
 
         public final class TimeBuilderImpl implements TimeBuilder {
@@ -154,7 +162,7 @@ public class JobBuilderImpl implements JobBuilder {
                             } else {
                                 info = ScheduleInfo.DAYLY(hour, minute);
                             }
-                            return jobManager.addScheduledJob(topic, name, properties, scheduleName, info);
+                            return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
                         }
                         logger.warn("Discarding scheduled job - wrong time information : {}…{}", hour, minute);
                     }
