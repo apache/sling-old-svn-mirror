@@ -156,22 +156,46 @@ public abstract class EventUtil {
      * Timed Events
      */
 
-    /** The topic for timed events. */
+    /**
+     * The topic for timed events.
+     * @deprecated Use scheduled jobs instead
+     */
+    @Deprecated
     public static final String TOPIC_TIMED_EVENT = "org/apache/sling/event/timed";
 
-    /** The real topic of the event. */
+    /**
+     * The real topic of the event.
+     * @deprecated Use scheduled jobs instead
+     */
+    @Deprecated
     public static final String PROPERTY_TIMED_EVENT_TOPIC = "event.topic.timed";
 
-    /** The property for the unique event id. */
+    /**
+     * The property for the unique event id.
+     * @deprecated Use scheduled jobs instead
+     */
+    @Deprecated
     public static final String PROPERTY_TIMED_EVENT_ID = "event.timed.id";
 
-    /** The scheduler cron expression for the timed event. Type must be String. */
+    /**
+     * The scheduler cron expression for the timed event. Type must be String.
+     * @deprecated Use scheduled jobs instead
+     */
+    @Deprecated
     public static final String PROPERTY_TIMED_EVENT_SCHEDULE = "event.timed.scheduler";
 
-    /** The period in seconds for the timed event. Type must be Long*/
+    /**
+     * The period in seconds for the timed event. Type must be Long.
+     * @deprecated Use scheduled jobs instead
+     */
+    @Deprecated
     public static final String PROPERTY_TIMED_EVENT_PERIOD = "event.timed.period";
 
-    /** The date for the timed event. Type must be Date.  */
+    /**
+     * The date for the timed event. Type must be Date.
+     * @deprecated Use scheduled jobs instead
+     */
+    @Deprecated
     public static final String PROPERTY_TIMED_EVENT_DATE = "event.timed.date";
 
     /**

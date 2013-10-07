@@ -53,6 +53,7 @@ public interface JobBuilder {
      * Schedule the job
      * If a job scheduler with the same name already exists, it is updated
      * with the new information.
+     * If no name is provided (empty name or null), the job can't be scheduled.
      * @param name Unique name for the scheduler.
      * @return A schedule builder to schedule the jobs
      */
@@ -64,7 +65,8 @@ public interface JobBuilder {
     public interface ScheduleBuilder {
 
         /**
-         * Schedule the job periodically every N minutes
+         * Schedule the job periodically every N minutes.
+         * If the minutes argument is less than 1, the job can't be scheduled.
          * @param minutes Positive number of minutes
          * @return <code>true</code> if the job could be scheduled, <code>false</code>otherwise.
          */
@@ -77,12 +79,14 @@ public interface JobBuilder {
 
         /**
          * Schedule the job weekly, the time needs to be specified in addition.
-         * @param day Day of the week, Sunday being one, Monday two, up to Saturday being seven.
+         * If a value lower than 1 or higher than 7 is used, the job can't be scheduled.
+         * @param day Day of the week, 1:Sunday, 2:Monday, ... 7:Saturday.
          */
         TimeBuilder weekly(final int day);
 
         /**
          * Schedule the job for a specific date.
+         * If no date or a a date in the past is provided, the job can't be scheduled.
          * @param date The date
          * @return <code>true</code> if the job could be scheduled, <code>false</code>otherwise.
          */
@@ -93,6 +97,8 @@ public interface JobBuilder {
 
         /**
          * Schedule the job for the given hour and minute.
+         * If a value less than zero for hour or minute is specified or a value higher than 23 for hour or
+         * a value higher than 59 for minute than the job can't be scheduled.
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
          * @return <code>true</code> if the job could be scheduled, <code>false</code>otherwise.

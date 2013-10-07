@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -66,6 +67,25 @@ public abstract class Utility {
             message = "Discarding job - job topic is missing";
         }
         return message;
+    }
+
+    /**
+     * Check the job.
+     * @return <code>null</code> if the topic topic is correct and all properties are serializable,
+     *                           otherwise an error description is returned
+     */
+    public static String checkJob(final Object jobTopic, final Map<String, Object> properties) {
+        final String msg = checkJobTopic(jobTopic);
+        if ( msg == null ) {
+            if ( properties != null ) {
+                for(final Object val : properties.values()) {
+                    if ( val != null && !(val instanceof Serializable) ) {
+                        return "Discarding job - properties must be serializable: " + jobTopic + " : " + properties;
+                    }
+                }
+            }
+        }
+        return msg;
     }
 
     /** Event property containing the time for job start and job finished events. */
