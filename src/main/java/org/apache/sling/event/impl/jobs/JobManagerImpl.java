@@ -1441,16 +1441,20 @@ public class JobManagerImpl
         return new JobBuilderImpl(this, this.logger, topic);
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#getScheduledJobs()
+     */
     @Override
     public Collection<ScheduledJobInfo> getScheduledJobs() {
-        // TODO Auto-generated method stub
-        return null;
+        return this.jobScheduler.getScheduledJobs();
     }
 
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#getScheduledJob(java.lang.String)
+     */
     @Override
-    public ScheduledJobInfo getScheduledJob(String name) {
-        // TODO Auto-generated method stub
-        return null;
+    public ScheduledJobInfo getScheduledJob(final String name) {
+        return this.jobScheduler.getScheduledJob(name);
     }
 
     public boolean addScheduledJob(final String topic,

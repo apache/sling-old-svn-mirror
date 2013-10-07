@@ -18,15 +18,18 @@
  */
 package org.apache.sling.event.impl.support;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.sling.event.jobs.ScheduledJobInfo.ScheduleType;
 
-// TODO - implement serializing
 public class ScheduleInfo implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    /** Serialization version. */
+    private static final int VERSION = 1;
 
     public static ScheduleInfo PERIODIC(final int minutes) {
         return new ScheduleInfo(ScheduleType.PERIODICALLY, minutes, -1, -1, -1, null);
@@ -44,17 +47,17 @@ public class ScheduleInfo implements Serializable {
         return new ScheduleInfo(ScheduleType.DAILY, -1, -1, hour, minute, null);
     }
 
-    private final ScheduleType scheduleType;
+    private ScheduleType scheduleType;
 
-    private final int period;
+    private int period;
 
-    private final int dayOfWeek;
+    private int dayOfWeek;
 
-    private final int hourOfDay;
+    private int hourOfDay;
 
-    private final int minuteOfHour;
+    private int minuteOfHour;
 
-    private final Date at;
+    private Date at;
 
     private ScheduleInfo(final ScheduleType scheduleType,
             final int period,
@@ -68,6 +71,43 @@ public class ScheduleInfo implements Serializable {
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
         this.at = at;
+    }
+
+    /**
+     * Serialize the object
+     * - write version id
+     * - serialize each entry
+     * @param out Object output stream
+     * @throws IOException
+     */
+    private void writeObject(final java.io.ObjectOutputStream out)
+            throws IOException {
+        out.writeInt(VERSION);
+        out.writeObject(this.scheduleType.name());
+        out.writeInt(this.period);
+        out.writeInt(this.dayOfWeek);
+        out.writeInt(this.hourOfDay);
+        out.writeInt(this.minuteOfHour);
+        out.writeObject(this.at);
+    }
+
+    /**
+     * Deserialize the object
+     * - read version id
+     * - deserialize each entry
+     */
+    private void readObject(final java.io.ObjectInputStream in)
+    throws IOException, ClassNotFoundException {
+        final int version = in.readInt();
+        if ( version < 1 || version > VERSION ) {
+            throw new ClassNotFoundException(this.getClass().getName());
+        }
+        this.scheduleType = ScheduleType.valueOf((String)in.readObject());
+        this.period = in.readInt();
+        this.dayOfWeek = in.readInt();
+        this.hourOfDay = in.readInt();
+        this.minuteOfHour = in.readInt();
+        this.at = (Date) in.readObject();
     }
 
     public Date getAt() {
