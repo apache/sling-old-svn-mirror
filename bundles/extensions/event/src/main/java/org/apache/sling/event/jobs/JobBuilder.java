@@ -70,12 +70,12 @@ public interface JobBuilder {
         ScheduleBuilder suspend(final boolean flag);
 
         /**
-         * Schedule the job periodically every N minutes.
-         * If the minutes argument is less than 1, the job can't be scheduled.
-         * @param minutes Positive number of minutes
+         * Schedule the job hourly at the given minute.
+         * If the minutes argument is less than 0 or higher than 59, the job can't be scheduled.
+         * @param minutes Between 0 and 59.
          * @return <code>true</code> if the job could be scheduled, <code>false</code>otherwise.
          */
-        boolean periodically(final int minutes);
+        boolean hourly(final int minutes);
 
         /**
          * Schedule the job daily, the time needs to be specified in addition.
