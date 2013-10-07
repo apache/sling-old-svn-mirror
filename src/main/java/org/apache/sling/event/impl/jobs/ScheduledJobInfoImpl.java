@@ -104,9 +104,12 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
                               nextW.add(Calendar.WEEK_OF_YEAR, 1);
                           }
                           return nextW.getTime();
-            case PERIODICALLY : final Calendar nextP = Calendar.getInstance();
-                                nextP.add(Calendar.MINUTE, this.getPeriod()); // TODO - this is not correct
-                                return nextP.getTime();
+            case HOURLY : final Calendar nextH = Calendar.getInstance();
+                          nextH.set(Calendar.MINUTE, this.getMinuteOfHour());
+                          if ( nextH.before(now) ) {
+                              nextH.add(Calendar.HOUR_OF_DAY, 1);
+                          }
+                          return nextH.getTime();
         }
         return null;
     }
@@ -132,15 +135,7 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
      */
     @Override
     public int getMinuteOfHour() {
-        return this.scheduleInfo.getPeriod();
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getPeriod()
-     */
-    @Override
-    public int getPeriod() {
-        return this.scheduleInfo.getPeriod();
+        return this.scheduleInfo.getMinuteOfHour();
     }
 
     /**
@@ -236,6 +231,11 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
             sb.append(this.scheduleInfo.getHourOfDay());
             sb.append(" * * ");
             sb.append(this.scheduleInfo.getDayOfWeek());
+            return sb.toString();
+        } else if ( this.scheduleInfo.getScheduleType() == ScheduleType.HOURLY ) {
+            final StringBuilder sb = new StringBuilder("0 ");
+            sb.append(this.scheduleInfo.getMinuteOfHour());
+            sb.append(" * * * *");
             return sb.toString();
         }
         return null;

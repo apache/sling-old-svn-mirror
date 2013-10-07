@@ -31,25 +31,23 @@ public class ScheduleInfo implements Serializable {
     /** Serialization version. */
     private static final int VERSION = 1;
 
-    public static ScheduleInfo PERIODIC(final int minutes) {
-        return new ScheduleInfo(ScheduleType.PERIODICALLY, minutes, -1, -1, -1, null);
+    public static ScheduleInfo HOURLY(final int minutes) {
+        return new ScheduleInfo(ScheduleType.HOURLY, -1, -1, minutes, null);
     }
 
     public static ScheduleInfo AT(final Date at) {
-        return new ScheduleInfo(ScheduleType.DATE, -1, -1, -1, -1, at);
+        return new ScheduleInfo(ScheduleType.DATE, -1, -1, -1, at);
     }
 
     public static ScheduleInfo WEEKLY(final int day, final int hour, final int minute) {
-        return new ScheduleInfo(ScheduleType.WEEKLY, -1, day, hour, minute, null);
+        return new ScheduleInfo(ScheduleType.WEEKLY, day, hour, minute, null);
     }
 
     public static ScheduleInfo DAYLY(final int hour, final int minute) {
-        return new ScheduleInfo(ScheduleType.DAILY, -1, -1, hour, minute, null);
+        return new ScheduleInfo(ScheduleType.DAILY, -1, hour, minute, null);
     }
 
     private ScheduleType scheduleType;
-
-    private int period;
 
     private int dayOfWeek;
 
@@ -60,13 +58,11 @@ public class ScheduleInfo implements Serializable {
     private Date at;
 
     private ScheduleInfo(final ScheduleType scheduleType,
-            final int period,
             final int dayOfWeek,
             final int hourOfDay,
             final int minuteOfHour,
             final Date at) {
         this.scheduleType = scheduleType;
-        this.period = period;
         this.dayOfWeek = dayOfWeek;
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
@@ -84,7 +80,6 @@ public class ScheduleInfo implements Serializable {
             throws IOException {
         out.writeInt(VERSION);
         out.writeObject(this.scheduleType.name());
-        out.writeInt(this.period);
         out.writeInt(this.dayOfWeek);
         out.writeInt(this.hourOfDay);
         out.writeInt(this.minuteOfHour);
@@ -103,7 +98,6 @@ public class ScheduleInfo implements Serializable {
             throw new ClassNotFoundException(this.getClass().getName());
         }
         this.scheduleType = ScheduleType.valueOf((String)in.readObject());
-        this.period = in.readInt();
         this.dayOfWeek = in.readInt();
         this.hourOfDay = in.readInt();
         this.minuteOfHour = in.readInt();
@@ -128,9 +122,5 @@ public class ScheduleInfo implements Serializable {
 
     public int getMinuteOfHour() {
         return this.minuteOfHour;
-    }
-
-    public int getPeriod() {
-        return this.period;
     }
 }

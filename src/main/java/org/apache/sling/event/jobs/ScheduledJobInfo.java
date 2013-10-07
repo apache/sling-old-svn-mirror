@@ -32,7 +32,7 @@ public interface ScheduledJobInfo {
 
     enum ScheduleType {
         DATE,         // scheduled for a date
-        PERIODICALLY, // scheduled periodically (minutes)
+        HOURLY,       // scheduled hourly
         DAILY,        // scheduled once a day
         WEEKLY        // scheduled once a week
     }
@@ -67,16 +67,10 @@ public interface ScheduledJobInfo {
     int getHourOfDay();
 
     /**
-     * Return the minute of the hour for daily and weekly scheduled jobs.
+     * Return the minute of the hour for daily, weekly and hourly scheduled jobs.
      * @return The minute of the hour (from 0 to 59) or -1
      */
     int getMinuteOfHour();
-
-    /**
-     * For periodically scheduled jobs, return the period in minutes.
-     * @return The period in minutes or -1
-     */
-    int getPeriod();
 
     /**
      * Return the job topic.

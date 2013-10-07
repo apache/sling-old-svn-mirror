@@ -275,15 +275,13 @@ public class JobSchedulerImpl
                 switch ( info.getScheduleType() ) {
                     case DAILY:
                     case WEEKLY:
+                    case HOURLY:
                         this.scheduler.addJob(info.getSchedulerJobId(), this, config, info.getCronExpression(), false);
                         break;
                     case DATE:
                         this.scheduler.fireJobAt(info.getSchedulerJobId(), this, config, info.getNextScheduledExecution());
                         break;
-                    case PERIODICALLY:
-                        this.scheduler.addPeriodicJob(info.getSchedulerJobId(), this, config, info.getPeriod() * 1000, false);
-                        break;
-                    }
+                }
             } catch (final Exception e) {
                 // we ignore it if scheduled fails...
                 this.ignoreException(e);

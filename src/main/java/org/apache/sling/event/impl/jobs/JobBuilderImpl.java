@@ -94,13 +94,13 @@ public class JobBuilderImpl implements JobBuilder {
         }
 
         @Override
-        public boolean periodically(final int minutes) {
+        public boolean hourly(final int minutes) {
             if ( check() ) {
                 if ( minutes > 0 ) {
-                    final ScheduleInfo info = ScheduleInfo.PERIODIC(minutes);
+                    final ScheduleInfo info = ScheduleInfo.HOURLY(minutes);
                     return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
                 }
-                logger.warn("Discarding scheduled job - period must be higher than 0 : {}", minutes);
+                logger.warn("Discarding scheduled job - minutes must be between 0 and 59 : {}", minutes);
             }
             return false;
         }
