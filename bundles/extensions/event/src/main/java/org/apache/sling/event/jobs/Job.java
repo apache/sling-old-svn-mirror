@@ -311,26 +311,38 @@ public interface Job {
     String getResultMessage();
 
     /**
-     * TODO
+     * This method returns the optional progress log from the last job
+     * processing. The log is optional and can be set by a job consumer.
+     * @return The log or <code>null</code>
      * @since 1.3
      */
     String[] getProgressLog();
 
     /**
-     * TODO
+     * If the job is in processing, return the optional progress step
+     * count if available. The progress information is optional and
+     * can be set by a job consumer.
+     * @return The progress step count or <code>-1</code>.
      * @since 1.3
      */
     int getProgressStepCount();
 
     /**
-     * TODO
+     * If the job is in processing, return the optional information
+     * about the finished steps. This progress information is optional
+     * and can be set by a job consumer.
+     * In combination with {@link #getProgressStepCount()} this can
+     * be used to calculate a progress bar.
+     * @return The number of the finished progress step or <code>0</code>
      * @since 1.3
      */
-    int getCurrentProgressStep();
+    int getFinishedProgressStep();
 
     /**
-     * TODO
+     * If the job is in processing, return the optional ETA for this job.
+     * The progress information is optional and can be set by a job consumer.
      * @since 1.3
+     * @return The estimated ETA or <code>null</code>
      */
     Calendar getProgressETA();
 }

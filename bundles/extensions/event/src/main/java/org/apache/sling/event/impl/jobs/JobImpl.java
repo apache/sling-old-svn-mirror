@@ -272,7 +272,7 @@ public class JobImpl implements Job {
         return new String[] {Job.PROPERTY_JOB_PROGRESS_ETA, PROPERTY_JOB_PROGRESS_STEPS};
     }
 
-    public String setProgress(final int step) {
+    public String[] setProgress(final int step) {
         final int steps = this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEPS, -1);
         if ( steps > 0 && step > 0 ) {
             int current = this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEP, 0);
@@ -282,8 +282,13 @@ public class JobImpl implements Job {
             }
             this.setProperty(Job.PROPERTY_JOB_PROGRESS_STEP, current);
 
-            // TODO - recalculate ETA
-            return Job.PROPERTY_JOB_PROGRESS_STEP;
+            final Calendar now = Calendar.getInstance();
+            final long elapsed = now.getTimeInMillis() - this.getProcessingStarted().getTimeInMillis();
+
+            final long eta = elapsed * steps / step;
+            now.setTimeInMillis(eta);
+            this.setProperty(Job.PROPERTY_JOB_PROGRESS_ETA, now);
+            return new String[] {Job.PROPERTY_JOB_PROGRESS_STEP, Job.PROPERTY_JOB_PROGRESS_ETA};
         }
         return null;
     }
@@ -318,7 +323,9 @@ public class JobImpl implements Job {
     public JobType getJobType() {
         final String enumValue = this.getProperty(JobImpl.PROPERTY_FINISHED_STATE, String.class);
         if ( enumValue == null ) {
-            // TODO - find out active
+            if ( this.getProcessingStarted() != null ) {
+                return JobType.ACTIVE;
+            }
             return JobType.QUEUED;
         }
         return JobType.valueOf(enumValue);
@@ -360,7 +367,7 @@ public class JobImpl implements Job {
      * @see org.apache.sling.event.jobs.Job#getCurrentProgressStep()
      */
     @Override
-    public int getCurrentProgressStep() {
+    public int getFinishedProgressStep() {
         return this.getProperty(Job.PROPERTY_JOB_PROGRESS_STEP, 0);
     }
 

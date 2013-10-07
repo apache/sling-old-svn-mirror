@@ -155,13 +155,11 @@ public class InstanceDescriptionComparatorTest {
 
                 @Override
                 public InstanceDescription getLeader() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
                 @Override
                 public List<InstanceDescription> getInstances() {
-                    // TODO Auto-generated method stub
                     return null;
                 }
 
@@ -189,13 +187,11 @@ public class InstanceDescriptionComparatorTest {
 
         @Override
         public String getProperty(String name) {
-            // TODO Auto-generated method stub
             return null;
         }
 
         @Override
         public Map<String, String> getProperties() {
-            // TODO Auto-generated method stub
             return null;
         }
     }

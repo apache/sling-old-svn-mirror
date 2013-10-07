@@ -126,4 +126,27 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
     public String getSchedulerJobId() {
         return Job.class.getName() + ":" + this.scheduleName;
     }
+
+    /**
+     * If the job is scheduled daily or weekly, return the cron expression
+     */
+    public String getCronExpression() {
+        if ( this.scheduleInfo.getScheduleType() == ScheduleType.DAILY ) {
+            final StringBuilder sb = new StringBuilder("0 ");
+            sb.append(this.scheduleInfo.getMinuteOfHour());
+            sb.append(' ');
+            sb.append(this.scheduleInfo.getHourOfDay());
+            sb.append(" * * *");
+            return sb.toString();
+        } else if ( this.scheduleInfo.getScheduleType() == ScheduleType.WEEKLY ) {
+            final StringBuilder sb = new StringBuilder("0 ");
+            sb.append(this.scheduleInfo.getMinuteOfHour());
+            sb.append(' ');
+            sb.append(this.scheduleInfo.getHourOfDay());
+            sb.append(" * * ");
+            sb.append(this.scheduleInfo.getDayOfWeek());
+            return sb.toString();
+        }
+        return null;
+    }
 }

@@ -21,6 +21,7 @@ package org.apache.sling.event.impl.jobs;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -65,13 +66,9 @@ import org.slf4j.LoggerFactory;
 /**
  * A scheduler for scheduling jobs
  *
- * TODO check handling of running and active flag
  */
 public class JobSchedulerImpl
     implements EventHandler, TopologyEventListener, org.apache.sling.commons.scheduler.Job {
-
-    /** We use the same resource type as for timed events. */
-    private static final String SCHEDULED_JOB_RESOURCE_TYPE = "slingevent:TimedEvent";
 
     private static final String TOPIC_READ_JOB = "org/apache/sling/event/impl/jobs/READSCHEDULEDJOB";
 
@@ -111,47 +108,7 @@ public class JobSchedulerImpl
         this.scheduler = scheduler;
         this.running = true;
         this.jobManager = jobManager;
-    }
 
-    /**
-     * Deactivate this component.
-     */
-    public void deactivate() {
-        this.running = false;
-        this.stopScheduling();
-    }
-
-    private void stopScheduling() {
-        if ( this.active ) {
-            final List<ScheduledJobInfoImpl> jobs = new ArrayList<ScheduledJobInfoImpl>();
-            synchronized ( this.scheduledJobs ) {
-                for(final ScheduledJobInfoImpl job : this.scheduledJobs.values() ) {
-                    jobs.add(job);
-                }
-            }
-            for(final ScheduledJobInfoImpl info : jobs) {
-                try {
-                    logger.debug("Stopping scheduled job : {}", info.getName());
-                    this.scheduler.removeJob(info.getSchedulerJobId());
-                } catch ( final NoSuchElementException nsee ) {
-                    this.ignoreException(nsee);
-                }
-            }
-        }
-        synchronized ( this.scheduledJobs ) {
-            this.scheduledJobs.clear();
-        }
-
-        // stop background threads by putting empty objects into the queue
-        this.queue.clear();
-        try {
-            this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
-        } catch (final InterruptedException e) {
-            this.ignoreException(e);
-        }
-    }
-
-    private void startScheduling() {
         final long now = System.currentTimeMillis();
         final Thread backgroundThread = new Thread(new Runnable() {
             @Override
@@ -166,6 +123,48 @@ public class JobSchedulerImpl
             }
         });
         backgroundThread.start();
+    }
+
+    /**
+     * Deactivate this component.
+     */
+    public void deactivate() {
+        this.running = false;
+        this.stopScheduling();
+        synchronized ( this.scheduledJobs ) {
+            this.scheduledJobs.clear();
+        }
+
+        // stop background threads by putting empty objects into the queue
+        this.queue.clear();
+        try {
+            this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
+        } catch (final InterruptedException e) {
+            this.ignoreException(e);
+        }
+    }
+
+    private void stopScheduling() {
+        if ( this.active ) {
+            final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs();
+            for(final ScheduledJobInfo info : jobs) {
+                try {
+                    logger.debug("Stopping scheduled job : {}", info.getName());
+                    this.scheduler.removeJob(((ScheduledJobInfoImpl)info).getSchedulerJobId());
+                } catch ( final NoSuchElementException nsee ) {
+                    this.ignoreException(nsee);
+                }
+            }
+        }
+    }
+
+    private void startScheduling() {
+        if ( this.active ) {
+            final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs();
+            for(final ScheduledJobInfo info : jobs) {
+                this.startScheduledJob(((ScheduledJobInfoImpl)info));
+            }
+        }
     }
 
     /**
@@ -199,7 +198,7 @@ public class JobSchedulerImpl
                     final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULER_NAME);
                     final ScheduleInfo scheduleInfo = (ScheduleInfo)  properties.remove(ResourceHelper.PROPERTY_SCHEDULER_INFO);
 
-                    // and now schedule (TODO)
+                    // and now schedule
                     final ScheduledJobInfoImpl info = new ScheduledJobInfoImpl(this, jobTopic, jobName, properties, schedulerName, scheduleInfo);
                     synchronized ( this.scheduledJobs ) {
                         this.scheduledJobs.put(ResourceHelper.filterName(schedulerName), info);
@@ -266,16 +265,14 @@ public class JobSchedulerImpl
         try {
             switch ( info.getScheduleType() ) {
                 case DAILY:
-                    // TODO
+                case WEEKLY:
+                    this.scheduler.addJob(info.getSchedulerJobId(), this, config, info.getCronExpression(), false);
                     break;
                 case DATE:
                     this.scheduler.fireJobAt(info.getSchedulerJobId(), this, config, info.getNextScheduledExecution());
                     break;
                 case PERIODICALLY:
                     this.scheduler.addPeriodicJob(info.getSchedulerJobId(), this, config, info.getPeriod() * 1000, false);
-                    break;
-                case WEEKLY:
-                    // TODO
                     break;
                 }
         } catch (final Exception e) {
@@ -414,7 +411,7 @@ public class JobSchedulerImpl
             final StringBuilder buf = new StringBuilder(64);
 
             buf.append("//element(*,");
-            buf.append(SCHEDULED_JOB_RESOURCE_TYPE);
+            buf.append(ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB);
             buf.append(")[@");
             buf.append(ISO9075.encode(org.apache.sling.event.jobs.Job.PROPERTY_JOB_CREATED));
             buf.append(" < xs:dateTime('");
@@ -594,5 +591,21 @@ public class JobSchedulerImpl
     public JobBuilder.ScheduleBuilder createJobBuilder(final ScheduledJobInfoImpl info) {
         final JobBuilder builder = this.jobManager.createJob(info.getJobTopic()).name(info.getJobTopic()).properties(info.getJobProperties());
         return builder.schedule(info.getName());
+    }
+
+    public Collection<ScheduledJobInfo> getScheduledJobs() {
+        final List<ScheduledJobInfo> jobs = new ArrayList<ScheduledJobInfo>();
+        synchronized ( this.scheduledJobs ) {
+            for(final ScheduledJobInfoImpl job : this.scheduledJobs.values() ) {
+                jobs.add(job);
+            }
+        }
+        return jobs;
+    }
+
+    public ScheduledJobInfo getScheduledJob(final String name) {
+        synchronized ( this.scheduledJobs ) {
+            return this.scheduledJobs.get(ResourceHelper.filterName(name));
+        }
     }
 }
