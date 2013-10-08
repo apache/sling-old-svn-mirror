@@ -97,6 +97,8 @@ public class JobConsumerManager {
 
     private BundleContext bundleContext;
 
+    private final Map<String, Object[]> listenerMap = new HashMap<String, Object[]>();
+
     private Dictionary<String, Object> getRegistrationProperties() {
         final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
         serviceProps.put(PropertyProvider.PROPERTY_PROPERTIES, TopologyCapabilities.PROPERTY_TOPICS);
@@ -162,6 +164,7 @@ public class JobConsumerManager {
         this.bundleContext = null;
         synchronized ( this.topicToConsumerMap ) {
             this.topicToConsumerMap.clear();
+            this.listenerMap.clear();
         }
     }
 
@@ -186,6 +189,18 @@ public class JobConsumerManager {
             }
         }
         return null;
+    }
+
+    public void registerListener(final String key, final JobExecutor consumer, final JobExecutionContext handler) {
+        synchronized ( this.topicToConsumerMap ) {
+            this.listenerMap.put(key, new Object[] {consumer, handler});
+        }
+    }
+
+    public void unregisterListener(final String key) {
+        synchronized ( this.topicToConsumerMap ) {
+            this.listenerMap.remove(key);
+        }
     }
 
     /**
@@ -289,6 +304,17 @@ public class JobConsumerManager {
                         if ( topic.length() > 0 ) {
                             final List<ConsumerInfo> consumers = this.topicToConsumerMap.get(topic);
                             if ( consumers != null ) { // sanity check
+                                for(final ConsumerInfo oldConsumer : consumers) {
+                                    if ( oldConsumer.equals(info) && oldConsumer.executor != null ) {
+                                        // notify listener
+                                        for(final Object[] listenerObjects : this.listenerMap.values()) {
+                                            if ( listenerObjects[0] == oldConsumer.executor ) {
+                                                ((JobExecutionContext)listenerObjects[1]).asyncProcessingFinished(JobStatus.FAILED);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                                 consumers.remove(info);
                                 if ( consumers.size() == 0 ) {
                                     this.topicToConsumerMap.remove(topic);
@@ -358,7 +384,7 @@ public class JobConsumerManager {
 
         public final ServiceReference serviceReference;
         private final boolean isConsumer;
-        private JobExecutor executor;
+        public JobExecutor executor;
         public final int ranking;
         public final long serviceId;
 
