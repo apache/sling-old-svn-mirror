@@ -108,6 +108,7 @@ import org.slf4j.LoggerFactory;
                      SlingConstants.TOPIC_RESOURCE_CHANGED,
                      SlingConstants.TOPIC_RESOURCE_REMOVED,
                      "org/apache/sling/event/notification/job/*",
+                     Utility.TOPIC_STOP,
                      ResourceHelper.BUNDLE_EVENT_STARTED,
                      ResourceHelper.BUNDLE_EVENT_UPDATED})
 })
@@ -468,6 +469,11 @@ public class JobManagerImpl
                 this.backgroundLoader.loadJob(path);
             }
             this.jobScheduler.handleEvent(event);
+        } else if ( Utility.TOPIC_STOP.equals(event.getTopic()) ) {
+            if ( !EventUtil.isLocal(event) ) {
+                final String jobId = (String) event.getProperty(Utility.PROPERTY_ID);
+                this.stopJobById(jobId, false);
+            }
         } else if ( ResourceHelper.BUNDLE_EVENT_STARTED.equals(event.getTopic())
                  || ResourceHelper.BUNDLE_EVENT_UPDATED.equals(event.getTopic()) ) {
             this.backgroundLoader.tryToReloadUnloadedJobs();
@@ -1427,10 +1433,30 @@ public class JobManagerImpl
      */
     @Override
     public void stopJobById(final String jobId) {
-        // 1. check if the job is running locally - stop directly
-        // 2. if running remote, send an event via event admin to stop
-        // TODO not implemented yet
-        throw new IllegalStateException("Not implemented yet...");
+        this.stopJobById(jobId, true);
+    }
+
+    private void stopJobById(final String jobId, final boolean forward) {
+        final JobImpl job = (JobImpl)this.getJobById(jobId);
+        if ( job != null && !this.configuration.isStoragePath(job.getResourcePath()) ) {
+            // get the queue configuration
+            final QueueInfo queueInfo = queueConfigManager.getQueueInfo(job.getTopic());
+            final AbstractJobQueue queue;
+            synchronized ( queuesLock ) {
+                queue = this.queues.get(queueInfo.queueName);
+            }
+            boolean stopped = false;
+            if ( queue != null ) {
+                stopped = queue.stopJob(job);
+            }
+            if ( forward && !stopped ) {
+                // send remote event
+                final Map<String, Object> props = new HashMap<String, Object>();
+                props.put(Utility.PROPERTY_ID, jobId);
+                props.put(EventUtil.PROPERTY_DISTRIBUTE, "");
+                this.eventAdmin.sendEvent(new Event(Utility.TOPIC_STOP, props));
+            }
+        }
     }
 
     /**

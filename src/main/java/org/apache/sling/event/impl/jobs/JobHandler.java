@@ -33,6 +33,8 @@ public class JobHandler {
     public long queued = -1;
     public long started = -1;
 
+    private volatile boolean isStopped = false;
+
     private final JobManagerImpl jobManager;
 
     public JobHandler(final JobImpl job, final JobManagerImpl jobManager) {
@@ -45,6 +47,7 @@ public class JobHandler {
     }
 
     public boolean startProcessing(final Queue queue) {
+        this.isStopped = false;
         return this.jobManager.persistJobProperties(this.job, this.job.prepare(queue));
     }
 
@@ -77,6 +80,14 @@ public class JobHandler {
         if ( propNames != null ) {
             this.jobManager.persistJobProperties(this.job, propNames);
         }
+    }
+
+    public boolean isStopped() {
+        return this.isStopped;
+    }
+
+    public void stop() {
+        this.isStopped = true;
     }
 
     @Override
