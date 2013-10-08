@@ -544,7 +544,7 @@ public abstract class AbstractJobQueue
 
                                 try {
                                     synchronized ( lock ) {
-                                        result = consumer.process(job, new JobExecutionContext() {
+                                        final JobExecutionContext ctx = new JobExecutionContext() {
 
                                             private boolean hasInit = false;
 
@@ -585,6 +585,7 @@ public abstract class AbstractJobQueue
                                             public void asyncProcessingFinished(final JobStatus status) {
                                                 synchronized ( lock ) {
                                                     if ( isAsync.compareAndSet(true, false) ) {
+                                                        jobConsumerManager.unregisterListener(job.getId());
                                                         finishedJob(job.getId(), status, true);
                                                         asyncCounter.decrementAndGet();
                                                     } else {
@@ -592,8 +593,10 @@ public abstract class AbstractJobQueue
                                                     }
                                                 }
                                             }
-                                        });
+                                        };
+                                        result = consumer.process(job, ctx);
                                         if ( result == null ) { // ASYNC processing
+                                            jobConsumerManager.registerListener(job.getId(), consumer, ctx);
                                             asyncCounter.incrementAndGet();
                                             notifyFinished(null);
                                             isAsync.set(true);
