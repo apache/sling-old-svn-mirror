@@ -167,7 +167,7 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
             handleError(HttpServletResponse.SC_NOT_FOUND, rnfe.getMessage(),
                 request, response);
 
-        } catch (SlingException se) {
+        } catch (final SlingException se) {
 
             // if we have request data and a non-null active servlet name
             // we assume, that this is the name of the causing servlet
@@ -178,7 +178,10 @@ public class SlingRequestProcessorImpl implements SlingRequestProcessor {
 
             // send this exception as is (albeit unwrapping and wrapped
             // exception.
-            Throwable t = (se.getCause() != null) ? se.getCause() : se;
+            Throwable t = se;
+            while ( t instanceof SlingException && t.getCause() != null ) {
+                t = t.getCause();
+            }
             log.error("service: Uncaught SlingException", t);
             handleError(t, request, response);
 
