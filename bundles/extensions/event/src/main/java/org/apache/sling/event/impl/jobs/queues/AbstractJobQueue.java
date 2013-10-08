@@ -578,7 +578,7 @@ public abstract class AbstractJobQueue
 
                                             @Override
                                             public boolean isStopped() {
-                                                return false;
+                                                return handler.isStopped();
                                             }
 
                                             @Override
@@ -844,5 +844,16 @@ public abstract class AbstractJobQueue
     protected abstract JobHandler start(final JobHandler event);
 
     protected abstract void notifyFinished(final JobHandler rescheduleInfo);
+
+    public boolean stopJob(final JobImpl job) {
+        final JobHandler handler;
+        synchronized ( this.processsingJobsLists ) {
+            handler = this.processsingJobsLists.get(job.getId());
+        }
+        if ( handler != null ) {
+            handler.stop();
+        }
+        return handler != null;
+    }
 }
 
