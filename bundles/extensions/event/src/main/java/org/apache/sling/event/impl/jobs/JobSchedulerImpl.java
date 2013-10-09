@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -47,16 +46,18 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.JobContext;
+import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.impl.support.ScheduleInfo;
+import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventHandler;
@@ -149,12 +150,7 @@ public class JobSchedulerImpl
         if ( this.active ) {
             final Collection<ScheduledJobInfo> jobs = this.getScheduledJobs();
             for(final ScheduledJobInfo info : jobs) {
-                try {
-                    logger.debug("Stopping scheduled job : {}", info.getName());
-                    this.scheduler.removeJob(((ScheduledJobInfoImpl)info).getSchedulerJobId());
-                } catch ( final NoSuchElementException nsee ) {
-                    this.ignoreException(nsee);
-                }
+                this.stopScheduledJob((ScheduledJobInfoImpl)info);
             }
         }
     }
@@ -190,27 +186,8 @@ public class JobSchedulerImpl
                 if ( event.getTopic().equals(TOPIC_READ_JOB) ) {
                     @SuppressWarnings("unchecked")
                     final Map<String, Object> properties = (Map<String, Object>) event.getProperty(PROPERTY_READ_JOB);
-                    properties.remove(ResourceResolver.PROPERTY_RESOURCE_TYPE);
-                    properties.remove(Job.PROPERTY_JOB_CREATED);
-                    properties.remove(Job.PROPERTY_JOB_CREATED_INSTANCE);
+                    final ScheduledJobInfoImpl info = this.addOrUpdateScheduledJob(properties);
 
-                    final String jobTopic = (String) properties.remove(JobUtil.PROPERTY_JOB_TOPIC);
-                    final String jobName = (String) properties.remove(JobUtil.PROPERTY_JOB_NAME);
-                    final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_NAME);
-                    final ScheduleInfo scheduleInfo = (ScheduleInfo) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_INFO);
-                    final boolean isSuspended = properties.remove(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED) != null;
-                    // and now schedule
-                    final String key = ResourceHelper.filterName(schedulerName);
-                    ScheduledJobInfoImpl info;
-                    synchronized ( this.scheduledJobs ) {
-                        info = this.scheduledJobs.get(key);
-                        if ( info == null ) {
-                            info = new ScheduledJobInfoImpl(this, jobTopic, jobName,
-                                    properties, schedulerName);
-                            this.scheduledJobs.put(key, info);
-                        }
-                        info.update(isSuspended, scheduleInfo);
-                    }
                     if ( this.active ) {
                         this.startScheduledJob(info);
                     }
@@ -249,19 +226,38 @@ public class JobSchedulerImpl
                         info = this.scheduledJobs.remove(scheduleName);
                     }
                     if ( info != null && this.active ) {
-                        logger.debug("Stopping scheduled job : {}", info.getName());
-                        try {
-                            this.scheduler.removeJob(info.getSchedulerJobId());
-                        } catch (final NoSuchElementException nsee) {
-                            // this can happen if the job is scheduled on another node
-                            // so we can just ignore this
-                        }
-
+                        this.stopScheduledJob(info);
                     }
                 }
                 event = nextEvent;
             }
         }
+    }
+
+    private ScheduledJobInfoImpl addOrUpdateScheduledJob(final Map<String, Object> properties) {
+        properties.remove(ResourceResolver.PROPERTY_RESOURCE_TYPE);
+        properties.remove(Job.PROPERTY_JOB_CREATED);
+        properties.remove(Job.PROPERTY_JOB_CREATED_INSTANCE);
+
+        final String jobTopic = (String) properties.remove(ResourceHelper.PROPERTY_JOB_TOPIC);
+        final String jobName = (String) properties.remove(ResourceHelper.PROPERTY_JOB_NAME);
+        final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_NAME);
+        @SuppressWarnings("unchecked")
+        final List<ScheduleInfo> scheduleInfos = (List<ScheduleInfo>) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_INFO);
+        final boolean isSuspended = properties.remove(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED) != null;
+        // and now schedule
+        final String key = ResourceHelper.filterName(schedulerName);
+        ScheduledJobInfoImpl info;
+        synchronized ( this.scheduledJobs ) {
+            info = this.scheduledJobs.get(key);
+            if ( info == null ) {
+                info = new ScheduledJobInfoImpl(this, jobTopic, jobName,
+                        properties, schedulerName);
+                this.scheduledJobs.put(key, info);
+            }
+            info.update(isSuspended, scheduleInfos);
+        }
+        return info;
     }
 
     private void startScheduledJob(final ScheduledJobInfoImpl info) {
@@ -271,21 +267,32 @@ public class JobSchedulerImpl
             config.put(PROPERTY_READ_JOB, info);
 
             logger.debug("Adding scheduled job: {}", info.getName());
-            try {
-                switch ( info.getScheduleType() ) {
-                    case DAILY:
+            int index = 0;
+            for(final ScheduleInfo si : info.getSchedules()) {
+                final String name = info.getSchedulerJobId() + "-" + String.valueOf(index);
+                ScheduleOptions options = null;
+                switch ( si.getType() ) {
+                    case DAYLY:
                     case WEEKLY:
                     case HOURLY:
-                        this.scheduler.addJob(info.getSchedulerJobId(), this, config, info.getCronExpression(), false);
+                        options = this.scheduler.EXPR(((ScheduleInfoImpl)si).getCronExpression());
+
                         break;
                     case DATE:
-                        this.scheduler.fireJobAt(info.getSchedulerJobId(), this, config, info.getNextScheduledExecution());
+                        options = this.scheduler.AT(((ScheduleInfoImpl)si).getNextScheduledExecution());
                         break;
                 }
-            } catch (final Exception e) {
-                // we ignore it if scheduled fails...
-                this.ignoreException(e);
+                this.scheduler.schedule(this, options.name(name).config(config).canRunConcurrently(false));
+                index++;
             }
+        }
+    }
+
+    private void stopScheduledJob(final ScheduledJobInfoImpl info) {
+        logger.debug("Stopping scheduled job : {}", info.getName());
+        for(int index = 0; index<info.getSchedules().size(); index++) {
+            final String name = info.getSchedulerJobId() + "-" + String.valueOf(index);
+            this.scheduler.unschedule(name);
         }
     }
 
@@ -297,12 +304,6 @@ public class JobSchedulerImpl
         final ScheduledJobInfoImpl info = (ScheduledJobInfoImpl) context.getConfiguration().get(PROPERTY_READ_JOB);
 
         this.jobManager.addJob(info.getJobTopic(), info.getJobName(), info.getJobProperties());
-
-        // is this job scheduled for a specific date?
-        if ( info.getScheduleType() == ScheduledJobInfo.ScheduleType.DATE ) {
-            // we can remove it from the resource tree
-            this.unschedule(info);
-        }
     }
 
     public void unschedule(final ScheduledJobInfoImpl info) {
@@ -500,13 +501,13 @@ public class JobSchedulerImpl
      * Write a schedule job to the resource tree.
      * @throws PersistenceException
      */
-    public boolean writeJob(
+    public ScheduledJobInfoImpl writeJob(
             final String jobTopic,
             final String jobName,
             final Map<String, Object> jobProperties,
             final String scheduleName,
             final boolean suspend,
-            final ScheduleInfo scheduleInfo)
+            final List<ScheduleInfoImpl> scheduleInfos)
     throws PersistenceException {
         ResourceResolver resolver = null;
         try {
@@ -524,16 +525,22 @@ public class JobSchedulerImpl
                 }
             }
 
-            properties.put(JobUtil.PROPERTY_JOB_TOPIC, jobTopic);
+            properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
             if ( jobName != null ) {
-                properties.put(JobUtil.PROPERTY_JOB_NAME, jobName);
+                properties.put(ResourceHelper.PROPERTY_JOB_NAME, jobName);
             }
             properties.put(Job.PROPERTY_JOB_CREATED, Calendar.getInstance());
             properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);
 
             // put scheduler name and scheduler info
             properties.put(ResourceHelper.PROPERTY_SCHEDULE_NAME, scheduleName);
-            properties.put(ResourceHelper.PROPERTY_SCHEDULE_INFO, scheduleInfo.getSerializedString());
+            final String[] infoArray = new String[scheduleInfos.size()];
+            int index = 0;
+            for(final ScheduleInfoImpl info : scheduleInfos) {
+                infoArray[index] = info.getSerializedString();
+                index++;
+            }
+            properties.put(ResourceHelper.PROPERTY_SCHEDULE_INFO, infoArray);
             if ( suspend ) {
                 properties.put(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED, Boolean.TRUE);
             }
@@ -558,7 +565,10 @@ public class JobSchedulerImpl
             ResourceHelper.getOrCreateResource(resolver,
                     path,
                     properties);
-            return true;
+            // put back real schedule infos
+            properties.put(ResourceHelper.PROPERTY_SCHEDULE_INFO, scheduleInfos);
+
+            return this.addOrUpdateScheduledJob(properties);
         } catch ( final LoginException le ) {
             // we ignore this
             this.ignoreException(le);
@@ -567,7 +577,7 @@ public class JobSchedulerImpl
                 resolver.close();
             }
         }
-        return false;
+        return null;
     }
 
     /**
@@ -600,12 +610,18 @@ public class JobSchedulerImpl
         }
     }
 
+    /**
+     * Create a schedule builder for a currently scheduled job
+     */
     public JobBuilder.ScheduleBuilder createJobBuilder(final ScheduledJobInfoImpl info) {
         final JobBuilder builder = this.jobManager.createJob(info.getJobTopic()).name(info.getJobTopic()).properties(info.getJobProperties());
         final JobBuilder.ScheduleBuilder sb = builder.schedule(info.getName());
-        return sb.suspend(info.isSuspended());
+        return (info.isSuspended() ? sb.suspend() : sb);
     }
 
+    /**
+     * Get all scheduled jobs
+     */
     public Collection<ScheduledJobInfo> getScheduledJobs() {
         final List<ScheduledJobInfo> jobs = new ArrayList<ScheduledJobInfo>();
         synchronized ( this.scheduledJobs ) {
@@ -616,6 +632,9 @@ public class JobSchedulerImpl
         return jobs;
     }
 
+    /**
+     * Get a scheduled job with the given name
+     */
     public ScheduledJobInfo getScheduledJob(final String name) {
         synchronized ( this.scheduledJobs ) {
             return this.scheduledJobs.get(ResourceHelper.filterName(name));

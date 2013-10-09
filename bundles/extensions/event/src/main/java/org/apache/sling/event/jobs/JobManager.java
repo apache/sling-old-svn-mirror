@@ -88,6 +88,9 @@ public interface JobManager {
      * The returned job object is a snapshot of the job state taken at the time of creation. Updates
      * to the job state are not reflected and the client needs to get a new job object using the job id.
      *
+     * If the queue for processing this job is configured to drop the job, <code>null</code> is returned
+     * as well.
+     *
      * @param topic The required job topic.
      * @param properties Optional job properties. The properties must be serializable.
      * @return The new job - or <code>null</code> if the job could not be created.
@@ -112,6 +115,9 @@ public interface JobManager {
      *
      * The returned job object is a snapshot of the job state taken at the time of creation. Updates
      * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
+     * If the queue for processing this job is configured to drop the job, <code>null</code> is returned
+     * as well.
      *
      * @param topic The required job topic.
      * @param name  Optional unique job name

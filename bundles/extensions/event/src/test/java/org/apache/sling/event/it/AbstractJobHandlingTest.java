@@ -112,11 +112,11 @@ public abstract class AbstractJobHandlingTest {
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.json", "2.0.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.mime", "2.1.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.classloader", "1.3.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.3.4"),
+                mavenBundle("org.apache.sling", "org.apache.sling.commons.scheduler", "2.4.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.auth.core", "1.1.4"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.api", "1.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.discovery.standalone", "1.0.0"),
 

@@ -38,6 +38,7 @@ import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.EventConstants;
 
@@ -60,13 +61,17 @@ public abstract class ResourceHelper {
     public static final String PROPERTY_SCHEDULE_INFO = "slingevent:scheduleInfo";
     public static final String PROPERTY_SCHEDULE_SUSPENDED = "slingevent:scheduleSuspended";
 
+    public static final String PROPERTY_JOB_ID = "slingevent:eventId";
+    public static final String PROPERTY_JOB_NAME = "event.job.id";
+    public static final String PROPERTY_JOB_TOPIC = "event.job.topic";
+
     /** List of ignored properties to write to the repository. */
     @SuppressWarnings("deprecation")
     private static final String[] IGNORE_PROPERTIES = new String[] {
         EventUtil.PROPERTY_DISTRIBUTE,
         EventUtil.PROPERTY_APPLICATION,
         EventConstants.EVENT_TOPIC,
-        JobUtil.JOB_ID,
+        ResourceHelper.PROPERTY_JOB_ID,
         JobUtil.PROPERTY_JOB_PARALLEL,
         JobUtil.PROPERTY_JOB_RUN_LOCAL,
         JobUtil.PROPERTY_JOB_QUEUE_ORDERED,
@@ -159,11 +164,22 @@ public abstract class ResourceHelper {
             final Map<String, Object> result = new HashMap<String, Object>(vm);
             for(final Map.Entry<String, Object> entry : result.entrySet()) {
                 if ( entry.getKey().equals(PROPERTY_SCHEDULE_INFO) ) {
-                    final ScheduleInfo info = ScheduleInfo.deserialize(entry.getValue().toString());
-                    if ( info == null ) {
+                    final String[] infoArray = vm.get(entry.getKey(), String[].class);
+                    if ( infoArray == null || infoArray.length == 0 ) {
                         hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
                     } else {
-                        entry.setValue(info);
+                        final List<ScheduleInfo> infos = new ArrayList<ScheduleInfo>();
+                        for(final String i : infoArray) {
+                            final ScheduleInfoImpl info = ScheduleInfoImpl.deserialize(i);
+                            if ( info != null ) {
+                                infos.add(info);
+                            }
+                        }
+                        if ( infos.size() < infoArray.length ) {
+                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
+                        } else {
+                            entry.setValue(infos);
+                        }
                     }
                 }
                 if ( entry.getValue() instanceof InputStream ) {

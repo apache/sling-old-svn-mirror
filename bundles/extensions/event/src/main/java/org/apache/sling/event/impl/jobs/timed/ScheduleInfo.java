@@ -67,7 +67,7 @@ final class ScheduleInfo implements Serializable {
         }
 
         final String id = (String)event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_ID);
-        final String jId = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
+        final String jId = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
 
         this.jobId = getJobId(topic, id, jId);
     }

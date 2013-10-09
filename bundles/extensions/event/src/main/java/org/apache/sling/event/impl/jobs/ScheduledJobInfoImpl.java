@@ -19,14 +19,17 @@
 package org.apache.sling.event.impl.jobs;
 
 import java.io.Serializable;
-import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.sling.event.impl.support.ScheduleInfo;
+import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder.ScheduleBuilder;
+import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 
 public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
@@ -43,7 +46,7 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
 
     private final JobSchedulerImpl jobScheduler;
 
-    private ScheduleInfo scheduleInfo;
+    private List<ScheduleInfo> scheduleInfos;
 
     private AtomicBoolean isSuspended;
 
@@ -60,8 +63,8 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
     }
 
     public void update(final boolean isSuspended,
-            final ScheduleInfo scheduleInfo) {
-        this.scheduleInfo = scheduleInfo;
+            final List<ScheduleInfo> scheduleInfos) {
+        this.scheduleInfos = Collections.unmodifiableList(scheduleInfos);
         this.isSuspended = new AtomicBoolean(isSuspended);
     }
 
@@ -74,11 +77,11 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
     }
 
     /**
-     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getScheduleType()
+     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getSchedules()
      */
     @Override
-    public ScheduleType getScheduleType() {
-        return this.scheduleInfo.getScheduleType();
+    public Collection<ScheduleInfo> getSchedules() {
+        return this.scheduleInfos;
     }
 
     /**
@@ -86,56 +89,14 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
      */
     @Override
     public Date getNextScheduledExecution() {
-        final Calendar now = Calendar.getInstance();
-        switch ( this.scheduleInfo.getScheduleType() ) {
-            case DATE : return this.scheduleInfo.getAt();
-            case DAILY : final Calendar next = Calendar.getInstance();
-                         next.set(Calendar.HOUR_OF_DAY, this.getHourOfDay());
-                         next.set(Calendar.MINUTE, this.getMinuteOfHour());
-                         if ( next.before(now) ) {
-                             next.add(Calendar.DAY_OF_WEEK, 1);
-                         }
-                         return next.getTime();
-            case WEEKLY : final Calendar nextW = Calendar.getInstance();
-                          nextW.set(Calendar.HOUR_OF_DAY, this.getHourOfDay());
-                          nextW.set(Calendar.MINUTE, this.getMinuteOfHour());
-                          nextW.set(Calendar.DAY_OF_WEEK, this.getDayOfWeek());
-                          if ( nextW.before(now) ) {
-                              nextW.add(Calendar.WEEK_OF_YEAR, 1);
-                          }
-                          return nextW.getTime();
-            case HOURLY : final Calendar nextH = Calendar.getInstance();
-                          nextH.set(Calendar.MINUTE, this.getMinuteOfHour());
-                          if ( nextH.before(now) ) {
-                              nextH.add(Calendar.HOUR_OF_DAY, 1);
-                          }
-                          return nextH.getTime();
+        Date result = null;
+        for(final ScheduleInfo info : this.scheduleInfos) {
+            final Date newResult = ((ScheduleInfoImpl)info).getNextScheduledExecution();
+            if ( result == null || result.getTime() > newResult.getTime() ) {
+                result = newResult;
+            }
         }
-        return null;
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getDayOfWeek()
-     */
-    @Override
-    public int getDayOfWeek() {
-        return this.scheduleInfo.getDayOfWeek();
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getHourOfDay()
-     */
-    @Override
-    public int getHourOfDay() {
-        return this.scheduleInfo.getHourOfDay();
-    }
-
-    /**
-     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getMinuteOfHour()
-     */
-    @Override
-    public int getMinuteOfHour() {
-        return this.scheduleInfo.getMinuteOfHour();
+        return result;
     }
 
     /**
@@ -211,33 +172,5 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
      */
     public String getSchedulerJobId() {
         return Job.class.getName() + ":" + this.scheduleName;
-    }
-
-    /**
-     * If the job is scheduled daily or weekly, return the cron expression
-     */
-    public String getCronExpression() {
-        if ( this.scheduleInfo.getScheduleType() == ScheduleType.DAILY ) {
-            final StringBuilder sb = new StringBuilder("0 ");
-            sb.append(this.scheduleInfo.getMinuteOfHour());
-            sb.append(' ');
-            sb.append(this.scheduleInfo.getHourOfDay());
-            sb.append(" * * *");
-            return sb.toString();
-        } else if ( this.scheduleInfo.getScheduleType() == ScheduleType.WEEKLY ) {
-            final StringBuilder sb = new StringBuilder("0 ");
-            sb.append(this.scheduleInfo.getMinuteOfHour());
-            sb.append(' ');
-            sb.append(this.scheduleInfo.getHourOfDay());
-            sb.append(" * * ");
-            sb.append(this.scheduleInfo.getDayOfWeek());
-            return sb.toString();
-        } else if ( this.scheduleInfo.getScheduleType() == ScheduleType.HOURLY ) {
-            final StringBuilder sb = new StringBuilder("0 ");
-            sb.append(this.scheduleInfo.getMinuteOfHour());
-            sb.append(" * * * *");
-            return sb.toString();
-        }
-        return null;
     }
 }

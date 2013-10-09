@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -169,9 +170,9 @@ public abstract class Utility {
         final Map<String, Object> eventProps = new HashMap<String, Object>();
         eventProps.putAll(((JobImpl)job).getProperties());
         if ( job.getName() != null ) {
-            eventProps.put(JobUtil.PROPERTY_JOB_NAME, job.getName());
+            eventProps.put(ResourceHelper.PROPERTY_JOB_NAME, job.getName());
         }
-        eventProps.put(JobUtil.JOB_ID, job.getId());
+        eventProps.put(ResourceHelper.PROPERTY_JOB_ID, job.getId());
         eventProps.remove(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER);
         return new Event(job.getTopic(), eventProps);
     }
@@ -185,9 +186,9 @@ public abstract class Utility {
             sb.append(", properties=");
             boolean first = true;
             for(final String propName : properties.keySet()) {
-                if ( propName.equals(JobUtil.JOB_ID)
-                    || propName.equals(JobUtil.PROPERTY_JOB_NAME)
-                    || propName.equals(JobUtil.PROPERTY_JOB_TOPIC) ) {
+                if ( propName.equals(ResourceHelper.PROPERTY_JOB_ID)
+                    || propName.equals(ResourceHelper.PROPERTY_JOB_NAME)
+                    || propName.equals(ResourceHelper.PROPERTY_JOB_TOPIC) ) {
                    continue;
                 }
                 if ( first ) {
