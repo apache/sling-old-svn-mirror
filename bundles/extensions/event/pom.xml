@@ -112,7 +112,7 @@
                         </property>
                     </systemProperties>
                     <argLine>
-                        -Xmx1024m -XX:MaxPermSize=368m
+                        -Xmx2048m -XX:MaxPermSize=512m
                     </argLine>
                     <includes>
                         <include>**/it/*</include>
