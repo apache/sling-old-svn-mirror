@@ -48,12 +48,7 @@
         <url>http://svn.apache.org/viewvc/sling/trunk/installer</url>
     </scm>
 
-
-    <!-- List modules to be included in the build here ! -->
     <modules>
-        
-        <!-- Installer -->
-        <module>api</module>
         <module>core</module>
         <module>console</module>
         <module>providers/file</module>
@@ -61,7 +56,5 @@
         <module>factories/configuration</module>
         <module>factories/deploymentpck</module>
         <module>it</module>
-        
     </modules>
-
 </project>
