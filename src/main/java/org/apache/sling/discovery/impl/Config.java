@@ -95,7 +95,54 @@ public class Config {
         those instances have preference to become leader which have the corresponding descriptor value of 'false' */
     @Property
     public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
+
+    /**
+     * If set to true, the whitelist is disabled and the signing and encryption are enabled.
+     */
+    @Property(boolValue=false)
+    private static final String WHITELIST_DISABLED = "whiteListDisabled";
+
+    /**
+     * If set to true, and the whitelist is disabled, messages will be encrypted.
+     */
+    @Property(boolValue=false)
+    private static final String ENCRYPTION_ENABLED = "enableEncryption";
+
+    /**
+     * The value fo the shared key, shared amongst all instances in the same cluster.
+     */
+    @Property
+    private static final String SHARED_KEY = "sharedKey";
+
+    /**
+     * The default lifetime of a HMAC shared key in ms. (4h)
+     */
+    private static final long DEFAULT_SHARED_KEY_INTERVAL = 3600*1000*4;
+
+    @Property(longValue=DEFAULT_SHARED_KEY_INTERVAL)
+    private static final String SHARED_KEY_INTERVAL = "hmacSharedKeyTTL";
+
     private String leaderElectionRepositoryDescriptor ;
+
+    /**
+     * True when the whitelist is disabled.
+     */
+    private boolean whiteListDisabled;
+
+    /**
+     * the shared key.
+     */
+    private String sharedKey;
+
+    /**
+     * The key interval.
+     */
+    private long keyInterval;
+
+    /**
+     * true when encryption is enabled.
+     */
+    private boolean encryptionEnabled;
 
     @Activate
     protected void activate(final Map<String, Object> properties) {
@@ -177,6 +224,12 @@ public class Config {
                 null);
         logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
+
+        whiteListDisabled = PropertiesUtil.toBoolean(properties.get(WHITELIST_DISABLED), true);
+        encryptionEnabled = PropertiesUtil.toBoolean(properties.get(ENCRYPTION_ENABLED), false);
+        sharedKey = PropertiesUtil.toString(properties.get(SHARED_KEY), null);
+        keyInterval = PropertiesUtil.toLong(SHARED_KEY_INTERVAL, DEFAULT_SHARED_KEY_INTERVAL);
+
     }
 
     /**
@@ -266,5 +319,21 @@ public class Config {
      */
     public String getLeaderElectionRepositoryDescriptor() {
         return leaderElectionRepositoryDescriptor;
+    }
+
+    public boolean isWhiteListDisabled() {
+        return whiteListDisabled;
+    }
+
+    public String getSharedKey() {
+        return sharedKey;
+    }
+
+    public long getKeyInterval() {
+        return keyInterval;
+    }
+
+    public boolean isEncryptionEnabled() {
+        return encryptionEnabled;
     }
 }
