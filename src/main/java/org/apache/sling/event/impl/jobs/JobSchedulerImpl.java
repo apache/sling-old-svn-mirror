@@ -196,9 +196,9 @@ public class JobSchedulerImpl
 
                     final String jobTopic = (String) properties.remove(JobUtil.PROPERTY_JOB_TOPIC);
                     final String jobName = (String) properties.remove(JobUtil.PROPERTY_JOB_NAME);
-                    final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULER_NAME);
-                    final ScheduleInfo scheduleInfo = (ScheduleInfo) properties.remove(ResourceHelper.PROPERTY_SCHEDULER_INFO);
-                    final boolean isSuspended = properties.remove(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED) != null;
+                    final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_NAME);
+                    final ScheduleInfo scheduleInfo = (ScheduleInfo) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_INFO);
+                    final boolean isSuspended = properties.remove(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED) != null;
                     // and now schedule
                     final String key = ResourceHelper.filterName(schedulerName);
                     ScheduledJobInfoImpl info;
@@ -504,7 +504,7 @@ public class JobSchedulerImpl
             final String jobTopic,
             final String jobName,
             final Map<String, Object> jobProperties,
-            final String schedulerName,
+            final String scheduleName,
             final boolean suspend,
             final ScheduleInfo scheduleInfo)
     throws PersistenceException {
@@ -532,16 +532,16 @@ public class JobSchedulerImpl
             properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);
 
             // put scheduler name and scheduler info
-            properties.put(ResourceHelper.PROPERTY_SCHEDULER_NAME, schedulerName);
-            properties.put(ResourceHelper.PROPERTY_SCHEDULER_INFO, scheduleInfo);
+            properties.put(ResourceHelper.PROPERTY_SCHEDULE_NAME, scheduleName);
+            properties.put(ResourceHelper.PROPERTY_SCHEDULE_INFO, scheduleInfo.getSerializedString());
             if ( suspend ) {
-                properties.put(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED, Boolean.TRUE);
+                properties.put(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED, Boolean.TRUE);
             }
 
             // create path and resource
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_SCHEDULED_JOB);
 
-            final String path = this.config.getScheduledJobsPathWithSlash() + ResourceHelper.filterName(schedulerName);
+            final String path = this.config.getScheduledJobsPathWithSlash() + ResourceHelper.filterName(scheduleName);
 
             // update existing resource
             final Resource existingInfo = resolver.getResource(path);
@@ -635,9 +635,9 @@ public class JobSchedulerImpl
             if ( eventResource != null ) {
                 final ModifiableValueMap mvm = eventResource.adaptTo(ModifiableValueMap.class);
                 if ( flag ) {
-                    mvm.put(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED, Boolean.TRUE);
+                    mvm.put(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED, Boolean.TRUE);
                 } else {
-                    mvm.remove(ResourceHelper.PROPERTY_SCHEDULER_SUSPENDED);
+                    mvm.remove(ResourceHelper.PROPERTY_SCHEDULE_SUSPENDED);
                 }
                 resolver.commit();
             }

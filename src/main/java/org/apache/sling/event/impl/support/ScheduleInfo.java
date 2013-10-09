@@ -18,7 +18,6 @@
  */
 package org.apache.sling.event.impl.support;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -29,7 +28,7 @@ public class ScheduleInfo implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** Serialization version. */
-    private static final int VERSION = 1;
+    private static final String VERSION = "1";
 
     public static ScheduleInfo HOURLY(final int minutes) {
         return new ScheduleInfo(ScheduleType.HOURLY, -1, -1, minutes, null);
@@ -47,15 +46,15 @@ public class ScheduleInfo implements Serializable {
         return new ScheduleInfo(ScheduleType.DAILY, -1, hour, minute, null);
     }
 
-    private ScheduleType scheduleType;
+    private final ScheduleType scheduleType;
 
-    private int dayOfWeek;
+    private final int dayOfWeek;
 
-    private int hourOfDay;
+    private final int hourOfDay;
 
-    private int minuteOfHour;
+    private final int minuteOfHour;
 
-    private Date at;
+    private final Date at;
 
     private ScheduleInfo(final ScheduleType scheduleType,
             final int dayOfWeek,
@@ -69,39 +68,39 @@ public class ScheduleInfo implements Serializable {
         this.at = at;
     }
 
-    /**
-     * Serialize the object
-     * - write version id
-     * - serialize each entry
-     * @param out Object output stream
-     * @throws IOException
-     */
-    private void writeObject(final java.io.ObjectOutputStream out)
-            throws IOException {
-        out.writeInt(VERSION);
-        out.writeObject(this.scheduleType.name());
-        out.writeInt(this.dayOfWeek);
-        out.writeInt(this.hourOfDay);
-        out.writeInt(this.minuteOfHour);
-        out.writeObject(this.at);
-    }
-
-    /**
-     * Deserialize the object
-     * - read version id
-     * - deserialize each entry
-     */
-    private void readObject(final java.io.ObjectInputStream in)
-    throws IOException, ClassNotFoundException {
-        final int version = in.readInt();
-        if ( version < 1 || version > VERSION ) {
-            throw new ClassNotFoundException(this.getClass().getName());
+    public static ScheduleInfo deserialize(final String s) {
+        final String[] parts = s.split(":");
+        if ( parts.length == 6 && parts[0].equals(VERSION) ) {
+            try {
+                return new ScheduleInfo(ScheduleType.valueOf(parts[1]),
+                        Integer.parseInt(parts[2]),
+                        Integer.parseInt(parts[3]),
+                        Integer.parseInt(parts[4]),
+                        (parts[5].equals("null") ? null : new Date(Long.parseLong(parts[5]))));
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
         }
-        this.scheduleType = ScheduleType.valueOf((String)in.readObject());
-        this.dayOfWeek = in.readInt();
-        this.hourOfDay = in.readInt();
-        this.minuteOfHour = in.readInt();
-        this.at = (Date) in.readObject();
+        return null;
+    }
+    public String getSerializedString() {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(VERSION);
+        sb.append(":");
+        sb.append(this.scheduleType.name());
+        sb.append(":");
+        sb.append(String.valueOf(this.dayOfWeek));
+        sb.append(":");
+        sb.append(String.valueOf(this.hourOfDay));
+        sb.append(":");
+        sb.append(String.valueOf(this.minuteOfHour));
+        sb.append(":");
+        if ( at == null ) {
+            sb.append("null");
+        } else {
+            sb.append(String.valueOf(at.getTime()));
+        }
+        return sb.toString();
     }
 
     public Date getAt() {
