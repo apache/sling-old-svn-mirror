@@ -81,6 +81,8 @@ public class TopologyConnectorClient implements
     /** SLING-2882: whether or not to suppress ping warnings **/
     private boolean suppressPingWarnings_ = false;
 
+    private TopologyRequestValidator requestValidator;
+
     TopologyConnectorClient(final ClusterViewService clusterViewService,
             final AnnouncementRegistry announcementRegistry, final Config config,
             final URL connectorUrl, final String serverInfo) {
@@ -98,6 +100,7 @@ public class TopologyConnectorClient implements
         if (connectorUrl == null) {
             throw new IllegalArgumentException("connectorUrl must not be null");
         }
+        this.requestValidator = new TopologyRequestValidator(config);
         this.clusterViewService = clusterViewService;
         this.announcementRegistry = announcementRegistry;
         this.config = config;
@@ -148,11 +151,12 @@ public class TopologyConnectorClient implements
                     return false;
                 }
             });
-            final String p = topologyAnnouncement.asJSON();
+            final String p = requestValidator.encodeMessage(topologyAnnouncement.asJSON());
 
         	if (logger.isDebugEnabled()) {
         		logger.debug("ping: topologyAnnouncement json is: " + p);
         	}
+        	requestValidator.trustMessage(method, p);
             method.setRequestEntity(new StringRequestEntity(p, "application/json", "UTF-8"));
             DefaultHttpMethodRetryHandler retryhandler = new DefaultHttpMethodRetryHandler(0, false);
             httpClient.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, retryhandler);
@@ -163,7 +167,7 @@ public class TopologyConnectorClient implements
         	}
             lastStatusCode = method.getStatusCode();
             if (method.getStatusCode()==HttpServletResponse.SC_OK) {
-                String responseBody = method.getResponseBodyAsString(16*1024*1024); // limiting to 16MB, should be way enough
+                String responseBody = requestValidator.decodeMessage(method); // limiting to 16MB, should be way enough
             	if (logger.isDebugEnabled()) {
             		logger.debug("ping: response body=" + responseBody);
             	}
@@ -280,6 +284,7 @@ public class TopologyConnectorClient implements
                                 .getURI().getPort()), c);
             }
 
+            requestValidator.trustMessage(method, null);
             httpClient.executeMethod(method);
         	if (logger.isDebugEnabled()) {
 	            logger.debug("disconnect: done. code=" + method.getStatusCode()

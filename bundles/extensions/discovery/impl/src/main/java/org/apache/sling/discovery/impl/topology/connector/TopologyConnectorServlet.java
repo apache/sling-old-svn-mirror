@@ -18,7 +18,6 @@
  */
 package org.apache.sling.discovery.impl.topology.connector;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashSet;
@@ -73,14 +72,20 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
     /** the set of ips/hostnames which are allowed to connect to this servlet **/
     private final Set<String> whitelist = new HashSet<String>();
 
+    private TopologyRequestValidator requestValidator;
+
+
     protected void activate(final ComponentContext context) {
         whitelist.clear();
-        String[] whitelistConfig = config.getTopologyConnectorWhitelist();
-        for (int i = 0; i < whitelistConfig.length; i++) {
-            String aWhitelistEntry = whitelistConfig[i];
-            logger.info("activate: adding whitelist entry: " + aWhitelistEntry);
-            whitelist.add(aWhitelistEntry);
+        if (!config.isWhiteListDisabled()) {
+            String[] whitelistConfig = config.getTopologyConnectorWhitelist();
+            for (int i = 0; i < whitelistConfig.length; i++) {
+                String aWhitelistEntry = whitelistConfig[i];
+                logger.info("activate: adding whitelist entry: " + aWhitelistEntry);
+                whitelist.add(aWhitelistEntry);
+            }
         }
+        requestValidator = new TopologyRequestValidator(config);
     }
 
     @Override
@@ -126,18 +131,7 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
         }
         final String selector = pathInfo.getSelectorString();
 
-        final BufferedReader reader = request.getReader();
-        StringBuilder sb = new StringBuilder();
-        while(true) {
-            final String line = reader.readLine();
-            if (line==null) {
-                break;
-            }
-            sb.append(line);
-            sb.append(System.getProperty("line.separator"));
-        }
-
-        String topologyAnnouncementJSON = sb.toString();
+        String topologyAnnouncementJSON = requestValidator.decodeMessage(request);
     	if (logger.isDebugEnabled()) {
 	        logger.debug("doPost: incoming topology announcement is: "
 	                + topologyAnnouncementJSON);
@@ -209,7 +203,8 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
                             }
                         });
             }
-            final String p = replyAnnouncement.asJSON();
+            final String p = requestValidator.encodeMessage(replyAnnouncement.asJSON());
+            requestValidator.trustMessage(response, request, p);
             final PrintWriter pw = response.getWriter();
             pw.print(p);
             pw.flush();
@@ -222,10 +217,14 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
 
     /** Checks if the provided request's remote server is whitelisted **/
     private boolean isWhitelisted(final SlingHttpServletRequest request) {
-        if (whitelist.contains(request.getRemoteAddr())) {
-            return true;
-        } else if (whitelist.contains(request.getRemoteHost())) {
-            return true;
+        if (config.isWhiteListDisabled()) {
+            return requestValidator.isTrusted(request);
+        } else {
+            if (whitelist.contains(request.getRemoteAddr())) {
+                return true;
+            } else if (whitelist.contains(request.getRemoteHost())) {
+                return true;
+            }
         }
         logger.info("isWhitelisted: rejecting " + request.getRemoteAddr()
                 + ", " + request.getRemoteHost());
