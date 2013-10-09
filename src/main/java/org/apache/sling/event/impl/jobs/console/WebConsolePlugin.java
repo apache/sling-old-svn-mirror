@@ -44,6 +44,7 @@ import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
+import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
@@ -183,9 +184,9 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
 
     private Event getTestEvent(final String id) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(JobUtil.PROPERTY_JOB_TOPIC, SLING_WEBCONSOLE_TEST_JOB_TOPIC);
+        props.put(ResourceHelper.PROPERTY_JOB_TOPIC, SLING_WEBCONSOLE_TEST_JOB_TOPIC);
         if ( id != null ) {
-            props.put(JobUtil.PROPERTY_JOB_NAME, id);
+            props.put(ResourceHelper.PROPERTY_JOB_NAME, id);
         }
 
         return new Event(JobUtil.TOPIC_JOB, props);

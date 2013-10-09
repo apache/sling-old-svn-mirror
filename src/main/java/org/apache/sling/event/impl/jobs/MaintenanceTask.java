@@ -710,7 +710,7 @@ public class MaintenanceTask {
 
             properties.put(JobImpl.PROPERTY_BRIDGED_EVENT, true);
             final String topic = (String)properties.remove("slingevent:topic");
-            properties.put(JobUtil.PROPERTY_JOB_TOPIC, topic);
+            properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, topic);
 
             properties.remove(Job.PROPERTY_JOB_QUEUE_NAME);
             properties.remove(Job.PROPERTY_JOB_TARGET_INSTANCE);
@@ -752,7 +752,7 @@ public class MaintenanceTask {
             properties.put(ResourceResolver.PROPERTY_RESOURCE_TYPE, ResourceHelper.RESOURCE_TYPE_JOB);
 
             final String jobId = this.configuration.getUniqueId(topic);
-            properties.put(JobUtil.JOB_ID, jobId);
+            properties.put(ResourceHelper.PROPERTY_JOB_ID, jobId);
             properties.remove(Job.PROPERTY_JOB_STARTED_TIME);
 
             final String newPath = this.configuration.getUniquePath(targetId, topic, jobId, vm);

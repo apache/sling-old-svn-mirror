@@ -39,6 +39,7 @@ import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.deprecated.JobStatusNotifier;
 import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
@@ -276,7 +277,7 @@ public abstract class AbstractJobQueue
      */
     @Override
     public boolean sendAcknowledge(final Event job) {
-        final String jobId = (String)job.getProperty(JobUtil.JOB_ID);
+        final String jobId = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID);
         final JobHandler ack;
         synchronized ( this.startedJobsLists ) {
             ack = this.startedJobsLists.remove(jobId);
@@ -350,7 +351,7 @@ public abstract class AbstractJobQueue
      */
     @Override
     public boolean finishedJob(final Event job, final boolean shouldReschedule) {
-        final String location = (String)job.getProperty(JobUtil.JOB_ID);
+        final String location = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID);
         return this.finishedJob(location, shouldReschedule ? JobStatus.FAILED : JobStatus.SUCCEEDED, false);
     }
 

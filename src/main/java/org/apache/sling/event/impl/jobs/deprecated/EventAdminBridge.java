@@ -35,6 +35,7 @@ import org.apache.sling.event.EventUtil;
 import org.apache.sling.event.impl.jobs.JobImpl;
 import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.Environment;
+import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
@@ -154,8 +155,8 @@ public class EventAdminBridge
                         this.ignoreException(ie);
                     }
                 } else {
-                    final String jobTopic = (String)event.getProperty(JobUtil.PROPERTY_JOB_TOPIC);
-                    final String jobName = (String)event.getProperty(JobUtil.PROPERTY_JOB_NAME);
+                    final String jobTopic = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC);
+                    final String jobName = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_NAME);
 
                     final Map<String, Object> props =  new EventPropertiesMap(event);
                     props.put(JobImpl.PROPERTY_BRIDGED_EVENT, Boolean.TRUE);
@@ -187,7 +188,7 @@ public class EventAdminBridge
                 logger.debug("Handling local job {}", EventUtil.toString(event));
             }
             // check job topic
-            final String errorMessage = Utility.checkJobTopic(event.getProperty(JobUtil.PROPERTY_JOB_TOPIC));
+            final String errorMessage = Utility.checkJobTopic(event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC));
             if ( errorMessage == null ) {
                 try {
                     this.writeQueue.put(event);

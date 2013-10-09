@@ -18,6 +18,7 @@
  */
 package org.apache.sling.event.jobs;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -30,13 +31,6 @@ import aQute.bnd.annotation.ProviderType;
 @ProviderType
 public interface ScheduledJobInfo {
 
-    enum ScheduleType {
-        DATE,         // scheduled for a date
-        HOURLY,       // scheduled hourly
-        DAILY,        // scheduled once a day
-        WEEKLY        // scheduled once a week
-    }
-
     /**
      * Return the unique scheduling name.
      * @return The unique name
@@ -44,33 +38,15 @@ public interface ScheduledJobInfo {
     String getName();
 
     /**
-     * Return the scheduling type
-     * @return The scheduling type
+     * Get all schedules for this job
+     * @return A non null and non empty list of schedules.
      */
-    ScheduleType getScheduleType();
+    Collection<ScheduleInfo> getSchedules();
 
     /**
      * Return the next scheduled execution date.
      */
     Date getNextScheduledExecution();
-
-    /**
-     * If the job is scheduled weekly, returns the day of the week
-     * @return The day of the week (from 1 to 7) or -1
-     */
-    int getDayOfWeek();
-
-    /**
-     * Return the hour of the day for daily and weekly scheduled jobs
-     * @return The hour of the day (from 0 to 23) or -1
-     */
-    int getHourOfDay();
-
-    /**
-     * Return the minute of the hour for daily, weekly and hourly scheduled jobs.
-     * @return The minute of the hour (from 0 to 59) or -1
-     */
-    int getMinuteOfHour();
 
     /**
      * Return the job topic.

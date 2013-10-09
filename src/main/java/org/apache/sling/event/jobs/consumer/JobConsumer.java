@@ -19,7 +19,6 @@
 package org.apache.sling.event.jobs.consumer;
 
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
 
 import aQute.bnd.annotation.ConsumerType;
 

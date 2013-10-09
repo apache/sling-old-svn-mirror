@@ -69,7 +69,7 @@ import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
 import org.apache.sling.event.impl.jobs.stats.TopicStatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.impl.support.ScheduleInfo;
+import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
@@ -517,10 +517,10 @@ public class JobManagerImpl
                 final ValueMap vm = ResourceHelper.getValueMap(resource);
 
                 // check job topic and job id
-                final String errorMessage = Utility.checkJobTopic(vm.get(JobUtil.PROPERTY_JOB_TOPIC));
-                final String jobId = vm.get(JobUtil.JOB_ID, String.class);
+                final String errorMessage = Utility.checkJobTopic(vm.get(ResourceHelper.PROPERTY_JOB_TOPIC));
+                final String jobId = vm.get(ResourceHelper.PROPERTY_JOB_ID, String.class);
                 if ( errorMessage == null && jobId != null ) {
-                    final String topic = vm.get(JobUtil.PROPERTY_JOB_TOPIC, String.class);
+                    final String topic = vm.get(ResourceHelper.PROPERTY_JOB_TOPIC, String.class);
                     final Map<String, Object> jobProperties = ResourceHelper.cloneValueMap(vm);
 
                     jobProperties.put(JobImpl.PROPERTY_RESOURCE_PATH, resource.getPath());
@@ -542,7 +542,7 @@ public class JobManagerImpl
                         }
                     }
                     job = new JobImpl(topic,
-                            (String)jobProperties.get(JobUtil.PROPERTY_JOB_NAME),
+                            (String)jobProperties.get(ResourceHelper.PROPERTY_JOB_NAME),
                             jobId,
                             jobProperties);
                 } else {
@@ -833,16 +833,7 @@ public class JobManagerImpl
      */
     @Override
     public Job addJob(final String topic, final String name, final Map<String, Object> properties) {
-        final String errorMessage = Utility.checkJob(topic, properties);
-        if ( errorMessage != null ) {
-            logger.warn("{}", errorMessage);
-            return null;
-        }
-        Job result = this.addJobInteral(topic, name, properties);
-        if ( result == null && name != null ) {
-            result = this.getJobByName(name);
-        }
-        return result;
+        return this.addJob(topic, name, properties, null);
     }
 
     /**
@@ -859,7 +850,7 @@ public class JobManagerImpl
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
-            buf.append(ISO9075.encode(JobUtil.PROPERTY_JOB_NAME));
+            buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_NAME));
             buf.append(" = '");
             buf.append(name);
             buf.append("']");
@@ -902,7 +893,7 @@ public class JobManagerImpl
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
-            buf.append(JobUtil.JOB_ID);
+            buf.append(ResourceHelper.PROPERTY_JOB_ID);
             buf.append(" = '");
             buf.append(id);
             buf.append("']");
@@ -977,7 +968,7 @@ public class JobManagerImpl
             buf.append("//element(*,");
             buf.append(ResourceHelper.RESOURCE_TYPE_JOB);
             buf.append(")[@");
-            buf.append(ISO9075.encode(JobUtil.PROPERTY_JOB_TOPIC));
+            buf.append(ISO9075.encode(ResourceHelper.PROPERTY_JOB_TOPIC));
             buf.append(" = '");
             buf.append(topic);
             buf.append("'");
@@ -1244,7 +1235,10 @@ public class JobManagerImpl
      * @param jobProperties The optional job properties
      * @return The persisted job or <code>null</code>.
      */
-    private Job addJobInteral(final String jobTopic, final String jobName, final Map<String, Object> jobProperties) {
+    private Job addJobInteral(final String jobTopic,
+            final String jobName,
+            final Map<String, Object> jobProperties,
+            final List<String> errors) {
         final QueueInfo info = this.queueConfigManager.getQueueInfo(jobTopic);
         if ( info.queueConfiguration.getType() == QueueConfiguration.Type.DROP ) {
             if ( logger.isDebugEnabled() ) {
@@ -1281,8 +1275,8 @@ public class JobManagerImpl
                         if ( configuration.isLocalJob(job.getResourcePath()) ) {
                             this.backgroundLoader.addJob(job);
                         }
+                        return job;
                     }
-                    return job;
                 } catch (final PersistenceException re ) {
                     // something went wrong, so let's log it
                     this.logger.error("Exception during persisting new job '" + Utility.toString(jobTopic, jobName, jobProperties) + "'", re);
@@ -1293,6 +1287,9 @@ public class JobManagerImpl
                     if ( resolver != null ) {
                         resolver.close();
                     }
+                }
+                if ( errors != null ) {
+                    errors.add("Unable to persist new job.");
                 }
             }
         }
@@ -1327,10 +1324,10 @@ public class JobManagerImpl
             }
         }
 
-        properties.put(JobUtil.JOB_ID, jobId);
-        properties.put(JobUtil.PROPERTY_JOB_TOPIC, jobTopic);
+        properties.put(ResourceHelper.PROPERTY_JOB_ID, jobId);
+        properties.put(ResourceHelper.PROPERTY_JOB_TOPIC, jobTopic);
         if ( jobName != null ) {
-            properties.put(JobUtil.PROPERTY_JOB_NAME, jobName);
+            properties.put(ResourceHelper.PROPERTY_JOB_NAME, jobName);
         }
         properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueConfiguration.getName());
         properties.put(Job.PROPERTY_JOB_RETRY_COUNT, 0);
@@ -1464,7 +1461,7 @@ public class JobManagerImpl
      */
     @Override
     public JobBuilder createJob(final String topic) {
-        return new JobBuilderImpl(this, this.logger, topic);
+        return new JobBuilderImpl(this, topic);
     }
 
     /**
@@ -1483,18 +1480,64 @@ public class JobManagerImpl
         return this.jobScheduler.getScheduledJob(name);
     }
 
-    public boolean addScheduledJob(final String topic,
+    public ScheduledJobInfo addScheduledJob(final String topic,
             final String jobName,
             final Map<String, Object> properties,
             final String scheduleName,
             final boolean isSuspended,
-            final ScheduleInfo scheduleInfo) {
-        try {
-            return this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, isSuspended, scheduleInfo);
-        } catch ( final PersistenceException pe) {
-            logger.warn("Unable to persist scheduled job", pe);
+            final List<ScheduleInfoImpl> scheduleInfos,
+            final List<String> errors) {
+        final List<String> msgs = new ArrayList<String>();
+        if ( scheduleName == null || scheduleName.length() == 0 ) {
+            msgs.add("Schedule name not specified");
         }
-        return false;
+        final String errorMessage = Utility.checkJob(topic, properties);
+        if ( errorMessage != null ) {
+            msgs.add(errorMessage);
+        }
+        if ( scheduleInfos.size() == 0 ) {
+            msgs.add("No schedule defined for " + scheduleName);
+        }
+        for(final ScheduleInfoImpl info : scheduleInfos) {
+            info.check(msgs);
+        }
+        if ( msgs.size() == 0 ) {
+            try {
+                final ScheduledJobInfo info = this.jobScheduler.writeJob(topic, jobName, properties, scheduleName, isSuspended, scheduleInfos);
+                if ( info != null ) {
+                    return info;
+                }
+                msgs.add("Unable to persist scheduled job.");
+            } catch ( final PersistenceException pe) {
+                msgs.add("Unable to persist scheduled job: " + scheduleName);
+                logger.warn("Unable to persist scheduled job", pe);
+            }
+        } else {
+            for(final String msg : msgs) {
+                logger.warn(msg);
+            }
+        }
+        if ( errors != null ) {
+            errors.addAll(msgs);
+        }
+        return null;
     }
 
+    public Job addJob(final String topic, final String name,
+            final Map<String, Object> properties,
+            final List<String> errors) {
+        final String errorMessage = Utility.checkJob(topic, properties);
+        if ( errorMessage != null ) {
+            logger.warn("{}", errorMessage);
+            if ( errors != null ) {
+                errors.add(errorMessage);
+            }
+            return null;
+        }
+        Job result = this.addJobInteral(topic, name, properties, errors);
+        if ( result == null && name != null ) {
+            result = this.getJobByName(name);
+        }
+        return result;
+    }
 }

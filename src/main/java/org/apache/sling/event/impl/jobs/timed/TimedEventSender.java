@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +30,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -53,6 +53,7 @@ import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Job;
 import org.apache.sling.commons.scheduler.JobContext;
+import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
@@ -143,11 +144,7 @@ public class TimedEventSender
         final Scheduler localScheduler = this.scheduler;
         if ( localScheduler != null ) {
             for(final String id : this.startedSchedulerJobs ) {
-                try {
-                    localScheduler.removeJob(id);
-                } catch ( final NoSuchElementException nsee ) {
-                    this.ignoreException(nsee);
-                }
+                localScheduler.unschedule(id);
             }
         }
         this.startedSchedulerJobs.clear();
@@ -227,12 +224,7 @@ public class TimedEventSender
                     final String jobId = ResourceUtil.getName(path);
                     this.startedSchedulerJobs.remove(jobId);
                     logger.debug("Stopping job with id : {}", jobId);
-                    try {
-                        this.scheduler.removeJob(jobId);
-                    } catch (final NoSuchElementException nsee) {
-                        // this can happen if the job is scheduled on another node
-                        // so we can just ignore this
-                    }
+                    this.scheduler.unschedule(jobId);
                     event = null;
 
                 } else if ( !Utility.TOPIC_STOPPED.equals(event.getTopic()) ) {
@@ -275,12 +267,7 @@ public class TimedEventSender
                     this.logger.debug("Stopping timed event " + event.getProperty(EventUtil.PROPERTY_TIMED_EVENT_TOPIC) + "(" + scheduleInfo.jobId + ")");
                 }
                 this.startedSchedulerJobs.remove(scheduleInfo.jobId);
-                try {
-                    localScheduler.removeJob(scheduleInfo.jobId);
-                } catch (final NoSuchElementException nsee) {
-                    // this can happen if the job is scheduled on another node
-                    // so we can just ignore this
-                }
+                localScheduler.unschedule(scheduleInfo.jobId);
                 return true;
             }
 
@@ -298,29 +285,28 @@ public class TimedEventSender
             config.put(JOB_CONFIG, properties);
             config.put(JOB_SCHEDULE_INFO, scheduleInfo);
 
-            try {
-                if ( scheduleInfo.expression != null ) {
-                    if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with cron expression " + scheduleInfo.expression);
-                    }
-                    localScheduler.addJob(scheduleInfo.jobId, this, config, scheduleInfo.expression, false);
-                } else if ( scheduleInfo.period != null ) {
-                    if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with period " + scheduleInfo.period);
-                    }
-                    localScheduler.addPeriodicJob(scheduleInfo.jobId, this, config, scheduleInfo.period, false);
-                } else {
-                    // then it must be date
-                    if ( this.logger.isDebugEnabled() ) {
-                        this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with date " + scheduleInfo.date);
-                    }
-                    localScheduler.fireJobAt(scheduleInfo.jobId, this, config, scheduleInfo.date);
+            final ScheduleOptions options;
+            if ( scheduleInfo.expression != null ) {
+                if ( this.logger.isDebugEnabled() ) {
+                    this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with cron expression " + scheduleInfo.expression);
                 }
-                this.startedSchedulerJobs.add(scheduleInfo.jobId);
-                return true;
-            } catch (final Exception e) {
-                this.ignoreException(e);
+                options = localScheduler.EXPR(scheduleInfo.expression);
+            } else if ( scheduleInfo.period != null ) {
+                if ( this.logger.isDebugEnabled() ) {
+                    this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with period " + scheduleInfo.period);
+                }
+                final Date startDate = new Date(System.currentTimeMillis() + scheduleInfo.period * 1000);
+                options = localScheduler.AT(startDate, -1, scheduleInfo.period);
+            } else {
+                // then it must be date
+                if ( this.logger.isDebugEnabled() ) {
+                    this.logger.debug("Adding timed event " + config.get(JOB_TOPIC) + "(" + scheduleInfo.jobId + ")" + " with date " + scheduleInfo.date);
+                }
+                options = localScheduler.AT(scheduleInfo.date);
             }
+            localScheduler.schedule(this, options.canRunConcurrently(false).name(scheduleInfo.jobId).config(config));
+            this.startedSchedulerJobs.add(scheduleInfo.jobId);
+            return true;
         } else {
             this.logger.error("No scheduler available to start timed event " + event);
         }

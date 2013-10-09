@@ -18,14 +18,15 @@
  */
 package org.apache.sling.event.impl.jobs;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.sling.event.impl.support.ScheduleInfo;
+import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
-import org.slf4j.Logger;
 
 /**
  * Fluent builder API
@@ -36,17 +37,15 @@ public class JobBuilderImpl implements JobBuilder {
 
     private final JobManagerImpl jobManager;
 
-    private final Logger logger;
-
     private String name;
 
     private Map<String, Object> properties;
 
-    public JobBuilderImpl(final JobManagerImpl manager, final Logger logger, final String topic) {
+    public JobBuilderImpl(final JobManagerImpl manager, final String topic) {
         this.jobManager = manager;
         this.topic = topic;
-        this.logger = logger;
     }
+
 
     @Override
     public JobBuilder name(final String name) {
@@ -62,7 +61,12 @@ public class JobBuilderImpl implements JobBuilder {
 
     @Override
     public Job add() {
-        return this.jobManager.addJob(this.topic, this.name, this.properties);
+        return this.add(null);
+    }
+
+    @Override
+    public Job add(final List<String> errors) {
+        return this.jobManager.addJob(this.topic, this.name, this.properties, errors);
     }
 
     @Override
@@ -70,105 +74,75 @@ public class JobBuilderImpl implements JobBuilder {
         return new ScheduleBuilderImpl(name);
     }
 
-    public final class ScheduleBuilderImpl implements ScheduleBuilder {
+    public final class ScheduleBuilderImpl implements ScheduleBuilder,
+        WeekBuilder, DayBuilder, MinuteBuilder, DateBuilder, ScheduleBuilderAdder {
 
         private final String scheduleName;
 
         private boolean suspend = false;
 
+        private final List<ScheduleInfoImpl> schedules = new ArrayList<ScheduleInfoImpl>();
+
         public ScheduleBuilderImpl(final String name) {
             this.scheduleName = name;
         }
 
-        private boolean check() {
-            if ( this.scheduleName == null || this.scheduleName.length() == 0 ) {
-                logger.warn("Discarding scheduled job - schedule name not specified");
-                return false;
-            }
-            final String errorMessage = Utility.checkJob(topic, properties);
-            if ( errorMessage != null ) {
-                logger.warn("{}", errorMessage);
-                return false;
-            }
-            return true;
-        }
-
         @Override
-        public boolean hourly(final int minutes) {
-            if ( check() ) {
-                if ( minutes > 0 ) {
-                    final ScheduleInfo info = ScheduleInfo.HOURLY(minutes);
-                    return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
-                }
-                logger.warn("Discarding scheduled job - minutes must be between 0 and 59 : {}", minutes);
-            }
-            return false;
-        }
-
-        @Override
-        public TimeBuilder daily() {
-            return new TimeBuilderImpl(ScheduledJobInfo.ScheduleType.DAILY, -1);
-        }
-
-        @Override
-        public TimeBuilder weekly(final int day) {
-            return new TimeBuilderImpl(ScheduledJobInfo.ScheduleType.WEEKLY, day);
-        }
-
-        @Override
-        public boolean at(final Date date) {
-            if ( check() ) {
-                if ( date != null && date.getTime() > System.currentTimeMillis() ) {
-                    final ScheduleInfo info = ScheduleInfo.AT(date);
-                    return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
-                }
-                logger.warn("Discarding scheduled job - date must be in the future : {}", date);
-            }
-            return false;
-        }
-
-        @Override
-        public ScheduleBuilder suspend(final boolean flag) {
-            this.suspend = flag;
+        public WeekBuilder weekly(final int day, final int hour, final int minute) {
+            schedules.add(ScheduleInfoImpl.WEEKLY(day, hour, minute));
             return this;
         }
 
-        public final class TimeBuilderImpl implements TimeBuilder {
+        @Override
+        public DayBuilder dayly(final int hour, final int minute) {
+            schedules.add(ScheduleInfoImpl.DAYLY(hour, minute));
+            return this;
+        }
 
-            private final ScheduledJobInfo.ScheduleType scheduleType;
+        @Override
+        public MinuteBuilder hourly(final int minute) {
+            schedules.add(ScheduleInfoImpl.HOURLY(minute));
+            return this;
+        }
 
-            private final int day;
+        @Override
+        public DateBuilder at(final Date date) {
+            schedules.add(ScheduleInfoImpl.AT(date));
+            return this;
+        }
 
-            public TimeBuilderImpl(ScheduledJobInfo.ScheduleType scheduleType, final int day) {
-                this.scheduleType = scheduleType;
-                this.day = day;
-            }
+        @Override
+        public MinuteBuilder at(int minute) {
+            schedules.add(ScheduleInfoImpl.HOURLY(minute));
+            return this;
+        }
 
-            @Override
-            public boolean at(final int hour, final int minute) {
-                if ( check() ) {
-                    boolean valid = true;
-                    if ( scheduleType == ScheduledJobInfo.ScheduleType.WEEKLY ) {
-                        if ( day < 1 || day > 7 ) {
-                            valid = false;
-                            logger.warn("Discarding scheduled job - day must be between 1 and 7 : {}", day);
-                        }
-                    }
-                    if ( valid ) {
-                        if ( hour >= 0 && hour < 24 && minute >= 0 && minute < 60 ) {
-                            final ScheduleInfo info;
-                            if ( scheduleType == ScheduledJobInfo.ScheduleType.WEEKLY ) {
-                                info = ScheduleInfo.WEEKLY(this.day, hour, minute);
-                            } else {
-                                info = ScheduleInfo.DAYLY(hour, minute);
-                            }
-                            return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, info);
-                        }
-                        logger.warn("Discarding scheduled job - wrong time information : {}…{}", hour, minute);
-                    }
-                }
-                return false;
-            }
+        @Override
+        public DayBuilder at(int hour, int minute) {
+            schedules.add(ScheduleInfoImpl.DAYLY(hour, minute));
+            return this;
+        }
+
+        @Override
+        public WeekBuilder at(int day, int hour, int minute) {
+            schedules.add(ScheduleInfoImpl.WEEKLY(day, hour, minute));
+            return this;
+        }
+
+        @Override
+        public ScheduledJobInfo add() {
+            return this.add(null);
+        }
+
+        @Override
+        public ScheduledJobInfo add(final List<String> errors) {
+            return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, schedules, errors);
+        }
+
+        @Override
+        public ScheduleBuilder suspend() {
+            this.suspend = true;
+            return this;
         }
     }
 }

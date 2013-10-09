@@ -197,7 +197,7 @@ public class DistributedEventReceiver
         final String[] propNames = event.getPropertyNames();
         if ( propNames != null && propNames.length > 0 ) {
             for(final String propName : propNames) {
-                if ( !ResourceHelper.ignoreProperty(propName) || JobUtil.JOB_ID.equals(propName) ) { // special handling for job id
+                if ( !ResourceHelper.ignoreProperty(propName) || ResourceHelper.PROPERTY_JOB_ID.equals(propName) ) { // special handling for job id
                     properties.put(propName, event.getProperty(propName));
                 }
             }

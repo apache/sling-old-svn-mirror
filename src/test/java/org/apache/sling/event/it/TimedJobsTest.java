@@ -19,7 +19,7 @@
 package org.apache.sling.event.it;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.IOException;
 import java.util.Date;
@@ -49,7 +49,7 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
         this.sleep(1000L);
     }
 
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
+    @Test(timeout = 1000*60)
     public void testTimedJob() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
 
@@ -66,16 +66,15 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
         });
         try {
             final Date d = new Date();
-            d.setTime(System.currentTimeMillis() + 2000); // run in 2 seconds
+            d.setTime(System.currentTimeMillis() + 3000); // run in 3 seconds
 
             // create scheduled job
-            assertTrue(this.getJobManager().createJob(TOPIC).schedule("simpleTest").at(d));
+            assertNotNull(this.getJobManager().createJob(TOPIC).schedule("simpleTest").at(d).add());
 
             while ( counter.get() == 0 ) {
                 this.sleep(1000);
             }
-            this.sleep(1000);
-            assertEquals(0, this.getJobManager().getScheduledJobs().size());
+            assertEquals(1, this.getJobManager().getScheduledJobs().size()); // job is still scheduled
         } finally {
             ehReg.unregister();
         }
