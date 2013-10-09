@@ -18,17 +18,15 @@
  */
 package org.apache.sling.event.it;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Date;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.inject.Inject;
-
-import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,18 +34,12 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.EventHandler;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class TimedJobsTest extends AbstractJobHandlingTest {
 
     private static final String TOPIC = "timed/test/topic";
-
-    @Inject
-    private EventAdmin eventAdmin;
 
     @Override
     @Before
@@ -61,66 +53,29 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
     public void testTimedJob() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
 
-        final ServiceRegistration ehReg = this.registerEventHandler(TOPIC, new EventHandler() {
+        final ServiceRegistration ehReg = this.registerJobConsumer(TOPIC, new JobConsumer() {
 
             @Override
-            public void handleEvent(final Event event) {
-                if ( TOPIC.equals(event.getTopic()) ) {
+            public JobResult process(final Job job) {
+                if ( job.getTopic().equals(TOPIC) ) {
                     counter.incrementAndGet();
                 }
+                return JobResult.OK;
             }
+
         });
         try {
             final Date d = new Date();
             d.setTime(System.currentTimeMillis() + 2000); // run in 2 seconds
-            // send timed event
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(EventUtil.PROPERTY_TIMED_EVENT_TOPIC, TOPIC);
-            props.put(EventUtil.PROPERTY_TIMED_EVENT_DATE, d);
-            this.eventAdmin.sendEvent(new Event(EventUtil.TOPIC_TIMED_EVENT, props));
+
+            // create scheduled job
+            assertTrue(this.getJobManager().createJob(TOPIC).schedule("simpleTest").at(d));
 
             while ( counter.get() == 0 ) {
                 this.sleep(1000);
             }
-        } finally {
-            ehReg.unregister();
-        }
-    }
-
-    @Test(timeout = DEFAULT_TEST_TIMEOUT)
-    public void testPeriodicTimedJob() throws Exception {
-        final AtomicInteger counter = new AtomicInteger();
-
-        final ServiceRegistration ehReg = this.registerEventHandler(TOPIC, new EventHandler() {
-
-            @Override
-            public void handleEvent(final Event event) {
-                if ( TOPIC.equals(event.getTopic()) ) {
-                    counter.incrementAndGet();
-                }
-            }
-        });
-        try {
-            // send timed event
-            final Dictionary<String, Object> props = new Hashtable<String, Object>();
-            props.put(EventUtil.PROPERTY_TIMED_EVENT_TOPIC, TOPIC);
-            props.put(EventUtil.PROPERTY_TIMED_EVENT_PERIOD, 1L);
-            props.put(EventUtil.PROPERTY_TIMED_EVENT_ID, "id");
-            this.eventAdmin.sendEvent(new Event(EventUtil.TOPIC_TIMED_EVENT, props));
-
-            while ( counter.get() < 5 ) {
-                this.sleep(1000);
-            }
-            final Dictionary<String, Object> props2 = new Hashtable<String, Object>();
-            props2.put(EventUtil.PROPERTY_TIMED_EVENT_TOPIC, TOPIC);
-            props2.put(EventUtil.PROPERTY_TIMED_EVENT_ID, "id");
-
-            this.eventAdmin.sendEvent(new Event(EventUtil.TOPIC_TIMED_EVENT, props2));
-            int current = counter.get();
-            this.sleep(2000);
-            if ( counter.get() != current && counter.get() != current + 1 ) {
-                fail("Events are still sent");
-            }
+            this.sleep(1000);
+            assertEquals(0, this.getJobManager().getScheduledJobs().size());
         } finally {
             ehReg.unregister();
         }

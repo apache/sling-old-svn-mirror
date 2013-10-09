@@ -56,9 +56,9 @@ public abstract class ResourceHelper {
 
     public static final String BUNDLE_EVENT_STARTED = "org/osgi/framework/BundleEvent/STARTED";
 
-    public static final String PROPERTY_SCHEDULER_NAME = "slingevent:schedulerName";
-    public static final String PROPERTY_SCHEDULER_INFO = "slingevent:schedulerInfo";
-    public static final String PROPERTY_SCHEDULER_SUSPENDED = "slingevent:schedulerSuspended";
+    public static final String PROPERTY_SCHEDULE_NAME = "slingevent:scheduleName";
+    public static final String PROPERTY_SCHEDULE_INFO = "slingevent:scheduleInfo";
+    public static final String PROPERTY_SCHEDULE_SUSPENDED = "slingevent:scheduleSuspended";
 
     /** List of ignored properties to write to the repository. */
     @SuppressWarnings("deprecation")
@@ -81,9 +81,9 @@ public abstract class ResourceHelper {
         Job.PROPERTY_FINISHED_DATE,
         JobImpl.PROPERTY_FINISHED_STATE,
         Job.PROPERTY_RESULT_MESSAGE,
-        PROPERTY_SCHEDULER_INFO,
-        PROPERTY_SCHEDULER_NAME,
-        PROPERTY_SCHEDULER_SUSPENDED
+        PROPERTY_SCHEDULE_INFO,
+        PROPERTY_SCHEDULE_NAME,
+        PROPERTY_SCHEDULE_SUSPENDED
     };
 
     /**
@@ -158,6 +158,14 @@ public abstract class ResourceHelper {
         try {
             final Map<String, Object> result = new HashMap<String, Object>(vm);
             for(final Map.Entry<String, Object> entry : result.entrySet()) {
+                if ( entry.getKey().equals(PROPERTY_SCHEDULE_INFO) ) {
+                    final ScheduleInfo info = ScheduleInfo.deserialize(entry.getValue().toString());
+                    if ( info == null ) {
+                        hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
+                    } else {
+                        entry.setValue(info);
+                    }
+                }
                 if ( entry.getValue() instanceof InputStream ) {
                     final Object value = vm.get(entry.getKey(), Serializable.class);
                     if ( value != null ) {
