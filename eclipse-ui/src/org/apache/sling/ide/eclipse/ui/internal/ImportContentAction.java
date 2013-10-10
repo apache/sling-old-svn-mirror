@@ -18,6 +18,9 @@ package org.apache.sling.ide.eclipse.ui.internal;
 
 import java.util.Iterator;
 
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -29,10 +32,11 @@ import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IObjectActionDelegate;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.wst.server.core.IModule;
 import org.eclipse.wst.server.core.ServerUtil;
 
-public class ImportContentAction implements IObjectActionDelegate, IExecutableExtension {
+public class ImportContentAction extends AbstractHandler implements IObjectActionDelegate, IExecutableExtension {
 
     private ISelection selection;
 
@@ -43,11 +47,15 @@ public class ImportContentAction implements IObjectActionDelegate, IExecutableEx
      */
     @Override
     public void run(IAction action) {
-        if (!(selection instanceof IStructuredSelection)) {
+        run(selection);
+    }
+
+    private void run(ISelection currentSelection) {
+        if (!(currentSelection instanceof IStructuredSelection)) {
             return;
         }
 
-        IStructuredSelection structuredSelection = (IStructuredSelection) selection;
+        IStructuredSelection structuredSelection = (IStructuredSelection) currentSelection;
 
         for (Iterator<?> it = structuredSelection.iterator(); it.hasNext();) {
             Object selected = it.next();
@@ -105,6 +113,13 @@ public class ImportContentAction implements IObjectActionDelegate, IExecutableEx
      */
     @Override
     public void setActivePart(IAction action, IWorkbenchPart targetPart) {
+    }
+
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+
+        run(HandlerUtil.getCurrentSelection(event));
+        return null;
     }
 
 }
