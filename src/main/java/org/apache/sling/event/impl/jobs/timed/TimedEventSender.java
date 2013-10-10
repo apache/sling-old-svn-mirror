@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -123,6 +124,8 @@ public class TimedEventSender
     /** Unloaded events. */
     private Set<String>unloadedEvents = new HashSet<String>();
 
+    private final AtomicBoolean threadStarted = new AtomicBoolean(false);
+
     /**
      * Activate this component.
      */
@@ -164,11 +167,13 @@ public class TimedEventSender
             @Override
             public void run() {
                 loadEvents(now);
-                try {
-                    runInBackground();
-                } catch (final Throwable t) { //NOSONAR
-                    logger.error("Background thread stopped with exception: " + t.getMessage(), t);
-                    running = false;
+                if ( threadStarted.compareAndSet(false, true) ) {
+                    try {
+                        runInBackground();
+                    } catch (final Throwable t) { //NOSONAR
+                        logger.error("Background thread stopped with exception: " + t.getMessage(), t);
+                        running = false;
+                    }
                 }
             }
         });
