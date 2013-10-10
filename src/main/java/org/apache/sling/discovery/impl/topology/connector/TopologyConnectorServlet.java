@@ -77,7 +77,7 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
 
     protected void activate(final ComponentContext context) {
         whitelist.clear();
-        if (!config.isWhiteListDisabled()) {
+        if (!config.isHmacEnabled()) {
             String[] whitelistConfig = config.getTopologyConnectorWhitelist();
             for (int i = 0; i < whitelistConfig.length; i++) {
                 String aWhitelistEntry = whitelistConfig[i];
@@ -217,7 +217,7 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
 
     /** Checks if the provided request's remote server is whitelisted **/
     private boolean isWhitelisted(final SlingHttpServletRequest request) {
-        if (config.isWhiteListDisabled()) {
+        if (config.isHmacEnabled()) {
             return requestValidator.isTrusted(request);
         } else {
             if (whitelist.contains(request.getRemoteAddr())) {

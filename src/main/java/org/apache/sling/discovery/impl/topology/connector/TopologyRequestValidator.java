@@ -117,7 +117,7 @@ public class TopologyRequestValidator {
     public TopologyRequestValidator(Config config) {
         trustEnabled = false;
         encryptionEnabled = false;
-        if (config.isWhiteListDisabled()) {
+        if (config.isHmacEnabled()) {
             trustEnabled = true;
             sharedKey = config.getSharedKey();
             interval = config.getKeyInterval();

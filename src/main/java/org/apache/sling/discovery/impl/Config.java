@@ -97,10 +97,10 @@ public class Config {
     public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
 
     /**
-     * If set to true, the whitelist is disabled and the signing and encryption are enabled.
+     * If set to true, hmac is enabled and the white list is disabled.
      */
     @Property(boolValue=false)
-    private static final String WHITELIST_DISABLED = "whiteListDisabled";
+    private static final String HMAC_ENABLED = "hmacEnabled";
 
     /**
      * If set to true, and the whitelist is disabled, messages will be encrypted.
@@ -125,9 +125,9 @@ public class Config {
     private String leaderElectionRepositoryDescriptor ;
 
     /**
-     * True when the whitelist is disabled.
+     * True when the hmac is enabled and signing is disabled.
      */
-    private boolean whiteListDisabled;
+    private boolean hmacEnabled;
 
     /**
      * the shared key.
@@ -225,7 +225,7 @@ public class Config {
         logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
 
-        whiteListDisabled = PropertiesUtil.toBoolean(properties.get(WHITELIST_DISABLED), true);
+        hmacEnabled = PropertiesUtil.toBoolean(properties.get(HMAC_ENABLED), true);
         encryptionEnabled = PropertiesUtil.toBoolean(properties.get(ENCRYPTION_ENABLED), false);
         sharedKey = PropertiesUtil.toString(properties.get(SHARED_KEY), null);
         keyInterval = PropertiesUtil.toLong(SHARED_KEY_INTERVAL, DEFAULT_SHARED_KEY_INTERVAL);
@@ -321,18 +321,30 @@ public class Config {
         return leaderElectionRepositoryDescriptor;
     }
 
-    public boolean isWhiteListDisabled() {
-        return whiteListDisabled;
+    /**
+     * @return true if hmac is enabled.
+     */
+    public boolean isHmacEnabled() {
+        return hmacEnabled;
     }
 
+    /**
+     * @return the shared key
+     */
     public String getSharedKey() {
         return sharedKey;
     }
 
+    /**
+     * @return the interval of the shared key for hmac.
+     */
     public long getKeyInterval() {
         return keyInterval;
     }
 
+    /**
+     * @return true if encryption is enabled.
+     */
     public boolean isEncryptionEnabled() {
         return encryptionEnabled;
     }
