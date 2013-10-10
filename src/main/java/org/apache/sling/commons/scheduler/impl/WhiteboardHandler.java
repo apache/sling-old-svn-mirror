@@ -127,7 +127,7 @@ public class WhiteboardHandler {
             runOnOpts = new String[] {runOn.toString()};
         } else if ( runOn instanceof String[] ) {
             runOnOpts = (String[])runOn;
-        } else {
+        } else if ( runOn != null ) {
             this.logger.warn("Property {} ignored for scheduler {}", Scheduler.PROPERTY_SCHEDULER_RUN_ON, ref);
         }
         final String expression = (String)ref.getProperty(Scheduler.PROPERTY_SCHEDULER_EXPRESSION);
