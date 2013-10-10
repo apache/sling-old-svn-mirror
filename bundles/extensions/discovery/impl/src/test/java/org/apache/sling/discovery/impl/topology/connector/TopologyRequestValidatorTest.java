@@ -51,7 +51,7 @@ public class TopologyRequestValidatorTest {
     public void before() throws SecurityException, IllegalArgumentException, NoSuchFieldException, IllegalAccessException {
         Config config= new Config();
         setPrivate(config, "sharedKey", "testKey");
-        setPrivate(config, "whiteListDisabled", true);
+        setPrivate(config, "hmacEnabled", true);
         setPrivate(config, "encryptionEnabled", true);
         setPrivate(config, "keyInterval", 3600*100*4);
         topologyRequestValidator = new TopologyRequestValidator(config);
