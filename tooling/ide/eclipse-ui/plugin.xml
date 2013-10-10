@@ -83,6 +83,7 @@
          <action
                class="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction"
                id="org.apache.sling.ide.menu.importContentAction"
+               definitionId="org.apache.sling.ide.commands.importContent"
                label="Import Content..."
                menubarPath="org.apache.sling.ide.menu/sling"
                style="push">
@@ -122,7 +123,17 @@
          </description>
       </wizard>
    </extension>
-  
+   
+   <extension
+         point="org.eclipse.ui.commands">
+         <command
+               id="org.apache.sling.ide.commands.importContent"
+               name="Import Content from a Sling Repository"
+               categoryId="org.eclipse.ui.category.window"
+               defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction">
+         </command>
+   </extension>
+
    <!-- Property page for project to select directory to sync -->
    <extension point="org.eclipse.ui.propertyPages"> 
         <page 
@@ -510,6 +521,15 @@
             id="org.apache.sling.ide.eclipse.ui.editors.WebBrowser"
             name="WebBrowser">
       </editor>
-   </extension> 
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.apache.sling.ide.commands.importContent"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+I">
+      </key>
+   </extension>
    
 </plugin>    
