@@ -457,7 +457,9 @@ public class TopologyRequestValidator {
      */
     private Key getCiperKey(byte[] salt) throws UnsupportedEncodingException, NoSuchAlgorithmException, InvalidKeySpecException {
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        KeySpec spec = new PBEKeySpec(sharedKey.toCharArray(),salt, 65536, 128);
+        // hashing the password 65K times takes 151ms, hashing 256 times takes 2ms.
+        // Since the salt has 2^^72 values, 256 times is probably good enough.
+        KeySpec spec = new PBEKeySpec(sharedKey.toCharArray(), salt, 256, 128);
         SecretKey tmp = factory.generateSecret(spec);
         SecretKey key = new SecretKeySpec(tmp.getEncoded(), "AES");
         return key;
