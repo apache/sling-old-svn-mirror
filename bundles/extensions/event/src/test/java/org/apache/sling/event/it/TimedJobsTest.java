@@ -49,7 +49,7 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
         this.sleep(1000L);
     }
 
-    @Test(timeout = 1000*60)
+    @Test(timeout = DEFAULT_TEST_TIMEOUT)
     public void testTimedJob() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
 
