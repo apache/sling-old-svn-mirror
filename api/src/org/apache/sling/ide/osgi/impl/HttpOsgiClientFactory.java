@@ -19,9 +19,24 @@ package org.apache.sling.ide.osgi.impl;
 import org.apache.sling.ide.osgi.OsgiClient;
 import org.apache.sling.ide.osgi.OsgiClientFactory;
 import org.apache.sling.ide.transport.RepositoryInfo;
+import org.osgi.service.event.EventAdmin;
 
 public class HttpOsgiClientFactory implements OsgiClientFactory {
+
+    private EventAdmin eventAdmin;
+
     public OsgiClient createOsgiClient(RepositoryInfo repositoryInfo) {
+        if (eventAdmin != null) {
+            return new TracingOsgiClient(new HttpOsgiClient(repositoryInfo), eventAdmin);
+        }
         return new HttpOsgiClient(repositoryInfo);
+    }
+
+    protected void bindEventAdmin(EventAdmin eventAdmin) {
+        this.eventAdmin = eventAdmin;
+    }
+
+    protected void unBindEventAdmin(EventAdmin eventAdmin) {
+        this.eventAdmin = null;
     }
 }

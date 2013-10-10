@@ -4,4 +4,5 @@
    <service>
       <provide interface="org.apache.sling.ide.osgi.OsgiClientFactory"/>
    </service>
+   <reference bind="bindEventAdmin" cardinality="1..1" interface="org.osgi.service.event.EventAdmin" name="EventAdmin" policy="static" unbind="unbindEventAdmin"/>
 </scr:component>
