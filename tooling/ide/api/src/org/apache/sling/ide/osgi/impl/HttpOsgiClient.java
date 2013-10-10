@@ -160,6 +160,12 @@ public class HttpOsgiClient implements OsgiClient {
             if (status != 200) {
                 throw new OsgiClientException("Method execution returned status " + status);
             }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            IOUtils.copy(method.getResponseBodyAsStream(), out);
+
+            System.out.println(new String(out.toByteArray(), "UTF-8"));
+
         } catch (IOException e) {
             throw new OsgiClientException(e);
         } finally {

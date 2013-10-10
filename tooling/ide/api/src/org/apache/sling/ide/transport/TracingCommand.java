@@ -55,7 +55,7 @@ public class TracingCommand<T> implements Command<T> {
             props.put(CommandExecutionProperties.ACTION_TARGET, command.getPath());
             props.put(CommandExecutionProperties.TIMESTAMP_START, start);
             props.put(CommandExecutionProperties.TIMESTAMP_END, end);
-            Event event = new Event(CommandExecutionProperties.TOPIC, props);
+            Event event = new Event(CommandExecutionProperties.REPOSITORY_TOPIC, props);
             eventAdmin.postEvent(event);
         }
 

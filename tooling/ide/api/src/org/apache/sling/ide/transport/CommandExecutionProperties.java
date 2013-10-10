@@ -15,9 +15,12 @@
  * limitations under the License.
  */package org.apache.sling.ide.transport;
 
+import org.apache.sling.ide.osgi.OsgiClient;
+
 public final class CommandExecutionProperties {
 
-    public static final String TOPIC = Repository.class.getPackage().getName().replace('.', '/');
+    public static final String REPOSITORY_TOPIC = Repository.class.getPackage().getName().replace('.', '/');
+    public static final String OSGI_CLIENT_TOPIC = OsgiClient.class.getPackage().getName().replace('.', '/');
 
     public static final String TIMESTAMP_START = "timestamp.start";
     public static final String TIMESTAMP_END = "timestamp.end";
