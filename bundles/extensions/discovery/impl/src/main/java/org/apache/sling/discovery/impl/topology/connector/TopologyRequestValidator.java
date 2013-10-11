@@ -324,7 +324,7 @@ public class TopologyRequestValidator {
      */
     private String createTrustHeader(String bodyHash) {
         try {
-            int keyNo = (int) (System.currentTimeMillis() / interval);
+            int keyNo = getCurrentKey();
             return keyNo + "/" + hmac(keyNo, bodyHash);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -350,6 +350,8 @@ public class TopologyRequestValidator {
             int keyNo = Integer.parseInt(parts[0]);
             return hmac(keyNo, bodyHash).equals(parts[1]);
         } catch (ArrayIndexOutOfBoundsException e) {
+            return false;
+        } catch (IllegalArgumentException e) {
             return false;
         } catch (InvalidKeyException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -471,6 +473,9 @@ public class TopologyRequestValidator {
      * @throws UnsupportedEncodingException
      */
     private Key getKey(int keyNo) throws UnsupportedEncodingException {
+        if(Math.abs(keyNo - getCurrentKey()) > 1 ) {
+            throw new IllegalArgumentException("Key has expired");
+        }
         if (keys.containsKey(keyNo)) {
             return keys.get(keyNo);
         }
@@ -479,6 +484,10 @@ public class TopologyRequestValidator {
             "HmacSHA256");
         keys.put(keyNo, key);
         return key;
+    }
+
+    private int getCurrentKey() {
+        return (int) (System.currentTimeMillis() / interval);
     }
 
     /**
