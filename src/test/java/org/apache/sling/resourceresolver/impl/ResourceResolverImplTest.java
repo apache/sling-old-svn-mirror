@@ -48,17 +48,20 @@ import org.mockito.Mockito;
 
 public class ResourceResolverImplTest {
 
+    private CommonResourceResolverFactoryImpl commonFactory;
+
     private ResourceResolver resResolver;
 
     private ResourceResolverFactoryImpl resFac;
 
     @Before public void setup() {
-        resFac = new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), /* TODO: using Bundle */ null, null);
-        resResolver = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null, null));
+        commonFactory = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
+        resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
+        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, null));
     }
 
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(resFac, new ResourceResolverContext(false, null, null));
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, null));
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -345,7 +348,7 @@ public class ResourceResolverImplTest {
         // the resource resolver
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
         final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
-                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), /* TODO: using Bundle */ null, null) {
+                new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
 
                     @Override
                     public ResourceResolver getAdministrativeResourceResolver(
@@ -381,7 +384,7 @@ public class ResourceResolverImplTest {
 
         final List<ResourceResolver> resolvers = new ArrayList<ResourceResolver>();
         final PathBasedResourceResolverImpl resolver = new PathBasedResourceResolverImpl(
-                new ResourceResolverFactoryImpl(new ResourceResolverFactoryActivator(), /* TODO: using Bundle */ null, null) {
+                new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator()) {
 
                     @Override
                     public ResourceResolver getAdministrativeResourceResolver(
@@ -414,7 +417,7 @@ public class ResourceResolverImplTest {
         private final Map<String, Resource> resources = new HashMap<String, Resource>();
 
         public PathBasedResourceResolverImpl(
-                ResourceResolverFactoryImpl factory, ResourceResolverContext ctx) {
+                CommonResourceResolverFactoryImpl factory, ResourceResolverContext ctx) {
             super(factory, ctx);
         }
 
