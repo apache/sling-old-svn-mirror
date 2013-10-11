@@ -32,7 +32,7 @@ public interface ScheduleInfo {
     enum ScheduleType {
         DATE,         // scheduled for a date
         HOURLY,       // scheduled hourly
-        DAYLY,        // scheduled once a day
+        DAILY,        // scheduled once a day
         WEEKLY        // scheduled once a week
     }
 

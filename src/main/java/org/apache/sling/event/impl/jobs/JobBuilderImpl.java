@@ -94,8 +94,8 @@ public class JobBuilderImpl implements JobBuilder {
         }
 
         @Override
-        public DayBuilder dayly(final int hour, final int minute) {
-            schedules.add(ScheduleInfoImpl.DAYLY(hour, minute));
+        public DayBuilder daily(final int hour, final int minute) {
+            schedules.add(ScheduleInfoImpl.DAILY(hour, minute));
             return this;
         }
 
@@ -119,7 +119,7 @@ public class JobBuilderImpl implements JobBuilder {
 
         @Override
         public DayBuilder at(int hour, int minute) {
-            schedules.add(ScheduleInfoImpl.DAYLY(hour, minute));
+            schedules.add(ScheduleInfoImpl.DAILY(hour, minute));
             return this;
         }
 

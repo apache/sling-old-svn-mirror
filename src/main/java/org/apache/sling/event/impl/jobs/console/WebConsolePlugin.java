@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -49,6 +50,8 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
+import org.apache.sling.event.jobs.ScheduleInfo;
+import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.osgi.service.event.Event;
@@ -262,6 +265,38 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
                     }
                 }
                 pw.printf("<tr><td>%s</td><td>%s</td></tr>", entry.getKey(), sb.toString());
+            }
+        }
+        pw.println("</tbody></table>");
+        pw.println("<br/>");
+
+        pw.println("<p class='statline'>Scheduled Jobs</p>");
+        pw.println("<table class='nicetable'><tbody>");
+        final Collection<ScheduledJobInfo> infos = this.jobManager.getScheduledJobs();
+        if ( infos.size() == 0 ) {
+            pw.print("<tr><td colspan='5'>No jobs currently scheduled.</td></tr>");
+        } else {
+            pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Job Name</th><th>Schedule Type</th><th>Schedules</th></tr>");
+            for(final ScheduledJobInfo info : infos) {
+                pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>%s</td><td>%s</td><td>",
+                        info.getName(), info.getJobTopic(), info.getJobName(), info.getSchedules().iterator().next().getType().name());
+                boolean first = true;
+                for(final ScheduleInfo si : info.getSchedules() ) {
+                    if ( !first ) {
+                        pw.print("<br/>");
+                    }
+                    first = false;
+                    switch ( si.getType() ) {
+                    case WEEKLY : pw.printf("%s : %s:%s", si.getDayOfWeek(), si.getHourOfDay(), si.getMinuteOfHour());
+                                  break;
+                    case DAILY : pw.printf("%s:%s", si.getHourOfDay(), si.getMinuteOfHour());
+                                 break;
+                    case HOURLY : pw.printf("%s", si.getMinuteOfHour());
+                                 break;
+                    default : pw.printf("%s", si.getAt());
+                    }
+                }
+                pw.print("</td></tr>");
             }
         }
         pw.println("</tbody></table>");
