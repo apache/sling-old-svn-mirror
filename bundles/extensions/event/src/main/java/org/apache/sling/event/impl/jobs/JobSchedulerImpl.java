@@ -56,7 +56,6 @@ import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.osgi.service.event.Event;
@@ -272,7 +271,7 @@ public class JobSchedulerImpl
                 final String name = info.getSchedulerJobId() + "-" + String.valueOf(index);
                 ScheduleOptions options = null;
                 switch ( si.getType() ) {
-                    case DAYLY:
+                    case DAILY:
                     case WEEKLY:
                     case HOURLY:
                         options = this.scheduler.EXPR(((ScheduleInfoImpl)si).getCronExpression());

@@ -59,6 +59,7 @@ public abstract class ResourceHelper {
 
     public static final String PROPERTY_SCHEDULE_NAME = "slingevent:scheduleName";
     public static final String PROPERTY_SCHEDULE_INFO = "slingevent:scheduleInfo";
+    public static final String PROPERTY_SCHEDULE_INFO_TYPE = "slingevent:scheduleInfoType";
     public static final String PROPERTY_SCHEDULE_SUSPENDED = "slingevent:scheduleSuspended";
 
     public static final String PROPERTY_JOB_ID = "slingevent:eventId";
@@ -88,6 +89,7 @@ public abstract class ResourceHelper {
         Job.PROPERTY_RESULT_MESSAGE,
         PROPERTY_SCHEDULE_INFO,
         PROPERTY_SCHEDULE_NAME,
+        PROPERTY_SCHEDULE_INFO_TYPE,
         PROPERTY_SCHEDULE_SUSPENDED
     };
 

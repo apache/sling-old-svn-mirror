@@ -109,7 +109,7 @@ public interface JobBuilder {
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
          */
-        DayBuilder dayly(final int hour, final int minute);
+        DayBuilder daily(final int hour, final int minute);
 
         /**
          * Schedule the job weekly, the time needs to be specified in addition.

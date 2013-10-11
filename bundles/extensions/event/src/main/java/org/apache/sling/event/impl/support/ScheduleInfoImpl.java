@@ -44,8 +44,8 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
         return new ScheduleInfoImpl(ScheduleType.WEEKLY, day, hour, minute, null);
     }
 
-    public static ScheduleInfoImpl DAYLY(final int hour, final int minute) {
-        return new ScheduleInfoImpl(ScheduleType.DAYLY, -1, hour, minute, null);
+    public static ScheduleInfoImpl DAILY(final int hour, final int minute) {
+        return new ScheduleInfoImpl(ScheduleType.DAILY, -1, hour, minute, null);
     }
 
     private final ScheduleType scheduleType;
@@ -70,6 +70,43 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
         this.at = at;
     }
 
+    public static ScheduleInfoImpl deserialize(final ScheduleType scheduleType, final String s) {
+        final String[] parts = s.split(":");
+        if ( scheduleType == ScheduleType.WEEKLY && parts.length == 3 ) {
+            try {
+                return new ScheduleInfoImpl(scheduleType,
+                        Integer.parseInt(parts[0]),
+                        Integer.parseInt(parts[1]),
+                        Integer.parseInt(parts[2]),
+                        null);
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
+        } else if ( scheduleType == ScheduleType.DAILY && parts.length == 2 ) {
+            try {
+                return new ScheduleInfoImpl(scheduleType,
+                        -1,
+                        Integer.parseInt(parts[0]),
+                        Integer.parseInt(parts[1]),
+                        null);
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
+        } else if ( scheduleType == ScheduleType.HOURLY && parts.length == 1 ) {
+            try {
+                return new ScheduleInfoImpl(scheduleType,
+                        -1,
+                        -1,
+                        Integer.parseInt(parts[0]),
+                        null);
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
+        }
+
+        return null;
+    }
+
     public static ScheduleInfoImpl deserialize(final String s) {
         final String[] parts = s.split(":");
         if ( parts.length == 6 && parts[0].equals(VERSION) ) {
@@ -85,6 +122,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
         }
         return null;
     }
+
     public String getSerializedString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(VERSION);
@@ -132,7 +170,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
 
     public void check(final List<String> errors) {
         switch ( this.scheduleType ) {
-        case DAYLY : if ( hourOfDay < 0 || hourOfDay > 23 || minuteOfHour < 0 || minuteOfHour > 59 ) {
+        case DAILY : if ( hourOfDay < 0 || hourOfDay > 23 || minuteOfHour < 0 || minuteOfHour > 59 ) {
                          errors.add("Wrong time information : " + minuteOfHour + ":" + minuteOfHour);
                      }
                      break;
@@ -158,7 +196,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
         final Calendar now = Calendar.getInstance();
         switch ( this.scheduleType ) {
             case DATE : return this.at;
-            case DAYLY : final Calendar next = Calendar.getInstance();
+            case DAILY : final Calendar next = Calendar.getInstance();
                          next.set(Calendar.HOUR_OF_DAY, this.hourOfDay);
                          next.set(Calendar.MINUTE, this.minuteOfHour);
                          if ( next.before(now) ) {
@@ -187,7 +225,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
      * If the job is scheduled daily or weekly, return the cron expression
      */
     public String getCronExpression() {
-        if ( this.scheduleType == ScheduleType.DAYLY ) {
+        if ( this.scheduleType == ScheduleType.DAILY ) {
             final StringBuilder sb = new StringBuilder("0 ");
             sb.append(String.valueOf(this.minuteOfHour));
             sb.append(' ');
