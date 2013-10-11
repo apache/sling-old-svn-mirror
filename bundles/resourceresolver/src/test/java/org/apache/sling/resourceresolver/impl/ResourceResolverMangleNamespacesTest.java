@@ -70,7 +70,7 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        final ResourceResolverFactoryImpl fac = new ResourceResolverFactoryImpl(act, null, null) {
+        final CommonResourceResolverFactoryImpl fac = new CommonResourceResolverFactoryImpl(act) {
             @Override
             public RootResourceProviderEntry getRootProviderEntry() {
                 return rrpe;

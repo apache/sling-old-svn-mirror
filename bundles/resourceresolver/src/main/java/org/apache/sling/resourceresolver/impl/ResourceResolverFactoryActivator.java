@@ -81,6 +81,8 @@ public class ResourceResolverFactoryActivator {
     private static final class FactoryRegistration {
         /** Registration .*/
         public volatile ServiceRegistration factoryRegistration;
+
+        public volatile CommonResourceResolverFactoryImpl commonFactory;
     }
 
     @Property(value = { "/apps", "/libs" })
@@ -327,6 +329,9 @@ public class ResourceResolverFactoryActivator {
             if ( local.factoryRegistration != null ) {
                 local.factoryRegistration.unregister();
             }
+            if ( local.commonFactory != null ) {
+                local.commonFactory.deactivate();;
+            }
         }
     }
 
@@ -351,18 +356,20 @@ public class ResourceResolverFactoryActivator {
             serviceProps.put(Constants.SERVICE_VENDOR, localContext.getProperties().get(Constants.SERVICE_VENDOR));
             serviceProps.put(Constants.SERVICE_DESCRIPTION, localContext.getProperties().get(Constants.SERVICE_DESCRIPTION));
 
+            local.commonFactory = new CommonResourceResolverFactoryImpl(this);
+            local.commonFactory.activate(localContext.getBundleContext());
             local.factoryRegistration = localContext.getBundleContext().registerService(
                 ResourceResolverFactory.class.getName(), new ServiceFactory() {
-                    public Object getService(Bundle bundle, ServiceRegistration registration) {
+
+                    public Object getService(final Bundle bundle, final ServiceRegistration registration) {
                         final ResourceResolverFactoryImpl r = new ResourceResolverFactoryImpl(
-                            ResourceResolverFactoryActivator.this, bundle,
+                                local.commonFactory, bundle,
                             ResourceResolverFactoryActivator.this.serviceUserMapper);
-                        r.activate(localContext.getBundleContext());
                         return r;
                     }
 
-                    public void ungetService(Bundle bundle, ServiceRegistration registration, Object service) {
-                        ((ResourceResolverFactoryImpl) service).deactivate();
+                    public void ungetService(final Bundle bundle, final ServiceRegistration registration, final Object service) {
+                        // nothing to do
                     }
                 }, serviceProps);
 

@@ -88,7 +88,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     private static final String JCR_CONTENT_LEAF = "/jcr:content";
 
     /** The factory which created this resource resolver. */
-    private final ResourceResolverFactoryImpl factory;
+    private final CommonResourceResolverFactoryImpl factory;
 
     /** Closed marker. */
     private volatile boolean closed = false;
@@ -99,7 +99,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     /**
      * The resource resolver context.
      */
-    public ResourceResolverImpl(final ResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
+    public ResourceResolverImpl(final CommonResourceResolverFactoryImpl factory, final ResourceResolverContext ctx) {
         this.factory = factory;
         this.context = ctx;
     }
