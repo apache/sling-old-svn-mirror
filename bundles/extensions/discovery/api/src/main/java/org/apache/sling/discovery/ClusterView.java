@@ -32,8 +32,20 @@ import aQute.bnd.annotation.ProviderType;
 public interface ClusterView {
 
 	/**
-	 * Returns an id of this cluster view
+	 * Returns an id of this cluster view.
+	 * <p>
+	 * Note that this id is not guaranteed to be stable between
+	 * instances of ClusterViews. The id is identifying only the
+	 * current view of the cluster, not the cluster itself, and 
+	 * thus if the view changes the id might (or might not) change.
 	 * @return an id of this cluster view
+	 * @deprecated due to the unstable nature of this id - it only
+	 * identifies the current view of the cluster, not the cluster
+	 * itself - this id has been deprecated. If an id of the cluster
+	 * itself is needed, this must be dealt with on an application
+	 * level - for example by letting the cluster leader define
+	 * such an id and taking care of special cases like cluster joins.
+	 * @see <a href="http://issues.apache.org/jira/browse/SLING-3164">SLING-3164</a>
 	 */
     String getId();
 
