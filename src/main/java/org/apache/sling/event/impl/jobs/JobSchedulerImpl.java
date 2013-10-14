@@ -239,7 +239,6 @@ public class JobSchedulerImpl
         properties.remove(Job.PROPERTY_JOB_CREATED_INSTANCE);
 
         final String jobTopic = (String) properties.remove(ResourceHelper.PROPERTY_JOB_TOPIC);
-        final String jobName = (String) properties.remove(ResourceHelper.PROPERTY_JOB_NAME);
         final String schedulerName = (String) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_NAME);
         @SuppressWarnings("unchecked")
         final List<ScheduleInfo> scheduleInfos = (List<ScheduleInfo>) properties.remove(ResourceHelper.PROPERTY_SCHEDULE_INFO);
@@ -250,7 +249,7 @@ public class JobSchedulerImpl
         synchronized ( this.scheduledJobs ) {
             info = this.scheduledJobs.get(key);
             if ( info == null ) {
-                info = new ScheduledJobInfoImpl(this, jobTopic, jobName,
+                info = new ScheduledJobInfoImpl(this, jobTopic,
                         properties, schedulerName);
                 this.scheduledJobs.put(key, info);
             }
@@ -302,7 +301,7 @@ public class JobSchedulerImpl
     public void execute(final JobContext context) {
         final ScheduledJobInfoImpl info = (ScheduledJobInfoImpl) context.getConfiguration().get(PROPERTY_READ_JOB);
 
-        this.jobManager.addJob(info.getJobTopic(), info.getJobName(), info.getJobProperties());
+        this.jobManager.addJob(info.getJobTopic(), info.getJobProperties());
     }
 
     public void unschedule(final ScheduledJobInfoImpl info) {
@@ -613,7 +612,7 @@ public class JobSchedulerImpl
      * Create a schedule builder for a currently scheduled job
      */
     public JobBuilder.ScheduleBuilder createJobBuilder(final ScheduledJobInfoImpl info) {
-        final JobBuilder builder = this.jobManager.createJob(info.getJobTopic()).name(info.getJobTopic()).properties(info.getJobProperties());
+        final JobBuilder builder = this.jobManager.createJob(info.getJobTopic()).properties(info.getJobProperties());
         final JobBuilder.ScheduleBuilder sb = builder.schedule(info.getName());
         return (info.isSuspended() ? sb.suspend() : sb);
     }

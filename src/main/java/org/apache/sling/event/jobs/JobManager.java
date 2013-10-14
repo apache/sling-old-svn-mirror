@@ -124,7 +124,9 @@ public interface JobManager {
      * @param properties Optional job properties. The properties must be serializable.
      * @return The new job - or <code>null</code> if the job could not be created.
      * @since 1.2
+     * @deprecated
      */
+    @Deprecated
     Job addJob(String topic, String name, Map<String, Object> properties);
 
     /**
@@ -135,7 +137,9 @@ public interface JobManager {
      *
      * @return A job or <code>null</code>
      * @since 1.2
+     * @deprecated
      */
+    @Deprecated
     Job getJobByName(String name);
 
     /**

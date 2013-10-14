@@ -174,16 +174,18 @@ public interface Job {
     String getTopic();
 
     /**
-     * Optional job name
-     * @return The job name or <code>null</code>
-     */
-    String getName();
-
-    /**
      * Unique job ID.
      * @return The unique job ID.
      */
     String getId();
+
+    /**
+     * Optional job name
+     * @return The job name or <code>null</code>
+     * @deprecated
+     */
+    @Deprecated
+    String getName();
 
     /**
      * Get the value of a property.

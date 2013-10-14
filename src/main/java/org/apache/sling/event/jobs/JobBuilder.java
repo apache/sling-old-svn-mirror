@@ -34,11 +34,6 @@ import aQute.bnd.annotation.ProviderType;
 public interface JobBuilder {
 
     /**
-     * Set the optional job name
-     */
-    JobBuilder name(final String name);
-
-    /**
      * Set the optional configuration properties for the job.
      */
     JobBuilder properties(final Map<String, Object> props);
