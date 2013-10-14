@@ -33,7 +33,10 @@ public interface ScheduleInfo {
         DATE,         // scheduled for a date
         HOURLY,       // scheduled hourly
         DAILY,        // scheduled once a day
-        WEEKLY        // scheduled once a week
+        WEEKLY,       // scheduled once a week
+        MONTHLY,      // scheduled once a month
+        YEARLY,       // scheduled once a year,
+        CRON          // scheduled according to the cron expression
     }
 
     /**
@@ -46,6 +49,24 @@ public interface ScheduleInfo {
      * Return the scheduled execution date for a schedule of type date.
      */
     Date getAt();
+
+    /**
+     * If the schedule is a cron expression, return the expression.
+     * @return The cron expression or <code>null</code>
+     */
+    String getExpression();
+
+    /**
+     * If the job is scheduled yearly, returns the month of the year
+     * @return The day of the year (from 1 to 12) or -1
+     */
+    int getMonthOfYear();
+
+    /**
+     * If the job is scheduled monthly, returns the day of the month
+     * @return The day of the month (from 1 to 28) or -1
+     */
+    int getDayOfMonth();
 
     /**
      * If the job is scheduled weekly, returns the day of the week

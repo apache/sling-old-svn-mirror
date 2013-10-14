@@ -75,7 +75,8 @@
                         </Sling-Namespaces>
                         <Embed-Dependency>
                             jackrabbit-jcr-commons;inline="org/apache/jackrabbit/util/ISO9075.*|org/apache/jackrabbit/util/ISO8601.*|org/apache/jackrabbit/util/XMLChar.*",
-                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*"
+                            org.apache.sling.commons.osgi;inline="org/apache/sling/commons/osgi/PropertiesUtil.*",
+                            quartz;inline="org/quartz/CronExpression.*"
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
@@ -233,6 +234,12 @@
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>2.2.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>2.2.0</version>
             <scope>provided</scope>
         </dependency>
       <!-- Webconsole -->

@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
@@ -170,7 +171,10 @@ public abstract class ResourceHelper {
                 if ( entry.getKey().equals(PROPERTY_SCHEDULE_INFO) ) {
                     final String[] infoArray = vm.get(entry.getKey(), String[].class);
                     if ( infoArray == null || infoArray.length == 0 ) {
-                        hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
+                        if ( hasReadError == null ) {
+                            hasReadError = new ArrayList<Exception>();
+                        }
+                        hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "' : " + entry.getValue()));
                     } else {
                         final List<ScheduleInfo> infos = new ArrayList<ScheduleInfo>();
                         for(final String i : infoArray) {
@@ -180,7 +184,10 @@ public abstract class ResourceHelper {
                             }
                         }
                         if ( infos.size() < infoArray.length ) {
-                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "'"));
+                            if ( hasReadError == null ) {
+                                hasReadError = new ArrayList<Exception>();
+                            }
+                            hasReadError.add(new Exception("Unable to deserialize property '" + entry.getKey() + "' : " + Arrays.toString(infoArray)));
                         } else {
                             entry.setValue(infos);
                         }

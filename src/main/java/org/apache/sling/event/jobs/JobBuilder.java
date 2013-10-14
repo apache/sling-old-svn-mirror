@@ -63,22 +63,6 @@ public interface JobBuilder {
      */
     ScheduleBuilder schedule(final String name);
 
-    public interface ScheduleBuilderAdder {
-
-        /**
-         * Finally add the job to the schedule
-         * @return Returns the info object if the job could be scheduled, <code>null</code>otherwise.
-         */
-        ScheduledJobInfo add();
-
-        /**
-         * Finally add the job to the schedule
-         * @param errors Optional list which will be filled with error messages.
-         * @return Returns the info object if the job could be scheduled, <code>null</code>otherwise.
-         */
-        ScheduledJobInfo add(final List<String> errors);
-    }
-
     /**
      * This is a builder interface for creating schedule information
      */
@@ -95,7 +79,7 @@ public interface JobBuilder {
          * If the minutes argument is less than 0 or higher than 59, the job can't be scheduled.
          * @param minute Between 0 and 59.
          */
-        MinuteBuilder hourly(final int minute);
+        ScheduleBuilder hourly(final int minute);
 
         /**
          * Schedule the job daily at the given time.
@@ -104,7 +88,7 @@ public interface JobBuilder {
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
          */
-        DayBuilder daily(final int hour, final int minute);
+        ScheduleBuilder daily(final int hour, final int minute);
 
         /**
          * Schedule the job weekly, the time needs to be specified in addition.
@@ -115,59 +99,57 @@ public interface JobBuilder {
          * @param hour  Hour of the day ranging from 0 to 23.
          * @param minute Minute of the hour ranging from 0 to 59.
          */
-        WeekBuilder weekly(final int day, final int hour, final int minute);
+        ScheduleBuilder weekly(final int day, final int hour, final int minute);
+
+        /**
+         * Schedule the job monthly, the time needs to be specified in addition.
+         * If a value lower than 1 or higher than 28 is used for the day, the job can't be scheduled.
+         * If a value less than zero for hour or minute is specified or a value higher than 23 for hour or
+         * a value higher than 59 for minute than the job can't be scheduled.
+         * @param day Day of the month from 1 to 28.
+         * @param hour  Hour of the day ranging from 0 to 23.
+         * @param minute Minute of the hour ranging from 0 to 59.
+         */
+        ScheduleBuilder monthly(final int day, final int hour, final int minute);
+
+        /**
+         * Schedule the job yearly, the time needs to be specified in addition.
+         * If a value lower than 1 or higher than 12 is used for the month, the job can't be scheduled.
+         * If a value lower than 1 or higher than 28 is used for the day, the job can't be scheduled.
+         * If a value less than zero for hour or minute is specified or a value higher than 23 for hour or
+         * a value higher than 59 for minute than the job can't be scheduled.
+         * @param month Month of the year from 1 to 12.
+         * @param day Day of the month from 1 to 28.
+         * @param hour  Hour of the day ranging from 0 to 23.
+         * @param minute Minute of the hour ranging from 0 to 59.
+         */
+        ScheduleBuilder yearly(final int month, final int day, final int hour, final int minute);
 
         /**
          * Schedule the job for a specific date.
          * If no date or a a date in the past is provided, the job can't be scheduled.
          * @param date The date
          */
-        DateBuilder at(final Date date);
-    }
-
-    public interface WeekBuilder extends ScheduleBuilderAdder {
+        ScheduleBuilder at(final Date date);
 
         /**
-         * Schedule the job for the given day, hour and minute.
-         * If a value lower than 1 or higher than 7 is used for the day, the job can't be scheduled.
-         * If a value less than zero for hour or minute is specified or a value higher than 23 for hour or
-         * a value higher than 59 for minute than the job can't be scheduled.
-         * @param day Day of the week, 1:Sunday, 2:Monday, ... 7:Saturday.
-         * @param hour  Hour of the day ranging from 0 to 23.
-         * @param minute Minute of the hour ranging from 0 to 59.
-         */
-        WeekBuilder at(final int day, final int hour, final int minute);
-    }
-
-    public interface DayBuilder extends ScheduleBuilderAdder  {
-
-        /**
-         * Schedule the job for the given hour and minute.
-         * If a value less than zero for hour or minute is specified or a value higher than 23 for hour or
-         * a value higher than 59 for minute than the job can't be scheduled.
-         * @param hour  Hour of the day ranging from 0 to 23.
-         * @param minute Minute of the hour ranging from 0 to 59.
-         */
-        DayBuilder at(final int hour, final int minute);
-    }
-
-    public interface DateBuilder extends ScheduleBuilderAdder {
-
-        /**
-         * Schedule the job for a specific date.
-         * If no date or a a date in the past is provided, the job can't be scheduled.
+         * Schedule the job for according to the cron expression.
+         * If no expression is specified, the job can't be scheduled.
          * @param date The date
          */
-        DateBuilder at(final Date date);
-    }
-
-    public interface MinuteBuilder extends ScheduleBuilderAdder {
+        ScheduleBuilder cron(final String expression);
 
         /**
-         * Schedule the job hourly at the given minute.
-         * If the minutes argument is less than 0 or higher than 59, the job can't be scheduled.
-         * @param minute Between 0 and 59.
+         * Finally add the job to the schedule
+         * @return Returns the info object if the job could be scheduled, <code>null</code>otherwise.
          */
-        MinuteBuilder at(final int minute);
+        ScheduledJobInfo add();
+
+        /**
+         * Finally add the job to the schedule
+         * @param errors Optional list which will be filled with error messages.
+         * @return Returns the info object if the job could be scheduled, <code>null</code>otherwise.
+         */
+        ScheduledJobInfo add(final List<String> errors);
     }
 }

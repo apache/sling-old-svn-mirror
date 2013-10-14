@@ -66,8 +66,7 @@ public class JobBuilderImpl implements JobBuilder {
         return new ScheduleBuilderImpl(name);
     }
 
-    public final class ScheduleBuilderImpl implements ScheduleBuilder,
-        WeekBuilder, DayBuilder, MinuteBuilder, DateBuilder, ScheduleBuilderAdder {
+    public final class ScheduleBuilderImpl implements ScheduleBuilder {
 
         private final String scheduleName;
 
@@ -80,44 +79,44 @@ public class JobBuilderImpl implements JobBuilder {
         }
 
         @Override
-        public WeekBuilder weekly(final int day, final int hour, final int minute) {
+        public ScheduleBuilder weekly(final int day, final int hour, final int minute) {
             schedules.add(ScheduleInfoImpl.WEEKLY(day, hour, minute));
             return this;
         }
 
         @Override
-        public DayBuilder daily(final int hour, final int minute) {
+        public ScheduleBuilder daily(final int hour, final int minute) {
             schedules.add(ScheduleInfoImpl.DAILY(hour, minute));
             return this;
         }
 
         @Override
-        public MinuteBuilder hourly(final int minute) {
+        public ScheduleBuilder hourly(final int minute) {
             schedules.add(ScheduleInfoImpl.HOURLY(minute));
             return this;
         }
 
         @Override
-        public DateBuilder at(final Date date) {
+        public ScheduleBuilder at(final Date date) {
             schedules.add(ScheduleInfoImpl.AT(date));
             return this;
         }
 
         @Override
-        public MinuteBuilder at(int minute) {
-            schedules.add(ScheduleInfoImpl.HOURLY(minute));
+        public ScheduleBuilder monthly(final int day, final int hour, final int minute) {
+            schedules.add(ScheduleInfoImpl.MONTHLY(day, hour, minute));
             return this;
         }
 
         @Override
-        public DayBuilder at(int hour, int minute) {
-            schedules.add(ScheduleInfoImpl.DAILY(hour, minute));
+        public ScheduleBuilder yearly(final int month, final int day, final int hour, final int minute) {
+            schedules.add(ScheduleInfoImpl.YEARLY(month, day, hour, minute));
             return this;
         }
 
         @Override
-        public WeekBuilder at(int day, int hour, int minute) {
-            schedules.add(ScheduleInfoImpl.WEEKLY(day, hour, minute));
+        public ScheduleBuilder cron(final String expression) {
+            schedules.add(ScheduleInfoImpl.CRON(expression));
             return this;
         }
 
