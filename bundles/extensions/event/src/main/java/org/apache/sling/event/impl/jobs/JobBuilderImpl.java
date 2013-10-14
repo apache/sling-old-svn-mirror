@@ -37,8 +37,6 @@ public class JobBuilderImpl implements JobBuilder {
 
     private final JobManagerImpl jobManager;
 
-    private String name;
-
     private Map<String, Object> properties;
 
     public JobBuilderImpl(final JobManagerImpl manager, final String topic) {
@@ -46,12 +44,6 @@ public class JobBuilderImpl implements JobBuilder {
         this.topic = topic;
     }
 
-
-    @Override
-    public JobBuilder name(final String name) {
-        this.name = name;
-        return this;
-    }
 
     @Override
     public JobBuilder properties(final Map<String, Object> props) {
@@ -66,7 +58,7 @@ public class JobBuilderImpl implements JobBuilder {
 
     @Override
     public Job add(final List<String> errors) {
-        return this.jobManager.addJob(this.topic, this.name, this.properties, errors);
+        return this.jobManager.addJob(this.topic, null, this.properties, errors);
     }
 
     @Override
@@ -136,7 +128,7 @@ public class JobBuilderImpl implements JobBuilder {
 
         @Override
         public ScheduledJobInfo add(final List<String> errors) {
-            return jobManager.addScheduledJob(topic, name, properties, scheduleName, suspend, schedules, errors);
+            return jobManager.addScheduledJob(topic, null, properties, scheduleName, suspend, schedules, errors);
         }
 
         @Override

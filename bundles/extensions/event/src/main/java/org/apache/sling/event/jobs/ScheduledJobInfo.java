@@ -55,12 +55,6 @@ public interface ScheduledJobInfo {
     String getJobTopic();
 
     /**
-     * Return the optional job name.
-     * @return The job name or <code>null</code>
-     */
-    String getJobName();
-
-    /**
      * Return the optional job topics.
      * @return The job topics or <code>null</code>
      */

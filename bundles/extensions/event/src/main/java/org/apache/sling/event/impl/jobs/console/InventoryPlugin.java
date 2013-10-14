@@ -193,13 +193,9 @@ public class InventoryPlugin implements InventoryPrinter {
         if ( infos.size() == 0 ) {
             pw.print("No jobs currently scheduled");
         } else {
-            pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Job Name</th><th>Schedule Type</th><th>Schedules</th></tr>");
             for(final ScheduledJobInfo info : infos) {
                 pw.printf("Schedule : %s%n", info.getName());
                 pw.printf("Job Topic< : %s%n", info.getJobTopic());
-                if ( info.getJobName() != null ) {
-                    pw.printf("Schedule : %s%n", info.getJobName());
-                }
                 pw.printf("ScheduleType : %s%n", info.getSchedules().iterator().next().getType().name());
                 pw.print("Schedules : ");
                 boolean first = true;

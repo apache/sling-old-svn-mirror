@@ -262,10 +262,10 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         if ( infos.size() == 0 ) {
             pw.print("<tr><td colspan='5'>No jobs currently scheduled.</td></tr>");
         } else {
-            pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Job Name</th><th>Schedule Type</th><th>Schedules</th></tr>");
+            pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Schedule Type</th><th>Schedules</th></tr>");
             for(final ScheduledJobInfo info : infos) {
-                pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>%s</td><td>%s</td><td>",
-                        info.getName(), info.getJobTopic(), info.getJobName(), info.getSchedules().iterator().next().getType().name());
+                pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>%s</td><td>",
+                        info.getName(), info.getJobTopic(), info.getSchedules().iterator().next().getType().name());
                 boolean first = true;
                 for(final ScheduleInfo si : info.getSchedules() ) {
                     if ( !first ) {
