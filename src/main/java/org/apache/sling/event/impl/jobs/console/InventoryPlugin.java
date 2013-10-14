@@ -252,7 +252,7 @@ public class InventoryPlugin implements InventoryPrinter {
             pw.printf("Max Parallel : %s%n", c.getMaxParallel());
             pw.printf("Max Retries : %s%n", c.getMaxRetries());
             pw.printf("Retry Delay : %s ms%n", c.getRetryDelayInMs());
-            pw.printf("Priority : %s%n", c.getPriority());
+            pw.printf("Priority : %s%n", c.getThreadPriority());
             pw.println();
         }
         if ( isEmpty ) {
@@ -388,7 +388,7 @@ public class InventoryPlugin implements InventoryPrinter {
             pw.printf("        \"maxParallel\" : %s,%n", c.getMaxParallel());
             pw.printf("        \"maxRetries\" : %s,%n", c.getMaxRetries());
             pw.printf("        \"retryDelayInMs\" : %s,%n", c.getRetryDelayInMs());
-            pw.printf("        \"priority\" : \"%s\"%n", c.getPriority());
+            pw.printf("        \"priority\" : \"%s\"%n", c.getThreadPriority());
             pw.println("      }");
             pw.print("    }");
         }

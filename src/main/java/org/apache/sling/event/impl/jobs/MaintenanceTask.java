@@ -41,8 +41,6 @@ import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager.QueueIn
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil;
-import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -724,7 +722,6 @@ public class MaintenanceTask {
             if ( !properties.containsKey(Job.PROPERTY_JOB_RETRY_COUNT) ) {
                 properties.put(Job.PROPERTY_JOB_RETRY_COUNT, 0);
             }
-            properties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.NORM.name());
 
             final List<InstanceDescription> potentialTargets = caps.getPotentialTargets("/", null);
             String targetId = null;
@@ -743,7 +740,6 @@ public class MaintenanceTask {
                         properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueName);
                         properties.put(Job.PROPERTY_JOB_TARGET_INSTANCE, targetId);
                         properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
-                        properties.put(Job.PROPERTY_JOB_PRIORITY, info.queueConfiguration.getPriority().name());
                     }
                 }
             }

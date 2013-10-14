@@ -31,7 +31,9 @@ import org.slf4j.LoggerFactory;
  * The <code>Job</code> class is an utility class for
  * creating and processing jobs.
  * @since 3.0
+ * @deprecated
  */
+@Deprecated
 public abstract class JobUtil {
 
     /**
@@ -150,6 +152,7 @@ public abstract class JobUtil {
 
     /**
      * The priority for jobs.
+     * @deprecated
      */
     public enum JobPriority {
         NORM,
@@ -176,50 +179,32 @@ public abstract class JobUtil {
      */
 
     /**
-     * Asynchronous notification event when a job is started.
-     * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
-     * The time stamp of the event (as a Long) is available from the property
-     * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
-     * The payload of the job is available as additional job specific properties.
+     * @see NotificationConstants#TOPIC_JOB_STARTED
+     * @deprecated Use NotificationConstants#TOPIC_JOB_STARTED
      */
-    public static final String TOPIC_JOB_STARTED = "org/apache/sling/event/notification/job/START";
+    @Deprecated
+    public static final String TOPIC_JOB_STARTED = NotificationConstants.TOPIC_JOB_STARTED;
 
     /**
-     * Asynchronous notification event when a job is finished.
-     * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
-     * The time stamp of the event (as a Long) is available from the property
-     * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
-     * The payload of the job is available as additional job specific properties.
+     * @see NotificationConstants#TOPIC_JOB_FINISHED
+     * @deprecated Use NotificationConstants#TOPIC_JOB_FINISHED
      */
-    public static final String TOPIC_JOB_FINISHED = "org/apache/sling/event/notification/job/FINISHED";
+    @Deprecated
+    public static final String TOPIC_JOB_FINISHED = NotificationConstants.TOPIC_JOB_FINISHED;
 
     /**
-     * Asynchronous notification event when a job failed.
-     * If a job execution fails, it is rescheduled for another try.
-     * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
-     * The time stamp of the event (as a Long) is available from the property
-     * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
-     * The payload of the job is available as additional job specific properties.
+     * @see NotificationConstants#TOPIC_JOB_FAILED
+     * @deprecated Use NotificationConstants#TOPIC_JOB_FAILED
      */
-    public static final String TOPIC_JOB_FAILED = "org/apache/sling/event/notification/job/FAILED";
+    @Deprecated
+    public static final String TOPIC_JOB_FAILED = NotificationConstants.TOPIC_JOB_FAILED;
 
-    /** A
-     * synchronous notification event when a job is cancelled.
-     * If a job execution is cancelled it is not rescheduled.
-     * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
-     * The time stamp of the event (as a Long) is available from the property
-     * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
-     * The payload of the job is available as additional job specific properties.
+    /**
+     * @see NotificationConstants#TOPIC_JOB_CANCELLED
+     * @deprecated Use NotificationConstants#TOPIC_JOB_CANCELLED
      */
-    public static final String TOPIC_JOB_CANCELLED = "org/apache/sling/event/notification/job/CANCELLED";
+    @Deprecated
+    public static final String TOPIC_JOB_CANCELLED = NotificationConstants.TOPIC_JOB_CANCELLED;
 
     /**
      * Property containing the job event. The value is of type org.osgi.service.event.Event.
@@ -229,22 +214,25 @@ public abstract class JobUtil {
     public static final String PROPERTY_NOTIFICATION_JOB = "event.notification.job";
 
     /**
-     * Property containing the job topic. Value is of type String.
-     * @see Job#getTopic()
+     * @see NotificationConstants#NOTIFICATION_PROPERTY_JOB_TOPIC
+     * @deprecated Use NotificationConstants#NOTIFICATION_PROPERTY_JOB_TOPIC
      */
-    public static final String NOTIFICATION_PROPERTY_JOB_TOPIC = "event.job.topic";
+    @Deprecated
+    public static final String NOTIFICATION_PROPERTY_JOB_TOPIC = NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC;
 
     /**
-     * Property containing the optional job name. Value is of type String.
-     * @see Job#getName()
+     * @see NotificationConstants#NOTIFICATION_PROPERTY_JOB_NAME
+     * @deprecated Use NotificationConstants#NOTIFICATION_PROPERTY_JOB_NAME
      */
-    public static final String NOTIFICATION_PROPERTY_JOB_NAME = "event.job.id";
+    @Deprecated
+    public static final String NOTIFICATION_PROPERTY_JOB_NAME = NotificationConstants.NOTIFICATION_PROPERTY_JOB_NAME;
 
     /**
-     * Property containing the unique job ID. Value is of type String.
-     * @see Job#getId()
+     * @see NotificationConstants#NOTIFICATION_PROPERTY_JOB_ID
+     * @deprecated Use NotificationConstants#NOTIFICATION_PROPERTY_JOB_ID
      */
-    public static final String NOTIFICATION_PROPERTY_JOB_ID = "slingevent:eventId";
+    @Deprecated
+    public static final String NOTIFICATION_PROPERTY_JOB_ID = NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID;
 
     /**
      * Is this a job event?

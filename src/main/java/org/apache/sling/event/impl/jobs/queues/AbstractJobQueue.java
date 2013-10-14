@@ -41,7 +41,7 @@ import org.apache.sling.event.impl.jobs.stats.StatisticsImpl;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
@@ -289,7 +289,7 @@ public abstract class AbstractJobQueue
             }
             final long queueTime = ack.started - ack.queued;
             this.addActive(queueTime);
-            Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_STARTED, ack.getJob(), queueTime);
+            Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, ack.getJob(), queueTime);
             synchronized ( this.processsingJobsLists ) {
                 this.processsingJobsLists.put(jobId, ack);
             }
@@ -401,13 +401,13 @@ public abstract class AbstractJobQueue
             handler.finished(result.getState(), keepJobs, rescheduleInfo.processingTime);
             finishSuccessful = true;
             if ( result.getState() == JobState.SUCCEEDED ) {
-                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FINISHED, handler.getJob(), rescheduleInfo.processingTime);
+                Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_FINISHED, handler.getJob(), rescheduleInfo.processingTime);
             } else {
-                Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, handler.getJob(), null);
+                Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
             }
         } else {
             finishSuccessful = handler.reschedule();
-            Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_FAILED, handler.getJob(), null);
+            Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_FAILED, handler.getJob(), null);
         }
 
         if ( !isAsync ) {
@@ -511,7 +511,7 @@ public abstract class AbstractJobQueue
                     if ( consumer != null ) {
                         final long queueTime = handler.started - handler.queued;
                         this.addActive(queueTime);
-                        Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_STARTED, job, queueTime);
+                        Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_STARTED, job, queueTime);
                         synchronized ( this.processsingJobsLists ) {
                             this.processsingJobsLists.put(job.getId(), handler);
                         }
@@ -530,8 +530,8 @@ public abstract class AbstractJobQueue
                                 final int oldPriority = currentThread.getPriority();
 
                                 currentThread.setName(oldName + "-" + job.getQueueName() + "(" + job.getTopic() + ")");
-                                if ( job.getJobPriority() != null ) {
-                                    switch ( job.getJobPriority() ) {
+                                if ( configuration.getThreadPriority() != null ) {
+                                    switch ( configuration.getThreadPriority() ) {
                                         case NORM : currentThread.setPriority(Thread.NORM_PRIORITY);
                                                     break;
                                         case MIN  : currentThread.setPriority(Thread.MIN_PRIORITY);
@@ -781,7 +781,7 @@ public abstract class AbstractJobQueue
                 public void run() {
                     for(final JobHandler job : events) {
                         job.cancel();
-                        Utility.sendNotification(eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, job.getJob(), null);
+                        Utility.sendNotification(eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, job.getJob(), null);
                     }
                 }
             }, "Apache Sling Queue RemoveAll Thread for " + this.queueName);

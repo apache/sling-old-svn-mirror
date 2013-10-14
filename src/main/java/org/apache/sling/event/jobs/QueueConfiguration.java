@@ -38,6 +38,16 @@ public interface QueueConfiguration {
     }
 
     /**
+     * The thread priority.
+     * @since 1.3
+     */
+    static enum ThreadPriority {
+        NORM,
+        MIN,
+        MAX
+    }
+
+    /**
      * Return the retry delay in ms
      */
     long getRetryDelayInMs();
@@ -54,8 +64,15 @@ public interface QueueConfiguration {
 
     /**
      * Return the thread priority for the job thread.
+     * @deprecated Use {@link #getThreadPriority()}
      */
+    @Deprecated
     JobUtil.JobPriority getPriority();
+
+    /**
+     * Return the thread priority for the job thread
+     */
+    ThreadPriority getThreadPriority();
 
     /**
      * Return the max number of parallel processes.

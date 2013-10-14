@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -139,10 +140,10 @@ public abstract class Utility {
             final Long time) {
         final Dictionary<String, Object> eventProps = new Hashtable<String, Object>();
         // add basic job properties
-        eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_ID, job.getId());
-        eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC, job.getTopic());
+        eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, job.getId());
+        eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, job.getTopic());
         if ( job.getName() != null ) {
-            eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
+            eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
         }
         // copy payload
         for(final String name : job.getPropertyNames()) {

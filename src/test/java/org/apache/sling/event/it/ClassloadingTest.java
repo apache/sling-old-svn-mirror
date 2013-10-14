@@ -37,6 +37,7 @@ import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.testing.tools.retry.RetryLoop;
@@ -99,7 +100,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -148,7 +149,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                 }
             }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
-            final String jobTopic = (String)finishedEvents.get(0).getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC);
+            final String jobTopic = (String)finishedEvents.get(0).getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
             assertNotNull(jobTopic);
             assertEquals("Hello", finishedEvents.get(0).getProperty("string"));
             assertEquals(new Integer(5), Integer.valueOf(finishedEvents.get(0).getProperty("int").toString()));

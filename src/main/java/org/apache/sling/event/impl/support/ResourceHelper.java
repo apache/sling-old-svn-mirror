@@ -77,6 +77,7 @@ public abstract class ResourceHelper {
         JobUtil.PROPERTY_JOB_RUN_LOCAL,
         JobUtil.PROPERTY_JOB_QUEUE_ORDERED,
         JobUtil.PROPERTY_NOTIFICATION_JOB,
+        Job.PROPERTY_JOB_PRIORITY,
         JobStatusNotifier.CONTEXT_PROPERTY_NAME,
         JobImpl.PROPERTY_DELAY_OVERRIDE,
         JobConsumer.PROPERTY_JOB_ASYNC_HANDLER,
