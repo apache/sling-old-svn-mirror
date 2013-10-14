@@ -83,7 +83,7 @@ public class InternalQueueConfiguration
     private long retryDelay;
 
     /** Thread priority. */
-    private JobUtil.JobPriority priority;
+    private ThreadPriority priority;
 
     /** The maximum number of parallel processes (for non ordered queues) */
     private int maxParallelProcesses;
@@ -124,7 +124,7 @@ public class InternalQueueConfiguration
     @Activate
     protected void activate(final Map<String, Object> params) {
         this.name = PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_NAME), null);
-        this.priority = JobUtil.JobPriority.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
+        this.priority = ThreadPriority.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_PRIORITY), ConfigurationConstants.DEFAULT_PRIORITY));
         this.type = Type.valueOf(PropertiesUtil.toString(params.get(ConfigurationConstants.PROP_TYPE), ConfigurationConstants.DEFAULT_TYPE));
         this.retries = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_RETRIES), ConfigurationConstants.DEFAULT_RETRIES);
         this.retryDelay = PropertiesUtil.toLong(params.get(ConfigurationConstants.PROP_RETRY_DELAY), ConfigurationConstants.DEFAULT_RETRY_DELAY);
@@ -233,7 +233,7 @@ public class InternalQueueConfiguration
      */
     @Override
     public JobUtil.JobPriority getPriority() {
-        return this.priority;
+        return JobUtil.JobPriority.valueOf(this.priority.name());
     }
 
     /**
@@ -306,4 +306,8 @@ public class InternalQueueConfiguration
         return 0;
     }
 
+    @Override
+    public ThreadPriority getThreadPriority() {
+        return this.priority;
+    }
 }

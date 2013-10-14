@@ -49,7 +49,6 @@ import org.apache.sling.event.impl.jobs.Utility;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.impl.support.Environment;
 import org.apache.sling.event.impl.support.ResourceHelper;
-import org.apache.sling.event.jobs.JobUtil;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;

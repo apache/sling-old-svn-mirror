@@ -134,13 +134,7 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
                     put(info);
                 }
             };
-            try {
-                scheduler.fireJobAt(jobName, t, null, fireDate);
-            } catch (Exception e) {
-                // we ignore the exception and just put back the job in the queue
-                ignoreException(e);
-                t.run();
-            }
+            scheduler.schedule(t, scheduler.AT(fireDate).name(jobName));
         } else {
             // put directly into queue
             put(info);

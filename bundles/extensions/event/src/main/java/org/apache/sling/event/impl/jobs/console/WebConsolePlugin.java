@@ -24,8 +24,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -45,18 +43,15 @@ import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.jobs.TopologyCapabilities;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
 import org.apache.sling.event.impl.jobs.config.QueueConfigurationManager;
-import org.apache.sling.event.impl.support.ResourceHelper;
+import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.ScheduleInfo;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
-import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
-import org.osgi.service.event.EventHandler;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,14 +61,14 @@ import org.slf4j.LoggerFactory;
  * @since 3.0
  */
 @Component
-@Service(value={javax.servlet.Servlet.class, EventHandler.class})
+@Service(value={javax.servlet.Servlet.class, JobConsumer.class})
 @Properties({
     @Property(name="felix.webconsole.label", value="slingevent"),
     @Property(name="felix.webconsole.title", value="Jobs"),
     @Property(name="felix.webconsole.category", value="Sling"),
-    @Property(name="event.topics", value={"sling/webconsole/test"})
+    @Property(name=JobConsumer.PROPERTY_TOPICS, value={"sling/webconsole/test"})
 })
-public class WebConsolePlugin extends HttpServlet implements EventHandler {
+public class WebConsolePlugin extends HttpServlet implements JobConsumer {
 
     private static final String SLING_WEBCONSOLE_TEST_JOB_TOPIC = "sling/webconsole/test";
 
@@ -83,9 +78,6 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
 
     @Reference
     private JobManager jobManager;
-
-    @Reference
-    private EventAdmin eventAdmin;
 
     @Reference
     private QueueConfigurationManager queueConfigManager;
@@ -161,8 +153,7 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
                 }
             }
         } else if ( "test".equals(cmd) ) {
-            logger.info("Posting test event.");
-            eventAdmin.postEvent(getTestEvent(null));
+            this.startTestJob();
         } else if ( "restart".equals(cmd) ) {
             this.jobManager.restart();
         } else if ( "dropall".equals(cmd) ) {
@@ -185,14 +176,9 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
         resp.sendRedirect(redirectTo);
     }
 
-    private Event getTestEvent(final String id) {
-        final Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(ResourceHelper.PROPERTY_JOB_TOPIC, SLING_WEBCONSOLE_TEST_JOB_TOPIC);
-        if ( id != null ) {
-            props.put(ResourceHelper.PROPERTY_JOB_NAME, id);
-        }
-
-        return new Event(JobUtil.TOPIC_JOB, props);
+    private void startTestJob() {
+        logger.info("Adding test job.");
+        this.jobManager.addJob(SLING_WEBCONSOLE_TEST_JOB_TOPIC, null);
     }
 
     @Override
@@ -329,7 +315,7 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
             pw.printf("<tr><td>Last Finished</td><td>%s</td><td>Max Parallel</td><td>%s</td></tr>", formatDate(s.getLastFinishedJobTime()), c.getMaxParallel());
             pw.printf("<tr><td>Queued Jobs</td><td>%s</td><td>Max Retries</td><td>%s</td></tr>", s.getNumberOfQueuedJobs(), c.getMaxRetries());
             pw.printf("<tr><td>Active Jobs</td><td>%s</td><td>Retry Delay</td><td>%s ms</td></tr>", s.getNumberOfActiveJobs(), c.getRetryDelayInMs());
-            pw.printf("<tr><td>Jobs</td><td>%s</td><td>Priority</td><td>%s</td></tr>", s.getNumberOfJobs(), c.getPriority());
+            pw.printf("<tr><td>Jobs</td><td>%s</td><td>Priority</td><td>%s</td></tr>", s.getNumberOfJobs(), c.getThreadPriority());
             pw.printf("<tr><td>Finished Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfFinishedJobs());
             pw.printf("<tr><td>Failed Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfFailedJobs());
             pw.printf("<tr><td>Cancelled Jobs</td><td>%s</td><td colspan='2'>&nbsp</td></tr>", s.getNumberOfCancelledJobs());
@@ -462,12 +448,8 @@ public class WebConsolePlugin extends HttpServlet implements EventHandler {
     }
 
     @Override
-    public void handleEvent(final Event event) {
-        if ( SLING_WEBCONSOLE_TEST_JOB_TOPIC.equals(event.getTopic()) ) {
-            logger.info("Received test event.");
-
-            JobUtil.acknowledgeJob(event);
-            JobUtil.finishedJob(event);
-        }
+    public JobResult process(final Job job) {
+        logger.info("Received test event.");
+        return JobResult.OK;
     }
 }

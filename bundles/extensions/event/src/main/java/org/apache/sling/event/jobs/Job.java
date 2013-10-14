@@ -21,8 +21,6 @@ package org.apache.sling.event.jobs;
 import java.util.Calendar;
 import java.util.Set;
 
-import org.apache.sling.event.jobs.consumer.JobConsumer;
-
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -56,13 +54,9 @@ public interface Job {
     String PROPERTY_JOB_QUEUE_NAME = "event.job.queuename";
 
     /**
-     * This property is set by the job handling to define the priority of this job
-     * execution.
-     * The property is evaluated by the job handling before starting the
-     * {@link JobConsumer} and sets the priority of the thread accordingly.
-     * For possible values see {@link JobUtil.JobPriority}.
-     * If this property is set by the client creating the job it's value is ignored
+     * @deprecated
      */
+    @Deprecated
     String PROPERTY_JOB_PRIORITY = "event.job.priority";
 
     /**
@@ -235,12 +229,10 @@ public interface Job {
     <T> T getProperty(String name, T defaultValue);
 
     /**
-     * This property is set by the job handling to define the priority of this job
-     * execution.
-     * The property is evaluated by the job handling before starting the
-     * {@link JobConsumer} and sets the priority of the thread accordingly.
-     * For possible values see {@link JobUtil.JobPriority}.
+     * This property is not supported anymore and always returns {@link JobUtil#JobPriority.NORM}.
+     * @deprecated
      */
+    @Deprecated
     JobUtil.JobPriority getJobPriority();
 
     /**

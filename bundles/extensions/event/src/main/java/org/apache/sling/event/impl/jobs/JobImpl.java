@@ -29,8 +29,8 @@ import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 import org.apache.sling.event.impl.support.ResourceHelper;
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.JobUtil.JobPriority;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 
 /**
@@ -89,7 +89,7 @@ public class JobImpl implements Job {
         this.readErrorList = (List<Exception>) properties.remove(ResourceHelper.PROPERTY_MARKER_READ_ERROR_LIST);
 
         this.properties = new ValueMapDecorator(properties);
-        this.properties.put(JobUtil.NOTIFICATION_PROPERTY_JOB_ID, jobId);
+        this.properties.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, jobId);
     }
 
     /**
@@ -187,7 +187,7 @@ public class JobImpl implements Job {
 
     @Override
     public JobPriority getJobPriority() {
-        return (JobPriority)this.getProperty(Job.PROPERTY_JOB_PRIORITY);
+        return JobPriority.NORM;
     }
 
     @Override
@@ -231,7 +231,6 @@ public class JobImpl implements Job {
     public void updateQueueInfo(final Queue queue) {
         this.properties.put(Job.PROPERTY_JOB_QUEUE_NAME, queue.getName());
         this.properties.put(Job.PROPERTY_JOB_RETRIES, queue.getConfiguration().getMaxRetries());
-        this.properties.put(Job.PROPERTY_JOB_PRIORITY, queue.getConfiguration().getPriority());
     }
 
     public void setProperty(final String name, final Object value) {
@@ -254,7 +253,7 @@ public class JobImpl implements Job {
         this.properties.remove(Job.PROPERTY_JOB_PROGRESS_STEP);
         this.properties.remove(Job.PROPERTY_RESULT_MESSAGE);
         this.properties.put(Job.PROPERTY_JOB_STARTED_TIME, Calendar.getInstance());
-        return new String[] {Job.PROPERTY_JOB_QUEUE_NAME, Job.PROPERTY_JOB_RETRIES, Job.PROPERTY_JOB_PRIORITY,
+        return new String[] {Job.PROPERTY_JOB_QUEUE_NAME, Job.PROPERTY_JOB_RETRIES,
                 Job.PROPERTY_JOB_PROGRESS_LOG, Job.PROPERTY_JOB_PROGRESS_ETA, PROPERTY_JOB_PROGRESS_STEPS,
                 PROPERTY_JOB_PROGRESS_STEP, Job.PROPERTY_RESULT_MESSAGE, Job.PROPERTY_JOB_STARTED_TIME};
     }

@@ -73,9 +73,8 @@ import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobUtil;
-import org.apache.sling.event.jobs.JobUtil.JobPriority;
 import org.apache.sling.event.jobs.JobsIterator;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
@@ -484,21 +483,21 @@ public class JobManagerImpl
         } else {
             if ( EventUtil.isLocal(event) ) {
                 // job notifications
-                final String topic = (String)event.getProperty(JobUtil.NOTIFICATION_PROPERTY_JOB_TOPIC);
+                final String topic = (String)event.getProperty(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC);
                 if ( topic != null ) { // this is just a sanity check
                     TopicStatisticsImpl ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
                     if ( ts == null ) {
                         this.topicStatistics.putIfAbsent(topic, new TopicStatisticsImpl(topic));
                         ts = (TopicStatisticsImpl)this.topicStatistics.get(topic);
                     }
-                    if ( event.getTopic().equals(JobUtil.TOPIC_JOB_CANCELLED) ) {
+                    if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_CANCELLED) ) {
                         ts.addCancelled();
-                    } else if ( event.getTopic().equals(JobUtil.TOPIC_JOB_FAILED) ) {
+                    } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FAILED) ) {
                         ts.addFailed();
-                    } else if ( event.getTopic().equals(JobUtil.TOPIC_JOB_FINISHED) ) {
+                    } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_FINISHED) ) {
                         final Long time = (Long)event.getProperty(Utility.PROPERTY_TIME);
                         ts.addFinished(time == null ? -1 : time);
-                    } else if ( event.getTopic().equals(JobUtil.TOPIC_JOB_STARTED) ) {
+                    } else if ( event.getTopic().equals(NotificationConstants.TOPIC_JOB_STARTED) ) {
                         final Long time = (Long)event.getProperty(Utility.PROPERTY_TIME);
                         ts.addActivated(time == null ? -1 : time);
                     }
@@ -527,7 +526,6 @@ public class JobManagerImpl
                     // convert to integers (JCR supports only long...)
                     jobProperties.put(Job.PROPERTY_JOB_RETRIES, vm.get(Job.PROPERTY_JOB_RETRIES, Integer.class));
                     jobProperties.put(Job.PROPERTY_JOB_RETRY_COUNT, vm.get(Job.PROPERTY_JOB_RETRY_COUNT, Integer.class));
-                    jobProperties.put(Job.PROPERTY_JOB_PRIORITY, JobPriority.valueOf(vm.get(Job.PROPERTY_JOB_PRIORITY, JobPriority.NORM.name())));
                     if ( vm.get(Job.PROPERTY_JOB_PROGRESS_STEPS) != null ) {
                         jobProperties.put(Job.PROPERTY_JOB_PROGRESS_STEPS, vm.get(Job.PROPERTY_JOB_PROGRESS_STEPS, Integer.class));
                     }
@@ -1244,7 +1242,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", info.queueName, Utility.toString(jobTopic, jobName, jobProperties));
             }
-            Utility.sendNotification(this.eventAdmin, JobUtil.TOPIC_JOB_CANCELLED, jobTopic, jobName, jobProperties, null);
+            Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, jobTopic, jobName, jobProperties, null);
         } else {
             // check for unique jobs
             if ( jobName != null && !this.lock(jobName) ) {
@@ -1332,7 +1330,6 @@ public class JobManagerImpl
         properties.put(Job.PROPERTY_JOB_QUEUE_NAME, info.queueConfiguration.getName());
         properties.put(Job.PROPERTY_JOB_RETRY_COUNT, 0);
         properties.put(Job.PROPERTY_JOB_RETRIES, info.queueConfiguration.getMaxRetries());
-        properties.put(Job.PROPERTY_JOB_PRIORITY, info.queueConfiguration.getPriority().name());
 
         properties.put(Job.PROPERTY_JOB_CREATED, Calendar.getInstance());
         properties.put(Job.PROPERTY_JOB_CREATED_INSTANCE, Environment.APPLICATION_ID);
@@ -1355,7 +1352,6 @@ public class JobManagerImpl
                 properties);
 
         // update property types - priority, add path and create job
-        properties.put(Job.PROPERTY_JOB_PRIORITY, info.queueConfiguration.getPriority());
         properties.put(JobImpl.PROPERTY_RESOURCE_PATH, path);
         return new JobImpl(jobTopic, jobName, jobId, properties);
     }
