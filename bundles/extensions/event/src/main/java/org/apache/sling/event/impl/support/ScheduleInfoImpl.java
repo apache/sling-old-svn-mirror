@@ -19,11 +19,13 @@
 package org.apache.sling.event.impl.support;
 
 import java.io.Serializable;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.sling.event.jobs.ScheduleInfo;
+import org.quartz.CronExpression;
 
 public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
 
@@ -33,19 +35,31 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
     private static final String VERSION = "1";
 
     public static ScheduleInfoImpl HOURLY(final int minutes) {
-        return new ScheduleInfoImpl(ScheduleType.HOURLY, -1, -1, minutes, null);
+        return new ScheduleInfoImpl(ScheduleType.HOURLY, -1, -1, minutes, null, -1, null);
+    }
+
+    public static ScheduleInfoImpl CRON(final String expr) {
+        return new ScheduleInfoImpl(ScheduleType.CRON, -1, -1, -1, null, -1, expr);
     }
 
     public static ScheduleInfoImpl AT(final Date at) {
-        return new ScheduleInfoImpl(ScheduleType.DATE, -1, -1, -1, at);
+        return new ScheduleInfoImpl(ScheduleType.DATE, -1, -1, -1, at, -1, null);
+    }
+
+    public static ScheduleInfoImpl YEARLY(final int month, final int day, final int hour, final int minute) {
+        return new ScheduleInfoImpl(ScheduleType.YEARLY, day, hour, minute, null, month, null);
+    }
+
+    public static ScheduleInfoImpl MONTHLY(final int day, final int hour, final int minute) {
+        return new ScheduleInfoImpl(ScheduleType.MONTHLY, day, hour, minute, null, -1, null);
     }
 
     public static ScheduleInfoImpl WEEKLY(final int day, final int hour, final int minute) {
-        return new ScheduleInfoImpl(ScheduleType.WEEKLY, day, hour, minute, null);
+        return new ScheduleInfoImpl(ScheduleType.WEEKLY, day, hour, minute, null, -1, null);
     }
 
     public static ScheduleInfoImpl DAILY(final int hour, final int minute) {
-        return new ScheduleInfoImpl(ScheduleType.DAILY, -1, hour, minute, null);
+        return new ScheduleInfoImpl(ScheduleType.DAILY, -1, hour, minute, null, -1, null);
     }
 
     private final ScheduleType scheduleType;
@@ -58,26 +72,60 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
 
     private final Date at;
 
+    private final int monthOfYear;
+
+    private final String expression;
+
     private ScheduleInfoImpl(final ScheduleType scheduleType,
             final int dayOfWeek,
             final int hourOfDay,
             final int minuteOfHour,
-            final Date at) {
+            final Date at,
+            final int monthOfYear,
+            final String expression) {
         this.scheduleType = scheduleType;
         this.dayOfWeek = dayOfWeek;
         this.hourOfDay = hourOfDay;
         this.minuteOfHour = minuteOfHour;
         this.at = at;
+        this.monthOfYear = monthOfYear;
+        this.expression = expression;
     }
 
     public static ScheduleInfoImpl deserialize(final ScheduleType scheduleType, final String s) {
-        final String[] parts = s.split(":");
-        if ( scheduleType == ScheduleType.WEEKLY && parts.length == 3 ) {
+        final String[] parts = s.split("|");
+        if ( scheduleType == ScheduleType.YEARLY && parts.length == 4 ) {
             try {
                 return new ScheduleInfoImpl(scheduleType,
                         Integer.parseInt(parts[0]),
                         Integer.parseInt(parts[1]),
                         Integer.parseInt(parts[2]),
+                        null,
+                        Integer.parseInt(parts[3]),
+                        null);
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
+        } else if ( scheduleType == ScheduleType.MONTHLY && parts.length == 3 ) {
+            try {
+                return new ScheduleInfoImpl(scheduleType,
+                        Integer.parseInt(parts[0]),
+                        Integer.parseInt(parts[1]),
+                        Integer.parseInt(parts[2]),
+                        null,
+                        -1,
+                        null);
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
+        } else if ( scheduleType == ScheduleType.WEEKLY && parts.length == 3 ) {
+            try {
+                return new ScheduleInfoImpl(scheduleType,
+                        Integer.parseInt(parts[0]),
+                        Integer.parseInt(parts[1]),
+                        Integer.parseInt(parts[2]),
+                        null,
+                        -1,
                         null);
             } catch ( final IllegalArgumentException iae) {
                 // ignore and return null
@@ -88,6 +136,8 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
                         -1,
                         Integer.parseInt(parts[0]),
                         Integer.parseInt(parts[1]),
+                        null,
+                        -1,
                         null);
             } catch ( final IllegalArgumentException iae) {
                 // ignore and return null
@@ -98,7 +148,21 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
                         -1,
                         -1,
                         Integer.parseInt(parts[0]),
+                        null,
+                        -1,
                         null);
+            } catch ( final IllegalArgumentException iae) {
+                // ignore and return null
+            }
+        } else if ( scheduleType == ScheduleType.CRON && parts.length == 1 ) {
+            try {
+                return new ScheduleInfoImpl(scheduleType,
+                        -1,
+                        -1,
+                        -1,
+                        null,
+                        -1,
+                        parts[0]);
             } catch ( final IllegalArgumentException iae) {
                 // ignore and return null
             }
@@ -108,14 +172,17 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
     }
 
     public static ScheduleInfoImpl deserialize(final String s) {
-        final String[] parts = s.split(":");
-        if ( parts.length == 6 && parts[0].equals(VERSION) ) {
+        final String[] parts = s.split("\\|");
+        if ( parts.length == 8 && parts[0].equals(VERSION) ) {
             try {
                 return new ScheduleInfoImpl(ScheduleType.valueOf(parts[1]),
                         Integer.parseInt(parts[2]),
                         Integer.parseInt(parts[3]),
                         Integer.parseInt(parts[4]),
-                        (parts[5].equals("null") ? null : new Date(Long.parseLong(parts[5]))));
+                        (parts[5].equals("null") ? null : new Date(Long.parseLong(parts[5]))),
+                        Integer.parseInt(parts[6]),
+                        (parts[7].equals("null") ? null : parts[7])
+                        );
             } catch ( final IllegalArgumentException iae) {
                 // ignore and return null
             }
@@ -126,19 +193,27 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
     public String getSerializedString() {
         final StringBuilder sb = new StringBuilder();
         sb.append(VERSION);
-        sb.append(":");
+        sb.append("|");
         sb.append(this.scheduleType.name());
-        sb.append(":");
+        sb.append("|");
         sb.append(String.valueOf(this.dayOfWeek));
-        sb.append(":");
+        sb.append("|");
         sb.append(String.valueOf(this.hourOfDay));
-        sb.append(":");
+        sb.append("|");
         sb.append(String.valueOf(this.minuteOfHour));
-        sb.append(":");
+        sb.append("|");
         if ( at == null ) {
             sb.append("null");
         } else {
             sb.append(String.valueOf(at.getTime()));
+        }
+        sb.append("|");
+        sb.append(String.valueOf(this.monthOfYear));
+        sb.append("|");
+        if ( expression == null ) {
+            sb.append("null");
+        } else {
+            sb.append(String.valueOf(expression));
         }
         return sb.toString();
     }
@@ -155,7 +230,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
 
     @Override
     public int getDayOfWeek() {
-        return this.dayOfWeek;
+        return (this.scheduleType == ScheduleType.WEEKLY ? this.dayOfWeek : -1);
     }
 
     @Override
@@ -166,6 +241,22 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
     @Override
     public int getMinuteOfHour() {
         return this.minuteOfHour;
+    }
+
+    @Override
+    public String getExpression() {
+        return this.expression;
+    }
+
+    @Override
+    public int getMonthOfYear() {
+        return this.monthOfYear;
+    }
+
+    @Override
+    public int getDayOfMonth() {
+        return (this.scheduleType == ScheduleType.MONTHLY
+                || this.scheduleType == ScheduleType.YEARLY ? this.dayOfWeek : -1);
     }
 
     public void check(final List<String> errors) {
@@ -189,6 +280,31 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
                           errors.add("Day must be between 1 and 7 : " + dayOfWeek);
                       }
                       break;
+        case MONTHLY : if ( hourOfDay < 0 || hourOfDay > 23 || minuteOfHour < 0 || minuteOfHour > 59 ) {
+                           errors.add("Wrong time information : " + minuteOfHour + ":" + minuteOfHour);
+                       }
+                       if ( dayOfWeek < 1 || dayOfWeek > 28 ) {
+                           errors.add("Day must be between 1 and 28 : " + dayOfWeek);
+                       }
+                       break;
+        case YEARLY : if ( hourOfDay < 0 || hourOfDay > 23 || minuteOfHour < 0 || minuteOfHour > 59 ) {
+                          errors.add("Wrong time information : " + minuteOfHour + ":" + minuteOfHour);
+                      }
+                      if ( dayOfWeek < 1 || dayOfWeek > 28 ) {
+                          errors.add("Day must be between 1 and 28 : " + dayOfWeek);
+                      }
+                      if ( monthOfYear < 1 || monthOfYear > 12 ) {
+                          errors.add("Month must be between 1 and 12 : " + dayOfWeek);
+                      }
+                      break;
+        case CRON : if ( expression == null ) {
+                         errors.add("Expression must be specified.");
+                    }
+                    try {
+                        new CronExpression(this.expression);
+                    } catch (final ParseException e) {
+                        errors.add("Expression must be valid: " + this.expression);
+                    }
         }
     }
 
@@ -217,6 +333,29 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
                               nextH.add(Calendar.HOUR_OF_DAY, 1);
                           }
                           return nextH.getTime();
+            case MONTHLY : final Calendar nextM = Calendar.getInstance();
+                           nextM.set(Calendar.HOUR_OF_DAY, this.hourOfDay);
+                           nextM.set(Calendar.MINUTE, this.minuteOfHour);
+                           nextM.set(Calendar.DAY_OF_MONTH, this.dayOfWeek);
+                           if ( nextM.before(now) ) {
+                               nextM.add(Calendar.MONTH, 1);
+                           }
+                           return nextM.getTime();
+            case YEARLY : final Calendar nextY = Calendar.getInstance();
+                          nextY.set(Calendar.HOUR_OF_DAY, this.hourOfDay);
+                          nextY.set(Calendar.MINUTE, this.minuteOfHour);
+                          nextY.set(Calendar.DAY_OF_MONTH, this.dayOfWeek);
+                          nextY.set(Calendar.MONTH, this.monthOfYear - 1);
+                          if ( nextY.before(now) ) {
+                              nextY.add(Calendar.YEAR, 1);
+                          }
+                          return nextY.getTime();
+            case CRON : try {
+                            final CronExpression exp = new CronExpression(this.expression);
+                            return exp.getNextValidTimeAfter(new Date());
+                        } catch (final ParseException e) {
+                            // as we check the expression in check() everything should be fine here
+                        }
         }
         return null;
     }
@@ -245,6 +384,28 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
             sb.append(String.valueOf(this.minuteOfHour));
             sb.append(" * * * *");
             return sb.toString();
+        } else if ( this.scheduleType == ScheduleType.MONTHLY ) {
+            final StringBuilder sb = new StringBuilder("0 ");
+            sb.append(String.valueOf(this.minuteOfHour));
+            sb.append(' ');
+            sb.append(String.valueOf(this.hourOfDay));
+            sb.append(' ');
+            sb.append(String.valueOf(this.dayOfWeek));
+            sb.append(" * *");
+            return sb.toString();
+        } else if ( this.scheduleType == ScheduleType.YEARLY ) {
+            final StringBuilder sb = new StringBuilder("0 ");
+            sb.append(String.valueOf(this.minuteOfHour));
+            sb.append(' ');
+            sb.append(String.valueOf(this.hourOfDay));
+            sb.append(' ');
+            sb.append(String.valueOf(this.dayOfWeek));
+            sb.append(' ');
+            sb.append(String.valueOf(this.monthOfYear));
+            sb.append(" *");
+            return sb.toString();
+        } else if ( this.scheduleType == ScheduleType.CRON ) {
+            return this.expression;
         }
         return null;
     }

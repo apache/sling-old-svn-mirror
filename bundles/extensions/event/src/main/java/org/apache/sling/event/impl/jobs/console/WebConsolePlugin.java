@@ -262,10 +262,10 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
         if ( infos.size() == 0 ) {
             pw.print("<tr><td colspan='5'>No jobs currently scheduled.</td></tr>");
         } else {
-            pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Schedule Type</th><th>Schedules</th></tr>");
+            pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Schedules</th></tr>");
             for(final ScheduledJobInfo info : infos) {
-                pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>%s</td><td>",
-                        info.getName(), info.getJobTopic(), info.getSchedules().iterator().next().getType().name());
+                pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>",
+                        info.getName(), info.getJobTopic());
                 boolean first = true;
                 for(final ScheduleInfo si : info.getSchedules() ) {
                     if ( !first ) {
@@ -273,13 +273,19 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                     }
                     first = false;
                     switch ( si.getType() ) {
-                    case WEEKLY : pw.printf("%s : %s:%s", si.getDayOfWeek(), si.getHourOfDay(), si.getMinuteOfHour());
+                    case YEARLY : pw.printf("YEARLY %s %s : %s:%s", si.getMonthOfYear(), si.getDayOfMonth(), si.getHourOfDay(), si.getMinuteOfHour());
                                   break;
-                    case DAILY : pw.printf("%s:%s", si.getHourOfDay(), si.getMinuteOfHour());
+                    case MONTHLY : pw.printf("MONTHLY %s : %s:%s", si.getDayOfMonth(), si.getHourOfDay(), si.getMinuteOfHour());
+                                  break;
+                    case WEEKLY : pw.printf("WEEKLY %s : %s:%s", si.getDayOfWeek(), si.getHourOfDay(), si.getMinuteOfHour());
+                                  break;
+                    case DAILY : pw.printf("DAILY %s:%s", si.getHourOfDay(), si.getMinuteOfHour());
                                  break;
-                    case HOURLY : pw.printf("%s", si.getMinuteOfHour());
+                    case HOURLY : pw.printf("HOURLY %s", si.getMinuteOfHour());
                                  break;
-                    default : pw.printf("%s", si.getAt());
+                    case CRON : pw.printf("CRON %s", si.getExpression());
+                                  break;
+                    default : pw.printf("AT %s", si.getAt());
                     }
                 }
                 pw.print("</td></tr>");

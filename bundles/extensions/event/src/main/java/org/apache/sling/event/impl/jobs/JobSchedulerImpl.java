@@ -273,6 +273,9 @@ public class JobSchedulerImpl
                     case DAILY:
                     case WEEKLY:
                     case HOURLY:
+                    case MONTHLY:
+                    case YEARLY:
+                    case CRON:
                         options = this.scheduler.EXPR(((ScheduleInfoImpl)si).getCronExpression());
 
                         break;

@@ -196,7 +196,6 @@ public class InventoryPlugin implements InventoryPrinter {
             for(final ScheduledJobInfo info : infos) {
                 pw.printf("Schedule : %s%n", info.getName());
                 pw.printf("Job Topic< : %s%n", info.getJobTopic());
-                pw.printf("ScheduleType : %s%n", info.getSchedules().iterator().next().getType().name());
                 pw.print("Schedules : ");
                 boolean first = true;
                 for(final ScheduleInfo si : info.getSchedules() ) {
@@ -205,13 +204,19 @@ public class InventoryPlugin implements InventoryPrinter {
                     }
                     first = false;
                     switch ( si.getType() ) {
-                    case WEEKLY : pw.printf("%s : %s:%s", si.getDayOfWeek(), si.getHourOfDay(), si.getMinuteOfHour());
+                    case YEARLY : pw.printf("YEARLY %s %s : %s:%s", si.getMonthOfYear(), si.getDayOfMonth(), si.getHourOfDay(), si.getMinuteOfHour());
                                   break;
-                    case DAILY : pw.printf("%s:%s", si.getHourOfDay(), si.getMinuteOfHour());
+                    case MONTHLY : pw.printf("MONTHLY %s : %s:%s", si.getDayOfMonth(), si.getHourOfDay(), si.getMinuteOfHour());
+                                  break;
+                    case WEEKLY : pw.printf("WEEKLY %s : %s:%s", si.getDayOfWeek(), si.getHourOfDay(), si.getMinuteOfHour());
+                                  break;
+                    case DAILY : pw.printf("DAILY %s:%s", si.getHourOfDay(), si.getMinuteOfHour());
                                  break;
-                    case HOURLY : pw.printf("%s", si.getMinuteOfHour());
+                    case HOURLY : pw.printf("HOURLY %s", si.getMinuteOfHour());
                                  break;
-                    default : pw.printf("%s", si.getAt());
+                    case CRON : pw.printf("CRON %s", si.getExpression());
+                                 break;
+                    default : pw.printf("AT %s", si.getAt());
                     }
                 }
                 pw.println();
