@@ -51,6 +51,9 @@ import org.osgi.framework.ServiceReference;
 /** A {@link DynamicMBean} used to execute a {@link HealthCheck} service */
 public class HealthCheckMBean implements DynamicMBean {
 
+    /** A HC result is cached for this time (ms) */
+    private static final long RESULT_TTL = 1500;
+
     public static final String HC_OK_ATTRIBUTE_NAME = "ok";
     public static final String HC_STATUS_ATTRIBUTE_NAME = "status";
     public static final String HC_LOG_ATTRIBUTE_NAME = "log";
@@ -73,6 +76,10 @@ public class HealthCheckMBean implements DynamicMBean {
 
     /** The default attributes. */
     private final Map<String, Object> defaultAttributes;
+
+    private long healthCheckInvocationTime;
+
+    private Result healthCheckResult;
 
     static {
         try {
@@ -137,7 +144,7 @@ public class HealthCheckMBean implements DynamicMBean {
                     // we assume that a valid attribute name is used
                     // which is requesting a hc result
                     if ( hcResult == null ) {
-                        hcResult = this.healthCheck.execute();
+                        hcResult = this.getHealthCheckResult();
                     }
 
                     if ( HC_OK_ATTRIBUTE_NAME.equals(key) ) {
@@ -240,5 +247,15 @@ public class HealthCheckMBean implements DynamicMBean {
     @Override
     public String toString() {
         return "HealthCheckMBean [healthCheck=" + healthCheck + "]";
+    }
+
+    private Result getHealthCheckResult() {
+        synchronized ( this ) {
+            if ( this.healthCheckResult == null || this.healthCheckInvocationTime < System.currentTimeMillis() ) {
+                this.healthCheckResult = this.healthCheck.execute();
+                this.healthCheckInvocationTime = System.currentTimeMillis() + RESULT_TTL;
+            }
+            return this.healthCheckResult;
+        }
     }
 }
