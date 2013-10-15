@@ -142,7 +142,7 @@ public class JMXResourceProvider implements ResourceProvider {
                 }
             } else {
                 if (info.pathInfo == null ) {
-                    return new MBeanResource(resourceResolver, this.convertObjectNameToResourcePath(info.objectName), path, info.mbeanInfo, info.objectName);
+                    return new MBeanResource(this.mbeanServer, resourceResolver, this.convertObjectNameToResourcePath(info.objectName), path, info.mbeanInfo, info.objectName);
                 }
                 if ( info.pathInfo.equals("mbean:attributes") ) {
                     return new AttributesResource(resourceResolver, path);
@@ -231,7 +231,7 @@ public class JMXResourceProvider implements ResourceProvider {
                                     final MBeanInfo info = mbeanServer.getMBeanInfo(on);
                                     final String path = convertObjectNameToResourcePath(on);
                                     final int sep = path.lastIndexOf('/');
-                                    this.next = new MBeanResource(parent.getResourceResolver(), path, parent.getPath() + "/" + path.substring(sep + 1), info, on);
+                                    this.next = new MBeanResource(mbeanServer, parent.getResourceResolver(), path, parent.getPath() + "/" + path.substring(sep + 1), info, on);
                                 } catch (final IntrospectionException e) {
                                     // ignore
                                 } catch (final InstanceNotFoundException e) {
