@@ -110,9 +110,11 @@ public class HealthCheckMBeanTest {
             resultOk = true;
             assertJmxValue(OBJECT_NAME, "ok", "true", true);
 
+            Thread.sleep(1500);
             resultOk = false;
             assertJmxValue(OBJECT_NAME, "ok", "true", false);
 
+            Thread.sleep(1500);
             assertJmxValue(OBJECT_NAME, "log", "contains message=Result is not ok!", true);
         } finally {
             jmxServer.unregisterMBean(name);
