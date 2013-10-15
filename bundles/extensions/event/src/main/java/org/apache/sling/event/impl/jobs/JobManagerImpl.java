@@ -81,7 +81,6 @@ import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.Statistics;
 import org.apache.sling.event.jobs.TopicStatistics;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
-import org.apache.sling.event.jobs.consumer.JobState;
 import org.apache.sling.event.jobs.jmx.QueuesMBean;
 import org.osgi.service.event.Event;
 import org.osgi.service.event.EventAdmin;
@@ -308,7 +307,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.finishJob(job, JobState.CANCELLED, false, -1);
+            this.finishJob(job, InternalJobState.CANCELLED, false, -1);
         } else if ( config.getType() == QueueConfiguration.Type.IGNORE ) {
             if ( !reassign ) {
                 if ( logger.isDebugEnabled() ) {
@@ -344,7 +343,7 @@ public class JobManagerImpl
                         if ( queue == null ) {
                             // this is just a sanity check, actually we can never get here
                             logger.warn("Ignoring event due to unknown queue type of queue {} : {}", queueInfo.queueName, Utility.toString(job));
-                            this.finishJob(job, JobState.CANCELLED, false, -1);
+                            this.finishJob(job, InternalJobState.CANCELLED, false, -1);
                         } else {
                             queues.put(queueInfo.queueName, queue);
                             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
@@ -801,7 +800,7 @@ public class JobManagerImpl
                         }
                     }
                 } else {
-                    this.finishJob(job, JobState.CANCELLED, true, -1);
+                    this.finishJob(job, InternalJobState.CANCELLED, true, -1);
                 }
             }
         } else {
@@ -977,11 +976,11 @@ public class JobManagerImpl
                 buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
                 if ( type == QueryType.SUCCEEDED ) {
                     buf.append(" = '");
-                    buf.append(JobState.SUCCEEDED.name());
+                    buf.append(InternalJobState.SUCCEEDED.name());
                     buf.append("'");
                 } else if ( type == QueryType.CANCELLED ) {
                     buf.append(" = '");
-                    buf.append(JobState.CANCELLED.name());
+                    buf.append(InternalJobState.CANCELLED.name());
                     buf.append("'");
                 }
             } else {
@@ -1067,10 +1066,10 @@ public class JobManagerImpl
      * @param state The state of the processing
      */
     public void finishJob(final JobImpl job,
-                          final JobState state,
+                          final InternalJobState state,
                           final boolean keepJobInHistory,
                           final long duration) {
-        final boolean isSuccess = (state == JobState.SUCCEEDED);
+        final boolean isSuccess = (state == InternalJobState.SUCCEEDED);
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -1082,7 +1081,7 @@ public class JobManagerImpl
                         final ValueMap vm = ResourceHelper.getValueMap(jobResource);
                         newPath = this.configuration.getStoragePath(job, isSuccess);
                         final Map<String, Object> props = new HashMap<String, Object>(vm);
-                        props.put(JobImpl.PROPERTY_FINISHED_STATE, isSuccess ? JobState.SUCCEEDED.name() : JobState.CANCELLED.name());
+                        props.put(JobImpl.PROPERTY_FINISHED_STATE, isSuccess ? InternalJobState.SUCCEEDED.name() : InternalJobState.CANCELLED.name());
                         if ( isSuccess ) {
                             // we set the finish date to start date + duration
                             final Date finishDate = new Date();
@@ -1365,7 +1364,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.finishJob(job, JobState.CANCELLED, false, -1); // DROP means complete removal
+            this.finishJob(job, InternalJobState.CANCELLED, false, -1); // DROP means complete removal
         } else {
             String targetId = null;
             if ( config.getType() != QueueConfiguration.Type.IGNORE ) {

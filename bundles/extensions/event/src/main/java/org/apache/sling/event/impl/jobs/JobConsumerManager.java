@@ -46,8 +46,8 @@ import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.event.jobs.consumer.JobConsumer.JobResult;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
+import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
-import org.apache.sling.event.jobs.consumer.JobStatus;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -309,7 +309,8 @@ public class JobConsumerManager {
                                         // notify listener
                                         for(final Object[] listenerObjects : this.listenerMap.values()) {
                                             if ( listenerObjects[0] == oldConsumer.executor ) {
-                                                ((JobExecutionContext)listenerObjects[1]).asyncProcessingFinished(JobStatus.FAILED);
+                                                final JobExecutionContext context = (JobExecutionContext)listenerObjects[1];
+                                                context.asyncProcessingFinished(context.FAILED());
                                                 break;
                                             }
                                         }
@@ -445,14 +446,14 @@ public class JobConsumerManager {
         }
 
         @Override
-        public JobStatus process(final Job job, final JobExecutionContext context) {
+        public JobExecutionResult process(final Job job, final JobExecutionContext context) {
             final JobConsumer.AsyncHandler asyncHandler =
                     new JobConsumer.AsyncHandler() {
 
                         final Object asyncLock = new Object();
                         final AtomicBoolean asyncDone = new AtomicBoolean(false);
 
-                        private void check(final JobStatus result) {
+                        private void check(final JobExecutionResult result) {
                             synchronized ( asyncLock ) {
                                 if ( !asyncDone.get() ) {
                                     asyncDone.set(true);
@@ -465,17 +466,17 @@ public class JobConsumerManager {
 
                         @Override
                         public void ok() {
-                            this.check(JobStatus.SUCCEEDED);
+                            this.check(context.SUCCEEDED());
                         }
 
                         @Override
                         public void failed() {
-                            this.check(JobStatus.FAILED);
+                            this.check(context.FAILED());
                         }
 
                         @Override
                         public void cancel() {
-                            this.check(JobStatus.CANCELLED);
+                            this.check(context.CANCELLED());
                         }
                     };
             ((JobImpl)job).setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
@@ -483,11 +484,11 @@ public class JobConsumerManager {
             if ( result == JobResult.ASYNC ) {
                 return null;
             } else if ( result == JobResult.FAILED) {
-                return JobStatus.FAILED;
+                return context.FAILED();
             } else if ( result == JobResult.OK) {
-                return JobStatus.SUCCEEDED;
+                return context.SUCCEEDED();
             }
-            return JobStatus.CANCELLED;
+            return context.CANCELLED();
         }
     }
 }

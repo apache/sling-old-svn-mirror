@@ -99,50 +99,6 @@ public interface JobManager {
     Job addJob(String topic, Map<String, Object> properties);
 
     /**
-     * Add a new job
-     *
-     * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
-     * If properties are provided, all of them must be serializable. If there are non serializable
-     * objects in the properties, no job is created and <code>null</code> is returned.
-     * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
-     * allowed characters are letters, numbers and the underscore.
-     *
-     * This method allows to specify a job name which should uniquely identify this job. If a job with
-     * the same name is started on different instances, the job is still processed only once. However,
-     * the topology api in combination with the leader selection provides a better way for
-     * dealing with this situation and as jobs with name come with a heavy processing overhead
-     * these should be avoided.
-     *
-     * The returned job object is a snapshot of the job state taken at the time of creation. Updates
-     * to the job state are not reflected and the client needs to get a new job object using the job id.
-     *
-     * If the queue for processing this job is configured to drop the job, <code>null</code> is returned
-     * as well.
-     *
-     * @param topic The required job topic.
-     * @param name  Optional unique job name
-     * @param properties Optional job properties. The properties must be serializable.
-     * @return The new job - or <code>null</code> if the job could not be created.
-     * @since 1.2
-     * @deprecated
-     */
-    @Deprecated
-    Job addJob(String topic, String name, Map<String, Object> properties);
-
-    /**
-     * Return a job based on the unique job name.
-     *
-     * The returned job object is a snapshot of the job state taken at the time of the call. Updates
-     * to the job state are not reflected and the client needs to get a new job object using the job id.
-     *
-     * @return A job or <code>null</code>
-     * @since 1.2
-     * @deprecated
-     */
-    @Deprecated
-    Job getJobByName(String name);
-
-    /**
      * Return a job based on the unique id.
      *
      * The returned job object is a snapshot of the job state taken at the time of the call. Updates
@@ -233,6 +189,50 @@ public interface JobManager {
      * @since 1.3
      */
     ScheduledJobInfo getScheduledJob(final String name);
+
+    /**
+     * Add a new job
+     *
+     * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.
+     * If properties are provided, all of them must be serializable. If there are non serializable
+     * objects in the properties, no job is created and <code>null</code> is returned.
+     * A job topic is a hierarchical name separated by dashes, each part has to start with a letter,
+     * allowed characters are letters, numbers and the underscore.
+     *
+     * This method allows to specify a job name which should uniquely identify this job. If a job with
+     * the same name is started on different instances, the job is still processed only once. However,
+     * the topology api in combination with the leader selection provides a better way for
+     * dealing with this situation and as jobs with name come with a heavy processing overhead
+     * these should be avoided.
+     *
+     * The returned job object is a snapshot of the job state taken at the time of creation. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
+     * If the queue for processing this job is configured to drop the job, <code>null</code> is returned
+     * as well.
+     *
+     * @param topic The required job topic.
+     * @param name  Optional unique job name
+     * @param properties Optional job properties. The properties must be serializable.
+     * @return The new job - or <code>null</code> if the job could not be created.
+     * @since 1.2
+     * @deprecated
+     */
+    @Deprecated
+    Job addJob(String topic, String name, Map<String, Object> properties);
+
+    /**
+     * Return a job based on the unique job name.
+     *
+     * The returned job object is a snapshot of the job state taken at the time of the call. Updates
+     * to the job state are not reflected and the client needs to get a new job object using the job id.
+     *
+     * @return A job or <code>null</code>
+     * @since 1.2
+     * @deprecated
+     */
+    @Deprecated
+    Job getJobByName(String name);
 
     /**
      * Return all jobs either running or scheduled.
