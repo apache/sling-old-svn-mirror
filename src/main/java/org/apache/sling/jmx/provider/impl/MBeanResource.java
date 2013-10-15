@@ -21,8 +21,14 @@ package org.apache.sling.jmx.provider.impl;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanException;
 import javax.management.MBeanInfo;
+import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.management.ReflectionException;
 
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.ResourceMetadata;
@@ -44,11 +50,16 @@ public class MBeanResource extends AbstractResource {
 
     private final String resourceType;
 
-    public MBeanResource(final ResourceResolver resolver,
+    /** The mbean server. */
+    private final MBeanServer mbeanServer;
+
+    public MBeanResource(final MBeanServer mbeanServer,
+            final ResourceResolver resolver,
             final String resourceType,
             final String path,
             final MBeanInfo info,
             final ObjectName objectName) {
+        this.mbeanServer = mbeanServer;
         this.resourceResolver = resolver;
         this.path = path;
         this.info = info;
@@ -115,6 +126,25 @@ public class MBeanResource extends AbstractResource {
         }
         result.put(Constants.PROP_CLASSNAME, this.info.getClassName());
         result.put(Constants.PROP_OBJECTNAME, this.objectName.getCanonicalName());
+
+        final MBeanAttributeInfo[] attribs = this.info.getAttributes();
+        for(final MBeanAttributeInfo i : attribs) {
+             Object value = null;
+             try {
+                value = this.mbeanServer.getAttribute(this.objectName, i.getName());
+                if ( value != null ) {
+                    result.put(i.getName(), value);
+                }
+            } catch (final AttributeNotFoundException e) {
+                // ignore
+            } catch (final InstanceNotFoundException e) {
+                // ignore
+            } catch (final MBeanException e) {
+                // ignore
+            } catch (final ReflectionException e) {
+                // ignore
+            }
+        }
 
         return result;
     }
