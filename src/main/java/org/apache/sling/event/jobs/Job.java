@@ -160,11 +160,15 @@ public interface Job {
      */
     String PROPERTY_FINISHED_DATE = "slingevent:finishedDate";
 
-    enum JobType {
-        QUEUED,
-        ACTIVE,
-        SUCCEEDED,
-        CANCELLED
+    /**
+     * The current job state.
+     * @since 1.3
+     */
+    enum JobState {
+        QUEUED,     // waiting in queue after adding or for restart after failing
+        ACTIVE,     // job is currently in processing
+        SUCCEEDED,  // processing finished successfully
+        CANCELLED,  // processing failed permanently
     };
 
     /**
@@ -283,10 +287,10 @@ public interface Job {
     String getCreatedInstance();
 
     /**
-     * Get the job type
+     * Get the job state
      * @since 1.3
      */
-    JobType getJobType();
+    JobState getJobState();
 
     /**
      * If the job is cancelled or succeeded, this method will return the finish date.

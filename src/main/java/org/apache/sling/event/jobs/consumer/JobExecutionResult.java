@@ -18,13 +18,36 @@
  */
 package org.apache.sling.event.jobs.consumer;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
- * The state of the job after it has been processed by a {@link JobExecutor}.
+ * The status of a job after it has been processed by a {@link JobExecutor}.
+ *
+ * A job executor can either use one of the constants {@link #SUCCEEDED}, {@link #FAILED}
+ * or {@link #CANCELLED} to return a result or it can build an individual result
+ * with optional parameters using the builder methods {@link #SUCCEEDED()}, {@link #FAILED()}
+ * or {@link #CANCELLED()}.
+ *
  * @since 1.1
  */
-public enum JobState {
+@ProviderType
+public interface JobExecutionResult {
 
-    SUCCEEDED,  // processing finished successfully
-    FAILED,     // processing failed, can be retried
-    CANCELLED   // processing failed permanently
+    boolean succeeded();
+
+    boolean cancelled();
+
+    boolean failed();
+
+    /**
+     * Return the optional message.
+     * @return The message or <code>null</code>
+     */
+    String getMessage();
+
+    /**
+     * Return the retry delay in ms
+     * @return The new retry delay (>= 0) or <code>null</code>
+     */
+    Long getRetryDelayInMs();
 }

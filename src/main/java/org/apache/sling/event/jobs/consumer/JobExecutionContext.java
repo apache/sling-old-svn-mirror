@@ -32,7 +32,7 @@ public interface JobExecutionContext {
      * @throws IllegalStateException If the job is not processed asynchronously
      *                               or if this method has already been called.
      */
-    void asyncProcessingFinished(final JobStatus status);
+    void asyncProcessingFinished(final JobExecutionResult result);
 
     /**
      * If a job is stoppable, it should periodically check this method
@@ -91,4 +91,26 @@ public interface JobExecutionContext {
      * @param args Additional arguments
      */
     void log(final String message, final Object...args);
+
+    ResultBuilder result(final String message);
+
+    JobExecutionResult SUCCEEDED();
+
+    JobExecutionResult FAILED();
+
+    JobExecutionResult CANCELLED();
+
+    public interface ResultBuilder {
+
+        /**
+         * @param retryDelayInMs The new retry delay in ms.
+         */
+        ResultBuilder retryDelay(final long retryDelayInMs);
+
+        JobExecutionResult SUCCEEDED();
+
+        JobExecutionResult FAILED();
+
+        JobExecutionResult CANCELLED();
+    }
 }

@@ -63,25 +63,25 @@ public interface JobExecutor {
     /**
      * Execute the job.
      *
-     * If the job has been processed successfully, {@link JobStatus.SUCCEEDED} should be returned.
-     * If the job has not been processed completely, but might be rescheduled {@link JobStatus.FAILED}
+     * If the job has been processed successfully, {@link JobExecutionContext#SUCCEEDED()} should be returned.
+     * If the job has not been processed completely, but might be rescheduled {@link JobExecutionContext#FAILED()}
      * should be returned.
-     * If the job processing failed and should not be rescheduled, {@link JobStatus.CANCELLED} should
+     * If the job processing failed and should not be rescheduled, {@link JobExecutionContext#CANCELLED()} should
      * be returned.
      *
      * If the executor decides to process the job asynchronously it should return <code>null</code>
-     * and notify the job manager by using the {@link JobExecutionContext#asyncProcessingFinished(JobStatus)}
+     * and notify the job manager by using the {@link JobExecutionContext#asyncProcessingFinished(JobExecutionResult)}
      * method.
      *
      * If the processing fails with throwing an exception/throwable, the process will not be rescheduled
-     * and treated like the method would have returned {@link JobStatus.CANCELLED}.
+     * and treated like the method would have returned {@link JobExecutionContext#CANCELLED()}.
      *
-     * Instead of the constants from the JobStatus class, this method can return a custom instance containing
-     * additional information.
+     * Instead of the constants from the JobExecutionContext class, this method can return a custom instance containing
+     * additional information using the builder pattern available from {@link JobExecutionContext#result(String)}.
      *
      * @param job The job
      * @param context The execution context.
-     * @return The job status
+     * @return The job execution result
      */
-    JobStatus process(Job job, JobExecutionContext context);
+    JobExecutionResult process(Job job, JobExecutionContext context);
 }

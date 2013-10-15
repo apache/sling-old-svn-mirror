@@ -319,15 +319,15 @@ public class JobImpl implements Job {
     }
 
     @Override
-    public JobType getJobType() {
+    public JobState getJobState() {
         final String enumValue = this.getProperty(JobImpl.PROPERTY_FINISHED_STATE, String.class);
         if ( enumValue == null ) {
             if ( this.getProcessingStarted() != null ) {
-                return JobType.ACTIVE;
+                return JobState.ACTIVE;
             }
-            return JobType.QUEUED;
+            return JobState.QUEUED;
         }
-        return JobType.valueOf(enumValue);
+        return JobState.valueOf(enumValue);
     }
 
     /**

@@ -20,7 +20,6 @@ package org.apache.sling.event.impl.jobs;
 
 
 import org.apache.sling.event.jobs.Queue;
-import org.apache.sling.event.jobs.consumer.JobState;
 
 
 /**
@@ -55,7 +54,7 @@ public class JobHandler {
      * Finish the processing of the job
      * @param state The state of processing
      */
-    public void finished(final JobState state, final boolean keepJobInHistory, final long duration) {
+    public void finished(final InternalJobState state, final boolean keepJobInHistory, final long duration) {
         // for now we just keep cancelled jobs
         this.jobManager.finishJob(this.job, state, keepJobInHistory, duration);
     }
@@ -69,7 +68,7 @@ public class JobHandler {
     }
 
     public void cancel() {
-        this.jobManager.finishJob(this.job, JobState.CANCELLED, true, -1);
+        this.jobManager.finishJob(this.job, InternalJobState.CANCELLED, true, -1);
     }
 
     public void reassign() {
