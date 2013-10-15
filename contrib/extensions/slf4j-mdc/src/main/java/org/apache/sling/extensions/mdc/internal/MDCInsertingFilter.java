@@ -116,34 +116,34 @@ public class MDCInsertingFilter implements Filter {
     }
 
     private void insertIntoMDC(ServletRequest request) {
-        MDC.put(REQUEST_REMOTE_HOST_MDC_KEY, request.getRemoteHost());
+        nullSafePut(REQUEST_REMOTE_HOST_MDC_KEY, request.getRemoteHost());
 
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
-            MDC.put(REQUEST_REQUEST_URI, httpRequest.getRequestURI());
+            nullSafePut(REQUEST_REQUEST_URI, httpRequest.getRequestURI());
 
             StringBuffer requestURL = httpRequest.getRequestURL();
             if (requestURL != null) {
-                MDC.put(REQUEST_REQUEST_URL, requestURL.toString());
+                nullSafePut(REQUEST_REQUEST_URL, requestURL.toString());
             }
 
-            MDC.put(REQUEST_QUERY_STRING, httpRequest.getQueryString());
-            MDC.put(REQUEST_USER_AGENT_MDC_KEY, httpRequest.getHeader("User-Agent"));
-            MDC.put(REQUEST_X_FORWARDED_FOR, httpRequest.getHeader("X-Forwarded-For"));
+            nullSafePut(REQUEST_QUERY_STRING, httpRequest.getQueryString());
+            nullSafePut(REQUEST_USER_AGENT_MDC_KEY, httpRequest.getHeader("User-Agent"));
+            nullSafePut(REQUEST_X_FORWARDED_FOR, httpRequest.getHeader("X-Forwarded-For"));
 
             for(String paramName : parameterNames){
-                MDC.put(paramName,httpRequest.getParameter(paramName));
+                nullSafePut(paramName,httpRequest.getParameter(paramName));
             }
 
             for(String headerName :headerNames){
-                MDC.put(headerName, httpRequest.getHeader(headerName));
+                nullSafePut(headerName, httpRequest.getHeader(headerName));
             }
 
             Cookie[] cookies = httpRequest.getCookies();
             if(cookies != null){
                 for(Cookie c : cookies){
                     if(cookieNames.contains(c.getName())){
-                        MDC.put(c.getName(),c.getValue());
+                        nullSafePut(c.getName(),c.getValue());
                     }
                 }
             }
@@ -208,6 +208,12 @@ public class MDCInsertingFilter implements Filter {
     private void deactivate(){
         if(filterReg != null){
             filterReg.unregister();
+        }
+    }
+
+    private void nullSafePut(String key,String value){
+        if(key != null && value != null){
+            MDC.put(key,value);
         }
     }
 

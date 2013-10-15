@@ -37,7 +37,6 @@ class SlingMDCFilter implements Filter {
 
     private static final String[] DEFAULT_KEY_NAMES = {
             SLING_USER,
-            JCR_SESSION_ID
     };
 
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -66,11 +65,6 @@ class SlingMDCFilter implements Filter {
         ResourceResolver rr = request.getResourceResolver();
         if(rr.getUserID() != null){
             MDC.put(SLING_USER,rr.getUserID());
-        }
-
-        Session session = rr.adaptTo(Session.class);
-        if(session != null){
-            MDC.put(JCR_SESSION_ID,session.toString());
         }
     }
 
