@@ -19,8 +19,11 @@
 package org.apache.sling.jmx.provider.impl;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import javax.management.Attribute;
+import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
@@ -128,22 +131,33 @@ public class MBeanResource extends AbstractResource {
         result.put(Constants.PROP_OBJECTNAME, this.objectName.getCanonicalName());
 
         final MBeanAttributeInfo[] attribs = this.info.getAttributes();
+        final String[] names = new String[attribs.length];
+        int index = 0;
         for(final MBeanAttributeInfo i : attribs) {
-             Object value = null;
-             try {
-                value = this.mbeanServer.getAttribute(this.objectName, i.getName());
-                if ( value != null ) {
-                    result.put(i.getName(), value);
+            names[index] = i.getName();
+            index++;
+        }
+         AttributeList values = null;
+         try {
+            values = this.mbeanServer.getAttributes(this.objectName, names);
+            if ( values != null ) {
+                final Iterator iter = values.iterator();
+                while ( iter.hasNext() ) {
+                    final Attribute a = (Attribute)iter.next();
+                    final Object value = a.getValue();
+                    if ( value != null ) {
+                        result.put(a.getName(), value);
+                    }
                 }
-            } catch (final AttributeNotFoundException e) {
-                // ignore
-            } catch (final InstanceNotFoundException e) {
-                // ignore
-            } catch (final MBeanException e) {
-                // ignore
-            } catch (final ReflectionException e) {
-                // ignore
             }
+        } catch (final AttributeNotFoundException e) {
+            // ignore
+        } catch (final InstanceNotFoundException e) {
+            // ignore
+        } catch (final MBeanException e) {
+            // ignore
+        } catch (final ReflectionException e) {
+            // ignore
         }
 
         return result;
