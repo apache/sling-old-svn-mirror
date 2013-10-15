@@ -161,6 +161,20 @@ public interface Job {
     String PROPERTY_FINISHED_DATE = "slingevent:finishedDate";
 
     /**
+     * This is an optional property containing a human readable title for
+     * the job
+     * @since 1.3
+     */
+    String PROPERTY_JOB_TITLE = "slingevent:jobTitle";
+
+    /**
+     * This is an optional property containing a human readable description for
+     * the job
+     * @since 1.3
+     */
+    String PROPERTY_JOB_DESCRIPTION = "slingevent:jobDescription";
+
+    /**
      * The current job state.
      * @since 1.3
      */
