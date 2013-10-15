@@ -24,10 +24,8 @@ import java.util.Map;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
-import javax.management.AttributeNotFoundException;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -150,11 +148,7 @@ public class MBeanResource extends AbstractResource {
                     }
                 }
             }
-        } catch (final AttributeNotFoundException e) {
-            // ignore
         } catch (final InstanceNotFoundException e) {
-            // ignore
-        } catch (final MBeanException e) {
             // ignore
         } catch (final ReflectionException e) {
             // ignore
