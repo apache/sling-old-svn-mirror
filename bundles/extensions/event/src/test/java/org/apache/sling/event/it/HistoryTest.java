@@ -101,9 +101,9 @@ public class HistoryTest extends AbstractJobHandlingTest {
                         sleep(5L);
                         final long count = job.getProperty(PROP_COUNTER, Long.class);
                         if ( count == 2 || count == 5 || count == 7 ) {
-                            return context.result(Job.JobState.CANCELLED.name()).CANCELLED();
+                            return context.result().message(Job.JobState.CANCELLED.name()).cancelled();
                         }
-                        return context.result(Job.JobState.SUCCEEDED.name()).SUCCEEDED();
+                        return context.result().message(Job.JobState.SUCCEEDED.name()).succeeded();
                     }
 
                 });

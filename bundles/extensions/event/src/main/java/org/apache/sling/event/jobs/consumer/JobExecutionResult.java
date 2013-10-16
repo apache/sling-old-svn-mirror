@@ -22,21 +22,39 @@ import aQute.bnd.annotation.ProviderType;
 
 /**
  * The status of a job after it has been processed by a {@link JobExecutor}.
+ * The job executor uses the {@link JobExecutionContext} to create a result object.
  *
- * A job executor can either use one of the constants {@link #SUCCEEDED}, {@link #FAILED}
- * or {@link #CANCELLED} to return a result or it can build an individual result
- * with optional parameters using the builder methods {@link #SUCCEEDED()}, {@link #FAILED()}
- * or {@link #CANCELLED()}.
+ * The result can have three states, succeeded, cancelled or failed whereas
+ * failed means that the execution is potentially retried.
  *
  * @since 1.1
  */
 @ProviderType
 public interface JobExecutionResult {
 
+    /**
+     * If this returns true the job processing finished successfully.
+     * In this case {@link #cancelled()} and {@link #failed()} return
+     * <code>false</code>
+     * @return <code>true</code> for a successful processing
+     */
     boolean succeeded();
 
+    /**
+     * If this returns true the job processing failed permanently.
+     * In this case {@link #succeeded()} and {@link #failed()} return
+     * <code>false</code>
+     * @return <code>true</code> for a permanently failed processing
+     */
     boolean cancelled();
 
+    /**
+     * If this returns true the job processing failed but might be
+     * retried..
+     * In this case {@link #cancelled()} and {@link #succeeded()} return
+     * <code>false</code>
+     * @return <code>true</code> for a failedl processing
+     */
     boolean failed();
 
     /**

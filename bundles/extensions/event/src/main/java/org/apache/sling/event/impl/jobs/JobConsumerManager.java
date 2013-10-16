@@ -310,7 +310,7 @@ public class JobConsumerManager {
                                         for(final Object[] listenerObjects : this.listenerMap.values()) {
                                             if ( listenerObjects[0] == oldConsumer.executor ) {
                                                 final JobExecutionContext context = (JobExecutionContext)listenerObjects[1];
-                                                context.asyncProcessingFinished(context.FAILED());
+                                                context.asyncProcessingFinished(context.result().failed());
                                                 break;
                                             }
                                         }
@@ -466,17 +466,17 @@ public class JobConsumerManager {
 
                         @Override
                         public void ok() {
-                            this.check(context.SUCCEEDED());
+                            this.check(context.result().succeeded());
                         }
 
                         @Override
                         public void failed() {
-                            this.check(context.FAILED());
+                            this.check(context.result().failed());
                         }
 
                         @Override
                         public void cancel() {
-                            this.check(context.CANCELLED());
+                            this.check(context.result().cancelled());
                         }
                     };
             ((JobImpl)job).setProperty(JobConsumer.PROPERTY_JOB_ASYNC_HANDLER, asyncHandler);
@@ -484,11 +484,11 @@ public class JobConsumerManager {
             if ( result == JobResult.ASYNC ) {
                 return null;
             } else if ( result == JobResult.FAILED) {
-                return context.FAILED();
+                return context.result().failed();
             } else if ( result == JobResult.OK) {
-                return context.SUCCEEDED();
+                return context.result().succeeded();
             }
-            return context.CANCELLED();
+            return context.result().cancelled();
         }
     }
 }
