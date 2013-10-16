@@ -615,7 +615,7 @@ public class JobSchedulerImpl
      * Create a schedule builder for a currently scheduled job
      */
     public JobBuilder.ScheduleBuilder createJobBuilder(final ScheduledJobInfoImpl info) {
-        final JobBuilder builder = this.jobManager.createJob(info.getJobTopic()).properties(info.getJobProperties());
+        final JobBuilderImpl builder = (JobBuilderImpl)this.jobManager.createJob(info.getJobTopic()).properties(info.getJobProperties());
         final JobBuilder.ScheduleBuilder sb = builder.schedule(info.getName());
         return (info.isSuspended() ? sb.suspend() : sb);
     }
@@ -631,15 +631,6 @@ public class JobSchedulerImpl
             }
         }
         return jobs;
-    }
-
-    /**
-     * Get a scheduled job with the given name
-     */
-    public ScheduledJobInfo getScheduledJob(final String name) {
-        synchronized ( this.scheduledJobs ) {
-            return this.scheduledJobs.get(ResourceHelper.filterName(name));
-        }
     }
 
     public void setSuspended(final ScheduledJobInfoImpl info, final boolean flag) {

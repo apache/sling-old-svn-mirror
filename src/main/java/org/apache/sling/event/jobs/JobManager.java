@@ -186,11 +186,6 @@ public interface JobManager {
     Collection<ScheduledJobInfo> getScheduledJobs();
 
     /**
-     * @since 1.3
-     */
-    ScheduledJobInfo getScheduledJob(final String name);
-
-    /**
      * Add a new job
      *
      * If the topic is <code>null</code> or illegal, no job is created and <code>null</code> is returned.

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.sling.event.impl.support.ScheduleInfoImpl;
 import org.apache.sling.event.jobs.Job;
@@ -62,6 +63,10 @@ public class JobBuilderImpl implements JobBuilder {
     }
 
     @Override
+    public ScheduleBuilder schedule() {
+        return new ScheduleBuilderImpl(UUID.randomUUID().toString());
+    }
+
     public ScheduleBuilder schedule(final String name) {
         return new ScheduleBuilderImpl(name);
     }

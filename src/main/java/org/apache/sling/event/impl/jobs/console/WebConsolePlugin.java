@@ -263,9 +263,10 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
             pw.print("<tr><td colspan='5'>No jobs currently scheduled.</td></tr>");
         } else {
             pw.println("<tr><th>Schedule</th><th>Job Topic</th><th>Schedules</th></tr>");
+            int index = 1;
             for(final ScheduledJobInfo info : infos) {
                 pw.printf("<tr><td><b>%s</b></td><td>%s</td><td>",
-                        info.getName(), info.getJobTopic());
+                        String.valueOf(index), info.getJobTopic());
                 boolean first = true;
                 for(final ScheduleInfo si : info.getSchedules() ) {
                     if ( !first ) {
@@ -289,6 +290,7 @@ public class WebConsolePlugin extends HttpServlet implements JobConsumer {
                     }
                 }
                 pw.print("</td></tr>");
+                index++;
             }
         }
         pw.println("</tbody></table>");

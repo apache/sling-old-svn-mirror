@@ -65,9 +65,8 @@ public class ScheduledJobInfoImpl implements ScheduledJobInfo, Serializable {
     }
 
     /**
-     * @see org.apache.sling.event.jobs.ScheduledJobInfo#getName()
+     * Get the schedule name
      */
-    @Override
     public String getName() {
         return this.scheduleName;
     }
