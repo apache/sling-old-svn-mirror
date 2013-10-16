@@ -85,6 +85,12 @@ public interface JobExecutionContext {
 
     /**
      * Log a message.
+     * A job consumer can use this method during job processing to add additional information
+     * about the current state of job processing.
+     * As calling this method adds a significant overhead it should only
+     * be used to log a few statements per job processing. If a consumer wants
+     * to output detailed information about the processing it should persists it
+     * by itself and not use this method for it.
      * The message and the arguments are passed to the {@link java.text.MessageFormat}
      * class.
      * @param message A message
