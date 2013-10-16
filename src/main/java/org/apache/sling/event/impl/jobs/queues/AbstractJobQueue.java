@@ -597,47 +597,40 @@ public abstract class AbstractJobQueue
                                             }
 
                                             @Override
-                                            public ResultBuilder result(final String message) {
+                                            public ResultBuilder result() {
                                                 return new ResultBuilder() {
+
+                                                    private String message;
 
                                                     private Long retryDelayInMs;
 
                                                     @Override
-                                                    public ResultBuilder retryDelay(final long retryDelayInMs) {
+                                                    public JobExecutionResult failed(final long retryDelayInMs) {
                                                         this.retryDelayInMs = retryDelayInMs;
-                                                        return this;
-                                                    }
-
-                                                    @Override
-                                                    public JobExecutionResult SUCCEEDED() {
-                                                        return new JobExecutionResultImpl(InternalJobState.SUCCEEDED, message, retryDelayInMs);
-                                                    }
-
-                                                    @Override
-                                                    public JobExecutionResult FAILED() {
                                                         return new JobExecutionResultImpl(InternalJobState.FAILED, message, retryDelayInMs);
                                                     }
 
                                                     @Override
-                                                    public JobExecutionResult CANCELLED() {
+                                                    public ResultBuilder message(final String message) {
+                                                        this.message = message;
+                                                        return this;
+                                                    }
+
+                                                    @Override
+                                                    public JobExecutionResult succeeded() {
+                                                        return new JobExecutionResultImpl(InternalJobState.SUCCEEDED, message, retryDelayInMs);
+                                                    }
+
+                                                    @Override
+                                                    public JobExecutionResult failed() {
+                                                        return new JobExecutionResultImpl(InternalJobState.FAILED, message, retryDelayInMs);
+                                                    }
+
+                                                    @Override
+                                                    public JobExecutionResult cancelled() {
                                                         return new JobExecutionResultImpl(InternalJobState.CANCELLED, message, retryDelayInMs);
                                                     }
                                                 };
-                                            }
-
-                                            @Override
-                                            public JobExecutionResult SUCCEEDED() {
-                                                return JobExecutionResultImpl.SUCCEEDED;
-                                            }
-
-                                            @Override
-                                            public JobExecutionResult FAILED() {
-                                                return JobExecutionResultImpl.FAILED;
-                                            }
-
-                                            @Override
-                                            public JobExecutionResult CANCELLED() {
-                                                return JobExecutionResultImpl.CANCELLED;
                                             }
                                         };
                                         result = (JobExecutionResultImpl)consumer.process(job, ctx);

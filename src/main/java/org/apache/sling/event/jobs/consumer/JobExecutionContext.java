@@ -98,25 +98,38 @@ public interface JobExecutionContext {
      */
     void log(final String message, final Object...args);
 
-    ResultBuilder result(final String message);
-
-    JobExecutionResult SUCCEEDED();
-
-    JobExecutionResult FAILED();
-
-    JobExecutionResult CANCELLED();
+    /**
+     * Build a result for the processing.
+     */
+    ResultBuilder result();
 
     public interface ResultBuilder {
 
         /**
+         * Add an optional processing message.
+         * This message can be viewed using {@link org.apache.sling.event.jobs.Job#getResultMessage()}.
+         */
+        ResultBuilder message(final String message);
+
+        /**
+         * The job processing finished successfully.
+         */
+        JobExecutionResult succeeded();
+
+        /**
+         * The job processing failed and might be retried.
+         */
+        JobExecutionResult failed();
+
+        /**
+         * The job processing failed and might be retried.
          * @param retryDelayInMs The new retry delay in ms.
          */
-        ResultBuilder retryDelay(final long retryDelayInMs);
+        JobExecutionResult failed(final long retryDelayInMs);
 
-        JobExecutionResult SUCCEEDED();
-
-        JobExecutionResult FAILED();
-
-        JobExecutionResult CANCELLED();
+        /**
+         * The job processing failed permanently.
+         */
+        JobExecutionResult cancelled();
     }
 }
