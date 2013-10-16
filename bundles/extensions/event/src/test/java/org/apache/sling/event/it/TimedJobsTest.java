@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,12 +70,14 @@ public class TimedJobsTest extends AbstractJobHandlingTest {
             d.setTime(System.currentTimeMillis() + 3000); // run in 3 seconds
 
             // create scheduled job
-            assertNotNull(this.getJobManager().createJob(TOPIC).schedule("simpleTest").at(d).add());
+            final ScheduledJobInfo info = this.getJobManager().createJob(TOPIC).schedule().at(d).add();
+            assertNotNull(info);
 
             while ( counter.get() == 0 ) {
                 this.sleep(1000);
             }
             assertEquals(1, this.getJobManager().getScheduledJobs().size()); // job is still scheduled
+            info.unschedule();
         } finally {
             ehReg.unregister();
         }

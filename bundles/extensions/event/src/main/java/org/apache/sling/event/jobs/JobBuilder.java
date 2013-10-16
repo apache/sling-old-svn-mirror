@@ -55,13 +55,9 @@ public interface JobBuilder {
 
     /**
      * Schedule the job
-     * If a job scheduler with the same name already exists, it is updated
-     * with the new information.
-     * If no name is provided (empty name or null), the job can't be scheduled.
-     * @param name Unique name for the scheduler.
      * @return A schedule builder to schedule the jobs
      */
-    ScheduleBuilder schedule(final String name);
+    ScheduleBuilder schedule();
 
     /**
      * This is a builder interface for creating schedule information

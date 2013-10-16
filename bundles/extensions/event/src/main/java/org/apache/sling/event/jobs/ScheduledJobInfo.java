@@ -32,12 +32,6 @@ import aQute.bnd.annotation.ProviderType;
 public interface ScheduledJobInfo {
 
     /**
-     * Return the unique scheduling name.
-     * @return The unique name
-     */
-    String getName();
-
-    /**
      * Get all schedules for this job
      * @return A non null and non empty list of schedules.
      */

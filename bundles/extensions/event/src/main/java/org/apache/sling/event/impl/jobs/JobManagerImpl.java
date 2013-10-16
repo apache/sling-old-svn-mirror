@@ -1467,14 +1467,6 @@ public class JobManagerImpl
         return this.jobScheduler.getScheduledJobs();
     }
 
-    /**
-     * @see org.apache.sling.event.jobs.JobManager#getScheduledJob(java.lang.String)
-     */
-    @Override
-    public ScheduledJobInfo getScheduledJob(final String name) {
-        return this.jobScheduler.getScheduledJob(name);
-    }
-
     public ScheduledJobInfo addScheduledJob(final String topic,
             final String jobName,
             final Map<String, Object> properties,
