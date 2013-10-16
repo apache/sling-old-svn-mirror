@@ -788,6 +788,7 @@ public class JobManagerImpl
                         } else {
                             logger.debug("Unable to remove job with id - resource already removed: {}", jobId);
                         }
+                        Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_REMOVED, job, null);
                     } catch ( final LoginException le ) {
                         this.ignoreException(le);
                         result = false;

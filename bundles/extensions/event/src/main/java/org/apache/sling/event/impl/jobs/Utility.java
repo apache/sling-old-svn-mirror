@@ -143,7 +143,7 @@ public abstract class Utility {
         eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_ID, job.getId());
         eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC, job.getTopic());
         if ( job.getName() != null ) {
-            eventProps.put(NotificationConstants.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
+            eventProps.put(JobUtil.NOTIFICATION_PROPERTY_JOB_NAME, job.getName());
         }
         // copy payload
         for(final String name : job.getPropertyNames()) {
