@@ -221,11 +221,10 @@ public abstract class JobUtil {
     public static final String NOTIFICATION_PROPERTY_JOB_TOPIC = NotificationConstants.NOTIFICATION_PROPERTY_JOB_TOPIC;
 
     /**
-     * @see NotificationConstants#NOTIFICATION_PROPERTY_JOB_NAME
-     * @deprecated Use NotificationConstants#NOTIFICATION_PROPERTY_JOB_NAME
+     * Property containing the optional job name. Value is of type String.
      */
     @Deprecated
-    public static final String NOTIFICATION_PROPERTY_JOB_NAME = NotificationConstants.NOTIFICATION_PROPERTY_JOB_NAME;
+    public static final String NOTIFICATION_PROPERTY_JOB_NAME = "event.job.id";
 
     /**
      * @see NotificationConstants#NOTIFICATION_PROPERTY_JOB_ID
