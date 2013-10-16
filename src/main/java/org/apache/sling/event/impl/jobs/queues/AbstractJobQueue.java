@@ -305,9 +305,9 @@ public abstract class AbstractJobQueue
         public long    processingTime;
     }
 
-    private RescheduleInfo handleReschedule(final JobHandler jobEvent, final JobExecutionResultImpl result) {
+    private RescheduleInfo handleReschedule(final JobHandler jobEvent, final Job.JobState resultState) {
         final RescheduleInfo info = new RescheduleInfo();
-        switch ( result.getState() ) {
+        switch ( resultState ) {
             case SUCCEEDED : // job is finished
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Finished job {}", Utility.toString(jobEvent.getJob()));
@@ -315,7 +315,7 @@ public abstract class AbstractJobQueue
                 info.processingTime = System.currentTimeMillis() - jobEvent.started;
                 this.finishedJob(info.processingTime);
                 break;
-            case FAILED : // check if we exceeded the number of retries
+            case QUEUED : // check if we exceeded the number of retries
                 int retries = (Integer) jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRIES);
                 int retryCount = (Integer)jobEvent.getJob().getProperty(Job.PROPERTY_JOB_RETRY_COUNT);
 
@@ -336,7 +336,7 @@ public abstract class AbstractJobQueue
                     jobEvent.queued = System.currentTimeMillis();
                 }
                 break;
-            case CANCELLED : // consumer cancelled the job
+            default : // consumer cancelled the job (STOPPED, GIVEN_UP, ERROR)
                 if ( this.logger.isDebugEnabled() ) {
                     this.logger.debug("Cancelled job {}", Utility.toString(jobEvent.getJob()));
                 }
@@ -353,17 +353,17 @@ public abstract class AbstractJobQueue
     @Override
     public boolean finishedJob(final Event job, final boolean shouldReschedule) {
         final String location = (String)job.getProperty(ResourceHelper.PROPERTY_JOB_ID);
-        return this.finishedJob(location, shouldReschedule ? JobExecutionResultImpl.FAILED : JobExecutionResultImpl.SUCCEEDED, false);
+        return this.finishedJob(location, shouldReschedule ? Job.JobState.QUEUED : Job.JobState.SUCCEEDED, false);
     }
 
     /**
      * Handle job finish and determine whether to reschedule or cancel the job
      */
     private boolean finishedJob(final String jobId,
-                                final JobExecutionResultImpl result,
+                                Job.JobState resultState,
                                 final boolean isAsync) {
         if ( this.logger.isDebugEnabled() ) {
-            this.logger.debug("Received finish for job {}, result={}", jobId, result);
+            this.logger.debug("Received finish for job {}, resultState={}", jobId, resultState);
         }
         // let's remove the event from our processing list
         // this is just a sanity check, as usually the job should have been
@@ -391,17 +391,19 @@ public abstract class AbstractJobQueue
         }
 
         // handle the reschedule, a new job might be returned with updated reschedule info!
-        final RescheduleInfo rescheduleInfo = this.handleReschedule(handler, result);
-
+        final RescheduleInfo rescheduleInfo = this.handleReschedule(handler, resultState);
+        if ( resultState == Job.JobState.QUEUED && !rescheduleInfo.reschedule ) {
+            resultState = Job.JobState.GIVEN_UP;
+        }
         // if this is set after the synchronized block we have an error
         final boolean finishSuccessful;
 
         if ( !rescheduleInfo.reschedule ) {
             // we keep cancelled jobs and succeeded jobs if the queue is configured like this.
-            final boolean keepJobs = result.getState() != InternalJobState.SUCCEEDED || this.configuration.isKeepJobs();
-            handler.finished(result.getState(), keepJobs, rescheduleInfo.processingTime);
+            final boolean keepJobs = resultState != Job.JobState.SUCCEEDED || this.configuration.isKeepJobs();
+            handler.finished(resultState, keepJobs, rescheduleInfo.processingTime);
             finishSuccessful = true;
-            if ( result.getState() == InternalJobState.SUCCEEDED ) {
+            if ( resultState == Job.JobState.SUCCEEDED ) {
                 Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_FINISHED, handler.getJob(), rescheduleInfo.processingTime);
             } else {
                 Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, handler.getJob(), null);
@@ -542,6 +544,7 @@ public abstract class AbstractJobQueue
                                     }
                                 }
                                 JobExecutionResultImpl result = JobExecutionResultImpl.CANCELLED;
+                                Job.JobState resultState = Job.JobState.ERROR;
                                 final AtomicBoolean isAsync = new AtomicBoolean(false);
 
                                 try {
@@ -584,11 +587,23 @@ public abstract class AbstractJobQueue
                                             }
 
                                             @Override
-                                            public void asyncProcessingFinished(final JobExecutionResult status) {
+                                            public void asyncProcessingFinished(final JobExecutionResult result) {
                                                 synchronized ( lock ) {
                                                     if ( isAsync.compareAndSet(true, false) ) {
                                                         jobConsumerManager.unregisterListener(job.getId());
-                                                        finishedJob(job.getId(), (JobExecutionResultImpl)status, true);
+                                                        Job.JobState state = null;
+                                                        if ( result.succeeded() ) {
+                                                            state = Job.JobState.SUCCEEDED;
+                                                        } else if ( result.failed() ) {
+                                                            state = Job.JobState.QUEUED;
+                                                        } else if ( result.cancelled() ) {
+                                                            if ( handler.isStopped() ) {
+                                                                state = Job.JobState.STOPPED;
+                                                            } else {
+                                                                state = Job.JobState.ERROR;
+                                                            }
+                                                        }
+                                                        finishedJob(job.getId(), state, true);
                                                         asyncCounter.decrementAndGet();
                                                     } else {
                                                         throw new IllegalStateException("Job is not processed async " + job.getId());
@@ -639,12 +654,25 @@ public abstract class AbstractJobQueue
                                             asyncCounter.incrementAndGet();
                                             notifyFinished(null);
                                             isAsync.set(true);
+                                        } else {
+                                            if ( result.succeeded() ) {
+                                                resultState = Job.JobState.SUCCEEDED;
+                                            } else if ( result.failed() ) {
+                                                resultState = Job.JobState.QUEUED;
+                                            } else if ( result.cancelled() ) {
+                                                if ( handler.isStopped() ) {
+                                                    resultState = Job.JobState.STOPPED;
+                                                } else {
+                                                    resultState = Job.JobState.ERROR;
+                                                }
+                                            }
                                         }
                                     }
                                 } catch (final Throwable t) { //NOSONAR
                                     logger.error("Unhandled error occured in job processor " + t.getMessage() + " while processing job " + Utility.toString(job), t);
                                     // we don't reschedule if an exception occurs
                                     result = JobExecutionResultImpl.CANCELLED;
+                                    resultState = Job.JobState.ERROR;
                                 } finally {
                                     currentThread.setPriority(oldPriority);
                                     currentThread.setName(oldName);
@@ -655,7 +683,7 @@ public abstract class AbstractJobQueue
                                         if ( result.getMessage() != null ) {
                                            job.setProperty(Job.PROPERTY_RESULT_MESSAGE, result.getMessage());
                                         }
-                                        finishedJob(job.getId(), result, false);
+                                        finishedJob(job.getId(), resultState, false);
                                     }
                                 }
                             }

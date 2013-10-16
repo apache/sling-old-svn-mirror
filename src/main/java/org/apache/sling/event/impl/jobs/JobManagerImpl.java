@@ -307,7 +307,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.finishJob(job, InternalJobState.CANCELLED, false, -1);
+            this.finishJob(job, Job.JobState.DROPPED, false, -1);
         } else if ( config.getType() == QueueConfiguration.Type.IGNORE ) {
             if ( !reassign ) {
                 if ( logger.isDebugEnabled() ) {
@@ -343,7 +343,7 @@ public class JobManagerImpl
                         if ( queue == null ) {
                             // this is just a sanity check, actually we can never get here
                             logger.warn("Ignoring event due to unknown queue type of queue {} : {}", queueInfo.queueName, Utility.toString(job));
-                            this.finishJob(job, InternalJobState.CANCELLED, false, -1);
+                            this.finishJob(job, Job.JobState.DROPPED, false, -1);
                         } else {
                             queues.put(queueInfo.queueName, queue);
                             ((QueuesMBeanImpl)queuesMBean).sendEvent(new QueueStatusEvent(queue, null));
@@ -801,7 +801,7 @@ public class JobManagerImpl
                         }
                     }
                 } else {
-                    this.finishJob(job, InternalJobState.CANCELLED, true, -1);
+                    this.finishJob(job, Job.JobState.DROPPED, true, -1);
                 }
             }
         } else {
@@ -931,6 +931,7 @@ public class JobManagerImpl
      */
     @Override
     public Job getJob(final String topic, final Map<String, Object> template) {
+        @SuppressWarnings("unchecked")
         final Iterable<Job> iter = this.findJobs(QueryType.ALL, topic, 1, template);
         final Iterator<Job> i = iter.iterator();
         if ( i.hasNext() ) {
@@ -955,7 +956,13 @@ public class JobManagerImpl
             final String topic,
             final long limit,
             final Map<String, Object>... templates) {
-        final boolean isHistoryQuery = type == QueryType.HISTORY || type == QueryType.SUCCEEDED || type == QueryType.CANCELLED;
+        final boolean isHistoryQuery = type == QueryType.HISTORY
+                                       || type == QueryType.SUCCEEDED
+                                       || type == QueryType.CANCELLED
+                                       || type == QueryType.DROPPED
+                                       || type == QueryType.ERROR
+                                       || type == QueryType.GIVEN_UP
+                                       || type == QueryType.STOPPED;
         final List<Job> result = new ArrayList<Job>();
         ResourceResolver resolver = null;
         try {
@@ -975,14 +982,28 @@ public class JobManagerImpl
             if ( isHistoryQuery ) {
                 buf.append(" and @");
                 buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
-                if ( type == QueryType.SUCCEEDED ) {
+                if ( type == QueryType.SUCCEEDED || type == QueryType.DROPPED || type == QueryType.ERROR || type == QueryType.GIVEN_UP || type == QueryType.STOPPED ) {
                     buf.append(" = '");
-                    buf.append(InternalJobState.SUCCEEDED.name());
+                    buf.append(type.name());
                     buf.append("'");
                 } else if ( type == QueryType.CANCELLED ) {
+                    buf.append(" and (@");
+                    buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
                     buf.append(" = '");
-                    buf.append(InternalJobState.CANCELLED.name());
-                    buf.append("'");
+                    buf.append(QueryType.DROPPED.name());
+                    buf.append("' or @");
+                    buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
+                    buf.append(" = '");
+                    buf.append(QueryType.ERROR.name());
+                    buf.append("' or @");
+                    buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
+                    buf.append(" = '");
+                    buf.append(QueryType.GIVEN_UP.name());
+                    buf.append("' or @");
+                    buf.append(ISO9075.encode(JobImpl.PROPERTY_FINISHED_STATE));
+                    buf.append(" = '");
+                    buf.append(QueryType.STOPPED.name());
+                    buf.append("')");
                 }
             } else {
                 buf.append(" and not(@");
@@ -1067,10 +1088,10 @@ public class JobManagerImpl
      * @param state The state of the processing
      */
     public void finishJob(final JobImpl job,
-                          final InternalJobState state,
+                          final Job.JobState state,
                           final boolean keepJobInHistory,
                           final long duration) {
-        final boolean isSuccess = (state == InternalJobState.SUCCEEDED);
+        final boolean isSuccess = (state == Job.JobState.SUCCEEDED);
         ResourceResolver resolver = null;
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
@@ -1082,7 +1103,7 @@ public class JobManagerImpl
                         final ValueMap vm = ResourceHelper.getValueMap(jobResource);
                         newPath = this.configuration.getStoragePath(job, isSuccess);
                         final Map<String, Object> props = new HashMap<String, Object>(vm);
-                        props.put(JobImpl.PROPERTY_FINISHED_STATE, isSuccess ? InternalJobState.SUCCEEDED.name() : InternalJobState.CANCELLED.name());
+                        props.put(JobImpl.PROPERTY_FINISHED_STATE, state.name());
                         if ( isSuccess ) {
                             // we set the finish date to start date + duration
                             final Date finishDate = new Date();
@@ -1365,7 +1386,7 @@ public class JobManagerImpl
             if ( logger.isDebugEnabled() ) {
                 logger.debug("Dropping job due to configuration of queue {} : {}", queueInfo.queueName, Utility.toString(job));
             }
-            this.finishJob(job, InternalJobState.CANCELLED, false, -1); // DROP means complete removal
+            this.finishJob(job, Job.JobState.DROPPED, false, -1); // DROP means complete removal
         } else {
             String targetId = null;
             if ( config.getType() != QueueConfiguration.Type.IGNORE ) {
