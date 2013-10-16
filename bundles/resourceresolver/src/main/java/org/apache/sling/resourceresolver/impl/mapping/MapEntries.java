@@ -512,12 +512,8 @@ public class MapEntries implements EventHandler {
                 resourceName = resource.getName();
             }
             Map<String, String> parentMap = map.get(parentPath);
-            if (parentMap == null) {
-                parentMap = new HashMap<String, String>();
-                map.put(parentPath, parentMap);
-            }
             for (final String alias : props.get(ResourceResolverImpl.PROP_ALIAS, String[].class)) {
-                if (parentMap.containsKey(alias)) {
+                if (parentMap != null && parentMap.containsKey(alias)) {
                     log.warn("Encountered duplicate alias {} under parent path {}. Refusing to replace current target {} with {}.", new Object[] {
                             alias,
                             parentPath,
@@ -525,7 +521,27 @@ public class MapEntries implements EventHandler {
                             resourceName
                     });
                 } else {
-                    parentMap.put(alias, resourceName);
+                    // check alias
+                    boolean invalid = alias.equals("..") || alias.equals(".");
+                    if ( !invalid ) {
+                        for(final char c : alias.toCharArray()) {
+                            // invalid if / or # or a ?
+                            if ( c == '/' || c == '#' || c == '?' ) {
+                                invalid = true;
+                                break;
+                            }
+                        }
+                    }
+                    if ( invalid ) {
+                        log.warn("Encountered invalid alias {} under parent path {}. Refusing to use it.",
+                                alias, parentPath);
+                    } else {
+                        if (parentMap == null) {
+                            parentMap = new HashMap<String, String>();
+                            map.put(parentPath, parentMap);
+                        }
+                        parentMap.put(alias, resourceName);
+                    }
                 }
             }
         }
