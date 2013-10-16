@@ -36,7 +36,6 @@ import org.apache.sling.event.EventPropertiesMap;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobUtil;
 import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -127,7 +126,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             props.put("list", list);
             props.put("map", map);
 
-            jobManager.addJob(TOPIC, null, props);
+            final String jobId = jobManager.addJob(TOPIC, props).getId();
 
             new RetryLoop(Conditions.collectionIsNotEmptyCondition(finishedEvents,
                     "Waiting for finishedEvents to have at least one element"), 5, 50);
@@ -156,6 +155,8 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             assertEquals(new Long(7), Long.valueOf(finishedEvents.get(0).getProperty("long").toString()));
             assertEquals(list, finishedEvents.get(0).getProperty("list"));
             assertEquals(map, finishedEvents.get(0).getProperty("map"));
+
+            jobManager.removeJobById(jobId);
         } finally {
             jcReg.unregister();
             ehReg.unregister();
@@ -171,11 +172,11 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
 
                     @Override
                     public JobResult process(Job job) {
-                failedJobsCount.incrementAndGet();
+                        failedJobsCount.incrementAndGet();
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -194,7 +195,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
             final Map<String, Object> props = new HashMap<String, Object>();
             props.put("dao", dao);
 
-            final String id = jobManager.addJob(TOPIC + "/failed", null, props).getId();
+            final String id = jobManager.addJob(TOPIC + "/failed", props).getId();
 
             // wait until the conditions are met
             new RetryLoop(new RetryLoop.Condition() {
@@ -215,8 +216,10 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
                 }
             }, CONDITION_TIMEOUT_SECONDS, CONDITION_INTERVAL_MILLIS);
 
-            jobManager.removeJobById(id);
+            jobManager.removeJobById(id); // moves the job to the history section
             assertEquals(0, jobManager.findJobs(JobManager.QueryType.ALL, TOPIC + "/failed", -1, (Map<String, Object>[])null).size());
+
+            jobManager.removeJobById(id); // removes the job permanently
         } finally {
             jcReg.unregister();
             ehReg.unregister();

@@ -182,7 +182,10 @@ public interface Job {
         QUEUED,     // waiting in queue after adding or for restart after failing
         ACTIVE,     // job is currently in processing
         SUCCEEDED,  // processing finished successfully
-        CANCELLED,  // processing failed permanently
+        STOPPED,    // processing was stopped by a user
+        GIVEN_UP,   // number of retries reached
+        ERROR,      // processing signaled CANCELLED or throw an exception
+        DROPPED     // dropped jobs
     };
 
     /**

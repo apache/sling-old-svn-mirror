@@ -101,7 +101,7 @@ public class HistoryTest extends AbstractJobHandlingTest {
                         sleep(5L);
                         final long count = job.getProperty(PROP_COUNTER, Long.class);
                         if ( count == 2 || count == 5 || count == 7 ) {
-                            return context.result().message(Job.JobState.CANCELLED.name()).cancelled();
+                            return context.result().message(Job.JobState.ERROR.name()).cancelled();
                         }
                         return context.result().message(Job.JobState.SUCCEEDED.name()).succeeded();
                     }
@@ -118,7 +118,14 @@ public class HistoryTest extends AbstractJobHandlingTest {
             }
             col = this.getJobManager().findJobs(JobManager.QueryType.HISTORY, TOPIC, -1, (Map<String, Object>[])null);
             assertEquals(10, col.size());
+            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.ACTIVE, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.QUEUED, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.ALL, TOPIC, -1, (Map<String, Object>[])null).size());
             assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.CANCELLED, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.DROPPED, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(3, this.getJobManager().findJobs(JobManager.QueryType.ERROR, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.GIVEN_UP, TOPIC, -1, (Map<String, Object>[])null).size());
+            assertEquals(0, this.getJobManager().findJobs(JobManager.QueryType.STOPPED, TOPIC, -1, (Map<String, Object>[])null).size());
             assertEquals(7, this.getJobManager().findJobs(JobManager.QueryType.SUCCEEDED, TOPIC, -1, (Map<String, Object>[])null).size());
             // verify order, message and state
             long last = 9;
@@ -127,7 +134,7 @@ public class HistoryTest extends AbstractJobHandlingTest {
                 final long count = j.getProperty(PROP_COUNTER, Long.class);
                 assertEquals(last, count);
                 if ( count == 2 || count == 5 || count == 7 ) {
-                    assertEquals(Job.JobState.CANCELLED, j.getJobState());
+                    assertEquals(Job.JobState.ERROR, j.getJobState());
                 } else {
                     assertEquals(Job.JobState.SUCCEEDED, j.getJobState());
                 }

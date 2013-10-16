@@ -39,9 +39,9 @@ public interface JobExecutionContext {
      * and stop processing if the method return <code>true</code>.
      * If a job is stopped and the job executor detects this, its up
      * to the implementation to decide the result of such a state.
-     * There might be use cases where the job returns {@link JobStatus#SUCCEEDED}
-     * although it didn't process everything, or {@link JobStatus#FAILED}
-     * to retry later on or {@link JobStatus#CANCELLED}.
+     * There might be use cases where the job returns {@link JobExecutionResult#succeeded()}
+     * although it didn't process everything, or {@link JobExecutionResult#failed()}
+     * to retry later on or {@link JobExecutionResult#cancelled()}.
      * @return Whether this job has been stopped from the outside.
      */
     boolean isStopped();

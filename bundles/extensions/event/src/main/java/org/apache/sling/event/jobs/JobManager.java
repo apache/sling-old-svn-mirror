@@ -64,9 +64,13 @@ public interface JobManager {
         ALL,      // all means all active and all queued
         ACTIVE,
         QUEUED,
-        HISTORY,  // returns the complete history of cancelled and succeeded jobs (if available)
-        CANCELLED,// history of cancelled jobs
-        SUCCEEDED // history of succeeded jobs
+        HISTORY,    // returns the complete history of cancelled and succeeded jobs (if available)
+        CANCELLED,  // history of cancelled jobs (STOPPED, GIVEN_UP, ERROR, DROPPED)
+        SUCCEEDED,  // history of succeeded jobs
+        STOPPED,    // history of stopped jobs
+        GIVEN_UP,   // history of given up jobs
+        ERROR,      // history of jobs signaled CANCELLED or throw an exception
+        DROPPED     // history of dropped jobs
     }
 
     /**
@@ -167,7 +171,10 @@ public interface JobManager {
     Collection<Job> findJobs(QueryType type, String topic, long limit, Map<String, Object>... templates);
 
     /**
-     * Stop a job
+     * Stop a job.
+     * When a job is stopped and the job consumer supports stopping the job processing, it is up
+     * to the job consumer how the stopping is handled. The job can be marked as finished successful,
+     * permanently failed or being retried.
      * @since 1.3
      */
     void stopJobById(String jobId);
@@ -181,6 +188,7 @@ public interface JobManager {
     JobBuilder createJob(final String topic);
 
     /**
+     * Return all available job schedules.
      * @since 1.3
      */
     Collection<ScheduledJobInfo> getScheduledJobs();
