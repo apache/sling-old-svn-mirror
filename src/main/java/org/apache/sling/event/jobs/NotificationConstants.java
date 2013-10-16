@@ -28,8 +28,7 @@ public abstract class NotificationConstants {
     /**
      * Asynchronous notification event when a job is started.
      * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
+     * the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
      * The time stamp of the event (as a Long) is available from the property
      * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
      * The payload of the job is available as additional job specific properties.
@@ -39,8 +38,7 @@ public abstract class NotificationConstants {
     /**
      * Asynchronous notification event when a job is finished.
      * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
+     * the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
      * The time stamp of the event (as a Long) is available from the property
      * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
      * The payload of the job is available as additional job specific properties.
@@ -51,20 +49,18 @@ public abstract class NotificationConstants {
      * Asynchronous notification event when a job failed.
      * If a job execution fails, it is rescheduled for another try.
      * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
+     * the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
      * The time stamp of the event (as a Long) is available from the property
      * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
      * The payload of the job is available as additional job specific properties.
      */
     public static final String TOPIC_JOB_FAILED = "org/apache/sling/event/notification/job/FAILED";
 
-    /** A
-     * synchronous notification event when a job is cancelled.
+    /**
+     * Asynchronous notification event when a job is cancelled.
      * If a job execution is cancelled it is not rescheduled.
      * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
-     * the property {@link #NOTIFICATION_PROPERTY_JOB_NAME} might contain the job name,
-     * and the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
+     * the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
      * The time stamp of the event (as a Long) is available from the property
      * {@link org.osgi.service.event.EventConstants#TIMESTAMP}.
      * The payload of the job is available as additional job specific properties.
@@ -72,16 +68,18 @@ public abstract class NotificationConstants {
     public static final String TOPIC_JOB_CANCELLED = "org/apache/sling/event/notification/job/CANCELLED";
 
     /**
+     * Asynchronous notification event when a job is permanently removed.
+     * The property {@link #NOTIFICATION_PROPERTY_JOB_TOPIC} contains the job topic,
+     * the property {@link #NOTIFICATION_PROPERTY_JOB_ID} contains the unique job id.
+     * The payload of the job is available as additional job specific properties.
+     */
+    public static final String TOPIC_JOB_REMOVED = "org/apache/sling/event/notification/job/REMOVED";
+
+    /**
      * Property containing the job topic. Value is of type String.
      * @see Job#getTopic()
      */
     public static final String NOTIFICATION_PROPERTY_JOB_TOPIC = "event.job.topic";
-
-    /**
-     * Property containing the optional job name. Value is of type String.
-     * @see Job#getName()
-     */
-    public static final String NOTIFICATION_PROPERTY_JOB_NAME = "event.job.id";
 
     /**
      * Property containing the unique job ID. Value is of type String.
