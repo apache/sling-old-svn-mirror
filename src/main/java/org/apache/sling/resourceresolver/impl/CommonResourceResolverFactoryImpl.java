@@ -199,4 +199,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             final Map<String, Object> authenticationInfo) throws LoginException {
         throw new IllegalStateException("This method is not implemented.");
     }
+
+    public boolean isVanityPathEnabled() {
+        return this.activator.isVanityPathEnabled();
+    }
 }

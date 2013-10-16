@@ -108,6 +108,8 @@ public class MapEntries implements EventHandler {
 
     private final ReentrantLock initializing = new ReentrantLock();
 
+    private final boolean enabledVanityPaths;
+
     @SuppressWarnings("unchecked")
     private MapEntries() {
         this.factory = null;
@@ -120,6 +122,7 @@ public class MapEntries implements EventHandler {
         this.aliasMap = Collections.<String, Map<String, String>>emptyMap();
         this.registration = null;
         this.eventAdmin = null;
+        this.enabledVanityPaths = true;
     }
 
     @SuppressWarnings("unchecked")
@@ -128,6 +131,7 @@ public class MapEntries implements EventHandler {
         this.resolver = factory.getAdministrativeResourceResolver(null);
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
+        this.enabledVanityPaths = factory.isVanityPathEnabled();
         this.eventAdmin = eventAdmin;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
@@ -139,7 +143,7 @@ public class MapEntries implements EventHandler {
 
         final Dictionary<String, String> props = new Hashtable<String, String>();
         props.put(EventConstants.EVENT_TOPIC, "org/apache/sling/api/resource/*");
-        props.put(EventConstants.EVENT_FILTER, createFilter());
+        props.put(EventConstants.EVENT_FILTER, createFilter(this.enabledVanityPaths));
         props.put(Constants.SERVICE_DESCRIPTION, "Map Entries Observation");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.registration = bundleContext.registerService(EventHandler.class.getName(), this, props);
@@ -203,7 +207,7 @@ public class MapEntries implements EventHandler {
             loadResolverMap(resolver, globalResolveMap, newMapMaps);
 
             // load the configuration into the resolver map
-            final Collection<String> vanityTargets = this.loadVanityPaths(resolver, newResolveMapsMap);
+            final Collection<String> vanityTargets = (this.enabledVanityPaths ? this.loadVanityPaths(resolver, newResolveMapsMap) : Collections.<String> emptySet());
             loadConfiguration(factory, globalResolveMap);
 
             // load the configuration into the mapper map
@@ -781,8 +785,8 @@ public class MapEntries implements EventHandler {
      * modified JCR properties) this allows to only get events interesting for
      * updating the internal structure
      */
-    private static String createFilter() {
-        final String[] nodeProps = { "sling:vanityPath", "sling:vanityOrder",
+    private static String createFilter(final boolean vanityPathEnabled) {
+        final String[] nodeProps = {
                         PROP_REDIRECT_EXTERNAL_REDIRECT_STATUS, PROP_REDIRECT_EXTERNAL,
                         ResourceResolverImpl.PROP_REDIRECT_INTERNAL, PROP_REDIRECT_EXTERNAL_STATUS,
                         PROP_REG_EXP, ResourceResolverImpl.PROP_ALIAS };
@@ -791,6 +795,10 @@ public class MapEntries implements EventHandler {
         filter.append("(|");
         for (final String eventProp : eventProps) {
             filter.append("(|");
+            if (  vanityPathEnabled ) {
+                filter.append('(').append(eventProp).append('=').append("sling:vanityPath").append(')');
+                filter.append('(').append(eventProp).append('=').append("sling:vanityOrder").append(')');
+            }
             for (final String nodeProp : nodeProps) {
                 filter.append('(').append(eventProp).append('=').append(nodeProp).append(')');
             }
