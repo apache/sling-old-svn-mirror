@@ -65,6 +65,9 @@
             Context path of the Sling web application
         -->
         <jetty.sling.context>/</jetty.sling.context>
+        
+        <!-- trick maven-launchpad-plugin into not copying any configs -->
+        <empty.config.directory>${project.build.directory}/NOCONFIGS</empty.config.directory>
 
     </properties>
 
@@ -91,8 +94,14 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-launchpad-plugin</artifactId>
-                <version>2.1.2</version>
+                <version>2.2.0</version>
                 <extensions>true</extensions>
+                <configuration>
+                    <includeDefaultBundles>false</includeDefaultBundles>
+                    <bundlesDirectory>install</bundlesDirectory>
+                    <bootDirectory>bundles</bootDirectory>
+                    <configDirectory>${empty.config.directory}</configDirectory>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-package-war</id>
@@ -110,12 +119,6 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>attach-bundle-list</id>
-                        <goals>
-                            <goal>attach-bundle-list</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>create-bundle-jar</id>
                         <goals>
                             <goal>create-bundle-jar</goal>
@@ -128,6 +131,24 @@
                                 </resource>
                             </resources>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-sources</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <tasks>
+                                <mkdir dir="${empty.config.directory}"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
