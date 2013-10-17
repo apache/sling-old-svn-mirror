@@ -180,6 +180,16 @@ public interface JobManager {
     void stopJobById(String jobId);
 
     /**
+     * Retry a cancelled job.
+     * If a job has failed permanently it can be requeued with this method. The job will be
+     * removed from the history and put into the queue again. The new job will get a new job id.
+     * For all other jobs calling this method has no effect and it simply returns <code>null</code>.
+     * @param jobId The job id.
+     * @return If the job is requeued, the new job object otherwise <code>null</code>
+     */
+    Job retryJobById(String jobId);
+
+    /**
      * Fluent API to create, start and schedule new jobs
      * @param topic Required topic
      * @return A job builder
