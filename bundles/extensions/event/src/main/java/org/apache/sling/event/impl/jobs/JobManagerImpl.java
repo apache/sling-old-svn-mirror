@@ -1565,4 +1565,8 @@ public class JobManagerImpl
         }
         return null;
     }
+
+    public JobManagerConfiguration getConfiguration() {
+        return this.configuration;
+    }
 }
