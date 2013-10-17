@@ -242,6 +242,14 @@ public class JobManagerConfiguration {
         return this.disabledDistribution;
     }
 
+    public String getStoredCancelledJobsPath() {
+        return this.storedCancelledJobsPath;
+    }
+
+    public String getStoredSuccessfulJobsPath() {
+        return this.storedSuccessfulJobsPath;
+    }
+
     /**
      * Get the storage path for finished jobs.
      * @param finishedJob The finished job

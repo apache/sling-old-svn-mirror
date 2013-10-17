@@ -30,8 +30,10 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.event.impl.jobs.JobManagerImpl;
 import org.apache.sling.event.impl.support.BatchResourceRemover;
 import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobExecutionContext;
 import org.apache.sling.event.jobs.consumer.JobExecutionResult;
 import org.apache.sling.event.jobs.consumer.JobExecutor;
@@ -55,6 +57,9 @@ public class HistoryCleanUpTask implements JobExecutor {
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
+    @Reference
+    private JobManager jobManager;
+
     @Override
     public JobExecutionResult process(final Job job, final JobExecutionContext context) {
         int age = job.getProperty(PROPERTY_AGE, DEFAULT_AGE);
@@ -69,85 +74,9 @@ public class HistoryCleanUpTask implements JobExecutor {
         try {
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
 
-            String basePath = "";
-            final Resource baseResource = resolver.getResource(basePath);
-            // sanity check - should never be null
-            if ( baseResource != null ) {
-                final Iterator<Resource> topicIter = baseResource.listChildren();
-                while ( !context.isStopped() && topicIter.hasNext() ) {
-                    final Resource topicResource = topicIter.next();
+            this.cleanup(now, resolver, context, ((JobManagerImpl)jobManager).getConfiguration().getStoredCancelledJobsPath());
+            this.cleanup(now, resolver, context, ((JobManagerImpl)jobManager).getConfiguration().getStoredSuccessfulJobsPath());
 
-                    // now years
-                    final Iterator<Resource> yearIter = topicResource.listChildren();
-                    while ( !context.isStopped() && yearIter.hasNext() ) {
-                        final Resource yearResource = yearIter.next();
-                        final int year = Integer.valueOf(yearResource.getName());
-                        final boolean oldYear = year < now.get(Calendar.YEAR);
-
-                        // months
-                        final Iterator<Resource> monthIter = yearResource.listChildren();
-                        while ( !context.isStopped() && monthIter.hasNext() ) {
-                            final Resource monthResource = monthIter.next();
-                            final int month = Integer.valueOf(monthResource.getName());
-                            final boolean oldMonth = oldYear || month < (now.get(Calendar.MONTH) + 1);
-
-                            // days
-                            final Iterator<Resource> dayIter = monthResource.listChildren();
-                            while ( !context.isStopped() && dayIter.hasNext() ) {
-                                final Resource dayResource = dayIter.next();
-                                final int day = Integer.valueOf(dayResource.getName());
-                                final boolean oldDay = oldMonth || day < now.get(Calendar.DAY_OF_MONTH);
-
-                                // hours
-                                final Iterator<Resource> hourIter = dayResource.listChildren();
-                                while ( !context.isStopped() && hourIter.hasNext() ) {
-                                    final Resource hourResource = hourIter.next();
-                                    final int hour = Integer.valueOf(hourResource.getName());
-                                    final boolean oldHour = oldDay || hour < now.get(Calendar.HOUR_OF_DAY);
-
-                                    // minutes
-                                    final Iterator<Resource> minuteIter = hourResource.listChildren();
-                                    while ( !context.isStopped() && minuteIter.hasNext() ) {
-                                        final Resource minuteResource = minuteIter.next();
-
-                                        // check if we can delete the minute
-                                        final int minute = Integer.valueOf(minuteResource.getName());
-                                        final boolean oldMinute = oldHour || minute <= now.get(Calendar.MINUTE);
-                                        if ( oldMinute ) {
-                                            BatchResourceRemover remover = new BatchResourceRemover();
-                                            remover.delete(minuteResource);
-                                            resolver.commit();
-                                        }
-                                    }
-
-                                    // check if we can delete the hour
-                                    if ( !context.isStopped() && oldHour && !hourResource.listChildren().hasNext()) {
-                                        resolver.delete(hourResource);
-                                        resolver.commit();
-                                    }
-                                }
-                                // check if we can delete the day
-                                if ( !context.isStopped() && oldDay && !dayResource.listChildren().hasNext()) {
-                                    resolver.delete(dayResource);
-                                    resolver.commit();
-                                }
-                            }
-
-                            // check if we can delete the month
-                            if ( !context.isStopped() && oldMonth && !monthResource.listChildren().hasNext() ) {
-                                resolver.delete(monthResource);
-                                resolver.commit();
-                            }
-                        }
-
-                        // check if we can delete the year
-                        if ( !context.isStopped() && oldYear && !yearResource.listChildren().hasNext() ) {
-                            resolver.delete(yearResource);
-                            resolver.commit();
-                        }
-                    }
-                }
-            }
 
         } catch (final PersistenceException pe) {
             // in the case of an error, we just log this as a warning
@@ -160,6 +89,89 @@ public class HistoryCleanUpTask implements JobExecutor {
             }
         }
         return context.result().succeeded();
+    }
+
+    private void cleanup(final Calendar now,
+            final ResourceResolver resolver, final JobExecutionContext context, final String basePath)
+    throws PersistenceException {
+        final Resource baseResource = resolver.getResource(basePath);
+        // sanity check - should never be null
+        if ( baseResource != null ) {
+            final Iterator<Resource> topicIter = baseResource.listChildren();
+            while ( !context.isStopped() && topicIter.hasNext() ) {
+                final Resource topicResource = topicIter.next();
+
+                // now years
+                final Iterator<Resource> yearIter = topicResource.listChildren();
+                while ( !context.isStopped() && yearIter.hasNext() ) {
+                    final Resource yearResource = yearIter.next();
+                    final int year = Integer.valueOf(yearResource.getName());
+                    final boolean oldYear = year < now.get(Calendar.YEAR);
+
+                    // months
+                    final Iterator<Resource> monthIter = yearResource.listChildren();
+                    while ( !context.isStopped() && monthIter.hasNext() ) {
+                        final Resource monthResource = monthIter.next();
+                        final int month = Integer.valueOf(monthResource.getName());
+                        final boolean oldMonth = oldYear || month < (now.get(Calendar.MONTH) + 1);
+
+                        // days
+                        final Iterator<Resource> dayIter = monthResource.listChildren();
+                        while ( !context.isStopped() && dayIter.hasNext() ) {
+                            final Resource dayResource = dayIter.next();
+                            final int day = Integer.valueOf(dayResource.getName());
+                            final boolean oldDay = oldMonth || day < now.get(Calendar.DAY_OF_MONTH);
+
+                            // hours
+                            final Iterator<Resource> hourIter = dayResource.listChildren();
+                            while ( !context.isStopped() && hourIter.hasNext() ) {
+                                final Resource hourResource = hourIter.next();
+                                final int hour = Integer.valueOf(hourResource.getName());
+                                final boolean oldHour = oldDay || hour < now.get(Calendar.HOUR_OF_DAY);
+
+                                // minutes
+                                final Iterator<Resource> minuteIter = hourResource.listChildren();
+                                while ( !context.isStopped() && minuteIter.hasNext() ) {
+                                    final Resource minuteResource = minuteIter.next();
+
+                                    // check if we can delete the minute
+                                    final int minute = Integer.valueOf(minuteResource.getName());
+                                    final boolean oldMinute = oldHour || minute <= now.get(Calendar.MINUTE);
+                                    if ( oldMinute ) {
+                                        BatchResourceRemover remover = new BatchResourceRemover();
+                                        remover.delete(minuteResource);
+                                        resolver.commit();
+                                    }
+                                }
+
+                                // check if we can delete the hour
+                                if ( !context.isStopped() && oldHour && !hourResource.listChildren().hasNext()) {
+                                    resolver.delete(hourResource);
+                                    resolver.commit();
+                                }
+                            }
+                            // check if we can delete the day
+                            if ( !context.isStopped() && oldDay && !dayResource.listChildren().hasNext()) {
+                                resolver.delete(dayResource);
+                                resolver.commit();
+                            }
+                        }
+
+                        // check if we can delete the month
+                        if ( !context.isStopped() && oldMonth && !monthResource.listChildren().hasNext() ) {
+                            resolver.delete(monthResource);
+                            resolver.commit();
+                        }
+                    }
+
+                    // check if we can delete the year
+                    if ( !context.isStopped() && oldYear && !yearResource.listChildren().hasNext() ) {
+                        resolver.delete(yearResource);
+                        resolver.commit();
+                    }
+                }
+            }
+        }
     }
 
     /**
