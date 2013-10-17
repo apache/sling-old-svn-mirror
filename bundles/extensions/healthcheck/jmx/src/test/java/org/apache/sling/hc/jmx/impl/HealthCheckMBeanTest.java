@@ -69,37 +69,31 @@ public class HealthCheckMBeanTest {
 
             @Override
             public boolean isAssignableTo(Bundle bundle, String className) {
-                // TODO Auto-generated method stub
                 return false;
             }
 
             @Override
             public Bundle[] getUsingBundles() {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public String[] getPropertyKeys() {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public Object getProperty(String key) {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public Bundle getBundle() {
-                // TODO Auto-generated method stub
                 return null;
             }
 
             @Override
             public int compareTo(Object reference) {
-                // TODO Auto-generated method stub
                 return 0;
             }
         };
