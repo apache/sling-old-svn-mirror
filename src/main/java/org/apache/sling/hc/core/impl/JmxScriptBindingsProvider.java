@@ -47,17 +47,17 @@ public class JmxScriptBindingsProvider implements BindingsValuesProvider {
     private MBeanServer jmxServer = ManagementFactory.getPlatformMBeanServer();
     private final Logger log = LoggerFactory.getLogger(getClass());
     public static final String JMX_BINDING_NAME = "jmx";
-    
+
     public static class AttributeBinding {
         private final MBeanServer jmxServer;
         private final FormattingResultLog resultLog;
-        
+
         AttributeBinding(MBeanServer s, FormattingResultLog r) {
             jmxServer = s;
             resultLog = r;
         }
-        
-        public Object attribute(String objectNameString, String attributeName) 
+
+        public Object attribute(String objectNameString, String attributeName)
                 throws MalformedObjectNameException, AttributeNotFoundException, InstanceNotFoundException, MBeanException, ReflectionException {
             final ObjectName name = new ObjectName(objectNameString);
             if(jmxServer.queryNames(name, null).size() == 0) {
@@ -76,8 +76,8 @@ public class JmxScriptBindingsProvider implements BindingsValuesProvider {
     public void addBindings(Bindings b) {
         final String logBindingName = FormattingResultLog.class.getName();
         final Object resultLog = b.get(logBindingName);
-        if(resultLog == null) {
-            log.info("No {} found in Bindings, cannot activate {} binding", logBindingName, JMX_BINDING_NAME);
+        if (resultLog == null) {
+            log.debug("No {} found in Bindings, cannot activate {} binding", logBindingName, JMX_BINDING_NAME);
             return;
         }
         try {
