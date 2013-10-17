@@ -36,6 +36,7 @@ import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
+import org.quartz.CronExpression;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -468,7 +469,7 @@ public class QuartzScheduler implements Scheduler {
      */
     public ScheduleOptions AT(final Date date) {
         if ( date == null ) {
-            throw new IllegalArgumentException("Date can't be null");
+            return new InternalScheduleOptions(new IllegalArgumentException("Date can't be null"));
         }
         return new InternalScheduleOptions( TriggerBuilder.newTrigger()
             .startAt(date));
@@ -505,6 +506,9 @@ public class QuartzScheduler implements Scheduler {
     public ScheduleOptions EXPR(final String expression) {
         if ( expression == null ) {
             return new InternalScheduleOptions(new IllegalArgumentException("Expression can't be null"));
+        }
+        if ( !CronExpression.isValidExpression(expression) ) {
+            return new InternalScheduleOptions(new IllegalArgumentException("Expressionis invalid : " + expression));
         }
         return new InternalScheduleOptions( TriggerBuilder.newTrigger()
                 .withSchedule(CronScheduleBuilder.cronSchedule(expression)));
