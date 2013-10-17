@@ -1532,6 +1532,9 @@ public class JobManagerImpl
         return null;
     }
 
+    /**
+     * Internal method to add a job
+     */
     public Job addJob(final String topic, final String name,
             final Map<String, Object> properties,
             final List<String> errors) {
@@ -1548,5 +1551,18 @@ public class JobManagerImpl
             result = this.getJobByName(name);
         }
         return result;
+    }
+
+    /**
+     * @see org.apache.sling.event.jobs.JobManager#retryJobById(java.lang.String)
+     */
+    @Override
+    public Job retryJobById(final String jobId) {
+        final JobImpl job = (JobImpl)this.getJobById(jobId);
+        if ( job != null && this.configuration.isStoragePath(job.getResourcePath()) ) {
+            this.internalRemoveJobById(jobId, true);
+            return this.addJob(job.getTopic(), job.getName(), job.getProperties());
+        }
+        return null;
     }
 }
