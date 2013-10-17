@@ -369,20 +369,20 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
             sb.append(String.valueOf(this.minuteOfHour));
             sb.append(' ');
             sb.append(String.valueOf(this.hourOfDay));
-            sb.append(" * * *");
+            sb.append(" * * ?");
             return sb.toString();
         } else if ( this.scheduleType == ScheduleType.WEEKLY ) {
             final StringBuilder sb = new StringBuilder("0 ");
             sb.append(String.valueOf(this.minuteOfHour));
             sb.append(' ');
             sb.append(String.valueOf(this.hourOfDay));
-            sb.append(" * * ");
+            sb.append(" ? * ");
             sb.append(String.valueOf(this.dayOfWeek));
             return sb.toString();
         } else if ( this.scheduleType == ScheduleType.HOURLY ) {
             final StringBuilder sb = new StringBuilder("0 ");
             sb.append(String.valueOf(this.minuteOfHour));
-            sb.append(" * * * *");
+            sb.append(" * * * ?");
             return sb.toString();
         } else if ( this.scheduleType == ScheduleType.MONTHLY ) {
             final StringBuilder sb = new StringBuilder("0 ");
@@ -391,7 +391,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
             sb.append(String.valueOf(this.hourOfDay));
             sb.append(' ');
             sb.append(String.valueOf(this.dayOfWeek));
-            sb.append(" * *");
+            sb.append(" *?*");
             return sb.toString();
         } else if ( this.scheduleType == ScheduleType.YEARLY ) {
             final StringBuilder sb = new StringBuilder("0 ");
@@ -401,8 +401,8 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
             sb.append(' ');
             sb.append(String.valueOf(this.dayOfWeek));
             sb.append(' ');
-            sb.append(String.valueOf(this.monthOfYear));
-            sb.append(" *");
+            sb.append(String.valueOf(this.monthOfYear - 1));
+            sb.append(" ?");
             return sb.toString();
         } else if ( this.scheduleType == ScheduleType.CRON ) {
             return this.expression;
