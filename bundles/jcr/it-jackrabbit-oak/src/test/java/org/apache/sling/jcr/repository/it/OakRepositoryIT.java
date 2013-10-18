@@ -97,7 +97,7 @@ public class OakRepositoryIT extends SlingRepositoryITBase {
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.1.2"),
                 
                 // Oak
-                mavenBundle("org.apache.sling", "org.apache.sling.whiteboard.bdelacretaz.oak.server", "0.0.1-SNAPSHOT"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.oak.server", "0.0.1-SNAPSHOT"),
                 mavenBundle("com.google.guava", "guava", "14.0.1"),
                 mavenBundle("com.google.code.findbugs", "jsr305", "2.0.0"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.7.1"),

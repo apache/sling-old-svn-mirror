@@ -9,17 +9,17 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>16</version>
-        <relativePath>16</relativePath>
+        <version>18</version>
+        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.sling</groupId>
-    <artifactId>org.apache.sling.jcr.repository.it</artifactId>
+    <artifactId>org.apache.sling.jcr.repository.it-jackrabbit-oak</artifactId>
     <packaging>jar</packaging>
     <version>0.0.2-SNAPSHOT</version>
 
-    <name>SlingRepository Integration Tests</name>
-    <description>Tests various SlingRepository implementations</description>
+    <name>Apache Sling SlingRepository Integration Tests</name>
+    <description>Tests and compares our Jackrabbit and Oak SlingRepository implementations</description>
     <inceptionYear>2013</inceptionYear>
 
     <properties>

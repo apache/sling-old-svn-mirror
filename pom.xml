@@ -149,6 +149,8 @@
         <module>bundles/jcr/webdav</module>
         <module>bundles/jcr/davex</module>
         <module>bundles/jcr/webconsole</module>
+        <module>bundles/jcr/oak-server</module>
+        <module>bundles/jcr/it-jackrabbit-oak</module>
         
         <!-- Servlets -->
         <module>bundles/servlets/resolver</module>
