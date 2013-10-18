@@ -47,7 +47,11 @@
       <module>ehcache</module>
       <module>impl</module>
       <module>infinispan</module>
+
+      <!-- 
+      portal is under https://svn.apache.org/repos/asf/sling/whiteboard/portal, let's disable it for now
       <module>portal</module>
+      -->
     </modules>
 
 </project>
