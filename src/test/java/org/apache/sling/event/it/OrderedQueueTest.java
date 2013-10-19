@@ -76,7 +76,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
     @After
     public void cleanUp() throws IOException {
         this.removeConfiguration(this.queueConfPid);
-
+        super.cleanup();
     }
 
     /**

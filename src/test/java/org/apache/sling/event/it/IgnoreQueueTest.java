@@ -71,7 +71,7 @@ public class IgnoreQueueTest extends AbstractJobHandlingTest {
     @After
     public void cleanUp() throws IOException {
         this.removeConfiguration(this.queueConfPid);
-
+        super.cleanup();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

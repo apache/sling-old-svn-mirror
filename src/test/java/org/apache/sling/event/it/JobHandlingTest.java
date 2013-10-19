@@ -84,7 +84,7 @@ public class JobHandlingTest extends AbstractJobHandlingTest {
     @After
     public void cleanUp() throws IOException {
         this.removeConfiguration(this.queueConfPid);
-
+        super.cleanup();
     }
 
     /**
