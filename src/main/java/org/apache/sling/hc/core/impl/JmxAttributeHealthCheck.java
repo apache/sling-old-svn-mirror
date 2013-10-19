@@ -42,11 +42,20 @@ import org.slf4j.LoggerFactory;
 @Component(
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
+        metatype=true,
+        label="Apache Sling JMX Attribute Health Check",
+        description="Checks the value of a single JMX attribute.")
 @Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME)
+    @Property(name=HealthCheck.NAME,
+            label="Name",
+            description="Name of this healtch check."),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY,
+              label="Tags",
+              description="List of tags for this health check, used to select " +
+                        "subsets of health checks for execution e.g. by a composite health check."),
+    @Property(name=HealthCheck.MBEAN_NAME,
+              label="MBean Name",
+              description="Name of the MBean to create for this health check. If empty, no MBean is registered.")
 })
 @Service(value=HealthCheck.class)
 public class JmxAttributeHealthCheck implements HealthCheck {
@@ -56,22 +65,26 @@ public class JmxAttributeHealthCheck implements HealthCheck {
     private String attributeName;
     private String constraint;
 
-    @Property
+    @Property(label="Check MBean Name",
+              description="The name of the MBean to check by this health check.")
     public static final String PROP_OBJECT_NAME = "mbean.name";
 
-    @Property
+    @Property(label="Check Attribute Name",
+            description="The name of the MBean attribute to check by this health check.")
     public static final String PROP_ATTRIBUTE_NAME = "attribute.name";
 
-    @Property
+    @Property(label="Check Attribute Constraint",
+            description="Constraint on the MBean attribute value.")
     public static final String PROP_CONSTRAINT = "attribute.value.constraint";
 
+
     @Activate
-    public void activate(final Map<String, Object> properties) {
+    protected void activate(final Map<String, Object> properties) {
         mbeanName = PropertiesUtil.toString(properties.get(PROP_OBJECT_NAME), "");
         attributeName = PropertiesUtil.toString(properties.get(PROP_ATTRIBUTE_NAME), "");
         constraint = PropertiesUtil.toString(properties.get(PROP_CONSTRAINT), "");
 
-        log.info("Activated with HealthCheck name={}, objectName={}, attribute={}, constraint={}",
+        log.debug("Activated with HealthCheck name={}, objectName={}, attribute={}, constraint={}",
                 new Object[] { properties.get(HealthCheck.NAME), mbeanName, attributeName, constraint });
     }
 
@@ -89,7 +102,7 @@ public class JmxAttributeHealthCheck implements HealthCheck {
                 resultLog.debug("{} {} returns {}", mbeanName, attributeName, value);
                 new SimpleConstraintChecker().check(value, constraint, resultLog);
             }
-        } catch(Exception e) {
+        } catch(final Exception e) {
             log.warn("JMX attribute {}/{} check failed: {}", new Object []{ mbeanName, attributeName, e});
             resultLog.healthCheckError("JMX attribute check failed: {}", e);
         }
