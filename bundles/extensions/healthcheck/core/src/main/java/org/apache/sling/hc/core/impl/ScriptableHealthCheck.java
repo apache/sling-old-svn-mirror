@@ -46,11 +46,20 @@ import org.slf4j.LoggerFactory;
 @Component(
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
+        metatype=true,
+        label="Apache Sling Scriptable Health Check",
+        description="Uses scripted expressions to verify multiple JMX attributes or other values.")
 @Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME)
+    @Property(name=HealthCheck.NAME,
+            label="Name",
+            description="Name of this healtch check."),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY,
+              label="Tags",
+              description="List of tags for this health check, used to select " +
+                        "subsets of health checks for execution e.g. by a composite health check."),
+    @Property(name=HealthCheck.MBEAN_NAME,
+              label="MBean Name",
+              description="Name of the MBean to create for this health check. If empty, no MBean is registered.")
 })
 @Service(value=HealthCheck.class)
 public class ScriptableHealthCheck implements HealthCheck {
@@ -61,24 +70,29 @@ public class ScriptableHealthCheck implements HealthCheck {
 
     private static final String DEFAULT_LANGUAGE_EXTENSION = "ecma";
 
-    @Property
+    @Property(label="Expression",
+              description="The value of this expression must be \"true\" for this check to be successful.")
     public static final String PROP_EXPRESSION = "expression";
 
-    @Property(value=DEFAULT_LANGUAGE_EXTENSION)
+    @Property(value=DEFAULT_LANGUAGE_EXTENSION,
+              label="Language Extension",
+              description="File extension of the language to use to evaluate the " +
+                      "expression, for example \"ecma\" or \"groovy\", asssuming the corresponding script engine " +
+                      "is available. By default \"ecma\" is used.")
     public static final String PROP_LANGUAGE_EXTENSION = "language.extension";
 
     @Reference
     private ScriptEngineManager scriptEngineManager;
-    
+
     @Reference(
-            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, 
+            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
             policy=ReferencePolicy.DYNAMIC,
             referenceInterface=BindingsValuesProvider.class,
             target="(context=healthcheck)")
     private final Set<BindingsValuesProvider> bindingsValuesProviders = new HashSet<BindingsValuesProvider>();
 
     @Activate
-    public void activate(ComponentContext ctx) {
+    protected void activate(ComponentContext ctx) {
         expression = PropertiesUtil.toString(ctx.getProperties().get(PROP_EXPRESSION), "");
         languageExtension = PropertiesUtil.toString(ctx.getProperties().get(PROP_LANGUAGE_EXTENSION), DEFAULT_LANGUAGE_EXTENSION);
 
@@ -106,7 +120,7 @@ public class ScriptableHealthCheck implements HealthCheck {
                     }
                 }
                 log.debug("All Bindings added: {}", b.keySet());
-                
+
                 final Object value = engine.eval(expression, b);
                 if(value!=null && "true".equals(value.toString().toLowerCase())) {
                     resultLog.debug("Expression [{}] evaluates to true as expected", expression);
@@ -121,14 +135,14 @@ public class ScriptableHealthCheck implements HealthCheck {
         }
         return new Result(resultLog);
     }
-    
+
     public void bindBindingsValuesProvider(BindingsValuesProvider bvp) {
         synchronized (bindingsValuesProviders) {
             bindingsValuesProviders.add(bvp);
         }
         log.debug("{} registered: {}", bvp, bindingsValuesProviders);
     }
-    
+
     public void unbindBindingsValuesProvider(BindingsValuesProvider bvp) {
         synchronized (bindingsValuesProviders) {
             bindingsValuesProviders.remove(bvp);
