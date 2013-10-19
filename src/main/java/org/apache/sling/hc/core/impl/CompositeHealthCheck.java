@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -30,6 +31,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.Result.Status;
 import org.apache.sling.hc.api.ResultLog;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.hc.util.HealthCheckFilter;
@@ -60,20 +62,33 @@ public class CompositeHealthCheck implements HealthCheck {
     private static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
 
+    private final ThreadLocal<Boolean> recursionLock = new ThreadLocal<Boolean>();
+
     @Activate
-    public void activate(ComponentContext ctx) {
+    protected void activate(final ComponentContext ctx) {
         bundleContext = ctx.getBundleContext();
         filterTags = PropertiesUtil.toStringArray(ctx.getProperties().get(PROP_FILTER_TAGS), new String[] {});
-        log.info("Activated, will select HealthCheck having tags {}", Arrays.asList(filterTags));
+        log.debug("Activated, will select HealthCheck having tags {}", Arrays.asList(filterTags));
+    }
+
+    @Deactivate
+    protected void deactivate() {
+        this.bundleContext = null;
     }
 
     @Override
     public Result execute() {
+        if ( recursionLock.get() != null ) {
+            // recursion
+            return new Result(Status.CRITICAL,
+                  "Recursive invocation of composite health checks with filter tags : " + Arrays.asList(filterTags));
+        }
         final FormattingResultLog resultLog = new FormattingResultLog();
         final HealthCheckFilter filter = new HealthCheckFilter(bundleContext);
+        this.recursionLock.set(Boolean.TRUE);
         try {
             final List<HealthCheck> checks = filter.getTaggedHealthChecks(filterTags);
-            if(checks.size() == 0) {
+            if (checks.size() == 0) {
                 resultLog.warn("HealthCheckFilter returns no HealthCheck for tags {}", Arrays.asList(filterTags));
                 return new Result(resultLog);
             }
@@ -81,7 +96,7 @@ public class CompositeHealthCheck implements HealthCheck {
             int executed = 0;
             resultLog.debug("Executing {} HealthCheck selected by the {} tags", checks.size(), Arrays.asList(filterTags));
             int failures = 0;
-            for(HealthCheck hc : checks) {
+            for (final HealthCheck hc : checks) {
                 if(hc == this) {
                     resultLog.info("Cowardly forfeiting execution of this HealthCheck in an infinite loop, ignoring it");
                     continue;
@@ -92,18 +107,19 @@ public class CompositeHealthCheck implements HealthCheck {
                 if(!sub.isOk()) {
                     failures++;
                 }
-                for(ResultLog.Entry e : sub) {
+                for(final ResultLog.Entry e : sub) {
                     resultLog.add(e);
                 }
             }
 
-            if(failures == 0) {
+            if (failures == 0) {
                 resultLog.debug("{} HealthCheck executed, all ok", executed);
             } else {
                 resultLog.warn("{} HealthCheck executed, {} failures", executed, failures);
             }
         } finally {
             filter.dispose();
+            this.recursionLock.remove();
         }
         return new Result(resultLog);
     }
