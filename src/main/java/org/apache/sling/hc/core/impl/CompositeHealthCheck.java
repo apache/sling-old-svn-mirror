@@ -70,7 +70,7 @@ public class CompositeHealthCheck implements HealthCheck {
 
     @Property(unbounded=PropertyUnbounded.ARRAY,
               label="Filter Tags",
-              description="Tags used to select which Health Checks the composite Health Check executes.")
+              description="Tags used to select which health checks the composite health check executes.")
     private static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
 
