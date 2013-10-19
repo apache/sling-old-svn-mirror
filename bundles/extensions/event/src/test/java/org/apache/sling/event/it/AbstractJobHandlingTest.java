@@ -32,6 +32,11 @@ import java.util.Hashtable;
 
 import javax.inject.Inject;
 
+import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.event.impl.jobs.JobManagerConfiguration;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -187,6 +192,28 @@ public abstract class AbstractJobHandlingTest {
             }
         };
         this.bc.registerService(StartupHandler.class.getName(), handler, null);
+    }
+
+    public void cleanup() {
+        final ServiceReference ref = this.bc.getServiceReference(ResourceResolverFactory.class.getName());
+        final ResourceResolverFactory factory = (ResourceResolverFactory) this.bc.getService(ref);
+        ResourceResolver resolver = null;
+        try {
+            resolver = factory.getAdministrativeResourceResolver(null);
+            final Resource rsrc = resolver.getResource(JobManagerConfiguration.DEFAULT_REPOSITORY_PATH);
+            if ( rsrc != null ) {
+                resolver.delete(rsrc);
+                resolver.commit();
+            }
+        } catch ( final LoginException le ) {
+            // ignore
+        } catch (final PersistenceException e) {
+            // ignore
+        } finally {
+            if ( resolver != null ) {
+                resolver.close();
+            }
+        }
     }
 
     /**

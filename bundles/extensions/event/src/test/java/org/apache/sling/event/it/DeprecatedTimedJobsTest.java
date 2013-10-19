@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
 import org.apache.sling.event.EventUtil;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +56,12 @@ public class DeprecatedTimedJobsTest extends AbstractJobHandlingTest {
         super.setup();
 
         this.sleep(1000L);
+    }
+
+    @Override
+    @After
+    public void cleanup() {
+        super.cleanup();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)

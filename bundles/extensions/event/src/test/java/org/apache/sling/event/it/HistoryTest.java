@@ -79,6 +79,7 @@ public class HistoryTest extends AbstractJobHandlingTest {
     @After
     public void cleanUp() throws IOException {
         this.removeConfiguration(this.queueConfPid);
+        super.cleanup();
     }
 
     private Job addJob(final long counter) {

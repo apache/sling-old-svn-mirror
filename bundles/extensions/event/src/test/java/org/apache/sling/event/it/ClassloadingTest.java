@@ -84,7 +84,7 @@ public class ClassloadingTest extends AbstractJobHandlingTest {
     @After
     public void cleanUp() throws IOException {
         this.removeConfiguration(this.queueConfigPid);
-
+        super.cleanup();
     }
 
     @Test(timeout = DEFAULT_TEST_TIMEOUT)
