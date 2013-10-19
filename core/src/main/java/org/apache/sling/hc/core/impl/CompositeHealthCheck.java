@@ -43,14 +43,24 @@ import org.slf4j.LoggerFactory;
 /** {@link HealthCheck} that executes a number of other HealthChecks,
  *  selected by their tags, and merges their Results.
  */
+
 @Component(
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
+        metatype=true,
+        label="Apache Sling Composite Health Check",
+        description="Executes a set of health checks, selected by tags.")
 @Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME)
+    @Property(name=HealthCheck.NAME,
+              label="Name",
+              description="Name of this healtch check."),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY,
+              label="Tags",
+              description="List of tags for this health check, used to select " +
+                          "subsets of health checks for execution e.g. by a composite health check."),
+    @Property(name=HealthCheck.MBEAN_NAME,
+              label="MBean Name",
+              description="Name of the MBean to create for this health check. If empty, no MBean is registered.")
 })
 @Service(value=HealthCheck.class)
 public class CompositeHealthCheck implements HealthCheck {
@@ -58,7 +68,9 @@ public class CompositeHealthCheck implements HealthCheck {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private BundleContext bundleContext;
 
-    @Property(unbounded=PropertyUnbounded.ARRAY)
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+              label="Filter Tags",
+              description="Tags used to select which Health Checks the composite Health Check executes.")
     private static final String PROP_FILTER_TAGS = "filter.tags";
     private String [] filterTags;
 
