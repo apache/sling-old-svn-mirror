@@ -25,6 +25,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
@@ -42,9 +43,10 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
     public ParallelJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final JobConsumerManager jobConsumerManager,
+                           final ThreadPoolManager threadPoolManager,
                            final EventAdmin eventAdmin,
                            final Scheduler scheduler) {
-        super(name, config, jobConsumerManager, eventAdmin, scheduler);
+        super(name, config, jobConsumerManager, threadPoolManager, eventAdmin, scheduler);
     }
 
     @Override

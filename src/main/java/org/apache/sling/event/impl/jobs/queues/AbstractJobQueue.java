@@ -30,7 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.sling.commons.threads.ThreadPool;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.EventUtil;
+import org.apache.sling.event.impl.EventingThreadPool;
 import org.apache.sling.event.impl.jobs.InternalJobState;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobExecutionResultImpl;
@@ -110,7 +112,10 @@ public abstract class AbstractJobQueue
     /** Marker flag if the queue is waiting for another element (= empty) */
     protected boolean isWaitingForNext = false;
 
+    /** A marker for closing the queue. */
     private final AtomicBoolean closeMarker = new AtomicBoolean(false);
+
+    private final ThreadPool threadPool;
 
     /**
      * Start this queue
@@ -121,7 +126,13 @@ public abstract class AbstractJobQueue
     public AbstractJobQueue(final String name,
                     final InternalQueueConfiguration config,
                     final JobConsumerManager jobConsumerManager,
+                    final ThreadPoolManager threadPoolManager,
                     final EventAdmin eventAdmin) {
+        if ( config.getOwnThreadPoolSize() > 0 ) {
+            this.threadPool = new EventingThreadPool(threadPoolManager, config.getOwnThreadPoolSize());
+        } else {
+            this.threadPool = Environment.THREAD_POOL;
+        }
         this.queueName = name;
         this.configuration = config;
         this.logger = LoggerFactory.getLogger(this.getClass().getName() + '.' + name);
@@ -195,6 +206,9 @@ public abstract class AbstractJobQueue
         }
         synchronized ( this.startedJobsLists ) {
             this.startedJobsLists.clear();
+        }
+        if ( this.configuration.getOwnThreadPoolSize() > 0 ) {
+            ((EventingThreadPool)this.threadPool).release();
         }
         this.logger.info("Stopped job queue {}", this.queueName);
     }
@@ -690,7 +704,7 @@ public abstract class AbstractJobQueue
 
                         };
                         // check if the thread pool is available
-                        final ThreadPool pool = Environment.THREAD_POOL;
+                        final ThreadPool pool = this.threadPool;
                         if ( pool != null ) {
                             pool.execute(task);
                         } else {

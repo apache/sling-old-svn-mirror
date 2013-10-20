@@ -64,6 +64,8 @@ import org.osgi.framework.Constants;
                      @PropertyOption(name="MAX",value="Max")}),
     @Property(name=ConfigurationConstants.PROP_KEEP_JOBS,
               boolValue=ConfigurationConstants.DEFAULT_KEEP_JOBS),
+    @Property(name=ConfigurationConstants.PROP_THREAD_POOL_SIZE,
+              intValue=ConfigurationConstants.DEFAULT_THREAD_POOL_SIZE),
     @Property(name=Constants.SERVICE_RANKING, intValue=0, propertyPrivate=false,
               label="%queue.ranking.name", description="%queue.ranking.description")
 })
@@ -103,6 +105,9 @@ public class InternalQueueConfiguration
     /** Valid flag. */
     private boolean valid = false;
 
+    /** Optional thread pool size. */
+    private int ownThreadPoolSize;
+
     private String pid;
 
     /**
@@ -139,6 +144,7 @@ public class InternalQueueConfiguration
         }
         this.keepJobs = PropertiesUtil.toBoolean(params.get(ConfigurationConstants.PROP_KEEP_JOBS), ConfigurationConstants.DEFAULT_KEEP_JOBS);
         this.serviceRanking = PropertiesUtil.toInteger(params.get(Constants.SERVICE_RANKING), 0);
+        this.ownThreadPoolSize = PropertiesUtil.toInteger(params.get(ConfigurationConstants.PROP_THREAD_POOL_SIZE), ConfigurationConstants.DEFAULT_THREAD_POOL_SIZE);
         this.pid = (String)params.get(Constants.SERVICE_PID);
         this.valid = this.checkIsValid();
     }
@@ -282,6 +288,11 @@ public class InternalQueueConfiguration
     }
 
     @Override
+    public int getOwnThreadPoolSize() {
+        return this.ownThreadPoolSize;
+    }
+
+    @Override
     public String toString() {
         return "Queue-Configuration(" + this.hashCode() + ") : {" +
             "name=" + this.name +
@@ -291,6 +302,7 @@ public class InternalQueueConfiguration
             ", retries=" + this.retries +
             ", retryDelayInMs=" + this.retryDelay +
             ", keepJobs=" + this.keepJobs +
+            ", ownThreadPoolSize=" + this.ownThreadPoolSize +
             ", serviceRanking=" + this.serviceRanking +
             ", pid=" + this.pid +
             ", isValid=" + this.isValid() + "}";

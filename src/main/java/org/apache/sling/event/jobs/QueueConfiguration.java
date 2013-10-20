@@ -104,6 +104,14 @@ public interface QueueConfiguration {
     boolean isKeepJobs();
 
     /**
+     * Return the size for the optional thread pool for this queue.
+     * @return A positive number or <code>0</code> if the default thread pool
+     *         should be used.
+     * @since 1.3
+     */
+    int getOwnThreadPoolSize();
+
+    /**
      * Get the ranking of this configuration.
      */
     int getRanking();
