@@ -66,8 +66,7 @@
                             *
                         </DynamicImport-Package>
                         <Embed-Dependency>
-                            jackrabbit-core;inline=org/apache/jackrabbit/core/jndi/provider/*.class,
-                            jackrabbit-jcr-rmi;inline=org/apache/jackrabbit/rmi/iterator/**|org/apache/jackrabbit/rmi/observation/**|org/apache/jackrabbit/rmi/remote/**|org/apache/jackrabbit/rmi/server/**|org/apache/jackrabbit/rmi/value/**|org/apache/jackrabbit/rmi/server/**
+                            jackrabbit-core;inline=org/apache/jackrabbit/core/jndi/provider/*.class
                         </Embed-Dependency>
                     </instructions>
                 </configuration>
