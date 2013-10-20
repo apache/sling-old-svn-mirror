@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -54,13 +55,31 @@ public class EventingThreadPool implements ThreadPool {
     @Property(intValue=DEFAULT_POOL_SIZE)
     private static final String PROPERTY_POOL_SIZE = "minPoolSize";
 
+    public EventingThreadPool() {
+        // default constructor
+    }
+
+    public EventingThreadPool(final ThreadPoolManager tpm, final int poolSize) {
+        this.threadPoolManager = tpm;
+    }
+
+    public void release() {
+        this.deactivate();
+    }
+
     /**
      * Activate this component.
      */
     @Activate
+    @Modified
     protected void activate(final Map<String, Object> props) {
+        final int maxPoolSize = PropertiesUtil.toInteger(props.get(PROPERTY_POOL_SIZE), DEFAULT_POOL_SIZE);
+        this.configure(maxPoolSize);
+    }
+
+    private void configure(final int maxPoolSize) {
         final ModifiableThreadPoolConfig config = new ModifiableThreadPoolConfig();
-        config.setMinPoolSize(PropertiesUtil.toInteger(props.get(PROPERTY_POOL_SIZE), DEFAULT_POOL_SIZE));
+        config.setMinPoolSize(maxPoolSize);
         config.setMaxPoolSize(config.getMinPoolSize());
         config.setQueueSize(-1); // unlimited
         config.setShutdownGraceful(true);

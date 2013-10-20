@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.event.impl.jobs.JobConsumerManager;
 import org.apache.sling.event.impl.jobs.JobHandler;
 import org.apache.sling.event.impl.jobs.config.InternalQueueConfiguration;
@@ -68,8 +69,9 @@ public final class OrderedJobQueue extends AbstractJobQueue {
     public OrderedJobQueue(final String name,
                            final InternalQueueConfiguration config,
                            final JobConsumerManager jobConsumerManager,
+                           final ThreadPoolManager threadPoolManager,
                            final EventAdmin eventAdmin) {
-        super(name, config, jobConsumerManager, eventAdmin);
+        super(name, config, jobConsumerManager, threadPoolManager, eventAdmin);
     }
 
     @Override

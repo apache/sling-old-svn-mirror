@@ -50,6 +50,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.discovery.TopologyEvent;
 import org.apache.sling.discovery.TopologyEvent.Type;
 import org.apache.sling.discovery.TopologyEventListener;
@@ -139,6 +140,9 @@ public class JobManagerImpl
 
     @Reference
     private QueuesMBean queuesMBean;
+
+    @Reference
+    private ThreadPoolManager threadPoolManager;
 
     /** The job manager configuration. */
     private JobManagerConfiguration configuration;
@@ -334,11 +338,11 @@ public class JobManagerImpl
                     }
                     if ( queue == null ) {
                         if ( config.getType() == QueueConfiguration.Type.ORDERED ) {
-                            queue = new OrderedJobQueue(queueInfo.queueName, config, this.jobConsumerManager, this.eventAdmin);
+                            queue = new OrderedJobQueue(queueInfo.queueName, config, this.jobConsumerManager, this.threadPoolManager, this.eventAdmin);
                         } else if ( config.getType() == QueueConfiguration.Type.UNORDERED ) {
-                            queue = new ParallelJobQueue(queueInfo.queueName, config, this.jobConsumerManager, this.eventAdmin, this.scheduler);
+                            queue = new ParallelJobQueue(queueInfo.queueName, config, this.jobConsumerManager, this.threadPoolManager, this.eventAdmin, this.scheduler);
                         } else if ( config.getType() == QueueConfiguration.Type.TOPIC_ROUND_ROBIN ) {
-                            queue = new TopicRoundRobinJobQueue(queueInfo.queueName, config, this.jobConsumerManager, this.eventAdmin, this.scheduler);
+                            queue = new TopicRoundRobinJobQueue(queueInfo.queueName, config, this.jobConsumerManager, this.threadPoolManager, this.eventAdmin, this.scheduler);
                         }
                         if ( queue == null ) {
                             // this is just a sanity check, actually we can never get here
