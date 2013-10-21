@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 @Properties({
     @Property(name=HealthCheck.NAME,
             label="Name",
-            description="Name of this healtch check."),
+            description="Name of this health check."),
     @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY,
               label="Tags",
               description="List of tags for this health check, used to select " +
