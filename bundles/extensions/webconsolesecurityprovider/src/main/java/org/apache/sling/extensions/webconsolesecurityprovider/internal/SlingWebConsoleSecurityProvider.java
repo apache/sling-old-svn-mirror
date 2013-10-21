@@ -18,33 +18,22 @@
  */
 package org.apache.sling.extensions.webconsolesecurityprovider.internal;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The <code>SlingWebConsoleSecurityProvider</code> is security provider for the
@@ -58,42 +47,35 @@ import org.slf4j.LoggerFactory;
  * only registered as a security provider service once such a JCR Repository is
  * available.
  */
-@Component(specVersion = "1.1", metatype = true)
-@Service(WebConsoleSecurityProvider.class)
-public class SlingWebConsoleSecurityProvider implements
-        WebConsoleSecurityProvider {
+@Component(ds=false, metatype=true,
+           label="Apache Sling Web Console Security Provider",
+           description="Configuration for the security provider used to verfiy user " +
+                       "credentials and grant access to the Apache Felix Web Console " +
+                       "based on registered JCR Repository users.")
+@Properties({
+    @Property(name = "users", value=AbstractWebConsoleSecurityProvider.PROP_GROUPS_DEFAULT_USER, cardinality=20,
+              label="User Names",
+              description="Names of users granted full access to the Apache Felix " +
+                          "Web Console. By default this lists the \"admin\" user. A maximum of 20 users" +
+                          " may be configured. Administrators are encouraged to create a group whose" +
+                          " members are to be granted access to Web Console instead of allowing access" +
+                          " to individual users."),
+    @Property(name = "groups", cardinality=20,
+             label="Group Names",
+             description="Names of groups whose members are granted full access to the Apache Felix " +
+                         "Web Console. The default lists no groups. Administrators are encouraged to " +
+                         "create a group whose members are to be granted access to the Web Console." +
+                         " A maximum of 20 groups may be configured. Using groups to control" +
+                         " access requires a Jackrabbit based repository.")
+})
+public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityProvider {
 
-    // name of the property providing list of authorized users
-    private static final String PROP_USERS = "users";
-
-    // default user being authorized
-    private static final String PROP_GROUPS_DEFAULT_USER = "admin";
-
-    // name of the property providing list of groups whose members are
-    // authorized
-    private static final String PROP_GROUPS = "groups";
-
-    /** default log */
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    @Reference
     private Repository repository;
 
-    @Property(name = PROP_USERS, cardinality = 20, value = PROP_GROUPS_DEFAULT_USER)
-    private Set<String> users;
-
-    @Property(name = PROP_GROUPS, cardinality = 20)
-    private Set<String> groups;
-
-    // ---------- SCR integration
-
-    @SuppressWarnings("unused")
-    @Activate
-    @Modified
-    private void configure(Map<String, Object> config) {
-        this.users = toSet(config.get(PROP_USERS));
-        this.groups = toSet(config.get(PROP_GROUPS));
+    public void setService(final Repository repo) {
+        this.repository = repo;
     }
+    // ---------- SCR integration
 
     /**
      * Authenticates and authorizes the user identified by the user name and
@@ -148,27 +130,27 @@ public class SlingWebConsoleSecurityProvider implements
                         }
                     }
 
-                    log.info(
-                        "authenticate: User {} is granted Web Console access",
+                    logger.debug(
+                        "authenticate: User {} is denied Web Console access",
                         userName);
                 } else {
-                    log.error(
+                    logger.error(
                         "authenticate: Expected user ID {} to refer to a user",
                         userId);
                 }
             } else {
-                log.info(
+                logger.info(
                     "authenticate: Jackrabbit Session required to grant access to the Web Console for {}; got {}",
                     userName, session.getClass());
             }
-        } catch (LoginException re) {
-            log.info(
+        } catch (final LoginException re) {
+            logger.info(
                 "authenticate: User "
                     + userName
                     + " failed to authenticate with the repository for Web Console access",
                 re);
-        } catch (Exception re) {
-            log.info("authenticate: Generic problem trying grant User "
+        } catch (final Exception re) {
+            logger.info("authenticate: Generic problem trying grant User "
                 + userName + " access to the Web Console", re);
         } finally {
             if (session != null) {
@@ -185,27 +167,7 @@ public class SlingWebConsoleSecurityProvider implements
      * authorized groups are granted access for all roles in the Web Console.
      */
     public boolean authorize(Object user, String role) {
-        log.info("authorize: Grant user {} access for role {}", user, role);
+        logger.debug("authorize: Grant user {} access for role {}", user, role);
         return true;
-    }
-
-    private Set<String> toSet(final Object configObj) {
-        final HashSet<String> groups = new HashSet<String>();
-        if (configObj instanceof String) {
-            groups.add((String) configObj);
-        } else if (configObj instanceof Collection<?>) {
-            for (Object obj : ((Collection<?>) configObj)) {
-                if (obj instanceof String) {
-                    groups.add((String) obj);
-                }
-            }
-        } else if (configObj instanceof String[]) {
-            for (String string : ((String[]) configObj)) {
-                if (string != null) {
-                    groups.add(string);
-                }
-            }
-        }
-        return groups;
     }
 }
