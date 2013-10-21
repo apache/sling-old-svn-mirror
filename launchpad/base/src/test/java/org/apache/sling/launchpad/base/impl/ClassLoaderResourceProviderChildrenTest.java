@@ -53,6 +53,7 @@ public class ClassLoaderResourceProviderChildrenTest {
         "resources/install/sub/two.jar",
         "resources/install/sub/six.jar",
         "resources/install.jackrabbit/three.jar",
+        "resources/install.jackrabbit/seven.jar",
         "resources/install.oak/four.jar",
         "resources/install.oak/sub/five.jar"
     };
@@ -107,6 +108,11 @@ public class ClassLoaderResourceProviderChildrenTest {
     }
     
     @Test
+    public void testInstallTrailingSlahs() {
+        assertChildren(provider, "resources/install/", "resources/install/one.jar");
+    }
+    
+    @Test
     public void testInstallSub() {
         assertChildren(provider, 
                 "resources/install/sub", 
@@ -118,12 +124,22 @@ public class ClassLoaderResourceProviderChildrenTest {
     public void testInstallJackrabbit() {
         assertChildren(provider, 
                 "resources/install.jackrabbit", 
-                "resources/install.jackrabbit/three.jar");
+                "resources/install.jackrabbit/three.jar",
+                "resources/install.jackrabbit/seven.jar");
+    }
+    
+    @Test
+    public void testInstallJackrabbitTrailingSlash() {
+        assertChildren(provider, 
+                "resources/install.jackrabbit/", 
+                "resources/install.jackrabbit/three.jar",
+                "resources/install.jackrabbit/seven.jar");
     }
     
     @Test
     public void testInstallOak() {
         assertChildren(provider, 
+                "resources/install.oak",
                 "resources/install.oak/four.jar");
     }
 }
