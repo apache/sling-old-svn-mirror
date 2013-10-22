@@ -44,17 +44,19 @@ public class ClassLoaderResourceProvider implements LaunchpadContentProvider {
                 ? classLoader
                 : this.getClass().getClassLoader();
     }
-    
-    static Pattern getResourcePathPattern(String forPath) {
-        return Pattern.compile("^" + forPath + "(\\.[^/]+)?/[^/]+/?$");
-    }
 
     public Iterator<String> getChildren(String path) {
         List<String> children;
 
+        // Guard against extra trailing slashes
+        if(path.endsWith("/") && path.length() > 1) {
+            path = path.substring(0, path.length()-1);
+        }
+        
         URL url = this.classLoader.getResource(path);
         if (url != null) {
-            final Pattern pathPattern = getResourcePathPattern(path);
+            Pattern pathPattern = Pattern.compile("^" + path + "/[^/]+/?$");
+
             children = new ArrayList<String>();
             try {
                 URLConnection conn = url.openConnection();

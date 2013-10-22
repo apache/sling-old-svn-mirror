@@ -19,6 +19,7 @@
 package org.apache.sling.launchpad.base.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
@@ -36,16 +37,15 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-@Ignore("SLING-3196")
 public class ClassLoaderResourceProviderChildrenTest {
     
     private ClassLoader classLoader;
     private ClassLoaderResourceProvider provider;
+    private boolean throwExceptionOnOpenConnection = false;
     
     private static final String [] TEST_PATHS = {
         "resources/install",
@@ -64,6 +64,9 @@ public class ClassLoaderResourceProviderChildrenTest {
         final URLStreamHandler handler = new URLStreamHandler() {
             @Override
             protected URLConnection openConnection(final URL url) throws IOException {
+                if(throwExceptionOnOpenConnection) {
+                    throw new IOException("Throwing up for testing that");
+                }
                 return conn;
             }
         };
@@ -75,7 +78,7 @@ public class ClassLoaderResourceProviderChildrenTest {
             entries.add(new JarEntry(path));
         }
         
-        when(cl.getResource(Matchers.any(String.class))).thenReturn(url);
+        when(cl.getResource(Matchers.contains("install"))).thenReturn(url);
         when(conn.getJarFile()).thenReturn(f);
         when(f.entries()).thenReturn(entries.elements());
         
@@ -141,5 +144,18 @@ public class ClassLoaderResourceProviderChildrenTest {
         assertChildren(provider, 
                 "resources/install.oak",
                 "resources/install.oak/four.jar");
+    }
+    
+    @Test
+    public void testNoResults() {
+        final Iterator<String> it = provider.getChildren("FOO");
+        assertFalse("Expecting no children", it.hasNext());
+    }
+    
+    @Test
+    public void testException() {
+        throwExceptionOnOpenConnection = true;
+        final Iterator<String> it = provider.getChildren("resources/install");
+        assertFalse("Expecting no results with ignored IOException", it.hasNext());
     }
 }
