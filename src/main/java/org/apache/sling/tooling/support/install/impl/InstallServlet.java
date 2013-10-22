@@ -22,7 +22,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.jar.JarFile;
+import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.Deflater;
@@ -38,13 +40,20 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.service.packageadmin.PackageAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Prototype for installing/updating a bundle from a directory
@@ -60,7 +69,12 @@ public class InstallServlet extends HttpServlet {
 
     private static final String DIR = "dir";
 
+    private static final int UPLOAD_IN_MEMORY_SIZE_THRESHOLD = 512 * 1024 * 1024;
+
     private BundleContext bundleContext;
+
+    @Reference
+    private PackageAdmin packageAdmin;
 
     @Activate
     protected void activate(final BundleContext bundleContext) {
@@ -71,16 +85,98 @@ public class InstallServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         final String dirPath = req.getParameter(DIR);
-        if ( dirPath == null ) {
-            logger.error("No dir parameter specified : {}", req.getParameterMap());
+
+        boolean isMultipart = ServletFileUpload.isMultipartContent(req);
+
+        if (dirPath == null && !isMultipart) {
+            logger.error("No dir parameter specified : {} and no multipart content found", req.getParameterMap());
             resp.setStatus(500);
             InstallationResult result = new InstallationResult(false, "No dir parameter specified: "
-                    + req.getParameterMap());
+                    + req.getParameterMap() + " and no multipart content found");
             result.render(resp.getWriter());
             return;
         }
-        final File dir = new File(dirPath);
-        installBasedOnDirectory(resp, dir);
+
+        if (isMultipart) {
+            installBasedOnUploadedJar(req, resp);
+        } else {
+            installBasedOnDirectory(resp, new File(dirPath));
+        }
+    }
+
+    private void installBasedOnUploadedJar(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+        InstallationResult result = null;
+
+        try {
+            DiskFileItemFactory factory = new DiskFileItemFactory();
+            // try to hold even largish bundles in memory to potentially improve performance
+            factory.setSizeThreshold(UPLOAD_IN_MEMORY_SIZE_THRESHOLD);
+
+            ServletFileUpload upload = new ServletFileUpload();
+            upload.setFileItemFactory(factory);
+
+            @SuppressWarnings("unchecked")
+            List<FileItem> items = upload.parseRequest(req);
+            if (items.size() != 1) {
+                logAndWriteError("Found " + items.size() + " items to process, but only updating 1 bundle is supported", resp);
+                return;
+            }
+
+            FileItem item = items.get(0);
+
+            JarInputStream jar = null;
+            InputStream rawInput = null;
+            try {
+                jar = new JarInputStream(item.getInputStream());
+                Manifest manifest = jar.getManifest();
+                if (manifest == null) {
+                    logAndWriteError("Uploaded jar file does not contain a manifest", resp);
+                    return;
+                }
+
+                final String symbolicName = manifest.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
+                if (symbolicName == null) {
+                    logAndWriteError("Manifest does not have a " + Constants.BUNDLE_SYMBOLICNAME, resp);
+                    return;
+                }
+
+                // the JarInputStream is used only for validation, we need a fresh input stream for updating
+                rawInput = item.getInputStream();
+
+                Bundle found = getBundle(symbolicName);
+                try {
+                    installOrUpdateBundle(found, rawInput, null);
+
+                    result = new InstallationResult(true, null);
+                    resp.setStatus(200);
+                    result.render(resp.getWriter());
+                    return;
+                } catch (BundleException e) {
+                    logAndWriteError("Unable to install/update bundle " + symbolicName, e, resp);
+                    return;
+                }
+            } finally {
+                IOUtils.closeQuietly(jar);
+                IOUtils.closeQuietly(rawInput);
+            }
+
+        } catch (FileUploadException e) {
+            logAndWriteError("Failed parsing uploaded bundle", e, resp);
+            return;
+        }
+    }
+
+    private void logAndWriteError(String message, HttpServletResponse resp) throws IOException {
+        logger.info(message);
+        resp.setStatus(500);
+        new InstallationResult(false, message).render(resp.getWriter());
+    }
+
+    private void logAndWriteError(String message, Exception e, HttpServletResponse resp) throws IOException {
+        logger.info(message, e);
+        resp.setStatus(500);
+        new InstallationResult(false, message + " : " + e.getMessage()).render(resp.getWriter());
     }
 
     private void installBasedOnDirectory(HttpServletResponse resp, final File dir) throws FileNotFoundException,
@@ -100,13 +196,7 @@ public class InstallServlet extends HttpServlet {
                     final String symbolicName = mf.getMainAttributes().getValue(Constants.BUNDLE_SYMBOLICNAME);
                     if ( symbolicName != null ) {
                         // search bundle
-                        Bundle found = null;
-                        for(final Bundle b : this.bundleContext.getBundles() ) {
-                            if ( symbolicName.equals(b.getSymbolicName()) ) {
-                                found = b;
-                                break;
-                            }
-                        }
+                        Bundle found = getBundle(symbolicName);
 
                         final File tempFile = File.createTempFile(dir.getName(), "bundle");
                         try {
@@ -114,14 +204,9 @@ public class InstallServlet extends HttpServlet {
 
                             final InputStream in = new FileInputStream(tempFile);
                             try {
-                                if ( found != null ) {
-                                    // update
-                                    found.update(in);
-                                } else {
-                                    // install
-                                    final Bundle b = bundleContext.installBundle(dir.getAbsolutePath(), in);
-                                    b.start();
-                                }
+                                String location = dir.getAbsolutePath();
+
+                                installOrUpdateBundle(found, in, location);
                                 result = new InstallationResult(true, null);
                                 resp.setStatus(200);
                                 result.render(resp.getWriter());
@@ -155,6 +240,30 @@ public class InstallServlet extends HttpServlet {
         if (result != null) {
             result.render(resp.getWriter());
         }
+    }
+
+    private void installOrUpdateBundle(Bundle bundle, final InputStream in, String location) throws BundleException {
+        if (bundle != null) {
+            // update
+            bundle.update(in);
+
+            packageAdmin.refreshPackages(new Bundle[] { bundle });
+        } else {
+            // install
+            final Bundle b = bundleContext.installBundle(location, in);
+            b.start();
+        }
+    }
+
+    private Bundle getBundle(final String symbolicName) {
+        Bundle found = null;
+        for (final Bundle b : this.bundleContext.getBundles()) {
+            if (symbolicName.equals(b.getSymbolicName())) {
+                found = b;
+                break;
+            }
+        }
+        return found;
     }
 
     private static void createJar(final File sourceDir, final File jarFile, final Manifest mf)
