@@ -54,6 +54,8 @@ public class MBeanResource extends AbstractResource {
     /** The mbean server. */
     private final MBeanServer mbeanServer;
 
+    private volatile AttributeList attributeList;
+
     public MBeanResource(final MBeanServer mbeanServer,
             final ResourceResolver resolver,
             final String resourceType,
@@ -71,6 +73,28 @@ public class MBeanResource extends AbstractResource {
         } else {
             this.resourceType = resourceType.substring(0, pos);
         }
+    }
+
+    public AttributeList getAttributes() {
+        if ( this.attributeList == null ) {
+            final MBeanAttributeInfo[] infos = info.getAttributes();
+            final String[] names = new String[infos.length];
+            int index = 0;
+            for(final MBeanAttributeInfo i : infos) {
+                names[index] = i.getName();
+                index++;
+            }
+            try {
+                this.attributeList = mbeanServer.getAttributes(objectName, names);
+            } catch (InstanceNotFoundException e) {
+                // ignore
+                this.attributeList = new AttributeList();
+            } catch (ReflectionException e) {
+                // ignore
+                this.attributeList = new AttributeList();
+            }
+        }
+        return this.attributeList;
     }
 
     /**
@@ -128,30 +152,14 @@ public class MBeanResource extends AbstractResource {
         result.put(Constants.PROP_CLASSNAME, this.info.getClassName());
         result.put(Constants.PROP_OBJECTNAME, this.objectName.getCanonicalName());
 
-        final MBeanAttributeInfo[] attribs = this.info.getAttributes();
-        final String[] names = new String[attribs.length];
-        int index = 0;
-        for(final MBeanAttributeInfo i : attribs) {
-            names[index] = i.getName();
-            index++;
-        }
-         AttributeList values = null;
-         try {
-            values = this.mbeanServer.getAttributes(this.objectName, names);
-            if ( values != null ) {
-                final Iterator iter = values.iterator();
-                while ( iter.hasNext() ) {
-                    final Attribute a = (Attribute)iter.next();
-                    final Object value = a.getValue();
-                    if ( value != null ) {
-                        result.put(a.getName(), value);
-                    }
-                }
+        final AttributeList values = this.getAttributes();
+        final Iterator iter = values.iterator();
+        while ( iter.hasNext() ) {
+            final Attribute a = (Attribute)iter.next();
+            final Object value = a.getValue();
+            if ( value != null ) {
+                result.put(a.getName(), value);
             }
-        } catch (final InstanceNotFoundException e) {
-            // ignore
-        } catch (final ReflectionException e) {
-            // ignore
         }
 
         return result;

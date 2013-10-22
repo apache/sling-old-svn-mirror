@@ -23,8 +23,8 @@ import java.lang.management.ManagementFactory;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -33,6 +33,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 
+import javax.management.Attribute;
+import javax.management.AttributeList;
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
 import javax.management.MBeanAttributeInfo;
@@ -52,6 +54,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 @Component
@@ -145,9 +148,14 @@ public class JMXResourceProvider implements ResourceProvider {
                     return new MBeanResource(this.mbeanServer, resourceResolver, this.convertObjectNameToResourcePath(info.objectName), path, info.mbeanInfo, info.objectName);
                 }
                 if ( info.pathInfo.equals("mbean:attributes") ) {
-                    return new AttributesResource(resourceResolver, path);
+                    final MBeanResource parent = (MBeanResource)resourceResolver.getResource(ResourceUtil.getParent(path));
+                    return new AttributesResource(resourceResolver, path, parent);
                 }
                 if ( info.pathInfo.startsWith("mbean:attributes/") ) {
+                    final AttributesResource parent = (AttributesResource)resourceResolver.getResource(ResourceUtil.getParent(path));
+                    final MBeanResource parentMBeanResource = (MBeanResource) parent.getParent();
+                    final AttributeList result = parentMBeanResource.getAttributes();
+
                     final String attrPath = info.pathInfo.substring("mbean:attributes/".length());
                     final int pos = attrPath.indexOf('/');
                     final String attrName;
@@ -161,7 +169,15 @@ public class JMXResourceProvider implements ResourceProvider {
                     }
                     for(final MBeanAttributeInfo mai : info.mbeanInfo.getAttributes()) {
                         if ( mai.getName().equals(attrName) ) {
-                            final AttributeResource rsrc = new AttributeResource(mbeanServer, info.objectName, resourceResolver, path, mai);
+                            final Iterator iter = result.iterator();
+                            Object value = null;
+                            while ( iter.hasNext() && value == null ) {
+                                final Attribute a = (Attribute) iter.next();
+                                if ( a.getName().equals(attrName) ) {
+                                    value = a.getValue();
+                                }
+                            }
+                            final AttributeResource rsrc = new AttributeResource(resourceResolver, path, mai, value, parent);
                             if ( subPath != null ) {
                                 return rsrc.getChildResource(subPath);
                             }
@@ -264,16 +280,24 @@ public class JMXResourceProvider implements ResourceProvider {
                     public void remove() {
                         throw new UnsupportedOperationException("remove");
                     }
-                    };
+                };
             } else {
                 if ( info.pathInfo == null ) {
+                    final MBeanResource parentResource = (MBeanResource)parent;
                     final List<Resource> list = new ArrayList<Resource>();
-                    list.add(new AttributesResource(parent.getResourceResolver(), parent.getPath() + "/mbean:attributes"));
+                    list.add(new AttributesResource(parent.getResourceResolver(), parent.getPath() + "/mbean:attributes", parentResource));
                     return list.iterator();
                 } else if ( info.pathInfo.equals("mbean:attributes") ) {
+                    final AttributesResource parentResource = (AttributesResource)parent;
+                    final MBeanResource parentMBeanResource = (MBeanResource)parentResource.getParent();
+                    final AttributeList result = parentMBeanResource.getAttributes();
+
                     final MBeanAttributeInfo[] infos = info.mbeanInfo.getAttributes();
-                    final List<MBeanAttributeInfo> list = Arrays.asList(infos);
-                    final Iterator<MBeanAttributeInfo> iter = list.iterator();
+                    final Map<String, MBeanAttributeInfo> infoMap = new HashMap<String, MBeanAttributeInfo>();
+                    for(final MBeanAttributeInfo i : infos) {
+                        infoMap.put(i.getName(), i);
+                    }
+                    final Iterator iter = result.iterator();
                     return new Iterator<Resource>() {
 
                         public void remove() {
@@ -281,8 +305,12 @@ public class JMXResourceProvider implements ResourceProvider {
                         }
 
                         public Resource next() {
-                            final MBeanAttributeInfo mai = iter.next();
-                            return new AttributeResource(mbeanServer, info.objectName, parent.getResourceResolver(), parent.getPath() + "/" + mai.getName(), mai);
+                            final Attribute attr = (Attribute)iter.next();
+                            return new AttributeResource(parent.getResourceResolver(),
+                                    parent.getPath() + "/" + attr.getName(),
+                                    infoMap.get(attr.getName()),
+                                    attr,
+                                    parentResource);
                         }
 
                         public boolean hasNext() {
@@ -290,23 +318,17 @@ public class JMXResourceProvider implements ResourceProvider {
                         }
                     };
                 } else if ( info.pathInfo.startsWith("mbean:attributes/") ) {
+                    final AttributeResource parentResource = (AttributeResource)parent;
                     final String attrPath = info.pathInfo.substring("mbean:attributes/".length());
                     final int pos = attrPath.indexOf('/');
-                    final String attrName;
                     final String subPath;
                     if ( pos == -1 ) {
-                        attrName = attrPath;
                         subPath = null;
                     } else {
-                        attrName = attrPath.substring(0, pos);
                         subPath = attrPath.substring(pos + 1);
                     }
-                    for(final MBeanAttributeInfo mai : info.mbeanInfo.getAttributes()) {
-                        if ( mai.getName().equals(attrName) ) {
-                            final AttributeResource rsrc = new AttributeResource(mbeanServer, info.objectName, parent.getResourceResolver(), parent.getPath(), mai);
-                            return rsrc.getChildren(subPath);
-                        }
-                    }
+
+                    return parentResource.getChildren(subPath);
 
                 }
             }

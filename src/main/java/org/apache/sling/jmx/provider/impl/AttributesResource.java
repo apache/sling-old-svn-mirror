@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.AbstractResource;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
@@ -35,10 +36,17 @@ public class AttributesResource extends AbstractResource {
 
     private final ResourceMetadata metadata = new ResourceMetadata();
 
-    public AttributesResource(final ResourceResolver resolver, final String p) {
+    private final MBeanResource parent;
+
+    public AttributesResource(final ResourceResolver resolver, final String p, final MBeanResource parent) {
         this.resourceResolver = resolver;
         this.path = p;
+        this.parent = parent;
+    }
 
+    @Override
+    public Resource getParent() {
+        return this.parent;
     }
 
     /**
