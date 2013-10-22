@@ -237,13 +237,15 @@ public class InstallServlet extends HttpServlet {
         if (bundle != null) {
             // update
             bundle.update(in);
-
-            packageAdmin.refreshPackages(new Bundle[] { bundle });
         } else {
             // install
             final Bundle b = bundleContext.installBundle(location, in);
             b.start();
         }
+
+        // take into account added/removed packages for updated bundles and newly satisfied optional package imports
+        // for new installed bundles
+        packageAdmin.refreshPackages(new Bundle[] { bundle });
     }
 
     private Bundle getBundle(final String symbolicName) {
