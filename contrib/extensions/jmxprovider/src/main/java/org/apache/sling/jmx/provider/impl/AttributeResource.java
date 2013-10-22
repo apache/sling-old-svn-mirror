@@ -32,8 +32,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.TabularData;
@@ -56,18 +54,25 @@ public class AttributeResource extends AbstractResource {
 
     private final MBeanAttributeInfo info;
 
-    private final MBeanServer server;
+    private final Object attrValue;
 
-    private final ObjectName on;
+    private final AttributesResource parent;
 
-    public AttributeResource(final MBeanServer server,
-                             final ObjectName on,
-                             final ResourceResolver resolver, final String p, final MBeanAttributeInfo mai) {
+    public AttributeResource(final ResourceResolver resolver,
+                             final String path,
+                             final MBeanAttributeInfo info,
+                             final Object value,
+                             final AttributesResource parent) {
         this.resourceResolver = resolver;
-        this.path = p;
-        this.info = mai;
-        this.on = on;
-        this.server = server;
+        this.path = path;
+        this.info = info;
+        this.attrValue = value;
+        this.parent = parent;
+    }
+
+    @Override
+    public Resource getParent() {
+        return this.parent;
     }
 
     /**
@@ -127,7 +132,7 @@ public class AttributeResource extends AbstractResource {
         result.put(Constants.PROP_TYPE, info.getType());
 
         try {
-            final Object value = server.getAttribute(this.on, info.getName());
+            final Object value = attrValue;
             if ( value != null ) {
                 if ( value.getClass().isArray() ) {
                     final int length = Array.getLength(value);
@@ -190,7 +195,7 @@ public class AttributeResource extends AbstractResource {
 
     private Map<String, Object> convertData() {
         try {
-            final Object value = server.getAttribute(this.on, info.getName());
+            final Object value = attrValue;
 
             if ( value instanceof TabularData ) {
                 return convertObject((TabularData)value);
