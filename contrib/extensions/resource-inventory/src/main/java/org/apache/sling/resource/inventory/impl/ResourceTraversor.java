@@ -18,7 +18,6 @@
 package org.apache.sling.resource.inventory.impl;
 
 import java.util.Iterator;
-import java.util.LinkedList;
 
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.commons.json.JSONException;
@@ -26,29 +25,13 @@ import org.apache.sling.commons.json.JSONObject;
 
 public class ResourceTraversor {
 
-    public static final class Entry {
-        public final Resource resource;
-        public final JSONObject json;
-
-        public Entry(final Resource r, final JSONObject o) {
-            this.resource = r;
-            this.json = o;
-        }
-    }
-
     private final JSONObject startObject;
-
-    private LinkedList<Entry> currentQueue;
-
-    private LinkedList<Entry> nextQueue;
 
     private final Resource startResource;
 
     public ResourceTraversor(final Resource resource)
     throws JSONException {
         this.startResource = resource;
-        this.currentQueue = new LinkedList<Entry>();
-        this.nextQueue = new LinkedList<Entry>();
         this.startObject = this.adapt(resource);
     }
 
@@ -58,7 +41,7 @@ public class ResourceTraversor {
      * @throws JSONException
      */
     public void collectResources() throws JSONException {
-        collectChildren(startResource, this.startObject, 0);
+        collectChildren(startResource, this.startObject);
     }
 
     /**
@@ -67,25 +50,14 @@ public class ResourceTraversor {
      * @throws JSONException
      */
     private void collectChildren(final Resource resource,
-            final JSONObject jsonObj,
-            int currentLevel)
+            final JSONObject jsonObj)
     throws JSONException {
 
         final Iterator<Resource> children = resource.listChildren();
         while (children.hasNext()) {
             final Resource res = children.next();
             final JSONObject json = collectResource(res, jsonObj);
-            nextQueue.addLast(new Entry(res, json));
-        }
-
-        while (!currentQueue.isEmpty() || !nextQueue.isEmpty()) {
-            if (currentQueue.isEmpty()) {
-                currentLevel++;
-                currentQueue = nextQueue;
-                nextQueue = new LinkedList<Entry>();
-            }
-            final Entry nextResource = currentQueue.removeFirst();
-            collectChildren(nextResource.resource, nextResource.json, currentLevel);
+            collectChildren(res, json);
         }
     }
 
@@ -96,7 +68,7 @@ public class ResourceTraversor {
      * @param level The level where this resource is located.
      * @throws JSONException
      */
-    private JSONObject collectResource(Resource resource, final JSONObject parent)
+    private JSONObject collectResource(final Resource resource, final JSONObject parent)
     throws JSONException {
         final JSONObject o = adapt(resource);
         parent.put(resource.getName(), o);
