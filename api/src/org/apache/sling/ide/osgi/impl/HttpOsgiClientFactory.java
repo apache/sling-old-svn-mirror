@@ -36,7 +36,7 @@ public class HttpOsgiClientFactory implements OsgiClientFactory {
         this.eventAdmin = eventAdmin;
     }
 
-    protected void unBindEventAdmin(EventAdmin eventAdmin) {
+    protected void unbindEventAdmin(EventAdmin eventAdmin) {
         this.eventAdmin = null;
     }
 }
