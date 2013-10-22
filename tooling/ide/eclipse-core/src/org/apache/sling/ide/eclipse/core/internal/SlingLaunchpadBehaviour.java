@@ -16,7 +16,6 @@
  */
 package org.apache.sling.ide.eclipse.core.internal;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +33,6 @@ import java.util.Set;
 import org.apache.commons.io.IOUtils;
 import org.apache.sling.ide.artifacts.EmbeddedArtifactLocator;
 import org.apache.sling.ide.eclipse.core.ISlingLaunchpadServer;
-import org.apache.sling.ide.eclipse.core.MavenLaunchHelper;
 import org.apache.sling.ide.eclipse.core.ProjectUtil;
 import org.apache.sling.ide.eclipse.core.ResourceUtil;
 import org.apache.sling.ide.eclipse.core.ServerUtil;
@@ -248,48 +246,41 @@ public class SlingLaunchpadBehaviour extends ServerBehaviourDelegate {
 	private void publishBundleModule(IModule[] module, IProgressMonitor monitor) throws CoreException {
 		final IProject project = module[0].getProject();
         boolean installLocally = getServer().getAttribute(ISlingLaunchpadServer.PROP_INSTALL_LOCALLY, true);
-		if (!installLocally) {
-            final String launchMemento = MavenLaunchHelper.createMavenLaunchConfigMemento(project.getLocation()
-                    .toString(), "package org.apache.sling:maven-sling-plugin:install", null, false, null);
-            IFolder dotLaunches = project.getFolder(".settings").getFolder(".launches");
-            if (!dotLaunches.exists()) {
-                dotLaunches.create(true, true, monitor);
-            }
-            IFile launchFile = dotLaunches.getFile("sling_install.launch");
-            InputStream in = new ByteArrayInputStream(launchMemento.getBytes());
-            if (!launchFile.exists()) {
-                launchFile.create(in, true, monitor);
-            }
+		monitor.beginTask("deploying via local install", 5);
 
-            ILaunchConfiguration launchConfig = DebugPlugin.getDefault().getLaunchManager()
-                    .getLaunchConfiguration(launchFile);
-            launchConfig.launch(ILaunchManager.RUN_MODE, monitor);
-		} else {
-			monitor.beginTask("deploying via local install", 5);
+        try {
+            OsgiClient osgiClient = Activator.getDefault().getOsgiClientFactory()
+                    .createOsgiClient(ServerUtil.getRepositoryInfo(getServer(), monitor));
 
-            try {
-                OsgiClient osgiClient = Activator.getDefault().getOsgiClientFactory()
-                        .createOsgiClient(ServerUtil.getRepositoryInfo(getServer(), monitor));
+            IJavaProject javaProject = ProjectHelper.asJavaProject(project);
 
-                IJavaProject javaProject = ProjectHelper.asJavaProject(project);
+            IFolder outputFolder = (IFolder) project.getWorkspace().getRoot().findMember(javaProject.getOutputLocation());
+            IPath outputLocation = outputFolder.getLocation();
+            monitor.worked(1);
 
-                IPath outputLocation = project.getWorkspace().getRoot().findMember(javaProject.getOutputLocation())
-                        .getLocation();
-                monitor.worked(1);
-
+            if ( installLocally ) {
                 osgiClient.installLocalBundle(outputLocation.toOSString());
                 monitor.worked(4);
-                setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+            } else {
 
-            } catch (URISyntaxException e1) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
-            } catch (OsgiClientException e1) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed installing bundle : "
-                        + e1.getMessage(), e1));
-            } finally {
-                monitor.done();
+                JarBuilder builder = new JarBuilder();
+                InputStream bundle = builder.buildJar(outputFolder);
+                monitor.worked(1);
+                
+                osgiClient.installLocalBundle(bundle, outputFolder.getLocation().toOSString());
+                monitor.worked(3);
             }
-		}
+
+            setModulePublishState(module, IServer.PUBLISH_STATE_NONE);
+
+        } catch (URISyntaxException e1) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, e1.getMessage(), e1));
+        } catch (OsgiClientException e1) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed installing bundle : "
+                    + e1.getMessage(), e1));
+        } finally {
+            monitor.done();
+        }
 	}
 
     private void publishContentModule(int kind, int deltaKind, IModule[] module, IProgressMonitor monitor)

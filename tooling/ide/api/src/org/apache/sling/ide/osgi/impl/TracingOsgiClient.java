@@ -54,6 +54,11 @@ public class TracingOsgiClient implements OsgiClient {
     @Override
     public void installLocalBundle(String explodedBundleLocation) throws OsgiClientException {
 
+        logInstallLocalBundle(explodedBundleLocation);
+    }
+
+    private void logInstallLocalBundle(String explodedBundleLocation) throws OsgiClientException, Error {
+
         Map<String, Object> props = new HashMap<String, Object>();
         long start = System.currentTimeMillis();
         props.put(CommandExecutionProperties.ACTION_TYPE, "InstallLocalBundle");
@@ -80,6 +85,12 @@ public class TracingOsgiClient implements OsgiClient {
             Event event = new Event(CommandExecutionProperties.REPOSITORY_TOPIC, props);
             eventAdmin.postEvent(event);
         }
+    }
+
+    @Override
+    public void installLocalBundle(InputStream jarredBundle, String sourceLocation) throws OsgiClientException {
+
+        logInstallLocalBundle(sourceLocation);
     }
 
 }

@@ -70,7 +70,7 @@ public class InstallEditorSection extends ServerEditorSection {
     protected boolean _updating;
     protected PropertyChangeListener _listener;
 
-    private Button mvnSlingInstallButton;
+    private Button bundleLocalInstallButton;
     private Button quickLocalInstallButton;
     private Hyperlink installOrUpdateSupportBundleLink;
     private ISlingLaunchpadServer launchpadServer;
@@ -105,9 +105,9 @@ public class InstallEditorSection extends ServerEditorSection {
         section.setClient(composite);
 
         
-        mvnSlingInstallButton = toolkit.createButton(composite, "Install bundles via mvn sling:install", SWT.RADIO);
+        bundleLocalInstallButton = toolkit.createButton(composite, "Install bundles via bundle upload", SWT.RADIO);
         GridData data = new GridData(SWT.FILL, SWT.FILL, true, false, 2, 1);
-        mvnSlingInstallButton.setLayoutData(data);
+        bundleLocalInstallButton.setLayoutData(data);
         
         quickLocalInstallButton = toolkit.createButton(composite, "Install bundles directly from local directory",
                 SWT.RADIO);
@@ -135,7 +135,7 @@ public class InstallEditorSection extends ServerEditorSection {
 
                 if (ISlingLaunchpadServer.PROP_INSTALL_LOCALLY.equals(evt.getPropertyName())) {
             		quickLocalInstallButton.setSelection((Boolean)evt.getNewValue());
-            		mvnSlingInstallButton.setSelection(!(Boolean)evt.getNewValue());
+            		bundleLocalInstallButton.setSelection(!(Boolean)evt.getNewValue());
                 } else if (evt.getPropertyName().equals(
                         String.format(ISlingLaunchpadServer.PROP_BUNDLE_VERSION_FORMAT,
                                 EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME))) {
@@ -166,7 +166,7 @@ public class InstallEditorSection extends ServerEditorSection {
         final ISlingLaunchpadConfiguration config = launchpadServer.getConfiguration();
 
         quickLocalInstallButton.setSelection(config.bundleInstallLocally());
-        mvnSlingInstallButton.setSelection(!config.bundleInstallLocally());
+        bundleLocalInstallButton.setSelection(!config.bundleInstallLocally());
 
         SelectionListener listener = new SelectionAdapter() {
         	
@@ -177,7 +177,7 @@ public class InstallEditorSection extends ServerEditorSection {
 		};
 
         quickLocalInstallButton.addSelectionListener(listener);
-        mvnSlingInstallButton.addSelectionListener(listener);
+        bundleLocalInstallButton.addSelectionListener(listener);
 
         Version serverVersion = launchpadServer.getBundleVersion(EmbeddedArtifactLocator.SUPPORT_BUNDLE_SYMBOLIC_NAME);
         final EmbeddedArtifact supportBundle = artifactLocator.loadToolingSupportBundle();
@@ -289,7 +289,7 @@ public class InstallEditorSection extends ServerEditorSection {
     private void updateActionArea(Version serverVersion, final Version embeddedVersion) {
         if (serverVersion == null || embeddedVersion.compareTo(serverVersion) > 0) {
             supportBundleVersionLabel
-                    .setText("Installation support bundle is not present our outdated, local deployment will not work");
+                    .setText("Installation support bundle is not present our outdated, deployment will not work");
             installOrUpdateSupportBundleLink.setEnabled(true);
         } else {
             supportBundleVersionLabel.setText("Installation support bundle is present and up to date.");
