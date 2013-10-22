@@ -317,8 +317,8 @@ public abstract class AbstractPostResponse implements PostResponse {
                 int statusCode = ((Number) status).intValue();
                 response.setStatus(statusCode);
 
-                // special treatment of 201/CREATED: Requires Location
-                if (statusCode == HttpServletResponse.SC_CREATED) {
+                // special treatment of 201/CREATED and 3xx: Requires Location
+                if (statusCode == HttpServletResponse.SC_CREATED || statusCode / 100 == 3) {
                     response.setHeader("Location", getLocation());
                 }
             }
