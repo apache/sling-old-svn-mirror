@@ -18,6 +18,8 @@
 package org.apache.sling.servlets.post;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -75,6 +77,33 @@ public class JsonResponseTest extends TestCase {
         assertEquals(JSONResponse.RESPONSE_CHARSET, response.getCharacterEncoding());
     }
 
+    public void testSend_201() throws Exception {
+        final String location = "http://example.com/test_location";
+        res.onChange("modified", "argument1");
+        res.setStatus(HttpServletResponse.SC_CREATED, "Created");
+        res.setLocation(location);
+        MockResponseWithHeader response = new MockResponseWithHeader();
+        res.send(response, true);
+        JSONObject result = new JSONObject(response.getOutput().toString());
+        assertProperty(result, HtmlResponse.PN_STATUS_CODE, HttpServletResponse.SC_CREATED);
+        assertEquals(location, response.getHeader("Location"));
+    }
+
+    public void testSend_3xx() throws Exception {
+        final String location = "http://example.com/test_location";
+        res.onChange("modified", "argument1");
+
+        for (int status = 300; status < 308; status++) {
+            res.setStatus(status, "3xx Status");
+            res.setLocation(location);
+            MockResponseWithHeader response = new MockResponseWithHeader();
+            res.send(response, true);
+            JSONObject result = new JSONObject(response.getOutput().toString());
+            assertProperty(result, HtmlResponse.PN_STATUS_CODE, status);
+            assertEquals(location, response.getHeader("Location"));
+        }
+    }
+
     private static <T> T assertProperty(JSONObject obj, String key, Class<T> clazz) throws JSONException {
         assertTrue("JSON object does not have property " + key, obj.has(key));
         return assertInstanceOf(obj.get(key), clazz);
@@ -97,4 +126,23 @@ public class JsonResponseTest extends TestCase {
         }
     }
 
+    private static class MockResponseWithHeader extends MockSlingHttpServletResponse {
+        private final Map<String, Object> headers = new HashMap<String, Object>();
+
+        @Override
+        public void setHeader(String name, String value) {
+            this.headers.put(name, value);
+        }
+
+        public String getHeader(String name) {
+            Object result = this.headers.get(name);
+            if (result instanceof String) {
+                return (String) result;
+            } else if (result instanceof String[]) {
+                return ((String[]) result)[0];
+            } else {
+                return null;
+            }
+        }
+    }
 }
