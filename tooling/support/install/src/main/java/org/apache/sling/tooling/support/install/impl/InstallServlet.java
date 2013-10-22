@@ -18,6 +18,7 @@ package org.apache.sling.tooling.support.install.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,9 +74,20 @@ public class InstallServlet extends HttpServlet {
         if ( dirPath == null ) {
             logger.error("No dir parameter specified : {}", req.getParameterMap());
             resp.setStatus(500);
+            InstallationResult result = new InstallationResult(false, "No dir parameter specified: "
+                    + req.getParameterMap());
+            result.render(resp.getWriter());
             return;
         }
         final File dir = new File(dirPath);
+        installBasedOnDirectory(resp, dir);
+    }
+
+    private void installBasedOnDirectory(HttpServletResponse resp, final File dir) throws FileNotFoundException,
+            IOException {
+
+        InstallationResult result = null;
+
         if ( dir.exists() && dir.isDirectory() ) {
             logger.info("Checking dir {} for bundle install", dir);
             final File manifestFile = new File(dir, JarFile.MANIFEST_NAME);
@@ -110,16 +122,21 @@ public class InstallServlet extends HttpServlet {
                                     final Bundle b = bundleContext.installBundle(dir.getAbsolutePath(), in);
                                     b.start();
                                 }
+                                result = new InstallationResult(true, null);
                                 resp.setStatus(200);
+                                result.render(resp.getWriter());
                                 return;
                             } catch ( final BundleException be ) {
                                 logger.info("Unable to install/update bundle from dir " + dir, be);
+                                result = new InstallationResult(false,
+                                        "Unable to install/update bundle from dir " + dir);
                             }
                         } finally {
                             tempFile.delete();
                         }
                     } else {
                         logger.info("Manifest in {} does not have a symbolic name", dir);
+                        result = new InstallationResult(false, "Manifest in " + dir + " does not have a symbolic name");
                     }
                 } finally {
                     if ( fis != null ) {
@@ -127,12 +144,17 @@ public class InstallServlet extends HttpServlet {
                     }
                 }
             } else {
+                result = new InstallationResult(false, "Dir " + dir + " does not have a manifest");
                 logger.info("Dir {} does not have a manifest", dir);
             }
         } else {
+            result = new InstallationResult(false, "Dir " + dir + " does not exist");
             logger.info("Dir {} does not exist", dir);
         }
         resp.setStatus(500);
+        if (result != null) {
+            result.render(resp.getWriter());
+        }
     }
 
     private static void createJar(final File sourceDir, final File jarFile, final Manifest mf)
