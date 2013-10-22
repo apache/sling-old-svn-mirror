@@ -212,33 +212,24 @@ public class InstallServlet extends HttpServlet {
                                 result.render(resp.getWriter());
                                 return;
                             } catch ( final BundleException be ) {
-                                logger.info("Unable to install/update bundle from dir " + dir, be);
-                                result = new InstallationResult(false,
-                                        "Unable to install/update bundle from dir " + dir);
+                                logAndWriteError("Unable to install/update bundle from dir " + dir, be, resp);
                             }
                         } finally {
                             tempFile.delete();
                         }
                     } else {
-                        logger.info("Manifest in {} does not have a symbolic name", dir);
-                        result = new InstallationResult(false, "Manifest in " + dir + " does not have a symbolic name");
+                        logAndWriteError("Manifest in " + dir + " does not have a symbolic name", resp);
                     }
                 } finally {
-                    if ( fis != null ) {
-                        fis.close();
-                    }
+                    IOUtils.closeQuietly(fis);
                 }
             } else {
                 result = new InstallationResult(false, "Dir " + dir + " does not have a manifest");
-                logger.info("Dir {} does not have a manifest", dir);
+                logAndWriteError("Dir " + dir + " does have a manifest", resp);
             }
         } else {
             result = new InstallationResult(false, "Dir " + dir + " does not exist");
-            logger.info("Dir {} does not exist", dir);
-        }
-        resp.setStatus(500);
-        if (result != null) {
-            result.render(resp.getWriter());
+            logAndWriteError("Dir " + dir + " does not exist", resp);
         }
     }
 
