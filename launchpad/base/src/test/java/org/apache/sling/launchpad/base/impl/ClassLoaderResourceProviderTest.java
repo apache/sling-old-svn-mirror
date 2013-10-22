@@ -18,45 +18,61 @@
  */
 package org.apache.sling.launchpad.base.impl;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import java.util.regex.Pattern;
+import java.io.IOException;
+import java.io.InputStream;
 
+import org.junit.After;
 import org.junit.Test;
 
 public class ClassLoaderResourceProviderTest {
     
-    private final Pattern pattern = ClassLoaderResourceProvider.getResourcePathPattern("resources/bundles");
-    
-    private void assertMatch(String path, boolean expectMatch) {
-        if(expectMatch != pattern.matcher(path).matches()) {
-            fail("Expected match=" + expectMatch + " for path '" + path + "', got " + !expectMatch);
+    public static final String TEST_RESOURCE_PATH = "holaworld-invalid.jar"; 
+    private ClassLoaderResourceProvider provider = new ClassLoaderResourceProvider(getClass().getClassLoader());
+    private InputStream toClose;
+
+    @After
+    public void cleanup() throws IOException {
+        if(toClose != null) {
+            toClose.close();
         }
     }
     
     @Test
-    public void testResourcePathPatterns() {
-        assertMatch("resources/bundles/", false);
-        
-        assertMatch("resources/bundles/0/", true);
-        assertMatch("resources/bundles/0", true);
-        
-        assertMatch("resources/bundles/1234/", true);
-        assertMatch("resources/bundles/1234", true);
-        
-        assertMatch("resources/bundles/12/42", false);
-        assertMatch("resources/bundles/12/42", false);
-        
-        assertMatch("something/else/0/", false);
-        assertMatch("something/else/0", false);
-        
-        assertMatch("resources/bundles.someRunMode/", false);
-        assertMatch("resources/bundles.someRunMode/14/", true);
-        assertMatch("resources/bundles.someRunMode/15", true);
-        
-        assertMatch("resources/bundles.runModeA.runModeB/", false);
-        assertMatch("resources/bundles.runModeA.runModeB/14/", true);
-        assertMatch("resources/bundles.runModeA.runModeB/14", true);
-        assertMatch("resources/bundles.runModeA.runModeB/15/16", false);
+    public void testGetResourceFound() {
+        assertNotNull(provider.getResource(TEST_RESOURCE_PATH));
     }
+    
+    @Test
+    public void testGetResourceLeadingSlash() {
+        assertNotNull(provider.getResource("/" + TEST_RESOURCE_PATH));
+    }
+    
+    @Test
+    public void testGetResourceNotFound() {
+        assertNull(provider.getResource("NONEXISTENT"));
+    }
+    
+    @Test
+    public void testGetResourceNull() {
+        assertNull(provider.getResource(null));
+    }
+    
+    @Test
+    public void testGetResourceStreamFound() throws IOException {
+        assertNotNull(toClose = provider.getResourceAsStream(TEST_RESOURCE_PATH));
+    }
+    
+    @Test
+    public void testGetResourceStreamLeadingSlash() throws IOException {
+        assertNotNull(toClose = provider.getResourceAsStream("/" + TEST_RESOURCE_PATH));
+    }
+    
+    @Test
+    public void testGetResourceStreamNotFound() throws IOException {
+        assertNull(provider.getResourceAsStream("NONEXISTENT"));
+    }
+    
 }
