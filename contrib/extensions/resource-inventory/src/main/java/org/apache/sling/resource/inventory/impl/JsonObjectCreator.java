@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.commons.json.JSONArray;
@@ -150,7 +151,27 @@ public abstract class JsonObjectCreator {
     throws JSONException {
         Object[] values = null;
         if (value.getClass().isArray()) {
-            values = (Object[])value;
+            if (value instanceof long[]) {
+                values = ArrayUtils.toObject((long[])value);
+            } else if (value instanceof int[]) {
+                values = ArrayUtils.toObject((int[])value);
+            } else if (value instanceof double[]) {
+                values = ArrayUtils.toObject((double[])value);
+            } else if (value instanceof byte[]) {
+                values = ArrayUtils.toObject((byte[])value);
+            } else if (value instanceof float[]) {
+                values = ArrayUtils.toObject((float[])value);
+            } else if (value instanceof short[]) {
+                values = ArrayUtils.toObject((short[])value);
+            } else if (value instanceof long[]) {
+                values = ArrayUtils.toObject((long[])value);
+            } else if (value instanceof boolean[]) {
+                values = ArrayUtils.toObject((boolean[])value);
+            } else if (value instanceof char[]) {
+                values = ArrayUtils.toObject((char[])value);
+            } else {
+                values = (Object[]) value;
+            }
             // write out empty array
             if ( values.length == 0 ) {
                 obj.put(key, new JSONArray());
