@@ -100,7 +100,6 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     public LogbackManager(BundleContext bundleContext) throws InvalidSyntaxException {
         final long startTime = System.currentTimeMillis();
-        ensureSlf4jIsInitialized();
         setLoggerContext((LoggerContext) LoggerFactory.getILoggerFactory());
         this.log = LoggerFactory.getLogger(getClass());
         this.rootDir = getRootDir(bundleContext);
@@ -135,17 +134,6 @@ public class LogbackManager extends LoggerContextAwareBase {
         registerEventHandler(bundleContext);
         StatusPrinter.printInCaseOfErrorsOrWarnings(getLoggerContext(), startTime);
         started = true;
-    }
-
-    private void ensureSlf4jIsInitialized() {
-        ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
-        //SLING-3185 Check if instance of LoggerContext as
-        //in case SLF4J has not completely initialized it would return a temp LoggerFactory
-        //SubstituteLoggerFactory
-        if(!(loggerFactory instanceof LoggerContext)){
-            //This ensures that Logger implementation is binded by the time call returns
-            StaticLoggerBinder.getSingleton();
-        }
     }
 
     public void shutdown() {
