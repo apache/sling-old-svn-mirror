@@ -32,7 +32,7 @@ import org.apache.sling.event.impl.Barrier;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.JobUtil;
+import org.apache.sling.event.jobs.NotificationConstants;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
@@ -86,19 +86,8 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
     public void testOrderedQueue() throws Exception {
         final JobManager jobManager = this.getJobManager();
 
+        // register consumer and event handler
         final Barrier cb = new Barrier(2);
-
-        final ServiceRegistration jc1Reg = this.registerJobConsumer("sling/orderedtest/start",
-                new JobConsumer() {
-
-                    @Override
-                    public JobResult process(final Job job) {
-                        cb.block();
-                        return JobResult.OK;
-                    }
-                });
-
-        // register new consumer and event handle
         final AtomicInteger count = new AtomicInteger(0);
         final AtomicInteger parallelCount = new AtomicInteger(0);
         final ServiceRegistration jcReg = this.registerJobConsumer("sling/orderedtest/*",
@@ -106,6 +95,10 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
 
                     @Override
                     public JobResult process(final Job job) {
+                        if ("sling/orderedtest/start".equals(job.getTopic()) ) {
+                            cb.block();
+                            return JobResult.OK;
+                        }
                         if ( parallelCount.incrementAndGet() > 1 ) {
                             parallelCount.decrementAndGet();
                             return JobResult.FAILED;
@@ -127,7 +120,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
                         return JobResult.OK;
                     }
                 });
-        final ServiceRegistration ehReg = this.registerEventHandler(JobUtil.TOPIC_JOB_FINISHED,
+        final ServiceRegistration ehReg = this.registerEventHandler(NotificationConstants.TOPIC_JOB_FINISHED,
                 new EventHandler() {
 
                     @Override
@@ -138,7 +131,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
 
         try {
             // we first sent one event to get the queue started
-            jobManager.addJob("sling/orderedtest/start", null, null);
+            jobManager.addJob("sling/orderedtest/start", null);
             assertTrue("No event received in the given time.", cb.block(5));
             cb.reset();
 
@@ -154,7 +147,7 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
             // we start "some" jobs:
             for(int i = 0; i < NUM_JOBS; i++ ) {
                 final String subTopic = "sling/orderedtest/sub" + (i % 10);
-                jobManager.addJob(subTopic, null, null);
+                jobManager.addJob(subTopic, null);
             }
             // start the queue
             q.resume();
@@ -172,7 +165,6 @@ public class OrderedQueueTest extends AbstractJobHandlingTest {
             assertEquals("Failed count", NUM_JOBS / 10, q.getStatistics().getNumberOfFailedJobs());
             assertEquals("Cancelled count", 0, q.getStatistics().getNumberOfCancelledJobs());
         } finally {
-            jc1Reg.unregister();
             jcReg.unregister();
             ehReg.unregister();
         }
