@@ -146,32 +146,85 @@ public class HttpOsgiClient implements OsgiClient {
     }
 
     @Override
-    public void installLocalBundle(String explodedBundleLocation) throws OsgiClientException {
+    public void installLocalBundle(final String explodedBundleLocation) throws OsgiClientException {
 
         if (explodedBundleLocation == null) {
             throw new IllegalArgumentException("explodedBundleLocation may not be null");
         }
 
-        PostMethod method = new PostMethod(repositoryInfo.getUrl() + "system/sling/tooling/install");
-        method.addParameter("dir", explodedBundleLocation);
+        new LocalBundleInstaller(getHttpClient(), repositoryInfo) {
 
-        try {
-            int status = getHttpClient().executeMethod(method);
-            if (status != 200) {
-                throw new OsgiClientException("Method execution returned status " + status);
+            @Override
+            void configureRequest(PostMethod method) {
+                method.addParameter("dir", explodedBundleLocation);
             }
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            IOUtils.copy(method.getResponseBodyAsStream(), out);
-
-            System.out.println(new String(out.toByteArray(), "UTF-8"));
-
-        } catch (IOException e) {
-            throw new OsgiClientException(e);
-        } finally {
-            method.releaseConnection();
-        }
-
+        }.installBundle();
     }
 
+    @Override
+    public void installLocalBundle(final InputStream jarredBundle, String sourceLocation) throws OsgiClientException {
+
+        if (jarredBundle == null) {
+            throw new IllegalArgumentException("jarredBundle may not be null");
+        }
+        
+        new LocalBundleInstaller(getHttpClient(), repositoryInfo) {
+
+            @Override
+            void configureRequest(PostMethod method) throws IOException {
+                Part[] parts = new Part[] { new StringPart("bundle", IOUtils.toString(jarredBundle, "UTF-8")) };
+                method.setRequestEntity(new MultipartRequestEntity(parts, method.getParams()));
+            }
+        }.installBundle();        
+    }
+
+    static abstract class LocalBundleInstaller {
+
+        private final HttpClient httpClient;
+        private final RepositoryInfo repositoryInfo;
+
+        public LocalBundleInstaller(HttpClient httpClient, RepositoryInfo repositoryInfo) {
+            this.httpClient = httpClient;
+            this.repositoryInfo = repositoryInfo;
+        }
+
+        void installBundle() throws OsgiClientException {
+
+            PostMethod method = new PostMethod(repositoryInfo.getUrl() + "system/sling/tooling/install");
+
+            try {
+                configureRequest(method);
+
+                int status = httpClient.executeMethod(method);
+                if (status != 200) {
+                    throw new OsgiClientException("Method execution returned status " + status);
+                }
+
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                IOUtils.copy(method.getResponseBodyAsStream(), out);
+
+                JSONObject obj = new JSONObject(new String(out.toByteArray(), "UTF-8"));
+
+                if ("OK".equals(obj.getString("status"))) {
+                    return;
+                }
+
+                String errorMessage = obj.has("message") ? "Bundle deployment failed, please check the Sling logs"
+                        : obj.getString("message");
+
+                throw new OsgiClientException(errorMessage);
+
+            } catch (IOException e) {
+                throw new OsgiClientException(e);
+            } catch (JSONException e) {
+                throw new OsgiClientException(
+                        "Response is not valid JSON. The InstallServlet is probably not installed at the expected location",
+                        e);
+            } finally {
+                method.releaseConnection();
+            }
+        }
+
+        abstract void configureRequest(PostMethod method) throws IOException;
+    }
 }

@@ -42,4 +42,14 @@ public interface OsgiClient {
      */
     void installLocalBundle(String explodedBundleLocation) throws OsgiClientException;
 
+    /**
+     * Installs a local bundle from an already-built jar file
+     * 
+     * @param jarredBundle the contents of the jarred bundle
+     * @param sourceLocation the source location, for informative purposes only
+     * 
+     * @throws OsgiClientException
+     */
+    void installLocalBundle(InputStream jarredBundle, String sourceLocation) throws OsgiClientException;
+
 }
