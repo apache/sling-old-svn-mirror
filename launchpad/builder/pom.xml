@@ -74,6 +74,21 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>ianal-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>verify-legal-files</goal>
+                        </goals>
+                        <configuration>
+                            <!-- TODO required for now due to missing legal files in bundleListConfig.zip -->
+                            <strict>false</strict>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
@@ -117,6 +132,12 @@
                         <configuration>
                             <packaging>jar</packaging>
                         </configuration>
+                    </execution>
+                    <execution>
+                        <id>attach-bundle-list</id>
+                        <goals>
+                            <goal>attach-bundle-list</goal>
+                        </goals>
                     </execution>
                     <execution>
                         <id>create-bundle-jar</id>
