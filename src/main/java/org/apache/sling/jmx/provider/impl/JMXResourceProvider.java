@@ -152,8 +152,22 @@ public class JMXResourceProvider implements ResourceProvider {
                     return new AttributesResource(resourceResolver, path, parent);
                 }
                 if ( info.pathInfo.startsWith("mbean:attributes/") ) {
-                    final AttributesResource parent = (AttributesResource)resourceResolver.getResource(ResourceUtil.getParent(path));
-                    final MBeanResource parentMBeanResource = (MBeanResource) parent.getParent();
+                    final Resource parentRsrc = resourceResolver.getResource(ResourceUtil.getParent(path));
+                    final AttributesResource parentAttributesResource;
+                    final MBeanResource parentMBeanResource;
+                    if ( parentRsrc instanceof AttributesResource ) {
+                        parentAttributesResource = (AttributesResource) parentRsrc;
+                        parentMBeanResource = (MBeanResource)parentRsrc.getParent();
+                    } else {
+                        final AttributeResource parent;
+                        if ( parentRsrc instanceof AttributeResource) {
+                            parent = (AttributeResource)parentRsrc;
+                        } else {
+                            parent = ((MapResource)parentRsrc).getAttributeResource();
+                        }
+                        parentAttributesResource = (AttributesResource) parent.getParent();
+                        parentMBeanResource = (MBeanResource) parentAttributesResource.getParent();
+                    }
                     final AttributeList result = parentMBeanResource.getAttributes();
 
                     final String attrPath = info.pathInfo.substring("mbean:attributes/".length());
@@ -177,7 +191,7 @@ public class JMXResourceProvider implements ResourceProvider {
                                     value = a.getValue();
                                 }
                             }
-                            final AttributeResource rsrc = new AttributeResource(resourceResolver, path, mai, value, parent);
+                            final AttributeResource rsrc = new AttributeResource(resourceResolver, path, mai, value, parentAttributesResource);
                             if ( subPath != null ) {
                                 return rsrc.getChildResource(subPath);
                             }
