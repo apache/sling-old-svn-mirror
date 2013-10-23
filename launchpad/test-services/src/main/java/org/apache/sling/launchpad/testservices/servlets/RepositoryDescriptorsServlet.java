@@ -17,7 +17,7 @@
 package org.apache.sling.launchpad.testservices.servlets;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.Arrays;
 
 import javax.jcr.Repository;
 import javax.servlet.ServletException;
@@ -30,6 +30,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.commons.json.io.JSONWriter;
 
 /** Test servlet that dumps our repository descriptors */ 
 @SuppressWarnings("serial")
@@ -38,7 +40,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 @Properties({ @Property(name = "service.description", value = "Repository Descriptors Servlet"),
         @Property(name = "service.vendor", value = "The Apache Software Foundation"),
         @Property(name = "sling.servlet.paths", value = "/testing/RepositoryDescriptors"),
-        @Property(name = "sling.servlet.extensions", value = "txt")})
+        @Property(name = "sling.servlet.extensions", value = "json")})
 public class RepositoryDescriptorsServlet extends SlingSafeMethodsServlet {
 
     @Reference
@@ -47,17 +49,22 @@ public class RepositoryDescriptorsServlet extends SlingSafeMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) 
     throws ServletException,IOException {
-        final PrintWriter pw = response.getWriter();
-        response.setContentType("text/plain");
+        response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
-        for(String key : repository.getDescriptorKeys()) {
-            final String v = repository.getDescriptor(key);
-            pw.print(key);
-            pw.print("=");
-            pw.println(v);
+        try {
+            final JSONWriter w = new JSONWriter(response.getWriter());
+            w.setTidy(Arrays.asList(request.getRequestPathInfo().getSelectors()).contains("tidy"));
+            w.object();
+            w.key("descriptors");
+            w.object();
+            for(String key : repository.getDescriptorKeys()) {
+                w.key(key).value(repository.getDescriptor(key));
+            }
+            w.endObject();
+            w.endObject();
+        } catch(JSONException je) {
+            throw (IOException)new IOException("JSONException in doGet").initCause(je);
         }
-        pw.flush();
+        response.getWriter().flush();
     }
-    
 }
