@@ -38,7 +38,13 @@ public class MapResource extends AbstractResource {
 
     private final ResourceMetadata metadata = new ResourceMetadata();
 
-    public MapResource(final ResourceResolver resolver, final String path, final Map<String, Object> props) {
+    private final AttributeResource parent;
+
+    public MapResource(final ResourceResolver resolver,
+            final String path,
+            final Map<String, Object> props,
+            final AttributeResource parent) {
+        this.parent = parent;
         this.resolver = resolver;
         this.path = path;
         this.properties = new HashMap<String, Object>();
@@ -47,6 +53,10 @@ public class MapResource extends AbstractResource {
                 this.properties.put(entry.getKey(), entry.getValue());
             }
         }
+    }
+
+    public AttributeResource getAttributeResource() {
+        return this.parent;
     }
 
     /**
