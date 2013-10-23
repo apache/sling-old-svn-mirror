@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -188,24 +189,22 @@ public class AttributeResource extends AbstractResource {
                 current = (Map<String, Object>)child;
             }
 
-            return new MapResource(this.getResourceResolver(), this.getPath(), current);
+            return new MapResource(this.getResourceResolver(), this.getPath(), current, this);
         }
         return null;
     }
 
-    private Map<String, Object> convertData() {
-        try {
-            final Object value = attrValue;
+    private volatile Map<String, Object> convertedValue;
 
-            if ( value instanceof TabularData ) {
-                return convertObject((TabularData)value);
-            } else if ( value instanceof CompositeData ) {
-                return convertObject((CompositeData)value);
+    private Map<String, Object> convertData() {
+        if ( convertedValue == null ) {
+            if ( attrValue instanceof TabularData ) {
+                convertedValue = convertObject((TabularData)attrValue);
+            } else if ( attrValue instanceof CompositeData ) {
+                convertedValue = convertObject((CompositeData)attrValue);
             }
-        } catch (final Exception ignore) {
-            // ignore and return null
         }
-        return null;
+        return convertedValue;
     }
 
     private Map<String, Object> convertObject(final TabularData td) {
@@ -292,7 +291,7 @@ public class AttributeResource extends AbstractResource {
         return result;
     }
 
-    public Iterator<Resource> getChildren(String subPath) {
+    public Iterator<Resource> getChildren(final String parentPath, final String subPath) {
         final Map<String, Object> childStructure = this.convertData();
         if ( childStructure != null ) {
             Map<String, Object> current = childStructure;
@@ -309,13 +308,6 @@ public class AttributeResource extends AbstractResource {
                     current = (Map<String, Object>)child;
                 }
             }
-            final Iterator<Map.Entry<String, Object>> removeIter = current.entrySet().iterator();
-            while ( removeIter.hasNext() ) {
-                final Map.Entry<String, Object> c = removeIter.next();
-                if ( !(c.getValue() instanceof Map) ) {
-                    removeIter.remove();
-                }
-            }
             if ( current.size() == 0 ) {
                 return null;
             }
@@ -323,18 +315,33 @@ public class AttributeResource extends AbstractResource {
 
             return new Iterator<Resource>() {
 
+                private Map.Entry<String, Object> next = this.seek();
+
+                private Map.Entry<String, Object> seek() {
+                    while ( childIter.hasNext() ) {
+                        final Map.Entry<String, Object> c = childIter.next();
+                        if ( c.getValue() instanceof Map ) {
+                            return c;
+                        }
+                    }
+                    return null;
+                }
+
                 public void remove() {
                     throw new UnsupportedOperationException("remove");
                 }
 
                 public Resource next() {
-                    final Map.Entry<String, Object> props = childIter.next();
-
-                    return new MapResource(getResourceResolver(), getPath() + '/' + props.getKey(), (Map)props.getValue());
+                    final Map.Entry<String, Object> props = next;
+                    if ( props == null ) {
+                        throw new NoSuchElementException();
+                    }
+                    next = seek();
+                    return new MapResource(getResourceResolver(), parentPath + '/' + props.getKey(), (Map)props.getValue(), AttributeResource.this);
                 }
 
                 public boolean hasNext() {
-                    return childIter.hasNext();
+                    return next != null;
                 }
             };
         }

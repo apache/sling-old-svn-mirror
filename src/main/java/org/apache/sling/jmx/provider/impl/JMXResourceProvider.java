@@ -309,7 +309,7 @@ public class JMXResourceProvider implements ResourceProvider {
                             return new AttributeResource(parent.getResourceResolver(),
                                     parent.getPath() + "/" + attr.getName(),
                                     infoMap.get(attr.getName()),
-                                    attr,
+                                    attr.getValue(),
                                     parentResource);
                         }
 
@@ -318,7 +318,13 @@ public class JMXResourceProvider implements ResourceProvider {
                         }
                     };
                 } else if ( info.pathInfo.startsWith("mbean:attributes/") ) {
-                    final AttributeResource parentResource = (AttributeResource)parent;
+                    final AttributeResource parentResource;
+                    if ( parent instanceof AttributeResource ) {
+                        parentResource = (AttributeResource)parent;
+                    } else {
+                        parentResource = ((MapResource)parent).getAttributeResource();
+                    }
+
                     final String attrPath = info.pathInfo.substring("mbean:attributes/".length());
                     final int pos = attrPath.indexOf('/');
                     final String subPath;
@@ -328,7 +334,7 @@ public class JMXResourceProvider implements ResourceProvider {
                         subPath = attrPath.substring(pos + 1);
                     }
 
-                    return parentResource.getChildren(subPath);
+                    return parentResource.getChildren(parent.getPath(), subPath);
 
                 }
             }
