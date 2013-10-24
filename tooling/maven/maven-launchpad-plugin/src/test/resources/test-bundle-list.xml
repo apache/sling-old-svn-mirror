@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<bundles>
+    <startLevel level="boot">
+        <!-- bootstrap bundles, must allow the installer core to start -->
+        <bundle>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.4</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.log</artifactId>
+            <version>3.0.3-SNAPSHOT</version>
+        </bundle>
+    </startLevel>
+    
+    <startLevel level="0">
+        <bundle>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+        </bundle>
+        <bundle>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.2.2</version>
+        </bundle>
+        <bundle>
+            <groupId>commons-collections</groupId>
+            <artifactId>commons-collections</artifactId>
+            <version>3.2.1</version>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.installer.provider.jcr</artifactId>
+            <version>3.1.6</version>
+            <runModes>test,dev</runModes>
+        </bundle>
+    </startLevel>
+    
+    <startLevel level="5">
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.webconsolebranding</artifactId>
+            <version>1.0.0</version>
+            <runModes>dev</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.extensions.webconsolesecurityprovider</artifactId>
+            <version>1.0.0</version>
+            <runModes>test</runModes>
+        </bundle>
+    </startLevel>
+   
+    <startLevel level="15">
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.jcr.oak.server</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <runModes>oak</runModes>
+        </bundle>
+        <bundle>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>14.0.1</version>
+            <runModes>jackrabbit</runModes>
+        </bundle>
+        <bundle>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>2.0.0</version>
+            <runModes>oak,jackrabbit</runModes>
+        </bundle>
+    </startLevel>
+</bundles>
