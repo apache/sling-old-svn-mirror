@@ -53,6 +53,7 @@ public class BundleListContentProviderTest {
     private LaunchpadContentProvider provider;
     private File resourceProviderRoot;
     private File resourceProviderFile;
+    private File configDirectory;
     
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -82,6 +83,7 @@ public class BundleListContentProviderTest {
             f.createNewFile();
             assertTrue("Expecting temporary config file to have been created: " + f.getAbsolutePath(), f.exists());
         }
+        configDirectory = tempFolder.getRoot();
         
         resourceProviderRoot = new File(tempFolder.getRoot(), "RESOURCE_PROVIDER_ROOT");
         resourceProviderRoot.mkdirs();
@@ -105,7 +107,7 @@ public class BundleListContentProviderTest {
 
             @Override
             File getConfigDirectory() {
-                return tempFolder.getRoot();
+                return configDirectory;
             }
 
             @Override
@@ -186,6 +188,12 @@ public class BundleListContentProviderTest {
     }
     
     @Test
+    public void testNonExistentConfigDirectory() {
+        configDirectory = new File("/NON_EXISTENT_" + System.currentTimeMillis());
+        assertChildren("resources/config");
+    }
+
+    @Test
     public void testBundles0() {
         assertChildren("resources/bundles/0", 
                 "file:/commons-io/0/null", 
@@ -262,4 +270,5 @@ public class BundleListContentProviderTest {
     public void testNullResult() {
         assertNull(provider.getChildren("/FOO/bar"));
     }
+    
 }
