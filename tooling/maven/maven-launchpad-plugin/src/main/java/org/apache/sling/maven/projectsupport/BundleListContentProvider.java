@@ -46,82 +46,100 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 abstract class BundleListContentProvider implements LaunchpadContentProvider {
     
     private final File resourceProviderRoot;
+    private final static List<String> EMPTY_STRING_LIST = Collections.emptyList();
     
     BundleListContentProvider(File resourceProviderRoot) {
         this.resourceProviderRoot = resourceProviderRoot;
     }
-
-    public Iterator<String> getChildren(String path) {
-        if (path.equals(BUNDLE_PATH_PREFIX)) {
-            final Set<String> levels = new HashSet<String>();
-            for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
-                // we treat the boot level as level 1
-                if ( level.getStartLevel() == -1 ) {
-                    levels.add(BUNDLE_PATH_PREFIX + "/1/");
-                } else {
-                    levels.add(BUNDLE_PATH_PREFIX + "/" + level.getLevel() + "/");
-                }
-            }
-            return levels.iterator();
-        } else if (path.equals("resources/corebundles")) {
-            List<String> empty = Collections.emptyList();
-            return empty.iterator();
-        } else if (path.equals(CONFIG_PATH_PREFIX)) {
-            if (getConfigDirectory().exists() && getConfigDirectory().isDirectory()) {
-                File[] configFiles = getConfigDirectory().listFiles(new FileFilter() {
-
-                    public boolean accept(File file) {
-                        return file.isFile();
-                    }
-                });
-
-                List<String> fileNames = new ArrayList<String>();
-                for (File cfgFile : configFiles) {
-                    if (cfgFile.isFile()) {
-                        fileNames.add(CONFIG_PATH_PREFIX + "/" + cfgFile.getName());
-                    }
-                }
-
-                return fileNames.iterator();
-
+    
+    private Iterator<String> handleBundlePathRoot(String path) {
+        final Set<String> levels = new HashSet<String>();
+        for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
+            // we treat the boot level as level 1
+            if ( level.getStartLevel() == -1 ) {
+                levels.add(BUNDLE_PATH_PREFIX + "/1/");
             } else {
-                List<String> empty = Collections.emptyList();
-                return empty.iterator();
+                levels.add(BUNDLE_PATH_PREFIX + "/" + level.getLevel() + "/");
             }
-        } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
-            final String startLevelInfo = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
-            try {
-                final int startLevel = Integer.parseInt(startLevelInfo);
+        }
+        return levels.iterator();
+    }
+    
+    private Iterator<String> handleConfigPath() {
+        if (getConfigDirectory().exists() && getConfigDirectory().isDirectory()) {
+            File[] configFiles = getConfigDirectory().listFiles(new FileFilter() {
 
-                final List<String> bundles = new ArrayList<String>();
-                for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
-                    if (level.getStartLevel() == startLevel || (startLevel == 1 && level.getStartLevel() == -1)) {
-                        for (final Bundle bundle : level.getBundles()) {
-                            final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);
-                            try {
-                                final Artifact artifact = getArtifact(d);
-                                bundles.add(artifact.getFile().toURI().toURL().toExternalForm());
-                            } catch (Exception e) {
-                                getLog().error("Unable to resolve artifact ", e);
-                            }
+                public boolean accept(File file) {
+                    return file.isFile();
+                }
+            });
+
+            List<String> fileNames = new ArrayList<String>();
+            for (File cfgFile : configFiles) {
+                if (cfgFile.isFile()) {
+                    fileNames.add(CONFIG_PATH_PREFIX + "/" + cfgFile.getName());
+                }
+            }
+
+            return fileNames.iterator();
+
+        } else {
+            return EMPTY_STRING_LIST.iterator();
+        }
+    }
+    
+    private Iterator<String> handleBundlePathFolder(String path) {
+        final String startLevelInfo = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
+        try {
+            final int startLevel = Integer.parseInt(startLevelInfo);
+
+            final List<String> bundles = new ArrayList<String>();
+            for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
+                if (level.getStartLevel() == startLevel || (startLevel == 1 && level.getStartLevel() == -1)) {
+                    for (final Bundle bundle : level.getBundles()) {
+                        final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);
+                        try {
+                            final Artifact artifact = getArtifact(d);
+                            bundles.add(artifact.getFile().toURI().toURL().toExternalForm());
+                        } catch (Exception e) {
+                            getLog().error("Unable to resolve artifact ", e);
                         }
                     }
                 }
-                return bundles.iterator();
-
-            } catch (NumberFormatException e) {
-                // we ignore this
             }
+            return bundles.iterator();
+
+        } catch (NumberFormatException e) {
+            // we ignore this
+        }
+        return null;
+    }
+    
+    private Iterator<String> handleResourcesRoot() {
+        final Set<String> subDirs = new HashSet<String>();
+        subDirs.add(BUNDLE_PATH_PREFIX);
+        subDirs.add(CONFIG_PATH_PREFIX);
+        subDirs.add("resources/corebundles");
+        return subDirs.iterator();
+    }
+
+    public Iterator<String> getChildren(String path) {
+        Iterator<String> result = null;
+        if (path.equals(BUNDLE_PATH_PREFIX)) {
+            result = handleBundlePathRoot(path);
+        } else if (path.equals("resources/corebundles")) {
+            result = EMPTY_STRING_LIST.iterator();
+        } else if (path.equals(CONFIG_PATH_PREFIX)) {
+            result = handleConfigPath();
+        } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
+            result = handleBundlePathFolder(path);
         } else if (path.equals("resources") ) {
-            final Set<String> subDirs = new HashSet<String>();
-            subDirs.add(BUNDLE_PATH_PREFIX);
-            subDirs.add(CONFIG_PATH_PREFIX);
-            subDirs.add("resources/corebundles");
-            return subDirs.iterator();
+            result = handleResourcesRoot();
+        } else {
+            getLog().warn("un-handlable " + getClass().getSimpleName() + " path: " + path);
         }
 
-        getLog().warn("un-handlable path " + path);
-        return null;
+        return result;
     }
 
     public URL getResource(String path) {
