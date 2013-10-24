@@ -19,33 +19,23 @@ package org.apache.sling.maven.projectsupport;
 import static org.apache.felix.framework.util.FelixConstants.LOG_LEVEL_PROP;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.felix.framework.Logger;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.shared.filtering.MavenFilteringException;
 import org.apache.maven.shared.filtering.PropertyUtils;
 import org.apache.sling.launchpad.api.LaunchpadContentProvider;
 import org.apache.sling.launchpad.base.impl.Sling;
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.apache.sling.launchpad.base.shared.SharedConstants;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
-import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
 import org.osgi.framework.BundleException;
 
 public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleListMojo implements Notifiable {
@@ -103,129 +93,26 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
      */
     private File resourceProviderRoot;
 
-    private LaunchpadContentProvider resourceProvider = new LaunchpadContentProvider() {
+    private LaunchpadContentProvider resourceProvider = new BundleListContentProvider(resourceProviderRoot) {
 
-        public Iterator<String> getChildren(String path) {
-            if (path.equals(BUNDLE_PATH_PREFIX)) {
-                final Set<String> levels = new HashSet<String>();
-                for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
-                    // we treat the boot level as level 1
-                    if ( level.getStartLevel() == -1 ) {
-                        levels.add(BUNDLE_PATH_PREFIX + "/1/");
-                    } else {
-                        levels.add(BUNDLE_PATH_PREFIX + "/" + level.getLevel() + "/");
-                    }
-                }
-                return levels.iterator();
-            } else if (path.equals("resources/corebundles")) {
-                List<String> empty = Collections.emptyList();
-                return empty.iterator();
-            } else if (path.equals(CONFIG_PATH_PREFIX)) {
-                if (getConfigDirectory().exists() && getConfigDirectory().isDirectory()) {
-                    File[] configFiles = getConfigDirectory().listFiles(new FileFilter() {
-
-                        public boolean accept(File file) {
-                            return file.isFile();
-                        }
-                    });
-
-                    List<String> fileNames = new ArrayList<String>();
-                    for (File cfgFile : configFiles) {
-                        if (cfgFile.isFile()) {
-                            fileNames.add(CONFIG_PATH_PREFIX + "/" + cfgFile.getName());
-                        }
-                    }
-
-                    return fileNames.iterator();
-
-                } else {
-                    List<String> empty = Collections.emptyList();
-                    return empty.iterator();
-                }
-            } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
-                final String startLevelInfo = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
-                try {
-                    final int startLevel = Integer.parseInt(startLevelInfo);
-
-                    final List<String> bundles = new ArrayList<String>();
-                    for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
-                        if (level.getStartLevel() == startLevel || (startLevel == 1 && level.getStartLevel() == -1)) {
-                            for (final Bundle bundle : level.getBundles()) {
-                                final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);
-                                try {
-                                    final Artifact artifact = getArtifact(d);
-                                    bundles.add(artifact.getFile().toURI().toURL().toExternalForm());
-                                } catch (Exception e) {
-                                    getLog().error("Unable to resolve artifact ", e);
-                                }
-                            }
-                        }
-                    }
-                    return bundles.iterator();
-
-                } catch (NumberFormatException e) {
-                    // we ignore this
-                }
-            } else if (path.equals("resources") ) {
-                final Set<String> subDirs = new HashSet<String>();
-                subDirs.add(BUNDLE_PATH_PREFIX);
-                subDirs.add(CONFIG_PATH_PREFIX);
-                subDirs.add("resources/corebundles");
-                return subDirs.iterator();
-            }
-
-            getLog().warn("un-handlable path " + path);
-            return null;
+        @Override
+        BundleList getInitializedBundleList() {
+            return AbstractLaunchpadStartingMojo.this.getInitializedBundleList();
         }
 
-        public URL getResource(String path) {
-            if (path.startsWith(CONFIG_PATH_PREFIX)) {
-                File configFile = new File(getConfigDirectory(), path.substring(CONFIG_PATH_PREFIX.length() + 1));
-                if (configFile.exists()) {
-                    try {
-                        return configFile.toURI().toURL();
-                    } catch (MalformedURLException e) {
-                        // ignore this one
-                    }
-                }
-            }
-
-            File resourceFile = new File(resourceProviderRoot, path);
-            if (resourceFile.exists()) {
-                try {
-                    return resourceFile.toURI().toURL();
-                } catch (MalformedURLException e) {
-                    getLog().error("Unable to create URL for file", e);
-                    return null;
-                }
-            } else {
-                URL fromClasspath = getClass().getResource("/" + path);
-                if (fromClasspath != null) {
-                    return fromClasspath;
-                }
-
-                try {
-                    return new URL(path);
-                } catch (MalformedURLException e) {
-                    return null;
-                }
-            }
-
+        @Override
+        File getConfigDirectory() {
+            return AbstractLaunchpadStartingMojo.this.getConfigDirectory();
         }
-
-        public InputStream getResourceAsStream(String path) {
-            URL res = this.getResource(path);
-            if (res != null) {
-                try {
-                    return res.openStream();
-                } catch (IOException ioe) {
-                    // ignore this one
-                }
-            }
-
-            // no resource
-            return null;
-
+        
+        @Override
+        Artifact getArtifact(ArtifactDefinition def) throws MojoExecutionException {
+            return AbstractLaunchpadStartingMojo.this.getArtifact(def);
+        }
+        
+        @Override
+        Log getLog() {
+            return AbstractLaunchpadStartingMojo.this.getLog();
         }
     };
 
