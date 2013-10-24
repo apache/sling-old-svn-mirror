@@ -95,22 +95,6 @@
                 </executions>
             </plugin>            
             <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>${basedir}</directory>
-                            <includes>
-                                <include>derby.log</include>
-                            </includes>
-                        </fileset>
-                        <fileset>
-                            <directory>jackrabbit</directory>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -126,9 +110,9 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>oak-server-default-NodeStore</include>
                                 <include>sling</include>
                                 <include>jackrabbit</include>
+                                <include>oak</include>
                                 <include>derby.log</include>
                             </includes>
                         </fileset>

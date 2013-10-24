@@ -17,6 +17,7 @@
  */
 package org.apache.sling.oak.server;
 
+import java.io.File;
 import java.util.Hashtable;
 
 import org.osgi.framework.BundleActivator;
@@ -64,10 +65,20 @@ public class Activator implements BundleActivator {
             return;
         }
         
-        // Else create a default NodeStore config
+        // else setup Oak data folder
+        final String SLING_HOME = "sling.home";
+        final String oakRepoPath = "oak/repository";
+        final String slingHome = context.getProperty(SLING_HOME);
+        final File repositoryHome = slingHome == null ? new File(oakRepoPath) : new File(slingHome, oakRepoPath);
+        repositoryHome.mkdirs();
+        if(!repositoryHome.isDirectory()) {
+            throw new IllegalStateException("Cannot create or access " + repositoryHome.getAbsolutePath());
+        }
+
+        // and create a default NodeStore config
         final Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put("name", "Default NodeStore config from the oak-server bundle");
-        props.put("repository.home", "oak-server-default-NodeStore");
+        props.put("name", "Default NodeStore config created by " + getClass().getName());
+        props.put("repository.home", repositoryHome.getAbsolutePath());
         Configuration config = ca.getConfiguration(nodeStoreServicePid);
         config.setBundleLocation(null);
         config.update(props);
