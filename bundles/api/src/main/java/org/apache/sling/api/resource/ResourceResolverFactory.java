@@ -73,6 +73,23 @@ public interface ResourceResolverFactory {
     String USER_IMPERSONATION = "user.impersonation";
 
     /**
+     * Name of the authentication information property used to indicate that the
+     * identity of the user indicated by the {@link #USER} property has already
+     * been validated by other means such as OAuth2, OpenID or similar SSO
+     * functionality. As a consequence password-less access to a
+     * {@link ResourceResolver} should be granted.
+     * <p>
+     * The non-empty string value of this property identifies the party having
+     * validated the user's identity. It may be used by implementations of this
+     * and the {@link ResourceProviderFactory} interfaces in log messages.
+     * <p>
+     * The type of this property, if present, is <code>String</code>.
+     *
+     * @since 2.4 (bundle version 2.5.0)
+     */
+    String IDENTIFIED = "user.identified";
+
+    /**
      * Name of the authentication information property providing the Subservice
      * Name for the service requesting a resource resolver.
      * <p>
