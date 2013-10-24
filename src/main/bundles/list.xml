@@ -17,6 +17,8 @@
     specific language governing permissions and limitations
     under the License.
 -->
+
+<!-- Additional bundles for the Sling launchpad tests --> 
 <bundles>
     <startLevel level="1">
         <bundle>
@@ -45,6 +47,11 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad.test-services</artifactId>
             <version>2.0.9-SNAPSHOT</version>
+            <!-- 
+                Add some run modes to verify that one of 
+                these run modes is active. 
+             -->
+            <runModes>jackrabbit,oak</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
@@ -56,6 +63,16 @@
             <artifactId>org.apache.sling.launchpad.test-services-war</artifactId>
             <version>2.0.8</version>
             <type>war</type>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.testing.samples.failingtests</artifactId>
+            <version>1.0.6</version>
+            <!-- 
+                Used to verify that a bundle with an inactive run mode
+                is not installed
+             -->
+            <runModes>failingtests</runModes>
         </bundle>
     </startLevel>
 </bundles>
