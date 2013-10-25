@@ -40,8 +40,7 @@ public class InactiveRunModeTest extends HttpTestBase {
      *  only if its specific run mode is active.
      */
     public void testBundleAbsent() throws IOException {
-        // TODO ignored due to SLING-3205
-        // assertBundlePresent("org.apache.sling.testing.samples.failingtests", false);
+        assertBundlePresent("org.apache.sling.testing.samples.failingtests", false);
     }
     
 }
