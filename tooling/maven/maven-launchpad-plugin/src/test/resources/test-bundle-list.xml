@@ -51,6 +51,11 @@
             <version>1.0.0</version>
             <runModes>test</runModes>
         </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>five.norunmode</artifactId>
+            <version>1.0.0</version>
+        </bundle>
     </startLevel>
    
     <startLevel level="15">
@@ -71,6 +76,11 @@
             <artifactId>jsr305</artifactId>
             <version>2.0.0</version>
             <runModes>oak,jackrabbit</runModes>
+        </bundle>
+        <bundle>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>fifteen.norunmode</artifactId>
+            <version>1.0.0</version>
         </bundle>
     </startLevel>
 </bundles>
