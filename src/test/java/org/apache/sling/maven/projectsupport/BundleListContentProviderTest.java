@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.maven.artifact.Artifact;
@@ -48,7 +49,7 @@ public class BundleListContentProviderTest {
     private static BundleList bundleList;
     
     public static final String TEST_BUNDLE_LIST = "test-bundle-list.xml";
-    public static final int BUNDLES_IN_TEST_BUNDLE_LIST = 11;
+    public static final int BUNDLES_IN_TEST_BUNDLE_LIST = 13;
     
     private LaunchpadContentProvider provider;
     private File resourceProviderRoot;
@@ -114,7 +115,7 @@ public class BundleListContentProviderTest {
             Artifact getArtifact(ArtifactDefinition def) throws MojoExecutionException {
                 final Artifact a = Mockito.mock(Artifact.class);
                 final String fakeName = new StringBuilder()
-                .append("/")
+                .append("/FAKE_BUNDLE/")
                 .append(def.getArtifactId())
                 .append("/")
                 .append(def.getStartLevel())
@@ -138,14 +139,17 @@ public class BundleListContentProviderTest {
         if(expected.length == 0) {
            assertTrue("Expecting no children for " + path, it == null || !it.hasNext()); 
         } else {
+            assertNotNull("Expecting non-null iterator for " + path, it);
             while(it.hasNext()) {
                 kids.add(it.next());
             }
             for(String exp : expected) {
-                assertTrue("Expecting " + exp + " in children of " + path + " (result=" + kids + ")", kids.contains(exp));
+                assertTrue("Expecting " + exp + " in children of " + path + " (result=" + kids + ")", 
+                        kids.contains(exp));
             }
         }
-        assertEquals("Expecting the correct number of children for " + path, expected.length, kids.size());
+        assertEquals("Expecting the correct number of children for " + path + " (result=" + kids + ")", 
+                expected.length, kids.size());
     }
     
     @Test
@@ -162,16 +166,53 @@ public class BundleListContentProviderTest {
         assertChildren("resources", 
                 "resources/bundles", 
                 "resources/corebundles", 
-                "resources/config");
+                "resources/config",
+                "resources/install",
+                "resources/install.dev", 
+                "resources/install.test", 
+                "resources/install.oak", 
+                "resources/install.jackrabbit");
     }
     
     @Test
     public void testBundles() {
         assertChildren("resources/bundles", 
-                "resources/bundles/0/", 
-                "resources/bundles/1/", 
-                "resources/bundles/5/", 
-                "resources/bundles/15/"); 
+                "resources/bundles/1/"); 
+    }
+    
+    @Test
+    public void testInstall() {
+        assertChildren("resources/install",
+                "resources/install/0", 
+                "resources/install/1", 
+                "resources/install/5", 
+                "resources/install/15"); 
+    }
+    
+    @Test
+    public void testInstallDev() {
+        assertChildren("resources/install.dev",
+                "resources/install.dev/0", 
+                "resources/install.dev/5");
+    }
+    
+    @Test
+    public void testInstallTest() {
+        assertChildren("resources/install.test",
+                "resources/install.test/0", 
+                "resources/install.test/5");
+    }
+    
+    @Test
+    public void testInstallOak() {
+        assertChildren("resources/install.oak",
+                "resources/install.oak/15");
+    }
+    
+    @Test
+    public void testInstallJackrabbit() {
+        assertChildren("resources/install.jackrabbit",
+                "resources/install.jackrabbit/15");
     }
     
     @Test
@@ -194,34 +235,68 @@ public class BundleListContentProviderTest {
     }
 
     @Test
-    public void testBundles0() {
-        assertChildren("resources/bundles/0", 
-                "file:/commons-io/0/null", 
-                "file:/commons-fileupload/0/null", 
-                "file:/commons-collections/0/null", 
-                "file:/org.apache.sling.installer.provider.jcr/0/test,dev"); 
+    public void testIgnoredNonBootstrapBundles() {
+        // All these start levels do not provide resources/bundles anymore - moved to resources/install
+        for(int i=0; i <= 30; i++) {
+            if(i == 1) {
+                continue;
+            }
+            final String path ="resources/bundles/" + i;
+            assertNull("Expecting no resources under " + path, provider.getChildren(path));
+        }
     }
     
     @Test
-    public void testBundles1() {
+    public void testInstall0() {
+        assertChildren("resources/install/0", 
+                "file:/FAKE_BUNDLE/commons-io/0/null", 
+                "file:/FAKE_BUNDLE/commons-fileupload/0/null", 
+                "file:/FAKE_BUNDLE/commons-collections/0/null"); 
+    }
+    
+    @Test
+    public void testBootstrapBundles() {
         assertChildren("resources/bundles/1", 
-                "file:/slf4j-api/1/null", 
-                "file:/org.apache.sling.commons.log/1/null"); 
+                "file:/FAKE_BUNDLE/slf4j-api/-1/null", 
+                "file:/FAKE_BUNDLE/org.apache.sling.commons.log/-1/null"); 
     }
     
     @Test
-    public void testBundles5() {
-        assertChildren("resources/bundles/5", 
-                "file:/org.apache.sling.extensions.webconsolebranding/5/dev", 
-                "file:/org.apache.sling.extensions.webconsolesecurityprovider/5/test"); 
+    public void testInstall5() {
+        assertChildren("resources/install/5", 
+                "file:/FAKE_BUNDLE/five.norunmode/5/null"); 
     }
     
     @Test
-    public void testBundles15() {
-        assertChildren("resources/bundles/15", 
-                "file:/org.apache.sling.jcr.oak.server/15/oak", 
-                "file:/guava/15/jackrabbit", 
-                "file:/jsr305/15/oak,jackrabbit"); 
+    public void testInstall5Dev() {
+        assertChildren("resources/install.dev/5", 
+                "file:/FAKE_BUNDLE/org.apache.sling.extensions.webconsolebranding/5/dev"); 
+    }
+    
+    @Test
+    public void testInstall5Test() {
+        assertChildren("resources/install.test/5", 
+                "file:/FAKE_BUNDLE/org.apache.sling.extensions.webconsolesecurityprovider/5/test");
+    }
+    
+    @Test
+    public void testInstall15() {
+        assertChildren("resources/install/15",
+                "file:/FAKE_BUNDLE/fifteen.norunmode/15/null"); 
+    }
+    
+    @Test
+    public void testInstall15Oak() {
+        assertChildren("resources/install.oak/15", 
+                "file:/FAKE_BUNDLE/org.apache.sling.jcr.oak.server/15/oak",
+                "file:/FAKE_BUNDLE/jsr305/15/oak,jackrabbit"); 
+    }
+    
+    @Test
+    public void testInstall15Jackrabbit() {
+        assertChildren("resources/install.jackrabbit/15", 
+                "file:/FAKE_BUNDLE/guava/15/jackrabbit", 
+                "file:/FAKE_BUNDLE/jsr305/15/oak,jackrabbit"); 
     }
     
     @Test
@@ -269,6 +344,41 @@ public class BundleListContentProviderTest {
     @Test
     public void testNullResult() {
         assertNull(provider.getChildren("/FOO/bar"));
+    }
+    
+    @Test
+    public void testAllBundlesFound() {
+        final List<String> allResources = new LinkedList<String>();
+        addRecursively(allResources, "resources");
+        final List<String> bundles = new LinkedList<String>();
+        for(String r : allResources) {
+            if(r.contains("FAKE_BUNDLE")) {
+                bundles.add(r);
+            }
+        }
+        
+        // Bundles that have two run modes appear in two folders, we have two of those
+        // with two run modes each
+        final int expected = BUNDLES_IN_TEST_BUNDLE_LIST + 2;
+        assertEquals("Expecting the exact number of test bundles to be found", expected, bundles.size());
+    }
+    
+    @Test
+    public void testFile() {
+        assertChildren("file:/something");
+    }
+                
+    private void addRecursively(List<String> resources, String path) {
+        if(path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        resources.add(path);
+        final Iterator<String> it = provider.getChildren(path);
+        if(it != null) {
+            while(it.hasNext()) {
+                addRecursively(resources, it.next());
+            }
+        }
     }
     
 }

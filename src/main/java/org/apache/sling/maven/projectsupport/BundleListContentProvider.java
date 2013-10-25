@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -45,6 +46,10 @@ import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
  */
 abstract class BundleListContentProvider implements LaunchpadContentProvider {
     
+    public static final String INSTALL_PATH_PREFIX = "resources/install";
+    public static final int BOOTSTRAP_DEF_START_LEVEL = -1;
+    public static final int ACTUAL_BOOTSTRAP_START_LEVEL = 1;
+
     private final File resourceProviderRoot;
     private final static List<String> EMPTY_STRING_LIST = Collections.emptyList();
     
@@ -55,11 +60,10 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
     private Iterator<String> handleBundlePathRoot(String path) {
         final Set<String> levels = new HashSet<String>();
         for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
-            // we treat the boot level as level 1
-            if ( level.getStartLevel() == -1 ) {
-                levels.add(BUNDLE_PATH_PREFIX + "/1/");
-            } else {
-                levels.add(BUNDLE_PATH_PREFIX + "/" + level.getLevel() + "/");
+            // Include only bootstrap bundles here, with start level 1.
+            // Other bundles go under the install folder, to support run modes
+            if( level.getStartLevel() == BOOTSTRAP_DEF_START_LEVEL) {
+                levels.add(BUNDLE_PATH_PREFIX + "/" + ACTUAL_BOOTSTRAP_START_LEVEL + "/");
             }
         }
         return levels.iterator();
@@ -88,31 +92,53 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
         }
     }
     
-    private Iterator<String> handleBundlePathFolder(String path) {
+    private Iterator<String> handleBundlesSubfolder(String path) {
+        Iterator<String> result = null;
         final String startLevelInfo = path.substring(BUNDLE_PATH_PREFIX.length() + 1);
         try {
             final int startLevel = Integer.parseInt(startLevelInfo);
+            
+            // To be consistent with handleBundlePathRoot, consider only level 1 which
+            // is assigned to bootstrap bundles
+            if(startLevel == ACTUAL_BOOTSTRAP_START_LEVEL) {
+                final List<String> bundles = new ArrayList<String>();
+                addBundles(bundles, ACTUAL_BOOTSTRAP_START_LEVEL, null);
+                addBundles(bundles, BOOTSTRAP_DEF_START_LEVEL, null);
+                result = bundles.iterator();
+            }
 
-            final List<String> bundles = new ArrayList<String>();
-            for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
-                if (level.getStartLevel() == startLevel || (startLevel == 1 && level.getStartLevel() == -1)) {
-                    for (final Bundle bundle : level.getBundles()) {
-                        final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);
-                        try {
-                            final Artifact artifact = getArtifact(d);
-                            bundles.add(artifact.getFile().toURI().toURL().toExternalForm());
-                        } catch (Exception e) {
-                            getLog().error("Unable to resolve artifact ", e);
-                        }
+        } catch (NumberFormatException e) {
+            getLog().warn("Invalid start level " + startLevelInfo + " in path " + path);
+        }
+        
+        return result;
+    }
+    
+    private void addBundles(Collection<String> bundles, int startLevel, String runMode) {
+        for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
+            if(level.getStartLevel() == startLevel) {
+                for (final Bundle bundle : level.getBundles()) {
+                    if(!runModeMatches(bundle, runMode)) {
+                        continue;
+                    }
+                    final ArtifactDefinition d = new ArtifactDefinition(bundle, startLevel);
+                    try {
+                        final Artifact artifact = getArtifact(d);
+                        bundles.add(artifact.getFile().toURI().toURL().toExternalForm());
+                    } catch (Exception e) {
+                        getLog().error("Unable to resolve artifact ", e);
                     }
                 }
             }
-            return bundles.iterator();
-
-        } catch (NumberFormatException e) {
-            // we ignore this
         }
-        return null;
+    }
+    
+    private boolean runModeMatches(Bundle b, String runMode) {
+        if(runMode == null || runMode.length() == 0) {
+            return b.getRunModes() == null || b.getRunModes().length() == 0;
+        } else {
+            return b.getRunModes() != null && b.getRunModes().contains(runMode);
+        }
     }
     
     private Iterator<String> handleResourcesRoot() {
@@ -120,7 +146,80 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
         subDirs.add(BUNDLE_PATH_PREFIX);
         subDirs.add(CONFIG_PATH_PREFIX);
         subDirs.add("resources/corebundles");
+        subDirs.add(INSTALL_PATH_PREFIX);
+        
+        // Compute the set of run modes in our bundles
+        final Set<String> runModes = new HashSet<String>();
+        for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
+            for(Bundle bundle : level.getBundles()) {
+                final String modes = bundle.getRunModes();
+                if(modes != null && modes.length() > 0) {
+                    for(String m : modes.split(",")) {
+                        runModes.add("." + m);
+                    }
+                }
+            }
+        }
+        
+        // Add one install subdir per run mode
+        for(String m : runModes) {
+            subDirs.add(INSTALL_PATH_PREFIX + m);
+        }
         return subDirs.iterator();
+    }
+    
+    /** Add one folder per child, using given path as prefix, for start
+     *  levels which actually provide bundles for the given run mode.
+     */
+    private void addStartLevelSubdirs(Collection<String> children, String path, String runMode) {
+        for (final StartLevel level : getInitializedBundleList().getStartLevels()) {
+            final List<String> bundles = new ArrayList<String>();
+            addBundles(bundles, level.getStartLevel(), runMode);
+            if(!bundles.isEmpty()) {
+                int folderLevel = level.getStartLevel();
+                if(folderLevel== BOOTSTRAP_DEF_START_LEVEL) {
+                    folderLevel = ACTUAL_BOOTSTRAP_START_LEVEL;
+                }
+                children.add(path + "/" + folderLevel);
+            }
+        }
+    }
+
+    private Iterator<String> handleInstallPath(String path) {
+        // Path is like
+        // bundles/install.runMode/12
+        // or a subset of that.
+        // Extract optional run mode and start level from that
+        if(path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        final String [] parts = path.substring(INSTALL_PATH_PREFIX.length()).split("/");
+        if (parts.length > 2){
+            throw new IllegalStateException("Cannot parse path " + path);
+        }
+        final String runMode = parts[0].length() == 0 ? null : parts[0].substring(1);
+        final String startLevelInfo = parts.length > 1 ? parts[1] : null; 
+        Set<String> result = new HashSet<String>();
+        
+        if(runMode == null && startLevelInfo == null) {
+            // Root folder: add one subdir per start level that provides bundles
+            addStartLevelSubdirs(result, INSTALL_PATH_PREFIX, null);
+            
+        } else if(startLevelInfo == null) {
+            // The root of a run mode folder - one subdir per start
+            // level which actually provides bundles
+            addStartLevelSubdirs(result, path, runMode);
+            
+        } else {
+            // A folder that contains bundles
+            try {
+                addBundles(result, Integer.parseInt(startLevelInfo), runMode);
+            } catch (NumberFormatException e) {
+                getLog().warn("Invalid start level info " + startLevelInfo + " in path " + path);
+            }
+        }
+        
+        return result.iterator();
     }
 
     public Iterator<String> getChildren(String path) {
@@ -132,11 +231,17 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
         } else if (path.equals(CONFIG_PATH_PREFIX)) {
             result = handleConfigPath();
         } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
-            result = handleBundlePathFolder(path);
+            result = handleBundlesSubfolder(path);
+        } else if (path.startsWith(INSTALL_PATH_PREFIX)) {
+            result = handleInstallPath(path);
         } else if (path.equals("resources") ) {
             result = handleResourcesRoot();
+        } else if (path.startsWith("file:") ) {
+            // Client looks for files under a file - we have none,
+            // as our file URLs point to Maven artifacts
+            result = EMPTY_STRING_LIST.iterator();
         } else {
-            getLog().warn("un-handlable " + getClass().getSimpleName() + " path: " + path);
+            getLog().warn("BundleListContentProvider cannot handle path: " + path);
         }
 
         return result;
