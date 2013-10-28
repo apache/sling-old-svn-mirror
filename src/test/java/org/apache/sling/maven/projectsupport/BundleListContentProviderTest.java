@@ -42,7 +42,10 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 /** Test the BundleListContentProvider */
 public class BundleListContentProviderTest {
@@ -55,6 +58,7 @@ public class BundleListContentProviderTest {
     private File resourceProviderRoot;
     private File resourceProviderFile;
     private File configDirectory;
+    private int logWarningsCount;
     
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -99,6 +103,18 @@ public class BundleListContentProviderTest {
     @Before
     public void setupProvider() {
         final Log log = Mockito.mock(Log.class);
+        final Answer<Void> countWarningAnswers = new Answer<Void>() {
+
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                logWarningsCount++;
+                return null;
+            }
+            
+        };
+        Mockito.doAnswer(countWarningAnswers).when(log).warn(Matchers.any(String.class));
+        Mockito.doAnswer(countWarningAnswers).when(log).warn(Matchers.any(Throwable.class));
+        Mockito.doAnswer(countWarningAnswers).when(log).warn(Matchers.any(String.class), Matchers.any(Throwable.class));
+        
         provider = new BundleListContentProvider(resourceProviderRoot) {
 
             @Override
@@ -226,6 +242,18 @@ public class BundleListContentProviderTest {
                 "resources/config/file1.txt", 
                 "resources/config/file2.cfg", 
                 "resources/config/someFile.properties"); 
+    }
+    
+    @Test
+    public void testConfigFile() {
+        assertChildren("resources/config/file1.txt");
+        assertEquals("Expecting no warnings", 0, logWarningsCount);
+    }
+    
+    @Test
+    public void testConfigSubpath() {
+        assertChildren("resources/config/someFolder/someSubFolder");
+        assertEquals("Expecting a warning", 1, logWarningsCount);
     }
     
     @Test
