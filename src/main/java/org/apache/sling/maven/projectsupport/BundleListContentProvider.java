@@ -221,6 +221,21 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
         
         return result.iterator();
     }
+    
+    private Iterator<String> handleConfigSubpath(String path) {
+        // We don't handle config subpaths for now, but do not 
+        // warn if we're asked for the children of a file, just
+        // return empty in that case
+        final File f = getConfigFile(path);
+        if(!f.exists()) {
+            getLog().warn("BundleListContentProvider cannot get children of config path: " + path);
+        }
+        return EMPTY_STRING_LIST.iterator();
+    }
+    
+    private File getConfigFile(String path) {
+        return new File(getConfigDirectory(), path.substring(CONFIG_PATH_PREFIX.length() + 1));
+    }
 
     public Iterator<String> getChildren(String path) {
         Iterator<String> result = null;
@@ -230,6 +245,8 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
             result = EMPTY_STRING_LIST.iterator();
         } else if (path.equals(CONFIG_PATH_PREFIX)) {
             result = handleConfigPath();
+        } else if (path.startsWith(CONFIG_PATH_PREFIX)) {
+            result = handleConfigSubpath(path);
         } else if (path.startsWith(BUNDLE_PATH_PREFIX)) {
             result = handleBundlesSubfolder(path);
         } else if (path.startsWith(INSTALL_PATH_PREFIX)) {
@@ -241,7 +258,7 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
             // as our file URLs point to Maven artifacts
             result = EMPTY_STRING_LIST.iterator();
         } else {
-            getLog().warn("BundleListContentProvider cannot handle path: " + path);
+            getLog().warn("BundleListContentProvider cannot get children of path: " + path);
         }
 
         return result;
@@ -249,7 +266,7 @@ abstract class BundleListContentProvider implements LaunchpadContentProvider {
 
     public URL getResource(String path) {
         if (path.startsWith(CONFIG_PATH_PREFIX)) {
-            File configFile = new File(getConfigDirectory(), path.substring(CONFIG_PATH_PREFIX.length() + 1));
+            final File configFile = getConfigFile(path);
             if (configFile.exists()) {
                 try {
                     return configFile.toURI().toURL();
