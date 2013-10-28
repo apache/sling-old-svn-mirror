@@ -29,6 +29,7 @@ import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -44,6 +45,16 @@ import org.eclipse.wst.server.core.util.ProjectModuleFactoryDelegate;
 public class SlingBundleModuleFactory extends ProjectModuleFactoryDelegate {
 
     static final String SLING_BUNDLE_FACET_ID = "sling.bundle";
+	private static final IPath[] SETTINGS_PATHS = new IPath[] {new Path(".settings")};
+    
+    @Override
+    protected IPath[] getListenerPaths() {
+    	// returning the .settings path instead of null (as done by the parent)
+    	// results in clearing the cache on changes to .settings - which in turn
+    	// results in re-evaluating facet changes.
+    	// we could be more specific here but .settings changes are infrequent anyway.
+    	return SETTINGS_PATHS;
+    }
 
     @Override
     public ModuleDelegate getModuleDelegate(IModule module) {

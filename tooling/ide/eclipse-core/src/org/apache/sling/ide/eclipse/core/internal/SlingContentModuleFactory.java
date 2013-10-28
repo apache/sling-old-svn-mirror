@@ -12,6 +12,7 @@ import org.eclipse.core.resources.IResourceVisitor;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.wst.common.project.facet.core.IFacetedProject;
 import org.eclipse.wst.common.project.facet.core.IProjectFacetVersion;
@@ -26,6 +27,16 @@ import org.eclipse.wst.server.core.util.ProjectModuleFactoryDelegate;
 public class SlingContentModuleFactory extends ProjectModuleFactoryDelegate {
 
     static final String SLING_CONTENT_FACET_ID = "sling.content";
+	private static final IPath[] SETTINGS_PATHS = new IPath[] {new Path(".settings")};
+    
+    @Override
+    protected IPath[] getListenerPaths() {
+    	// returning the .settings path instead of null (as done by the parent)
+    	// results in clearing the cache on changes to .settings - which in turn
+    	// results in re-evaluating facet changes.
+    	// we could be more specific here but .settings changes are infrequent anyway.
+    	return SETTINGS_PATHS;
+    }
 
     @Override
     public ModuleDelegate getModuleDelegate(IModule module) {
