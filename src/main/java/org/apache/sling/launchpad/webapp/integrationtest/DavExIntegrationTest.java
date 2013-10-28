@@ -45,7 +45,7 @@ public class DavExIntegrationTest extends HttpTestBase {
 
     public void testDescriptor() throws Exception {
         assertEquals("2.0", repository.getDescriptor(Repository.SPEC_VERSION_DESC));
-        assertEquals("Jackrabbit", repository.getDescriptor(Repository.REP_NAME_DESC));
+        assertTrue(repository.getDescriptor(Repository.REP_NAME_DESC).contains("Jackrabbit"));
     }
 
     public void testReadNode() throws Exception {
