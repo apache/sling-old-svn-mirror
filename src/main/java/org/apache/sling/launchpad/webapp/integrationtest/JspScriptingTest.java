@@ -17,6 +17,8 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
 
 /** Test JSP scripting
  *  TODO this class can be generalized to be used for any scripting language,
@@ -27,6 +29,9 @@ public class JspScriptingTest extends JspTestBase {
     private String testRootUrl;
     private TestNode rtNode;
     private TestNode unstructuredNode;
+    
+    public static final int CHECK_CONTENT_TIMEOUT_SECONDS = 5;
+    public static final int CHECK_CONTENT_INTERVAL_MSEC = 500;
 
     @Override
     protected void setUp() throws Exception {
@@ -108,17 +113,21 @@ public class JspScriptingTest extends JspTestBase {
             final String [] scripts = { "jsp1.jsp", "jsp2.jsp" };
             for(String script : scripts) {
                 toDelete = uploadTestScript(unstructuredNode.scriptPath, script, "html.jsp");
-                String content = null;
                 final String expected = "text from " + script + ":" + unstructuredNode.testText;
-                final long timeout = System.currentTimeMillis() + 2000L;
-                while(System.currentTimeMillis() < timeout) {
-                    content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
-                    if(content.contains(expected)) {
-                        break;
+                
+                final Condition c = new Condition() {
+
+                    public String getDescription() {
+                        return "Expecting " + expected;
                     }
-                    Thread.sleep(100L);
-                }
-                assertTrue("Content contains '" + expected + "'(" + content + ")", content.contains(expected));
+
+                    public boolean isTrue() throws Exception {
+                        final String content = getContent(unstructuredNode.nodeUrl + ".html", CONTENT_TYPE_HTML);
+                        return content.contains(expected);
+                    }
+                };
+                
+                new RetryLoop(c, CHECK_CONTENT_TIMEOUT_SECONDS, CHECK_CONTENT_INTERVAL_MSEC);
             }
         } finally {
             if(toDelete != null) {
@@ -142,16 +151,28 @@ public class JspScriptingTest extends JspTestBase {
         }
     }
 
-    private void checkContent(TestNode tn) throws Exception {
-        final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
-        assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
+    private void checkContent(final TestNode tn) throws Exception {
+        final Condition c = new Condition() {
 
-        final String [] expected = {
-                "using resource.adaptTo:" + tn.testText,
-                "using currentNode:" + tn.testText,
+            public String getDescription() {
+                return "Check content of " + tn.nodeUrl;
+            }
+
+            public boolean isTrue() throws Exception {
+                final String content = getContent(tn.nodeUrl + ".html", CONTENT_TYPE_HTML);
+                assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
+                
+                final String [] expected = {
+                        "using resource.adaptTo:" + tn.testText,
+                        "using currentNode:" + tn.testText,
+                };
+                for(String exp : expected) {
+                    assertTrue("Content contains " + exp + "(" + content + ")", content.contains(exp));
+                }
+                return true;
+            }
         };
-        for(String exp : expected) {
-            assertTrue("Content contains " + exp + "(" + content + ")", content.contains(exp));
-        }
+        
+        new RetryLoop(c, CHECK_CONTENT_TIMEOUT_SECONDS, CHECK_CONTENT_INTERVAL_MSEC);
     }
 }
