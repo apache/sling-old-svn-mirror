@@ -19,9 +19,11 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
@@ -59,15 +61,17 @@ public class DavExIntegrationTest extends HttpTestBase {
 
         testClient.createNode(url, props);
 
-        Session session = repository.login("default");
+        final Credentials creds = new SimpleCredentials("admin", "admin".toCharArray());
+        Session session = repository.login(creds);
 
-        Node node = session.getNode(path);
-
-        assertNotNull(node);
-        assertEquals("value1", node.getProperty("name1").getString());
-        assertEquals("value2", node.getProperty("name2").getString());
-
-        session.logout();
+        try {
+            final Node node = session.getNode(path);
+            assertNotNull(node);
+            assertEquals("value1", node.getProperty("name1").getString());
+            assertEquals("value2", node.getProperty("name2").getString());
+        } finally {
+            session.logout();
+        }
     }
 
     @Override
