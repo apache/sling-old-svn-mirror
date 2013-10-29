@@ -16,6 +16,9 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,14 +26,16 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 /** Test the {link ScriptHelper#include) functionality */
- public class JspIncludeTest extends JspTestBase {
+ public class JspIncludeTest {
 	 
 	private static final Logger log = LoggerFactory.getLogger(JspIncludeTest.class);
 
@@ -48,54 +53,57 @@ import org.slf4j.LoggerFactory;
     private String forcedResourceType;
     private Set<String> toDelete = new HashSet<String>();
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    /** HTTP tests helper */
+    private final HttpTest H = new HttpTest();
+
+    @Before
+    public void setUp() throws Exception {
+        H.setUp();
 
         // Create the test nodes under a path that's specific to this class to
         // allow collisions
-        final String url = HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
+        final String url = HttpTest.HTTP_BASE_URL + "/" + getClass().getSimpleName() + "/" + System.currentTimeMillis() + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         final Map<String,String> props = new HashMap<String,String>();
 
         // Create two test nodes and store their paths
         testTextA = "Text A " + System.currentTimeMillis();
         props.put("text", testTextA);
-        nodeUrlA = testClient.createNode(url, props);
-        String pathToInclude = nodeUrlA.substring(HTTP_BASE_URL.length());
+        nodeUrlA = H.getTestClient().createNode(url, props);
+        String pathToInclude = nodeUrlA.substring(HttpTest.HTTP_BASE_URL.length());
 
         // Node B stores the path of A, so that the test script can
         // include A when rendering B
         testTextB = "Text B " + System.currentTimeMillis();
         props.put("text", testTextB);
         props.put("pathToInclude", pathToInclude);
-        nodeUrlB = testClient.createNode(url, props);
+        nodeUrlB = H.getTestClient().createNode(url, props);
 
         // Node E is like B but with an extension on the include path
         props.put("pathToInclude", pathToInclude + ".html");
-        nodeUrlE = testClient.createNode(url, props);
+        nodeUrlE = H.getTestClient().createNode(url, props);
 
         // Node F is used for the max calls detection test
         props.put("testMaxCalls","true");
-        nodeUrlF = testClient.createNode(url, props);
+        nodeUrlF = H.getTestClient().createNode(url, props);
 
         // Node C is used for the infinite loop detection test
         props.remove("pathToInclude");
         props.remove("testMaxCalls");
         props.put("testInfiniteLoop","true");
-        nodeUrlC = testClient.createNode(url, props);
+        nodeUrlC = H.getTestClient().createNode(url, props);
 
         // Node D is used for the "force resource type" test
         forcedResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
         props.remove("testInfiniteLoop");
         props.put("forceResourceType", forcedResourceType);
         props.put("pathToInclude", pathToInclude);
-        nodeUrlD = testClient.createNode(url, props);
+        nodeUrlD = H.getTestClient().createNode(url, props);
 
         // Node G is used for the basic "call" test
         props.remove("forceResourceType");
         props.remove("pathToInclude");
         props.put("testCallScript", "called-test.jsp");
-        nodeUrlG = testClient.createNode(url, props);
+        nodeUrlG = H.getTestClient().createNode(url, props);
         
         // Node I is used for the "var" test
         props.remove("forceResourceType");
@@ -103,69 +111,69 @@ import org.slf4j.LoggerFactory;
         props.put("testVarInclude","true"); 
         props.put("pathToInclude", pathToInclude);
         props.put("VAR_INCLUDE", "VALUE");
-        nodeUrlI = testClient.createNode(url, props);
+        nodeUrlI = H.getTestClient().createNode(url, props);
 
         // Script for forced resource type
-        scriptPath = "/apps/" + forcedResourceType;
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        toDelete.add(uploadTestScript(scriptPath,"include-forced.jsp","html.jsp"));
+        H.setScriptPath("/apps/" + forcedResourceType);
+        H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, H.getScriptPath());
+        toDelete.add(H.uploadTestScript(H.getScriptPath(),"include-forced.jsp","html.jsp"));
 
         // The main rendering script goes under /apps in the repository
-        scriptPath = "/apps/nt/unstructured";
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        toDelete.add(uploadTestScript(scriptPath,"include-test.jsp","html.jsp"));
-        toDelete.add(uploadTestScript(scriptPath,"called-test.jsp","called-test.jsp"));
+        H.setScriptPath("/apps/nt/unstructured");
+        H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, H.getScriptPath());
+        toDelete.add(H.uploadTestScript(H.getScriptPath(),"include-test.jsp","html.jsp"));
+        toDelete.add(H.uploadTestScript(H.getScriptPath(),"called-test.jsp","called-test.jsp"));
 
         // Node H is used for "call" test where the called script is inherited from the supertype
         String nodeHResourceType = getClass().getSimpleName() + "/" + System.currentTimeMillis();
         String nodeHSuperResourceType = getClass().getSimpleName() + "/super" + System.currentTimeMillis();
         props.put("sling:resourceType", nodeHResourceType);
         props.put("sling:resourceSuperType", nodeHSuperResourceType);
-        nodeUrlH = testClient.createNode(url, props);
-        scriptPath = "/apps/" + nodeHResourceType;
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        toDelete.add(uploadTestScript(scriptPath,"calling-test.jsp","html.jsp"));
-        scriptPath = "/apps/" + nodeHSuperResourceType;
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        toDelete.add(uploadTestScript(scriptPath,"called-test.jsp","called-test.jsp"));
+        nodeUrlH = H.getTestClient().createNode(url, props);
+        H.setScriptPath("/apps/" + nodeHResourceType);
+        H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, H.getScriptPath());
+        toDelete.add(H.uploadTestScript(H.getScriptPath(),"calling-test.jsp","html.jsp"));
+        H.setScriptPath("/apps/" + nodeHSuperResourceType);
+        H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, H.getScriptPath());
+        toDelete.add(H.uploadTestScript(H.getScriptPath(),"called-test.jsp","called-test.jsp"));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
+        H.tearDown();
         for(String script : toDelete) {
-           testClient.delete(script);
+           H.getTestClient().delete(script);
         }
     }
 
-    public void testWithoutInclude() throws IOException {
-        final String content = getContent(nodeUrlA + ".html", CONTENT_TYPE_HTML);
+    @Test public void testWithoutInclude() throws IOException {
+        final String content = H.getContent(nodeUrlA + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertFalse("Nothing has been included",content.contains("<p>Including"));
     }
 
-    public void testWithInclude() throws IOException {
-        final String content = getContent(nodeUrlB + ".html", CONTENT_TYPE_HTML);
+    @Test public void testWithInclude() throws IOException {
+        final String content = H.getContent(nodeUrlB + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Include has been used",content.contains("<p>Including"));
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
     }
 
-    public void testWithIncludeAndExtension() throws IOException {
-        final String content = getContent(nodeUrlE + ".html", CONTENT_TYPE_HTML);
+    @Test public void testWithIncludeAndExtension() throws IOException {
+        final String content = H.getContent(nodeUrlE + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Include has been used",content.contains("<p>Including"));
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
     }
 
-    public void testInfiniteLoopDetection() throws IOException {
+    @Test public void testInfiniteLoopDetection() throws IOException {
         // Node C has a property that causes an infinite include loop,
         // Sling must indicate the problem in its response
         final GetMethod get = new GetMethod(nodeUrlC + ".html");
-        httpClient.executeMethod(get);
+        H.getHttpClient().executeMethod(get);
         final String content = get.getResponseBodyAsString();
         assertTrue(
             "Response contains infinite loop error message",
@@ -177,11 +185,11 @@ import org.slf4j.LoggerFactory;
         // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
     }
 
-    public void testMaxCallsDetection() throws IOException {
+    @Test public void testMaxCallsDetection() throws IOException {
         // Node F has a property that causes over 1000 includes
         // Sling must indicate the problem in its response
         final GetMethod get = new GetMethod(nodeUrlF + ".html");
-        httpClient.executeMethod(get);
+        H.getHttpClient().executeMethod(get);
         final String content = get.getResponseBodyAsString();
         assertTrue(
             "Response contains infinite loop error message",
@@ -193,8 +201,8 @@ import org.slf4j.LoggerFactory;
         // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
     }
 
-    public void testForcedResourceType() throws IOException {
-        final String content = getContent(nodeUrlD + ".html", CONTENT_TYPE_HTML);
+    @Test public void testForcedResourceType() throws IOException {
+        final String content = H.getContent(nodeUrlD + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Include has been used",content.contains("<p>Including"));
@@ -202,24 +210,24 @@ import org.slf4j.LoggerFactory;
         assertTrue("Resource type has been forced (" + content + ")",content.contains("Forced resource type:" + forcedResourceType));
     }
 
-    public void testCall() throws IOException {
-        final String content = getContent(nodeUrlG + ".html", CONTENT_TYPE_HTML);
+    @Test public void testCall() throws IOException {
+        final String content = H.getContent(nodeUrlG + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
         assertTrue("Call has been used",content.contains("<p>Calling"));
         assertTrue("Call has been made",content.contains("called"));
     }
 
-    public void testCallToSupertype() throws IOException {
+    @Test public void testCallToSupertype() throws IOException {
         System.out.println(nodeUrlH);
-        final String content = getContent(nodeUrlH + ".html", CONTENT_TYPE_HTML);
+        final String content = H.getContent(nodeUrlH + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Call has been made",content.contains("called"));
     }
     
-    public void testVarInclude() throws IOException{
+    @Test public void testVarInclude() throws IOException{
     	log.info("testVarInclude");
-        final String content = getContent(nodeUrlI + ".html", CONTENT_TYPE_HTML);
+        final String content = H.getContent(nodeUrlI + ".html", HttpTest.CONTENT_TYPE_HTML);
     	log.info("Loaded content: "+content);
         assertTrue("Content includes Loaded test content:",content.contains("Loaded test content:"));
     }
