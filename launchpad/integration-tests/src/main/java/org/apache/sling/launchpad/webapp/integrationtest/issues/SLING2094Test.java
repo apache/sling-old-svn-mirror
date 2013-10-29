@@ -20,11 +20,10 @@ package org.apache.sling.launchpad.webapp.integrationtest.issues;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 
 /** Test the SLING-2094 JSP errorpage statement */
-public class SLING2094Test extends JspTestBase {
+public class SLING2094Test extends RenderingTestBase {
     public final static String TEST_ROOT = "/apps/sling2094";
     private String testNodePath;
     
