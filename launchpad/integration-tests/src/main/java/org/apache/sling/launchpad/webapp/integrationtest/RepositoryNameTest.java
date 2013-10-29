@@ -38,12 +38,18 @@ public class RepositoryNameTest extends HttpTestBase {
     
     public void testName() throws Exception {
         final String runMode = System.getProperty(RUN_MODE_PROP, DEFAULT_RUN_MODE);
-        final String name = RUNMODE_TO_NAME.get(runMode);
-        assertNotNull("Expecting to have a repository name for run mode " + runMode, name);
+        final String expectedName = RUNMODE_TO_NAME.get(runMode);
+        assertNotNull("Expecting to have a repository name for run mode " + runMode, expectedName);
         
         final String path = "/testing/RepositoryDescriptors.json";
         final JSONObject json = new JSONObject(getContent(HTTP_BASE_URL + path, CONTENT_TYPE_JSON));
         final String key = "jcr.repository.name";
-        assertEquals("Expecting " + key + "=" + name, name, json.getJSONObject("descriptors").getString(key));
+        final String actualName = json.getJSONObject("descriptors").getString(key);
+        if(!expectedName.equals(actualName)) {
+            fail(
+                "Repository descriptor '" + key + "' value '" + actualName + "' does not match expected value '" + expectedName + "'. "
+                + "Note that this test uses the " + RUN_MODE_PROP + " system property to select the expected value."
+            );
+        }
     }
 }
