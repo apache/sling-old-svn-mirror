@@ -84,14 +84,6 @@ public class DavExIntegrationTest extends HttpTestBase {
         }
     }
 
-    /** Verify that we can access the davex servlet without credentials (SLING-2274) */
-    public void testDavexServletAccess() throws IOException {
-        final HttpClient noCredentialsClient = new HttpClient();
-        final GetMethod get = new GetMethod(DAVEX_SERVER_URL);
-        final int status = noCredentialsClient.executeMethod(get);
-        assertEquals("With no HTTP credentials, expecting 200 status at " + DAVEX_SERVER_URL, 200, status);
-    }
-
     @Override
     protected void tearDown() throws Exception {
         repository = null;
