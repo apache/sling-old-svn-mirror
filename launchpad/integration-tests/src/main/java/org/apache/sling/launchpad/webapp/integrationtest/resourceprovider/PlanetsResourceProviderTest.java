@@ -70,4 +70,10 @@ public class PlanetsResourceProviderTest extends HttpTestBase {
                         "384"
                 });
     }
+    
+    public void testMoonHtml() throws Exception {
+        final String content = getContent(HTTP_BASE_URL + "/planets/earth/moon.html", CONTENT_TYPE_HTML);
+        final String expect = "<title>Planet at /planets/earth/moon</title>";
+        assertTrue("Expecting content to contain " + expect, content.contains(expect));
+    }
 }
