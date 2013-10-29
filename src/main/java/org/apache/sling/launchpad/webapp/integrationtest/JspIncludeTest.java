@@ -27,18 +27,17 @@ import java.util.Set;
 
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.commons.testing.junit.Retry;
+import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Test the {link ScriptHelper#include) functionality */
  public class JspIncludeTest {
 	 
-	private static final Logger log = LoggerFactory.getLogger(JspIncludeTest.class);
-
     private String nodeUrlA;
     private String testTextA;
     private String nodeUrlB;
@@ -55,6 +54,9 @@ import org.slf4j.LoggerFactory;
 
     /** HTTP tests helper */
     private final HttpTest H = new HttpTest();
+
+    @Rule
+    public RetryRule retryRule = new RetryRule();
 
     @Before
     public void setUp() throws Exception {
@@ -146,14 +148,18 @@ import org.slf4j.LoggerFactory;
         }
     }
 
-    @Test public void testWithoutInclude() throws IOException {
+    @Test 
+    @Retry
+    public void testWithoutInclude() throws IOException {
         final String content = H.getContent(nodeUrlA + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextA + "</p>"));
         assertFalse("Nothing has been included",content.contains("<p>Including"));
     }
 
-    @Test public void testWithInclude() throws IOException {
+    @Test 
+    @Retry
+    public void testWithInclude() throws IOException {
         final String content = H.getContent(nodeUrlB + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
@@ -161,7 +167,9 @@ import org.slf4j.LoggerFactory;
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
     }
 
-    @Test public void testWithIncludeAndExtension() throws IOException {
+    @Test 
+    @Retry
+    public void testWithIncludeAndExtension() throws IOException {
         final String content = H.getContent(nodeUrlE + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
@@ -169,7 +177,9 @@ import org.slf4j.LoggerFactory;
         assertTrue("Text of node A is included (" + content + ")",content.contains(testTextA));
     }
 
-    @Test public void testInfiniteLoopDetection() throws IOException {
+    @Test 
+    @Retry
+    public void testInfiniteLoopDetection() throws IOException {
         // Node C has a property that causes an infinite include loop,
         // Sling must indicate the problem in its response
         final GetMethod get = new GetMethod(nodeUrlC + ".html");
@@ -185,7 +195,9 @@ import org.slf4j.LoggerFactory;
         // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
     }
 
-    @Test public void testMaxCallsDetection() throws IOException {
+    @Test 
+    @Retry
+    public void testMaxCallsDetection() throws IOException {
         // Node F has a property that causes over 1000 includes
         // Sling must indicate the problem in its response
         final GetMethod get = new GetMethod(nodeUrlF + ".html");
@@ -201,7 +213,9 @@ import org.slf4j.LoggerFactory;
         // assertEquals("Status is 500 for infinite loop",HttpServletResponse.SC_INTERNAL_SERVER_ERROR, status);
     }
 
-    @Test public void testForcedResourceType() throws IOException {
+    @Test 
+    @Retry
+    public void testForcedResourceType() throws IOException {
         final String content = H.getContent(nodeUrlD + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
@@ -210,7 +224,9 @@ import org.slf4j.LoggerFactory;
         assertTrue("Resource type has been forced (" + content + ")",content.contains("Forced resource type:" + forcedResourceType));
     }
 
-    @Test public void testCall() throws IOException {
+    @Test 
+    @Retry
+    public void testCall() throws IOException {
         final String content = H.getContent(nodeUrlG + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Content contains formatted test text",content.contains("<p class=\"main\">" + testTextB + "</p>"));
@@ -218,17 +234,18 @@ import org.slf4j.LoggerFactory;
         assertTrue("Call has been made",content.contains("called"));
     }
 
-    @Test public void testCallToSupertype() throws IOException {
-        System.out.println(nodeUrlH);
+    @Test 
+    @Retry
+    public void testCallToSupertype() throws IOException {
         final String content = H.getContent(nodeUrlH + ".html", HttpTest.CONTENT_TYPE_HTML);
         assertTrue("Content includes JSP marker",content.contains("JSP template"));
         assertTrue("Call has been made",content.contains("called"));
     }
     
-    @Test public void testVarInclude() throws IOException{
-    	log.info("testVarInclude");
+    @Test 
+    @Retry
+    public void testVarInclude() throws IOException{
         final String content = H.getContent(nodeUrlI + ".html", HttpTest.CONTENT_TYPE_HTML);
-    	log.info("Loaded content: "+content);
         assertTrue("Content includes Loaded test content:",content.contains("Loaded test content:"));
     }
 }
