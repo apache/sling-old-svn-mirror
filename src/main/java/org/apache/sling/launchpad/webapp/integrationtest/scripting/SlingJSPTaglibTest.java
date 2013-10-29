@@ -19,7 +19,8 @@ package org.apache.sling.launchpad.webapp.integrationtest.scripting;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
+
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * Test JSP and page to it and then checks to make sure the page responds with a
  * 200 response.
  */
-public class SlingJSPTaglibTest extends JspTestBase {
+public class SlingJSPTaglibTest extends RenderingTestBase {
 	private static final Logger log = LoggerFactory
 			.getLogger(SlingJSPTaglibTest.class);
 	private String testPage;

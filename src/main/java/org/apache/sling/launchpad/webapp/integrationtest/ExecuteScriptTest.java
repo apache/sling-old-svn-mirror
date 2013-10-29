@@ -16,8 +16,10 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
+import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
+
 /** Test the executeScript test method */
-public class ExecuteScriptTest extends JspTestBase {
+public class ExecuteScriptTest extends RenderingTestBase {
     
     public void testEspScript() throws Exception {
         final String content = executeScript("serverscripts/servertest.esp");

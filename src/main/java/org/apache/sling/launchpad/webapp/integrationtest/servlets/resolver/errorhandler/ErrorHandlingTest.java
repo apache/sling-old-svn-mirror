@@ -22,12 +22,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
 import org.apache.sling.servlets.post.SlingPostConstants;
-
+import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 
 /** Test the sling error handling mechanism http://sling.apache.org/site/errorhandling.html*/
-public class ErrorHandlingTest extends JspTestBase {
+public class ErrorHandlingTest extends RenderingTestBase {
 
 	public final static String TEST_ROOT = "/apps";
 

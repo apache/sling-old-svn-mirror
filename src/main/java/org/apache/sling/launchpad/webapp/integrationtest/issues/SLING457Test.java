@@ -20,10 +20,9 @@ package org.apache.sling.launchpad.webapp.integrationtest.issues;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.sling.launchpad.webapp.integrationtest.RenderingTestBase;
 
-import org.apache.sling.launchpad.webapp.integrationtest.JspTestBase;
-
-public class SLING457Test extends JspTestBase {
+public class SLING457Test extends RenderingTestBase {
 
     private String testRootUrl;
 
