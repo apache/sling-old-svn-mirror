@@ -96,26 +96,9 @@ public class HttpTestBase extends TestCase {
      *  stores useful values for testing. Created for JspScriptingTest,
      *  older test classes do not use it, but it might simplify them.
      */
-    protected class TestNode {
-        public final String testText;
-        public final String nodeUrl;
-        public final String resourceType;
-        public final String scriptPath;
-
+    protected class TestNode extends HttpTestNode {
         public TestNode(String parentPath, Map<String, String> properties) throws IOException {
-            if(properties == null) {
-                properties = new HashMap<String, String>();
-            }
-            testText = "This is a test node " + System.currentTimeMillis();
-            properties.put("text", testText);
-            nodeUrl = testClient.createNode(parentPath + SLING_POST_SERVLET_CREATE_SUFFIX, properties);
-            resourceType = properties.get(SLING_RESOURCE_TYPE);
-            scriptPath = "/apps/" + (resourceType == null ? "nt/unstructured" : resourceType);
-            testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        }
-
-        public void delete() throws IOException {
-            testClient.delete(nodeUrl);
+            super(testClient, parentPath, properties);
         }
     };
 
@@ -344,12 +327,12 @@ public class HttpTestBase extends TestCase {
     }
 
     /** retrieve the contents of given URL and assert its content type (default to HTTP GET method)*/
-    protected String getContent(String url, String expectedContentType) throws IOException {
+    public String getContent(String url, String expectedContentType) throws IOException {
         return getContent(url, expectedContentType, null);
     }
 
     /** retrieve the contents of given URL and assert its content type (default to HTTP GET method)*/
-    protected String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
+    public String getContent(String url, String expectedContentType, List<NameValuePair> params) throws IOException {
         return getContent(url, expectedContentType, params, HttpServletResponse.SC_OK);
     }
 
@@ -357,7 +340,7 @@ public class HttpTestBase extends TestCase {
      * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
      * @throws IOException
      * @throws HttpException */
-    protected String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
+    public String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
     	return getContent(url, expectedContentType, params, expectedStatusCode, HTTP_METHOD_GET);
     }
     
@@ -366,7 +349,7 @@ public class HttpTestBase extends TestCase {
      * @param httMethod supports just GET and POST methods
      * @throws IOException
      * @throws HttpException */
-    protected String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode, String httpMethod) throws IOException {
+    public String getContent(String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode, String httpMethod) throws IOException {
     	HttpMethodBase method = null;
     	
     	if (HTTP_METHOD_GET.equals(httpMethod)){
@@ -410,7 +393,7 @@ public class HttpTestBase extends TestCase {
     
 
     /** upload rendering test script, and return its URL for future deletion */
-    protected String uploadTestScript(String scriptPath, String localFilename,String filenameOnServer) throws IOException {
+    public String uploadTestScript(String scriptPath, String localFilename,String filenameOnServer) throws IOException {
         final String url = WEBDAV_BASE_URL + scriptPath + "/" + filenameOnServer;
         final String testFile = "/integration-test/" + localFilename;
         final InputStream data = getClass().getResourceAsStream(testFile);
