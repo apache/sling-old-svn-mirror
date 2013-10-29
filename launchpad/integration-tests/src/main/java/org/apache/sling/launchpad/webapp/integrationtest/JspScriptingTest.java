@@ -20,10 +20,14 @@ import static org.junit.Assert.assertTrue;
 
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.HttpTestNode;
+import org.apache.sling.commons.testing.junit.Retry;
+import org.apache.sling.commons.testing.junit.RetryRule;
 import org.apache.sling.servlets.post.SlingPostConstants;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 /** Test JSP scripting
  *  TODO this class can be generalized to be used for any scripting language,
@@ -40,6 +44,9 @@ public class JspScriptingTest {
 
     /** HTTP tests helper */
     private final HttpTest H = new HttpTest();
+    
+    @Rule
+    public RetryRule retryRule = new RetryRule();
 
     @Before
     public void setUp() throws Exception {
@@ -57,18 +64,24 @@ public class JspScriptingTest {
         H.tearDown();
     }
 
+    @Test
+    @Retry
     public void testRtNoScript() throws Exception {
         final String content = H.getContent(rtNode.nodeUrl + ".txt", HttpTest.CONTENT_TYPE_PLAIN);
         assertTrue(content.contains("PlainTextRendererServlet"));
         assertTrue("Content contains " + rtNode.testText + " (" + content + ")", content.contains(rtNode.testText));
     }
 
+    @Test
+    @Retry
     public void testUnstructuredNoScript() throws Exception {
         final String content = H.getContent(unstructuredNode.nodeUrl + ".txt", HttpTest.CONTENT_TYPE_PLAIN);
         assertTrue(content.contains("PlainTextRendererServlet"));
         assertTrue("Content contains " + unstructuredNode.testText + " (" + content + ")", content.contains(unstructuredNode.testText));
     }
 
+    @Test
+    @Retry
     public void testRtJsp() throws Exception {
         final String toDelete = H.uploadTestScript(rtNode.scriptPath, "rendering-test.jsp", "html.jsp");
         try {
@@ -80,6 +93,8 @@ public class JspScriptingTest {
         }
     }
 
+    @Test
+    @Retry
     public void testUnstructuredJsp() throws Exception {
         final String toDelete = H.uploadTestScript(unstructuredNode.scriptPath, "rendering-test.jsp", "html.jsp");
         try {
@@ -91,6 +106,8 @@ public class JspScriptingTest {
         }
     }
 
+    @Test
+    @Retry
     public void testTagFile() throws Exception {
         String tagFile = null;
         String tagUsingScript = null;
@@ -114,6 +131,7 @@ public class JspScriptingTest {
 
     /* Verify that overwriting a JSP script changes the output within a reasonable time 
      * (might not be immediate as there's some observation and caching involved) */
+    @Test
     public void testChangingJsp() throws Exception {
         String toDelete = null;
 
@@ -144,6 +162,8 @@ public class JspScriptingTest {
         }
     }
     
+    @Test
+    @Retry
     public void testEnum() throws Exception {
         String toDelete = null;
         try {
@@ -160,27 +180,15 @@ public class JspScriptingTest {
     }
 
     private void checkContent(final HttpTestNode tn) throws Exception {
-        final Condition c = new Condition() {
-
-            public String getDescription() {
-                return "Check content of " + tn.nodeUrl;
-            }
-
-            public boolean isTrue() throws Exception {
-                final String content = H.getContent(tn.nodeUrl + ".html", HttpTest.CONTENT_TYPE_HTML);
-                assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
-                
-                final String [] expected = {
-                        "using resource.adaptTo:" + tn.testText,
-                        "using currentNode:" + tn.testText,
-                };
-                for(String exp : expected) {
-                    assertTrue("Content contains " + exp + "(" + content + ")", content.contains(exp));
-                }
-                return true;
-            }
-        };
+        final String content = H.getContent(tn.nodeUrl + ".html", HttpTest.CONTENT_TYPE_HTML);
+        assertTrue("JSP script executed as expected (" + content + ")", content.contains("<h1>JSP rendering result</h1>"));
         
-        new RetryLoop(c, CHECK_CONTENT_TIMEOUT_SECONDS, CHECK_CONTENT_INTERVAL_MSEC);
+        final String [] expected = {
+                "using resource.adaptTo:" + tn.testText,
+                "using currentNode:" + tn.testText,
+        };
+        for(String exp : expected) {
+            assertTrue("Content contains " + exp + "(" + content + ")", content.contains(exp));
+        }
     }
 }
