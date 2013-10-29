@@ -18,6 +18,7 @@ package org.apache.sling.launchpad.webapp.integrationtest;
 
 import java.io.IOException;
 
+import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 
 /** Base class for rendering tests
@@ -32,14 +33,10 @@ public abstract class RenderingTestBase extends HttpTestBase {
     }
     
     protected void assertContains(String content, String expected) {
-        if(!content.contains(expected)) {
-            fail("Content does not contain '" + expected + "' (content=" + content + ")");
-        }
+        HttpTest.assertContains(content, expected);
     }
     
     protected void assertNotContains(String content, String notExpected) {
-    	if(content.contains(notExpected)) {
-            fail("Content contains '" + notExpected + "' (content=" + content + ")");
-        }
+        HttpTest.assertNotContains(content, notExpected);
     }
 }
