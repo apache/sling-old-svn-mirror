@@ -31,17 +31,17 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.core</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.remote</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.junit.scriptable</artifactId>
-            <version>1.0.8</version>
+            <version>1.0.9-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
