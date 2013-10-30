@@ -159,6 +159,30 @@ public class SlingFunctions {
 	}
 
 	/**
+	 * Method for checking whether or not a resource has child resources.
+	 * 
+	 * @param resource
+	 *            the resource to check for child resources
+	 * @return true if the resource has child resources, false otherwise
+	 * @since 2.2.2
+	 */
+	public static final boolean hasChildren(Resource resource) {
+		return resource != null ? resource.listChildren().hasNext() : false;
+	}
+
+	/**
+	 * Method for checking whether or not a resource has child resources.
+	 * 
+	 * @param resource
+	 *            the resource to check for child resources
+	 * @return true if the resource has child resources, false otherwise
+	 * @since 2.2.2
+	 */
+	public static final boolean hasChildren(Resource resource) {
+		return resource != null ? resource.listChildren().hasNext() : false;
+	}
+
+	/**
 	 * Method for allowing the invocation of the Sling Resource listChildren
 	 * method.
 	 * 
