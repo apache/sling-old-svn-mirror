@@ -448,6 +448,16 @@ public interface ResourceResolver extends Adaptable {
     Iterator<Map<String, Object>> queryResources(String query, String language);
 
     /**
+     * Checks if the specified resource has any direct child resources.
+     * 
+     * @param resource
+     *            the resource to check for direct children
+     * @return <code>true</code> if the resource has any child resources
+     * @since 2.4.4
+     */
+    boolean hasChildren(Resource resource);
+    
+    /**
      * Returns a new <code>ResourceResolver</code> instance based on the given
      * <code>authenticationInfo</code> map and the original authentication info
      * used to create this instance.

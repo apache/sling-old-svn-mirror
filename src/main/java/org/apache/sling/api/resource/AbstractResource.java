@@ -104,6 +104,14 @@ public abstract class AbstractResource
             }
         };
     }
+    
+    /**
+     * Checks to see if there are direct children of this resource by invoking
+     * {@link ResourceResolver#hasChildren(Resource)}.
+     */
+    public boolean hasChildren() {
+        return getResourceResolver().hasChildren(this);
+    }
 
     /**
      * Returns <code>true</code> if this resource is of the given resource type

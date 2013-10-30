@@ -136,6 +136,16 @@ public class ResourceWrapper implements Resource {
     }
 
     /**
+     * Returns the value of calling <code>hasChildren</code> on the
+     * {@link #getResource() wrapped resource}.
+     * 
+     * @since 2.4.4
+     */
+	public boolean hasChildren() {
+		return getResource().hasChildren();
+	}
+    
+    /**
      * Returns the value of calling <code>isResourceType</code> on the
      * {@link #getResource() wrapped resource}.
      *
@@ -170,4 +180,5 @@ public class ResourceWrapper implements Resource {
         return className + ", type=" + getResourceType()
             + ", path=" + getPath() + ", resource=[" + getResource() + "]";
     }
+	
 }
