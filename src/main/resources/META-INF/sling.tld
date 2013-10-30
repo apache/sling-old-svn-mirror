@@ -48,6 +48,11 @@
         <function-signature>java.lang.Object getValue(org.apache.sling.api.resource.ValueMap,java.lang.String,java.lang.Object)</function-signature>
     </function>
 	
+    <function>
+        <name>hasChildren</name>
+        <function-class>org.apache.sling.scripting.jsp.taglib.SlingFunctions</function-class>
+        <function-signature>java.lang.Boolean hasChildren(org.apache.sling.api.resource.Resource)</function-signature>
+    </function>
 
 	<function>
 		<name>listChildren</name>
