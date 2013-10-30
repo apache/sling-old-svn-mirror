@@ -23,9 +23,11 @@ import static org.apache.sling.scripting.api.BindingsValuesProvider.DEFAULT_CONT
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.script.ScriptEngineFactory;
 
@@ -33,14 +35,18 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.apache.sling.scripting.api.BindingsValuesProvidersByContext;
 import org.apache.sling.scripting.core.impl.helper.SlingScriptEngineManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.slf4j.Logger;
@@ -53,6 +59,10 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
 
     private final Map<String, ContextBvpCollector> customizers = new HashMap<String, ContextBvpCollector>();
     public static final String [] DEFAULT_CONTEXT_ARRAY = new String [] { DEFAULT_CONTEXT };
+
+    private static final String TOPIC_CREATED = "org/apache/sling/scripting/core/BindingsValuesProvider/CREATED";
+    private static final String TOPIC_MODIFIED = "org/apache/sling/scripting/core/BindingsValuesProvider/MODIFIED";
+    private static final String TOPIC_REMOVED = "org/apache/sling/scripting/core/BindingsValuesProvider/REMOVED";
     
     private ServiceTracker bvpTracker;
     private ServiceTracker mapsTracker;
@@ -62,7 +72,10 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
     
     @Reference
     private SlingScriptEngineManager scriptEngineManager;
-    
+
+    @Reference(policy = ReferencePolicy.DYNAMIC)
+    private EventAdmin eventAdmin;
+
     private abstract class ContextLoop {
         Object apply(ServiceReference ref) {
             final Object service = bundleContext.getService(ref);
@@ -150,9 +163,15 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
 
         return results;
     }
-    
+
     private String [] getContexts(ServiceReference reference) {
         return PropertiesUtil.toStringArray(reference.getProperty(CONTEXT), new String[] { DEFAULT_CONTEXT });
+    }
+
+    private Event newEvent(final String topic, final ServiceReference reference) {
+        Dictionary<Object, Object> props = new Properties();
+        props.put("service.id", reference.getProperty(Constants.SERVICE_ID));
+        return new Event(topic, props);
     }
 
     public Object addingService(final ServiceReference reference) {
@@ -166,6 +185,9 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
             @Override
             protected void applyInContext(ContextBvpCollector c) {
                 c.addingService(reference);
+                if (eventAdmin != null) {
+                    eventAdmin.postEvent(newEvent(TOPIC_CREATED, reference));
+                }
             }
         }.apply(reference);
     }
@@ -175,6 +197,9 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
             @Override
             protected void applyInContext(ContextBvpCollector c) {
                 c.modifiedService(reference, service);
+                if (eventAdmin != null) {
+                    eventAdmin.postEvent(newEvent(TOPIC_MODIFIED, reference));
+                }
             }
         }.apply(reference);
     }
@@ -190,6 +215,9 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
             @Override
             protected void applyInContext(ContextBvpCollector c) {
                 c.removedService(reference, service);
+                if (eventAdmin != null) {
+                    eventAdmin.postEvent(newEvent(TOPIC_REMOVED, reference));
+                }
             }
         }.apply(reference);
     }

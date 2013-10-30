@@ -115,7 +115,8 @@ import org.slf4j.LoggerFactory;
          value={"org/apache/sling/api/resource/Resource/*",
                     "org/apache/sling/api/resource/ResourceProvider/*",
                     "javax/script/ScriptEngineFactory/*",
-                    "org/apache/sling/api/adapter/AdapterFactory/*"})
+                    "org/apache/sling/api/adapter/AdapterFactory/*",
+                    "org/apache/sling/scripting/core/BindingsValuesProvider/*"})
 })
 @Reference(name="Servlet", referenceInterface=javax.servlet.Servlet.class,
            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE, policy=ReferencePolicy.DYNAMIC)
@@ -1078,6 +1079,9 @@ public class SlingServletResolver
             } else if (topic.startsWith("org/apache/sling/api/adapter/AdapterFactory/")) {
                 // adapter factory added or removed: we always flush
                 // as adapting might be transitive
+                flushCache = true;
+            } else if (topic.startsWith("org/apache/sling/scripting/core/BindingsValuesProvider/")) {
+                // bindings values provide factory added or removed: we always flush
                 flushCache = true;
             } else {
                 // this is a resource event
