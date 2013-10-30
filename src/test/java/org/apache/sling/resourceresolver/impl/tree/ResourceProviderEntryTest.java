@@ -274,5 +274,9 @@ public class ResourceProviderEntryTest {
         public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
             return null;
         }
+
+		public boolean hasChildren() {
+			return false;
+		}
     }
 }
