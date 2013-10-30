@@ -92,9 +92,7 @@ class ContextBvpCollector {
         Object serviceId = ref.getProperty(Constants.SERVICE_ID);
         if (genericBindingsValuesProviders.remove(serviceId) == null) {
             for (Map<Object, BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
-                if (coll.remove(service) != null) {
-                    return;
-                }
+                coll.remove(serviceId);
             }
         }
     }
