@@ -28,12 +28,12 @@ public class TestDescriptionRule extends TestWatcher {
 
     @Override
     protected void finished(Description description) {
-        currentTestDescription.set(description);
+        currentTestDescription.remove();
     }
 
     @Override
     protected void starting(Description description) {
-        currentTestDescription.remove();
+        currentTestDescription.set(description);
     }
 
     public static Description getCurrentTestDescription(){
