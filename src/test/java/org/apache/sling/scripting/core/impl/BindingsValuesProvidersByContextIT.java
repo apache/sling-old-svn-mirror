@@ -19,6 +19,7 @@
 package org.apache.sling.scripting.core.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -30,6 +31,7 @@ import static org.ops4j.pax.exam.CoreOptions.when;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -80,6 +82,7 @@ public class BindingsValuesProvidersByContextIT {
                 provision(
                         bundle(bundleFile.toURI().toString()),
                         mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
+                        mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.3.2"),
                         
                         mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.5-SNAPSHOT"),
                         mavenBundle("org.apache.sling", "org.apache.sling.api", "2.4.2"),
@@ -198,15 +201,27 @@ public class BindingsValuesProvidersByContextIT {
         };
     }
     
-    private String asString(Collection<?> data) {
-        final StringBuilder sb = new StringBuilder();
+    private String asString(Collection<?> data, boolean sortList) {
+        final List<String> maybeSorted = new ArrayList<String>();
         for(Object o : data) {
+            maybeSorted.add(o.toString());
+        }
+        if(sortList) {
+            Collections.sort(maybeSorted);
+        }
+        
+        final StringBuilder sb = new StringBuilder();
+        for(String str : maybeSorted) {
             if(sb.length() > 0) {
                 sb.append(",");
             }
-            sb.append(o.toString());
+            sb.append(str);
         }
         return sb.toString();
+    }
+    
+    private String asString(Collection<?> data) {
+        return asString(data, true);
     }
     
     @Test
@@ -217,9 +232,12 @@ public class BindingsValuesProvidersByContextIT {
         addBVP("four", null, "ANY");
         addBVP("five", null, "basic");
         
-        assertEquals("four,three,two,one", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
-        assertEquals("four,three,two,five", asString(bvpProvider.getBindingsValuesProviders(factory("basic"), null)));
+        assertEquals("four,one,three,two", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
+        assertEquals("five,four,three,two", asString(bvpProvider.getBindingsValuesProviders(factory("basic"), null)));
         assertEquals("four,three,two", asString(bvpProvider.getBindingsValuesProviders(factory("other"), null)));
+        
+        final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("js"), null), false);
+        assertTrue("Expecting js language-specific BVP at the end", unsorted.endsWith("one"));
     }
     
     @Test
@@ -231,11 +249,16 @@ public class BindingsValuesProvidersByContextIT {
         addBVP("o1", "other", "js");
         addBVP("o2", "other", null);
         addBVP("o3", "other,request", null);
+        addBVP("o4", "python", null);
         addBVP("python", "python", "python");
-        assertEquals("o3,r2,bar,r1,foo", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "request")));
-        assertEquals("With default content", "o3,r2,bar,r1,foo", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
-        assertEquals("o3,o2,o1", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "other")));
+        assertEquals("bar,foo,o3,r1,r2", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "request")));
+        assertEquals("With default content", "bar,foo,o3,r1,r2", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
+        assertEquals("o1,o2,o3", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "other")));
+        assertEquals("o4,python", asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python")));
         assertEquals("", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "unusedContext")));
+        
+        final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python"), false);
+        assertTrue("Expecting python language-specific BVP at the end", unsorted.endsWith("python"));
     }
     
     @Test
@@ -247,10 +270,15 @@ public class BindingsValuesProvidersByContextIT {
         addMap("o1", "other", "js");
         addBVP("o2", "other", null);
         addMap("o3", "other,request", null);
+        addBVP("o4", "python", null);
         addMap("python", "python", "python");
-        assertEquals("M_o3,M_r2,M_bar,M_r1,foo", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "request")));
-        assertEquals("With default content", "M_o3,M_r2,M_bar,M_r1,foo", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
-        assertEquals("M_o3,o2,M_o1", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "other")));
+        assertEquals("M_bar,M_o3,M_r1,M_r2,foo", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "request")));
+        assertEquals("With default content", "M_bar,M_o3,M_r1,M_r2,foo", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null)));
+        assertEquals("M_o1,M_o3,o2", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "other")));
         assertEquals("", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "unusedContext")));
+        assertEquals("M_python,o4", asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python")));
+        
+        final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python"), false);
+        assertTrue("Expecting python language-specific BVP at the end", unsorted.endsWith("M_python"));
     }
 }
