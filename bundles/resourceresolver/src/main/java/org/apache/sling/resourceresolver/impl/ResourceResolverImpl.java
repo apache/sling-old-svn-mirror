@@ -1094,6 +1094,13 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
     public boolean hasChanges() {
         return this.context.hasChanges(this);
     }
+    
+    /**
+     * @see org.apache.sling.api.resource.ResourceResolver#hasChildren()
+     */
+	public boolean hasChildren(Resource resource) {
+		return listChildren(resource).hasNext();
+	}
 
     /**
      * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(org.apache.sling.api.resource.Resource)

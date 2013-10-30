@@ -130,6 +130,14 @@ public interface Resource extends Adaptable {
     String getResourceSuperType();
 
     /**
+     * Checks if the resource has any child resources.
+     * 
+     * @return <code>true</code> if the resource has any child resources
+     * @since 2.4.4
+     */
+    boolean hasChildren();
+
+    /**
      * Returns <code>true</code> if the resource type or any of the resource's
      * super type(s) equals the given resource type.
      *
