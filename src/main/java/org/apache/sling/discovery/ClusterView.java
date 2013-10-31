@@ -32,20 +32,25 @@ import aQute.bnd.annotation.ProviderType;
 public interface ClusterView {
 
 	/**
-	 * Returns an id of this cluster view.
+	 * Returns a stable id of the cluster represented by this
+	 * cluster view.
 	 * <p>
-	 * Note that this id is not guaranteed to be stable between
-	 * instances of ClusterViews. The id is identifying only the
-	 * current view of the cluster, not the cluster itself, and 
-	 * thus if the view changes the id might (or might not) change.
+	 * Similar to the SlingID, this id is persisted and thus
+	 * remains stable accross instance/cluster restarts.
+	 * <p>
+	 * When an instance joins a cluster, it will inherit
+	 * the id from the joined cluster (thus incurs a cluster id
+	 * change).
+	 * <p>
+	 * Note: When instances part from a cluster (eg due to a network
+	 * partitioning) the cluster id is retained. This results in
+	 * potentially multiple clusters with the same id. This 
+	 * fact could be used to detect such partitioning/split brain
+	 * situations. It also implies though that the cluster id
+	 * is not guaranteed to be unique in a topology!
 	 * @return an id of this cluster view
-	 * @deprecated due to the unstable nature of this id - it only
-	 * identifies the current view of the cluster, not the cluster
-	 * itself - this id has been deprecated. If an id of the cluster
-	 * itself is needed, this must be dealt with on an application
-	 * level - for example by letting the cluster leader define
-	 * such an id and taking care of special cases like cluster joins.
 	 * @see <a href="http://issues.apache.org/jira/browse/SLING-3164">SLING-3164</a>
+	 * @since exists since 1.0.0 - stable since 1.0.2
 	 */
     String getId();
 
