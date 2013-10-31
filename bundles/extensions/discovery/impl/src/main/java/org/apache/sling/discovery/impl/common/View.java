@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.impl.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,10 @@ import org.slf4j.LoggerFactory;
  */
 public class View {
 
+    protected static final String VIEW_PROPERTY_CLUSTER_ID = "clusterId";
+    protected static final String VIEW_PROPERTY_CLUSTER_ID_DEFINED_AT = "clusterIdDefinedAt";
+    protected static final String VIEW_PROPERTY_CLUSTER_ID_DEFINED_BY = "clusterIdDefinedBy";
+    
     /**
      * use static logger to avoid frequent initialization as is potentially the
      * case with ClusterViewResource.
@@ -76,7 +81,13 @@ public class View {
      * @return the id of this view
      */
     public String getViewId() {
-        return getResource().getName();
+    	final ValueMap props = getResource().adaptTo(ValueMap.class);
+    	final String clusterId = props.get(VIEW_PROPERTY_CLUSTER_ID, String.class);
+    	if (clusterId != null && clusterId.length() > 0) {
+    		return clusterId;
+    	} else {
+    		return getResource().getName();
+    	}
     }
 
     /**

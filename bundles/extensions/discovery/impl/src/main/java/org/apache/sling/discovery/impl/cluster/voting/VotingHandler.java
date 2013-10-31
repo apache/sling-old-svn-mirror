@@ -366,6 +366,7 @@ public class VotingHandler implements EventHandler {
         winningVoteMap.put("leaderId", leaderid);
         winningVoteMap.put("leaderElectionId", leaderElectionId);
         winningVoteMap.put("promotedAt", Calendar.getInstance());
+        winningVoteMap.put("promotedBy", slingId);
 
         // 3b: move the result under /established
         final String newEstablishedViewPath = establishedViewsResource.getPath()

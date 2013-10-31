@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.View;
+import org.apache.sling.discovery.impl.common.ViewHelper;
 import org.apache.sling.discovery.impl.common.resource.ResourceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +65,37 @@ public class VotingView extends View {
                         + newViewId);
         final ModifiableValueMap votingMap = votingResource.adaptTo(ModifiableValueMap.class);
         votingMap.put("votingStart", Calendar.getInstance());
+
+        String clusterId = null;
+        Calendar clusterIdDefinedAt = null;
+        String clusterIdDefinedBy = null;
+        final View currentlyEstablishedView = ViewHelper.getEstablishedView(resourceResolver, config);
+        if (currentlyEstablishedView != null) {
+        	final ValueMap establishedViewValueMap = currentlyEstablishedView.getResource().adaptTo(ValueMap.class);
+        	clusterId = establishedViewValueMap.get(VIEW_PROPERTY_CLUSTER_ID, String.class);
+        	if (clusterId == null || clusterId.length() == 0) {
+        		clusterId = currentlyEstablishedView.getResource().getName();
+        	}
+        	Date date = establishedViewValueMap.get(VIEW_PROPERTY_CLUSTER_ID_DEFINED_AT, Date.class);
+        	if (date!=null) {
+        		clusterIdDefinedAt = Calendar.getInstance();
+        		clusterIdDefinedAt.setTime(date);
+        	}
+        	clusterIdDefinedBy = establishedViewValueMap.get(VIEW_PROPERTY_CLUSTER_ID_DEFINED_BY, String.class);
+        }
+        if (clusterId == null || clusterId.length() == 0) {
+        	clusterId = newViewId;
+        	clusterIdDefinedAt = Calendar.getInstance();
+        }
+        votingMap.put(VIEW_PROPERTY_CLUSTER_ID, clusterId);
+        if (clusterIdDefinedAt != null) {
+        	votingMap.put(VIEW_PROPERTY_CLUSTER_ID_DEFINED_AT, clusterIdDefinedAt);
+        }
+        if (clusterIdDefinedBy == null || clusterIdDefinedBy.length() == 0) {
+        	clusterIdDefinedBy = initiatorId;
+        }
+        votingMap.put(VIEW_PROPERTY_CLUSTER_ID_DEFINED_BY, clusterIdDefinedBy);
+        
         final Resource membersResource = resourceResolver.create(votingResource, "members", null);
         final Iterator<String> it = liveInstances.iterator();
         while (it.hasNext()) {
