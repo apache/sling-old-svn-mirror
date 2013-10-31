@@ -14,17 +14,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.launchpad.testservices.exported;
+package org.apache.sling.launchpad.testservices.serversidetests;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.Node;
@@ -37,152 +40,144 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.junit.annotations.SlingAnnotationsTestRunner;
+import org.apache.sling.junit.annotations.TestReference;
+import org.apache.sling.launchpad.testservices.events.EventsCounter;
+import org.apache.sling.launchpad.testservices.exported.FakeSlingHttpServletRequest;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@RunWith(SlingAnnotationsTestRunner.class)
 public class ResourceResolverTest {
 
     public static final String PROP_REDIRECT_INTERNAL = "sling:internalRedirect";
     public static final String PROP_REDIRECT_EXTERNAL = "sling:redirect";
+    public static final String MAPPING_EVENT_TOPIC = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
-    private final ResourceResolverFactory resourceResolverFactory;
-
-    private final ResourceResolver resResolver;
-
-    private final Session session;
-
+    private static ResourceResolver resResolver;
+    private static Session session;
     private String rootPath;
-
     private Node rootNode;
-
     private Node mapRoot;
-
     private String vanity;
+    private static List<String> toDelete = new ArrayList<String>();
+    private static ResourceResolverFactory cleanupResolverFactory;
     
-    // TODO - there should be a better way to wait for changes to be propagated.
-    // For now, let's make this tunable, for debugging (remember to set this property server-side)
-    public static final String SLEEP_TIME_PROP = "ResourceResolverTest.sleep.msec";
-    private static final long sleepTime = Long.valueOf(System.getProperty(SLEEP_TIME_PROP, "2000"));
+    @TestReference
+    private EventsCounter eventsCounter;
+    
+    @TestReference
+    private ResourceResolverFactory resourceResolverFactory;  
+    
+    // How long to wait for mapping updates
+    public static final String MAPPING_UPDATE_TIMEOUT_MSEC = "ResourceResolverTest.mapping.update.timeout.msec";
+    private static final long updateTimeout = Long.valueOf(System.getProperty(MAPPING_UPDATE_TIMEOUT_MSEC, "10000"));
 
-    public ResourceResolverTest(final ResourceResolverFactory resourceResolverFactory) throws Exception {
-        logger.info("sleepTime = {}, use {} system property to change", sleepTime, SLEEP_TIME_PROP);
-        this.resourceResolverFactory = resourceResolverFactory;
-        this.resResolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
-        this.session = this.resResolver.adaptTo(Session.class);
+    public ResourceResolverTest() throws Exception {
+        logger.info("updateTimeout = {}, use {} system property to change", updateTimeout, MAPPING_UPDATE_TIMEOUT_MSEC);
     }
-
-    public void runTest() throws Exception {
-        try {
-            this.setUp();
-
-            // run tests
-            this.test_attributes_from_authInfo();
-            this.test_clone_based_on_admin();
-            this.test_clone_based_on_anonymous();
-            this.test_resolve();
-            this.test_resolve_extension();
-            this.test_resolve_extension_suffix();
-            this.test_resolve_selectors_extension();
-            this.test_resolve_with_sling_alias();
-            this.test_resolve_with_sling_alias_extension();
-            this.test_resolve_with_sling_alias_extension_suffix();
-            this.test_resolve_with_sling_alias_multi_value();
-            this.test_resolve_with_sling_alias_selectors_extension();
-            this.test_resolve_with_sling_vanity_path_order();
-            this.testGetDoesNotGoUp();
-            this.testGetRemovesExtensionInResolution();
-            this.testGetResource();
-            this.testMap();
-            this.testMapContext();
-            this.testMapEmptyPath();
-            this.testMapExtension();
-            this.testMapExtensionFragmentQuery();
-            this.testMapExtensionSuffix();
-            this.testMapFragment();
-            this.testMapFragmentQuery();
-            this.testMapNamespaceMangling();
-            this.testMapQuery();
-            this.testMapResourceAlias();
-            this.testMapResourceAliasJcrContent();
-            this.testMapSelectorsExtension();
-            this.testMapURLEscaping();
-            this.testResolveResource();
-            this.testResolveResourceAlias();
-            this.testResolveResourceAliasJcrContent();
-            this.testResolveResourceExternalRedirect();
-            this.testResolveResourceInternalRedirectDepthFirst();
-            this.testResolveResourceInternalRedirectExact();
-            this.testResolveResourceInternalRedirectPath();
-            this.testResolveResourceInternalRedirectPathUpdate();
-            this.testResolveResourceInternalRedirectUrl();
-            this.testResolveVanityPath();
-            this.testResolveVirtualHostHttp80();
-            this.testResolveVirtualHostHttp8080();
-            this.testResolveVirtualHostHttp8080Root();
-            this.testResolveVirtualHostHttp80Multiple();
-            this.testResolveVirtualHostHttp80MultipleRoot();
-            this.testResolveVirtualHostHttps443();
-            this.testResolveVirtualHostHttps4443();
-            this.testResolveVirtualHostHttpVsHttps();
-            this.testSlingFolder();
-            this.testStarResourceExtension();
-            this.testStarResourcePlain();
-            this.testStarResourceSelectorExtension();
-        } finally {
-            try {
-                this.tearDown();
-            } catch (final Exception e) {
-                logger.error("Exception in tearDown: " + e.getMessage(), e);
+    
+    /** Save a Session that has mapping changes, and wait for the OSGi event
+     *  that signals that mappings have been updated.
+     */
+    private void saveMappings(Session session) throws Exception {
+        final int oldEventsCount = eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC);
+        session.save();
+        final long timeout = System.currentTimeMillis() + updateTimeout;
+        while(System.currentTimeMillis() < timeout) {
+            if(eventsCounter.getEventsCount(MAPPING_EVENT_TOPIC) != oldEventsCount) {
+                // Sleeping here shouldn't be needed but it looks
+                // like mappings are not immediately updated once the event arrives
+                Thread.sleep(updateTimeout / 50);
+                return;
             }
+            try {
+                Thread.sleep(10);
+            } catch(InterruptedException ignore) {
+            }
+        }
+        fail("Timeout waiting for " + MAPPING_EVENT_TOPIC + " event, after " + updateTimeout + " msec");
+    }
+    
+    private Node maybeCreateNode(Node parent, String name, String type) throws RepositoryException {
+        if(parent.hasNode(name)) {
+            return parent.getNode(name);
+        } else {
+            return parent.addNode(name, type);
         }
     }
 
-    private void setUp() throws Exception {
-        // test data
-        rootPath = "/content";
-        rootNode = session.getRootNode().addNode(rootPath.substring(1),
-                "nt:unstructured");
-
-        // test mappings
-        mapRoot = session.getRootNode().addNode("etc", "nt:folder");
-        Node map = mapRoot.addNode("map", "sling:Mapping");
-        Node http = map.addNode("http", "sling:Mapping");
-        http.addNode("localhost.80", "sling:Mapping");
-        Node https = map.addNode("https", "sling:Mapping");
-        https.addNode("localhost.443", "sling:Mapping");
-
+    @Before
+    public synchronized void setup() throws Exception {
+        closeResolver();
+        resResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+        cleanupResolverFactory = resourceResolverFactory;
+        session = resResolver.adaptTo(Session.class);
+        
+        // Do the mappings setup only once, and clean it up 
+        // after all tests
+        rootNode = maybeCreateNode(session.getRootNode(), "content", "nt:unstructured");
+        rootPath = rootNode.getPath();
+        session.save();
+        if(toDelete.isEmpty()) {
+            final Node mapRoot = maybeCreateNode(session.getRootNode(), "etc", "nt:folder");
+            final Node map = maybeCreateNode(mapRoot, "map", "sling:Mapping");
+            final Node http = maybeCreateNode(map, "http", "sling:Mapping");
+            maybeCreateNode(http, "localhost.80", "sling:Mapping");
+            final Node https = maybeCreateNode(map, "https", "sling:Mapping");
+            maybeCreateNode(https, "localhost.443", "sling:Mapping");
+            toDelete.add(map.getPath());
+            toDelete.add(rootNode.getPath());
+        }
+        
+        mapRoot = session.getNode("/etc");
+        
         // define a vanity path for the rootPath
         vanity = "testVanity";
         rootNode.setProperty("sling:vanityPath", vanity);
         rootNode.addMixin("sling:VanityPath");
-
         session.save();
     }
-
-    private void tearDown() throws Exception {
-        if ( session != null ) {
-            try {
-                if (rootNode != null) {
-                    rootNode.remove();
-                }
-
-                if (mapRoot != null) {
-                    mapRoot.remove();
-                }
-
-                session.save();
-            } catch (final RepositoryException e) {
-                // ignore
+    
+    private void closeResolver() {
+        if(session != null) {
+            if(session.isLive()) {
+                session.logout();
             }
+            session = null;
         }
-        if ( this.resResolver != null ) {
-            this.resResolver.close();
+        if (resResolver != null ) {
+            resResolver.close();
+            resResolver = null;
+        }
+        
+    }
+
+    @AfterClass
+    public static void deleteTestNodes() throws Exception {
+        final ResourceResolver resolver = cleanupResolverFactory.getAdministrativeResourceResolver(null);
+        final Session session = resolver.adaptTo(Session.class);
+        
+        try {
+            for(String path : toDelete) {
+                if(session.itemExists(path)) {
+                    session.getItem(path).remove();
+                }
+            }
+            toDelete.clear();
+            session.save();
+        } finally {
+            session.logout();
+            resolver.close();
         }
     }
 
-    public void test_clone_based_on_anonymous() throws Exception {
+    @Test public void test_clone_based_on_anonymous() throws Exception {
         final ResourceResolver anon0 = this.resourceResolverFactory.getResourceResolver((Map<String, Object>) null);
         final Session anon0Session = anon0.adaptTo(Session.class);
         assertEquals("anonymous", anon0.getUserID());
@@ -223,7 +218,7 @@ public class ResourceResolverTest {
         anon0.close();
     }
 
-    public void test_clone_based_on_admin() throws Exception {
+    @Test public void test_clone_based_on_admin() throws Exception {
         final ResourceResolver admin0 = this.resourceResolverFactory.getAdministrativeResourceResolver((Map<String, Object>) null);
         final Session admin0Session = admin0.adaptTo(Session.class);
         assertEquals("admin", admin0.getUserID());
@@ -262,7 +257,7 @@ public class ResourceResolverTest {
         admin0.close();
     }
 
-    /*public void test_attributes_from_session() throws Exception {
+    /*@Test public void test_attributes_from_session() throws Exception {
         // test assumes admin password is admin (which is default)
 
         final Credentials creds0 = new SimpleCredentials("admin",
@@ -329,7 +324,7 @@ public class ResourceResolverTest {
         session1.logout();
     }*/
 
-    public void test_attributes_from_authInfo() throws Exception {
+    @Test public void test_attributes_from_authInfo() throws Exception {
         final Map<String, Object> authInfo = new HashMap<String, Object>();
         authInfo.put(ResourceResolverFactory.USER, "admin");
         authInfo.put(ResourceResolverFactory.PASSWORD, "admin".toCharArray());
@@ -367,7 +362,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testGetResource() throws Exception {
+    @Test public void testGetResource() throws Exception {
         // existing resource
         Resource res = resResolver.getResource(rootPath);
         assertNotNull(res);
@@ -384,7 +379,7 @@ public class ResourceResolverTest {
         assertNull(res);
     }
 
-    public void testResolveResource() throws Exception {
+    @Test public void testResolveResource() throws Exception {
         // existing resource
         HttpServletRequest request = new FakeSlingHttpServletRequest(rootPath);
         Resource res = resResolver.resolve(request, rootPath);
@@ -427,17 +422,15 @@ public class ResourceResolverTest {
 
 
 
-    public void testResolveResourceExternalRedirect() throws Exception {
+    @Test public void testResolveResourceExternalRedirect() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         localhost443.setProperty(PROP_REDIRECT_EXTERNAL,
             "http://localhost");
-        session.save();
 
         try {
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
             Resource res = resResolver.resolve(request, rootPath);
             assertNotNull(res);
             assertEquals(rootPath, res.getPath());
@@ -451,17 +444,15 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceInternalRedirectUrl() throws Exception {
+    @Test public void testResolveResourceInternalRedirectUrl() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         localhost443.setProperty(PROP_REDIRECT_INTERNAL,
             "http://localhost");
-        session.save();
-
-        Thread.sleep(sleepTime);
 
         try {
+            saveMappings(session);
             Resource res = resResolver.resolve(request, rootPath);
             assertNotNull(res);
             assertEquals(rootPath, res.getPath());
@@ -476,7 +467,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceInternalRedirectPath() throws Exception {
+    @Test public void testResolveResourceInternalRedirectPath() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
@@ -487,11 +478,8 @@ public class ResourceResolverTest {
             "(playground|designground)");
         toContent.setProperty(PROP_REDIRECT_INTERNAL,
             "/content/$1");
-        session.save();
-
-        Thread.sleep(sleepTime);
         try {
-
+            saveMappings(session);
             Resource res = resResolver.resolve(request, "/playground.html");
             assertNotNull(res);
             assertEquals("/content/playground.html", res.getPath());
@@ -509,18 +497,15 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceInternalRedirectPathUpdate() throws Exception {
+    @Test public void testResolveResourceInternalRedirectPathUpdate() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https", null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
         Node toContent = localhost443.addNode("_playground_designground_", "sling:Mapping");
         toContent.setProperty("sling:match", "(playground|designground)");
         toContent.setProperty(PROP_REDIRECT_INTERNAL, "/content/$1");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             Resource res = resResolver.resolve(request, "/playground.html");
             assertNotNull(res);
             assertEquals("/content/playground.html", res.getPath());
@@ -535,10 +520,7 @@ public class ResourceResolverTest {
 
             // update the match
             toContent.setProperty("sling:match", "(homeground|foreignground)");
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             res = resResolver.resolve(request, "/homeground.html");
             assertNotNull(res);
@@ -557,7 +539,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceInternalRedirectExact() throws Exception {
+    @Test public void testResolveResourceInternalRedirectExact() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             null, -1, rootPath);
         Node localhost443 = mapRoot.getNode("map/https/localhost.443");
@@ -565,12 +547,9 @@ public class ResourceResolverTest {
         toContent.setProperty("sling:match", "virtual$");
         toContent.setProperty(PROP_REDIRECT_INTERNAL,
             "/content/virtual.html");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             Resource res = resResolver.resolve(request, "/virtual");
             assertNotNull(res);
             assertEquals("/content/virtual.html", res.getPath());
@@ -596,7 +575,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceInternalRedirectDepthFirst()
+    @Test public void testResolveResourceInternalRedirectDepthFirst()
             throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             null, -1, rootPath);
@@ -611,12 +590,9 @@ public class ResourceResolverTest {
         toContent.setProperty("sling:match", "virtual$");
         toContent.setProperty(PROP_REDIRECT_INTERNAL,
             "/content2/virtual.html");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             Resource res = resResolver.resolve(request, "/virtual");
             assertNotNull(res);
             assertEquals("/content2/virtual.html", res.getPath());
@@ -635,19 +611,16 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttp80() throws Exception {
+    @Test public void testResolveVirtualHostHttp80() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest(null,
             "virtual.host.com", -1, rootPath);
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             "virtual.host.com.80", "sling:Mapping");
         virtualhost80.setProperty(PROP_REDIRECT_INTERNAL,
             "/content/virtual");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             final Resource res0 = resResolver.resolve(request, "/playground.html");
             assertNotNull(res0);
             assertEquals("/content/virtual/playground.html", res0.getPath());
@@ -672,7 +645,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttp80Multiple() throws Exception {
+    @Test public void testResolveVirtualHostHttp80Multiple() throws Exception {
 
         final String de = "de";
         final String en = "en";
@@ -689,14 +662,11 @@ public class ResourceResolverTest {
             "sling:Mapping");
         virtualhost80.setProperty(PROP_REDIRECT_INTERNAL,
             contentEN);
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
+            
             // de content mapping
-
             final HttpServletRequest requestDE = new FakeSlingHttpServletRequest(
                 null, hostDE, -1, rootPath);
             final Resource resDE0 = resResolver.resolve(requestDE,
@@ -749,7 +719,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttp80MultipleRoot() throws Exception {
+    @Test public void testResolveVirtualHostHttp80MultipleRoot() throws Exception {
 
         final String de = "de";
         final String en = "en";
@@ -766,14 +736,11 @@ public class ResourceResolverTest {
             "sling:Mapping");
         virtualhost80.setProperty(PROP_REDIRECT_INTERNAL,
             "/");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
+            
             // de content mapping
-
             final HttpServletRequest requestDE = new FakeSlingHttpServletRequest(
                 null, hostDE, -1, rootPath);
             final Resource resDE0 = resResolver.resolve(requestDE,
@@ -857,18 +824,16 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttp8080() throws Exception {
+    @Test public void testResolveVirtualHostHttp8080() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest(null,
             "virtual.host.com", 8080, rootPath);
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             "virtual.host.com.8080", "sling:Mapping");
         virtualhost80.setProperty(PROP_REDIRECT_INTERNAL,
             "/content/virtual");
-        session.save();
-
-        Thread.sleep(sleepTime);
 
         try {
+            saveMappings(session);
             final Resource res0 = resResolver.resolve(request, "/playground.html");
             assertNotNull(res0);
             assertEquals("/content/virtual/playground.html", res0.getPath());
@@ -894,19 +859,16 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttp8080Root() throws Exception {
+    @Test public void testResolveVirtualHostHttp8080Root() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest(null,
             "virtual.host.com", 8080, rootPath);
         Node virtualhost80 = mapRoot.getNode("map/http").addNode(
             "virtual.host.com.8080", "sling:Mapping");
         virtualhost80.setProperty(PROP_REDIRECT_INTERNAL,
             "/");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             final Resource res0 = resResolver.resolve(request, "/playground.html");
             assertNotNull(res0);
             assertEquals("/playground.html", res0.getPath());
@@ -932,19 +894,16 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttps443() throws Exception {
+    @Test public void testResolveVirtualHostHttps443() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             "virtual.host.com", -1, rootPath);
         Node virtualhost443 = mapRoot.getNode("map/https").addNode(
             "virtual.host.com.443", "sling:Mapping");
         virtualhost443.setProperty(PROP_REDIRECT_INTERNAL,
             "/content/virtual");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             final Resource res0 = resResolver.resolve(request, "/playground.html");
             assertNotNull(res0);
             assertEquals("/content/virtual/playground.html", res0.getPath());
@@ -969,19 +928,16 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttps4443() throws Exception {
+    @Test public void testResolveVirtualHostHttps4443() throws Exception {
         HttpServletRequest request = new FakeSlingHttpServletRequest("https",
             "virtual.host.com", 4443, rootPath);
         Node virtualhost4443 = mapRoot.getNode("map/https").addNode(
             "virtual.host.com.4443", "sling:Mapping");
         virtualhost4443.setProperty(PROP_REDIRECT_INTERNAL,
             "/content/virtual");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
-
+        
         try {
+            saveMappings(session);
             final Resource res0 = resResolver.resolve(request, "/playground.html");
             assertNotNull(res0);
             assertEquals("/content/virtual/playground.html", res0.getPath());
@@ -1007,7 +963,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveVirtualHostHttpVsHttps() throws Exception {
+    @Test public void testResolveVirtualHostHttpVsHttps() throws Exception {
 
         final String host0 = "www.host.com";
         final String host1 = "secure.host.com";
@@ -1021,14 +977,10 @@ public class ResourceResolverTest {
             host0 + ".443", "sling:Mapping");
         virtualhost443.setProperty(PROP_REDIRECT_INTERNAL,
             content);
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         // HTTP request
-
         try {
+            saveMappings(session);
             final HttpServletRequest requestHttp0 = new FakeSlingHttpServletRequest(
                 null, host0, -1, rootPath);
             final Resource resHttp0 = resResolver.resolve(requestHttp0, "/playground.html");
@@ -1095,15 +1047,13 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceAlias() throws Exception {
+    @Test public void testResolveResourceAlias() throws Exception {
         // define an alias for the rootPath
         String alias = "testAlias";
         rootNode.setProperty("sling:alias", alias);
-        session.save();
-
-        Thread.sleep(sleepTime);
 
         try {
+            saveMappings(session);
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + alias + ".print.html");
 
@@ -1141,17 +1091,14 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testResolveResourceAliasJcrContent() throws Exception {
+    @Test public void testResolveResourceAliasJcrContent() throws Exception {
         // define an alias for the rootPath in the jcr:content child node
         String alias = "testAlias";
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
         content.setProperty("sling:alias", alias);
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
             String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + alias + ".print.html");
 
@@ -1192,12 +1139,9 @@ public class ResourceResolverTest {
 
             Node child = rootNode.addNode("child", "nt:unstructured");
             child.setProperty("sling:alias", alias);
-            session.save();
 
             try {
-                Thread.sleep(sleepTime);
-
-
+                saveMappings(session);
                 res = resResolver.resolve(request, path);
                 assertEquals(child.getPath(), res.getPath());
             } finally {
@@ -1211,7 +1155,7 @@ public class ResourceResolverTest {
 
     }
 
-    public void testResolveVanityPath() throws Exception {
+    @Test public void testResolveVanityPath() throws Exception {
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath)
                 + "/" + vanity + ".print.html");
 
@@ -1245,7 +1189,7 @@ public class ResourceResolverTest {
         assertTrue(rootNode.isSame(res.adaptTo(Node.class)));
     }
 
-    public void testGetDoesNotGoUp() throws Exception {
+    @Test public void testGetDoesNotGoUp() throws Exception {
 
         final String path = rootPath + "/nothing";
 
@@ -1266,7 +1210,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testGetRemovesExtensionInResolution() throws Exception {
+    @Test public void testGetRemovesExtensionInResolution() throws Exception {
         final String path = rootPath + ".whatever";
         final Resource res = resResolver.resolve(
             new FakeSlingHttpServletRequest(path, "GET"), path);
@@ -1276,7 +1220,7 @@ public class ResourceResolverTest {
             res.getResourceType());
     }
 
-    public void testStarResourcePlain() throws Exception {
+    @Test public void testStarResourcePlain() throws Exception {
         final String path = rootPath + "/" + System.currentTimeMillis() + "/*";
         testStarResourceHelper(path, "GET");
         testStarResourceHelper(path, "POST");
@@ -1284,7 +1228,7 @@ public class ResourceResolverTest {
         testStarResourceHelper(path, "DELETE");
     }
 
-    public void testStarResourceExtension() throws Exception {
+    @Test public void testStarResourceExtension() throws Exception {
         final String path = rootPath + "/" + System.currentTimeMillis()
             + "/*.html";
         testStarResourceHelper(path, "GET");
@@ -1293,7 +1237,7 @@ public class ResourceResolverTest {
         testStarResourceHelper(path, "DELETE");
     }
 
-    public void testStarResourceSelectorExtension() throws Exception {
+    @Test public void testStarResourceSelectorExtension() throws Exception {
         final String path = rootPath + "/" + System.currentTimeMillis()
             + "/*.print.a4.html";
         testStarResourceHelper(path, "GET");
@@ -1302,7 +1246,7 @@ public class ResourceResolverTest {
         testStarResourceHelper(path, "DELETE");
     }
 
-    public void testSlingFolder() throws Exception {
+    @Test public void testSlingFolder() throws Exception {
 
         // create a folder
         String folderPath = "folder";
@@ -1335,7 +1279,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMap() throws Exception {
+    @Test public void testMap() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1356,7 +1300,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapURLEscaping() throws Exception {
+    @Test public void testMapURLEscaping() throws Exception {
 
         final String mapHostInternal = "internal.host.com";
         final String mapRootInternal = "/content/internal";
@@ -1365,12 +1309,10 @@ public class ResourceResolverTest {
             mapHostInternal + ".80", "sling:Mapping");
         internalRedirect.setProperty(
             PROP_REDIRECT_INTERNAL, mapRootInternal);
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
+            
             final String path = "/sample with spaces";
             final String escapedPath = "/sample%20with%20spaces";
 
@@ -1416,7 +1358,7 @@ public class ResourceResolverTest {
 
     }
 
-    public void testMapNamespaceMangling() throws Exception {
+    @Test public void testMapNamespaceMangling() throws Exception {
 
         final String mapHost = "virtual.host.com";
         final String mapRootPath = "/content/virtual";
@@ -1426,11 +1368,10 @@ public class ResourceResolverTest {
             mapHost + ".80", "sling:Mapping");
         virtualhost80.setProperty(PROP_REDIRECT_INTERNAL,
             mapRootPath);
-        session.save();
-
-        Thread.sleep(sleepTime);
 
         try {
+            saveMappings(session);
+            
             // ---------------------------------------------------------------------
             // tests expecting paths without context
 
@@ -1510,7 +1451,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapContext() throws Exception {
+    @Test public void testMapContext() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1531,7 +1472,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapExtension() throws Exception {
+    @Test public void testMapExtension() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1553,7 +1494,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapSelectorsExtension() throws Exception {
+    @Test public void testMapSelectorsExtension() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1575,7 +1516,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapExtensionSuffix() throws Exception {
+    @Test public void testMapExtensionSuffix() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1597,7 +1538,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapFragment() throws Exception {
+    @Test public void testMapFragment() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1619,7 +1560,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapQuery() throws Exception {
+    @Test public void testMapQuery() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1641,7 +1582,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapFragmentQuery() throws Exception {
+    @Test public void testMapFragmentQuery() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1663,12 +1604,12 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapEmptyPath() throws Exception {
+    @Test public void testMapEmptyPath() throws Exception {
         String mapped = resResolver.map("");
         assertEquals("/", mapped);
     }
 
-    public void testMapExtensionFragmentQuery() throws Exception {
+    @Test public void testMapExtensionFragmentQuery() throws Exception {
         String path = rootNode.getPath();
         String mapped = resResolver.map(path);
         assertEquals(path, mapped);
@@ -1690,7 +1631,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void testMapResourceAlias() throws Exception {
+    @Test public void testMapResourceAlias() throws Exception {
         // define an alias for the rootPath
         String alias = "testAlias";
         rootNode.setProperty("sling:alias", alias);
@@ -1717,7 +1658,7 @@ public class ResourceResolverTest {
         }
      }
 
-    public void testMapResourceAliasJcrContent() throws Exception {
+    @Test public void testMapResourceAliasJcrContent() throws Exception {
         // define an alias for the rootPath in the jcr:content child node
         String alias = "testAlias";
         Node content = rootNode.addNode("jcr:content", "nt:unstructured");
@@ -1748,7 +1689,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void test_resolve() throws Exception {
+    @Test public void test_resolve() throws Exception {
 
         Node child = rootNode.addNode("child");
         session.save();
@@ -1796,7 +1737,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void test_resolve_extension() throws Exception {
+    @Test public void test_resolve_extension() throws Exception {
 
         final String selExt = ".html";
 
@@ -1846,7 +1787,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void test_resolve_selectors_extension() throws Exception {
+    @Test public void test_resolve_selectors_extension() throws Exception {
 
         final String selExt = ".sel1.sel2.html";
 
@@ -1896,7 +1837,7 @@ public class ResourceResolverTest {
         }
     }
 
-    public void test_resolve_extension_suffix() throws Exception {
+    @Test public void test_resolve_extension_suffix() throws Exception {
 
         final String selExt = ".html/some/suffx.pdf";
 
@@ -1924,7 +1865,7 @@ public class ResourceResolverTest {
     /**
      * Test the order property of the vanity paths
      */
-    public void test_resolve_with_sling_vanity_path_order() throws Exception {
+    @Test public void test_resolve_with_sling_vanity_path_order() throws Exception {
         final String vanityPath = "/ordering";
 
         // create two nodes - child2 with a higher order
@@ -1936,10 +1877,9 @@ public class ResourceResolverTest {
         child2.addMixin("sling:VanityPath");
         child2.setProperty("sling:vanityPath", vanityPath);
         child2.setProperty("sling:vanityOrder", 200);
-        session.save();
 
         try {
-            Thread.sleep(sleepTime);
+            saveMappings(session);
 
 
             // we should get child2 now
@@ -1950,10 +1890,7 @@ public class ResourceResolverTest {
 
             // remove 2
             child2.remove();
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // we should get child 1 now
             rsrc = resResolver.resolve(vanityPath);
@@ -1966,10 +1903,7 @@ public class ResourceResolverTest {
             child2.addMixin("sling:VanityPath");
             child2.setProperty("sling:vanityPath", vanityPath);
             child2.setProperty("sling:vanityOrder", 200);
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // we should get child2 now
             rsrc = resResolver.resolve(vanityPath);
@@ -1979,10 +1913,7 @@ public class ResourceResolverTest {
 
             // change order of child 1 to make it higher than child 2
             child1.setProperty("sling:vanityOrder", 300);
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // we should get child 1 now
             rsrc = resResolver.resolve(vanityPath);
@@ -1992,10 +1923,7 @@ public class ResourceResolverTest {
 
             // change order of child 1 to make it lower than child 2
             child1.setProperty("sling:vanityOrder", 50);
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // we should get child 2 now
             rsrc = resResolver.resolve(vanityPath);
@@ -2011,13 +1939,11 @@ public class ResourceResolverTest {
         }
     }
 
-    public void test_resolve_with_sling_alias() throws Exception {
+    @Test public void test_resolve_with_sling_alias() throws Exception {
 
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
-        session.save();
-
-        Thread.sleep(sleepTime);
+        saveMappings(session);
 
         try {
             // expect kind due to alias and no parent due to mapping
@@ -2040,10 +1966,7 @@ public class ResourceResolverTest {
             // second level alias
             Node grandchild = child.addNode("grandchild");
             grandchild.setProperty("sling:alias", "enkel");
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // expect kind/enkel due to alias and no parent due to mapping
             // the rootPath onto root
@@ -2066,7 +1989,7 @@ public class ResourceResolverTest {
         }
     }
 
-    /*public void test_resolve_with_sling_alias_limited_access() throws Exception {
+    /*@Test public void test_resolve_with_sling_alias_limited_access() throws Exception {
         Principal testUserPrincipal = AccessControlUtil.getPrincipalManager(session).getPrincipal("testuser");
 
         Node child = rootNode.addNode("child");
@@ -2131,17 +2054,15 @@ try {
         }
     }*/
 
-    public void test_resolve_with_sling_alias_multi_value() throws Exception {
+    @Test public void test_resolve_with_sling_alias_multi_value() throws Exception {
 
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", new String[] {
             "kind", "enfant" });
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
+            
             // expect kind due to alias and no parent due to mapping
             // the rootPath onto root
             String path = "/kind";
@@ -2179,10 +2100,7 @@ try {
             // second level alias
             Node grandchild = child.addNode("grandchild");
             grandchild.setProperty("sling:alias", "enkel");
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // expect kind/enkel due to alias and no parent due to mapping
             // the rootPath onto root
@@ -2221,18 +2139,16 @@ try {
         }
     }
 
-    public void test_resolve_with_sling_alias_extension() throws Exception {
+    @Test public void test_resolve_with_sling_alias_extension() throws Exception {
 
         final String selExt = ".html";
 
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
+            
             // expect kind due to alias and no parent due to mapping
             // the rootPath onto root
             String path = "/kind" + selExt;
@@ -2252,10 +2168,7 @@ try {
             // second level alias
             Node grandchild = child.addNode("grandchild");
             grandchild.setProperty("sling:alias", "enkel");
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // expect kind/enkel due to alias and no parent due to mapping
             // the rootPath onto root
@@ -2279,19 +2192,17 @@ try {
         }
     }
 
-    public void test_resolve_with_sling_alias_selectors_extension()
+    @Test public void test_resolve_with_sling_alias_selectors_extension()
             throws Exception {
 
         final String selExt = ".sel1.sel2.html";
 
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
-        session.save();
-
-        Thread.sleep(sleepTime);
-
 
         try {
+            saveMappings(session);
+            
             // expect kind due to alias and no parent due to mapping
             // the rootPath onto root
             String path = "/kind" + selExt;
@@ -2311,10 +2222,7 @@ try {
             // second level alias
             Node grandchild = child.addNode("grandchild");
             grandchild.setProperty("sling:alias", "enkel");
-            session.save();
-
-            Thread.sleep(sleepTime);
-
+            saveMappings(session);
 
             // expect kind/enkel due to alias and no parent due to mapping
             // the rootPath onto root
@@ -2338,18 +2246,17 @@ try {
         }
     }
 
-    public void test_resolve_with_sling_alias_extension_suffix()
+    @Test public void test_resolve_with_sling_alias_extension_suffix()
             throws Exception {
 
         final String selExt = ".html/some/suffx.pdf";
 
         Node child = rootNode.addNode("child");
         child.setProperty("sling:alias", "kind");
-        session.save();
-
-        Thread.sleep(sleepTime);
 
         try {
+            saveMappings(session);
+            
             // expect kind due to alias and no parent due to mapping
             // the rootPath onto root
             String path = "/kind" + selExt;
@@ -2366,8 +2273,6 @@ try {
             session.save();
         }
     }
-
-
 
     // ---------- internal
 
