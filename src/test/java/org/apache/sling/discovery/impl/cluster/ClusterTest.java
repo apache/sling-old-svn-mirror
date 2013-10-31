@@ -19,6 +19,7 @@
 package org.apache.sling.discovery.impl.cluster;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -73,6 +74,81 @@ public class ClusterTest {
         instance3 = null;
     }
 
+    @Test
+    public void testStableClusterId() throws Throwable {
+    	// stop 1 and 2 and create them with a lower heartbeat timeout
+    	instance2.stopHeartbeats();
+    	instance1.stopHeartbeats();
+        instance2.stop();
+        instance1.stop();
+        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 1, 1);
+        instance2 = Instance.newClusterInstance("/var/discovery/impl/", "secondInstance", instance1,
+                false, 1, 1);
+        assertNotNull(instance1);
+        assertNotNull(instance2);
+
+        String clusterId1 = instance1.getClusterViewService()
+                .getClusterView().getId();
+        String clusterId2 = instance2.getClusterViewService()
+                .getClusterView().getId();
+        // the cluster ids must differ
+        assertNotEquals(clusterId1, clusterId2);
+        assertEquals(1, instance1.getClusterViewService().getClusterView().getInstances().size());
+        assertEquals(1, instance2.getClusterViewService().getClusterView().getInstances().size());
+
+        // let the sync/voting happen
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        
+        String newClusterId1 = instance1.getClusterViewService()
+                .getClusterView().getId();
+        String newClusterId2 = instance2.getClusterViewService()
+                .getClusterView().getId();
+        // both cluster ids must be the same
+        assertEquals(newClusterId1, newClusterId1);
+        
+        // either instance1 or instance2 must have kept the cluster id
+        if (!newClusterId1.equals(clusterId1)) {
+        	assertEquals(newClusterId2, clusterId2);
+        }
+        instance1.dumpRepo();
+        assertEquals(2, instance1.getClusterViewService().getClusterView().getInstances().size());
+        assertEquals(2, instance2.getClusterViewService().getClusterView().getInstances().size());
+        
+        // let instance2 'die' by now longer doing heartbeats
+        instance2.stopHeartbeats(); // would actually not be necessary as it was never started.. this test only runs heartbeats manually
+        instance1.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        // the cluster should now have size 1
+        assertEquals(1, instance1.getClusterViewService().getClusterView().getInstances().size());
+        // the instance 2 should be in isolated mode as it is no longer in the established view
+        // hence also size 1
+        assertEquals(1, instance2.getClusterViewService().getClusterView().getInstances().size());
+
+        // but the cluster id must have remained stable
+        instance1.dumpRepo();
+        String actualClusterId = instance1.getClusterViewService()
+                .getClusterView().getId();
+        System.err.println("expected cluster id: "+newClusterId1);
+        System.err.println("actual   cluster id: "+actualClusterId);
+		assertEquals(newClusterId1, actualClusterId);
+    }
+    
     @Test
     public void testClusterView() throws Exception {
         assertNotNull(instance1);
