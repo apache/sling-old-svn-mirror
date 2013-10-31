@@ -18,6 +18,7 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.util;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -90,9 +91,20 @@ public class ServerSideTestClient extends SlingClient {
         return r;
     }
     
+    /** Run server-side test(s)
+     * @param testPackageOrClassName selects which tests to run
+     * @param expectedTestsCount Use a negative -N value to mean "at least N tests"
+     * @throws Exception
+     */
     public void assertTestsPass(String testPackageOrClassName, int expectedTestsCount) throws Exception {
         TestResults results = runTests(testPackageOrClassName);
-        assertEquals("Expecting " + expectedTestsCount + " test(s) for " + testPackageOrClassName, expectedTestsCount, results.getTestCount());
+        if(expectedTestsCount < 0) {
+            assertTrue("Expecting at least " + -expectedTestsCount + " test(s) for " + testPackageOrClassName, 
+                    results.getTestCount() >= -expectedTestsCount);
+        } else {
+            assertEquals("Expecting " + expectedTestsCount + " test(s) for " + testPackageOrClassName, 
+                    expectedTestsCount, results.getTestCount());
+        }
         if(!results.getFailures().isEmpty()) {
             fail(results.getFailures().size() + " tests failed:" + results.getFailures());
         }
