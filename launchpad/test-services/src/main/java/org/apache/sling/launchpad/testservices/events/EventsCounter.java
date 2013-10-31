@@ -1,4 +1,3 @@
-<%@page session="false" %><%
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -15,12 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-%><%@page import="org.apache.sling.launchpad.testservices.exported.ResourceResolverTest,
-                  org.apache.sling.api.resource.ResourceResolverFactory"%><%
-%><%@taglib prefix="sling" uri="http://sling.apache.org/taglibs/sling/1.0" %><%
-%><sling:defineObjects/><%
+package org.apache.sling.launchpad.testservices.events;
 
-    final ResourceResolverFactory factory = sling.getService(ResourceResolverFactory.class);
-    final ResourceResolverTest test = new ResourceResolverTest(factory);
-    test.runTest();
-%>TEST_PASSED
+/** Provide access to events counts */
+public interface EventsCounter {
+    int getEventsCount(String topic);
+}
