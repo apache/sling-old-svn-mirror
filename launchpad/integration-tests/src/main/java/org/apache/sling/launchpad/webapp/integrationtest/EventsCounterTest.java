@@ -17,10 +17,11 @@
 package org.apache.sling.launchpad.webapp.integrationtest;
 
 import static org.junit.Assert.assertTrue;
-import org.apache.sling.commons.json.JSONObject;
+
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.junit.Retry;
 import org.apache.sling.commons.testing.junit.RetryRule;
+import org.apache.sling.launchpad.webapp.integrationtest.util.EventsCounterUtil;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -39,15 +40,10 @@ public class EventsCounterTest {
     /** HTTP tests helper */
     private static final HttpTest H = new HttpTest();
     
-    private static int getResourceEventsCount() throws Exception {
-        final JSONObject json = new JSONObject(H.getContent(HttpTest.HTTP_BASE_URL + "/testing/EventsCounter.json", HttpTest.CONTENT_TYPE_JSON));
-        return json.has(TOPIC) ? json.getInt(TOPIC) : 0;
-    }
-    
     @BeforeClass
     public static void setupClass() throws Exception {
         H.setUp();
-        initialResourceEventsCount = getResourceEventsCount();
+        initialResourceEventsCount = EventsCounterUtil.getEventsCount(H, TOPIC);
         final String testResourcePath = HttpTest.HTTP_BASE_URL + "/testing/" + EventsCounterTest.class.getName() + "." + System.currentTimeMillis();
         toDelete = H.getTestClient().createNode(testResourcePath, null);
     }
@@ -61,6 +57,6 @@ public class EventsCounterTest {
     @Retry
     @Test
     public void testResourceEvents() throws Exception {
-        assertTrue("Expecting events counter to have changed", getResourceEventsCount() > initialResourceEventsCount);
+        assertTrue("Expecting events counter to have changed", EventsCounterUtil.getEventsCount(H, TOPIC) > initialResourceEventsCount);
     }
 }
