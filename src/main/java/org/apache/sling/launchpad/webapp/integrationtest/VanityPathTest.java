@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.launchpad.webapp.integrationtest.util.EventsCounterUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
@@ -35,7 +36,9 @@ public class VanityPathTest extends HttpTestBase {
     private String postUrl;
     private String vanityPath;
     private String vanityUrl;
-
+    private int mappingEventCount;
+    public static final String MAPPING_UPDATE_TOPIC = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -47,10 +50,10 @@ public class VanityPathTest extends HttpTestBase {
             + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         vanityPath = "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/vanity";
         vanityUrl = HTTP_BASE_URL + vanityPath;
-
-
+        
+        mappingEventCount = EventsCounterUtil.getEventsCount(this, MAPPING_UPDATE_TOPIC);
     }
-
+    
     /** test vanity path with internal redirect */
     public void testInternalRedirect() throws IOException {
         // create a node with a vanity path
@@ -190,9 +193,6 @@ public class VanityPathTest extends HttpTestBase {
      * MapEntries to reinitialize.
      */
     private void waitForMapReload() {
-        try {
-            Thread.sleep(750L);
-        } catch (InterruptedException e) {
-        }
+        EventsCounterUtil.waitForEvent(this, MAPPING_UPDATE_TOPIC, 5000, mappingEventCount);
     }
 }
