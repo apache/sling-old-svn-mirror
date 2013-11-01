@@ -225,6 +225,11 @@ public class ServerSideScriptsTest {
             final String destPath = scriptPath + "/test.txt" + test.scriptExtension;
             logger.info("Setting up node {} for {}", destPath, test.testScriptFile.getAbsoluteFile());
             this.slingClient.upload(destPath, new FileInputStream(test.testScriptFile), -1, false);
+            
+            // SLING-3087 with Oak, the Sling JUnit's scriptable module TestAllPaths class
+            // might still see the old script, and not yet the new one, for some time.
+            // There's probably a better way to avoid this...for now just wait a bit
+            Thread.sleep(2000L);
 
             final long startTime = System.currentTimeMillis();
             final ServerSideTestClient.TestResults results = slingClient.runTests("org.apache.sling.junit.scriptable.ScriptableTestsProvider");
