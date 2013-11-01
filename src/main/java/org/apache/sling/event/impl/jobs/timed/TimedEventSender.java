@@ -252,6 +252,15 @@ public class TimedEventSender
                     }
 
                     event = null;
+                } else if (Utility.TOPIC_STOPPED.equals(event.getTopic())){
+                    // stopScheduling() puts this event on the queue, but the intention is unclear to me.
+                    // as the threadStarted flag ensures the background thread is only started once, we must not stop
+                    // the thread, otherwise its never started again upon topology changes.
+                    event = null;
+                } else {
+                    // to ensure the event is reset to null in any case, in order to take from the queue again
+                    // and to not fall into an endless busy loop
+                    event = null;
                 }
             }
         }
