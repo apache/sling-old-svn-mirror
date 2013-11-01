@@ -24,11 +24,26 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.testing.tools.retry.RetryLoop;
+import org.apache.sling.testing.tools.retry.RetryLoop.Condition;
 
 /** Give access to info provided by the test-services EventsCounterServlet */
 public class EventsCounterUtil {
     public static int getEventsCount(HttpTestBase b, String topic) throws JSONException, IOException {
         final JSONObject json = new JSONObject(b.getContent(HttpTest.HTTP_BASE_URL + "/testing/EventsCounter.json", HttpTest.CONTENT_TYPE_JSON));
         return json.has(topic) ? json.getInt(topic) : 0;
+    }
+    
+    public static void waitForEvent(final HttpTestBase b, final String topic, int timeoutMsec, final int previousCount) {
+        final Condition c = new Condition() {
+            public String getDescription() {
+                return "Wait for OSGi event on topic " + topic; 
+            }
+
+            public boolean isTrue() throws Exception {
+                return getEventsCount(b, topic) > previousCount;
+            }
+        };
+        new RetryLoop(c, timeoutMsec, 500);
     }
 }
