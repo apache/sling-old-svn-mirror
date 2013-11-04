@@ -18,7 +18,6 @@ package org.apache.sling.launchpad.webapp.integrationtest.accessManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,14 +38,6 @@ public class GetAclTest extends AbstractAccessManagerTest {
 
 	String testUserId = null;
 	String testUserId2 = null;
-	
-	private void assertPrivilege(Collection<String> privileges, boolean expected, String privilegeName) {
-	    if(expected != privileges.contains(privilegeName)) {
-	        fail("Expected privilege " + privilegeName + " to be " 
-	                + (expected ? "included" : "NOT INCLUDED")
-	                + " in supplied list: " + privileges + ")");
-	    }
-	}
 	
 	@Override
 	protected void tearDown() throws Exception {

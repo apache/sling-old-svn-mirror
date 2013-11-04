@@ -17,6 +17,7 @@
 package org.apache.sling.launchpad.webapp.integrationtest.accessManager;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -75,4 +76,12 @@ public abstract class AbstractAccessManagerTest extends AbstractAuthenticatedTes
         
         return location;
 	}
+	
+    protected void assertPrivilege(Collection<String> privileges, boolean expected, String privilegeName) {
+        if(expected != privileges.contains(privilegeName)) {
+            fail("Expected privilege " + privilegeName + " to be " 
+                    + (expected ? "included" : "NOT INCLUDED")
+                    + " in supplied list: " + privileges + ")");
+        }
+    }
 }

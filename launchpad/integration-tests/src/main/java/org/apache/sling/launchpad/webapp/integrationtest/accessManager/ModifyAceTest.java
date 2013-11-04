@@ -209,9 +209,9 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:readAccessControl"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:addChildNodes"));
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:readAccessControl");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:addChildNodes");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNotNull(deniedArray);
@@ -220,8 +220,8 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertTrue(deniedPrivilegeNames.contains("jcr:modifyAccessControl"));
-		assertTrue(deniedPrivilegeNames.contains("jcr:removeChildNodes"));
+		assertPrivilege(deniedPrivilegeNames, true, "jcr:modifyAccessControl");
+		assertPrivilege(deniedPrivilegeNames, true, "jcr:removeChildNodes");
 		
 		
 		
@@ -258,9 +258,9 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray2.length(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames2.contains("jcr:read"));
-		assertTrue(grantedPrivilegeNames2.contains("jcr:addChildNodes"));
-		assertTrue(grantedPrivilegeNames2.contains("jcr:modifyProperties"));
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:read");
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:addChildNodes");
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:modifyProperties");
 
 		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
 		assertNotNull(deniedArray2);
@@ -269,8 +269,8 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray2.length(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
-		assertTrue(deniedPrivilegeNames2.contains("jcr:modifyAccessControl"));
-		assertTrue(deniedPrivilegeNames2.contains("jcr:removeNode"));
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:modifyAccessControl");
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:removeNode");
 	}
 
 	
@@ -314,7 +314,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNotNull(deniedArray);
@@ -323,7 +323,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertTrue(deniedPrivilegeNames.contains("jcr:write"));
+		assertPrivilege(deniedPrivilegeNames, true, "jcr:write");
 		
 		
 		
@@ -357,8 +357,8 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray2.length(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames2.contains("jcr:read"));
-		assertTrue(grantedPrivilegeNames2.contains("jcr:modifyProperties"));
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:read");
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:modifyProperties");
 
 		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
 		assertNotNull(deniedArray2);
@@ -367,11 +367,11 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray2.length(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
-		assertFalse(deniedPrivilegeNames2.contains("jcr:write"));
+		assertPrivilege(deniedPrivilegeNames2, false, "jcr:write");
 		//only the remaining privileges from the disaggregated jcr:write collection should remain.
-		assertTrue(deniedPrivilegeNames2.contains("jcr:addChildNodes"));
-		assertTrue(deniedPrivilegeNames2.contains("jcr:removeNode"));
-		assertTrue(deniedPrivilegeNames2.contains("jcr:removeChildNodes"));
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:addChildNodes");
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:removeNode");
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:removeChildNodes");
 	}
 
 	/**
@@ -414,7 +414,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
 
 		JSONArray deniedArray = aceObject.getJSONArray("denied");
 		assertNotNull(deniedArray);
@@ -423,7 +423,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertTrue(deniedPrivilegeNames.contains("jcr:removeNode"));
+		assertPrivilege(deniedPrivilegeNames, true, "jcr:removeNode");
 		
 		
 		
@@ -458,7 +458,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray2.length(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames2.contains("jcr:read"));
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:read");
 
 		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
 		assertNotNull(deniedArray2);
@@ -467,7 +467,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray2.length(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
-		assertTrue(deniedPrivilegeNames2.contains("jcr:write"));
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:write");
 	}
 
 	
@@ -510,7 +510,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames.contains("jcr:write"));
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:write");
 
 		assertFalse(aceObject.has("denied"));
 		
@@ -546,7 +546,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray2.length(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames2.contains("jcr:write"));
+		assertPrivilege(grantedPrivilegeNames2, true, "jcr:write");
 
 		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
 		assertNotNull(deniedArray2);
@@ -555,7 +555,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < deniedArray2.length(); i++) {
 			deniedPrivilegeNames2.add(deniedArray2.getString(i));
 		}
-		assertTrue(deniedPrivilegeNames2.contains("jcr:nodeTypeManagement"));
+		assertPrivilege(deniedPrivilegeNames2, true, "jcr:nodeTypeManagement");
 	}
 
 
@@ -911,10 +911,10 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames.contains("jcr:versionManagement"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:modifyAccessControl"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:write"));
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:versionManagement");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:modifyAccessControl");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:write");
 
 		JSONArray deniedArray = aceObject.getJSONArray("denied");
 		assertNotNull(deniedArray);
@@ -924,7 +924,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
 		//the leftovers from the denied rep:write that were not granted with jcr:write
-		assertTrue(deniedPrivilegeNames.contains("jcr:nodeTypeManagement")); 
+		assertPrivilege(deniedPrivilegeNames, true, "jcr:nodeTypeManagement"); 
 	}
 
 	/**
@@ -976,15 +976,15 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 		
 		JSONArray grantedArray = aceObject.getJSONArray("granted");
 		assertNotNull(grantedArray);
-		assertEquals(4, grantedArray.length());
 		Set<String> grantedPrivilegeNames = new HashSet<String>();
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertTrue(grantedPrivilegeNames.contains("jcr:versionManagement"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:read"));
-		assertTrue(grantedPrivilegeNames.contains("jcr:modifyAccessControl"));
-		assertTrue(grantedPrivilegeNames.contains("rep:write")); //jcr:nodeTypeManagement + jcr:write
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:versionManagement");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:read");
+		assertPrivilege(grantedPrivilegeNames, true, "jcr:modifyAccessControl");
+		assertPrivilege(grantedPrivilegeNames, true, "rep:write"); //jcr:nodeTypeManagement + jcr:write
+        assertEquals("Expecting the correct number of privileges in " + grantedPrivilegeNames, 4, grantedPrivilegeNames.size());
 
 		//should be nothing left in the denied set.
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
