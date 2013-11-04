@@ -41,7 +41,6 @@ import javax.jcr.query.Query;
 
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -55,7 +54,7 @@ import org.slf4j.LoggerFactory;
  *  in a quick test that didn't work well with variable
  *  @Config annotations.
  */
-public abstract class SlingRepositoryITBase {
+public abstract class CommonTests {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final AtomicInteger counter = new AtomicInteger();

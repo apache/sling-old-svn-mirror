@@ -167,7 +167,7 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.logservice</artifactId>
             <version>1.0.2</version>
-            <scope>optional</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

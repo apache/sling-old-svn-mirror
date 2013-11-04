@@ -32,7 +32,7 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class OakRepositoryIT extends SlingRepositoryITBase {
+public class OakRepositoryIT extends CommonTests {
 
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
