@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
 public abstract class CommonTests {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final AtomicInteger counter = new AtomicInteger();
     
     @Inject
     protected SlingRepository repository;
@@ -70,6 +69,7 @@ public abstract class CommonTests {
     protected abstract void doCheckRepositoryDescriptors();
     
     private final List<String> toDelete = new LinkedList<String>();
+    private final AtomicInteger uniqueNameCounter = new AtomicInteger();
     
     private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
         toDelete.add(it.getPath());
@@ -83,7 +83,7 @@ public abstract class CommonTests {
         Session s = repository.loginAdministrative(null);
         try {
             final Node root = s.getRootNode();
-            final String name = "TEST_" + counter.incrementAndGet() + "_" + System.currentTimeMillis();
+            final String name = uniqueName("assertCreateRetrieveNode");
             final String propName = "PN_" + name;
             final String propValue = "PV_" + name;
             final Node child = nodeType == null ? root.addNode(name) : root.addNode(name, nodeType);
@@ -99,6 +99,10 @@ public abstract class CommonTests {
         } finally {
             s.logout();
         }
+    }
+    
+    protected String uniqueName(String hint) {
+        return hint + "_" + uniqueNameCounter.incrementAndGet() + "_" + System.currentTimeMillis();
     }
 
     @After
@@ -287,7 +291,7 @@ public abstract class CommonTests {
         final Session s = repository.loginAdministrative(null);
         final int nPaths = 500;
         final int timeoutMsec = 5000;
-        final String prefix = "testOsgiResourceEvents_" + counter.incrementAndGet() + "_" + System.currentTimeMillis();
+        final String prefix = uniqueName("testOsgiResourceEvents");
         
         try {
             for(int i=0; i  < nPaths; i++) {
