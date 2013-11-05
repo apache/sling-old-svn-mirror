@@ -218,58 +218,31 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <version>2.16</version>
                         <executions>
                             <execution>
-                                <id>surefire-integration-test</id>
-                                <phase>integration-test</phase>
                                 <goals>
-                                    <goal>test</goal>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
                                 </goals>
-                                <configuration>
-                                    <!--  needed to make it possible to scan the jar -->
-                                    <useManifestOnlyJar>false</useManifestOnlyJar>
-                                
-                                    <excludes>
-                                        <exclude>none</exclude>
-                                    </excludes>
-                                    <includes>
-                                        <include>
-                                            **/launchpad/testing/TestAll.java
-                                        </include>
-                                    </includes>
-                                    <systemProperties>
-                                        <!--
-                                            WARNING: make sure these URLs are consistent with the
-                                            maven-launchpad-plugin settings below.
-                                        -->
-                                        <property>
-                                            <name>
-                                                launchpad.http.server.url
-                                            </name>
-                                            <value>
-                                                http://${test.host}:${http.port}/
-                                            </value>
-                                        </property>
-                                        <property>
-                                            <name>
-                                                launchpad.webdav.server.url
-                                            </name>
-                                            <value>
-                                                http://${test.host}:${http.port}/${webdav.workspace.path}
-                                            </value>
-                                        </property>
-                                        <property>
-                                            <name>HttpTestBase.readyTimeoutSeconds</name>
-                                            <value>
-                                                ${HttpTestBase.readyTimeoutSeconds}
-                                            </value>
-                                        </property>
-                                    </systemProperties>
-                                </configuration>
                             </execution>
                         </executions>
+                        <configuration>
+                            <dependenciesToScan>
+                                <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
+                            </dependenciesToScan>
+                            <includes>
+                                <include>**/*Test.java</include>
+                                <include>**/*IT.java</include>
+                            </includes>
+                            <excludedGroups>${sling.it.excludedGroups}</excludedGroups>
+                            <systemPropertyVariables>
+                                <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
+                                <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
+                                <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
+                            </systemPropertyVariables>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.sling</groupId>
@@ -299,34 +272,29 @@
             </build>
         </profile>
         <profile>
-            <!--
-                By default, do not run the integration tests in the test phase, as they have
-                no Sling instance to talk to.
-            -->
-            <id>disableIntegrationTestsInTestPhase</id>
+            <id>jackrabbit</id>
             <activation>
+                <activeByDefault>true</activeByDefault>
                 <property>
-                    <name>!maven.test.skip</name>
+                    <name>sling.run.modes</name>
+                    <value>!oak</value>
                 </property>
             </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <excludes>
-                                <exclude>
-                                    ${integration.test.code.path}/**/*.java
-                                </exclude>
-                                <exclude>
-                                     **/launchpad/testing/TestAll.java
-                                </exclude>
-                            </excludes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+            <properties>
+                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.OakOnly</sling.it.excludedGroups>
+            </properties>
+        </profile>
+        <profile>
+            <id>oak</id>
+            <activation>
+                <property>
+                    <name>sling.run.modes</name>
+                    <value>oak</value>
+                </property>
+            </activation>
+            <properties>
+                <sling.it.excludedGroups>org.apache.sling.commons.testing.junit.categories.JackrabbitOnly</sling.it.excludedGroups>
+            </properties>
         </profile>
         <profile>
             <id>pax-web</id>
@@ -507,6 +475,12 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.11</version>
+          <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
