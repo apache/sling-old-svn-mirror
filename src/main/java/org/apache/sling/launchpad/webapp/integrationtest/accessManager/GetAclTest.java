@@ -34,13 +34,13 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * Tests for the 'acl' and 'eacl' Sling Get Operation
  */
-public class GetAclTest extends AbstractAccessManagerTest {
+public class GetAclTest extends AccessManagerTestUtil {
 
 	String testUserId = null;
 	String testUserId2 = null;
 	
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		super.tearDown();
 
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");

@@ -27,7 +27,7 @@ import org.apache.commons.httpclient.NameValuePair;
 /**
  * Test that both Sling-Namespaces and {@link NamespaceMapper} work.
  */
-public class NamespaceMappingTest extends AbstractAuthenticatedTest {
+public class NamespaceMappingTest extends AuthenticatedTestUtil {
 
     /**
      * Verify that Sling-Namespaces works.
@@ -74,7 +74,7 @@ public class NamespaceMappingTest extends AbstractAuthenticatedTest {
     String testUserId = null;
 
     @Override
-    protected void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         if (testUserId != null) {
             //remove the test user if it exists.
             String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
@@ -87,7 +87,7 @@ public class NamespaceMappingTest extends AbstractAuthenticatedTest {
     }
 
     @Override
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
         this.testUserId = createTestUser();
     }

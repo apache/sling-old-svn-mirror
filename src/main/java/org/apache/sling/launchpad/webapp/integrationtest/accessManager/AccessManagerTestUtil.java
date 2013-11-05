@@ -24,19 +24,21 @@ import java.util.Random;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.sling.launchpad.webapp.integrationtest.AbstractAuthenticatedTest;
+import org.apache.sling.launchpad.webapp.integrationtest.AuthenticatedTestUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
 /**
- * Base class for AccessManager tests.
+ * Base class for AccessManager tests - it's called "Util" now
+ * as we're moving tests to JUnit4-style which won't extend
+ * this anymore - but right now some still do.
  */
-public abstract class AbstractAccessManagerTest extends AbstractAuthenticatedTest {
+public class AccessManagerTestUtil extends AuthenticatedTestUtil {
 
 	public static final String TEST_BASE_PATH = "/sling-tests";
     
     private static Random random = new Random(System.currentTimeMillis());
 	
-	protected String createTestFolder() throws IOException {
+	public String createTestFolder() throws IOException {
         String postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + "testFolder" + random.nextInt();
 
         final String location = testClient.createNode(postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
@@ -50,7 +52,7 @@ public abstract class AbstractAccessManagerTest extends AbstractAuthenticatedTes
         return location;
 	}
 	
-	protected String createTestFolder(String jsonContent) throws IOException {
+	public String createTestFolder(String jsonContent) throws IOException {
         final String testPath = TEST_BASE_PATH;
         Map<String, String> props = new HashMap<String, String>();
         String testNode = testClient.createNode(HTTP_BASE_URL + testPath, props);
@@ -77,7 +79,7 @@ public abstract class AbstractAccessManagerTest extends AbstractAuthenticatedTes
         return location;
 	}
 	
-    protected void assertPrivilege(Collection<String> privileges, boolean expected, String privilegeName) {
+    public void assertPrivilege(Collection<String> privileges, boolean expected, String privilegeName) {
         if(expected != privileges.contains(privilegeName)) {
             fail("Expected privilege " + privilegeName + " to be " 
                     + (expected ? "included" : "NOT INCLUDED")

@@ -16,6 +16,9 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.accessManager;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,34 +33,37 @@ import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Tests for the PrivilegesInfo Script Helper
- */
-public class PrivilegesInfoTest extends AbstractAccessManagerTest {
+public class AccessPrivilegesInfoTest {
     private static Random random = new Random(System.currentTimeMillis());
 	
 	String testUserId = null;
 	String testGroupId = null;
 	String testFolderUrl = null;
     Set<String> toDelete = new HashSet<String>();
+    
+    private final AccessManagerTestUtil H = new AccessManagerTestUtil();
 	
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setup() throws Exception {
+		H.setUp();
 
         // Script for server-side PrivilegeInfo calculations
         String scriptPath = "/apps/nt/unstructured";
-        testClient.mkdirs(WEBDAV_BASE_URL, scriptPath);
-        toDelete.add(uploadTestScript(scriptPath,
+        H.getTestClient().mkdirs(HttpTest.WEBDAV_BASE_URL, scriptPath);
+        toDelete.add(H.uploadTestScript(scriptPath,
         				"accessmanager/privileges-info.json.esp",
         				"privileges-info.json.esp"));
 	}
 
-	@Override
-	protected void tearDown() throws Exception {
-		super.tearDown();
+	@After
+	public void cleanup() throws Exception {
+		H.tearDown();
 
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 
@@ -66,32 +72,33 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 			String postUrl = testFolderUrl;
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 			postParams.add(new NameValuePair(":operation", "delete"));
-			assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+			H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 		if (testGroupId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".delete.html";
+			String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+			H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 		if (testUserId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
+			String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+			H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 		
         for(String script : toDelete) {
-            testClient.delete(script);
+            H.getTestClient().delete(script);
         }
 	}
 	
 	/*
 	 * testuser granted read / denied write
 	 */
+	@Test 
 	public void testDeniedWriteForUser() throws IOException, JSONException {
-		testUserId = createTestUser();
-		testFolderUrl = createTestFolder();
+		testUserId = H.createTestUser();
+		testFolderUrl = H.createTestFolder();
 		
 		//assign some privileges
         String postUrl = testFolderUrl + ".modifyAce.html";
@@ -103,14 +110,14 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
 		
 		Credentials adminCreds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		String getUrl = testFolderUrl + ".privileges-info.json";
 
 		//fetch the JSON for the test page to verify the settings.
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 
-		String json = getAuthenticatedContent(testUserCreds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
 		
@@ -125,9 +132,10 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 	/*
 	 * testuser granted read / granted write
 	 */
+	@Test 
 	public void testGrantedWriteForUser() throws IOException, JSONException {
-		testUserId = createTestUser();
-		testFolderUrl = createTestFolder();
+		testUserId = H.createTestUser();
+		testFolderUrl = H.createTestFolder();
 		
 		//assign some privileges
         String postUrl = testFolderUrl + ".modifyAce.html";
@@ -140,14 +148,14 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "granted"));
 		
 		Credentials adminCreds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		String getUrl = testFolderUrl + ".privileges-info.json";
 
 		//fetch the JSON for the test page to verify the settings.
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 
-		String json = getAuthenticatedContent(testUserCreds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
 		
@@ -160,17 +168,17 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		assertEquals(true, jsonObj.getBoolean("canModifyAccessControl"));
 		
 		//add a child node to verify the 'canDelete' use case
-        String childFolderUrl = testClient.createNode(testFolderUrl + "/testFolder" + random.nextInt() + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        String childFolderUrl = H.getTestClient().createNode(testFolderUrl + "/testFolder" + random.nextInt() + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         String childPostUrl = childFolderUrl + ".modifyAce.html";
 
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:removeNode", "granted"));
-		assertAuthenticatedPostStatus(adminCreds, childPostUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, childPostUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		String childGetUrl = childFolderUrl + ".privileges-info.json";
-		String childJson = getAuthenticatedContent(testUserCreds, childGetUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String childJson = H.getAuthenticatedContent(testUserCreds, childGetUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(childJson);
 		JSONObject childJsonObj = new JSONObject(childJson);
 		assertEquals(true, childJsonObj.getBoolean("canDelete"));
@@ -181,18 +189,19 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 	/*
 	 * group testuser granted read / denied write
 	 */
+	@Test 
 	public void testDeniedWriteForGroup() throws IOException, JSONException {
-		testGroupId = createTestGroup();
-		testUserId = createTestUser();
-		testFolderUrl = createTestFolder();
+		testGroupId = H.createTestGroup();
+		testUserId = H.createTestUser();
+		testFolderUrl = H.createTestFolder();
 
 		Credentials adminCreds = new UsernamePasswordCredentials("admin", "admin");
 
 		//add testUserId to testGroup
-        String groupPostUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
+        String groupPostUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 		List<NameValuePair> groupPostParams = new ArrayList<NameValuePair>();
 		groupPostParams.add(new NameValuePair(":member", testUserId));
-		assertAuthenticatedPostStatus(adminCreds, groupPostUrl, HttpServletResponse.SC_OK, groupPostParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, groupPostUrl, HttpServletResponse.SC_OK, groupPostParams, null);
 		
 		//assign some privileges
         String postUrl = testFolderUrl + ".modifyAce.html";
@@ -203,14 +212,14 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("privilege@jcr:readAccessControl", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
 		
-		assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		String getUrl = testFolderUrl + ".privileges-info.json";
 
 		//fetch the JSON for the test page to verify the settings.
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 
-		String json = getAuthenticatedContent(testUserCreds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
 		
@@ -225,18 +234,19 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 	/*
 	 * group testuser granted read / granted write
 	 */
+	@Test 
 	public void testGrantedWriteForGroup() throws IOException, JSONException {
-		testGroupId = createTestGroup();
-		testUserId = createTestUser();
-		testFolderUrl = createTestFolder();
+		testGroupId = H.createTestGroup();
+		testUserId = H.createTestUser();
+		testFolderUrl = H.createTestFolder();
 
 		Credentials adminCreds = new UsernamePasswordCredentials("admin", "admin");
 
 		//add testUserId to testGroup
-        String groupPostUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
+        String groupPostUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".update.html";
 		List<NameValuePair> groupPostParams = new ArrayList<NameValuePair>();
 		groupPostParams.add(new NameValuePair(":member", testUserId));
-		assertAuthenticatedPostStatus(adminCreds, groupPostUrl, HttpServletResponse.SC_OK, groupPostParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, groupPostUrl, HttpServletResponse.SC_OK, groupPostParams, null);
 
 		//assign some privileges
         String postUrl = testFolderUrl + ".modifyAce.html";
@@ -248,14 +258,14 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("privilege@jcr:readAccessControl", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:modifyAccessControl", "granted"));
 		
-		assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		String getUrl = testFolderUrl + ".privileges-info.json";
 
 		//fetch the JSON for the test page to verify the settings.
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 
-		String json = getAuthenticatedContent(testUserCreds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
 		
@@ -269,17 +279,17 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		
 
 		//add a child node to verify the 'canDelete' use case
-        String childFolderUrl = testClient.createNode(testFolderUrl + "/testFolder" + random.nextInt() + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+        String childFolderUrl = H.getTestClient().createNode(testFolderUrl + "/testFolder" + random.nextInt() + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         String childPostUrl = childFolderUrl + ".modifyAce.html";
 
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testGroupId));
 		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:removeNode", "granted"));
-		assertAuthenticatedPostStatus(adminCreds, childPostUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, childPostUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		String childGetUrl = childFolderUrl + ".privileges-info.json";
-		String childJson = getAuthenticatedContent(testUserCreds, childGetUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String childJson = H.getAuthenticatedContent(testUserCreds, childGetUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(childJson);
 		JSONObject childJsonObj = new JSONObject(childJson);
 		assertEquals(true, childJsonObj.getBoolean("canDelete"));
@@ -289,8 +299,9 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 	/**
 	 * Test the fix for SLING-1090
 	 */
+	@Test 
 	public void testSLING_1090() throws Exception {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 
         //grant jcr: removeChildNodes to the root node
         ArrayList<NameValuePair> postParams = new ArrayList<NameValuePair>();
@@ -298,10 +309,10 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:removeChildNodes", "granted"));
 		Credentials adminCreds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(adminCreds, HTTP_BASE_URL + "/.modifyAce.html", HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, HttpTest.HTTP_BASE_URL + "/.modifyAce.html", HttpServletResponse.SC_OK, postParams, null);
 
 		//create a node as a child of the root folder
-		testFolderUrl = testClient.createNode(HTTP_BASE_URL + "/testFolder" + random.nextInt() + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
+		testFolderUrl = H.getTestClient().createNode(HttpTest.HTTP_BASE_URL + "/testFolder" + random.nextInt() + SlingPostConstants.DEFAULT_CREATE_SUFFIX, null);
         String postUrl = testFolderUrl + ".modifyAce.html";
         
         //grant jcr:removeNode to the test node
@@ -309,12 +320,12 @@ public class PrivilegesInfoTest extends AbstractAccessManagerTest {
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:read", "granted"));
 		postParams.add(new NameValuePair("privilege@jcr:removeNode", "granted"));
-		assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(adminCreds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		//fetch the JSON for the test page to verify the settings.
 		String getUrl = testFolderUrl + ".privileges-info.json";
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
-		String json = getAuthenticatedContent(testUserCreds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(testUserCreds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObj = new JSONObject(json);
 		assertEquals(true, jsonObj.getBoolean("canDelete"));

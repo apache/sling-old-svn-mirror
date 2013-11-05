@@ -32,12 +32,12 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * Tests for the 'createUser' Sling Post Operation
  */
-public class CreateUserTest extends AbstractUserManagerTest {
+public class CreateUserTest extends UserManagerTestUtil {
     private static Random random = new Random(System.currentTimeMillis());
     private String testUserId;
 
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		if (testUserId != null) {
 			//remove the test user if it exists.
 			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";

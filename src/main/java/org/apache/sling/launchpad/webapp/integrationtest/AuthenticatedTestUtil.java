@@ -32,22 +32,22 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTest;
 
 /**
- * This class consists of utility methods for writing tests which use authentication.
+ * Utility class for tests which use authentication.
  */
-public abstract class AbstractAuthenticatedTest extends HttpTestBase {
+public class AuthenticatedTestUtil extends HttpTest {
 
     /** Execute a POST request and check status */
-    protected void assertAuthenticatedAdminPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
+    public void assertAuthenticatedAdminPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
     throws IOException {
         Credentials defaultcreds = new UsernamePasswordCredentials("admin", "admin");
         assertAuthenticatedPostStatus(defaultcreds, url, expectedStatusCode, postParams, assertMessage);
     }
 
     /** Execute a POST request and check status */
-    protected void assertAuthenticatedPostStatus(Credentials creds, String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
+    public void assertAuthenticatedPostStatus(Credentials creds, String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
     throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
@@ -77,7 +77,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
 
     /** Verify that given URL returns expectedStatusCode
      * @throws IOException */
-    protected void assertAuthenticatedHttpStatus(Credentials creds, String urlString, int expectedStatusCode, String assertMessage) throws IOException {
+    public void assertAuthenticatedHttpStatus(Credentials creds, String urlString, int expectedStatusCode, String assertMessage) throws IOException {
         URL baseUrl = new URL(HTTP_BASE_URL);
         AuthScope authScope = new AuthScope(baseUrl.getHost(), baseUrl.getPort(), AuthScope.ANY_REALM);
         GetMethod getMethod = new GetMethod(urlString);
@@ -102,7 +102,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
      * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
      * @throws IOException
      * @throws HttpException */
-    protected String getAuthenticatedContent(Credentials creds, String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
+    public String getAuthenticatedContent(Credentials creds, String url, String expectedContentType, List<NameValuePair> params, int expectedStatusCode) throws IOException {
         final GetMethod get = new GetMethod(url);
 
         URL baseUrl = new URL(HTTP_BASE_URL);
@@ -157,7 +157,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
      * @param expectedContentType use CONTENT_TYPE_DONTCARE if must not be checked
      * @throws IOException
      * @throws HttpException */
-    protected String getAuthenticatedPostContent(Credentials creds, String url, String expectedContentType, List<NameValuePair> postParams, int expectedStatusCode) throws IOException {
+    public String getAuthenticatedPostContent(Credentials creds, String url, String expectedContentType, List<NameValuePair> postParams, int expectedStatusCode) throws IOException {
         final PostMethod post = new PostMethod(url);
 
         URL baseUrl = new URL(HTTP_BASE_URL);
@@ -218,7 +218,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
         return val;
     }
 
-    protected String createTestUser() throws IOException {
+    public String createTestUser() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/user.create.html";
 
         String testUserId = "testUser" + getNextInt();
@@ -237,7 +237,7 @@ public abstract class AbstractAuthenticatedTest extends HttpTestBase {
         return testUserId;
     }
 
-    protected String createTestGroup() throws IOException {
+    public String createTestGroup() throws IOException {
         String postUrl = HTTP_BASE_URL + "/system/userManager/group.create.html";
 
         String testGroupId = "testGroup" + getNextInt();

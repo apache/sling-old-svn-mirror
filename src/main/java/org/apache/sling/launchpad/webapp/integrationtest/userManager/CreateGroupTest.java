@@ -32,13 +32,13 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * Tests for the 'createGroup' Sling Post Operation
  */
-public class CreateGroupTest extends AbstractUserManagerTest {
+public class CreateGroupTest extends UserManagerTestUtil {
     private static Random random = new Random(System.currentTimeMillis());
 
 	String testGroupId = null;
 
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		if (testGroupId != null) {
 			//remove the test group if it exists.
 			String postUrl = HTTP_BASE_URL + "/system/userManager/group/" + testGroupId + ".delete.html";
