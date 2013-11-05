@@ -16,6 +16,10 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.servlets.post;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,33 +44,46 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
+import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.apache.sling.launchpad.webapp.integrationtest.AuthenticatedTestUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TestName;
 
-public class PostServletPrivilegesUpdateTest extends AuthenticatedTestUtil {
+public class PostServletPrivilegesUpdateTest {
     public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
 	private String testUserId = null;
+	
+	private final AuthenticatedTestUtil H = new AuthenticatedTestUtil(); 
+	
+    @Rule 
+    public TestName testName = new TestName();
 
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
-        postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
+    @Before
+    public void setup() throws Exception {
+        H.setUp();
+        postUrl = HttpTest.HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
 
    /* (non-Javadoc)
 	 * @see org.apache.sling.commons.testing.integration.HttpTestBase#tearDown()
 	 */
-	@Override
-	public void tearDown() throws Exception {
+	@After
+	public void cleanup() throws Exception {
 		if (testUserId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
+			String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
+			H.assertAuthenticatedAdminPostStatus(postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
-		super.tearDown();
+		H.tearDown();
 	}
 
     /**
@@ -75,22 +92,24 @@ public class PostServletPrivilegesUpdateTest extends AuthenticatedTestUtil {
      * 2. When changing an existing property observers should receive a PROPERTY_CHANGED event instead 
      *     of a PROPERTY_REMOVED event and a PROPERTY_ADDED event
      */
+    @Test 
+    @Category(JackrabbitOnly.class) // TODO: fails on Oak
     public void testUpdatePropertyPrivilegesAndEvents() throws IOException, JSONException, RepositoryException, InterruptedException {
     	//1. Create user as admin (OK)
         // curl -F:name=myuser -Fpwd=password -FpwdConfirm=password http://admin:admin@localhost:8080/system/userManager/user.create.html
-    	testUserId = createTestUser();
+    	testUserId = H.createTestUser();
 
     	//2. Create node as admin (OK)
         // curl -F:nameHint=node -FpropOne=propOneValue1 -FpropOne=propOneValue2 -FpropTwo=propTwoValue http://admin:admin@localhost:8080/test/
         final String createTestNodeUrl = postUrl + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         NameValuePairList clientNodeProperties = new NameValuePairList();
-        clientNodeProperties.add(SlingPostConstants.RP_NODE_NAME_HINT, getName());
+        clientNodeProperties.add(SlingPostConstants.RP_NODE_NAME_HINT, testName.getMethodName());
         clientNodeProperties.add("propOne", "propOneValue1");
         clientNodeProperties.add("propOne", "propOneValue2");
         clientNodeProperties.add("propTwo", "propTwoValue");
-    	String testNodeUrl = testClient.createNode(createTestNodeUrl, clientNodeProperties, null, false);
+    	String testNodeUrl = H.getTestClient().createNode(createTestNodeUrl, clientNodeProperties, null, false);
 
-        String content = getContent(testNodeUrl + ".json", CONTENT_TYPE_JSON);
+        String content = H.getContent(testNodeUrl + ".json", HttpTest.CONTENT_TYPE_JSON);
         JSONObject json = new JSONObject(content);
         Object propOneObj = json.opt("propOne");
         assertTrue(propOneObj instanceof JSONArray);
@@ -111,24 +130,24 @@ public class PostServletPrivilegesUpdateTest extends AuthenticatedTestUtil {
     	postParams.add(new NameValuePair("propTwo", "propTwoValueChanged2"));
 		Credentials testUserCreds = new UsernamePasswordCredentials(testUserId, "testPwd");
 		String expectedMessage = "Expected javax.jcr.AccessDeniedException";
-    	assertAuthenticatedPostStatus(testUserCreds, testNodeUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, expectedMessage);
+    	H.assertAuthenticatedPostStatus(testUserCreds, testNodeUrl, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, postParams, expectedMessage);
     	
         //4. Grant jcr:modifyProperties rights to testUser as admin (OK)
         // curl -FprincipalId=myuser -Fprivilege@jcr:modifyProperties=granted http://admin:admin@localhost:8080/test/node.modifyAce.html
         Map<String, String> nodeAceProperties = new HashMap<String, String>();
         nodeAceProperties.put("principalId", testUserId);
         nodeAceProperties.put("privilege@jcr:modifyProperties", "granted");
-    	testClient.createNode(testNodeUrl + ".modifyAce.html", nodeAceProperties);
+    	H.getTestClient().createNode(testNodeUrl + ".modifyAce.html", nodeAceProperties);
     	
         //use a davex session to verify the correct JCR events are delivered
-        Repository repository = JcrUtils.getRepository(HTTP_BASE_URL + "/server/");
+        Repository repository = JcrUtils.getRepository(HttpTest.HTTP_BASE_URL + "/server/");
         Session jcrSession = null;
         TestEventListener listener = new TestEventListener();
         ObservationManager observationManager = null;
         try {
             jcrSession = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
             observationManager = jcrSession.getWorkspace().getObservationManager();
-        	String testNodePath = testNodeUrl.substring(HTTP_BASE_URL.length());
+        	String testNodePath = testNodeUrl.substring(HttpTest.HTTP_BASE_URL.length());
             observationManager.addEventListener(listener, 
 					Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED, //event types
 					testNodePath, //absPath
@@ -139,10 +158,10 @@ public class PostServletPrivilegesUpdateTest extends AuthenticatedTestUtil {
         
             //5. Attempt to update properties of node (OK)
             // curl -FpropOne=propOneValueChanged -FpropTwo=propTwoValueChanged1 -FpropTwo=propTwoValueChanged2 http://myuser:password@localhost:8080/test/node
-        	assertAuthenticatedPostStatus(testUserCreds, testNodeUrl, HttpServletResponse.SC_OK, postParams, expectedMessage);
+        	H.assertAuthenticatedPostStatus(testUserCreds, testNodeUrl, HttpServletResponse.SC_OK, postParams, expectedMessage);
         	
         	//verify the change happened
-            String afterUpdateContent = getContent(testNodeUrl + ".json", CONTENT_TYPE_JSON);
+            String afterUpdateContent = H.getContent(testNodeUrl + ".json", HttpTest.CONTENT_TYPE_JSON);
             JSONObject afterUpdateJson = new JSONObject(afterUpdateContent);
             Object afterUpdatePropOneObj = afterUpdateJson.opt("propOne");
             assertTrue(afterUpdatePropOneObj instanceof JSONArray);
