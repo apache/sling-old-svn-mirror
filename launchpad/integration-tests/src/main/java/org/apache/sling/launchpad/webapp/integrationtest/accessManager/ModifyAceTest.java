@@ -34,7 +34,7 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * Tests for the 'modifyAce' Sling Post Operation
  */
-public class ModifyAceTest extends AbstractAccessManagerTest {
+public class ModifyAceTest extends AccessManagerTestUtil {
 
 	String testUserId = null;
 	String testUserId2 = null;
@@ -42,7 +42,7 @@ public class ModifyAceTest extends AbstractAccessManagerTest {
 	String testFolderUrl = null;
 	
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		super.tearDown();
 
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");

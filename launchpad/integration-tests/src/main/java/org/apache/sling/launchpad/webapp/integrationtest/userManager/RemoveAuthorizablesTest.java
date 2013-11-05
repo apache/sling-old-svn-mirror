@@ -31,7 +31,7 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * Tests for the 'removeAuthorizable' Sling Post Operation
  */
-public class RemoveAuthorizablesTest extends AbstractUserManagerTest {
+public class RemoveAuthorizablesTest extends UserManagerTestUtil {
 
 	public void testRemoveUser() throws IOException {
 		String userId = createTestUser();

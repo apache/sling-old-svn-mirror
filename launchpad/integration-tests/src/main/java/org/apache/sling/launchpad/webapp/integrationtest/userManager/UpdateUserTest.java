@@ -33,12 +33,12 @@ import org.apache.sling.commons.json.JSONObject;
  * Tests for the 'updateAuthorizable' and 'changePassword' Sling Post 
  * Operations on a user resource.
  */
-public class UpdateUserTest extends AbstractUserManagerTest {
+public class UpdateUserTest extends UserManagerTestUtil {
 
 	String testUserId = null;
 	
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		if (testUserId != null) {
 			//remove the test user if it exists.
 			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";

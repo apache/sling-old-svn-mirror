@@ -32,13 +32,13 @@ import org.apache.sling.commons.json.JSONObject;
 /**
  * Tests for the 'removeAce' Sling POST operation
  */
-public class RemoveAcesTest extends AbstractAccessManagerTest {
+public class RemoveAcesTest extends AccessManagerTestUtil {
 	String testUserId = null;
 	String testGroupId = null;
 	String testFolderUrl = null;
 	
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		super.tearDown();
 
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");

@@ -41,16 +41,16 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.NameValuePairList;
-import org.apache.sling.launchpad.webapp.integrationtest.AbstractAuthenticatedTest;
+import org.apache.sling.launchpad.webapp.integrationtest.AuthenticatedTestUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
 
-public class PostServletPrivilegesUpdateTest extends AbstractAuthenticatedTest {
+public class PostServletPrivilegesUpdateTest extends AuthenticatedTestUtil {
     public static final String TEST_BASE_PATH = "/sling-tests";
     private String postUrl;
 	private String testUserId = null;
 
     @Override
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
         super.setUp();
         postUrl = HTTP_BASE_URL + TEST_BASE_PATH + "/" + System.currentTimeMillis();
     }
@@ -59,7 +59,7 @@ public class PostServletPrivilegesUpdateTest extends AbstractAuthenticatedTest {
 	 * @see org.apache.sling.commons.testing.integration.HttpTestBase#tearDown()
 	 */
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
 		if (testUserId != null) {
 			//remove the test user if it exists.
 			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";

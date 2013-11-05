@@ -33,14 +33,14 @@ import org.apache.sling.commons.json.JSONObject;
  * Tests for the 'updateAuthorizable' Sling Post Operation on
  * a group resource.
  */
-public class UpdateGroupTest extends AbstractUserManagerTest {
+public class UpdateGroupTest extends UserManagerTestUtil {
 
 	String testGroupId = null;
 
 	String testUserId = null;
 
 	@Override
-	protected void tearDown() throws Exception {
+	public void tearDown() throws Exception {
         if (testUserId != null) {
             //remove the test user if it exists.
             String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
