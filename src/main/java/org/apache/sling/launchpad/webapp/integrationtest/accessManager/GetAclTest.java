@@ -16,6 +16,11 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest.accessManager;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,43 +35,57 @@ import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
+import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Tests for the 'acl' and 'eacl' Sling Get Operation
  */
-public class GetAclTest extends AccessManagerTestUtil {
+public class GetAclTest {
 
 	String testUserId = null;
 	String testUserId2 = null;
 	
-	@Override
-	public void tearDown() throws Exception {
-		super.tearDown();
+	private final AccessManagerTestUtil H = new AccessManagerTestUtil();  
+	
+	@Before
+	public void setup() throws Exception {
+	    H.setUp();
+	}
+	
+	@After
+	public void cleanup() throws Exception {
+		H.tearDown();
 
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
 
 		if (testUserId != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
+			String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+			H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 		if (testUserId2 != null) {
 			//remove the test user if it exists.
-			String postUrl = HTTP_BASE_URL + "/system/userManager/user/" + testUserId2 + ".delete.html";
+			String postUrl = HttpTest.HTTP_BASE_URL + "/system/userManager/user/" + testUserId2 + ".delete.html";
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-			assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+			H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		}
 	}
 	
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclForUser() throws IOException, JSONException {
-		testUserId = createTestUser();
-		testUserId2 = createTestUser();
+		testUserId = H.createTestUser();
+		testUserId2 = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -76,26 +95,26 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId2));
 		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId2));
 		postParams.add(new NameValuePair("privilege@jcr:lockManagement", "granted"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -112,7 +131,7 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:write");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:write");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNull(deniedArray);
@@ -130,8 +149,8 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray2.length(); i++) {
 			grantedPrivilegeNames2.add(grantedArray2.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames2, true, "jcr:write");
-		assertPrivilege(grantedPrivilegeNames2, true, "jcr:lockManagement");
+		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:write");
+		H.assertPrivilege(grantedPrivilegeNames2, true, "jcr:lockManagement");
 
 		JSONArray deniedArray2 = aceObject2.optJSONArray("denied");
 		assertNull(deniedArray2);
@@ -141,10 +160,11 @@ public class GetAclTest extends AccessManagerTestUtil {
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclMergeForUser_ReplacePrivilegeOnChild() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -154,22 +174,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -186,7 +206,7 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:write");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:write");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNull(deniedArray);
@@ -195,10 +215,11 @@ public class GetAclTest extends AccessManagerTestUtil {
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclMergeForUser_FewerPrivilegesGrantedOnChild() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -208,22 +229,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -240,7 +261,7 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNull(deniedArray);
@@ -249,10 +270,11 @@ public class GetAclTest extends AccessManagerTestUtil {
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclMergeForUser_MorePrivilegesGrantedOnChild() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -262,22 +284,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -294,7 +316,7 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:all");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNull(deniedArray);
@@ -303,10 +325,12 @@ public class GetAclTest extends AccessManagerTestUtil {
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Category(JackrabbitOnly.class) // TODO: fails on Oak
+	@Test 
 	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -316,22 +340,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:write", "denied"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -348,21 +372,21 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:write");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:read");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:readAccessControl");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyAccessControl");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:lockManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:versionManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:nodeTypeManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:retentionManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:lifecycleManagement");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:write");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:read");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:readAccessControl");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyAccessControl");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:lockManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:versionManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:nodeTypeManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:retentionManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:lifecycleManagement");
 		//jcr:write aggregate privileges should be denied
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:modifyProperties");
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:addChildNodes");
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:removeNode");
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:removeChildNodes");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:modifyProperties");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:addChildNodes");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:removeNode");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:removeChildNodes");
 		
 		
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
@@ -372,16 +396,17 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertPrivilege(deniedPrivilegeNames, true, "jcr:write");
+		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:write");
 	}
 
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclMergeForUser_SubsetOfPrivilegesDeniedOnChild2() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -391,22 +416,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:all", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:removeNode", "denied"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -423,19 +448,19 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < grantedArray.length(); i++) {
 			grantedPrivilegeNames.add(grantedArray.getString(i));
 		}
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
-		assertPrivilege(grantedPrivilegeNames,false,"jcr:write");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:read");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:readAccessControl");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyAccessControl");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:lockManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:versionManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:nodeTypeManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:retentionManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:lifecycleManagement");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyProperties");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:addChildNodes");
-		assertPrivilege(grantedPrivilegeNames,true,"jcr:removeChildNodes");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:all");
+		H.assertPrivilege(grantedPrivilegeNames,false,"jcr:write");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:read");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:readAccessControl");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyAccessControl");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:lockManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:versionManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:nodeTypeManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:retentionManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:lifecycleManagement");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:modifyProperties");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:addChildNodes");
+		H.assertPrivilege(grantedPrivilegeNames,true,"jcr:removeChildNodes");
 
 		JSONArray deniedArray = aceObject.optJSONArray("denied");
 		assertNotNull(deniedArray);
@@ -444,16 +469,17 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertPrivilege(deniedPrivilegeNames, true, "jcr:removeNode");
+		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:removeNode");
 	}
 
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -463,22 +489,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:write", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:all", "denied"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -498,16 +524,17 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertPrivilege(deniedPrivilegeNames, true, "jcr:all");
+		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:all");
 	}
 
 	/**
 	 * Test for SLING-2600, Effective ACL servlet returns incorrect information
 	 */
+	@Test 
 	public void testEffectiveAclMergeForUser_SupersetOfPrivilegesDeniedOnChild2() throws IOException, JSONException {
-		testUserId = createTestUser();
+		testUserId = H.createTestUser();
 		
-		String testFolderUrl = createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
+		String testFolderUrl = H.createTestFolder("{ 'jcr:primaryType': 'nt:unstructured', 'propOne' : 'propOneValue', 'child' : { 'childPropOne' : true } }");
 		
         String postUrl = testFolderUrl + ".modifyAce.html";
 
@@ -517,22 +544,22 @@ public class GetAclTest extends AccessManagerTestUtil {
 		postParams.add(new NameValuePair("privilege@jcr:modifyProperties", "granted"));
 		
 		Credentials creds = new UsernamePasswordCredentials("admin", "admin");
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 		
 		postParams = new ArrayList<NameValuePair>();
 		postParams.add(new NameValuePair("principalId", testUserId));
 		postParams.add(new NameValuePair("privilege@jcr:all", "denied"));
 		
         postUrl = testFolderUrl + "/child.modifyAce.html";
-		assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
+		H.assertAuthenticatedPostStatus(creds, postUrl, HttpServletResponse.SC_OK, postParams, null);
 
 		
 		//fetch the JSON for the eacl to verify the settings.
 		String getUrl = testFolderUrl + "/child.eacl.json";
 
-		String json = getAuthenticatedContent(creds, getUrl, CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
+		String json = H.getAuthenticatedContent(creds, getUrl, HttpTest.CONTENT_TYPE_JSON, null, HttpServletResponse.SC_OK);
 		assertNotNull(json);
 		JSONObject jsonObject = new JSONObject(json);
 		
@@ -552,6 +579,6 @@ public class GetAclTest extends AccessManagerTestUtil {
 		for (int i=0; i < deniedArray.length(); i++) {
 			deniedPrivilegeNames.add(deniedArray.getString(i));
 		}
-		assertPrivilege(deniedPrivilegeNames, true, "jcr:all");
+		H.assertPrivilege(deniedPrivilegeNames, true, "jcr:all");
 	}
 }
