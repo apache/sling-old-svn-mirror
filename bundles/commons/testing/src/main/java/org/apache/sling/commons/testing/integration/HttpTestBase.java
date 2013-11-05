@@ -102,7 +102,7 @@ public class HttpTestBase extends TestCase {
         }
     };
 
-    protected static String removeEndingSlash(String str) {
+    public static String removeEndingSlash(String str) {
         if(str != null && str.endsWith("/")) {
             return str.substring(0, str.length() - 1);
         }
@@ -157,7 +157,7 @@ public class HttpTestBase extends TestCase {
     /**
      * Generate default credentials used for HTTP requests.
      */
-    protected Credentials getDefaultCredentials() {
+    public Credentials getDefaultCredentials() {
         return new UsernamePasswordCredentials("admin", "admin");
     }
 
@@ -286,7 +286,7 @@ public class HttpTestBase extends TestCase {
     /** Verify that given URL returns expectedStatusCode
      * @return the HttpMethod executed
      * @throws IOException */
-    protected HttpMethod assertHttpStatus(String urlString, int expectedStatusCode, String assertMessage) throws IOException {
+    public HttpMethod assertHttpStatus(String urlString, int expectedStatusCode, String assertMessage) throws IOException {
         final GetMethod get = new GetMethod(urlString);
         final int status = httpClient.executeMethod(get);
         if(assertMessage == null) {
@@ -300,14 +300,14 @@ public class HttpTestBase extends TestCase {
     /** Verify that given URL returns expectedStatusCode
      * @return the HttpMethod executed
      * @throws IOException */
-    protected HttpMethod assertHttpStatus(String urlString, int expectedStatusCode) throws IOException {
+    public HttpMethod assertHttpStatus(String urlString, int expectedStatusCode) throws IOException {
         return assertHttpStatus(urlString, expectedStatusCode, null);
     }
 
     /** Execute a POST request and check status
      * @return the HttpMethod executed
      * @throws IOException */
-    protected HttpMethod assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
+    public HttpMethod assertPostStatus(String url, int expectedStatusCode, List<NameValuePair> postParams, String assertMessage)
     throws IOException {
         final PostMethod post = new PostMethod(url);
         post.setFollowRedirects(false);
@@ -411,12 +411,12 @@ public class HttpTestBase extends TestCase {
     }
 
     /** Upload script, execute with no parameters and return content */
-    protected String executeScript(String localFilename) throws Exception {
+    public String executeScript(String localFilename) throws Exception {
         return executeScript(localFilename, null);
     }
 
     /** Upload script, execute with given parameters (optional) and return content */
-    protected String executeScript(String localFilename, List<NameValuePair> params) throws Exception {
+    public String executeScript(String localFilename, List<NameValuePair> params) throws Exception {
 
         // Use unique resource type
         int counter = 0;
@@ -448,12 +448,12 @@ public class HttpTestBase extends TestCase {
         }
     }
 
-    protected void assertJavascript(String expectedOutput, String jsonData, String code) throws IOException {
+    public void assertJavascript(String expectedOutput, String jsonData, String code) throws IOException {
         assertJavascript(expectedOutput, jsonData, code, null);
     }
 
     /** Evaluate given code using given jsonData as the "data" object */
-    protected void assertJavascript(String expectedOutput, String jsonData, String code, String testInfo) throws IOException {
+    public void assertJavascript(String expectedOutput, String jsonData, String code, String testInfo) throws IOException {
     	final String result = javascriptEngine.execute(code, jsonData);
         if(!result.equals(expectedOutput)) {
             fail(
