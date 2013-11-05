@@ -16,40 +16,49 @@
  */
 package org.apache.sling.launchpad.webapp.integrationtest;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.sling.commons.json.JSONObject;
-import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.apache.sling.commons.testing.integration.HttpTest;
+import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
+import org.apache.sling.commons.testing.junit.categories.OakOnly;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /** Verify the repository name, to make sure we're testing the right one */
-public class RepositoryNameTest extends HttpTestBase {
+public class RepositoryNameTest {
+
+    private final HttpTest H = new HttpTest();
     
-    /** We use the same property that Sling uses to switch between repositories */
-    public static final String RUN_MODE_PROP = "sling.run.modes";
-    public static final String DEFAULT_RUN_MODE = "jackrabbit";
-    
-    public static final Map<String, String> RUNMODE_TO_NAME = new HashMap<String, String>();
-    
-    static {
-        RUNMODE_TO_NAME.put("jackrabbit", "Jackrabbit");
-        RUNMODE_TO_NAME.put("oak", "Apache Jackrabbit Oak");
+    @Before
+    public void setup() throws Exception {
+        H.setUp();
     }
     
-    public void testName() throws Exception {
-        final String runMode = System.getProperty(RUN_MODE_PROP, DEFAULT_RUN_MODE);
-        final String expectedName = RUNMODE_TO_NAME.get(runMode);
-        assertNotNull("Expecting to have a repository name for run mode " + runMode, expectedName);
-        
+    @After
+    public void cleanup() throws Exception {
+        H.tearDown();
+    }
+    
+    private void assertRepositoryName(String expectedName) throws Exception {
         final String path = "/testing/RepositoryDescriptors.json";
-        final JSONObject json = new JSONObject(getContent(HTTP_BASE_URL + path, CONTENT_TYPE_JSON));
+        final JSONObject json = new JSONObject(H.getContent(HttpTest.HTTP_BASE_URL + path, HttpTest.CONTENT_TYPE_JSON));
         final String key = "jcr.repository.name";
         final String actualName = json.getJSONObject("descriptors").getString(key);
-        if(!expectedName.equals(actualName)) {
-            fail(
-                "Repository descriptor '" + key + "' value '" + actualName + "' does not match expected value '" + expectedName + "'. "
-                + "Note that this test uses the " + RUN_MODE_PROP + " system property to select the expected value."
-            );
-        }
+        assertEquals("Expecting the correct value for " + key, expectedName, actualName);
+    }
+    
+    @Category(JackrabbitOnly.class)
+    @Test
+    public void checkJackrabbitName() throws Exception {
+        assertRepositoryName("Jackrabbit");
+    }
+    
+    @Category(OakOnly.class)
+    @Test
+    public void checkOakName() throws Exception {
+        assertRepositoryName("Apache Jackrabbit Oak");
     }
 }
