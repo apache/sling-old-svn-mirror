@@ -202,44 +202,6 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
         getSession().save();
     }
 
-    // ---------------------------------------------------------------< test data helper >
-
-    /**
-     * Helper class for creating test data in a generic way.
-     */
-    public static class Message {
-        public String key;
-        public String message;
-        public boolean useNodeName;
-        public String path;
-
-        public Message(String path, String key, String message, boolean useNodeName) {
-            this.path = path;
-            this.key = key;
-            this.message = message;
-            this.useNodeName = useNodeName;
-        }
-
-        private static int nodeNameCounter = 0;
-
-        public void add(Node languageNode) throws RepositoryException {
-            Node node = languageNode;
-            String[] pathElements = path.split("/");
-            for (String pathStep : pathElements) {
-                if (pathStep != null && pathStep.length() > 0) {
-                    node = node.addNode(pathStep, "nt:folder");
-                }
-            }
-            if (useNodeName) {
-                node = node.addNode(key, "sling:MessageEntry");
-            } else {
-                node = node.addNode("node" + nodeNameCounter, "sling:MessageEntry");
-                nodeNameCounter++;
-                node.setProperty("sling:key", key);
-            }
-            node.setProperty("sling:message", message);
-        }
-    }
 
     // test data to add to the repository (use linked hash map for insertion order)
     public static final Map<String, Message> MESSAGES_DE = new LinkedHashMap<String, Message>();

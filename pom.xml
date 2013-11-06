@@ -35,6 +35,13 @@
         Support for creating Java I18N ResourceBundles from repository
         resources.
     </description>
+    
+    <properties>
+        <exam.version>3.0.3</exam.version>
+        <url.version>1.5.2</url.version>
+        <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
+        <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
+    </properties>
 
     <scm>
         <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/i18n</connection>
@@ -77,6 +84,31 @@
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <org.ops4j.pax.logging.DefaultServiceLog.level>${org.ops4j.pax.logging.DefaultServiceLog.level}</org.ops4j.pax.logging.DefaultServiceLog.level>
+                        <pax.exam.log.level>${pax.exam.log.level}</pax.exam.log.level>
+                        <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
+                        <bundle.file.name>${bundle.file.name}</bundle.file.name>
+                    </systemPropertyVariables>
+                    <classpathDependencyExcludes>
+                        <!-- The osgi.org dependencies cause trouble with pax exam -->
+                        <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes> 
+                        <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes> 
+                    </classpathDependencyExcludes>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <dependencies>
@@ -114,7 +146,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
@@ -141,8 +172,14 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.paxexam.util</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>
-            <version>2.0.6</version>
+            <version>2.0.14</version>
             <scope>test</scope>
             <exclusions>
                 <!-- slf4j simple implementation logs INFO + higher to stdout (we don't want that behaviour) -->
@@ -165,6 +202,36 @@
             <version>1.2.13</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-container-native</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-junit4</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.exam</groupId>
+            <artifactId>pax-exam-link-mvn</artifactId>
+            <version>${exam.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.url</groupId>
+            <artifactId>pax-url-aether</artifactId>
+            <version>${url.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.framework</artifactId>
+            <version>4.2.1</version>
+            <scope>test</scope>
+        </dependency>
+      </dependencies>
 
 </project>
