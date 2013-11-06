@@ -19,94 +19,64 @@ package org.apache.sling.paxexam.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.ops4j.pax.exam.CoreOptions.junitBundles;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.sling.launchpad.api.StartupListener;
-import org.apache.sling.launchpad.api.StartupMode;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/** Verify that we get a working Sling launchpad with what SlingPaxOptions provide */
 @RunWith(PaxExam.class)
-public class SlingBundlesTest {
-    
-    private final Logger log = LoggerFactory.getLogger(getClass());
+@ExamReactorStrategy(PerClass.class)
+public class SlingSetupTest {
     
     @Inject
     private BundleContext bundleContext;
     
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
-        final String paxLogLevel = System.getProperty("pax.exam.log.level", "INFO");
-        
-        return options(
-                junitBundles(),
-                systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxLogLevel),
-                SlingPaxOptions.slingBootstrapBundles(),
-                SlingPaxOptions.slingLaunchpadBundles(null)
-        );
+        return SlingPaxOptions.defaultLaunchpadOptions().getOptions();
     }
 
+    private void assertBundleActive(String symbolicName) {
+        assertEquals("Expecting bundle to be active:" + symbolicName, Bundle.ACTIVE, getBundleState(symbolicName));
+    }
+    
     private boolean isFragment(Bundle b) {
         return b.getHeaders().get("Fragment-Host") != null;
     }
     
-    private void assertBundleActive(String symbolicName) {
-        Bundle b = null;
-        for(Bundle x : bundleContext.getBundles()) {
-            if(symbolicName.equals(x.getSymbolicName())) {
-                b = x;
-                break;
+    private Bundle getBundle(String symbolicName) {
+        for(Bundle b : bundleContext.getBundles()) {
+            if(symbolicName.equals(b.getSymbolicName())) {
+                return b;
             }
         }
-        assertNotNull("Expecting bundle " + symbolicName + " to be present", b);
-        if(!isFragment(b)) {
-            assertEquals("Expecting bundle " + symbolicName + " to be active", Bundle.ACTIVE, b.getState());
-        }
+        return null;
+    }
+    /** @return bundle state, UNINSTALLED if absent */
+    private int getBundleState(String symbolicName) {
+        return getBundleState(getBundle(symbolicName));
     }
     
-    @Before 
-    public void startAllBundles() {
-        final List<String> notStarted = new LinkedList<String>();
-        int lastNotStarted = Integer.MAX_VALUE;
-        
-        while(true) {
-            notStarted.clear();
-            for(Bundle b : bundleContext.getBundles()) {
-                if(!isFragment(b) && b.getState() != Bundle.ACTIVE) {
-                    notStarted.add(b.getSymbolicName());
-                    try {
-                        b.start();
-                    } catch(Exception e) {
-                        fail("Cannot start Bundle " + b.getSymbolicName() + ": " + e);
-                    } 
-                }
-            }
-            
-            if(notStarted.isEmpty()) {
-                break;
-            }
-            
-            if(!notStarted.isEmpty() && notStarted.size() >= lastNotStarted) {
-                log.error("No bundles started in the last cycle, inactive bundles={}", notStarted);
-                break;
-            }
-            lastNotStarted = notStarted.size();
+    /** @return bundle state, UNINSTALLED if absent, ACTIVE  */
+    private int getBundleState(Bundle b) {
+        if(b == null) {
+            return Bundle.UNINSTALLED; 
+        } else if(isFragment(b)) {
+            return Bundle.ACTIVE;
+        } else {
+            return b.getState();
         }
     }
     
@@ -143,12 +113,10 @@ public class SlingBundlesTest {
                 "org.apache.sling.extensions.threaddump",
                 "org.apache.sling.extensions.webconsolebranding",
                 "org.apache.sling.extensions.webconsolesecurityprovider",
-                "org.apache.sling.fragment.activation",
                 "org.apache.sling.fragment.transaction",
                 "org.apache.sling.fragment.ws",
                 "org.apache.sling.fragment.xml",
                 "org.apache.sling.fsresource",
-                "org.apache.sling.installer.api",
                 "org.apache.sling.installer.console",
                 "org.apache.sling.installer.core",
                 "org.apache.sling.installer.factory.configuration",
@@ -182,84 +150,41 @@ public class SlingBundlesTest {
                 "org.apache.sling.settings"
         };
         
+        final List<String> missing = new ArrayList<String>();
         for(String bundleName : bundles) {
-            assertBundleActive(bundleName);
+            final int state = getBundleState(bundleName); 
+            if(state != Bundle.ACTIVE) {
+                missing.add(bundleName + " (state=" + state + ")");
+            }
+        }
+        
+        if(!missing.isEmpty()) {
+            fail("Some required bundles are missing or inactive:" + missing);
         }
     }
     
     @Test
     public void testSlingServices() {
+        assertBundleActive("org.apache.sling.commons.mime");
+        assertBundleActive("org.apache.sling.engine");
         
-        class LocalStartupListener implements StartupListener {
-            
-            boolean testsHaveRun;
-            
-            public void inform(StartupMode m, boolean finished) {
-                log.info("inform(finished={})", finished);
-                if(finished) {
-                    runTests();
-                }
-            }
-
-            public void startupFinished(StartupMode m) {
-                log.info("Startup finished");
-                runTests();
-            }
-
-            public void startupProgress(float f) {
-                log.info("Startup progress {}", f);
-            }
-            
-            void runTests() {
-                if(!testsHaveRun) {
-                    testsHaveRun = true;
-                }
-                
-                try {
-                    assertBundleActive("org.apache.sling.commons.mime");
-                    assertBundleActive("org.apache.sling.engine");
-                    
-                    final String [] services = {
-                            "org.apache.sling.commons.mime.MimeTypeService",
-                            "org.apache.sling.engine.SlingRequestProcessor"
-                    };
-                    
-                    for(String svc : services) {
-                        final ServiceReference<?> ref = bundleContext.getServiceReference(svc);
-                        assertNotNull("Expecting " + svc + " to be available", ref);
-                        bundleContext.ungetService(ref);
-                    }
-                } finally {
-                    log.info("Done running tests");
-                    synchronized (this) {
-                        notify();
-                    }
-                }
-            }
+        final String [] services = {
+                "org.apache.sling.engine.SlingRequestProcessor",
+                "org.apache.sling.commons.mime.MimeTypeService",
+                "org.apache.sling.jcr.api.SlingRepository"
         };
         
-
-        final LocalStartupListener s = new LocalStartupListener();
-        s.runTests();
-        
-        /*
-        // TODO generalize this "wait for Sling startup" - assuming we really need it
-        final ServiceRegistration<?> reg = bundleContext.registerService(StartupListener.class.getName(), s, null);
-        final long timeout = 5000L;
-        try {
-            synchronized (s) {
-                log.info("Waiting for {} to be done running tests", s);
-                s.wait(timeout);
+        final List<String> missing = new ArrayList<String>();
+        for(String svc : services) {
+            final ServiceReference<?> ref = bundleContext.getServiceReference(svc);
+            if(ref == null) {
+                missing.add(svc);
+            } else {
+                bundleContext.ungetService(ref);
             }
-        } catch(InterruptedException ignored) {
-            fail("InterruptedException waiting tests to be executed");
-        } finally {
-            reg.unregister();
         }
-        
-        if(!s.testsHaveRun) {
-            fail("Timeout waiting for tests to run, after " + timeout + " msec");
+        if(!missing.isEmpty()) {
+            fail("Some required services are missing:" + missing);
         }
-        */
     }
 }

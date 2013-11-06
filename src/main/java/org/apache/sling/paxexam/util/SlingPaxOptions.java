@@ -16,7 +16,9 @@
  */
 package org.apache.sling.paxexam.util;
 
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -25,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,14 +36,55 @@ import org.apache.sling.maven.projectsupport.BundleListUtils;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.Bundle;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.BundleList;
 import org.apache.sling.maven.projectsupport.bundlelist.v1_0_0.StartLevel;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.options.CompositeOption;
 import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Pax exam options utilities for Sling */
+/** Pax exam options and utilities to test Sling applications
+ *  The basic idea is to get a vanilla Sling launchpad instance
+ *  setup with a minimal amount of boilerplate code.
+ *  See {@link SlingSetupTest} for an example.
+ * */
 public class SlingPaxOptions {
     private static final Logger log = LoggerFactory.getLogger(SlingPaxOptions.class);
+    public static final int DEFAULT_SLING_START_LEVEL = 30;
+    public static final String PROP_TELNET_PORT = "osgi.shell.telnet.port";
+    public static final String PROP_HTTP_PORT = "org.osgi.service.http.port";
+    
+    private static int getAvailablePort() {
+        int result = Integer.MIN_VALUE;
+        try {
+            final ServerSocket s = new ServerSocket(0);
+            result = s.getLocalPort();
+            s.close();
+        } catch(IOException ignore) {
+        }
+        return result;
+    }
+    
+    public static CompositeOption defaultLaunchpadOptions() {
+        final String paxLogLevel = System.getProperty("pax.exam.log.level", "INFO");
+        
+        final int slingStartLevel = DEFAULT_SLING_START_LEVEL;
+        final String telnetPort = System.getProperty(PROP_TELNET_PORT, String.valueOf(getAvailablePort()));
+        final String httpPort = System.getProperty(PROP_HTTP_PORT, String.valueOf(getAvailablePort()));
+        
+        log.info("{}={}", PROP_TELNET_PORT, telnetPort);
+        log.info("{}={}", PROP_HTTP_PORT, httpPort);
+                
+        return new DefaultCompositeOption(
+                junitBundles(),
+                systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxLogLevel),
+                SlingPaxOptions.felixRemoteShellBundles(),
+                SlingPaxOptions.slingBootstrapBundles(),
+                SlingPaxOptions.slingLaunchpadBundles(null),
+                CoreOptions.frameworkStartLevel(slingStartLevel),
+                CoreOptions.frameworkProperty(PROP_TELNET_PORT).value(telnetPort),
+                CoreOptions.frameworkProperty(PROP_HTTP_PORT).value(httpPort)
+        );
+    }
     
     public static CompositeOption slingBundleList(String groupId, String artifactId, String version, String type, String classifier) {
         
@@ -67,7 +111,10 @@ public class SlingPaxOptions {
             final BundleList list = BundleListUtils.readBundleList(tmp);
             int counter = 0;
             for(StartLevel s : list.getStartLevels()) {
-                final int startLevel = s.getStartLevel();
+                
+                // Start level < 0 means bootstrap in our bundle lists
+                final int startLevel = s.getStartLevel() < 0 ? 1 : s.getStartLevel();
+                
                 for(Bundle b : s.getBundles()) {
                     counter++;
                     
@@ -76,6 +123,12 @@ public class SlingPaxOptions {
                     final List<String> KNOWN_FRAGMENTS = new ArrayList<String>();
                     KNOWN_FRAGMENTS.add("org.apache.sling.extensions.webconsolebranding");
                     final boolean isFragment = b.getArtifactId().contains("fragment") || KNOWN_FRAGMENTS.contains(b.getArtifactId());
+                    
+                    // TODO need to handle sling run modes 
+                    if(b.getArtifactId().contains("oak")) {
+                        log.warn("Ignoring bundle due to hard-coded TODO condition: {}", b.getArtifactId());
+                        continue;
+                    }
                     
                     if(isFragment) {
                         result.add(mavenBundle(b.getGroupId(), b.getArtifactId(), b.getVersion()).noStart());
@@ -111,6 +164,17 @@ public class SlingPaxOptions {
     
     public static CompositeOption slingLaunchpadBundles(String version) {
         return slingBundleList("org.apache.sling", "org.apache.sling.launchpad", version, "xml", "bundlelist");
+    }
+    
+    /** @param version can be null, to use default */ 
+    public static CompositeOption felixRemoteShellBundles() {
+        final String gogoVersion = "0.10.0";
+        return new DefaultCompositeOption(
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.runtime").version(gogoVersion),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.shell").version(gogoVersion),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.gogo.command").version(gogoVersion),
+                mavenBundle().groupId("org.apache.felix").artifactId("org.apache.felix.shell.remote").version("1.1.2")
+        );
     }
     
     private static File dumpMvnUrlToTmpFile(String mvnUrl) throws IOException {
