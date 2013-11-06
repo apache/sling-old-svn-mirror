@@ -47,7 +47,14 @@ public class SlingRepositoryTest {
 
     @Test
     public void testNameDescriptor() {
-        assertEquals("Jackrabbit", repository.getDescriptor("jcr.repository.name"));
+        // We could use JUnit categories to select tests, as we
+        // do in our integration, but let's avoid a dependency on 
+        // that in this module
+        if(System.getProperty("sling.run.modes", "").contains("oak")) {
+            assertEquals("Apache Jackrabbit Oak", repository.getDescriptor("jcr.repository.name"));
+        } else {
+            assertEquals("Jackrabbit", repository.getDescriptor("jcr.repository.name"));
+        }
     }
     
     @Test

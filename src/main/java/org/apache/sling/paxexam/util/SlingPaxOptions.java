@@ -30,6 +30,8 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.sling.maven.projectsupport.BundleListUtils;
@@ -52,6 +54,7 @@ public class SlingPaxOptions {
     public static final int DEFAULT_SLING_START_LEVEL = 30;
     public static final String PROP_TELNET_PORT = "osgi.shell.telnet.port";
     public static final String PROP_HTTP_PORT = "org.osgi.service.http.port";
+    public static final String DEFAULT_RUN_MODES = "jackrabbit";
     
     private static int getAvailablePort() {
         int result = Integer.MIN_VALUE;
@@ -62,6 +65,12 @@ public class SlingPaxOptions {
         } catch(IOException ignore) {
         }
         return result;
+    }
+    
+    /** Get run modes to use for our tests, as set by the sling.run.modes property */
+    public static Collection<String> getTestRunModes() {
+        final String runModes = System.getProperty("sling.run.modes", DEFAULT_RUN_MODES);
+        return Arrays.asList(runModes.split(","));
     }
     
     public static CompositeOption defaultLaunchpadOptions() {
@@ -106,6 +115,7 @@ public class SlingPaxOptions {
         // TODO BundleList should take an InputStream - for now copy to a tmp file for parsing
         log.info("Getting bundle list {}", paxUrl);
         File tmp = null;
+        final Collection<String> testRunModes = getTestRunModes();
         try {
             tmp = dumpMvnUrlToTmpFile(paxUrl);
             final BundleList list = BundleListUtils.readBundleList(tmp);
@@ -124,10 +134,21 @@ public class SlingPaxOptions {
                     KNOWN_FRAGMENTS.add("org.apache.sling.extensions.webconsolebranding");
                     final boolean isFragment = b.getArtifactId().contains("fragment") || KNOWN_FRAGMENTS.contains(b.getArtifactId());
                     
-                    // TODO need to handle sling run modes 
-                    if(b.getArtifactId().contains("oak")) {
-                        log.warn("Ignoring bundle due to hard-coded TODO condition: {}", b.getArtifactId());
-                        continue;
+                    // Ignore bundles with run modes that do not match ours 
+                    final String bundleRunModes = b.getRunModes();
+                    if(bundleRunModes != null && bundleRunModes.length() > 0) {
+                        boolean active = false;
+                        for(String m : bundleRunModes.split(",")) {
+                            if(testRunModes.contains(m)) {
+                                active = true;
+                                break;
+                            }
+                        }
+                        if(!active) {
+                            log.info("Ignoring bundle {} as none of its run modes [{}] are active in this test run {}", 
+                                    new Object[] { b.getArtifactId(), bundleRunModes, testRunModes} );
+                            continue;
+                        }
                     }
                     
                     if(isFragment) {
