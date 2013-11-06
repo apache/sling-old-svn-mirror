@@ -73,7 +73,8 @@ public class SlingPaxOptions {
         return Arrays.asList(runModes.split(","));
     }
     
-    public static CompositeOption defaultLaunchpadOptions() {
+    /** @param launchpadVersion null means use the latest */
+    public static CompositeOption defaultLaunchpadOptions(String launchpadVersion) {
         final String paxLogLevel = System.getProperty("pax.exam.log.level", "INFO");
         
         final int slingStartLevel = DEFAULT_SLING_START_LEVEL;
@@ -88,7 +89,7 @@ public class SlingPaxOptions {
                 systemProperty( "org.ops4j.pax.logging.DefaultServiceLog.level" ).value(paxLogLevel),
                 SlingPaxOptions.felixRemoteShellBundles(),
                 SlingPaxOptions.slingBootstrapBundles(),
-                SlingPaxOptions.slingLaunchpadBundles(null),
+                SlingPaxOptions.slingLaunchpadBundles(launchpadVersion),
                 CoreOptions.frameworkStartLevel(slingStartLevel),
                 CoreOptions.frameworkProperty(PROP_TELNET_PORT).value(telnetPort),
                 CoreOptions.frameworkProperty(PROP_HTTP_PORT).value(httpPort)
