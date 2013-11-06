@@ -111,6 +111,7 @@
                         <configuration>
                             <portNames>
                                 <portName>http.port</portName>
+                                <portName>sling.control.port</portName>
                             </portNames>
                         </configuration>
                     </execution>
@@ -266,6 +267,7 @@
                         <configuration>
                             <httpPort>${http.port}</httpPort>
                             <controlHost>${test.host}</controlHost>
+                            <controlPort>${sling.control.port}</controlPort>
                         </configuration>
                     </plugin>
                 </plugins>
