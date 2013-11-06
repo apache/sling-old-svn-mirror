@@ -14,21 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.sling.launchpad.webapp.integrationtest;
+package org.apache.sling.launchpad.webapp.integrationtest.repository;
 
 import static org.junit.Assert.assertEquals;
 
-import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.apache.sling.commons.testing.junit.categories.OakOnly;
+import org.apache.sling.launchpad.webapp.integrationtest.util.RepositoryTestUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/** Verify the repository name, to make sure we're testing the right one */
-public class RepositoryNameTest {
+/** Verify the repository name when running on Oak.
+ *  Checking that this test class was executed is a good
+ *  way of verifying which repository implementation was
+ *  used to run the integration tests.
+ */
+@Category(OakOnly.class)
+public class OakRepositoryNameTest {
 
     private final HttpTest H = new HttpTest();
     
@@ -42,23 +46,8 @@ public class RepositoryNameTest {
         H.tearDown();
     }
     
-    private void assertRepositoryName(String expectedName) throws Exception {
-        final String path = "/testing/RepositoryDescriptors.json";
-        final JSONObject json = new JSONObject(H.getContent(HttpTest.HTTP_BASE_URL + path, HttpTest.CONTENT_TYPE_JSON));
-        final String key = "jcr.repository.name";
-        final String actualName = json.getJSONObject("descriptors").getString(key);
-        assertEquals("Expecting the correct value for " + key, expectedName, actualName);
-    }
-    
-    @Category(JackrabbitOnly.class)
     @Test
     public void checkJackrabbitName() throws Exception {
-        assertRepositoryName("Jackrabbit");
-    }
-    
-    @Category(OakOnly.class)
-    @Test
-    public void checkOakName() throws Exception {
-        assertRepositoryName("Apache Jackrabbit Oak");
+        assertEquals("Apache Jackrabbit Oak", RepositoryTestUtil.getDescriptor(H, "jcr.repository.name"));
     }
 }
