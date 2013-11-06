@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.http.HttpServletResponse;
 
 import junit.framework.TestCase;
@@ -40,11 +41,15 @@ import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.sling.commons.testing.util.JavascriptEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /** Base class for HTTP-based Sling Launchpad integration tests */
 public class HttpTestBase extends TestCase {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     /** If this system property is set, the startup check is skipped. */
     public static final String PROPERTY_SKIP_STARTUP_CHECK = "launchpad.skip.startupcheck";
 
@@ -204,17 +209,39 @@ public class HttpTestBase extends TestCase {
         final List<String> exceptionMessages = new LinkedList<String>();
         final long maxMsecToWait = READY_TIMEOUT_SECONDS * 1000L;
         final long startupTime = System.currentTimeMillis();
-
+        String lastException = "";
+        int nTimesOk = 0;
+        
+        // Wait until slingServerReady returns true this many times,
+        // as in some cases more initializations might take place after
+        // this returns true
+        final int MIN_TIMES_OK = 4;
+        
         while(!slingStartupOk && (System.currentTimeMillis() < startupTime + maxMsecToWait) ) {
             try {
-                slingStartupOk = slingServerReady();
+                if(slingServerReady()) {
+                    nTimesOk++;
+                    if(nTimesOk >= MIN_TIMES_OK) {
+                        slingStartupOk = true;
+                        break;
+                    }
+                } else {
+                    nTimesOk = 0;
+                }
             } catch(Exception e) {
-                exceptionMessages.add(e.toString());
-                Thread.sleep(500L);
+                nTimesOk = 0;
+                final String newX = e.toString();
+                if(!lastException.equals(newX)) {
+                    exceptionMessages.add(newX);
+                }
+                lastException = newX;
             }
+            Thread.sleep(500L);
         }
 
-        if(!slingStartupOk) {
+        if(slingStartupOk) {
+            log.info("Sling server found ready after {} msec", System.currentTimeMillis() - startupTime);
+        } else {
             StringBuffer msg = new StringBuffer("Server does not seem to be ready, after ");
             msg.append(maxMsecToWait).append(" msec, got the following ").append(exceptionMessages.size()).append(" Exceptions:");
             for (String e: exceptionMessages) {
