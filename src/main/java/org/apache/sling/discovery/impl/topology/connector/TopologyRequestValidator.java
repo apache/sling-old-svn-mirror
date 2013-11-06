@@ -346,6 +346,9 @@ public class TopologyRequestValidator {
      */
     private boolean checkTrustHeader(String bodyHash, String signature) {
         try {
+            if (bodyHash == null || signature == null ) {
+                return false;
+            }
             String[] parts = signature.split("/", 2);
             int keyNo = Integer.parseInt(parts[0]);
             return hmac(keyNo, bodyHash).equals(parts[1]);
@@ -360,6 +363,8 @@ public class TopologyRequestValidator {
         } catch (IllegalStateException e) {
             throw new RuntimeException(e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
