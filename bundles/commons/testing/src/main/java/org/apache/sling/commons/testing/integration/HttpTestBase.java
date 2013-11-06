@@ -238,8 +238,9 @@ public class HttpTestBase extends TestCase {
         props.put("time", time);
 
         // POST, get URL of created node and get content
-        {
-            final String urlOfNewNode = testClient.createNode(url, props, null, true);
+        String urlOfNewNode = null; 
+        try {
+            urlOfNewNode = testClient.createNode(url, props, null, true);
             final GetMethod get = new GetMethod(urlOfNewNode + DEFAULT_EXT);
             final int status = httpClient.executeMethod(get);
             if(status!=200) {
@@ -255,6 +256,13 @@ public class HttpTestBase extends TestCase {
             final String content = get.getResponseBodyAsString();
             if(!content.contains(time)) {
                 throw new IOException("Content does not contain '" + time + "' (" + content + ") at URL=" + urlOfNewNode);
+            }
+        } finally {
+            if(urlOfNewNode != null) {
+                try {
+                    testClient.delete(urlOfNewNode);
+                } catch(Exception ignore) {
+                }
             }
         }
 
