@@ -1180,6 +1180,14 @@ public class SlingServletResolver
             if (StringUtils.isBlank(method)) {
                 method = "GET";
             }
+            
+            final String CONSOLE_PATH_WARNING = 
+                    "<em>"
+                    + "Note that in a real Sling request, the path might vary depending on the existence of"
+                    + " resources that partially match it."
+                    + "<br/>This utility does not take this into account and uses the first dot to split"
+                    + " between path and selectors/extension."
+                    + "</em>";
 
             ResourceResolver resourceResolver = null;
             try {
@@ -1225,7 +1233,7 @@ public class SlingServletResolver
                     tdContent(pw);
                     pw.println("<dl>");
                     pw.println("<dt>Path</dt>");
-                    pw.println("<dd>" + requestPathInfo.getResourcePath() + "</dd>");
+                    pw.println("<dd>" + requestPathInfo.getResourcePath() + "<br/>" + CONSOLE_PATH_WARNING + "</dd>");
                     pw.println("<dt>Selectors</dt>");
                     pw.print("<dd>");
                     if (requestPathInfo.getSelectors().length == 0) {

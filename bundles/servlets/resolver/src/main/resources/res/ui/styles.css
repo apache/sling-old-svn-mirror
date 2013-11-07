@@ -28,3 +28,8 @@ ol.servlets li {
 .content dd {
     margin-left: 10px;
 } 
+
+.content em {
+	text-style:italic;
+	color:gray;
+}
