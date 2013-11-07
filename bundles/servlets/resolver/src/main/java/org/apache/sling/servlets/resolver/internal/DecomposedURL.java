@@ -33,6 +33,10 @@ public class DecomposedURL {
 
     DecomposedURL(String urlString) {
         
+        if(urlString == null) {
+            urlString = "";
+        }
+        
         // For the path, take everything up to the first dot
         String fullPath = urlString;
         if(urlString.contains("http")) {
