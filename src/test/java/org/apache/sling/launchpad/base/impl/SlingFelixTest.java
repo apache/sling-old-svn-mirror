@@ -18,15 +18,22 @@
  */
 package org.apache.sling.launchpad.base.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
 
 import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
 
 import org.apache.sling.launchpad.base.shared.Notifiable;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -38,24 +45,45 @@ import org.osgi.service.packageadmin.PackageAdmin;
 
 public class SlingFelixTest {
 
+    public static final int N_START_STOP = 10;
     private final TestNotifiable notifiable = new TestNotifiable();
 
     private SlingFelix framework;
 
+    @Before
+    public void setup() {
+        startSling();
+    }
+    
     @After
     public void tearDown() {
         stopSling();
     }
+    
+    @Test
+    public void testMultipleStop() {
+        startSling();
+        for(int i=0; i < N_START_STOP; i++) {
+            stopSling();
+        }
+    }
+
+    @Test
+    public void testMultipleStartStop() {
+        stopSling();
+        for(int i=0; i < N_START_STOP; i++) {
+            startSling();
+            stopSling();
+        }
+    }
 
     @Test
     public void test_start_stop() {
-        SlingFelix sf = startSling();
-        TestCase.assertNotNull(sf);
-        TestCase.assertEquals(Bundle.ACTIVE, sf.getState());
+        assertNotNull(framework);
+        assertEquals(Bundle.ACTIVE, framework.getState());
 
         stopSling();
-        TestCase.assertNull("Expect the framework field to be cleared", this.framework);
-
+        
         // as the notifiable is notified async we wait
         final long start = System.currentTimeMillis();
         while ( !this.notifiable.stoppedCalled ) {
@@ -68,9 +96,9 @@ public class SlingFelixTest {
             } catch (InterruptedException ignore) {
             }
         }
-        TestCase.assertTrue("Expect Notifiable.stopped to be called", this.notifiable.stoppedCalled);
-        TestCase.assertFalse("Expect Notifiable.updated to not be called", this.notifiable.updatedCalled);
-        TestCase.assertNull("Expect Notifiable.updated to not be called", this.notifiable.updatedCalledFile);
+        assertTrue("Expect Notifiable.stopped to be called", this.notifiable.stoppedCalled);
+        assertFalse("Expect Notifiable.updated to not be called", this.notifiable.updatedCalled);
+        assertNull("Expect Notifiable.updated to not be called", this.notifiable.updatedCalledFile);
     }
 
     @SuppressWarnings("deprecation")
@@ -84,13 +112,11 @@ public class SlingFelixTest {
          * methodology.
          */
 
-        SlingFelix sf = startSling();
+        PackageAdmin pa = getService(framework, PackageAdmin.class);
+        assertNotNull(pa);
 
-        PackageAdmin pa = getService(sf, PackageAdmin.class);
-        TestCase.assertNotNull(pa);
-
-        TestCase.assertNull("Integer class provided by the VM not from a bundle", pa.getBundle(Integer.class));
-        TestCase.assertEquals("BundleContext class must come from the framework", sf.getBundle(),
+        assertNull("Integer class provided by the VM not from a bundle", pa.getBundle(Integer.class));
+        assertEquals("BundleContext class must come from the framework", framework.getBundle(),
             pa.getBundle(BundleContext.class));
     }
 
@@ -105,35 +131,31 @@ public class SlingFelixTest {
          * Felix
          */
 
-        SlingFelix sf = startSling();
-        SlingFelix sf2 = doStartSling(new TestNotifiable());
+        final SlingFelix sf2 = startFramework(new TestNotifiable());
 
         try {
             InputStream ins = getClass().getResourceAsStream("/test1.jar");
-            sf.getBundleContext().installBundle("test1", ins).start();
+            framework.getBundleContext().installBundle("test1", ins).start();
 
-            Runnable r = getService(sf, Runnable.class);
+            Runnable r = getService(framework, Runnable.class);
             r.run();
 
         } catch (Exception e) {
             throw (AssertionFailedError) new AssertionFailedError(e.toString()).initCause(e);
         } finally {
-            doStopSling(sf2);
+            stopFramework(sf2);
         }
     }
 
-    private SlingFelix startSling() {
-        if (this.framework == null) {
-            this.framework = doStartSling(this.notifiable);
-        }
-
-        return this.framework;
+    private void startSling() {
+        stopSling();
+        framework = startFramework(this.notifiable);
     }
 
-    private static SlingFelix doStartSling(final Notifiable notifiable) {
+    private static SlingFelix startFramework(final Notifiable notifiable) {
         final String baseDir = System.getProperty("basedir");
         if (baseDir == null) {
-            TestCase.fail("Need the basedir system property to locate the framework folder");
+            fail("Need the basedir system property to locate the framework folder");
         }
         File fwDir = new File(baseDir + "/target/felix." + System.nanoTime());
         fwDir.mkdirs();
@@ -148,29 +170,26 @@ public class SlingFelixTest {
             fw.start();
             return fw;
         } catch (Exception e) {
-            TestCase.fail("Failed to start OSGi Framework: " + e);
+            fail("Failed to start OSGi Framework: " + e);
             return null; // to keep the compiler cool
         }
     }
-
+    
     private void stopSling() {
-        if (this.framework != null) {
-            try {
-                doStopSling(this.framework);
-            } finally {
-                this.framework = null;
-            }
-        }
+        stopFramework(framework);
     }
 
-    private static void doStopSling(final SlingFelix framework) {
+    private static void stopFramework(Framework f) {
+        if(f == null) {
+            return;
+        }
         try {
-            framework.stop();
-            if (framework.waitForStop(10L).getType() == FrameworkEvent.WAIT_TIMEDOUT) {
-                TestCase.fail("Timed out waiting for framework to stop");
+            f.stop();
+            if (f.waitForStop(10L).getType() == FrameworkEvent.WAIT_TIMEDOUT) {
+                fail("Timed out waiting for framework to stop");
             }
         } catch (Exception e) {
-            TestCase.fail("Cannot stop OSGi Framework: " + e);
+            fail("Cannot stop OSGi Framework: " + e);
         }
     }
 
