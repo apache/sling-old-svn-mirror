@@ -1187,6 +1187,7 @@ public class SlingServletResolver
                     + " resources that partially match it."
                     + "<br/>This utility does not take this into account and uses the first dot to split"
                     + " between path and selectors/extension."
+                    + "<br/>As a workaround, you can replace dots with underline characters, for example, when testing such an URL."
                     + "</em>";
 
             ResourceResolver resourceResolver = null;
