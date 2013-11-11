@@ -28,7 +28,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,12 +48,10 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.commons.jackrabbit.authorization.AccessControlUtils;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.api.AuthInfo;
 import org.apache.jackrabbit.oak.api.ContentRepository;
-import org.apache.jackrabbit.oak.api.Root;
 import org.apache.jackrabbit.oak.jcr.repository.RepositoryImpl;
 import org.apache.jackrabbit.oak.plugins.commit.ConflictValidatorProvider;
 import org.apache.jackrabbit.oak.plugins.commit.JcrConflictHandler;
@@ -82,13 +79,11 @@ import org.apache.jackrabbit.oak.spi.security.authentication.AuthInfoImpl;
 import org.apache.jackrabbit.oak.spi.security.authentication.ConfigurationUtil;
 import org.apache.jackrabbit.oak.spi.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.oak.spi.security.principal.EveryonePrincipal;
-import org.apache.jackrabbit.oak.spi.security.privilege.PrivilegeConfiguration;
 import org.apache.jackrabbit.oak.spi.security.privilege.PrivilegeConstants;
 import org.apache.jackrabbit.oak.spi.security.user.UserConfiguration;
 import org.apache.jackrabbit.oak.spi.security.user.UserConstants;
 import org.apache.jackrabbit.oak.spi.security.user.action.AccessControlAction;
 import org.apache.jackrabbit.oak.spi.state.NodeBuilder;
-import org.apache.jackrabbit.oak.spi.state.NodeState;
 import org.apache.jackrabbit.oak.spi.state.NodeStore;
 import org.apache.jackrabbit.oak.spi.whiteboard.OsgiWhiteboard;
 import org.apache.jackrabbit.oak.spi.whiteboard.Whiteboard;
@@ -272,9 +267,9 @@ public class OakSlingRepository extends AbstractNamespaceMappingRepository
     
     private static final class ExtraSlingContent implements RepositoryInitializer {
 
+        
         @Override
-        public NodeState initialize(NodeState state) {
-            NodeBuilder root = state.builder();
+        public void initialize(NodeBuilder root) {
             if (root.hasChildNode(INDEX_DEFINITIONS_NAME)) {
                 NodeBuilder index = root.child(INDEX_DEFINITIONS_NAME);
                 
@@ -309,7 +304,6 @@ public class OakSlingRepository extends AbstractNamespaceMappingRepository
                 }
                 
             }
-            return root.getNodeState();
         }
         
         /**
