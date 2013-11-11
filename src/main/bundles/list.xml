@@ -543,45 +543,45 @@
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-core</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
         <!-- embedded in oak.server for now
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-jcr</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
         -->
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-commons</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-mk</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-mk-api</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-mk-remote</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
         <bundle>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>oak-lucene</artifactId>
-            <version>0.9</version>
+            <version>0.10</version>
             <runModes>oak</runModes>
         </bundle>
     </startLevel>       
