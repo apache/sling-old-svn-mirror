@@ -109,7 +109,7 @@ public  abstract class AbstractOSGiRunner {
 						// url resolution for pax
 						mavenBundle("org.ops4j.pax.url", "pax-url-mvn", "1.3.5"),
 						// to support declarative services
-						mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.0"),
+						mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.0"),
 						// bound to need servlet api
 						mavenBundle("org.apache.felix", "javax.servlet","1.0.0"),
 						// standard items.

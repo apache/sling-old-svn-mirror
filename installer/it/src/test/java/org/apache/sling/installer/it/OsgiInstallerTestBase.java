@@ -407,7 +407,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                         mavenBundle("org.slf4j", "jcl-over-slf4j", "1.6.4"),
                         mavenBundle("org.slf4j", "log4j-over-slf4j", "1.6.4"),
 
-        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.0"),
+        	            mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.0"),
         	            mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.2.8"),
                         mavenBundle("org.apache.felix", "org.apache.felix.metatype", "1.0.2"),
         	        	mavenBundle("org.apache.sling", "org.apache.sling.installer.core", POM_VERSION),

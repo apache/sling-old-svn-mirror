@@ -66,7 +66,7 @@ public class JackrabbitRepositoryIT extends CommonTests {
 
                 mavenBundle("org.apache.felix", "org.apache.felix.http.jetty", "2.2.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.eventadmin", "1.2.14"),
-                mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.6.2"),
+                mavenBundle("org.apache.felix", "org.apache.felix.scr", "1.8.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.configadmin", "1.6.0"),
                 mavenBundle("org.apache.felix", "org.apache.felix.inventory", "1.0.0"),
 
