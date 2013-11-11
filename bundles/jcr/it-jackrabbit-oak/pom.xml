@@ -27,7 +27,7 @@
         <url.version>1.5.2</url.version>
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <org.ops4j.pax.url.mvn.settings></org.ops4j.pax.url.mvn.settings>
-        <oak.version>0.9</oak.version>
+        <oak.version>0.10</oak.version>
     </properties>
 
     <build>
