@@ -36,7 +36,6 @@ import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
-import org.apache.sling.commons.testing.junit.categories.JackrabbitOnly;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -962,7 +961,6 @@ public class ModifyAceTest {
 	 * Test for SLING-3010
 	 */
 	@Test 
-    @Category(JackrabbitOnly.class) // TODO: fails on Oak
 	public void testMergeAceForUserGrantAggregatePrivilegePartsAfterDenyAggregatePrivilege() throws IOException, JSONException {
 		testUserId = H.createTestUser();
 		
