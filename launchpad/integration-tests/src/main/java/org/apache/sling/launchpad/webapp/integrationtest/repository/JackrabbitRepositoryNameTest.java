@@ -48,6 +48,7 @@ public class JackrabbitRepositoryNameTest {
     
     @Test
     public void checkJackrabbitName() throws Exception {
+        RepositoryTestUtil.logDescriptors(H,  "jcr.repository.name", "jcr.repository.version");
         assertEquals("Jackrabbit", RepositoryTestUtil.getDescriptor(H, "jcr.repository.name"));
     }
 }

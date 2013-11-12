@@ -24,8 +24,12 @@ import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.json.JSONObject;
 import org.apache.sling.commons.testing.integration.HttpTest;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RepositoryTestUtil {
+    
+    private static final Logger log = LoggerFactory.getLogger(RepositoryTestUtil.class);
     
     public static final String DESCRIPTORS_KEY = "descriptors";
     
@@ -33,5 +37,11 @@ public class RepositoryTestUtil {
         final String path = "/testing/RepositoryDescriptors.json";
         final JSONObject json = new JSONObject(H.getContent(HttpTest.HTTP_BASE_URL + path, HttpTest.CONTENT_TYPE_JSON));
         return json.getJSONObject("descriptors").getString(descriptorName);
+    }
+    
+    public static void logDescriptors(HttpTestBase H, String ... names) throws JSONException, IOException {
+        for(String name : names) {
+            log.info("Repository descriptor {}={}", name, getDescriptor(H, name));
+        }
     }
 }

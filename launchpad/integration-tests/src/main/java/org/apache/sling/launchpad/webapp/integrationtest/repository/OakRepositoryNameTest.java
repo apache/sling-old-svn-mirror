@@ -47,7 +47,8 @@ public class OakRepositoryNameTest {
     }
     
     @Test
-    public void checkJackrabbitName() throws Exception {
+    public void checkOakName() throws Exception {
+        RepositoryTestUtil.logDescriptors(H,  "jcr.repository.name", "jcr.repository.version");
         assertEquals("Apache Jackrabbit Oak", RepositoryTestUtil.getDescriptor(H, "jcr.repository.name"));
     }
 }
