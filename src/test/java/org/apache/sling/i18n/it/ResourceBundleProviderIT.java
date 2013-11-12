@@ -18,9 +18,9 @@
  */
 package org.apache.sling.i18n.it;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.provision;
 
@@ -46,11 +46,15 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class ResourceBundleProviderIT {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     public static final int RETRY_TIMEOUT_MSEC = 5000;
     public static final String MSG_KEY = "foo";
     
@@ -145,13 +149,18 @@ public class ResourceBundleProviderIT {
 
     @Test
     public void testRepositoryName() {
+        final String name = repository.getDescriptor("jcr.repository.name");
+        log.info("Test running on  {} repository {}", 
+                name, 
+                repository.getDescriptor("jcr.repository.version"));
+        
         // We could use JUnit categories to select tests, as we
         // do in our integration tests, but let's avoid a dependency on 
         // that in this module
         if(System.getProperty("sling.run.modes", "").contains("oak")) {
-            assertEquals("Apache Jackrabbit Oak", repository.getDescriptor("jcr.repository.name"));
+            assertEquals("Apache Jackrabbit Oak", name);
         } else {
-            assertEquals("Jackrabbit", repository.getDescriptor("jcr.repository.name"));
+            assertEquals("Jackrabbit", name);
         }
     }
 
