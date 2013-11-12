@@ -63,4 +63,23 @@ public class MediaRangeListTest extends TestCase {
         assertTrue("Did not contain media type from query param", rangeList.contains("text/html"));
         assertFalse("Contained media type from overridden Accept header", rangeList.contains("text/plain"));
     }
+
+    public void testInvalidJdkAcceptHeader() {
+        //This header is sent by Java client which make use of URLConnection on Oracle JDK
+        //See acceptHeader at http://hg.openjdk.java.net/jdk6/jdk6-gate/jdk/file/tip/src/share/classes/sun/net/www/protocol/http/HttpURLConnection.java
+        //To support such case the MediaRange parser has to be made bit linient
+        final String invalidHeader = "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2";
+        MockSlingHttpServletRequest req = new MockSlingHttpServletRequest(null, null, null, null, null) {
+            @Override
+            public String getHeader(String name) {
+                return name.equals(MediaRangeList.HEADER_ACCEPT) ? invalidHeader : super.getHeader(name);
+            }
+
+            public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+                return null;
+            }
+        };
+        MediaRangeList rangeList = new MediaRangeList(req);
+        assertTrue("Did not contain media type from query param", rangeList.contains("text/html"));
+    }
 }
