@@ -235,7 +235,12 @@ public class MediaRangeList extends TreeSet<MediaRangeList.MediaRange> {
 
         private void setType(String typeDef) {
             String[] parts = typeDef.split("/");
-            this.setType(parts[0], parts[1]);
+            String superType = parts[0];
+            String subType = WILDCARD;
+            if(parts.length > 1){
+                subType = parts[1];
+            }
+            this.setType(superType,subType);
         }
 
         MediaRange(String supertype, String subtype, double q) {
