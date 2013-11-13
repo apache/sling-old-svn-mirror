@@ -37,7 +37,6 @@ import org.apache.sling.commons.testing.sling.MockResourceResolver;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.scripting.RepositoryScriptingTestBase;
 import org.apache.sling.scripting.javascript.internal.ScriptEngineHelper;
-import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.Wrapper;
 
 public class ScriptableResourceTest extends RepositoryScriptingTestBase {
@@ -153,14 +152,10 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
         data.put("resource", new TestResource(node));
 
         // the node to which the resource adapts
-        assertEquals(Undefined.instance,
-            script.eval("resource.adaptTo()", data));
-        assertEquals(Undefined.instance, script.eval("resource.adaptTo(null)",
-            data));
-        assertEquals(Undefined.instance, script.eval(
-            "resource.adaptTo(undefined)", data));
-        assertEquals(Undefined.instance, script.eval(
-            "resource.adaptTo(Packages.java.util.Date)", data));
+        assertEquals(true, script.eval("resource.adaptTo() == undefined", data));
+        assertEquals(true, script.eval("resource.adaptTo(null) == undefined", data));
+        assertEquals(true, script.eval("resource.adaptTo(undefined) == undefined", data));
+        assertEquals(true, script.eval("resource.adaptTo(Packages.java.util.Date) == undefined", data));
     }
 
     private void assertEquals(Node expected, Object actual) {
@@ -279,7 +274,7 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
 			}
 		}
 
-        
+
     }
 
 }
