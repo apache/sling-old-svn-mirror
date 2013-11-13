@@ -488,7 +488,7 @@ public class Main {
      * <li>Default value <code>sling</code></li>
      * </ol>
      *
-     * @param args The command line arguments
+     * @param commandLine The command line arguments
      * @return The value to use for sling.home
      */
     private static String getSlingHome(Map<String, String> commandLine) {
@@ -643,12 +643,32 @@ public class Main {
                 } else {
                     String key = String.valueOf(arg.charAt(1));
                     if (arg.length() > 2) {
-                        commandLine.put(key, arg.substring(2));
+                        final String val;
+                        final int indexOfEq = arg.indexOf('=');
+                        if (indexOfEq != -1) {
+                            //Handle case -Da=b
+                            key = arg.substring(1, indexOfEq);
+                            val = arg.substring(indexOfEq + 1);
+                        } else {
+                            val = arg.substring(2);
+                        }
+                        commandLine.put(key, val);
                     } else {
                         argc++;
                         if (argc < args.length
                             && (args[argc].equals("-") || !args[argc].startsWith("-"))) {
-                            commandLine.put(key, args[argc]);
+                            String val = args[argc];
+
+                            //Special handling for -D a=b
+                            if(key.equals("D")){
+                                final int indexOfEq = val.indexOf('=');
+                                if (indexOfEq != -1) {
+                                    //Handle case -D a=b. Add key as Da
+                                    key = "D" + val.substring(0, indexOfEq);
+                                    val = val.substring(indexOfEq + 1);
+                                }
+                            }
+                            commandLine.put(key, val);
                         } else {
                             commandLine.put(key, key);
                             argc--;
@@ -667,7 +687,7 @@ public class Main {
         if (args.remove("h") != null) {
             System.out.println("usage: "
                 + Main.class.getName()
-                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -i launchpadhome ] [ -a address ] [ -p port ] { -D n=v } [ -h ]");
+                + " [ start | stop | status ] [ -j adr ] [ -l loglevel ] [ -f logfile ] [ -c slinghome ] [ -i launchpadhome ] [ -a address ] [ -p port ] { -Dn=v } [ -h ]");
 
             System.out.println("    start         listen for control connection (uses -j)");
             System.out.println("    stop          terminate running Apache Sling (uses -j)");
@@ -681,7 +701,9 @@ public class Main {
             System.out.println("    -p port       the port to listen to (default 8080)");
             System.out.println("    -r path       the root servlet context path for the http service (default is /)");
             System.out.println("    -n            don't install the shutdown hook");
-            System.out.println("    -D n=v        sets property n to value v");
+            System.out.println("    -Dn=v         sets property n to value v. Make sure to use this option *after* " +
+                                                  "the jar filename. The JVM also has a -D option which has a " +
+                                                  "different meaning");
             System.out.println("    -h            prints this usage message");
 
             return true;
@@ -704,7 +726,7 @@ public class Main {
         final HashMap<String, String> props = new HashMap<String, String>();
         boolean errorArg = false;
         for (Entry<String, String> arg : rawArgs.entrySet()) {
-            if (arg.getKey().length() == 1) {
+            if (arg.getKey().length() == 1 || arg.getKey().startsWith("D")) {
                 String value = arg.getValue();
                 switch (arg.getKey().charAt(0)) {
                     case 'j':
@@ -798,9 +820,15 @@ public class Main {
                             errorArg = true;
                             continue;
                         }
-                        String[] parts = value.split("=");
-                        int valueIdx = (parts.length > 1) ? 1 : 0;
-                        props.put(parts[0], parts[valueIdx]);
+                        if (arg.getKey().length() > 1) {
+                            //Dfoo=bar arg.key=Dfoo and arg.value=bar
+                            props.put(arg.getKey().substring(1), arg.getValue());
+                        } else {
+                            //D foo=bar arg.key=D and arg.value=foo=bar
+                            String[] parts = value.split("=");
+                            int valueIdx = (parts.length > 1) ? 1 : 0;
+                            props.put(parts[0], parts[valueIdx]);
+                        }
                         break;
 
                     default:
