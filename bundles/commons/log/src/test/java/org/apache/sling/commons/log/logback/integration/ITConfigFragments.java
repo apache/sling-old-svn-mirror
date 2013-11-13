@@ -19,12 +19,12 @@
 
 package org.apache.sling.commons.log.logback.integration;
 
+import java.util.Dictionary;
 import java.util.Properties;
 
 import javax.inject.Inject;
 
 import org.apache.sling.commons.log.logback.ConfigProvider;
-import org.apache.sling.commons.log.logback.integration.LogTestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -109,7 +109,7 @@ public class ITConfigFragments extends LogTestBase {
 
         fcp.fileName = "test-reset-config-2.xml";
 
-        eventAdmin.sendEvent(new Event(RESET_EVENT_TOPIC, new Properties()));
+        eventAdmin.sendEvent(new Event(RESET_EVENT_TOPIC, (Dictionary)null));
 
         delay();
 

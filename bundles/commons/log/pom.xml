@@ -59,6 +59,36 @@
   </properties>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <!--
+        Unfortunately the <ignores> sections do not seem to
+        properly work, so the sniffer is disabled by default.
+
+        Note: 1.9 contains a call to a Java 7 specific method
+        (java.nio.CharBuffer.subSequence(II)Ljava/nio/CharBuffer;)
+        that is triggered when an undefined reference is found. This breaks error
+        reporting on Java 5/6.
+      -->
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>animal-sniffer-maven-plugin</artifactId>
+          <version>1.8</version>
+          <configuration>
+            <skip>true</skip>
+            <ignores>
+              <ignore>ch.qos.logback.classic.spi*</ignore>
+            </ignores>
+            <signature>
+              <groupId>org.codehaus.mojo.signature</groupId>
+              <artifactId>java1${sling.java.version}</artifactId>
+              <version>1.0</version>
+            </signature>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -209,6 +239,8 @@
     </plugins>
   </build>
 
+
+
   <reporting>
     <plugins>
       <plugin>
@@ -259,12 +291,14 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>4.0.0</version>
+      <version>4.2.0</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
-      <version>4.0.0</version>
+      <version>4.2.0</version>
+        <scope>provided</scope>
     </dependency>
 
     <!-- servlet API for the web console plugin -->
