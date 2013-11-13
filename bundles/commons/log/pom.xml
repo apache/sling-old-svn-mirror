@@ -121,8 +121,8 @@
               !javax.xml.transform.sax,
               !javax.xml.transform.stream,
               org.osgi.framework;version=1.3,
-              org.slf4j;provide:=true,
-              org.slf4j.spi;provide:=true,
+              org.slf4j;version="[1.6,1.8)",
+              org.slf4j.spi;version="[1.6,1.8)",
               groovy.lang;
               javax.jms;
               javax.mail;
