@@ -28,7 +28,9 @@ import javax.inject.Inject;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ClassPackagingData;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import org.junit.After;
@@ -44,7 +46,9 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.LoggerFactory;
 
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -117,6 +121,26 @@ public class ITAppenderServices extends LogTestBase {
 
         // One event should be logged.
         assertEquals(2, ta.events.size());
+    }
+
+    @Test
+    public void testPackagingData() throws Exception {
+        TestAppender ta = registerAppender("foo.bar.packaging");
+        delay();
+
+        Logger foo = (Logger)LoggerFactory.getLogger("foo.bar.packaging");
+        foo.warn("This is a test", new Exception());
+
+        // One event should be logged.
+        assertEquals(1, ta.events.size());
+        ILoggingEvent e = ta.events.get(0);
+        StackTraceElementProxy[] stProxies = e.getThrowableProxy().getStackTraceElementProxyArray();
+
+        ClassPackagingData cpd1 = stProxies[0].getClassPackagingData();
+
+        //For pax exam the bundle is created with name starting with PAXEXAM-PROBE
+        //As codeLocation is OSGi env is bundle symbolic name we check for that
+        assertThat(cpd1.getCodeLocation(), startsWith("PAXEXAM-PROBE"));
     }
 
     @After
