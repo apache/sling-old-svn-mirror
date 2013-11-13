@@ -19,8 +19,13 @@
 package org.apache.sling.commons.testing.sling;
 
 import org.apache.sling.api.request.RequestPathInfo;
+import org.apache.sling.api.resource.Resource;
 
 class MockRequestPathInfo implements RequestPathInfo {
+
+    public Resource getSuffixResource() {
+        return null;
+    }
 
     private final String selectors;
 
