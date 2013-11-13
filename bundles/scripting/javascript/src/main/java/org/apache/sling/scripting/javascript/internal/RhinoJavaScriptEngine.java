@@ -36,6 +36,7 @@ import org.mozilla.javascript.JavaScriptException;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.WrapFactory;
 import org.mozilla.javascript.Wrapper;
 import org.slf4j.Logger;
@@ -111,8 +112,14 @@ public class RhinoJavaScriptEngine extends AbstractSlingScriptEngine {
             final int lineNumber = 1;
             final Object securityDomain = null;
 
-            return rhinoContext.evaluateReader(scope, scriptReader, scriptName,
+            Object result = rhinoContext.evaluateReader(scope, scriptReader, scriptName,
                     lineNumber, securityDomain);
+
+            if (result instanceof Wrapper) {
+                result = ((Wrapper) result).unwrap();
+            }
+
+            return (result instanceof Undefined) ? null : result;
 
         } catch (JavaScriptException t) {
 
