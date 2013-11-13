@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 
@@ -175,17 +176,51 @@ public class MockResourceResolver implements ResourceResolver {
 
     public ResourceResolver clone(Map<String, Object> authenticationInfo)
     throws LoginException {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public Object getAttribute(String name) {
-        // TODO Auto-generated method stub
         return null;
     }
 
     public Iterator<String> getAttributeNames() {
-        // TODO Auto-generated method stub
         return null;
+    }
+
+    public void commit() throws PersistenceException {
+    }
+
+    public Resource create(Resource arg0, String arg1, Map<String, Object> arg2)
+            throws PersistenceException {
+        return null;
+    }
+
+    public void delete(Resource arg0) throws PersistenceException {
+    }
+
+    public Iterable<Resource> getChildren(Resource arg0) {
+        return null;
+    }
+
+    public String getParentResourceType(Resource arg0) {
+        return null;
+    }
+
+    public String getParentResourceType(String arg0) {
+        return null;
+    }
+
+    public boolean hasChanges() {
+        return false;
+    }
+
+    public boolean isResourceType(Resource arg0, String arg1) {
+        return false;
+    }
+
+    public void refresh() {
+    }
+
+    public void revert() {
     }
 }
