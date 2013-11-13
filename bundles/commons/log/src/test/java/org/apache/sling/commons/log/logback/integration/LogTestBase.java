@@ -79,7 +79,8 @@ public abstract class LogTestBase {
         final File bundleFile = new File(bundleFileName);
         if (!bundleFile.canRead()) {
             throw new IllegalArgumentException("Cannot read from bundle file " + bundleFileName + " specified in the "
-                + BUNDLE_JAR_SYS_PROP + " system property");
+                + BUNDLE_JAR_SYS_PROP + " system property. Try building the project first " +
+                    "with 'mvn clean install -Pide -DskipTests'");
         }
         return options(
             // the current project (the bundle under test)
@@ -133,6 +134,10 @@ public abstract class LogTestBase {
 
     protected Option addExtraOptions() {
         return new DefaultCompositeOption();
+    }
+
+    protected static String absolutePath(String configFileName){
+        return FilenameUtils.concat(new File(".").getAbsolutePath(), "src/test/resources/"+configFileName);
     }
 
     protected static void delay() {

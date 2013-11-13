@@ -21,10 +21,17 @@ package org.apache.sling.commons.log.logback.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -34,11 +41,6 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
-
 public class AppenderTracker extends ServiceTracker implements LogbackResetListener {
 
     private static final String PROP_LOGGER = "loggers";
@@ -46,6 +48,8 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
     private final LoggerContext loggerContext;
 
     private final Map<ServiceReference, AppenderInfo> appenders = new ConcurrentHashMap<ServiceReference, AppenderInfo>();
+
+    private final Map<String,Set<String>> appenderNameToLoggerMap = new ConcurrentHashMap<String, Set<String>>();
 
     public AppenderTracker(final BundleContext context, final LoggerContext loggerContext) throws InvalidSyntaxException {
         super(context, createFilter(), null);
@@ -94,7 +98,7 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
     private void detachAppender(final AppenderInfo ai) {
         if (ai != null) {
-            for (final String name : ai.loggers) {
+            for (final String name : ai.getLoggers()) {
                 final Logger logger = loggerContext.getLogger(name);
 
                 logger.detachAppender(ai.appender);
@@ -104,7 +108,7 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
     private void attachAppender(final AppenderInfo ai) {
         if (ai != null) {
-            for (final String name : ai.loggers) {
+            for (final String name : ai.getLoggers()) {
                 final Logger logger = loggerContext.getLogger(name);
 
                 logger.addAppender(ai.appender);
@@ -114,14 +118,21 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
 
     @Override
     public void onResetStart(final LoggerContext context) {
-        for (AppenderInfo ai : appenders.values()) {
-            attachAppender(ai);
-        }
+        attachAppenders();
     }
 
     @Override
     public void onResetComplete(final LoggerContext context) {
+        @SuppressWarnings("unchecked")
+        Map<String,Set<String>> appenderRefBag =
+                (Map<String, Set<String>>) context.getObject(OsgiAppenderRefInternalAction.OSGI_APPENDER_REF_BAG);
+        if(appenderRefBag == null){
+            appenderRefBag = Collections.emptyMap();
+        }
+        this.appenderNameToLoggerMap.clear();
+        this.appenderNameToLoggerMap.putAll(appenderRefBag);
 
+        attachAppenders();
     }
 
     @Override
@@ -130,17 +141,25 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
         appenders.clear();
     }
 
+    private void attachAppenders() {
+        for (AppenderInfo ai : appenders.values()) {
+            attachAppender(ai);
+        }
+    }
+
     private static Filter createFilter() throws InvalidSyntaxException {
         String filter = String.format("(&(objectClass=%s)(%s=*))", Appender.class.getName(), PROP_LOGGER);
         return FrameworkUtil.createFilter(filter);
     }
 
-    static class AppenderInfo {
-        final List<String> loggers;
+    class AppenderInfo {
+        private final List<String> loggers;
 
         final Appender<ILoggingEvent> appender;
 
         final String pid;
+
+        final String name;
 
         public AppenderInfo(final ServiceReference ref, Appender<ILoggingEvent> appender) {
             this.appender = appender;
@@ -151,6 +170,22 @@ public class AppenderTracker extends ServiceTracker implements LogbackResetListe
             }
 
             this.loggers = loggers;
+            this.name = appender.getName();
         }
+
+        public Set<String> getLoggers(){
+            Set<String> result = new HashSet<String>(loggers);
+
+            if(name != null){
+                Set<String> loggersFromConfig = appenderNameToLoggerMap.get(name);
+                if(loggersFromConfig != null){
+                    result.addAll(loggersFromConfig);
+                }
+            }
+
+            return Collections.unmodifiableSet(result);
+        }
+
+
     }
 }

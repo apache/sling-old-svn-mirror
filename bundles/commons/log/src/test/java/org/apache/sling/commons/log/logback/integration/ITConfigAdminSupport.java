@@ -19,7 +19,6 @@
 
 package org.apache.sling.commons.log.logback.integration;
 
-import java.io.File;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -28,8 +27,6 @@ import javax.inject.Inject;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.sling.commons.log.logback.integration.LogTestBase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -47,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.composite;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
+@SuppressWarnings("UnusedDeclaration")
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class ITConfigAdminSupport extends LogTestBase {
@@ -144,8 +142,7 @@ public class ITConfigAdminSupport extends LogTestBase {
         Configuration config = ca.getConfiguration(PID, null);
         Dictionary<String, Object> p = new Hashtable<String, Object>();
         p.put(LOG_LEVEL, "DEBUG");
-        p.put(LOGBACK_FILE,
-            FilenameUtils.concat(new File(".").getAbsolutePath(), "src/test/resources/test1-external-config.xml"));
+        p.put(LOGBACK_FILE,absolutePath("test1-external-config.xml"));
         config.update(p);
 
         delay();

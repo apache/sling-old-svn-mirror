@@ -22,12 +22,8 @@ package org.apache.sling.commons.log.logback.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.joran.action.Action;
 import ch.qos.logback.core.joran.action.ActionConst;
 import ch.qos.logback.core.joran.event.EndEvent;
@@ -37,7 +33,6 @@ import ch.qos.logback.core.joran.event.SaxEventRecorder;
 import ch.qos.logback.core.joran.spi.ActionException;
 import ch.qos.logback.core.joran.spi.InterpretationContext;
 import ch.qos.logback.core.joran.spi.JoranException;
-
 import org.apache.sling.commons.log.logback.internal.util.Util;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -52,15 +47,11 @@ import static org.apache.sling.commons.log.logback.internal.ConfigSourceTracker.
 public class OsgiInternalAction extends Action {
     private static final String INCLUDED_TAG = "included";
 
-    private Map<String, Appender<ILoggingEvent>> appenderBag;
 
     @SuppressWarnings("unchecked")
     @Override
     public void begin(InterpretationContext ec, String name, Attributes attributes) throws ActionException {
-        ec.addInPlayListener(new ConfigCompleteListener());
-
-        //Extract the appender bag from InterpretationContext. It would be used later
-        appenderBag = (HashMap<String, Appender<ILoggingEvent>>) ec.getObjectMap().get(ActionConst.APPENDER_BAG);
+        ec.addInPlayListener(new ConfigCompleteListener(ec));
 
         populateSubstitutionProperties(ec);
 
@@ -146,17 +137,40 @@ public class OsgiInternalAction extends Action {
      */
     private class ConfigCompleteListener implements InPlayListener {
         private static final String CONFIG_TAG = "configuration";
+        private final String[] OBJECT_NAMES = {
+                ActionConst.APPENDER_BAG,
+                OsgiAppenderRefInternalAction.OSGI_APPENDER_REF_BAG,
+        };
+
+        private final InterpretationContext ic;
+
+        public ConfigCompleteListener(InterpretationContext ec) {
+            this.ic = ec;
+        }
+
         @Override
         public void inPlay(SaxEvent event) {
             if(event instanceof EndEvent
                     && event.qName.equalsIgnoreCase(CONFIG_TAG)){
                 //Export the appender bag to LoggerContext object
-                getContext().putObject(ActionConst.APPENDER_BAG,appenderBag);
+                transferObjectsToContext();
 
                 getLogbackManager().fireResetCompleteListeners();
 
                 //Clear the appender bag entry
-                getContext().putObject(ActionConst.APPENDER_BAG,null);
+                removeTransferredObjects();
+            }
+        }
+
+        private void transferObjectsToContext(){
+            for(String name : OBJECT_NAMES){
+                getContext().putObject(name,ic.getObjectMap().get(name));
+            }
+        }
+
+        private void removeTransferredObjects(){
+            for(String name : OBJECT_NAMES){
+                getContext().putObject(name,null);
             }
         }
     }

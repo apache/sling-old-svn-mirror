@@ -43,7 +43,7 @@ import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.helpers.Transform;
 import ch.qos.logback.core.status.Status;
 import ch.qos.logback.core.util.CachingDateFormatter;
-
+import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
 import org.apache.sling.commons.log.logback.internal.LogbackManager.LoggerStateContext;
 import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
 import org.apache.sling.commons.log.logback.internal.util.Util;
@@ -53,7 +53,6 @@ import org.osgi.framework.ServiceReference;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
-import static org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
 import static org.apache.sling.commons.log.logback.internal.ConfigSourceTracker.ConfigSourceInfo;
 
 /**
