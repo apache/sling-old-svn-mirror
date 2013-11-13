@@ -35,6 +35,7 @@ import ch.qos.logback.core.status.StatusListener;
 import ch.qos.logback.core.status.StatusListenerAsList;
 import ch.qos.logback.core.status.StatusUtil;
 import ch.qos.logback.core.util.StatusPrinter;
+import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -43,9 +44,7 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
-import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
-import org.slf4j.impl.StaticLoggerBinder;
 
 public class LogbackManager extends LoggerContextAwareBase {
     private static final String PREFIX = "org.apache.sling.commons.log";
@@ -461,7 +460,8 @@ public class LogbackManager extends LoggerContextAwareBase {
 
         final Map<String, Appender<ILoggingEvent>> appenders = new HashMap<String, Appender<ILoggingEvent>>();
 
-        final Map<Appender<ILoggingEvent>, AppenderTracker.AppenderInfo> dynamicAppenders = new HashMap<Appender<ILoggingEvent>, AppenderTracker.AppenderInfo>();
+        final Map<Appender<ILoggingEvent>, AppenderInfo> dynamicAppenders =
+                new HashMap<Appender<ILoggingEvent>, AppenderInfo>();
 
         final Map<ServiceReference,TurboFilter> turboFilters;
 

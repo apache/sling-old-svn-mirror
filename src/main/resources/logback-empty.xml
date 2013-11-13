@@ -26,5 +26,7 @@
   <jmxConfigurator />
   <newRule pattern="*/configuration/osgi"
            actionClass="org.apache.sling.commons.log.logback.OsgiAction"/>
+  <newRule pattern="*/configuration/appender-ref-osgi"
+           actionClass="org.apache.sling.commons.log.logback.OsgiAppenderRefAction"/>
   <osgi/>
 </configuration>
