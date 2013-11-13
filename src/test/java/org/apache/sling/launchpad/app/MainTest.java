@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import junit.framework.TestCase;
-
 import org.apache.sling.launchpad.base.shared.SharedConstants;
 
 public class MainTest extends TestCase {
@@ -63,11 +62,11 @@ public class MainTest extends TestCase {
         assertEquals("commandline map must have one entry", 1,
             commandline.size());
         assertEquals("single argument must be " + args[0].charAt(1),
-            String.valueOf(args[0].charAt(1)),
-            commandline.keySet().iterator().next());
+                String.valueOf(args[0].charAt(1)),
+                commandline.keySet().iterator().next());
         assertEquals("single argument value must be " + args[0].charAt(1),
-            String.valueOf(args[0].charAt(1)),
-            commandline.values().iterator().next());
+                String.valueOf(args[0].charAt(1)),
+                commandline.values().iterator().next());
     }
 
     public void test_parseCommandLine_single_arg_with_par() {
@@ -128,7 +127,7 @@ public class MainTest extends TestCase {
         Map<String, String> commandline = Main.parseCommandLine(args);
         assertNotNull("commandline map must not be null", commandline);
         assertEquals("commandline map must have three entries", 3,
-            commandline.size());
+                commandline.size());
         assertEquals("argument a must apar", "apar", commandline.get("a"));
         assertEquals("argument -b must -b", "-b", commandline.get("-b"));
         assertEquals("argument bpar must bpar", "bpar", commandline.get("bpar"));
@@ -358,6 +357,24 @@ public class MainTest extends TestCase {
         assertNotNull(props1);
         assertEquals(1, props1.size());
         assertEquals(Boolean.TRUE.toString(), props1.get("sling.shutdown.hook"));
+    }
+
+    public void test_converCommandLineArgs_multi_D() {
+        String[] args = {"-Da1=b1", "-Da2=b2"};
+        Map<String, String> commandline = Main.parseCommandLine(args);
+        Map<String, String> props = Main.convertCommandLineArgs(commandline);
+        assertEquals(2, props.size());
+        assertEquals("b1", props.get("a1"));
+        assertEquals("b2", props.get("a2"));
+    }
+
+    public void test_converCommandLineArgs_multi_D_with_space() {
+        String[] args = {"-D", "a1=b1", "-D", "a2=b2"};
+        Map<String, String> commandline = Main.parseCommandLine(args);
+        Map<String, String> props = Main.convertCommandLineArgs(commandline);
+        assertEquals(2, props.size());
+        assertEquals("b1", props.get("a1"));
+        assertEquals("b2", props.get("a2"));
     }
 
     public void test_converCommandLineArgs_D() {
