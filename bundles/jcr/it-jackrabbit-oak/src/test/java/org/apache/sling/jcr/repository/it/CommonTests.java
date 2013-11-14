@@ -22,6 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,8 +39,12 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
 
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.junit.After;
 import org.junit.Test;
@@ -70,6 +76,53 @@ public abstract class CommonTests {
     
     private final List<String> toDelete = new LinkedList<String>();
     private final AtomicInteger uniqueNameCounter = new AtomicInteger();
+    
+    public static final String I18N_MESSAGE_CND = 
+        "<sling = 'http://sling.apache.org/jcr/sling/1.0'>\n"
+        + "[mix:language]\n"
+        + "mixin\n"
+        + "- jcr:language (string)\n"
+        + "\n"
+        + "[sling:Message]\n"
+        + "mixin\n"
+        + "- sling:key (string)\n"
+        + "- sling:message (undefined)\n"
+        + "\n"
+        + "[sling:MessageEntry] > nt:hierarchyNode, sling:Message\n"
+        ;
+    
+    protected class JcrEventsCounter implements EventListener {
+        private final Session s;
+        private int jcrEventsCounter;
+        
+        public JcrEventsCounter() throws RepositoryException {
+            s = repository.loginAdministrative(null);
+            final ObservationManager om = s.getWorkspace().getObservationManager();
+            final int eventTypes = 255; // not sure if that's a recommended value, but common
+            final boolean deep = true;
+            final String [] uuid = null;
+            final String [] nodeTypeNames = new String [] { "mix:language", "sling:Message" };
+            final boolean noLocal = true;
+            final String root = "/";
+            om.addEventListener(this, eventTypes, root, deep, uuid, nodeTypeNames, noLocal);
+        }
+        
+        void close() {
+            s.logout();
+        }
+        
+        @Override
+        public void onEvent(EventIterator it) {
+            while(it.hasNext()) {
+                it.nextEvent();
+                jcrEventsCounter++;
+            }
+        }
+
+        int get() {
+            return jcrEventsCounter;
+        }
+    }
     
     private <ItemType extends Item> ItemType deleteAfterTests(ItemType it) throws RepositoryException {
         toDelete.add(it.getPath());
@@ -104,7 +157,7 @@ public abstract class CommonTests {
     protected String uniqueName(String hint) {
         return hint + "_" + uniqueNameCounter.incrementAndGet() + "_" + System.currentTimeMillis();
     }
-
+    
     @After
     public void deleteTestItems() throws RepositoryException {
         if(toDelete.isEmpty()) {
@@ -326,5 +379,62 @@ public abstract class CommonTests {
             reg.unregister();
             s.logout();
         }
+    }
+    
+    @Test
+    public void testNodetypeObservation() throws Exception {
+        Session s = repository.loginAdministrative(null);
+        final Reader cnd = new StringReader(I18N_MESSAGE_CND);
+        JcrEventsCounter counter = null;
+        final String path = "/" + uniqueName("observation");
+        
+        // Add a sling:MessageEntry and verify that we get JCR events
+        try {
+            CndImporter.registerNodeTypes(cnd, s);
+            counter = new JcrEventsCounter();
+            
+            final Node n = s.getRootNode().addNode(path.substring(1), "sling:MessageEntry"); 
+            toDelete.add(n.getPath());
+            n.setProperty("sling:key", "foo");
+            n.setProperty("sling:message", "bar");
+            s.save();
+            
+            final JcrEventsCounter c = counter;
+            new Retry(5000) {
+                @Override
+                protected void exec() throws Exception {
+                    assertTrue("Expecting JCR events after adding " + path, c.get() > 0);
+                }
+            };
+            
+        } finally {
+            s.logout();
+            cnd.close();
+            counter.close();
+        }
+        
+        // In a separate session, modify node and verify that we get events
+        counter = new JcrEventsCounter();
+        s = repository.loginAdministrative(null);
+        try {
+            
+            final Node n = s.getNode(path); 
+            n.setProperty("sling:message", "CHANGED now");
+            s.save();
+            
+            final JcrEventsCounter c = counter;
+            new Retry(5000) {
+                @Override
+                protected void exec() throws Exception {
+                    assertTrue("Expecting JCR events after modifying " + path, c.get() > 0);
+                }
+            };
+            
+        } finally {
+            s.logout();
+            cnd.close();
+            counter.close();
+        }
+
     }
 }
