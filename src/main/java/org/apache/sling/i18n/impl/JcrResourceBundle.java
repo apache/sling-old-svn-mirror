@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.query.Query;
 
 import org.apache.sling.api.SlingException;
@@ -57,8 +59,9 @@ public class JcrResourceBundle extends ResourceBundle {
     JcrResourceBundle(Locale locale, String baseName,
             ResourceResolver resourceResolver) {
         this.locale = locale;
-
+        
         long start = System.currentTimeMillis();
+        refreshSession(resourceResolver, true);
         final String loadQuery = getFullLoadQuery(locale, baseName);
         this.resources = loadFully(resourceResolver, loadQuery);
         long end = System.currentTimeMillis();
@@ -66,6 +69,19 @@ public class JcrResourceBundle extends ResourceBundle {
             "JcrResourceBundle: Fully loaded {} entries for {} (base: {}) in {}ms",
             new Object[] { resources.size(), locale, baseName,
                 (end - start) });
+    }
+
+    static void refreshSession(ResourceResolver resolver, boolean keepChanges) {
+        final Session s = resolver.adaptTo(Session.class);
+        if(s == null) {
+            log.warn("ResourceResolver {} does not adapt to Session, cannot refresh", resolver);
+        } else {
+            try {
+                s.refresh(keepChanges);
+            } catch(RepositoryException re) {
+                throw new RuntimeException("RepositoryException in session.refresh", re);
+            }
+        }
     }
 
     @Override
