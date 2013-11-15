@@ -242,6 +242,10 @@
                                 <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
                                 <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
                                 <HttpTestBase.readyTimeoutSeconds>${HttpTestBase.readyTimeoutSeconds}</HttpTestBase.readyTimeoutSeconds>
+                                
+                                <!-- Additional readyness checks, SLING-3235 -->
+                                <launchpad.ready.1>GET:/system/console/status-Configurations/configuration-status-20131115-101714.txt:200:config.comment.*setup the JSP engine for running tests</launchpad.ready.1>
+                                <launchpad.ready.2>GET:/.EXPORTED_PACKAGES.txt?package=org.apache.sling.api:200:PACKAGE FOUND.*org.apache.sling.api</launchpad.ready.2>
                             </systemPropertyVariables>
                         </configuration>
                     </plugin>
