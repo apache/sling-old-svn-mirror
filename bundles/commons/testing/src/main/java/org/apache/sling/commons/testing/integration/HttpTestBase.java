@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -57,6 +58,9 @@ public class HttpTestBase extends TestCase {
     public static final String HTTP_BASE_URL = removePath(HTTP_URL);
     public static final String WEBDAV_BASE_URL = removeEndingSlash(System.getProperty("launchpad.webdav.server.url", HTTP_BASE_URL));
     public static final String SERVLET_CONTEXT = removeEndingSlash(System.getProperty("launchpad.servlet.context", getPath(HTTP_URL)));
+    
+    public static final String READY_URL_PROP_PREFIX = "launchpad.ready.";
+    public static final int MAX_READY_URL_INDEX = 50;
 
     /** base path for test files */
     public static final String TEST_PATH = "/launchpad-integration-tests";
@@ -313,7 +317,31 @@ public class HttpTestBase extends TestCase {
                 throw new IOException("Allow header (" + h.getValue() + " does not contain PROPFIND, at URL=" + webDavUrl);
             }
         }
-
+        
+        // And check optional additional URLs for readyness
+        // Defined by system properties like
+        //  launchpad.ready.1 = GET:/tmp/someUrl:200:expectedRegexpInResponse
+        {
+            for(int i=0; i <= MAX_READY_URL_INDEX ; i++) {
+                final String propName = READY_URL_PROP_PREFIX + i;
+                final String readyDef = System.getProperty(propName, "");
+                final String [] parts = readyDef.split(":");
+                if(parts.length == 4) {
+                    final String info = propName + "=" + readyDef;
+                    final HttpAnyMethod m = new HttpAnyMethod(parts[0],HTTP_BASE_URL + parts[1]);
+                    final int expectedStatus = Integer.valueOf(parts[2]);
+                    final int status = httpClient.executeMethod(m);
+                    if(expectedStatus != status) {
+                        throw new IOException("Status " + status + " does not match expected value: " + info); 
+                    }
+                    final String content = m.getResponseBodyAsString();
+                    final Pattern p = Pattern.compile("(?s).*" + parts[3] + ".*");
+                    if(!p.matcher(content).matches()) {
+                        throw new IOException("Content does not match expected regexp:" + info  + ", content=" + content);
+                    }
+                }
+            }
+        }
 
         return true;
     }
