@@ -136,16 +136,11 @@ class TenantAdapterFactory implements AdapterFactory {
 	@SuppressWarnings("unchecked")
 	private <AdapterType> AdapterType getAdapter(String path,
 			Class<AdapterType> type) {
-		if (type == TENANT_CLASS) {
-			Tenant tenant = resolveTenantByPath(path);
-
-			if (tenant != null) {
-				return (AdapterType) tenant;
-			}
-
-		}
-		log.debug("Unable to adapt to resource of type {}", type.getName());
-		return null;
+        if (type == TENANT_CLASS) {
+            return (AdapterType) resolveTenantByPath(path);
+        }
+        log.debug("Unable to adapt to resource of type {}", type.getName());
+        return null;
 	}
 
     private Tenant resolveTenantByPath(String path) {
@@ -157,10 +152,15 @@ class TenantAdapterFactory implements AdapterFactory {
                 // make group number configurable.
                 if (matcher.groupCount() >= 1) {
                     String tenantId = matcher.group(1);
-                    return this.tenantProvider.getTenant(tenantId);
+                    final Tenant tenant = this.tenantProvider.getTenant(tenantId);
+                    if (tenant != null) {
+                        return tenant;
+                    }
                 }
             }
         }
+
+        log.debug("Cannot resolve {} to a Tenant", path);
         return null;
     }
 
