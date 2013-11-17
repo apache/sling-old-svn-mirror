@@ -113,9 +113,8 @@ class TenantAdapterFactory implements AdapterFactory {
 
 	private <AdapterType> AdapterType getAdapter(Session session,
 			Class<AdapterType> type) {
-	    if ( session != null ) {
+	    if ( session instanceof JackrabbitSession) {
     		String userID = session.getUserID();
-
     		JackrabbitSession jrSession = (JackrabbitSession) session;
     		try {
     			Authorizable authorizable = jrSession.getUserManager()
