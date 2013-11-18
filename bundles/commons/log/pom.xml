@@ -33,9 +33,9 @@
 
     <name>Apache Sling SLF4J Implementation (Logback)</name>
   <description>
-    This bundle embeds Logback to implement the SLF4J logging API.
+    This bundle embeds Logback which provides the SLF4J logging API.
     The embedding supports dynamic OSGi-configuration without
-    requring to edit some global filesystem based XML file.
+    requiring to edit some global filesystem based XML file.
   </description>
 
   <scm>
@@ -142,7 +142,7 @@
             <DynamicImport-Package>
               org.osgi.service.cm;version=1.2,
               javax.servlet,
-              javax.servlet.http,
+              javax.servlet.http;version=2.3,
               org.osgi.service.event;version=1.2,
               <!-- Required by WebConsole support-->
               javax.xml.transform,
@@ -322,6 +322,13 @@
       <artifactId>junit</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>4.0.2</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Pax Exam Dependencies -->
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
@@ -448,7 +455,7 @@
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <execution>
-                <id>scr-file-create</id>
+                <id>log-file-create</id>
                 <phase>package</phase>
                 <goals>
                   <goal>run</goal>
@@ -472,7 +479,6 @@
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.6.2.201302030002</version>
             <executions>
               <execution>
                 <id>prepare-agent</id>
@@ -529,31 +535,5 @@
         </plugins>
       </build>
     </profile>
-
-    <profile>
-      <id>felix</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-      </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>org.apache.felix.framework</artifactId>
-          <version>4.0.2</version>
-          <scope>test</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-    <profile>
-      <id>equinox</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.eclipse</groupId>
-          <artifactId>org.eclipse.osgi</artifactId>
-          <version>3.8.0.v20120529-1548</version>
-          <scope>test</scope>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
+</profiles>
 </project>
