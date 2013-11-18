@@ -46,7 +46,7 @@ import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.LoggerFactory;
 
-import static org.hamcrest.CoreMatchers.startsWith;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -140,7 +140,7 @@ public class ITAppenderServices extends LogTestBase {
 
         //For pax exam the bundle is created with name starting with PAXEXAM-PROBE
         //As codeLocation is OSGi env is bundle symbolic name we check for that
-        assertThat(cpd1.getCodeLocation(), startsWith("PAXEXAM-PROBE"));
+        assertThat(cpd1.getCodeLocation(), is(bundleContext.getBundle().getSymbolicName()));
     }
 
     @After
