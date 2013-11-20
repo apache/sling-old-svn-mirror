@@ -19,6 +19,8 @@
 package org.apache.sling.discovery.impl.cluster;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -72,6 +74,57 @@ public class ClusterTest {
         instance1 = null;
         instance2 = null;
         instance3 = null;
+    }
+    
+    /** test leader behaviour with ascending slingIds, SLING-3253 **/
+    @Test
+    public void testLeaderAsc() throws Throwable {
+    	doTestLeader("000", "111");
+    }
+
+    /** test leader behaviour with descending slingIds, SLING-3253 **/
+    @Test
+    public void testLeaderDesc() throws Throwable {
+    	doTestLeader("111", "000");
+    }
+
+    private void doTestLeader(String slingId1, String slingId2) throws Throwable {
+    	// stop 1 and 2 and create them with a lower heartbeat timeout
+    	instance2.stopHeartbeats();
+    	instance1.stopHeartbeats();
+        instance2.stop();
+        instance1.stop();
+        instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 1, 1, slingId1);
+        // sleep so that the two dont have the same startup time, and thus leaderElectionId is lower for instance1
+        Thread.sleep(200);
+        instance2 = Instance.newClusterInstance("/var/discovery/impl/", "secondInstance", instance1,
+                false, 1, 1, slingId2);
+        assertNotNull(instance1);
+        assertNotNull(instance2);
+
+        // the two instances are still isolated - so in a cluster of size 1
+        assertEquals(1, instance1.getClusterViewService().getClusterView().getInstances().size());
+        assertEquals(1, instance2.getClusterViewService().getClusterView().getInstances().size());
+        assertTrue(instance1.getLocalInstanceDescription().isLeader());
+        assertTrue(instance2.getLocalInstanceDescription().isLeader());
+
+        // let the sync/voting happen
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        Thread.sleep(500);
+        instance1.runHeartbeatOnce();
+        instance2.runHeartbeatOnce();
+        
+        // now they must be in the same cluster, so in a cluster of size 1
+        assertEquals(2, instance1.getClusterViewService().getClusterView().getInstances().size());
+        assertEquals(2, instance2.getClusterViewService().getClusterView().getInstances().size());
+        
+        // the first instance should be the leader - since it was started first
+        assertTrue(instance1.getLocalInstanceDescription().isLeader());
+        assertFalse(instance2.getLocalInstanceDescription().isLeader());
     }
 
     @Test
