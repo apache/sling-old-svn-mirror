@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.common.DefaultClusterViewImpl;
@@ -51,6 +52,7 @@ public class EstablishedClusterView extends DefaultClusterViewImpl {
             final String localId) {
         super(view.getViewId());
 
+        String leaderId = view.getResource().adaptTo(ValueMap.class).get("leaderId", String.class);
         final Iterator<Resource> it1 = view.getResource().getChild("members")
                 .getChildren().iterator();
         final List<Resource> instanceRess = new LinkedList<Resource>();
@@ -73,8 +75,11 @@ public class EstablishedClusterView extends DefaultClusterViewImpl {
             }
         });
 
-        final Resource leader = instanceRess.get(0);
-        final String leaderId = leader.getName();
+        if (leaderId==null || leaderId.length()==0) {
+        	// fallback to pre-SLING-3253: choose leader based on slingId alone.
+	        final Resource leader = instanceRess.get(0);
+	        leaderId = leader.getName();
+        }
         InstanceDescription leaderInstance = null;
 
         for (Iterator<Resource> it2 = instanceRess.iterator(); it2.hasNext();) {
