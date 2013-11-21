@@ -34,6 +34,7 @@ import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.AppenderBase;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
@@ -123,6 +124,7 @@ public class ITAppenderServices extends LogTestBase {
         assertEquals(2, ta.events.size());
     }
 
+    @Ignore("SLING-3049")
     @Test
     public void testPackagingData() throws Exception {
         TestAppender ta = registerAppender("foo.bar.packaging");
