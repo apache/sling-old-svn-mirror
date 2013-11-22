@@ -42,6 +42,7 @@ import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.ResourceNotFoundException;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
@@ -192,7 +193,8 @@ public class SlingPostServlet extends SlingAllMethodsServlet {
                 "Invalid operation specified for POST request");
 
         } else {
-
+            request.getRequestProgressTracker().log(
+                    "Calling PostOperation: {0}", operation.getClass().getName());
             final SlingPostProcessor[] processors = this.cachedPostProcessors;
             try {
                 operation.run(request, htmlResponse, processors);
