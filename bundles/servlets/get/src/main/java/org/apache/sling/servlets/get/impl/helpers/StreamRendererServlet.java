@@ -102,7 +102,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                 "StreamRendererServlet does not support for extension " + ext);
             if (included || response.isCommitted()) {
                 log.error(
-                    "StreamRendererServlet does not support for extension {}",
+                    "StreamRendererServlet does not support extension {}",
                     ext);
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -481,9 +481,8 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                     + currentRange.end + "/" + currentRange.length);
                 ostream.println();
 
-                // Printing content
-                exception = copyRange(istream, ostream, currentRange.start,
-                    currentRange.end);
+                // Copy content
+                copy(istream, ostream, currentRange);
             } finally {
                 closeSilently(istream);
             }
@@ -492,10 +491,6 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         ostream.println();
         ostream.print("--" + mimeSeparation + "--");
-
-        // Rethrow any exception that has occurred
-        if (exception != null) throw exception;
-
     }
 
     /**
@@ -509,67 +504,41 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     */
     private void copy(InputStream istream, OutputStream ostream,
             Range range) throws IOException {
-        IOException exception = copyRange(istream, ostream, range.start, range.end);
-
-        // Rethrow any exception that has occurred
-        if (exception != null) {
-            throw exception;
-        }
-    }
-
-    /**
-     * Copy the contents of the specified input stream to the specified output
-     * stream.
-     *
-     * @param istream The input stream to read from
-     * @param ostream The output stream to write to
-     * @param start Start of the range which will be copied
-     * @param end End of the range which will be copied
-     * @return Exception which occurred during processing
-     */
-    private IOException copyRange(InputStream istream,
-            OutputStream ostream, long start, long end) {
-        log.debug("copyRange: Serving bytes: {}-{}", start, end);
-        return staticCopyRange(istream, ostream, start, end);
+        log.debug("copy: Serving bytes: {}-{}", range.start, range.end);
+        staticCopyRange(istream, ostream, range.start, range.end);
     }
 
     // static, package-private method to make unit testing easier
-    static IOException staticCopyRange(InputStream istream,
-            OutputStream ostream, long start, long end) {
-        try {
-            long position = 0;
-            byte buffer[] = new byte[IO_BUFFER_SIZE];
+    static void staticCopyRange(InputStream istream,
+            OutputStream ostream, long start, long end) throws IOException {
+        long position = 0;
+        byte buffer[] = new byte[IO_BUFFER_SIZE];
 
-            while (position < start) {
-                long skipped = istream.skip(start - position);
-                if (skipped == 0) {
-                    // skip() may return zero if for whatever reason it wasn't
-                    // able to advance the stream. In such cases we need to
-                    // fall back to read() to force the skipping of bytes.
-                    int len = (int) Math.min(start - position, buffer.length);
-                    skipped = istream.read(buffer, 0, len);
-                    if (skipped == -1) {
-                        return new IOException("Failed to skip " + start
-                                + " bytes; only skipped " + position + " bytes");
-                    }
-                }
-                position += skipped;
-            }
-
-            while (position < end) {
-                int len = (int) Math.min(end - position, buffer.length);
-                int read = istream.read(buffer, 0, len);
-                if (read != -1) {
-                    position += read;
-                    ostream.write(buffer, 0, len);
-                } else {
-                    break;
+        while (position < start) {
+            long skipped = istream.skip(start - position);
+            if (skipped == 0) {
+                // skip() may return zero if for whatever reason it wasn't
+                // able to advance the stream. In such cases we need to
+                // fall back to read() to force the skipping of bytes.
+                int len = (int) Math.min(start - position, buffer.length);
+                skipped = istream.read(buffer, 0, len);
+                if (skipped == -1) {
+                    throw new IOException("Failed to skip " + start
+                            + " bytes; only skipped " + position + " bytes");
                 }
             }
+            position += skipped;
+        }
 
-            return null;
-        } catch (IOException e) {
-            return e;
+        while (position < end) {
+            int len = (int) Math.min(end - position, buffer.length);
+            int read = istream.read(buffer, 0, len);
+            if (read != -1) {
+                position += read;
+                ostream.write(buffer, 0, len);
+            } else {
+                break;
+            }
         }
     }
 
