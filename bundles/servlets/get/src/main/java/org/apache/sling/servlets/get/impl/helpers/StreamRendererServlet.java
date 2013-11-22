@@ -502,15 +502,13 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     * Copy the contents of the specified input stream to the specified
     * output stream.
     *
-    * @param cacheEntry The cache entry for the source resource
+    * @param istream The input stream to read from
     * @param ostream The output stream to write to
     * @param range Range the client wanted to retrieve
     * @exception IOException if an input/output error occurs
     */
-    private void copy(InputStream resourceInputStream, OutputStream ostream,
+    private void copy(InputStream istream, OutputStream ostream,
             Range range) throws IOException {
-
-        InputStream istream = new BufferedInputStream(resourceInputStream, IO_BUFFER_SIZE);
         IOException exception = copyRange(istream, ostream, range.start, range.end);
 
         // Rethrow any exception that has occurred
@@ -531,44 +529,48 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
      */
     private IOException copyRange(InputStream istream,
             OutputStream ostream, long start, long end) {
-
         log.debug("copyRange: Serving bytes: {}-{}", start, end);
+        return staticCopyRange(istream, ostream, start, end);
+    }
 
+    // static, package-private method to make unit testing easier
+    static IOException staticCopyRange(InputStream istream,
+            OutputStream ostream, long start, long end) {
         try {
-            long skipped = istream.skip(start);
-            if (skipped < start) {
-                return new IOException("Failed to skip " + start
-                    + " bytes; only skipped " + skipped + " bytes");
+            long position = 0;
+            byte buffer[] = new byte[IO_BUFFER_SIZE];
+
+            while (position < start) {
+                long skipped = istream.skip(start - position);
+                if (skipped == 0) {
+                    // skip() may return zero if for whatever reason it wasn't
+                    // able to advance the stream. In such cases we need to
+                    // fall back to read() to force the skipping of bytes.
+                    int len = (int) Math.min(start - position, buffer.length);
+                    skipped = istream.read(buffer, 0, len);
+                    if (skipped == -1) {
+                        return new IOException("Failed to skip " + start
+                                + " bytes; only skipped " + position + " bytes");
+                    }
+                }
+                position += skipped;
             }
+
+            while (position < end) {
+                int len = (int) Math.min(end - position, buffer.length);
+                int read = istream.read(buffer, 0, len);
+                if (read != -1) {
+                    position += read;
+                    ostream.write(buffer, 0, len);
+                } else {
+                    break;
+                }
+            }
+
+            return null;
         } catch (IOException e) {
             return e;
         }
-
-        IOException exception = null;
-        long bytesToRead = end - start + 1;
-
-        byte buffer[] = new byte[IO_BUFFER_SIZE];
-        int len = buffer.length;
-        while ((bytesToRead > 0) && (len >= buffer.length)) {
-            try {
-                len = istream.read(buffer);
-                if (bytesToRead >= len) {
-                    ostream.write(buffer, 0, len);
-                    bytesToRead -= len;
-                } else {
-                    ostream.write(buffer, 0, (int) bytesToRead);
-                    bytesToRead = 0;
-                }
-            } catch (IOException e) {
-                exception = e;
-                len = -1;
-            }
-            if (len < buffer.length) {
-                break;
-            }
-        }
-
-        return exception;
     }
 
     /**
