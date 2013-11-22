@@ -18,28 +18,38 @@
  */
 package org.apache.sling.servlets.get.impl.helpers;
 
+import static org.junit.Assert.assertEquals;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.Random;
 
-import org.apache.sling.servlets.get.impl.helpers.StreamRendererServlet;
+import org.junit.Test;
 
-import junit.framework.TestCase;
+public class StreamRendererServletTest {
 
-public class StreamRendererServletTest extends TestCase {
-
+    @Test
     public void testCopyRange() {
-        assertCopyRange(1234);
-        assertCopyRange(4321);
+        runTests(1234);
+        runTests(4321);
     }
 
-    private void assertCopyRange(long seed) {
-        Random random = new Random(seed);
+    private void runTests(int randomSeed) {
+        final Random random = new Random(randomSeed);
+        assertCopyRange(random, StreamRendererServlet.IO_BUFFER_SIZE * 2 + 42);
+        assertCopyRange(random, StreamRendererServlet.IO_BUFFER_SIZE * 3);
+        assertCopyRange(random, StreamRendererServlet.IO_BUFFER_SIZE);
+        assertCopyRange(random, StreamRendererServlet.IO_BUFFER_SIZE - 1);
+        assertCopyRange(random, random.nextInt(StreamRendererServlet.IO_BUFFER_SIZE));
+        assertCopyRange(random, 42);
+        assertCopyRange(random, 1);
+    }
+
+    private void assertCopyRange(Random random, int bufferSize) {
 
         // generate some random test data
-        byte[] expected = new byte[random.nextInt(10000)]; // >> IO_BUFFER_SIZE
+        final byte[] expected = new byte[bufferSize];
         random.nextBytes(expected);
 
         // Check some simple cases ...
@@ -48,16 +58,11 @@ public class StreamRendererServletTest extends TestCase {
         assertCopyRange(expected, 0, expected.length);
 
         // ... and a few randomly selected ones
-        int n = random.nextInt(100);
+        final int n = random.nextInt(100);
         for (int i = 0; i < n; i++) {
-            int a = random.nextInt(expected.length);
-            int b = random.nextInt(expected.length);
-            if (a > b) {
-                int x = a;
-                a = b;
-                b = x;
-            }
-            assertCopyRange(expected, a, b);
+            final int a = random.nextInt(expected.length);
+            final int b = random.nextInt(expected.length);
+            assertCopyRange(expected, Math.min(a, b), Math.max(a, b));
         }
     }
 
