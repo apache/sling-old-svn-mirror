@@ -482,7 +482,11 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
                 ostream.println();
 
                 // Copy content
-                copy(istream, ostream, currentRange);
+                try {
+                    copy(istream, ostream, currentRange);
+                } catch(IOException e) {
+                    exception = e;
+                }
             } finally {
                 closeSilently(istream);
             }
@@ -491,6 +495,10 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
 
         ostream.println();
         ostream.print("--" + mimeSeparation + "--");
+        
+        if(exception != null) {
+            throw exception;
+        }
     }
 
     /**
