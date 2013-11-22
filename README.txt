@@ -57,7 +57,8 @@ adding the following profile in your ~/.m2/settings.xml configuration file:
 
 Once you have everything in place, run
 
-    MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=256M" mvn clean install
+    export MAVEN_OPTS="-Xmx256M -XX:MaxPermSize=256M" 
+    mvn clean install
 
 in this directory (on 64bit platforms you might want to use 512M instead
 of 256M). This will build, test and install the Sling modules in your local
