@@ -19,9 +19,11 @@
 package org.apache.sling.servlets.get.impl.helpers;
 
 import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Random;
 
@@ -30,12 +32,22 @@ import org.junit.Test;
 public class StreamRendererServletTest {
 
     @Test
-    public void testCopyRange() {
+    public void testCopyRange() throws IOException {
         runTests(1234);
         runTests(4321);
     }
 
-    private void runTests(int randomSeed) {
+    @Test
+    public void testResultingLength() throws IOException {
+        final ByteArrayInputStream in = new ByteArrayInputStream("12345678".getBytes());
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        StreamRendererServlet.staticCopyRange(in, out, 2, 4);
+        final String result = out.toString();
+        assertEquals(2, result.length());
+        assertEquals("34", result);
+    }
+    
+    private void runTests(int randomSeed) throws IOException {
         final Random random = new Random(randomSeed);
         assertCopyRange(random, StreamRendererServlet.IO_BUFFER_SIZE * 2 + 42);
         assertCopyRange(random, StreamRendererServlet.IO_BUFFER_SIZE * 3);
@@ -46,7 +58,7 @@ public class StreamRendererServletTest {
         assertCopyRange(random, 1);
     }
 
-    private void assertCopyRange(Random random, int bufferSize) {
+    private void assertCopyRange(Random random, int bufferSize) throws IOException {
 
         // generate some random test data
         final byte[] expected = new byte[bufferSize];
@@ -66,7 +78,7 @@ public class StreamRendererServletTest {
         }
     }
 
-    private void assertCopyRange(byte[] expected, int a, int b) {
+    private void assertCopyRange(byte[] expected, int a, int b) throws IOException {
         assertCopyRange(expected, new ByteArrayInputStream(expected), a, b);
         // with BufferedInputStream
         assertCopyRange(expected, new BufferedInputStream(new ByteArrayInputStream(expected)), a, b);
@@ -87,7 +99,7 @@ public class StreamRendererServletTest {
     }
 
     private void assertCopyRange(
-            byte[] expected, InputStream input, int a, int b) {
+            byte[] expected, InputStream input, int a, int b) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         StreamRendererServlet.staticCopyRange(
                 new ByteArrayInputStream(expected), output, a, b);
