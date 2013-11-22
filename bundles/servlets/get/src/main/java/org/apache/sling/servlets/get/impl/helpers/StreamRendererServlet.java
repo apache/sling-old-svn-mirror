@@ -512,8 +512,10 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
     */
     private void copy(InputStream istream, OutputStream ostream,
             Range range) throws IOException {
-        log.debug("copy: Serving bytes: {}-{}", range.start, range.end);
-        staticCopyRange(istream, ostream, range.start, range.end);
+        // HTTP Range 0-9 means "byte 9 included"
+        final long endIndex = range.end + 1;
+        log.debug("copy: Serving bytes: {}-{}", range.start, endIndex);
+        staticCopyRange(istream, ostream, range.start, endIndex);
     }
 
     // static, package-private method to make unit testing easier
