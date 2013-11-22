@@ -73,7 +73,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
      */
     private static ArrayList<Range> FULL = new ArrayList<Range>(0);
 
-    private static final int IO_BUFFER_SIZE = 2048;
+    static final int IO_BUFFER_SIZE = 2048;
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
