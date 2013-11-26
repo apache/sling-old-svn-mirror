@@ -147,7 +147,7 @@ public class MimeTypeServiceImpl implements MimeTypeService, BundleListener {
                     log(LogService.LOG_INFO,
                         "registerMimeType: Ignoring mapping " + extension + "="
                             + mimeType + ": Mapping " + extension + "="
-                            + oldMimeType + " alread exists", null);
+                            + oldMimeType + " already exists", null);
 
                 }
 
