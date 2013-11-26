@@ -96,13 +96,24 @@ public class StreamRendererServletTest {
                 return 0;
             }
         }), a, b);
+        // with an input stream that does not return everything in read()
+        assertCopyRange(expected, new ByteArrayInputStream(expected) {
+            @Override
+            public synchronized int read(byte[] b, int off, int len) {
+                // allow maximum of 10
+                if (len > 10) {
+                    len = 10;
+                }
+                return super.read(b, off, len);
+            }
+        }, a, b);
     }
 
     private void assertCopyRange(
             byte[] expected, InputStream input, int a, int b) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        StreamRendererServlet.staticCopyRange(
-                new ByteArrayInputStream(expected), output, a, b);
+
+        StreamRendererServlet.staticCopyRange(input, output, a, b);
 
         byte[] actual = output.toByteArray();
         assertEquals(b - a, actual.length);

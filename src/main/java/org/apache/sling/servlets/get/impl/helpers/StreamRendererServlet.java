@@ -545,7 +545,7 @@ public class StreamRendererServlet extends SlingSafeMethodsServlet {
             int read = istream.read(buffer, 0, len);
             if (read != -1) {
                 position += read;
-                ostream.write(buffer, 0, len);
+                ostream.write(buffer, 0, read);
             } else {
                 break;
             }
