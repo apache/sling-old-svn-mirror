@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.commons.testing.integration.HttpTestBase;
 import org.apache.sling.launchpad.webapp.integrationtest.util.EventsCounterUtil;
 import org.apache.sling.servlets.post.SlingPostConstants;
@@ -50,10 +51,14 @@ public class VanityPathTest extends HttpTestBase {
             + SlingPostConstants.DEFAULT_CREATE_SUFFIX;
         vanityPath = "/" + getClass().getSimpleName() + "_" + System.currentTimeMillis() + "/vanity";
         vanityUrl = HTTP_BASE_URL + vanityPath;
-        
+
+        resetMappingEventCount();
+    }
+
+    private void resetMappingEventCount() throws JSONException, IOException {
         mappingEventCount = EventsCounterUtil.getEventsCount(this, MAPPING_UPDATE_TOPIC);
     }
-    
+
     /** test vanity path with internal redirect */
     public void testInternalRedirect() throws IOException {
         // create a node with a vanity path
@@ -153,7 +158,7 @@ public class VanityPathTest extends HttpTestBase {
     }
 
     /** test vanity path on a path with an extension with a redirect */
-    public void testRedirectOnPathWithExtension() throws IOException {
+    public void testRedirectOnPathWithExtension() throws IOException, JSONException {
         // create a node with a vanity path
         Map<String, String> props = new HashMap<String, String>();
         props.put("jcr:mixinTypes", "sling:VanityPath");
@@ -161,6 +166,9 @@ public class VanityPathTest extends HttpTestBase {
         props.put("sling:redirect", "true");
         String createdNodeUrl = testClient.createNode(postUrl, props);
 
+        waitForMapReload();
+        resetMappingEventCount();
+        
         String pathWithExtension = removeHttpBase(createdNodeUrl) + ".ext";
         List<NameValuePair> moveParams = Arrays.asList(
                 new NameValuePair(":dest", pathWithExtension),
@@ -175,13 +183,12 @@ public class VanityPathTest extends HttpTestBase {
         get.setFollowRedirects(false);
         int status = httpClient.executeMethod(get);
 
-        // expect temporary redirect ...
-        assertEquals(302, status);
+        assertEquals("Expecting temporary redirect", 302, status);
 
         // ... to the created node
         String location = get.getResponseHeader("Location").getValue();
-        assertNotNull(location);
-        assertEquals(pathWithExtension, location);
+        assertNotNull("Expecting non-null Location", location);
+        assertEquals("Expecting redirect to the specified extension", pathWithExtension, location);
     }
 
     private String removeHttpBase(String url) {
@@ -189,8 +196,8 @@ public class VanityPathTest extends HttpTestBase {
     }
 
     /**
-     * Wait a little bit to give the observation events to fire, causing
-     * MapEntries to reinitialize.
+     * Wait for a MAPPING_UPDATE_TOPIC events, assuming mappingEventCount was reset
+     * before making the corresponding content changes.
      */
     private void waitForMapReload() {
         EventsCounterUtil.waitForEvent(this, MAPPING_UPDATE_TOPIC, 5000, mappingEventCount);
