@@ -307,6 +307,8 @@ public class LogbackManager extends LoggerContextAwareBase {
             addInfo("OsgiIntegrationListener : context reset detected. Adding LogManager to context map and firing"
                 + " listeners");
 
+            context.setPackagingDataEnabled(logConfigManager.isPackagingDataEnabled());
+
             // Attach a console appender to handle logging untill we configure
             // one. This would be removed in LogConfigManager.reset
             final Logger rootLogger = getLoggerContext().getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
