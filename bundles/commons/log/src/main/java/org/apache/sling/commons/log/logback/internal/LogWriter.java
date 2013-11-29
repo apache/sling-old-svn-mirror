@@ -30,7 +30,6 @@ import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
-
 import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
 
 /**
@@ -98,6 +97,10 @@ public class LogWriter {
 
     public String getConfigurationPID() {
         return configurationPID;
+    }
+
+    public String getImplicitConfigPID(){
+        return LogConfigManager.PID;
     }
 
     public String getFileName() {

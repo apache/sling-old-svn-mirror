@@ -92,7 +92,7 @@ public class SlingLogPanel extends HttpServlet {
 
         final LoggerStateContext ctx = logbackManager.determineLoggerState();
         appendLoggerStatus(pw, ctx);
-        appendLoggerData(pw, ctx);
+        appendLoggerData(pw, consoleAppRoot, ctx);
         addAppenderData(pw, consoleAppRoot, ctx);
         appendTurboFilterData(pw, consoleAppRoot,ctx);
         appendLogbackMainConfig(pw);
@@ -110,11 +110,11 @@ public class SlingLogPanel extends HttpServlet {
 
     private void appendLoggerStatus(PrintWriter pw, LoggerStateContext ctx) {
         pw.printf(
-            "<p class='statline'>Log Service Stats: %d categories, %d appenders(s), %d Dynamic appenders(s)</p>%n",
+            "<p class='statline'>Log Service Stats: %d categories, %d appender, %d Dynamic appenders</p>%n",
             ctx.getNumberOfLoggers(), ctx.getNumOfAppenders(), ctx.getNumOfDynamicAppenders());
     }
 
-    private void appendLoggerData(PrintWriter pw, LoggerStateContext ctx) {
+    private void appendLoggerData(PrintWriter pw, String consoleAppRoot, LoggerStateContext ctx) {
         pw.println("<div class='table'>");
 
         pw.println("<div class='ui-widget-header ui-corner-top buttonGroup'>Logger</div>");
@@ -127,7 +127,7 @@ public class SlingLogPanel extends HttpServlet {
         pw.println("<th>Additivity</th>");
         pw.println("<th>Name</th>");
         pw.println("<th>Appender</th>");
-        // pw.println("<th>" + cfgColTitle + "</th>");
+        pw.println("<th>" + getConfigColTitle(consoleAppRoot) + "</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody class='ui-widget-content'>");
@@ -144,7 +144,21 @@ public class SlingLogPanel extends HttpServlet {
             while (itr.hasNext()) {
                 Appender<ILoggingEvent> a = itr.next();
                 pw.print("<li>");
-                pw.println(getName(a));
+                pw.print(getName(a));
+                pw.print("</li>");
+            }
+            pw.println("</ul>");
+            pw.println("</td>");
+
+            pw.println("<td>");
+            pw.println("<ul>");
+            Iterator<Appender<ILoggingEvent>> itr2 = logger.iteratorForAppenders();
+            while (itr2.hasNext()) {
+                Appender<ILoggingEvent> a = itr2.next();
+                pw.print("<li>");
+                if(a instanceof SlingRollingFileAppender){
+                    pw.print(formatPidForLogger(consoleAppRoot, ctx, logger.getName()));
+                }
                 pw.print("</li>");
             }
             pw.println("</ul>");
@@ -387,15 +401,28 @@ public class SlingLogPanel extends HttpServlet {
         return String.format("%s (%s)", appender.getName(), appender.getClass().getName());
     }
 
+    private static String formatPidForLogger(final String consoleAppRoot,
+                                             final LoggerStateContext ctx, final String loggerName) {
+        //Each logger configured via OSGi config would have a
+        //backing LogConfig. Extract PID from that
+        final LogConfig lc = ctx.getConfig(loggerName);
+        if (lc != null) {
+            String pid = lc.getConfigPid();
+            return createUrl(consoleAppRoot, "configMgr", pid);
+        }
+
+        //Should not happen
+        return null;
+    }
+
     private static String formatPid(final String consoleAppRoot, final Appender<ILoggingEvent> appender,
             final LoggerStateContext ctx) {
         if (appender instanceof SlingRollingFileAppender) {
             final LogWriter lw = ((SlingRollingFileAppender) appender).getLogWriter();
+            String pid = lw.getConfigurationPID();
             if (lw.isImplicit()) {
-                return "[implicit]";
+                pid = lw.getImplicitConfigPID();
             }
-
-            final String pid = lw.getConfigurationPID();
             return createUrl(consoleAppRoot, "configMgr", pid);
         } else if (ctx.isDynamicAppender(appender)) {
             final AppenderInfo ai = ctx.dynamicAppenders.get(appender);
