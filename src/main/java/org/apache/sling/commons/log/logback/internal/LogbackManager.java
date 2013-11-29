@@ -445,6 +445,12 @@ public class LogbackManager extends LoggerContextAwareBase {
                 }
             }
         }
+
+        for (LogConfig lc : logConfigManager.getLogConfigs()) {
+            for (String category : lc.getCategories()) {
+                ctx.loggerNameToConfigMapping.put(category, lc);
+            }
+        }
         return ctx;
     }
 
@@ -457,6 +463,8 @@ public class LogbackManager extends LoggerContextAwareBase {
          * List of logger which have explicitly defined level or appenders set
          */
         final List<Logger> loggerInfos = new ArrayList<Logger>();
+
+        final Map<String,LogConfig> loggerNameToConfigMapping = new HashMap<String, LogConfig>();
 
         final Map<String, Appender<ILoggingEvent>> appenders = new HashMap<String, Appender<ILoggingEvent>>();
 
@@ -504,6 +512,10 @@ public class LogbackManager extends LoggerContextAwareBase {
 
         Map<String,Appender<ILoggingEvent>> getAppenderMap(){
             return Collections.unmodifiableMap(appenders);
+        }
+
+        LogConfig getConfig(String loggerName) {
+            return loggerNameToConfigMapping.get(loggerName);
         }
     }
 

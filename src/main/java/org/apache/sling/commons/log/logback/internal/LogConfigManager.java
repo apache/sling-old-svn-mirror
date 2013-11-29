@@ -29,14 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.commons.log.logback.internal.config.ConfigAdminSupport;
-import org.apache.sling.commons.log.logback.internal.config.ConfigurationException;
-import org.apache.sling.commons.log.logback.internal.util.LoggerSpecificEncoder;
-import org.apache.sling.commons.log.logback.internal.util.Util;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
@@ -47,6 +39,13 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.joran.action.ActionConst;
 import ch.qos.logback.core.util.ContextUtil;
+import org.apache.sling.commons.log.logback.internal.config.ConfigAdminSupport;
+import org.apache.sling.commons.log.logback.internal.config.ConfigurationException;
+import org.apache.sling.commons.log.logback.internal.util.LoggerSpecificEncoder;
+import org.apache.sling.commons.log.logback.internal.util.Util;
+import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LogConfigManager implements LogbackResetListener, LogConfig.LogWriterProvider {
 
@@ -613,7 +612,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return getDefaultConfig().createLayout();
     }
 
-    private Iterable<LogConfig> getLogConfigs() {
+    Iterable<LogConfig> getLogConfigs() {
         return configByPid.values();
     }
 
