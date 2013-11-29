@@ -67,6 +67,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public static final String LOG_ADDITIV = "org.apache.sling.commons.log.additiv";
 
+    public static final String LOG_PACKAGING_DATA = "org.apache.sling.commons.log.packagingDataEnabled";
+
     public static final String LOG_LEVEL_DEFAULT = "INFO";
 
     public static final int LOG_FILE_NUMBER_DEFAULT = 5;
@@ -116,6 +118,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     private final Object configLock = new Object();
 
     private File logbackConfigFile;
+
+    private boolean packagingDataEnabled;
 
     /**
      * Logs a message an optional stack trace to error output. This method is
@@ -550,13 +554,18 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         }
     }
 
+    public boolean isPackagingDataEnabled() {
+        return packagingDataEnabled;
+    }
+
     // ---------- ManagedService interface -------------------------------------
 
     private Dictionary<String, String> getBundleConfiguration(BundleContext bundleContext) {
         Dictionary<String, String> config = new Hashtable<String, String>();
 
         final String[] props = {
-            LOG_LEVEL, LOG_FILE, LOG_FILE_NUMBER, LOG_FILE_SIZE, LOG_PATTERN, LOGBACK_FILE
+            LOG_LEVEL, LOG_FILE, LOG_FILE_NUMBER, LOG_FILE_SIZE, LOG_PATTERN, LOGBACK_FILE,
+            LOG_PACKAGING_DATA
         };
         for (String prop : props) {
             String value = bundleContext.getProperty(prop);
@@ -575,18 +584,29 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     private void processGlobalConfig(Dictionary<String, String> configuration) {
         String fileName = configuration.get(LOGBACK_FILE);
-        if (fileName != null) {
+        if (fileName != null && !fileName.isEmpty()) {
             File file = new File(getAbsoluteFilePath(fileName));
             final String path = file.getAbsolutePath();
             if (!file.exists()) {
-                log.warn("Logback configuration file [{}]does not exist.", path);
-            } else if (!file.canRead()) {
+                log.warn("Logback configuration file [{}] does not exist.", path);
+            } if (!file.isFile()) {
+                log.warn("Logback configuration file [{}] is not a file.", path);
+            }else if (!file.canRead()) {
                 log.warn("Logback configuration [{}]file cannot be read", path);
             } else {
                 synchronized (configLock) {
                     logbackConfigFile = file;
                 }
             }
+        }
+
+        //Process packaging data
+        Object packagingData = configuration.get(LOG_PACKAGING_DATA);
+        if (packagingData != null) {
+            packagingDataEnabled = Boolean.valueOf(packagingData.toString());
+        } else {
+            //Defaults to true
+            packagingDataEnabled = true;
         }
     }
 

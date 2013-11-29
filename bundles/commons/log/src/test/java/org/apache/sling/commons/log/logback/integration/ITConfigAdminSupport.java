@@ -25,6 +25,7 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 
+import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import org.junit.Test;
@@ -76,6 +77,8 @@ public class ITConfigAdminSupport extends LogTestBase {
     public static final String FACTORY_PID_WRITERS = PID + ".factory.writer";
 
     public static final String FACTORY_PID_CONFIGS = PID + ".factory.config";
+
+    public static final String LOG_PACKAGING_DATA = "org.apache.sling.commons.log.packagingDataEnabled";
 
     @Inject
     private ConfigurationAdmin ca;
@@ -135,6 +138,20 @@ public class ITConfigAdminSupport extends LogTestBase {
 
         assertTrue(LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME).isInfoEnabled());
         assertFalse(LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME).isDebugEnabled());
+    }
+
+    @Test
+    public void testPackagingDataConfig() throws Exception {
+        // Set log level to debug for Root logger
+        Configuration config = ca.getConfiguration(PID, null);
+        Dictionary<String, Object> p = new Hashtable<String, Object>();
+        p.put(LOG_PACKAGING_DATA, Boolean.FALSE);
+        p.put(LOG_LEVEL, "INFO");
+        config.update(p);
+
+        delay();
+
+        assertFalse(((LoggerContext)LoggerFactory.getILoggerFactory()).isPackagingDataEnabled());
     }
 
     @Test
