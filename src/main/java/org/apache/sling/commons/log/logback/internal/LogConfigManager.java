@@ -207,6 +207,14 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return logbackConfigFile;
     }
 
+    public Iterable<LogConfig> getLogConfigs() {
+        return configByPid.values();
+    }
+
+    public Iterable<LogWriter> getLogWriters(){
+        return writerByFileName.values();
+    }
+
     public Appender<ILoggingEvent> getDefaultAppender() {
         OutputStreamAppender<ILoggingEvent> appender = new ConsoleAppender<ILoggingEvent>();
         appender.setName(DEFAULT_CONSOLE_APPENDER_NAME);
@@ -620,7 +628,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return new LogWriter(getAppnderName(logWriterName),logWriterName, defaultWriter.getLogNumber(), defaultWriter.getLogRotation());
     }
 
-    private LogWriter getDefaultWriter() {
+    public LogWriter getDefaultWriter() {
         return writerByPid.get(LogConfigManager.PID);
     }
 
@@ -632,9 +640,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return getDefaultConfig().createLayout();
     }
 
-    Iterable<LogConfig> getLogConfigs() {
-        return configByPid.values();
-    }
+
 
     /**
      * Returns the <code>logFileName</code> argument converted into an absolute

@@ -18,6 +18,12 @@
  */
 package org.apache.sling.commons.log.logback.integration.remote;
 
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -32,12 +38,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Marker;
 import org.xml.sax.InputSource;
-
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
 
 /**
  * Test bundle activator which registers all type of extension point supported by bundle
@@ -61,8 +61,8 @@ public class WebConsoleTestActivator implements BundleActivator {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
         String prefix = "WebConsoleTest";
         String[] loggers = {
-                prefix + ".foo.bar:DEBUG",
-                prefix + ".foo.baz:INFO",
+                prefix + ".foo.bar",
+                prefix + ".foo.baz",
         };
 
         props.put("loggers", loggers);
