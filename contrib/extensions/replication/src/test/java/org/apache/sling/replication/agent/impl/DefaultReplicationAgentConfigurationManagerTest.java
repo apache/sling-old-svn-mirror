@@ -36,13 +36,14 @@ public class DefaultReplicationAgentConfigurationManagerTest {
 
     @Test
     public void testRetrievalWithNoConfigurationAvailable() throws Exception {
+        ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
+        ReplicationAgent agent = mock(ReplicationAgent.class);
+        DefaultReplicationAgentConfigurationManager defaultReplicationAgentConfigurationManager = new DefaultReplicationAgentConfigurationManager();
+        Field configAdminField = defaultReplicationAgentConfigurationManager.getClass().getDeclaredField("configAdmin");
+        configAdminField.setAccessible(true);
+        configAdminField.set(defaultReplicationAgentConfigurationManager, configAdmin);
+        
         try {
-            ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
-            ReplicationAgent agent = mock(ReplicationAgent.class);
-            DefaultReplicationAgentConfigurationManager defaultReplicationAgentConfigurationManager = new DefaultReplicationAgentConfigurationManager();
-            Field configAdminField = defaultReplicationAgentConfigurationManager.getClass().getDeclaredField("configAdmin");
-            configAdminField.setAccessible(true);
-            configAdminField.set(defaultReplicationAgentConfigurationManager, configAdmin);
             defaultReplicationAgentConfigurationManager.getConfiguration(agent);
             fail("an exception should be thrown when no configuration is available");
         } catch (Exception e) {
@@ -52,15 +53,16 @@ public class DefaultReplicationAgentConfigurationManagerTest {
 
     @Test
     public void testRetrievalWithMultipleConfigurationsAvailable() throws Exception {
+        ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
+        ReplicationAgent agent = mock(ReplicationAgent.class);
+        when(agent.getName()).thenReturn("publish");
+        when(configAdmin.listConfigurations("(name=publish)")).thenReturn(new Configuration[]{null, null});
+        DefaultReplicationAgentConfigurationManager defaultReplicationAgentConfigurationManager = new DefaultReplicationAgentConfigurationManager();
+        Field configAdminField = defaultReplicationAgentConfigurationManager.getClass().getDeclaredField("configAdmin");
+        configAdminField.setAccessible(true);
+        configAdminField.set(defaultReplicationAgentConfigurationManager, configAdmin);
+        
         try {
-            ConfigurationAdmin configAdmin = mock(ConfigurationAdmin.class);
-            ReplicationAgent agent = mock(ReplicationAgent.class);
-            when(agent.getName()).thenReturn("publish");
-            when(configAdmin.listConfigurations("(name=publish)")).thenReturn(new Configuration[]{null, null});
-            DefaultReplicationAgentConfigurationManager defaultReplicationAgentConfigurationManager = new DefaultReplicationAgentConfigurationManager();
-            Field configAdminField = defaultReplicationAgentConfigurationManager.getClass().getDeclaredField("configAdmin");
-            configAdminField.setAccessible(true);
-            configAdminField.set(defaultReplicationAgentConfigurationManager, configAdmin);
             defaultReplicationAgentConfigurationManager.getConfiguration(agent);
             fail("an exception should be thrown when multiple configurations are available");
         } catch (Exception e) {
