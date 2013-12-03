@@ -25,7 +25,6 @@ import java.io.IOException;
 import com.gargoylesoftware.htmlunit.DefaultCredentialsProvider;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.sling.commons.log.logback.integration.remote.WebConsoleTestActivator;
 import org.junit.AfterClass;
@@ -74,6 +73,7 @@ public class ITWebConsoleRemote extends LogTestBase {
             mavenBundle("commons-io", "commons-io").versionAsInProject(),
             wrappedBundle(mavenBundle("commons-fileupload", "commons-fileupload").versionAsInProject()),
             wrappedBundle(mavenBundle("org.json", "json").versionAsInProject()),
+            configAdmin(),
             frameworkProperty("org.apache.sling.commons.log.configurationFile").value(
                 FilenameUtils.concat(new File(".").getAbsolutePath(), "src/test/resources/test-webconsole-remote.xml")),
             createWebConsoleTestBundle()
