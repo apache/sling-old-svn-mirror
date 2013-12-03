@@ -40,6 +40,7 @@ import javax.inject.Inject;
 
 import org.apache.sling.installer.api.InstallableResource;
 import org.apache.sling.installer.api.OsgiInstaller;
+import org.junit.Before;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -60,9 +61,9 @@ import org.osgi.service.packageadmin.PackageAdmin;
 import org.osgi.util.tracker.ServiceTracker;
 
 /** Base class for OsgiInstaller testing */
-class OsgiInstallerTestBase implements FrameworkListener {
-	private final static String POM_VERSION = System.getProperty("osgi.installer.pom.version");
-    private final static String CONFIG_VERSION = System.getProperty("installer.configuration.version");
+public class OsgiInstallerTestBase implements FrameworkListener {
+	private final static String POM_VERSION = System.getProperty("osgi.installer.pom.version", "POM_VERSION_NOT_SET");
+    private final static String CONFIG_VERSION = System.getProperty("installer.configuration.version", "INSTALLER_VERSION_NOT_SET");
 
 	public final static String JAR_EXT = ".jar";
 	private int packageRefreshEventsCount;
@@ -100,6 +101,12 @@ class OsgiInstallerTestBase implements FrameworkListener {
     /** Set up the installer service. */
     protected void setupInstaller() {
         installer = getService(OsgiInstaller.class);
+    }
+
+    @Before
+    public void setup() {
+        configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
+        configAdminTracker.open();
     }
 
     /** Tear down everything. */
@@ -203,7 +210,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	if(c.isTrue()) {
         		return;
         	}
-        	Thread.sleep(c.getMsecBetweenEvaluations());
+        	sleep(c.getMsecBetweenEvaluations());
         } while(System.currentTimeMillis() < end);
 
         if(c.additionalInfo() != null) {
@@ -221,7 +228,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
         	if(value.equals(c.getProperties().get(key))) {
         		return;
         	}
-        	Thread.sleep(100L);
+        	sleep(100L);
         } while(System.currentTimeMillis() < end);
         fail("Did not get " + key + "=" + value + " for config " + pid);
     }
@@ -329,12 +336,6 @@ class OsgiInstallerTestBase implements FrameworkListener {
 
     protected ConfigurationAdmin waitForConfigAdmin(final boolean shouldBePresent) {
     	ConfigurationAdmin result = null;
-        synchronized (this) {
-            if (configAdminTracker == null) {
-                configAdminTracker = new ServiceTracker(bundleContext, ConfigurationAdmin.class.getName(), null);
-                configAdminTracker.open();
-            }
-        }
 
         final int timeout = 5;
     	final long waitUntil = System.currentTimeMillis() + (timeout * 1000L);
@@ -385,7 +386,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
     	}
 
     	// optional debugging
-    	final String paxDebugLevel = System.getProperty("pax.exam.log.level");
+    	final String paxDebugLevel = System.getProperty("pax.exam.log.level", "INFO");
     	final String paxDebugPort = System.getProperty("pax.exam.debug.port");
     	if(paxDebugPort != null && paxDebugPort.length() > 0) {
         	vmOpt += " -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=" + paxDebugPort;
@@ -534,9 +535,7 @@ class OsgiInstallerTestBase implements FrameworkListener {
                         }
                     }
                 }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ignore) {}
+                sleep(100);
             }
             logInstalledBundles();
             final StringBuilder sb = new StringBuilder();
