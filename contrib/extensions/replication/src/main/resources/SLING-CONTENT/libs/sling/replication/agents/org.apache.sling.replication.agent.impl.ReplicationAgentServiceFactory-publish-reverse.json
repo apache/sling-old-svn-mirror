@@ -1,0 +1,11 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "publish-reverse",
+    "endpoint" : "http://localhost:4503/system/replication/agent/reverse-pub",
+    "TransportHandler.target" : "(name=poll)", 
+    "ReplicationPackageBuilder.target" : "(name=vlt)",
+    "ReplicationQueueProvider.target" : "(name=sjh)",
+    "AuthenticationHandlerFactory.target" : "(name=user)",
+    "authentication.properties" : ["user=admin","password=admin"],
+    "ReplicationQueueDistributionStrategy.target" : "(name=single)"
+}
