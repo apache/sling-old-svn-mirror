@@ -28,16 +28,14 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import org.apache.jackrabbit.util.Text;
-import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvider;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationContext;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,16 +57,16 @@ public class PollingTransportHandler implements TransportHandler {
     @SuppressWarnings("unchecked")
     public void transport(ReplicationPackage replicationPackage,
                     ReplicationEndpoint replicationEndpoint,
-                    AuthenticationHandler<?, ?> authenticationHandler)
+                    TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
                     throws ReplicationTransportException {
         if (log.isInfoEnabled()) {
             log.info("polling from {}", replicationEndpoint.getUri());
         }
         try {
             Executor executor = Executor.newInstance();
-            AuthenticationContext context = new AuthenticationContext();
+            TransportAuthenticationContext context = new TransportAuthenticationContext();
             context.addAttribute("endpoint", replicationEndpoint);
-            executor = ((AuthenticationHandler<Executor, Executor>) authenticationHandler)
+            executor = ((TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider)
                             .authenticate(executor, context);
 
             Request req = Request.Get(replicationEndpoint.getUri()).useExpectContinue();
@@ -76,22 +74,12 @@ public class PollingTransportHandler implements TransportHandler {
             Response response = executor.execute(req);
             HttpResponse httpResponse = response.returnResponse();
             HttpEntity entity = httpResponse.getEntity();
-            Header typeHeader = httpResponse.getFirstHeader("type");
-            Header pathsHeader = httpResponse.getFirstHeader("path");
-            Header actionHeader = httpResponse.getFirstHeader("action");
+            Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
 
-            if (typeHeader != null && pathsHeader != null && actionHeader != null) {
+            if (typeHeader != null) {
                 String type = typeHeader.getValue();
-                String[] paths = Text.unescape(pathsHeader.getValue()).replace("[", "")
-                                .replace("]", "").split(", ");
-                ReplicationActionType action = ReplicationActionType.valueOf(actionHeader
-                                .getValue());
-                ReplicationRequest replicationRequest = new ReplicationRequest(
-                                System.currentTimeMillis(), action, paths);
-
                 ReplicationPackage readPackage = packageBuilderProvider
-                                .getReplicationPacakageBuilder(type).readPackage(
-                                                replicationRequest, entity.getContent(), true);
+                                .getReplicationPackageBuilder(type).readPackage(entity.getContent(), true);
 
                 if (log.isInfoEnabled()) {
                     log.info("package {} fetched and installed", readPackage.getId());
@@ -108,7 +96,7 @@ public class PollingTransportHandler implements TransportHandler {
 
     }
 
-    public boolean supportsAuthenticationHandler(AuthenticationHandler<?, ?> authenticationHandler) {
-        return authenticationHandler.canAuthenticate(Executor.class);
+    public boolean supportsAuthenticationProvider(TransportAuthenticationProvider<?, ?> transportAuthenticationProvider) {
+        return transportAuthenticationProvider.canAuthenticate(Executor.class);
     }
 }

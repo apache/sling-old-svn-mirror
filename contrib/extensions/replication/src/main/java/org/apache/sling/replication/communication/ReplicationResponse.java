@@ -22,23 +22,23 @@ package org.apache.sling.replication.communication;
  * A replication response
  */
 public class ReplicationResponse {
-    private boolean successfull;
+    private boolean successful;
 
     private String status;
 
-    public boolean isSuccessfull() {
-        return successfull;
+    public boolean isSuccessful() {
+        return successful;
     }
 
-    public void setSuccessfull(boolean successfull) {
-        this.successfull = successfull;
+    public void setSuccessful(boolean successful) {
+        this.successful = successful;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"success\":");
-        sb.append(successfull);
+        sb.append(successful);
         sb.append(", \"status\":\"");
         sb.append(status);
         sb.append("\"}");

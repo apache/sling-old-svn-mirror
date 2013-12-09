@@ -74,7 +74,7 @@ public class JobHandlingReplicationQueueTest {
         assertTrue(queue.add(pkg));
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);
-        assertFalse(status.isSuccessfull());
+        assertFalse(status.isSuccessful());
         assertEquals(ItemState.DROPPED, status.getItemState());
     }
 

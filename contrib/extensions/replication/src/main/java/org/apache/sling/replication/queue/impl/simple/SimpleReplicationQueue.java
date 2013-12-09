@@ -41,21 +41,28 @@ import org.apache.sling.replication.serialization.ReplicationPackage;
  */
 public class SimpleReplicationQueue implements ReplicationQueue {
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ReplicationAgent agent;
+    private final ReplicationAgent agent;
 
-    private BlockingQueue<ReplicationPackage> queue;
+    private final String name;
 
-    private Map<ReplicationPackage, ReplicationQueueItemState> statusMap;
+    private final BlockingQueue<ReplicationPackage> queue;
 
-    public SimpleReplicationQueue(ReplicationAgent agent) {
+    private final Map<ReplicationPackage, ReplicationQueueItemState> statusMap;
+
+    public SimpleReplicationQueue(ReplicationAgent agent, String name) {
         if (log.isInfoEnabled()) {
             log.info("starting a simple queue for agent {}", agent.getName());
         }
         this.agent = agent;
+        this.name = name;
         this.queue = new LinkedBlockingQueue<ReplicationPackage>();
         this.statusMap = new WeakHashMap<ReplicationPackage, ReplicationQueueItemState>(10);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public boolean add(ReplicationPackage replicationPackage) {
@@ -65,7 +72,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
             result = queue.offer(replicationPackage, 10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             log.error("cannot add an item to the queue", e);
-            status.setSuccessfull(false);
+            status.setSuccessful(false);
         } finally {
             statusMap.put(replicationPackage, status);
         }
@@ -97,7 +104,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
 
     public void removeHead() {
         ReplicationPackage element = queue.remove();
-        statusMap.get(element).setSuccessfull(true);
+        statusMap.get(element).setSuccessful(true);
     }
 
     public boolean isEmpty() {

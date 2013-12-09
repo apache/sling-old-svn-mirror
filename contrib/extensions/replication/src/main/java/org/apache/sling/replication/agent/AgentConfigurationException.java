@@ -19,7 +19,7 @@
 package org.apache.sling.replication.agent;
 
 /**
- * represents error happened during agent configuration
+ * Represents errors happened during {@link ReplicationAgent} configuration
  */
 @SuppressWarnings("serial")
 public class AgentConfigurationException extends Exception {

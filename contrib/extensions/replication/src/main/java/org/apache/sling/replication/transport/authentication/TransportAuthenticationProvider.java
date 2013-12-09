@@ -19,15 +19,15 @@
 package org.apache.sling.replication.transport.authentication;
 
 
-@SuppressWarnings("serial")
-public class AuthenticationException extends Exception {
+/**
+ * A <code>TransportAuthenticationProvider</code> is responsible for authentication of instances sending and
+ * receiving replication items via {@link org.apache.sling.replication.transport.TransportHandler}s
+ */
+public interface TransportAuthenticationProvider<A, T> {
 
-    public AuthenticationException(String string) {
-        super(string);
-    }
+    boolean canAuthenticate(Class<?> authenticable);
 
-    public AuthenticationException(Exception e) {
-        super(e);
-    }
+    T authenticate(A authenticable, TransportAuthenticationContext context)
+                    throws TransportAuthenticationException;
 
 }

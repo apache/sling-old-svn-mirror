@@ -27,6 +27,9 @@ import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.event.ReplicationEventType;
 import org.osgi.service.event.EventAdmin;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * {@link ReplicationEventFactory} OSGi service
  */
@@ -34,15 +37,17 @@ import org.osgi.service.event.EventAdmin;
 @Service(value = ReplicationEventFactory.class)
 public class DefaultReplicationEventFactory implements ReplicationEventFactory {
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     @Reference
     private EventAdmin eventAdmin;
 
-    public void postEvent(ReplicationEvent event) {
-        eventAdmin.postEvent(event);
-    }
-
-    public void generateEvent(ReplicationEventType replicationEventType, Dictionary properties) {
-        postEvent(new ReplicationEvent(replicationEventType, properties));
+    public void generateEvent(ReplicationEventType replicationEventType, Dictionary<?, ?> properties) {
+        ReplicationEvent replicationEvent = new ReplicationEvent(replicationEventType, properties);
+        eventAdmin.postEvent(replicationEvent);
+        if (log.isDebugEnabled()) {
+            log.debug("replication event posted {}", replicationEvent);
+        }
     }
 
 }

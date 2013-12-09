@@ -25,7 +25,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.agent.ReplicationAgent;
 
 /**
- * a {@link ReplicationAgent} {@link org.apache.sling.api.resource.Resource}
+ * a {@link ReplicationAgent} {@link org.apache.sling.api.resource.Resource}
  */
 public class ReplicationAgentResource extends AbstractResource {
 
@@ -39,13 +39,15 @@ public class ReplicationAgentResource extends AbstractResource {
 
     public ReplicationAgentResource(ReplicationAgent replicationAgent,
                     ResourceResolver resourceResolver) {
+        if (replicationAgent == null) {
+            throw new RuntimeException("cannot create an agent resource with a null agent");
+        }
         this.replicationAgent = replicationAgent;
         this.resourceResolver = resourceResolver;
     }
 
     public String getPath() {
-        return new StringBuilder(BASE_PATH).append('/').append(replicationAgent.getName())
-                        .toString();
+        return BASE_PATH + '/' + replicationAgent.getName();
     }
 
     public String getResourceType() {

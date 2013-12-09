@@ -18,17 +18,16 @@
  */
 package org.apache.sling.replication.queue.impl.simple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-
-import org.junit.Test;
-
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 /**
  * Testcase for {@link SimpleReplicationQueue}
@@ -38,7 +37,7 @@ public class SimpleReplicationQueueTest {
     @Test
     public void testPackageAddition() throws Exception {
         ReplicationAgent agent = mock(ReplicationAgent.class);
-        ReplicationQueue queue = new SimpleReplicationQueue(agent);
+        ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         assertTrue(queue.add(pkg));
     }
@@ -46,26 +45,26 @@ public class SimpleReplicationQueueTest {
     @Test
     public void testPackageAdditionAndRemoval() throws Exception {
         ReplicationAgent agent = mock(ReplicationAgent.class);
-        ReplicationQueue queue = new SimpleReplicationQueue(agent);
+        ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         assertTrue(queue.add(pkg));
         queue.removeHead();
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);
-        assertTrue(status.isSuccessfull());
+        assertTrue(status.isSuccessful());
     }
 
     @Test
     public void testPackageAdditionRetrievalAndRemoval() throws Exception {
         ReplicationAgent agent = mock(ReplicationAgent.class);
-        ReplicationQueue queue = new SimpleReplicationQueue(agent);
+        ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         assertTrue(queue.add(pkg));
         assertEquals(pkg, queue.getHead());
         queue.removeHead();
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);
-        assertTrue(status.isSuccessfull());
+        assertTrue(status.isSuccessful());
         assertEquals(1, status.getAttempts());
     }
 

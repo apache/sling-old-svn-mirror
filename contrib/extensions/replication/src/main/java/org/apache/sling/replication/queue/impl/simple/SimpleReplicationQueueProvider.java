@@ -40,9 +40,9 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
 
     public static final String NAME = "simple";
 
-    protected ReplicationQueue createQueue(ReplicationAgent agent, String selector)
+    protected ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String selector)
                     throws ReplicationQueueException {
-        return new SimpleReplicationQueue(agent);
+        return new SimpleReplicationQueue(agent, selector);
     }
 
     protected void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException {

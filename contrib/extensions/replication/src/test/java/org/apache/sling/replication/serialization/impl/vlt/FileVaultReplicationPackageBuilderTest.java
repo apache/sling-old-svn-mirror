@@ -33,7 +33,7 @@ import static org.mockito.Mockito.mock;
 public class FileVaultReplicationPackageBuilderTest {
 
     @Test
-    public void testCreatePackageForActivationWithoutPermissions() throws Exception {
+    public void testCreatePackageForAddWithoutPermissions() throws Exception {
         try {
             SlingRepository repository = mock(SlingRepository.class);
             FileVaultReplicationPackageBuilder fileVaultReplicationPackageBuilder = new FileVaultReplicationPackageBuilder();
@@ -47,7 +47,7 @@ public class FileVaultReplicationPackageBuilderTest {
             packagingField.set(fileVaultReplicationPackageBuilder, packaging);
 
             ReplicationRequest request = mock(ReplicationRequest.class);
-            fileVaultReplicationPackageBuilder.createPackageForActivation(request);
+            fileVaultReplicationPackageBuilder.createPackageForAdd(request);
             fail("cannot create a package without supplying needed credentials");
         } catch (Throwable t) {
             // expected to fail

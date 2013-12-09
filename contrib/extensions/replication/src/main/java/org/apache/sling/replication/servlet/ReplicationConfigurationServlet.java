@@ -58,6 +58,7 @@ public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
                     throws ServletException, IOException {
+        response.setContentType("application/json");
         @SuppressWarnings("unchecked")
         Map<String, Object> parameterMap = request.getParameterMap();
         Resource agentResource = request.getResource().getParent();
@@ -76,6 +77,7 @@ public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
                     throws ServletException, IOException {
+        response.setContentType("application/json");
         Resource resource = request.getResource();
         ReplicationAgentConfiguration configuration = resource
                         .adaptTo(ReplicationAgentConfiguration.class);

@@ -23,30 +23,20 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.http.client.fluent.Executor;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandlerFactory;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
 
 @Component(immediate = true)
-@Service(value = AuthenticationHandlerFactory.class)
-@Property(name = "name", value = UserCredentialsAuthenticationHandlerFactory.TYPE)
-public class UserCredentialsAuthenticationHandlerFactory implements AuthenticationHandlerFactory {
-    public static final String TYPE = "user";
+@Service(value = TransportAuthenticationProviderFactory.class)
+@Property(name = "name", value = NopTransportAuthenticationProviderFactory.TYPE)
+public class NopTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
+    public static final String TYPE = "nop";
 
-    public AuthenticationHandler<Executor, Executor> createAuthenticationHandler(
-                    Map<String, String> properties) {
-        String user = null;
-        Object userProp = properties.get("user");
-        if (userProp != null) {
-            user = String.valueOf(userProp);
-        }
-        String password = null;
-        Object passwordProp = properties.get("password");
-        if (passwordProp != null) {
-            password = String.valueOf(passwordProp);
-        }
-        return new UserCredentialsAuthenticationHandler(user, password);
+    private static final TransportAuthenticationProvider<Object, Object> NOP_TRANSPORT_AUTHENTICATION_PROVIDER = new NopTransportAuthenticationProvider();
+
+    public TransportAuthenticationProvider<Object, Object> createAuthenticationProvider(Map<String, String> properties) {
+        return NOP_TRANSPORT_AUTHENTICATION_PROVIDER;
     }
 
     public String getType() {

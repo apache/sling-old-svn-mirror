@@ -33,16 +33,25 @@ public interface ReplicationRule {
     String getSignature();
 
     /**
+     * checks if the given rule <code>String</code> matches this {@link ReplicationRule}'s signature
+     *
+     * @param ruleString a rule <code>String</code>
+     * @return <code>true</code> if the given rule <code>String</code> matches this rule's signature, <code>false</code> otherwise
+     */
+    boolean signatureMatches(String ruleString);
+
+    /**
      * apply this rule to a replication agent
      *
-     * @param {@link ReplicationAgent agent} the agent to apply the rule to
+     * @param ruleString the rule to apply to the agent
+     * @param agent      {@link ReplicationAgent agent} the agent to apply the rule to
      */
-    void apply(ReplicationAgent agent);
+    void apply(String ruleString, ReplicationAgent agent);
 
     /**
      * undo the application of this rule to the given agent
      *
      * @param agent the {@link ReplicationAgent agent} on which undoing this rule application
      */
-    void unapply(ReplicationAgent agent);
+    void undo(String ruleString, ReplicationAgent agent);
 }

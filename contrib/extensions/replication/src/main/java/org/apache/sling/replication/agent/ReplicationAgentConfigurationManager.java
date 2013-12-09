@@ -21,14 +21,29 @@ package org.apache.sling.replication.agent;
 import java.util.Map;
 
 /**
- * Facade class for dealing with {@link ReplicationAgent}'s {@link ReplicationConfiguration}s
+ * Facade class for dealing with {@link ReplicationAgent}s' {@link ReplicationAgentConfiguration}s
  */
 public interface ReplicationAgentConfigurationManager {
 
+    /**
+     * retrieve a {@link ReplicationAgentConfiguration} for a given {@link ReplicationAgent}
+     *
+     * @param replicationAgent a {@link ReplicationAgent}
+     * @return a {@link ReplicationAgentConfiguration} for the given agent
+     * @throws AgentConfigurationException
+     */
     ReplicationAgentConfiguration getConfiguration(ReplicationAgent replicationAgent)
-                    throws AgentConfigurationException;
+            throws AgentConfigurationException;
 
+    /**
+     * updates the {@link ReplicationAgentConfiguration} of a certain {@link ReplicationAgent}
+     *
+     * @param agent      a {@link ReplicationAgent}
+     * @param properties a {@link Map} of properties used to update the configuration
+     * @return the updated {@link ReplicationAgentConfiguration} for the given agent
+     * @throws AgentConfigurationException
+     */
     ReplicationAgentConfiguration updateConfiguration(ReplicationAgent agent,
-                    Map<String, Object> properties) throws AgentConfigurationException;
+                                                      Map<String, Object> properties) throws AgentConfigurationException;
 
 }

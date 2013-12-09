@@ -19,9 +19,7 @@
 package org.apache.sling.replication.agent.impl;
 
 import java.util.Iterator;
-
 import javax.servlet.http.HttpServletRequest;
-
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
@@ -30,6 +28,11 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+
+import org.apache.sling.replication.agent.AgentConfigurationException;
+import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
+import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
@@ -51,6 +54,8 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
 
     private static final String CONFIGURATION_PATH = "/configuration";
 
+    private static final String QUEUE_PATH = "/queue";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private BundleContext context;
@@ -67,7 +72,7 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
 
     @Deprecated
     public Resource getResource(ResourceResolver resourceResolver, HttpServletRequest request,
-                    String path) {
+                                String path) {
         return getResource(resourceResolver, path);
     }
 
@@ -80,26 +85,43 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
                 log.info("resolving configuration for agent {}", agentPath);
             }
             ReplicationAgent replicationAgent = getAgentAtPath(agentPath);
-            ServiceReference configurationManagerServiceReference = context
-                            .getServiceReference(ReplicationAgentConfigurationManager.class
-                                            .getName());
-            if (configurationManagerServiceReference != null) {
-                ReplicationAgentConfigurationManager agentConfigurationManager = (ReplicationAgentConfigurationManager) context
-                                .getService(configurationManagerServiceReference);
-                ReplicationAgentConfiguration configuration;
-                try {
-                    configuration = agentConfigurationManager
-                                    .getConfiguration(replicationAgent);
-                    resource = new ReplicationAgentConfigurationResource(configuration,
-                                    resourceResolver);
-                } catch (AgentConfigurationException e) {
+            if (replicationAgent != null) {
+                ServiceReference configurationManagerServiceReference = context
+                        .getServiceReference(ReplicationAgentConfigurationManager.class
+                                .getName());
+                if (configurationManagerServiceReference != null) {
+                    ReplicationAgentConfigurationManager agentConfigurationManager = (ReplicationAgentConfigurationManager) context
+                            .getService(configurationManagerServiceReference);
+                    ReplicationAgentConfiguration configuration;
+                    try {
+                        configuration = agentConfigurationManager
+                                .getConfiguration(replicationAgent);
+                        resource = new ReplicationAgentConfigurationResource(configuration,
+                                resourceResolver);
+                    } catch (AgentConfigurationException e) {
+                        if (log.isWarnEnabled()) {
+                            log.warn("could not find a configuration", e);
+                        }
+                    }
+                } else {
                     if (log.isWarnEnabled()) {
-                        log.warn("could not find a configuration", e);
+                        log.warn("could not find a configuration manager service");
                     }
                 }
-            } else {
-                if (log.isWarnEnabled()) {
-                    log.warn("could not find a configuration manager service");
+            }
+        } else if (path.endsWith(QUEUE_PATH)) {
+            String agentPath = path.substring(0, path.lastIndexOf(QUEUE_PATH));
+            if (log.isInfoEnabled()) {
+                log.info("resolving queue for agent {}", agentPath);
+            }
+            ReplicationAgent replicationAgent = getAgentAtPath(agentPath);
+            if (replicationAgent != null) {
+                try {
+                    resource = new ReplicationAgentQueueResource(replicationAgent.getQueue(null), resourceResolver);
+                } catch (Exception e) {
+                    if (log.isWarnEnabled()) {
+                        log.warn("could not find a queue for agent {}", replicationAgent.getName());
+                    }
                 }
             }
         } else {
@@ -108,7 +130,7 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
             }
             ReplicationAgent replicationAgent = getAgentAtPath(path);
             resource = replicationAgent != null ? new ReplicationAgentResource(replicationAgent,
-                            resourceResolver) : null;
+                    resourceResolver) : null;
         }
         if (log.isInfoEnabled()) {
             log.info("resource found: {}", resource != null ? resource.getPath() : "none");
@@ -125,11 +147,11 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
         ServiceReference[] replicationAgentReferences;
         try {
             replicationAgentReferences = context.getServiceReferences(
-                            ReplicationAgent.class.getName(),
-                            new StringBuilder("(name=").append(agentName).append(")").toString());
+                    ReplicationAgent.class.getName(),
+                    "(name=" + agentName + ")");
             if (replicationAgentReferences != null && replicationAgentReferences.length == 1) {
                 replicationAgent = (ReplicationAgent) context
-                                .getService(replicationAgentReferences[0]);
+                        .getService(replicationAgentReferences[0]);
                 if (log.isDebugEnabled()) {
                     log.debug("replication agent found: {}", replicationAgent);
                 }

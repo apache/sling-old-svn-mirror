@@ -23,20 +23,30 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandlerFactory;
+import org.apache.http.client.fluent.Executor;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
 
 @Component(immediate = true)
-@Service(value = AuthenticationHandlerFactory.class)
-@Property(name = "name", value = NopAuthenticationHandlerFactory.TYPE)
-public class NopAuthenticationHandlerFactory implements AuthenticationHandlerFactory {
-    public static final String TYPE = "nop";
+@Service(value = TransportAuthenticationProviderFactory.class)
+@Property(name = "name", value = UserCredentialsTransportAuthenticationProviderFactory.TYPE)
+public class UserCredentialsTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
+    public static final String TYPE = "user";
 
-    private static final AuthenticationHandler<Object, Object> nopAuthenticationHandler = new NopAuthenticationHandler();
-
-    public AuthenticationHandler<Object, Object> createAuthenticationHandler(Map<String, String> properties) {
-        return nopAuthenticationHandler;
+    public TransportAuthenticationProvider<Executor, Executor> createAuthenticationProvider(
+            Map<String, String> properties) {
+        String user = null;
+        Object userProp = properties.get("user");
+        if (userProp != null) {
+            user = String.valueOf(userProp);
+        }
+        String password = null;
+        Object passwordProp = properties.get("password");
+        if (passwordProp != null) {
+            password = String.valueOf(passwordProp);
+        }
+        return new UserCredentialsTransportAuthenticationProvider(user, password);
     }
 
     public String getType() {

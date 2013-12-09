@@ -18,9 +18,9 @@
  */
 package org.apache.sling.replication.transport;
 
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 
 /**
  * A <code>TransportHandler</code> is responsible for implementing the transport of a
@@ -28,10 +28,27 @@ import org.apache.sling.replication.serialization.ReplicationPackage;
  */
 public interface TransportHandler {
 
+    /**
+     * execute the transport of a given {@link ReplicationPackage} to a specific {@link ReplicationEndpoint} using this
+     * transport and the supplied {@link TransportAuthenticationProvider} for authenticating the endpoint
+     *
+     * @param replicationPackage  a {@link ReplicationPackage} to transport
+     * @param replicationEndpoint a {@link ReplicationEndpoint} to transport the package to
+     * @param transportAuthenticationProvider
+     *                            a {@link TransportAuthenticationProvider} to authenticate the endpoint
+     * @throws ReplicationTransportException if any error occurs during the transport
+     */
     void transport(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint,
-                    AuthenticationHandler<?, ?> authenticationHandler)
-                    throws ReplicationTransportException;
+                   TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
+            throws ReplicationTransportException;
 
-    boolean supportsAuthenticationHandler(AuthenticationHandler<?, ?> authenticationHandler);
+    /**
+     * defines if this {@link TransportHandler} can be authenticated using the given {@link TransportAuthenticationProvider}
+     *
+     * @param transportAuthenticationProvider
+     *         a {@link TransportAuthenticationProvider} to be used to authenticate {@link ReplicationEndpoint}s with this {@link TransportHandler}
+     * @return <code>true</code> if the given {@link TransportAuthenticationProvider} is supported by this {@link TransportHandler}
+     */
+    boolean supportsAuthenticationProvider(TransportAuthenticationProvider<?, ?> transportAuthenticationProvider);
 
 }

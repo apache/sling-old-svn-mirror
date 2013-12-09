@@ -38,7 +38,7 @@ public class JobHandlingUtilsTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         InputStream stream = IOUtils.toInputStream("some text");
         when(replicationPackage.getInputStream()).thenReturn(stream);
-        when(replicationPackage.getAction()).thenReturn("ACTIVATE");
+        when(replicationPackage.getAction()).thenReturn("ADD");
         when(replicationPackage.getId()).thenReturn("an-id");
         when(replicationPackage.getLength()).thenReturn(10l);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content", "/apps"});

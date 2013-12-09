@@ -26,17 +26,13 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.adapter.AdapterFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link AdapterFactory} for
@@ -47,9 +43,10 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvi
 @Properties({
         @Property(name = "adaptables", value = { "org.apache.sling.api.SlingHttpServletRequest" }),
         @Property(name = "adapters", value = { "org.apache.sling.replication.serialization.ReplicationPackage" }) })
+@Deprecated
 public class ReplicationPackageAdapterFactory implements AdapterFactory {
 
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
     private ReplicationPackageBuilderProvider packageBuilderProvider;
@@ -64,20 +61,14 @@ public class ReplicationPackageAdapterFactory implements AdapterFactory {
             if (adaptable instanceof SlingHttpServletRequest) {
                 SlingHttpServletRequest request = (SlingHttpServletRequest) adaptable;
                 String name = request.getHeader("Type");
-                ReplicationPackageBuilder replicationPacakageBuilder = packageBuilderProvider
-                                .getReplicationPacakageBuilder(name);
+                ReplicationPackageBuilder replicationPackageBuilder = packageBuilderProvider
+                                .getReplicationPackageBuilder(name);
                 if (log.isInfoEnabled()) {
-                    log.info("using {} package builder", replicationPacakageBuilder);
+                    log.info("using {} package builder", replicationPackageBuilder);
                 }
-                if (replicationPacakageBuilder != null) {
+                if (replicationPackageBuilder != null) {
                     InputStream stream = request.getInputStream();
-                    ReplicationActionType action = ReplicationActionType.fromName(request
-                                    .getHeader("Action"));
-                    String[] paths = Text.unescape(request.getHeader("Path")).replace("[", "").replace("]", "").split(", ");
-                    if (log.isInfoEnabled()) {
-                        log.info("action {} on paths {}", action, Arrays.toString(paths));
-                    }
-                    pkg = replicationPacakageBuilder.readPackage(new ReplicationRequest(System.currentTimeMillis(), action, paths), stream, true);
+                    pkg = replicationPackageBuilder.readPackage(stream, true);
                     if (pkg != null) {
                         if (log.isInfoEnabled()) {
                             log.info("package {} created", Arrays.toString(pkg.getPaths()));

@@ -48,11 +48,11 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvi
                unbind = "unbindReplicationPackageBuilder")
     })
 @Service(value = ReplicationPackageBuilderProvider.class)
-public class ReplicationPackageBuilderProviderImpl implements ReplicationPackageBuilderProvider {
+public class DefaultReplicationPackageBuilderProvider implements ReplicationPackageBuilderProvider {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Map<String, ReplicationPackageBuilder> replicationPackageBuilders = new HashMap<String, ReplicationPackageBuilder>();
+    private final Map<String, ReplicationPackageBuilder> replicationPackageBuilders = new HashMap<String, ReplicationPackageBuilder>();
 
     @Deactivate
     protected void deactivate() {
@@ -78,11 +78,11 @@ public class ReplicationPackageBuilderProviderImpl implements ReplicationPackage
         log.debug("Unregistering Replication PackageBuilder {} ", replicationPackageBuilder);
     }
 
-    public Collection<ReplicationPackageBuilder> getAvailableReplicationPacakageBuilders() {
+    public Collection<ReplicationPackageBuilder> getAvailableReplicationPackageBuilders() {
         return replicationPackageBuilders.values();
     }
 
-    public ReplicationPackageBuilder getReplicationPacakageBuilder(String name) {
+    public ReplicationPackageBuilder getReplicationPackageBuilder(String name) {
         return replicationPackageBuilders.get(name);
     }
 

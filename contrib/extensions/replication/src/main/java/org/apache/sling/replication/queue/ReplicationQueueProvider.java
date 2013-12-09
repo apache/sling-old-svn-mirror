@@ -39,7 +39,7 @@ public interface ReplicationQueueProvider {
      * @return a replication queue to be used for the given parameters
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String name)
+    ReplicationQueue getQueue(ReplicationAgent agent, String name)
                     throws ReplicationQueueException;
 
     /**
@@ -53,7 +53,7 @@ public interface ReplicationQueueProvider {
      * @return a replication queue to be used for the given parameters
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getOrCreateQueue(ReplicationAgent agent, ReplicationPackage replicationPackage)
+    ReplicationQueue getQueue(ReplicationAgent agent, ReplicationPackage replicationPackage)
                     throws ReplicationQueueException;
 
     /**
@@ -64,7 +64,7 @@ public interface ReplicationQueueProvider {
      * @return the default replication queue for the given agent
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getOrCreateDefaultQueue(ReplicationAgent agent)
+    ReplicationQueue getDefaultQueue(ReplicationAgent agent)
                     throws ReplicationQueueException;
 
     /**
@@ -73,7 +73,7 @@ public interface ReplicationQueueProvider {
      * @return a collection of replication queues
      * @throws ReplicationQueueException
      */
-    Collection<ReplicationQueue> getAllQueues() throws ReplicationQueueException;
+    Collection<ReplicationQueue> getAllQueues();
 
     /**
      * removes an existing queue owned by this provider

@@ -35,6 +35,7 @@ import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
 import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
@@ -56,8 +57,8 @@ public class ReplicationAgentPostServlet extends SlingAllMethodsServlet {
 
         response.setContentType("application/json");
 
-        String action = request.getParameter("action");
-        String[] path = request.getParameterValues("path");
+        String action = request.getParameter(ReplicationHeader.ACTION.toString());
+        String[] path = request.getParameterValues(ReplicationHeader.PATH.toString());
 
         ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
                         ReplicationActionType.valueOf(action), path);
@@ -67,7 +68,7 @@ public class ReplicationAgentPostServlet extends SlingAllMethodsServlet {
         if (agent != null) {
             try {
                 ReplicationResponse replicationResponse = agent.execute(replicationRequest);
-                if (replicationResponse.isSuccessfull()
+                if (replicationResponse.isSuccessful()
                                 || ItemState.DROPPED.toString().equals(
                                                 replicationResponse.getStatus())) {
                     response.setStatus(200);

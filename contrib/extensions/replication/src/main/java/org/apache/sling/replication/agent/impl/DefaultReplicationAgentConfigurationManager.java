@@ -50,10 +50,13 @@ public class DefaultReplicationAgentConfigurationManager implements
     public ReplicationAgentConfiguration getConfiguration(ReplicationAgent replicationAgent)
                     throws AgentConfigurationException {
         if (log.isInfoEnabled()) {
-            log.info("retrieving configuration for agent ", replicationAgent);
+            log.info("retrieving configuration for agent {}", replicationAgent);
         }
         try {
             Configuration configuration = getOsgiConfiguration(replicationAgent);
+            if (log.isInfoEnabled()) {
+                log.info("configuration for agent {} found {}", replicationAgent, configuration);
+            }
             return new ReplicationAgentConfiguration(configuration.getProperties());
 
         } catch (Exception e) {
@@ -65,8 +68,8 @@ public class DefaultReplicationAgentConfigurationManager implements
     }
 
     private Configuration getOsgiConfiguration(ReplicationAgent replicationAgent) throws Exception {
-        String filter = new StringBuilder("(name=").append(replicationAgent.getName()).append(")")
-                        .toString();
+
+        String filter = "(name=" + replicationAgent.getName() + ")";
         Configuration[] configurations = configAdmin.listConfigurations(filter);
         if (configurations == null) {
           throw new Exception("no configuration found");
@@ -92,7 +95,11 @@ public class DefaultReplicationAgentConfigurationManager implements
             @SuppressWarnings("unchecked")
             Dictionary<String, Object> configurationProperties = configuration.getProperties();
             for (Map.Entry<String, Object> entry : updateProperties.entrySet()) {
-                configurationProperties.put(entry.getKey(), entry.getValue());
+                String key = entry.getKey();
+                if (key.startsWith("X-replication-")) {
+                    key = key.substring(0, 14);
+                }
+                configurationProperties.put(key, entry.getValue());
             }
             configuration.update(configurationProperties);
             return new ReplicationAgentConfiguration(configuration.getProperties());
