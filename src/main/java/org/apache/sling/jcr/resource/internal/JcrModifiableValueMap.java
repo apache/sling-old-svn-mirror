@@ -327,9 +327,10 @@ public final class JcrModifiableValueMap
             return null;
         }
 
-        // if the node has been completely read we can directly return
-        if ( fullyRead ) {
-            return cache.get(name);
+        // check cache
+        JcrPropertyMapCacheEntry cachedValued = cache.get(name);
+        if ( fullyRead || cachedValued != null ) {
+            return cachedValued;
         }
 
         try {
