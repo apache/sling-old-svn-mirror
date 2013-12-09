@@ -19,21 +19,21 @@
 package org.apache.sling.replication.transport.authentication.impl;
 
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationContext;
-import org.apache.sling.replication.transport.authentication.AuthenticationException;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationException;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 
 /**
- * {@link AuthenticationHandler} used when no authentication is required
+ * {@link org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider} used when no authentication is required
  */
-public class NopAuthenticationHandler implements AuthenticationHandler<Object, Object> {
+public class NopTransportAuthenticationProvider implements TransportAuthenticationProvider<Object, Object> {
 
     public boolean supportsTransportHandler(TransportHandler transportHandler) {
         return true;
     }
 
-    public Object authenticate(Object authenticable, AuthenticationContext context)
-                    throws AuthenticationException {
+    public Object authenticate(Object authenticable, TransportAuthenticationContext context)
+                    throws TransportAuthenticationException {
         return authenticable;
     }
 

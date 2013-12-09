@@ -18,12 +18,12 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
@@ -31,35 +31,38 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentsManager;
 import org.apache.sling.replication.communication.ReplicationActionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of {@link ReplicationAgentsManager}
  */
 @Component
-@References({ 
-    @Reference(name = "replicationAgent", 
-               referenceInterface = ReplicationAgent.class, 
-               cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, 
-               policy = ReferencePolicy.DYNAMIC,
-               bind = "bindReplicationAgent", 
-               unbind = "unbindReplicationAgent")
-    })
+@References({
+        @Reference(name = "replicationAgent",
+                referenceInterface = ReplicationAgent.class,
+                cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+                policy = ReferencePolicy.DYNAMIC,
+                bind = "bindReplicationAgent",
+                unbind = "unbindReplicationAgent")
+})
 @Service(value = ReplicationAgentsManager.class)
-public class ReplicationAgentsManagerImpl implements ReplicationAgentsManager {
+public class DefaultReplicationAgentsManager implements ReplicationAgentsManager {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private SortedSet<ReplicationAgent> replicationAgents = new TreeSet<ReplicationAgent>(new ReplicationAgentComparator());
+    private final SortedSet<ReplicationAgent> replicationAgents = new TreeSet<ReplicationAgent>(new ReplicationAgentComparator());
 
     public SortedSet<ReplicationAgent> getAgentsFor(ReplicationActionType action, String... paths) {
         // TODO : implement the filtering based on rules here
         return Collections.unmodifiableSortedSet(replicationAgents);
+    }
+
+    public Collection<ReplicationAgent> getAllAvailableAgents() {
+        return Collections.unmodifiableCollection(replicationAgents);
     }
 
     @Deactivate
@@ -68,7 +71,7 @@ public class ReplicationAgentsManagerImpl implements ReplicationAgentsManager {
     }
 
     protected void bindReplicationAgent(final ReplicationAgent replicationAgent,
-                    Map<String, Object> properties) {
+                                        Map<String, Object> properties) {
         synchronized (replicationAgents) {
             replicationAgents.add(replicationAgent);
         }
@@ -76,7 +79,7 @@ public class ReplicationAgentsManagerImpl implements ReplicationAgentsManager {
     }
 
     protected void unbindReplicationAgent(final ReplicationAgent replicationAgent,
-                    Map<String, Object> properties) {
+                                          Map<String, Object> properties) {
         synchronized (replicationAgents) {
             replicationAgents.remove(replicationAgent);
         }

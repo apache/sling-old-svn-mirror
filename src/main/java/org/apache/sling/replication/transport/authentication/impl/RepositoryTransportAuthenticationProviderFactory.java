@@ -25,17 +25,17 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandlerFactory;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
 
 @Component(immediate = true)
-@Service(value = AuthenticationHandlerFactory.class)
-@Property(name = "name", value = RepositoryAuthenticationHandlerFactory.TYPE)
-public class RepositoryAuthenticationHandlerFactory implements AuthenticationHandlerFactory {
+@Service(value = TransportAuthenticationProviderFactory.class)
+@Property(name = "name", value = RepositoryTransportAuthenticationProviderFactory.TYPE)
+public class RepositoryTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {
     public static final String TYPE = "repo-user";
 
-    public AuthenticationHandler<SlingRepository, Session> createAuthenticationHandler(Map<String, String> properties) {
+    public TransportAuthenticationProvider<SlingRepository, Session> createAuthenticationProvider(Map<String, String> properties) {
         String user = null;
         Object userProp = properties.get("user");
         if (userProp != null) {
@@ -46,7 +46,7 @@ public class RepositoryAuthenticationHandlerFactory implements AuthenticationHan
         if (passwordProp != null) {
             password = String.valueOf(passwordProp);
         }
-        return new RepositoryAuthenticationHandler(user, password);
+        return new RepositoryTransportAuthenticationProvider(user, password);
     }
 
     public String getType() {

@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public class ReplicationAgentConfigurationTest {
     @Test
-    public void testDefaultConfiguration() throws Exception {
+    public void testNullsWithDefaultConfiguration() throws Exception {
         ReplicationAgentConfiguration replicationAgentConfiguration = new ReplicationAgentConfiguration(new Properties());
         assertNotNull(replicationAgentConfiguration.getAuthenticationProperties());
         assertNotNull(replicationAgentConfiguration.getEndpoint());

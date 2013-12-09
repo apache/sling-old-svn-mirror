@@ -57,7 +57,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
     private String[] priorityPaths;
 
     @Activate
-    protected void activate(ComponentContext context) throws Exception {
+    protected void activate(ComponentContext context) {
         priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
@@ -85,7 +85,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
                     log.error("could not add the item to the queue {}", queue);
                 }
                 state.setItemState(ItemState.ERROR);
-                state.setSuccessfull(false);
+                state.setSuccessful(false);
             }
             return state;
         } else {
@@ -121,21 +121,21 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
             if (log.isInfoEnabled()) {
                 log.info("using priority queue for path {}", pp);
             }
-            queue = queueProvider.getOrCreateQueue(agent, pp);
+            queue = queueProvider.getQueue(agent, pp);
         } else {
             if (log.isInfoEnabled()) {
                 log.info("using default queue");
             }
-            queue = queueProvider.getOrCreateDefaultQueue(agent);
+            queue = queueProvider.getDefaultQueue(agent);
         }
         return queue;
     }
 
-    public void offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
-                    ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+    public boolean offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
+                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueue queue = getQueue(replicationPackage, agent, queueProvider);
         if (queue != null) {
-            queue.add(replicationPackage);
+            return queue.add(replicationPackage);
         } else {
             throw new ReplicationQueueException("could not get a queue for agent "
                             + agent.getName());

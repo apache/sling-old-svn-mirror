@@ -19,8 +19,6 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
-import java.util.Arrays;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
@@ -33,13 +31,13 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
+import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(metatype = false)
 @Service(value = Servlet.class)
@@ -58,25 +56,29 @@ public class ReplicationAgentPollServlet extends SlingAllMethodsServlet {
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
-        String queueName = request.getParameter("queue");
+        String queueName = request.getParameter(ReplicationHeader.QUEUE.toString());
 
         ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 
         if (agent != null) {
             try {
-                // TODO : consider using queue distribution strategy some way and validating who's making this request
+                // TODO : consider using queue distribution strategy and validating who's making this request
+                if (log.isInfoEnabled()) {
+                    log.info("getting item from queue {}", queueName);
+                }
                 ReplicationQueue queue = agent.getQueue(queueName);
                 // get first item
                 ReplicationPackage head = queue.getHead();
                 if (head != null) {
                     int bytesCopied = IOUtils.copy(head.getInputStream(),
                                     response.getOutputStream());
-                    response.setHeader("type", head.getType());
-                    response.setHeader("action", head.getAction().toString());
-                    response.setHeader("path", Arrays.toString(head.getPaths()));
+                    response.setHeader(ReplicationHeader.TYPE.toString(), head.getType());
                     if (log.isInfoEnabled()) {
                         log.info("{} bytes written into the response", bytesCopied);
                     }
+                    // remove the item from the queue
+                    // TODO : this should be conditional to successful import on polling instance
+                    queue.removeHead();
                 } else {
                     if (log.isInfoEnabled()) {
                         log.info("nothing to fetch");

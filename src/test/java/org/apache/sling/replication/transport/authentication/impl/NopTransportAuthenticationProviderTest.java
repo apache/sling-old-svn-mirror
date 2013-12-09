@@ -20,45 +20,45 @@ package org.apache.sling.replication.transport.authentication.impl;
 
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.transport.authentication.AuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * Testcase for {@link NopAuthenticationHandler}
+ * Testcase for {@link NopTransportAuthenticationProvider}
  */
-public class NopAuthenticationHandlerTest {
+public class NopTransportAuthenticationProviderTest {
 
     @Test
     public void testAuthenticationWithNullAuthenticableAndContext() throws Exception {
-        NopAuthenticationHandler authenticationHandler = new NopAuthenticationHandler();
+        NopTransportAuthenticationProvider authenticationHandler = new NopTransportAuthenticationProvider();
         Object authenticable = null;
-        AuthenticationContext context = null;
+        TransportAuthenticationContext context = null;
         assertEquals(authenticable, authenticationHandler.authenticate(authenticable, context));
     }
 
     @Test
     public void testAuthenticationWithAuthenticableAndNullContext() throws Exception {
-        NopAuthenticationHandler authenticationHandler = new NopAuthenticationHandler();
+        NopTransportAuthenticationProvider authenticationHandler = new NopTransportAuthenticationProvider();
         Executor authenticable = Executor.newInstance();
-        AuthenticationContext context = null;
+        TransportAuthenticationContext context = null;
         assertEquals(authenticable, authenticationHandler.authenticate(authenticable, context));
     }
 
     @Test
     public void testAuthenticationWithAuthenticableAndEmptyContext() throws Exception {
-        NopAuthenticationHandler authenticationHandler = new NopAuthenticationHandler();
+        NopTransportAuthenticationProvider authenticationHandler = new NopTransportAuthenticationProvider();
         Executor authenticable = Executor.newInstance();
-        AuthenticationContext context = new AuthenticationContext();
+        TransportAuthenticationContext context = new TransportAuthenticationContext();
         assertEquals(authenticable, authenticationHandler.authenticate(authenticable, context));
     }
 
     @Test
     public void testAuthenticationWithAuthenticableAndCorrectContext() throws Exception {
-        NopAuthenticationHandler authenticationHandler = new NopAuthenticationHandler();
+        NopTransportAuthenticationProvider authenticationHandler = new NopTransportAuthenticationProvider();
         Executor authenticable = Executor.newInstance();
-        AuthenticationContext context = new AuthenticationContext();
+        TransportAuthenticationContext context = new TransportAuthenticationContext();
         context.addAttribute("endpoint", new ReplicationEndpoint("http://www.apache.org"));
         assertEquals(authenticable, authenticationHandler.authenticate(authenticable, context));
     }

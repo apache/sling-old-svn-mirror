@@ -30,7 +30,7 @@ public class ReplicationAgentConfiguration {
 
     public static final String TRANSPORT = "TransportHandler.target";
 
-    public static final String AUTHENTICATION_FACTORY = "AuthenticationHandlerFactory.target";
+    public static final String TRANSPORT_AUTHENTICATION_FACTORY = "TransportAuthenticationProviderFactory.target";
 
     public static final String QUEUEPROVIDER = "ReplicationQueueProvider.target";
 
@@ -43,6 +43,10 @@ public class ReplicationAgentConfiguration {
     public static final String AUTHENTICATION_PROPERTIES = "authentication.properties";
 
     public static final String DISTRIBUTION = "ReplicationQueueDistributionStrategy.target";
+
+    public static final String RULES = "rules";
+
+    public static final String ENABLED = "enabled";
 
     private final String name;
 
@@ -58,17 +62,20 @@ public class ReplicationAgentConfiguration {
 
     private final String[] authenticationProperties;
 
+    private final String[] rules;
+
     public ReplicationAgentConfiguration(Dictionary<?, ?> dictionary) {
         this.name = PropertiesUtil.toString(dictionary.get(NAME), "");
         this.endpoint = PropertiesUtil.toString(dictionary.get(ENDPOINT), "");
         this.targetAuthenticationHandlerFactory = PropertiesUtil.toString(
-                        dictionary.get(AUTHENTICATION_FACTORY), "");
+                        dictionary.get(TRANSPORT_AUTHENTICATION_FACTORY), "");
         this.targetReplicationBuilder = PropertiesUtil.toString(dictionary.get(PACKAGING), "");
         this.targetReplicationQueueProvider = PropertiesUtil.toString(
                         dictionary.get(QUEUEPROVIDER), "");
         this.targetTransportHandler = PropertiesUtil.toString(dictionary.get(TRANSPORT), "");
         String[] ap = PropertiesUtil.toStringArray(dictionary.get(AUTHENTICATION_PROPERTIES));
         this.authenticationProperties = ap != null ? ap : new String[0];
+        this.rules = PropertiesUtil.toStringArray(dictionary.get(RULES), new String[0]);
     }
 
     public String[] getAuthenticationProperties() {
@@ -106,7 +113,8 @@ public class ReplicationAgentConfiguration {
                         + targetReplicationBuilder + "\", \"targetReplicationQueueProvider\":\""
                         + targetReplicationQueueProvider + "\", \"targetAuthenticationHandlerFactory\":\""
                         + targetAuthenticationHandlerFactory + "\", \"authenticationProperties\":\""
-                        + Arrays.toString(authenticationProperties) + "\"}";
+                        + Arrays.toString(authenticationProperties) + "\", \"rules\":\""
+                        + Arrays.toString(rules) + "\"}";
     }
 
 }

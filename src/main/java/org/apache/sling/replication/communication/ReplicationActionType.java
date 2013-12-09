@@ -25,14 +25,14 @@ package org.apache.sling.replication.communication;
 public enum ReplicationActionType {
 
     /**
-     * Content is activated
+     * Content is added
      */
-    ACTIVATE("Activate"),
+    ADD("Add"),
 
     /**
-     * Content is deactivated
+     * Content is deleted
      */
-    DEACTIVATE("Deactivate");
+    DELETE("Delete");
 
     /**
      * internal human readable name

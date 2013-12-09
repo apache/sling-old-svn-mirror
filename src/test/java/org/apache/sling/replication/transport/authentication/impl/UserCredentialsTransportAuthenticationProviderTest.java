@@ -20,22 +20,22 @@ package org.apache.sling.replication.transport.authentication.impl;
 
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.transport.authentication.AuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
 
 /**
- * Testcase for {@link UserCredentialsAuthenticationHandler}
+ * Testcase for {@link UserCredentialsTransportAuthenticationProvider}
  */
-public class UserCredentialsAuthenticationHandlerTest {
+public class UserCredentialsTransportAuthenticationProviderTest {
 
     @Test
     public void testAuthenticationWithNullAuthenticableAndContext() throws Exception {
-        UserCredentialsAuthenticationHandler authenticationHandler = new UserCredentialsAuthenticationHandler(
+        UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
                         "foo", "bar");
         Executor authenticable = null;
-        AuthenticationContext context = null;
+        TransportAuthenticationContext context = null;
         try {
             authenticationHandler.authenticate(authenticable, context);
             fail("could not authenticate a null authenticable");
@@ -46,10 +46,10 @@ public class UserCredentialsAuthenticationHandlerTest {
 
     @Test
     public void testAuthenticationWithAuthenticableAndNullContext() throws Exception {
-        UserCredentialsAuthenticationHandler authenticationHandler = new UserCredentialsAuthenticationHandler(
+        UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
                         "foo", "bar");
         Executor authenticable = Executor.newInstance();
-        AuthenticationContext context = null;
+        TransportAuthenticationContext context = null;
         try {
             authenticationHandler.authenticate(authenticable, context);
             fail("could not authenticate with a null context");
@@ -60,10 +60,10 @@ public class UserCredentialsAuthenticationHandlerTest {
 
     @Test
     public void testAuthenticationWithAuthenticableAndEmptyContext() throws Exception {
-        UserCredentialsAuthenticationHandler authenticationHandler = new UserCredentialsAuthenticationHandler(
+        UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
                         "foo", "bar");
         Executor authenticable = Executor.newInstance();
-        AuthenticationContext context = new AuthenticationContext();
+        TransportAuthenticationContext context = new TransportAuthenticationContext();
         try {
             authenticationHandler.authenticate(authenticable, context);
             fail("could not authenticate with an empty context");
@@ -74,10 +74,10 @@ public class UserCredentialsAuthenticationHandlerTest {
 
     @Test
     public void testAuthenticationWithAuthenticableAndCorrectContext() throws Exception {
-        UserCredentialsAuthenticationHandler authenticationHandler = new UserCredentialsAuthenticationHandler(
+        UserCredentialsTransportAuthenticationProvider authenticationHandler = new UserCredentialsTransportAuthenticationProvider(
                         "foo", "bar");
         Executor authenticable = Executor.newInstance();
-        AuthenticationContext context = new AuthenticationContext();
+        TransportAuthenticationContext context = new TransportAuthenticationContext();
         context.addAttribute("endpoint", new ReplicationEndpoint("http://www.apache.org"));
         authenticationHandler.authenticate(authenticable, context);
     }

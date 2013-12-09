@@ -27,6 +27,12 @@ import org.apache.sling.replication.serialization.ReplicationPackage;
 public interface ReplicationQueue {
 
     /**
+     * get this queue name
+     * @return queue name as a <code>String</code>
+     */
+    String getName();
+
+    /**
      * add a replication package to this queue
      *
      * @param replicationPackage
@@ -52,30 +58,27 @@ public interface ReplicationQueue {
      * get the agent this queue is used for
      *
      * @return a replication agent
-     * @throws ReplicationQueueException
      */
-    ReplicationAgent getAgent() throws ReplicationQueueException;
+    ReplicationAgent getAgent();
 
     /**
      * get the first item (FIFO wise, the next to be processed) into the queue
      *
      * @return the first replication package into the queue
-     * @throws ReplicationQueueException
      */
-    ReplicationPackage getHead() throws ReplicationQueueException;
+    ReplicationPackage getHead();
 
     /**
      * remove the first package into the queue from it
      *
      * @throws ReplicationQueueException
      */
-    void removeHead() throws ReplicationQueueException;
+    void removeHead();
 
     /**
      * check if the queue is empty
      *
      * @return <code>true</code> if the queue is empty, <code>false</code> otherwise
-     * @throws ReplicationQueueException
      */
-    boolean isEmpty() throws ReplicationQueueException;
+    boolean isEmpty();
 }

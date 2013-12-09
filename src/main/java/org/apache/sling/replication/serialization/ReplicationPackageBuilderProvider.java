@@ -25,8 +25,19 @@ import java.util.Collection;
  */
 public interface ReplicationPackageBuilderProvider {
 
-    Collection<ReplicationPackageBuilder> getAvailableReplicationPacakageBuilders();
+    /**
+     * get all the available {@link ReplicationPackageBuilder}s in the system
+     *
+     * @return a {@link Collection} of {@link ReplicationPackageBuilder}
+     */
+    Collection<ReplicationPackageBuilder> getAvailableReplicationPackageBuilders();
 
-    ReplicationPackageBuilder getReplicationPacakageBuilder(String name);
+    /**
+     * get the {@link ReplicationPackageBuilder} with the specified name
+     *
+     * @param name the name of the {@link ReplicationPackageBuilder} as a <code>String</code>
+     * @return the {@link ReplicationPackageBuilder} with the given name, if it exists, <code>null</code> otherwise
+     */
+    ReplicationPackageBuilder getReplicationPackageBuilder(String name);
 
 }

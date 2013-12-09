@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.IOUtils;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.ScheduledJobInfo;
@@ -55,8 +56,7 @@ public class JobHandlingUtils {
     public static Job getJob(ScheduledJobInfo info, JobManager jobManager, String topic) {
         String id = String.valueOf(info.getJobProperties().get(ID));
         Map<String, Object> jobProps = JobHandlingUtils.createIdPropertiesFromId(id);
-        Job job = jobManager.getJob(topic, jobProps);
-        return job;
+        return jobManager.getJob(topic, jobProps);
     }
 
     public static ReplicationPackage getPackage(ReplicationPackageBuilder packageBuilder,
@@ -111,9 +111,11 @@ public class JobHandlingUtils {
             }
 
             public InputStream getInputStream() throws IOException {
-                // TODO : eventually re-enable it once SLING-3140 gets released
+                // TODO : use this once SLING-3140 gets released
                 // return new ByteArrayInputStream((byte[]) job.getProperty(BIN));
-                return null;
+
+                // workaround to make void package work while we get SLING-3140 to be released
+                return IOUtils.toInputStream(String.valueOf(job.getProperty(ID)));
             }
 
             public String getId() {
@@ -132,7 +134,7 @@ public class JobHandlingUtils {
     }
 
     public static Map<String, Object> createFullPropertiesFromPackage(
-                    ReplicationPackage replicationPackage) throws IOException {
+                    ReplicationPackage replicationPackage) {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(ID, replicationPackage.getId());
         properties.put(PATHS, replicationPackage.getPaths());

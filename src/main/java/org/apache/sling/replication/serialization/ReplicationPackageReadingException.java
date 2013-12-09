@@ -16,18 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.transport.authentication;
-
+package org.apache.sling.replication.serialization;
 
 /**
- * An <code>AuthenticationHandler</code> is responsible for authentication of instances sending and
- * receiving replication items.
+ * This represents an error happening while reading / installing a
+ * {@link org.apache.sling.replication.serialization.ReplicationPackage}
  */
-public interface AuthenticationHandler<A, T> {
+@SuppressWarnings("serial")
+public class ReplicationPackageReadingException extends Exception {
 
-    boolean canAuthenticate(Class<?> authenticable);
+    public ReplicationPackageReadingException(String message) {
+        super(message);
+    }
 
-    T authenticate(A authenticable, AuthenticationContext context)
-                    throws AuthenticationException;
-
+    public ReplicationPackageReadingException(Throwable t) {
+        super(t);
+    }
 }

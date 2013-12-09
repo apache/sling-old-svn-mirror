@@ -33,47 +33,50 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Basic implementation of a {@link ReplicationAgent}
  */
-public class SimpleReplicationAgentImpl implements ReplicationAgent {
+public class SimpleReplicationAgent implements ReplicationAgent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ReplicationPackageBuilder packageBuilder;
+    private final ReplicationPackageBuilder packageBuilder;
 
-    private ReplicationQueueProvider queueProvider;
+    private final ReplicationQueueProvider queueProvider;
 
-    private TransportHandler transportHandler;
+    private final TransportHandler transportHandler;
 
-    private AuthenticationHandler<?, ?> authenticationHandler;
+    private final TransportAuthenticationProvider<?, ?> transportAuthenticationProvider;
 
-    private ReplicationQueueDistributionStrategy queueDistributionStrategy;
+    private final ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
-    private String name;
+    private final String name;
 
-    private String endpoint;
+    private final String endpoint;
 
-    public SimpleReplicationAgentImpl(String name, String endpoint,
-                    TransportHandler transportHandler, ReplicationPackageBuilder packageBuilder,
-                    ReplicationQueueProvider queueProvider,
-                    AuthenticationHandler<?, ?> authenticationHandler,
-                    ReplicationQueueDistributionStrategy queueDistributionHandler) {
+    private final String[] rules;
+
+    public SimpleReplicationAgent(String name, String endpoint, String[] rules,
+                                  TransportHandler transportHandler, ReplicationPackageBuilder packageBuilder,
+                                  ReplicationQueueProvider queueProvider,
+                                  TransportAuthenticationProvider<?, ?> transportAuthenticationProvider,
+                                  ReplicationQueueDistributionStrategy queueDistributionHandler) {
         this.name = name;
         this.endpoint = endpoint;
+        this.rules = rules;
         this.transportHandler = transportHandler;
         this.packageBuilder = packageBuilder;
         this.queueProvider = queueProvider;
-        this.authenticationHandler = authenticationHandler;
+        this.transportAuthenticationProvider = transportAuthenticationProvider;
         this.queueDistributionStrategy = queueDistributionHandler;
     }
 
     public ReplicationResponse execute(ReplicationRequest replicationRequest)
-                    throws AgentReplicationException {
+            throws AgentReplicationException {
 
         // create package from request
         ReplicationPackage replicationPackage;
@@ -88,14 +91,18 @@ public class SimpleReplicationAgentImpl implements ReplicationAgent {
         // send the replication package to the queue distribution handler
         try {
             ReplicationQueueItemState state = queueDistributionStrategy.add(replicationPackage,
-                            this, queueProvider);
-            replicationResponse.setStatus(state.getItemState().toString());
-            replicationResponse.setSuccessfull(state.isSuccessfull());
+                    this, queueProvider);
+            if (state != null) {
+                replicationResponse.setStatus(state.getItemState().toString());
+                replicationResponse.setSuccessful(state.isSuccessful());
+            } else {
+                replicationResponse.setStatus(ReplicationQueueItemState.ItemState.ERROR.toString());
+            }
         } catch (Exception e) {
             if (log.isErrorEnabled()) {
                 log.error("an error happened during queue processing", e);
             }
-            replicationResponse.setSuccessfull(false);
+            replicationResponse.setSuccessful(false);
         }
 
         return replicationResponse;
@@ -120,12 +127,12 @@ public class SimpleReplicationAgentImpl implements ReplicationAgent {
         try {
             if (transportHandler != null) {
                 transportHandler.transport(item, new ReplicationEndpoint(endpoint),
-                                authenticationHandler);
+                        transportAuthenticationProvider);
                 return true;
             } else {
                 if (log.isWarnEnabled()) {
                     log.warn("could not process an item as a transport handler is not bound to agent {}",
-                                    name);
+                            name);
                 }
                 return false;
             }
@@ -140,12 +147,15 @@ public class SimpleReplicationAgentImpl implements ReplicationAgent {
 
     public ReplicationQueue getQueue(String name) throws ReplicationQueueException {
         ReplicationQueue queue;
-        if (name != null) {
-            queue = queueProvider.getOrCreateQueue(this, name);
+        if (name != null && name.length() > 0) {
+            queue = queueProvider.getQueue(this, name);
         } else {
-            queue = queueProvider.getOrCreateDefaultQueue(this);
+            queue = queueProvider.getDefaultQueue(this);
         }
         return queue;
     }
 
+    public String[] getRules() {
+        return rules;
+    }
 }

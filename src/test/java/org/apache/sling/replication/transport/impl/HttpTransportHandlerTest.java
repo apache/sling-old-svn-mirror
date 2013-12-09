@@ -26,8 +26,8 @@ import org.apache.http.client.fluent.Response;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.transport.authentication.AuthenticationContext;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.junit.Test;
 
 import static org.mockito.Matchers.any;
@@ -42,17 +42,17 @@ public class HttpTransportHandlerTest {
     public void testHttpTransport() throws Exception {
         HttpTransportHandler httpTransportHandler = new HttpTransportHandler();
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
-        when(replicationPackage.getAction()).thenReturn(ReplicationActionType.ACTIVATE.toString());
+        when(replicationPackage.getAction()).thenReturn(ReplicationActionType.ADD.toString());
         when(replicationPackage.getType()).thenReturn("test");
-        when(replicationPackage.getPaths()).thenReturn(new String[]{"/"});
+        when(replicationPackage.getPaths()).thenReturn(new String[]{"/content"});
         ReplicationEndpoint replicationEndpoint = new ReplicationEndpoint(new URI("http://localhost:8080/system/replication/receive"));
-        AuthenticationHandler<Executor, Executor> authenticationHandler = mock(AuthenticationHandler.class);
+        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = mock(TransportAuthenticationProvider.class);
         Executor executor = mock(Executor.class);
         Response response = mock(Response.class);
         Content content = mock(Content.class);
         when(response.returnContent()).thenReturn(content);
         when(executor.execute(any(Request.class))).thenReturn(response);
-        when(authenticationHandler.authenticate(any(Executor.class), any(AuthenticationContext.class))).thenReturn(executor);
-        httpTransportHandler.transport(replicationPackage, replicationEndpoint, authenticationHandler);
+        when(transportAuthenticationProvider.authenticate(any(Executor.class), any(TransportAuthenticationContext.class))).thenReturn(executor);
+        httpTransportHandler.transport(replicationPackage, replicationEndpoint, transportAuthenticationProvider);
     }
 }

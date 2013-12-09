@@ -18,14 +18,16 @@
  */
 package org.apache.sling.replication.transport.authentication;
 
-import java.util.Map;
 
-/**
- * Factory for {@link AuthenticationHandler}s
- */
-public interface AuthenticationHandlerFactory {
+@SuppressWarnings("serial")
+public class TransportAuthenticationException extends Exception {
 
-    AuthenticationHandler<?, ?> createAuthenticationHandler(Map<String, String> properties);
+    public TransportAuthenticationException(String string) {
+        super(string);
+    }
 
-    String getType();
+    public TransportAuthenticationException(Exception e) {
+        super(e);
+    }
+
 }

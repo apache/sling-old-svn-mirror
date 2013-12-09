@@ -19,21 +19,18 @@
 package org.apache.sling.replication.queue.impl.simple;
 
 import java.util.Arrays;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * a simple scheduled {@link SimpleReplicationQueue}s processor
@@ -80,7 +77,7 @@ public class ScheduledReplicationQueueProcessor implements Runnable {
                     // }
                 }
             }
-        } catch (ReplicationQueueException e) {
+        } catch (Exception e) {
             if (log.isErrorEnabled()) {
                 log.error("error while processing queue {}", e);
             }

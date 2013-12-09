@@ -29,9 +29,18 @@ public interface ReplicationRuleEngine {
      * reads a <code>String</code>, transforms it into a {@link ReplicationRule} and applies it to the
      * given {@link ReplicationAgent}
      *
-     * @param ruleString the <code>String</code> to be read as a {@link ReplicationRule}
-     * @param agent      the {@link ReplicationAgent} to apply the rule to
+     * @param agent       the {@link ReplicationAgent} to apply the rule to
+     * @param ruleStrings the <code>String</code> array to be read as a {@link ReplicationRule}s
      */
-    void applyRule(String ruleString, ReplicationAgent agent);
+    void applyRules(ReplicationAgent agent, String... ruleStrings);
+
+    /**
+     * reads a <code>String</code>, transforms it into a {@link ReplicationRule} and un-applies it to the
+     * given {@link ReplicationAgent}
+     *
+     * @param agent       the {@link ReplicationAgent} to un-apply the rule to
+     * @param ruleStrings the <code>String</code> array to be read as a {@link ReplicationRule}s
+     */
+    void unapplyRules(ReplicationAgent agent, String... ruleStrings);
 
 }

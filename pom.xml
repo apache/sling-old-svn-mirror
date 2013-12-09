@@ -25,7 +25,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>18</version>
+        <version>19-SNAPSHOT</version>
         <relativePath>../../../parent/pom.xml</relativePath>
     </parent>
 
@@ -68,7 +68,7 @@
               <configuration>
                 <instructions>
                   <Bundle-SymbolicName>org.apache.sling.replication</Bundle-SymbolicName>
-                  <Sling-Initial-Content>SLING-CONTENT/libs/sling/replication/agents;path:=/apps/system/config;overwrite:=true</Sling-Initial-Content>
+                  <Sling-Initial-Content>SLING-CONTENT/libs/sling/replication;path:=/apps/system;overwrite:=true</Sling-Initial-Content>
                   <Export-Package>
                     org.apache.sling.replication.agent,
                     org.apache.sling.replication.transport.authentication,
@@ -77,12 +77,12 @@
                     org.apache.sling.replication.event,
                     org.apache.sling.replication.queue,
                     org.apache.sling.replication.rule,
-                    org.apache.sling.replication.serialization,
+                    org.apache.sling.replication.serialization
                   </Export-Package>
                 </instructions>
               </configuration>
             </plugin>
-	        <plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
             </plugin>

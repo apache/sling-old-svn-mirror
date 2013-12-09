@@ -35,7 +35,7 @@ import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
- * no failure / stuck handling where each pacakge is put regardless of anything.
+ * no failure / stuck handling where each package is put regardless of anything.
  */
 @Component(immediate = true)
 @Service(value = ReplicationQueueDistributionStrategy.class)
@@ -53,7 +53,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
             log.info("using single queue distribution");
         }
         ReplicationQueueItemState state = new ReplicationQueueItemState();
-        ReplicationQueue queue = queueProvider.getOrCreateDefaultQueue(agent);
+        ReplicationQueue queue = queueProvider.getDefaultQueue(agent);
         if (log.isInfoEnabled()) {
             log.info("obtained queue {}", queue);
         }
@@ -68,7 +68,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
                     log.error("could not add the item to the queue {}", queue);
                 }
                 state.setItemState(ItemState.ERROR);
-                state.setSuccessfull(false);
+                state.setSuccessful(false);
             }
             return state;
         } else {
@@ -78,11 +78,11 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     }
 
-    public void offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
-                    ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue queue = queueProvider.getOrCreateDefaultQueue(agent);
+    public boolean offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
+                         ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
+        ReplicationQueue queue = queueProvider.getDefaultQueue(agent);
         if (queue != null) {
-            queue.add(replicationPackage);
+            return queue.add(replicationPackage);
         } else {
             throw new ReplicationQueueException("could not get a queue for agent "
                             + agent.getName());

@@ -18,23 +18,22 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.replication.agent.AgentConfigurationException;
+import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
+import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-import org.apache.sling.replication.agent.AgentConfigurationException;
-import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
-import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link ReplicationAgentResourceProvider}
@@ -94,14 +93,14 @@ public class ReplicationAgentResourceProviderTest {
         when(configurationManager.getConfiguration(replicationAgent)).thenReturn(configuration);
     }
 
-    private SimpleReplicationAgentImpl createMockedReplicationAgent(String path,
+    private SimpleReplicationAgent createMockedReplicationAgent(String path,
                     BundleContext context) throws InvalidSyntaxException {
         ServiceReference serviceReference = mock(ServiceReference.class);
         ServiceReference[] agentServiceReferences = new ServiceReference[] { serviceReference };
-        String filter = new StringBuilder("(name=").append(path).append(")").toString();
+        String filter = "(name=" + path + ")";
         when(context.getServiceReferences(ReplicationAgent.class.getName(), filter)).thenReturn(
                         agentServiceReferences);
-        SimpleReplicationAgentImpl replicationAgent = new SimpleReplicationAgentImpl(path, null,
+        SimpleReplicationAgent replicationAgent = new SimpleReplicationAgent(path, null, null,
                         null, null, null, null, null);
         when(context.getService(serviceReference)).thenReturn(replicationAgent);
         return replicationAgent;

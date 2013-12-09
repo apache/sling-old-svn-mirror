@@ -18,13 +18,23 @@
  */
 package org.apache.sling.replication.transport.authentication;
 
+import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Provides {@link AuthenticationHandler}s instances of specific types with specific properties
- */
-public interface AuthenticationHandlerProvider {
+public class TransportAuthenticationContext {
+    private final Map<String, Object> attributes = new HashMap<String, Object>();
 
-    AuthenticationHandler<?, ?> getAuthenticationHandler(String type, Map<String, String> properties);
+    @SuppressWarnings("unchecked")
+    public <T> T getAttribute(String name, Class<? extends T> klass) {
+        T result = null;
+        Object object = attributes.get(name);
+        if (klass.isInstance(object)) {
+            result = (T) object;
+        }
+        return result;
+    }
 
+    public <T> void addAttribute(String name, T object) {
+        attributes.put(name, object);
+    }
 }

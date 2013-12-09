@@ -19,6 +19,8 @@
 package org.apache.sling.replication.transport.impl;
 
 import java.net.URI;
+import java.util.Dictionary;
+import java.util.Properties;
 import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
@@ -27,13 +29,18 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.Text;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.event.ReplicationEventFactory;
+import org.apache.sling.replication.event.ReplicationEventType;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.AuthenticationContext;
-import org.apache.sling.replication.transport.authentication.AuthenticationHandler;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
+import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,37 +58,57 @@ public class RepositoryTransportHandler implements TransportHandler {
     @Reference
     private SlingRepository repository;
 
+    @Reference
+    private ReplicationEventFactory replicationEventFactory;
+
     public void transport(ReplicationPackage replicationPackage,
-                    ReplicationEndpoint replicationEndpoint,
-                    AuthenticationHandler<?, ?> authenticationHandler)
-                    throws ReplicationTransportException {
+                          ReplicationEndpoint replicationEndpoint,
+                          TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
+            throws ReplicationTransportException {
         if (validateEndpoint(replicationEndpoint)) {
+            Session session = null;
             try {
-                AuthenticationContext authenticationContext = new AuthenticationContext();
-                String path = new StringBuilder(replicationEndpoint.getUri().getHost()).append(
-                                replicationEndpoint.getUri().getPath()).toString();
-                authenticationContext.addAttribute("path", path);
-                @SuppressWarnings("unchecked")
-                Session session = ((AuthenticationHandler<SlingRepository, Session>) authenticationHandler)
-                                .authenticate(repository, authenticationContext);
+                TransportAuthenticationContext transportAuthenticationContext = new TransportAuthenticationContext();
+                String path = replicationEndpoint.getUri().toString().replace("repo:/", "");
+                transportAuthenticationContext.addAttribute("path", path);
+                session = ((TransportAuthenticationProvider<SlingRepository, Session>) transportAuthenticationProvider)
+                        .authenticate(repository, transportAuthenticationContext);
+                int lastSlash = replicationPackage.getId().lastIndexOf('/');
+                String nodeName = Text.escape(lastSlash < 0 ? replicationPackage.getId() : replicationPackage.getId().substring(lastSlash + 1));
+                if (log.isInfoEnabled()) {
+                    log.info("creating node {} in {}", replicationPackage.getId(), nodeName);
+                }
                 if (session != null) {
-                    Node addedNode = session.getNode(path).addNode(replicationPackage.getId(),
-                                    NodeType.NT_FILE);
+                    Node addedNode = session.getNode(path).addNode(nodeName,
+                            NodeType.NT_FILE);
+                    Node contentNode = addedNode.addNode(JcrConstants.JCR_CONTENT, NodeType.NT_RESOURCE);
+                    if (contentNode != null) {
+                        contentNode.setProperty(JcrConstants.JCR_DATA, session.getValueFactory().createBinary(replicationPackage.getInputStream()));
+                        session.save();
+                    }
                     if (log.isInfoEnabled()) {
                         log.info("package {} delivered to the repository as node {} ",
-                                        replicationPackage.getId(), addedNode.getPath());
+                                replicationPackage.getId(), addedNode.getPath());
                     }
-                    // TODO : trigger event, this event can be used to ask an author to get the persisted package
+                    Dictionary<Object, Object> props = new Properties();
+                    props.put("transport", NAME);
+                    props.put("path", replicationPackage.getPaths());
+                    replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_REPLICATED, props);
+
                 } else {
                     throw new ReplicationTransportException(
-                                    "could not get a Session to deliver package to the repository");
+                            "could not get a Session to deliver package to the repository");
                 }
             } catch (Exception e) {
                 throw new ReplicationTransportException(e);
+            } finally {
+                if (session != null) {
+                    session.logout();
+                }
             }
         } else {
             throw new ReplicationTransportException("invalid endpoint "
-                            + replicationEndpoint.getUri());
+                    + replicationEndpoint.getUri());
         }
     }
 
@@ -90,7 +117,7 @@ public class RepositoryTransportHandler implements TransportHandler {
         return REPO_SCHEME.equals(uri.getScheme()) && uri.getHost() != null;
     }
 
-    public boolean supportsAuthenticationHandler(AuthenticationHandler<?, ?> authenticationHandler) {
-        return authenticationHandler.canAuthenticate(SlingRepository.class);
+    public boolean supportsAuthenticationProvider(TransportAuthenticationProvider<?, ?> transportAuthenticationProvider) {
+        return transportAuthenticationProvider.canAuthenticate(SlingRepository.class);
     }
 }

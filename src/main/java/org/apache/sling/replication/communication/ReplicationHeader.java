@@ -16,25 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.replication.transport.authentication;
+package org.apache.sling.replication.communication;
 
-import java.util.HashMap;
-import java.util.Map;
+/**
+ * HTTP headers {@link Enum} for replication
+ */
+public enum ReplicationHeader {
 
-public class AuthenticationContext {
-    private Map<String, Object> attributes = new HashMap<String, Object>();
+    TYPE("X-replication-type"),
+    ACTION("X-replication-action"),
+    PATH("X-replication-path"),
+    QUEUE("X-replication-queue");
 
-    @SuppressWarnings("unchecked")
-    public <T extends Object> T getAttribute(String name, Class<? extends T> klass) {
-        T result = null;
-        Object object = attributes.get(name);
-        if (klass.isInstance(object)) {
-            result = (T) object;
-        }
-        return result;
+    private final String name;
+
+    ReplicationHeader(String name) {
+        this.name = name;
     }
 
-    public <T extends Object> void addAttribute(String name, T object) {
-        attributes.put(name, object);
+    @Override
+    public String toString() {
+        return name;
     }
 }

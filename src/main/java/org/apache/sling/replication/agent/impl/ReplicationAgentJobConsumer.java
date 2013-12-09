@@ -30,15 +30,15 @@ import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 
 /**
- * {@JobConsumer} for {@link ReplicationAgent}s using {@link org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueue}
+ * {@link JobConsumer} for {@link ReplicationAgent}s using {@link org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueue}
  */
 public class ReplicationAgentJobConsumer implements JobConsumer {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private ReplicationAgent agent;
+    private final ReplicationAgent agent;
 
-    private ReplicationPackageBuilder packageBuilder;
+    private final ReplicationPackageBuilder packageBuilder;
 
     public ReplicationAgentJobConsumer(ReplicationAgent agent,
                     ReplicationPackageBuilder packageBuilder) {

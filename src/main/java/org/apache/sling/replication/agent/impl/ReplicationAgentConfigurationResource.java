@@ -25,27 +25,29 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 
 /**
- * a {@Resource} for a {@link ReplicationAgentConfiguration}
+ * a {@link org.apache.sling.api.resource.Resource} for a {@link ReplicationAgentConfiguration}
  */
 public class ReplicationAgentConfigurationResource extends AbstractResource {
 
     public static final String RESOURCE_TYPE = "sling/replication/agent/configuration";
 
-    private ReplicationAgentConfiguration replicationAgentConfiguration;
 
-    private ResourceResolver resourceResolver;
+    private final ReplicationAgentConfiguration replicationAgentConfiguration;
+
+    private final ResourceResolver resourceResolver;
 
     public ReplicationAgentConfigurationResource(
                     ReplicationAgentConfiguration replicationAgentConfiguration,
                     ResourceResolver resourceResolver) {
+        if (replicationAgentConfiguration == null) {
+            throw new RuntimeException("cannot create a configuration resource with a null configuration");
+        }
         this.replicationAgentConfiguration = replicationAgentConfiguration;
         this.resourceResolver = resourceResolver;
     }
 
     public String getPath() {
-        return new StringBuilder(ReplicationAgentResource.BASE_PATH).append('/')
-                        .append(replicationAgentConfiguration.getName()).append("/configuration")
-                        .toString();
+        return ReplicationAgentResource.BASE_PATH + '/' + replicationAgentConfiguration.getName() + "/configuration";
     }
 
     public String getResourceType() {
@@ -58,8 +60,7 @@ public class ReplicationAgentConfigurationResource extends AbstractResource {
 
     public ResourceMetadata getResourceMetadata() {
         ResourceMetadata metadata = new ResourceMetadata();
-        metadata.setResolutionPath(new StringBuilder(ReplicationAgentResource.BASE_PATH)
-                        .append('/').append(replicationAgentConfiguration.getName()).toString());
+        metadata.setResolutionPath(ReplicationAgentResource.BASE_PATH + '/' + replicationAgentConfiguration.getName());
         return metadata;
     }
 
