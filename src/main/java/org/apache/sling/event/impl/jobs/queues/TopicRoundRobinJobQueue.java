@@ -67,20 +67,19 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
 
     @Override
     protected void put(final JobHandler event) {
-        // is this a close?
-        if ( event.getJob() == null ) {
-            return;
-        }
-        final String topic = event.getJob().getTopic();
         synchronized ( this.topicMap ) {
-            List<JobHandler> events = this.topicMap.get(topic);
-            if ( events == null ) {
-                events = new LinkedList<JobHandler>();
-                this.topicMap.put(topic, events);
-                this.topics.add(topic);
+            // is this a real event (not close)?
+            if ( event.getJob() != null ) {
+                final String topic = event.getJob().getTopic();
+                List<JobHandler> events = this.topicMap.get(topic);
+                if ( events == null ) {
+                    events = new LinkedList<JobHandler>();
+                    this.topicMap.put(topic, events);
+                    this.topics.add(topic);
+                }
+                events.add(event);
+                this.eventCount++;
             }
-            events.add(event);
-            this.eventCount++;
             if ( this.isWaitingForNext ) {
                 this.isWaitingForNext = false;
                 // wake up take()
