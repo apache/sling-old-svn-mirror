@@ -34,19 +34,20 @@ import org.apache.sling.api.resource.Resource;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Verify that resources are ignored when ResourceDecorator returns null */
-public class IgnoredResourcesTest extends ResourceDecoratorTestBase {
+/** Verify what happens when ResourceDecorator returns null */
+public class ResourceDecoratorReturnsNullTest extends ResourceDecoratorTestBase {
 
-    private Set<String> pathsToIgnore = new HashSet<String>();
+    private Set<String> pathsThatReturnNull = new HashSet<String>();
     
-    /** Return null for ignored resources, will cause our 
-     *  test ResourceDecorator to return null */
+    /** Return null for resources that have a path in pathsThatReturnNull.
+     *  Will cause our test ResourceDecorator to return null for these resources
+     */
     protected Resource wrapResourceForTest(Resource r) {
-        return isIgnored(r) ? null : r;
+        return isReturnNull(r) ? null : r;
     }
     
-    private boolean isIgnored(Resource r) {
-        return pathsToIgnore.contains(r.getPath());
+    private boolean isReturnNull(Resource r) {
+        return pathsThatReturnNull.contains(r.getPath());
     }
     
     private void assertResources(Iterator<Resource> it, String ...paths) {
@@ -57,7 +58,7 @@ public class IgnoredResourcesTest extends ResourceDecoratorTestBase {
             final Resource r = it.next();
             
             // TODO should not get any null Resources here
-            // remove this once SLING-3267 is fixed
+            // remove this once SLING-3269 is fixed
             if(r == null) {
                 actual.add("NULL_" + nullCounter++);
                 continue;
@@ -77,19 +78,28 @@ public class IgnoredResourcesTest extends ResourceDecoratorTestBase {
     @Before
     public void setup() {
         super.setup();
-        pathsToIgnore.add("/tmp/D");
-        pathsToIgnore.add("/var/two");
+        pathsThatReturnNull.add("/tmp/D");
+        pathsThatReturnNull.add("/var/two");
     }
     
     @Test
-    public void testNotIgnored() {
+    public void testResolveNotNull() {
         assertExistent(resolver.resolve("/tmp/A"), true);
     }
     
+    public void testGetNotNull() {
+        assertExistent(resolver.getResource("/tmp/A"), true);
+    }
+    
     @Test
-    public void testIgnored() {
+    public void testGetNull() {
+        assertNull(resolver.getResource("/tmp/D"));
+    }
+    
+    @Test
+    public void testResolveNull() {
         // TODO this should return a non-existent resource instead of null
-        // use this once SLING-3267 is fixed
+        // use this once SLING-3269 is fixed
         // assertExistent(resolver.resolve("/tmp/D"), false);
         assertNull(resolver.resolve("/tmp/D"));
     }
@@ -105,13 +115,13 @@ public class IgnoredResourcesTest extends ResourceDecoratorTestBase {
     public void testVarChildren() {
         final Resource var = resolver.resolve("/var");
         assertNotNull(var);
-        // TODO remove the NULL once SLING-3267 is fixed
+        // TODO remove the NULL once SLING-3269 is fixed
         assertResources(resolver.listChildren(var), "/var/one", "/var/three", "NULL_1");
     }
     
     @Test
     public void testFind() {
-        // TODO remove the NULL once SLING-3267 is fixed
+        // TODO remove the NULL once SLING-3269 is fixed
         assertResources(resolver.findResources("foo", QUERY_LANGUAGE), "/tmp/C", "/var/one", "NULL_1", "NULL_2");
     }
 }
