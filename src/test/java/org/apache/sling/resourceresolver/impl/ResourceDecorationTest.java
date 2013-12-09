@@ -18,6 +18,7 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -59,10 +60,22 @@ public class ResourceDecorationTest extends ResourceDecoratorTestBase {
     }
     
     @Test
-    public void rootIsDecorated() {
+    public void resolveRootIsDecorated() {
         final Resource r = resolver.resolve((String)null); 
         assertDecorated(r);
         assertExistent(r, true);
+    }
+    
+    @Test
+    public void getRootIsDecorated() {
+        final Resource r = resolver.getResource("/"); 
+        assertDecorated(r);
+        assertExistent(r, true);
+    }
+    
+    @Test
+    public void getNonExistingIsNull() {
+        assertNull(resolver.getResource("/non-existing/something")); 
     }
     
     @Test
