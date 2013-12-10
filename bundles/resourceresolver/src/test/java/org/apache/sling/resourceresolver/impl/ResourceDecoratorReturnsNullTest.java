@@ -18,10 +18,9 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
-import static org.junit.Assert.fail;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,17 +52,8 @@ public class ResourceDecoratorReturnsNullTest extends ResourceDecoratorTestBase 
     private void assertResources(Iterator<Resource> it, String ...paths) {
         assertNotNull("Expecting non-null Iterator", it);
         final List<String> actual = new ArrayList<String>();
-        int nullCounter = 1;
         while(it.hasNext()) {
             final Resource r = it.next();
-            
-            // TODO should not get any null Resources here
-            // remove this once SLING-3269 is fixed
-            if(r == null) {
-                actual.add("NULL_" + nullCounter++);
-                continue;
-            }
-            
             assertNotNull("Expecting no null Resources in iterator", r);
             actual.add(r.getPath());
         }
@@ -93,15 +83,12 @@ public class ResourceDecoratorReturnsNullTest extends ResourceDecoratorTestBase 
     
     @Test
     public void testGetNull() {
-        assertNull(resolver.getResource("/tmp/D"));
+        assertExistent(resolver.getResource("/tmp/D"), true);
     }
     
     @Test
     public void testResolveNull() {
-        // TODO this should return a non-existent resource instead of null
-        // use this once SLING-3269 is fixed
-        // assertExistent(resolver.resolve("/tmp/D"), false);
-        assertNull(resolver.resolve("/tmp/D"));
+        assertExistent(resolver.resolve("/tmp/D"), true);
     }
     
     @Test
@@ -115,13 +102,11 @@ public class ResourceDecoratorReturnsNullTest extends ResourceDecoratorTestBase 
     public void testVarChildren() {
         final Resource var = resolver.resolve("/var");
         assertNotNull(var);
-        // TODO remove the NULL once SLING-3269 is fixed
-        assertResources(resolver.listChildren(var), "/var/one", "/var/three", "NULL_1");
+        assertResources(resolver.listChildren(var), "/var/one", "/var/two", "/var/three");
     }
     
     @Test
     public void testFind() {
-        // TODO remove the NULL once SLING-3269 is fixed
-        assertResources(resolver.findResources("foo", QUERY_LANGUAGE), "/tmp/C", "/var/one", "NULL_1", "NULL_2");
+        assertResources(resolver.findResources("foo", QUERY_LANGUAGE), "/tmp/C", "/tmp/D", "/var/one", "/var/two");
     }
 }

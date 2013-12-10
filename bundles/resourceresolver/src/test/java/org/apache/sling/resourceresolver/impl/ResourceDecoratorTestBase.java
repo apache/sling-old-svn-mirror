@@ -18,8 +18,8 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -53,13 +54,19 @@ public abstract class ResourceDecoratorTestBase {
     
     @Before 
     public void setup() {
-        final ResourceDecoratorTracker t = new ResourceDecoratorTracker() {
-            @Override
+        final ResourceDecorator d = new ResourceDecorator() {
             public Resource decorate(Resource resource) {
-                return wrapResourceForTest(resource);
+                return ResourceDecoratorTestBase.this.wrapResourceForTest(resource);
+            }
+
+            public Resource decorate(Resource resource, HttpServletRequest request) {
+                throw new UnsupportedOperationException("Not supposed to be used in these tests");
             }
             
         };
+        
+        final ResourceDecoratorTracker t = new ResourceDecoratorTracker();
+        t.bindResourceDecorator(d, null);
         
         final ResourceProvider provider = new QueriableResourceProvider() {
             
