@@ -28,6 +28,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.sling.api.request.ResponseUtil;
+
 @SuppressWarnings("serial")
 public class AuthenticatorWebConsolePlugin extends HttpServlet {
 
@@ -76,7 +78,7 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("</table>");
     }
 
-    private void printAuthenticationHandler(PrintWriter pw) {
+    private void printAuthenticationHandler(final PrintWriter pw) {
         pw.println("<tr>");
         pw.println("<th class='content container' colspan='3'>Registered Authentication Handler</td>");
         pw.println("</tr>");
@@ -86,18 +88,18 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("</tr>");
 
         final Map<String, List<String>> handlerMap = slingAuthenticator.getAuthenticationHandler();
-        for (Map.Entry<String, List<String>> handler : handlerMap.entrySet()) {
+        for (final Map.Entry<String, List<String>> handler : handlerMap.entrySet()) {
             final String path = handler.getKey();
-            for (String name : handler.getValue()) {
+            for (final String name : handler.getValue()) {
                 pw.println("<tr class='content'>");
-                pw.println("<td class='content'>" + path + "</td>");
-                pw.println("<td class='content' colspan='2'>" + name + "</td>");
+                pw.printf("<td class='content'>%s</td>%n", ResponseUtil.escapeXml(path));
+                pw.printf("<td class='content' colspan='2'>%s</td>%n", ResponseUtil.escapeXml(name));
                 pw.println("</tr>");
             }
         }
     }
 
-    private void printAuthenticationRequirements(PrintWriter pw) {
+    private void printAuthenticationRequirements(final PrintWriter pw) {
         pw.println("<tr>");
         pw.println("<th class='content container' colspan='3'>Authentication Requirement Configuration</td>");
         pw.println("</tr>");
@@ -108,19 +110,18 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("</tr>");
 
         final List<AuthenticationRequirementHolder> holderList = slingAuthenticator.getAuthenticationRequirements();
-        for (AuthenticationRequirementHolder req : holderList) {
+        for (final AuthenticationRequirementHolder req : holderList) {
 
             pw.println("<tr class='content'>");
-            pw.println("<td class='content'>" + req.fullPath + "</td>");
-            pw.println("<td class='content'>"
-                + (req.requiresAuthentication() ? "Yes" : "No") + "</td>");
-            pw.println("<td class='content'>" + req.getProvider() + "</td>");
+            pw.printf("<td class='content'>%s</td>%n", ResponseUtil.escapeXml(req.fullPath));
+            pw.printf("<td class='content'>%s</td>%n", (req.requiresAuthentication() ? "Yes" : "No"));
+            pw.printf("<td class='content'>%s</td>%n", ResponseUtil.escapeXml(req.getProvider()));
             pw.println("</tr>");
 
         }
     }
 
-    private void printAuthenticationConfiguration(PrintWriter pw) {
+    private void printAuthenticationConfiguration(final PrintWriter pw) {
         final String anonUser = slingAuthenticator.getAnonUserName();
         final String sudoCookie = slingAuthenticator.getSudoCookieName();
         final String sudoParam = slingAuthenticator.getSudoParameterName();
@@ -131,15 +132,15 @@ public class AuthenticatorWebConsolePlugin extends HttpServlet {
         pw.println("</tr>");
         pw.println("<tr>");
         pw.println("<td class='content'>Impersonation Cookie</td>");
-        pw.printf("<td class='content' colspan='2'>%s</td>%n", sudoCookie);
+        pw.printf("<td class='content' colspan='2'>%s</td>%n", ResponseUtil.escapeXml(sudoCookie));
         pw.println("</tr>");
         pw.println("<tr>");
         pw.println("<td class='content'>Impersonation Parameter</td>");
-        pw.printf("<td class='content' colspan='2'>%s</td>%n", sudoParam);
+        pw.printf("<td class='content' colspan='2'>%s</td>%n", ResponseUtil.escapeXml(sudoParam));
         pw.println("</tr>");
         pw.println("<tr>");
         pw.println("<td class='content'>Anonymous User Name</td>");
-        pw.printf("<td class='content' colspan='2'>%s</td>%n", (anonUser == null) ? "(default)" : anonUser);
+        pw.printf("<td class='content' colspan='2'>%s</td>%n", (anonUser == null) ? "(default)" : ResponseUtil.escapeXml(anonUser));
         pw.println("</tr>");
     }
 }
