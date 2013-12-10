@@ -63,10 +63,12 @@
                         </Bundle-Activator>
                         <Import-Package>
                             !org.apache.sling.auth.core,
+                            !org.apache.sling.api.auth,
                             !org.apache.sling.api.resource,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
+                            org.apache.sling.api.auth;version="[1.0,2)",
                             org.apache.sling.api.resource;version="[2.3,3)",
                             org.apache.sling.auth.core;version="[1.0,2)"
                         </DynamicImport-Package>
