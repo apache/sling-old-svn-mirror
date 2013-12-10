@@ -31,6 +31,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.auth.core.AuthenticationSupport;
 
@@ -50,17 +51,19 @@ public class SlingWebConsoleSecurityProvider2
     extends AbstractWebConsoleSecurityProvider
     implements WebConsoleSecurityProvider2 {
 
-    private final AuthenticationSupport authenticator;
+    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
 
-    public SlingWebConsoleSecurityProvider2(final Object support) {
-        this.authenticator = (AuthenticationSupport)support;
-    }
+    private static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
 
-    private void invokeAuthenticator(final HttpServletRequest request, final HttpServletResponse response) {
-        final AuthenticationSupport localAuthenticator = this.authenticator;
-        if (localAuthenticator != null) {
-            localAuthenticator.handleSecurity(request, response);
-        }
+    private static final String DEFAULT_REALM = "OSGi Management Console"; //$NON-NLS-1$
+
+    private final AuthenticationSupport authentiationSupport;
+
+    private final Authenticator authenticator;
+
+    public SlingWebConsoleSecurityProvider2(final Object support, final Object authenticator) {
+        this.authentiationSupport = (AuthenticationSupport)support;
+        this.authenticator = (Authenticator)authenticator;
     }
 
     /**
@@ -68,27 +71,29 @@ public class SlingWebConsoleSecurityProvider2
      */
     public boolean authenticate(final HttpServletRequest request,
             final HttpServletResponse response) {
-        invokeAuthenticator(request, response);
-        // get ResourceResolver (set by AuthenticationSupport)
-        Object resolverObject = request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
-        final ResourceResolver resolver = (resolverObject instanceof ResourceResolver)
-                ? (ResourceResolver) resolverObject
-                : null;
-        if ( resolver != null ) {
-            final Session session = resolver.adaptTo(Session.class);
-            if ( session != null ) {
-                try {
-                    final User u = this.authenticate(session);
-                    if ( u != null ) {
-                        request.setAttribute(USER_ATTRIBUTE, u);
-                        return true;
+        if ( this.authentiationSupport.handleSecurity(request, response) ) {
+            // get ResourceResolver (set by AuthenticationSupport)
+            Object resolverObject = request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+            final ResourceResolver resolver = (resolverObject instanceof ResourceResolver)
+                    ? (ResourceResolver) resolverObject
+                    : null;
+            if ( resolver != null ) {
+                final Session session = resolver.adaptTo(Session.class);
+                if ( session != null ) {
+                    try {
+                        final User u = this.authenticate(session);
+                        if ( u != null ) {
+                            request.setAttribute(USER_ATTRIBUTE, u);
+                            return true;
+                        }
+                    } catch (final Exception re) {
+                        logger.info("authenticate: Generic problem trying grant User "
+                            + " access to the Web Console", re);
                     }
-                    return false;
-                } catch (final Exception re) {
-                    logger.info("authenticate: Generic problem trying grant User "
-                        + " access to the Web Console", re);
                 }
             }
+
+            this.authenticator.login(request, response);
         }
         return false;
     }

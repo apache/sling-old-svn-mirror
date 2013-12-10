@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jcr.Repository;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
+import org.apache.sling.api.auth.Authenticator;
 import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.launchpad.api.StartupListener;
 import org.apache.sling.launchpad.api.StartupMode;
@@ -45,6 +46,7 @@ import org.osgi.service.cm.ManagedService;
 public class ServicesListener implements StartupListener {
 
     private static final String AUTH_SUPPORT_CLASS = AuthenticationSupport.class.getName();
+    private static final String AUTHENTICATOR_CLASS = Authenticator.class.getName();
     private static final String REPO_CLASS = Repository.class.getName();
 
     /** The bundle context. */
@@ -55,6 +57,9 @@ public class ServicesListener implements StartupListener {
 
     /** The listener for the authentication support. */
     private final Listener authSupportListener;
+
+    /** The listener for the authenticator. */
+    private final Listener authListener;
 
     private enum State {
         NONE,
@@ -81,8 +86,10 @@ public class ServicesListener implements StartupListener {
         this.bundleContext = bundleContext;
         this.authSupportListener = new Listener(AUTH_SUPPORT_CLASS);
         this.repositoryListener = new Listener(REPO_CLASS);
+        this.authListener = new Listener(AUTHENTICATOR_CLASS);
         this.authSupportListener.start();
         this.repositoryListener.start();
+        this.authListener.start();
     }
 
     /**
@@ -106,7 +113,7 @@ public class ServicesListener implements StartupListener {
     /**
      * @see org.apache.sling.launchpad.api.StartupListener#startupProgress(float)
      */
-    public void startupProgress(float arg0) {
+    public void startupProgress(final float progress) {
         // nothing to do
     }
 
@@ -116,16 +123,18 @@ public class ServicesListener implements StartupListener {
     public synchronized void notifyChange() {
         // check if all services are available
         final Object authSupport = this.startupFinished.get() ? this.authSupportListener.getService() : null;
+        final Object authenticator = this.startupFinished.get() ? this.authListener.getService() : null;
+        final boolean hasAuthServices = authSupport != null && authenticator != null;
         final Object repository = this.repositoryListener.getService();
         if ( registrationState == State.NONE ) {
-            if ( authSupport != null ) {
-                registerProvider2(authSupport);
+            if ( hasAuthServices ) {
+                registerProvider2(authSupport, authenticator);
             } else if ( repository != null ) {
                 registerProvider(repository);
             }
         } else if ( registrationState == State.PROVIDER ) {
-            if ( authSupport != null ) {
-                registerProvider2(authSupport);
+            if ( hasAuthServices ) {
+                registerProvider2(authSupport, authenticator);
                 unregisterProvider();
             } else if ( repository == null ) {
                 unregisterProvider();
@@ -157,13 +166,14 @@ public class ServicesListener implements StartupListener {
         }
     }
 
-    private void registerProvider2(final Object authSupport) {
+    private void registerProvider2(final Object authSupport, final Object authenticator) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, SlingWebConsoleSecurityProvider.class.getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Web Console Security Provider 2");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.provider2Reg = this.bundleContext.registerService(
-            new String[] {ManagedService.class.getName(), WebConsoleSecurityProvider.class.getName()}, new SlingWebConsoleSecurityProvider2(authSupport), props);
+            new String[] {ManagedService.class.getName(), WebConsoleSecurityProvider.class.getName()},
+                          new SlingWebConsoleSecurityProvider2(authSupport, authenticator), props);
         this.registrationState = State.PROVIDER2;
     }
 
@@ -183,6 +193,7 @@ public class ServicesListener implements StartupListener {
     public void deactivate() {
         this.repositoryListener.deactivate();
         this.authSupportListener.deactivate();
+        this.authListener.deactivate();
         this.unregisterProvider();
         this.unregisterProvider2();
     }
