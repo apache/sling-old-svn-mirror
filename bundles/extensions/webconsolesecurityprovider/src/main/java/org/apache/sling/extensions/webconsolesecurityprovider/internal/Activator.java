@@ -16,24 +16,33 @@
  */
 package org.apache.sling.extensions.webconsolesecurityprovider.internal;
 
+import org.apache.sling.launchpad.api.StartupListener;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 public class Activator implements BundleActivator {
 
     private ServicesListener listener;
+
+    private ServiceRegistration registration;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
     public void start(final BundleContext context) throws Exception {
         listener = new ServicesListener(context);
+        registration = context.registerService(StartupListener.class.getName(), listener, null);
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
     public void stop(final BundleContext context) throws Exception {
+        if ( registration != null ) {
+            registration.unregister();
+            registration = null;
+        }
         if ( listener != null ) {
             listener.deactivate();
             listener = null;

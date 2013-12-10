@@ -21,11 +21,14 @@ package org.apache.sling.extensions.webconsolesecurityprovider.internal;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jcr.Repository;
 
 import org.apache.felix.webconsole.WebConsoleSecurityProvider;
 import org.apache.sling.auth.core.AuthenticationSupport;
+import org.apache.sling.launchpad.api.StartupListener;
+import org.apache.sling.launchpad.api.StartupMode;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
@@ -39,7 +42,7 @@ import org.osgi.service.cm.ManagedService;
  * The <code>ServicesListener</code> listens for the required services
  * and registers the security provider when required services are available
  */
-public class ServicesListener {
+public class ServicesListener implements StartupListener {
 
     private static final String AUTH_SUPPORT_CLASS = AuthenticationSupport.class.getName();
     private static final String REPO_CLASS = Repository.class.getName();
@@ -68,6 +71,9 @@ public class ServicesListener {
     /** The registration for the provider2 */
     private ServiceRegistration provider2Reg;
 
+    /** Flag for marking if startup is finished. */
+    private final AtomicBoolean startupFinished = new AtomicBoolean(false);
+
     /**
      * Start listeners
      */
@@ -80,11 +86,36 @@ public class ServicesListener {
     }
 
     /**
+     * @see org.apache.sling.launchpad.api.StartupListener#inform(org.apache.sling.launchpad.api.StartupMode, boolean)
+     */
+    public void inform(final StartupMode mode, final boolean finished) {
+        if ( finished && this.startupFinished.compareAndSet(false, true) ) {
+            notifyChange();
+        }
+    }
+
+    /**
+     * @see org.apache.sling.launchpad.api.StartupListener#startupFinished(org.apache.sling.launchpad.api.StartupMode)
+     */
+    public void startupFinished(final StartupMode mode) {
+        if ( this.startupFinished.compareAndSet(false, true) ) {
+            notifyChange();
+        }
+    }
+
+    /**
+     * @see org.apache.sling.launchpad.api.StartupListener#startupProgress(float)
+     */
+    public void startupProgress(float arg0) {
+        // nothing to do
+    }
+
+    /**
      * Notify of service changes from the listeners.
      */
     public synchronized void notifyChange() {
         // check if all services are available
-        final Object authSupport = this.authSupportListener.getService();
+        final Object authSupport = this.startupFinished.get() ? this.authSupportListener.getService() : null;
         final Object repository = this.repositoryListener.getService();
         if ( registrationState == State.NONE ) {
             if ( authSupport != null ) {
