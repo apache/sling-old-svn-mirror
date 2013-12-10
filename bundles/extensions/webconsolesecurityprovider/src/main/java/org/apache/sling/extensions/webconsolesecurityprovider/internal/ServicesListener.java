@@ -41,6 +41,9 @@ import org.osgi.service.cm.ManagedService;
  */
 public class ServicesListener {
 
+    private static final String AUTH_SUPPORT_CLASS = AuthenticationSupport.class.getName();
+    private static final String REPO_CLASS = Repository.class.getName();
+
     /** The bundle context. */
     private final BundleContext bundleContext;
 
@@ -49,10 +52,6 @@ public class ServicesListener {
 
     /** The listener for the authentication support. */
     private final Listener authSupportListener;
-
-    private final SlingWebConsoleSecurityProvider provider = new SlingWebConsoleSecurityProvider();
-
-    private final SlingWebConsoleSecurityProvider2 provider2 = new SlingWebConsoleSecurityProvider2();
 
     private enum State {
         NONE,
@@ -69,14 +68,13 @@ public class ServicesListener {
     /** The registration for the provider2 */
     private ServiceRegistration provider2Reg;
 
-
     /**
      * Start listeners
      */
     public ServicesListener(final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
-        this.authSupportListener = new Listener(AuthenticationSupport.class.getName());
-        this.repositoryListener = new Listener(Repository.class.getName());
+        this.authSupportListener = new Listener(AUTH_SUPPORT_CLASS);
+        this.repositoryListener = new Listener(REPO_CLASS);
         this.authSupportListener.start();
         this.repositoryListener.start();
     }
@@ -86,8 +84,8 @@ public class ServicesListener {
      */
     public synchronized void notifyChange() {
         // check if all services are available
-        final AuthenticationSupport authSupport = (AuthenticationSupport)this.authSupportListener.getService();
-        final Repository repository = (Repository)this.repositoryListener.getService();
+        final Object authSupport = this.authSupportListener.getService();
+        final Object repository = this.repositoryListener.getService();
         if ( registrationState == State.NONE ) {
             if ( authSupport != null ) {
                 registerProvider2(authSupport);
@@ -101,8 +99,6 @@ public class ServicesListener {
             } else if ( repository == null ) {
                 unregisterProvider();
                 this.registrationState = State.NONE;
-            } else {
-                this.provider.setService(repository);
             }
         } else {
             if ( authSupport == null ) {
@@ -112,8 +108,6 @@ public class ServicesListener {
                     this.registrationState = State.NONE;
                 }
                 unregisterProvider2();
-            } else {
-                this.provider2.setService(authSupport);
             }
         }
     }
@@ -123,7 +117,6 @@ public class ServicesListener {
             this.provider2Reg.unregister();
             this.provider2Reg = null;
         }
-        this.provider2.setService(null);
     }
 
     private void unregisterProvider() {
@@ -131,28 +124,25 @@ public class ServicesListener {
             this.providerReg.unregister();
             this.providerReg = null;
         }
-        this.provider.setService(null);
     }
 
-    private void registerProvider2(final AuthenticationSupport authSupport) {
-        this.provider2.setService(authSupport);
+    private void registerProvider2(final Object authSupport) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, SlingWebConsoleSecurityProvider.class.getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Web Console Security Provider 2");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.provider2Reg = this.bundleContext.registerService(
-            new String[] {ManagedService.class.getName(), WebConsoleSecurityProvider.class.getName()}, this.provider2, props);
+            new String[] {ManagedService.class.getName(), WebConsoleSecurityProvider.class.getName()}, new SlingWebConsoleSecurityProvider2(authSupport), props);
         this.registrationState = State.PROVIDER2;
     }
 
-    private void registerProvider(final Repository repository) {
-        this.provider.setService(repository);
+    private void registerProvider(final Object repository) {
         final Dictionary<String, Object> props = new Hashtable<String, Object>();
         props.put(Constants.SERVICE_PID, SlingWebConsoleSecurityProvider.class.getName());
         props.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Web Console Security Provider");
         props.put(Constants.SERVICE_VENDOR, "The Apache Software Foundation");
         this.providerReg = this.bundleContext.registerService(
-            new String[] {ManagedService.class.getName(), WebConsoleSecurityProvider.class.getName()}, this.provider, props);
+            new String[] {ManagedService.class.getName(), WebConsoleSecurityProvider.class.getName()}, new SlingWebConsoleSecurityProvider(repository), props);
         this.registrationState = State.PROVIDER;
     }
 

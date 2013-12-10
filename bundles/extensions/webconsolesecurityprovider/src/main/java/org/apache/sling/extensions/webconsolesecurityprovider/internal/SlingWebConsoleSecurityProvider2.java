@@ -50,10 +50,10 @@ public class SlingWebConsoleSecurityProvider2
     extends AbstractWebConsoleSecurityProvider
     implements WebConsoleSecurityProvider2 {
 
-    private AuthenticationSupport authenticator;
+    private final AuthenticationSupport authenticator;
 
-    public void setService(final AuthenticationSupport support) {
-        this.authenticator = support;
+    public SlingWebConsoleSecurityProvider2(final Object support) {
+        this.authenticator = (AuthenticationSupport)support;
     }
 
     private void invokeAuthenticator(final HttpServletRequest request, final HttpServletResponse response) {

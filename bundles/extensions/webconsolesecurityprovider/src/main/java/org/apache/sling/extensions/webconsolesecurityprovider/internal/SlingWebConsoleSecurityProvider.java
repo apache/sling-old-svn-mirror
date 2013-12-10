@@ -72,9 +72,10 @@ public class SlingWebConsoleSecurityProvider extends AbstractWebConsoleSecurityP
 
     private Repository repository;
 
-    public void setService(final Repository repo) {
-        this.repository = repo;
+    public SlingWebConsoleSecurityProvider(final Object repository) {
+        this.repository = (Repository)repository;
     }
+
     // ---------- SCR integration
 
     /**
