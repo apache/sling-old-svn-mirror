@@ -45,7 +45,9 @@ import org.osgi.service.packageadmin.PackageAdmin;
 
 public class SlingFelixTest {
 
-    public static final int N_START_STOP = 10;
+    public static final int N_START_STOP = 100;
+    public static final long WAIT_FOR_STOP_TIMEOUT_MSEC = 1000;
+    public static final long STOPPED_CALLED_TIMEOUT_MSEC = 5000L;
     private final TestNotifiable notifiable = new TestNotifiable();
 
     private SlingFelix framework;
@@ -87,8 +89,8 @@ public class SlingFelixTest {
         // as the notifiable is notified async we wait
         final long start = System.currentTimeMillis();
         while ( !this.notifiable.stoppedCalled ) {
-            // we wait max 3 seconds
-            if ( System.currentTimeMillis() - start > 3000 ) {
+            // timeout on this wait
+            if ( System.currentTimeMillis() - start > STOPPED_CALLED_TIMEOUT_MSEC ) {
                 break;
             }
             try {
@@ -185,8 +187,8 @@ public class SlingFelixTest {
         }
         try {
             f.stop();
-            if (f.waitForStop(10L).getType() == FrameworkEvent.WAIT_TIMEDOUT) {
-                fail("Timed out waiting for framework to stop");
+            if (f.waitForStop(WAIT_FOR_STOP_TIMEOUT_MSEC).getType() == FrameworkEvent.WAIT_TIMEDOUT) {
+                fail("Timed out waiting for framework to stop, after " + WAIT_FOR_STOP_TIMEOUT_MSEC + " msec");
             }
         } catch (Exception e) {
             fail("Cannot stop OSGi Framework: " + e);
