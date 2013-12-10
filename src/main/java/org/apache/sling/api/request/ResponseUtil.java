@@ -68,6 +68,10 @@ public class ResponseUtil {
                 target.write("&lt;");
             } else if(c == '>') {
                 target.write("&gt;");
+            } else if(c == '"') {
+                target.write("&quot;");
+            } else if(c == '\'') {
+                target.write("&apos;");
             } else {
                 target.write(c);
             }
@@ -85,8 +89,8 @@ public class ResponseUtil {
     }
 
     /** Escape xml text */
-    public static String escapeXml(String input) {
-        if(input == null) {
+    public static String escapeXml(final String input) {
+        if (input == null) {
             return null;
         }
 
@@ -99,6 +103,10 @@ public class ResponseUtil {
                 b.append("&lt;");
             } else if(c == '>') {
                 b.append("&gt;");
+            } else if(c == '"') {
+                b.append("&quot;");
+            } else if(c == '\'') {
+                b.append("&apos;");
             } else {
                 b.append(c);
             }
