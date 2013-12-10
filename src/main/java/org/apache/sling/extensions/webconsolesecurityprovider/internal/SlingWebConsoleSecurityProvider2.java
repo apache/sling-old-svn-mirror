@@ -51,12 +51,6 @@ public class SlingWebConsoleSecurityProvider2
     extends AbstractWebConsoleSecurityProvider
     implements WebConsoleSecurityProvider2 {
 
-    private static final String HEADER_WWW_AUTHENTICATE = "WWW-Authenticate";
-
-    private static final String AUTHENTICATION_SCHEME_BASIC = "Basic";
-
-    private static final String DEFAULT_REALM = "OSGi Management Console"; //$NON-NLS-1$
-
     private final AuthenticationSupport authentiationSupport;
 
     private final Authenticator authenticator;
