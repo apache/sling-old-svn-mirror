@@ -116,7 +116,7 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
         if (this.n > 1) {
             // algorithm taken from
             // http://de.wikipedia.org/wiki/Standardabweichung section
-            // "Berechnung für auflaufende Messwerte"
+            // "Berechnung fuer auflaufende Messwerte"
             return Math.sqrt((this.durationMsecSumX2 - this.durationMsecSumX * this.durationMsecSumX / this.n) / (this.n - 1));
         }
 
@@ -139,9 +139,13 @@ class RequestProcessorMBeanImpl extends StandardMBean implements RequestProcesso
         this.servletCallCountMax = 0;
         this.peakRecursionDepthMin = Integer.MAX_VALUE;
         this.peakRecursionDepthMax = 0;
-        
+        this.durationMsecSumX=0d;
+        this.durationMsecSumX2=0d;
+        this.peakRecursionDepthSumX=0d;
+        this.peakRecursionDepthSumX2=0d;
+        this.servletCallCountSumX=0d;
+        this.servletCallCountSumX2=0d;
         this.n = 0;
-        
     }
 
     public int getMaxPeakRecursionDepth() {
