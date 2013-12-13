@@ -613,8 +613,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         if (packagingData != null) {
             packagingDataEnabled = Boolean.valueOf(packagingData.toString());
         } else {
-            //Defaults to true
-            packagingDataEnabled = true;
+            //Defaults to false i.e. disabled in OSGi env
+            packagingDataEnabled = false;
         }
     }
 
