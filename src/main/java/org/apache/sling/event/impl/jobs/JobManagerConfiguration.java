@@ -41,7 +41,7 @@ public class JobManagerConfiguration {
     public static final boolean DEFAULT_DISABLE_DISTRIBUTION = false;
 
     /** Default resource path for scheduled jobs. */
-    private static final String DEFAULT_SCHEDULED_JOBS_PATH = "/var/eventing/scheduled-jobs";
+    public static final String DEFAULT_SCHEDULED_JOBS_PATH = "/var/eventing/scheduled-jobs";
 
     /** The path where all jobs are stored. */
     public static final String PROPERTY_REPOSITORY_PATH = "repository.path";
@@ -53,7 +53,7 @@ public class JobManagerConfiguration {
     public static final String PROPERTY_DISABLE_DISTRIBUTION = "job.consumermanager.disableDistribution";
 
     /** Configuration property for the scheduled jobs path. */
-    private static final String PROPERTY_SCHEDULED_JOBS_PATH = "job.scheduled.jobs.path";
+    public static final String PROPERTY_SCHEDULED_JOBS_PATH = "job.scheduled.jobs.path";
 
     /** The jobs base path with a slash. */
     private String jobsBasePathWithSlash;
