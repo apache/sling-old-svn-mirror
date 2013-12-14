@@ -94,14 +94,25 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of the job manager.
  */
-@Component(immediate=true,
+@Component(immediate=true, metatype=true,
+           label="Apache Sling Job Manager",
+           description="This is the central service of the job handling.",
            name="org.apache.sling.event.impl.jobs.jcr.PersistenceHandler")
 @Service(value={JobManager.class, EventHandler.class, TopologyEventListener.class, Runnable.class})
 @Properties({
+    @Property(name=JobManagerConfiguration.PROPERTY_DISABLE_DISTRIBUTION,
+            boolValue=JobManagerConfiguration.DEFAULT_DISABLE_DISTRIBUTION,
+            label="Disable Distribution",
+            description="If the distribution is disabled, all jobs will be processed on the leader only! Please use this switch " +
+                        "with care."),
     @Property(name=JobManagerConfiguration.PROPERTY_REPOSITORY_PATH,
-          value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH),
-    @Property(name="scheduler.period", longValue=60),
-    @Property(name="scheduler.concurrent", boolValue=false),
+             value=JobManagerConfiguration.DEFAULT_REPOSITORY_PATH, propertyPrivate=true),
+    @Property(name=JobManagerConfiguration.PROPERTY_SCHEDULED_JOBS_PATH,
+             value=JobManagerConfiguration.DEFAULT_SCHEDULED_JOBS_PATH, propertyPrivate=true),
+    @Property(name=JobManagerConfiguration.PROPERTY_BACKGROUND_LOAD_DELAY,
+             longValue=JobManagerConfiguration.DEFAULT_BACKGROUND_LOAD_DELAY, propertyPrivate=true),
+    @Property(name="scheduler.period", longValue=60, propertyPrivate=true),
+    @Property(name="scheduler.concurrent", boolValue=false, propertyPrivate=true),
     @Property(name=EventConstants.EVENT_TOPIC,
               value={SlingConstants.TOPIC_RESOURCE_ADDED,
                      SlingConstants.TOPIC_RESOURCE_CHANGED,
@@ -109,7 +120,7 @@ import org.slf4j.LoggerFactory;
                      "org/apache/sling/event/notification/job/*",
                      Utility.TOPIC_STOP,
                      ResourceHelper.BUNDLE_EVENT_STARTED,
-                     ResourceHelper.BUNDLE_EVENT_UPDATED})
+                     ResourceHelper.BUNDLE_EVENT_UPDATED}, propertyPrivate=true),
 })
 public class JobManagerImpl
     extends StatisticsImpl
