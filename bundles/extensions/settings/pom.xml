@@ -74,6 +74,7 @@
                             org.osgi.service.cm
                         </DynamicImport-Package>
                         <Import-Package>
+                            !org.osgi.service.cm,
                             org.apache.felix.shell;resolution:=optional, 
                             *
                         </Import-Package>
