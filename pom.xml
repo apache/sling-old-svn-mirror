@@ -83,6 +83,7 @@
                             org.apache.sling.scripting.api.*;resolution:=optional,
                             org.apache.sling.api.resource;provide:=true,
                             org.apache.sling.commons.osgi;version="$(@)",
+                            !org.apache.jackrabbit.api.observation,
                             *
                         </Import-Package>
                         <DynamicImport-Package>
