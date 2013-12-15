@@ -67,6 +67,7 @@
                             http://sling.apache.org/site/authentication.html
                         </Bundle-DocURL>
                         <Import-Package>
+                            !javax.jcr,
                             org.apache.sling.api.auth;provide:=true,
                             *
                         </Import-Package>
