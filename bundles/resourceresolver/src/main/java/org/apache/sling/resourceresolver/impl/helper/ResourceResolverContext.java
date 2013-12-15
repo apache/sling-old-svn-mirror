@@ -23,11 +23,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.sling.api.resource.DynamicResourceProvider;
+import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.RefreshableResourceProvider;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
@@ -56,9 +60,12 @@ public class ResourceResolverContext {
      * The original authentication information - this is used for cloning and lazy logins.
      */
     private final Map<String, Object> originalAuthInfo;
-    
+
     /** service tracker for ResourceAccessSecurity service */
     private final ServiceTracker resourceAccessSecurityTracker;
+
+    /** Resource type resource resolver (admin resolver) */
+    private ResourceResolver resourceTypeResourceResolver;
 
     /**
      * Create a new resource resolver context.
@@ -134,6 +141,10 @@ public class ResourceResolverContext {
         this.dynamicProviders.clear();
         this.providers.clear();
         this.refreshableProviders.clear();
+        if ( this.resourceTypeResourceResolver != null ) {
+            this.resourceTypeResourceResolver.close();
+            this.resourceTypeResourceResolver = null;
+        }
     }
 
     /**
@@ -174,12 +185,54 @@ public class ResourceResolverContext {
             provider.refresh();
         }
     }
-    
+
     /**
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */
     public ServiceTracker getResourceAccessSecurityTracker () {
         return resourceAccessSecurityTracker;
     }
-    
+
+    private ResourceResolver getResourceTypeResourceResolver(
+            final ResourceResolverFactory factory,
+            final ResourceResolver resolver) {
+        if ( this.isAdmin ) {
+            return resolver;
+        } else {
+            if ( this.resourceTypeResourceResolver == null ) {
+                try {
+                    this.resourceTypeResourceResolver = factory.getAdministrativeResourceResolver(null);
+                } catch (final LoginException e) {
+                    // we simply ignore this and return null
+                }
+            }
+            return this.resourceTypeResourceResolver;
+        }
+    }
+
+    /**
+     * Get the parent resource type
+     *
+     * @see org.apache.sling.api.resource.ResourceResolver#getParentResourceType(java.lang.String)
+     */
+    public String getParentResourceType(
+            final ResourceResolverFactory factory,
+            final ResourceResolver resolver,
+            final String resourceType) {
+        // normalize resource type to a path string
+        final String rtPath = (resourceType == null ? null : ResourceUtil.resourceTypeToPath(resourceType));
+        // get the resource type resource and check its super type
+        String resourceSuperType = null;
+
+        if ( rtPath != null ) {
+            ResourceResolver adminResolver = this.getResourceTypeResourceResolver(factory, resolver);
+            if ( adminResolver != null ) {
+                final Resource rtResource = adminResolver.getResource(rtPath);
+                if (rtResource != null) {
+                    resourceSuperType = rtResource.getResourceSuperType();
+                }
+            }
+        }
+        return resourceSuperType;
+    }
 }
