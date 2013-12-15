@@ -142,6 +142,7 @@
             <plugin>
                 <groupId>org.apache.sling</groupId>
                 <artifactId>maven-launchpad-plugin</artifactId>
+                <!-- Version newer than the one declared in the parent pom -->
                 <version>2.2.1-SNAPSHOT</version>
                 <executions>
                     <execution>

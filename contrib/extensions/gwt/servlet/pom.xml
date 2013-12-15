@@ -55,6 +55,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <!-- TODO - Upgrading to 2.4.0 leads to errors about unresolved references  -->
                 <version>2.3.7</version>
                 <extensions>true</extensions>
                 <configuration>
