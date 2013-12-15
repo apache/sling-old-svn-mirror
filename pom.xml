@@ -57,6 +57,35 @@
                         <Private-Package>
                             org.apache.sling.commons.scheduler.impl
                         </Private-Package>
+                        <Import-Package>
+                            !org.apache.sling.discovery,
+                            !commonj.work,
+                            !com.mchange.v2.c3p0,
+                            !javax.ejb,
+                            !javax.jms,
+                            !javax.mail,
+                            !javax.mail.internet,
+                            !oracle.sql,
+                            !org.jboss.logging,
+                            !org.jboss.naming,
+                            !org.jboss.system,
+                            !org.quartz.jobs,
+                            !org.terracotta.toolkit,
+                            !org.terracotta.toolkit.atomic,
+                            !org.terracotta.toolkit.builder,
+                            !org.terracotta.toolkit.cluster,
+                            !org.terracotta.toolkit.collections,
+                            !org.terracotta.toolkit.concurrent.locks,
+                            !org.terracotta.toolkit.config,
+                            !org.terracotta.toolkit.internal,
+                            !org.terracotta.toolkit.internal.concurrent.locks,
+                            !org.terracotta.toolkit.search,
+                            !org.terracotta.toolkit.search.attribute,
+                            !org.terracotta.toolkit.store,
+                            !weblogic.jdbc.jts,
+                            !weblogic.jdbc.vendor.oracle,
+                            *                        
+                        </Import-Package>
                         <DynamicImport-Package>
                             org.apache.sling.discovery;version="[1.0,2)",
                             commonj.work,
