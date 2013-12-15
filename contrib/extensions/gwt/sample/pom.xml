@@ -76,6 +76,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            !com.google.gwt.user.client.rpc.core.*,
+                            *
+                        </Import-Package>
                         <Export-Package>
                             !*
                         </Export-Package>
