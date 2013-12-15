@@ -57,6 +57,10 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Import-Package>
+                            !org.apache.felix.shell,
+                            *
+                        </Import-Package>
                         <DynamicImport-Package>
                             org.apache.felix.shell;version="[1.0,2)"
                         </DynamicImport-Package>
