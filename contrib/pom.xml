@@ -101,6 +101,7 @@
           <module>extensions/rewriter</module>
           <module>extensions/tenant</module>
           <module>extensions/replication</module>
+          <module>extensions/sling-pax-util</module>
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
           <module>jcr/prefs</module>
