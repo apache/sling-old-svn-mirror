@@ -104,6 +104,7 @@
           <module>jcr/jackrabbit-client</module>
           <module>jcr/compiler</module>
           <module>jcr/prefs</module>
+          <module>jcr/resourcesecurity</module>
           <module>launchpad/karaf</module>
           <module>launchpad/testing</module>
           <module>scripting/script-console</module>
