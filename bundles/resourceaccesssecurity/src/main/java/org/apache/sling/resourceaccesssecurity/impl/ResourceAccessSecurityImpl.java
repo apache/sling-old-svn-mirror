@@ -28,7 +28,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.AccessSecurityException;
@@ -127,8 +126,6 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         final Iterator<ResourceAccessGateHandler> accessGateHandlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.READ);
         if ( accessGateHandlers != null ) {
-            final ResourceResolver resResolver = resource.getResourceResolver();
-
             GateResult finalGateResult = null;
             boolean canReadAllValues = false;
             List<ResourceAccessGate> accessGatesForValues = null;
@@ -161,7 +158,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
             // return NonExistingResource if access is denied or no
             // ResourceAccessGate is present
             if (finalGateResult == null || finalGateResult == GateResult.DENIED) {
-                returnValue = new NonExistingResource(resResolver,resource.getPath());
+                returnValue = null;
             } else if (finalGateResult == GateResult.DONTCARE) {
                 returnValue = resource;
             }
