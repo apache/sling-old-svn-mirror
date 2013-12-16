@@ -24,24 +24,21 @@ import java.util.List;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.security.AccessSecurityException;
+import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
-@Component(name = "org.apache.sling.api.security.ResourceAccessSecurity", immediate = true)
+@Component(name = "org.apache.sling.api.security.ResourceAccessSecurity")
 @Service(value = { ResourceAccessSecurity.class })
-@Properties({
-        @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling ResourceAccessSecurity"),
-        @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation") })
+@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling ResourceAccessSecurity")
 public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
 
     private ResourceAccessGateTracker resourceAccessGateTracker;
@@ -67,10 +64,10 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
 
     private List<ResourceAccessGateHandler> getMatchingResourceAccessGateHandlers(
             String path, ResourceAccessGate.Operation operation) {
-        /*
-         * TODO: maybe caching some frequent paths with read operation would be
-         * a good idea
-         */
+        //
+        // TODO: maybe caching some frequent paths with read operation would be
+        // a good idea
+        //
         List<ResourceAccessGateHandler> returnValue = resourceAccessGateTracker
                 .getResourceAccessGateHandlers();
 

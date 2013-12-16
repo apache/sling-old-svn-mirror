@@ -22,17 +22,19 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.AccessSecurityException;
 
+import aQute.bnd.annotation.ConsumerType;
+
 /**
  * The <code>ResourceAccessGate</code> defines a service API which might be used
  * to make some restrictions to accessing resources.
- * 
+ *
  * Implementations of this service interface must be registered like
  * ResourceProvider with a path (like provider.roots). If different
  * ResourceAccessGateService services match a path, not only the
  * ResourceAccessGateService with the longest path should be called, but all of
  * them, that's in contrast to the ResourceProvider, but in this case more
  * logical (and secure!).
- * 
+ *
  * service properties:
  * <ul>
  * <li><b>path</b>: regexp to define on which paths the service should be called
@@ -42,8 +44,9 @@ import org.apache.sling.api.security.AccessSecurityException;
  * <li><b>finaloperations</b>: set of operations on which the service answer is
  * final an no other service should be called (default none of them)</li>
  * </ul>
- * 
+ *
  */
+@ConsumerType
 public interface ResourceAccessGate {
 
     /**
@@ -141,10 +144,10 @@ public interface ResourceAccessGate {
      * Allows to transform the query based on the current user's credentials.
      * Can be used to narrow down queries to omit results that the current user
      * is not allowed to see anyway, speeding up downstream access control.
-     * 
+     *
      * Query transformations are not critical with respect to access control as
      * results are checked using the canRead.. methods anyway.
-     * 
+     *
      * @param query
      *            the query
      * @param language

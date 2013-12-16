@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.sling</groupId>
         <artifactId>sling</artifactId>
-        <version>16</version>
+        <version>18</version>
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
@@ -77,15 +77,6 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Import-Package>
-                            javax.annotation;resolution:=optional,
-                            org.apache.sling.api.resource;provide:=true,
-                            org.apache.sling.commons.osgi;version="$(@)",
-                            *
-                        </Import-Package>
-                        <Private-Package>
-                            org.apache.sling.resourceaccesssecurity.impl.*
-                        </Private-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -93,10 +84,6 @@
     </build>
     
     <dependencies>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-        </dependency>
         <dependency>
             <groupId>javax.jcr</groupId>
             <artifactId>jcr</artifactId>

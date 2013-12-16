@@ -22,18 +22,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.commons.osgi.SortingServiceTracker;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
 public class ResourceAccessGateTracker extends
         SortingServiceTracker<ResourceAccessGate> {
 
-    private List<ResourceAccessGateHandler> resourceAccessGateHandlers = null;
-    private ServiceRegistration decoratorRegistration = null;
+    private List<ResourceAccessGateHandler> resourceAccessGateHandlers;
 
     /**
      * Constructor
