@@ -130,7 +130,7 @@ public class JcrResourceListener implements EventListener {
             public void run() {
                 processOsgiEventQueue();
             }
-        }, "Apche Sling JCR Resource Event Queue Processor for path '" + this.startPath + "'");
+        }, "Apache Sling JCR Resource Event Queue Processor for path '" + this.startPath + "'");
         oeqt.start();
     }
 
