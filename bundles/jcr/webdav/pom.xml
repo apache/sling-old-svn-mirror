@@ -70,7 +70,7 @@
                                 org/apache/jackrabbit/webdav/jcr/JcrDavException*.class|
                                 org/apache/jackrabbit/webdav/jcr/JcrDavSession*.class|
                                 org/apache/jackrabbit/webdav/jcr/JcrValueType*.class|
-                                org/apache/jackrabbit/webdav/jcr/lock/JcrActiveLock*.class|
+                                org/apache/jackrabbit/webdav/jcr/lock/*|
                                 META-INF/maven/**
                         </Embed-Dependency>
                     </instructions>
