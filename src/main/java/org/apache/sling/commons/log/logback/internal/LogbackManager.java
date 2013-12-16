@@ -20,6 +20,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.gaffer.GafferUtil;
 import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.classic.jul.LevelChangePropagator;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggerContextAwareBase;
 import ch.qos.logback.classic.spi.LoggerContextListener;
@@ -46,8 +47,11 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class LogbackManager extends LoggerContextAwareBase {
+    private static final String JUL_SUPPORT = "org.apache.sling.commons.log.julenabled";
+
     //These properties should have been defined in SlingLogPanel
     //But we need them while registering ServiceFactory and hence
     //would not want to load SlingLogPanel class for registration
@@ -108,6 +112,8 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     private final List<ServiceTracker> serviceTrackers = new ArrayList<ServiceTracker>();
 
+    private final boolean bridgeHandlerInstalled;
+
     /**
      * Time at which reset started. Used as the threshold for logging error
      * messages from status printer
@@ -123,17 +129,17 @@ public class LogbackManager extends LoggerContextAwareBase {
         this.log = LoggerFactory.getLogger(getClass());
         this.rootDir = getRootDir(bundleContext);
         this.debug = Boolean.parseBoolean(bundleContext.getProperty(DEBUG));
+        this.bridgeHandlerInstalled = installSlf4jBridgeHandler(bundleContext);
 
         this.appenderTracker = new AppenderTracker(bundleContext, getLoggerContext());
         this.configSourceTracker = new ConfigSourceTracker(bundleContext, this);
         this.filterTracker = new FilterTracker(bundleContext,this);
         this.turboFilterTracker = new TurboFilterTracker(bundleContext,getLoggerContext());
 
-        // TODO Make it configurable
-        // TODO: what should it be ?
         getLoggerContext().setName(contextName);
         this.logConfigManager = new LogConfigManager(getLoggerContext(), bundleContext, rootDir, this);
 
+        resetListeners.add(new LevelChangePropagatorChecker());
         resetListeners.add(logConfigManager);
         resetListeners.add(appenderTracker);
         resetListeners.add(configSourceTracker);
@@ -152,10 +158,15 @@ public class LogbackManager extends LoggerContextAwareBase {
         registerWebConsoleSupport();
         registerEventHandler();
         StatusPrinter.printInCaseOfErrorsOrWarnings(getLoggerContext(), startTime);
+
         started = true;
     }
 
     public void shutdown() {
+        if(bridgeHandlerInstalled){
+            SLF4JBridgeHandler.uninstall();
+        }
+
         logConfigManager.close();
 
         for(ServiceTracker tracker : serviceTrackers){
@@ -288,6 +299,83 @@ public class LogbackManager extends LoggerContextAwareBase {
         return rootDir;
     }
 
+    //~-------------------------------------------------- Slf4j Bridge Handler Support
+
+    /**
+     * Installs the Slf4j BridgeHandler to route the JUL logs through Slf4j
+     *
+     * @return true only if the BridgeHandler is installed.
+     */
+    private static boolean installSlf4jBridgeHandler(BundleContext bundleContext){
+        // SLING-2373
+        if (Boolean.parseBoolean(bundleContext.getProperty(JUL_SUPPORT))) {
+            // In config one must enable the LevelChangePropagator
+            // http://logback.qos.ch/manual/configuration.html#LevelChangePropagator
+            // make sure configuration is empty unless explicitly set
+            if (System.getProperty("java.util.logging.config.file") == null
+                    && System.getProperty("java.util.logging.config.class") == null) {
+                final Thread ct = Thread.currentThread();
+                final ClassLoader old = ct.getContextClassLoader();
+                try {
+                    ct.setContextClassLoader(LogbackManager.class.getClassLoader());
+                    System.setProperty("java.util.logging.config.class",
+                            DummyLogManagerConfiguration.class.getName());
+                    java.util.logging.LogManager.getLogManager().reset();
+                } finally {
+                    ct.setContextClassLoader(old);
+                    System.clearProperty("java.util.logging.config.class");
+                }
+            }
+
+            SLF4JBridgeHandler.install();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * It checks if LevelChangePropagator is installed or not. If not then
+     * it installs the propagator when Slf4j Bridge Handler is installed
+     */
+    private class LevelChangePropagatorChecker implements LogbackResetListener {
+
+        @Override
+        public void onResetStart(LoggerContext context) {
+
+        }
+
+        @Override
+        public void onResetComplete(LoggerContext context) {
+            List<LoggerContextListener> listenerList = context.getCopyOfListenerList();
+            boolean levelChangePropagatorInstalled = false;
+            for (LoggerContextListener listener : listenerList) {
+                if (listener instanceof LevelChangePropagator) {
+                    levelChangePropagatorInstalled = true;
+                    break;
+                }
+            }
+
+            //http://logback.qos.ch/manual/configuration.html#LevelChangePropagator
+            if (!levelChangePropagatorInstalled
+                    && bridgeHandlerInstalled) {
+                LevelChangePropagator propagator = new LevelChangePropagator();
+                propagator.setContext(context);
+                propagator.start();
+                context.addListener(propagator);
+                addInfo("Slf4j bridge handler found to be enabled. Installing the LevelChangePropagator");
+            }
+        }
+    }
+
+    /**
+     * The <code>DummyLogManagerConfiguration</code> class is used as JUL
+     * LogginManager configurator to preven reading platform default
+     * configuration which just duplicate log output to be redirected to SLF4J.
+     */
+    @SuppressWarnings("UnusedDeclaration")
+    public static class DummyLogManagerConfiguration {
+    }
+
     private class LoggerReconfigurer implements Runnable {
 
         public void run() {
@@ -312,7 +400,7 @@ public class LogbackManager extends LoggerContextAwareBase {
         }
     }
 
-    // ~-------------------------------LogggerContextListener
+    // ~-------------------------------LoggerContextListener
 
     private class OsgiIntegrationListener implements LoggerContextListener {
 
@@ -558,10 +646,6 @@ public class LogbackManager extends LoggerContextAwareBase {
 
         Map<String,Appender<ILoggingEvent>> getAppenderMap(){
             return Collections.unmodifiableMap(appenders);
-        }
-
-        LogConfig getConfig(String loggerName) {
-            return osgiConfiguredLoggers.get(loggerName);
         }
     }
 

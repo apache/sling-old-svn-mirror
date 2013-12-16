@@ -18,7 +18,9 @@
   -->
 
 <configuration>
-  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
+  <newRule pattern="*/configuration/osgi"
+           actionClass="org.apache.sling.commons.log.logback.OsgiAction"/>
+  <osgi/>
 
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
