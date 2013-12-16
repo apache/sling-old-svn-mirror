@@ -60,6 +60,7 @@
             to fail the build with an exception
         -->
         <sling.java.version>5</sling.java.version>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
 
