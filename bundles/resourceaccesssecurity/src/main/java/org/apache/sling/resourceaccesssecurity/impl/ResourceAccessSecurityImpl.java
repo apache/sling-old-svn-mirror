@@ -63,19 +63,18 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     private List<ResourceAccessGateHandler> getMatchingResourceAccessGateHandlers(
-            String path, ResourceAccessGate.Operation operation) {
+            final String path, final ResourceAccessGate.Operation operation) {
         //
         // TODO: maybe caching some frequent paths with read operation would be
         // a good idea
         //
-        List<ResourceAccessGateHandler> returnValue = resourceAccessGateTracker
-                .getResourceAccessGateHandlers();
+        final List<ResourceAccessGateHandler> handlers = resourceAccessGateTracker.getResourceAccessGateHandlers();
+        List<ResourceAccessGateHandler> returnValue = handlers;
 
-        if (returnValue.size() > 0) {
+        if (handlers.size() > 0) {
             returnValue = new ArrayList<ResourceAccessGateHandler>();
 
-            for (ResourceAccessGateHandler resourceAccessGateHandler : resourceAccessGateTracker
-                    .getResourceAccessGateHandlers()) {
+            for (ResourceAccessGateHandler resourceAccessGateHandler : handlers) {
                 if (resourceAccessGateHandler.matches(path, operation)) {
                     returnValue.add(resourceAccessGateHandler);
                 }
@@ -85,15 +84,10 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         return returnValue;
     }
 
-    public boolean areResourceAccessGatesRegistered() {
-        return (resourceAccessGateTracker.size() > 0);
-    }
-
     @Override
-    public Resource getReadableResource(Resource resource) {
+    public Resource getReadableResource(final Resource resource) {
         Resource returnValue = resource;
         ResourceResolver resResolver = resource.getResourceResolver();
-        String user = resResolver.getUserID();
 
         List<ResourceAccessGateHandler> accessGateHandlers = getMatchingResourceAccessGateHandlers(
                 resource.getPath(), ResourceAccessGate.Operation.READ);
