@@ -25,16 +25,16 @@ import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 
 /**
- * The <code>AccessGateResourceWrapper</code> wraps a <code>Resource</code> and 
+ * The <code>AccessGateResourceWrapper</code> wraps a <code>Resource</code> and
  * intercepts calls to adaptTo to wrap the adapted <code>ValueMap</code> or
  * also a <code>ModifiableValueMap</code> to enforce access rules defined
  * by implementations of <code>ResourceAccessGate</code>
  *
  */
 public class AccessGateResourceWrapper extends ResourceWrapper {
-    
+
     private List<ResourceAccessGate> accessGatesForValues;
-    
+
     /**
      * Creates a new wrapper instance delegating all method calls to the given
      * <code>resource</code>, but intercepts the calls with checks to the
@@ -51,7 +51,7 @@ public class AccessGateResourceWrapper extends ResourceWrapper {
      */
     @Override
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
-        //TODO intercept adaptions of ValueMap
+        //TODO intercept adaptions of ValueMap, ModifiableValueMap, and PersistableValueMap
         return getResource().adaptTo(type);
     }
 

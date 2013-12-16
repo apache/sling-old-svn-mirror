@@ -17,8 +17,8 @@
  * under the License.
  */package org.apache.sling.resourceaccesssecurity.impl;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,21 +27,21 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.osgi.framework.ServiceReference;
 
 public class ResourceAccessGateHandler {
-    
-    private ResourceAccessGate resourceAccessGate;
-    
-    private Pattern pathPattern;
-    private List<ResourceAccessGate.Operation> operations = new ArrayList<ResourceAccessGate.Operation>();
-    private List<ResourceAccessGate.Operation> finalOperations = new ArrayList<ResourceAccessGate.Operation>();
-    
+
+    private final ResourceAccessGate resourceAccessGate;
+
+    private final Pattern pathPattern;
+    private final Set<ResourceAccessGate.Operation> operations = new HashSet<ResourceAccessGate.Operation>();
+    private final Set<ResourceAccessGate.Operation> finalOperations = new HashSet<ResourceAccessGate.Operation>();
+
     /**
      * constructor
      */
-    public ResourceAccessGateHandler ( ServiceReference resourceAccessGateRef ) {
-        
+    public ResourceAccessGateHandler ( final ServiceReference resourceAccessGateRef ) {
+
         resourceAccessGate = (ResourceAccessGate) resourceAccessGateRef.getBundle().
                 getBundleContext().getService(resourceAccessGateRef);
-        /* extract the service property "path" */
+        // extract the service property "path"
         String path = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.PATH);
         if ( path != null ) {
             pathPattern = Pattern.compile(path);
@@ -50,59 +50,54 @@ public class ResourceAccessGateHandler {
         {
             pathPattern = Pattern.compile(".*");
         }
-        
-        /* extract the service property "operations" */
+
+        // extract the service property "operations"
         String ops = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.OPERATIONS);
         if ( ops != null ) {
             String[] opsArray = PropertiesUtil.toStringArray(ops);
             for (String opAsString : opsArray) {
                 ResourceAccessGate.Operation operation = ResourceAccessGate.Operation.fromString(opAsString);
-                if ( operation != null )
-                {
+                if ( operation != null ) {
                     operations.add(operation);
                 }
             }
-        }
-        else
-        {
+        } else {
            for (ResourceAccessGate.Operation op : ResourceAccessGate.Operation.values() ) {
                operations.add(op);
            }
         }
-        
-        /* extract the service property "finaloperations" */
+
+        // extract the service property "finaloperations"
         String finOps = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.FINALOPERATIONS);
         if ( finOps != null ) {
             String[] finOpsArray = PropertiesUtil.toStringArray(finOps);
             for (String opAsString : finOpsArray) {
                 ResourceAccessGate.Operation operation = ResourceAccessGate.Operation.fromString(opAsString);
-                if ( operation != null )
-                {
+                if ( operation != null ) {
                     finalOperations.add(operation);
                 }
             }
         }
 
     }
-    
-    public boolean matches ( String path, ResourceAccessGate.Operation operation ) {
+
+    public boolean matches ( final String path, final ResourceAccessGate.Operation operation ) {
         boolean returnValue = false;
-        
-        if ( operations.contains( operation ) )
-        {
-            Matcher match = pathPattern.matcher(path);
+
+        if ( operations.contains( operation ) ) {
+            final Matcher match = pathPattern.matcher(path);
             returnValue = match.matches();
         }
-        
+
         return returnValue;
     }
-    
-    public boolean isFinalOperation( ResourceAccessGate.Operation operation ) {
+
+    public boolean isFinalOperation( final ResourceAccessGate.Operation operation ) {
         return finalOperations.contains(operation);
     }
-    
+
     public ResourceAccessGate getResourceAccessGate () {
         return resourceAccessGate;
     }
-    
+
 }
