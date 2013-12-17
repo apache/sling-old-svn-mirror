@@ -183,7 +183,7 @@ public class HealthCheckMBeanCreator {
             if ( this.registration != null ) {
                 this.registration.unregister();
                 this.registration = null;
-                logger.debug("Ungegistered health check mbean {}", this.mbean);
+                logger.debug("Unregistered health check mbean {}", this.mbean);
                 return true;
             }
             return false;
