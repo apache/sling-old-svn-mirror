@@ -16,26 +16,31 @@
  */
 package org.apache.sling.performance;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.sling.performance.annotation.AfterSuite;
 import org.apache.sling.performance.annotation.BeforeSuite;
 import org.apache.sling.performance.annotation.PerformanceTest;
+import org.apache.sling.performance.annotation.PerformanceTestFactory;
 import org.apache.sling.performance.annotation.PerformanceTestSuite;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
+import org.junit.runners.model.TestClass;
+
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The custom JUnit runner that collects the performance tests
@@ -82,9 +87,10 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 	 * @throws Exception
 	 */
 	protected void computeTests() throws Exception {
+		// add normal JUnit tests
 		tests.addAll(super.computeTestMethods());
 
-		// count the performance tests
+		// add the performance tests
 		tests.addAll(computePerformanceTests());
 
 		// This is called here to ensure the test class constructor is called at
@@ -101,9 +107,12 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 	 */
 	protected Collection<? extends FrameworkMethod> computePerformanceTests()
 			throws Exception {
-		List<FrameworkPerformanceMethod> tests = new LinkedList<FrameworkPerformanceMethod>();
+		List<FrameworkMethod> tests = new LinkedList<FrameworkMethod>();
 
 		List<Object> testObjects = new ArrayList<Object>();
+		List<Object> testObjectsTmp = new ArrayList<Object>();
+
+
 		ParameterizedTestList testCenter = new ParameterizedTestList();
 
 		// Retrieve the test objects included in the Performance test suite
@@ -114,10 +123,42 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 					.equals(ParameterizedTestList.class)) {
 				testCenter = (ParameterizedTestList) method.getMethod().invoke(
 						targetObject);
-				testObjects = testCenter.getTestObjectList();
+				testObjectsTmp = testCenter.getTestObjectList();
+
+                // Iterate through all the test cases and see if they have a factory
+                for (Object testObject : testObjectsTmp) {
+                    Method[] factoryMethods = getSpecificMethods(
+                            testObject.getClass(), PerformanceTestFactory.class);
+
+                    // If we have a factory method, get all the instance objects returned by this factory
+                    if (factoryMethods.length > 0) {
+                        // Make sure there's only one factory method
+                        if (factoryMethods.length > 1) {
+                            throw new IllegalStateException(
+                                    "There should be at most one PerformanceTestFactory method");
+                        }
+                        Method factoryMethod = factoryMethods[0];
+
+                        // Execute the method (statically)
+                        Object instances = factoryMethod.invoke(testObject);
+
+                        // If the factory returned an array, make a list
+                        if (instances.getClass().isArray()) {
+                            instances = Arrays.asList((Object[]) instances);
+                        }
+
+                        // If the factory returned a single element, put it in a list
+                        if (!(instances instanceof Iterable<?>)) {
+                            instances = Collections.singletonList(instances);
+                        }
+                        testObjects.addAll((List) instances);
+                    } else {
+                        testObjects.add(testObject);
+                    }
+                }
 			} else {
 				throw new InitializationError(
-						"Wrong signature for the @PerformanceSuite method");
+						"Wrong signature for the @PerformanceTestSuite method");
 			}
 		}
 
@@ -172,21 +213,24 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 		// In case there are any objects retrieved from the Performance Suite
 		// we should add them to the tests that will be run and increase the
 		// number of methods
-		// contained in the PerformaceSuite
+		// contained in the PerformanceSuite
 		if (!testObjects.isEmpty()) {
 			for (Object testObject : testObjects) {
+
 				// retrieve the test methods from the test classes
 				Method[] testMethods = getSpecificMethods(
 						testObject.getClass(), PerformanceTest.class);
 
-				if (!suiteAlreadyRegistered) {
-					newSuite.incrementNumberOfTestMethodsInSuite();
-				}
 
 				for (Method method : testMethods) {
-					FrameworkPerformanceMethod performaceTestMethod = new FrameworkPerformanceMethod(
+					FrameworkPerformanceMethod performaceTestMethod = new
+							FrameworkPerformanceMethod(
 							method, testObject, current, reportLevel);
 					tests.add(performaceTestMethod);
+				}
+
+                if (!suiteAlreadyRegistered) {
+					newSuite.incrementNumberOfTestMethodsInSuite();
 				}
 			}
 
@@ -199,15 +243,16 @@ public class PerformanceRunner extends BlockJUnit4ClassRunner {
 		for (FrameworkMethod method : getTestClass().getAnnotatedMethods(
 				PerformanceTest.class)) {
 			Object targetObject = getTestClass().getJavaClass().newInstance();
-			FrameworkPerformanceMethod performaceTestMethod = new FrameworkPerformanceMethod(
+			FrameworkPerformanceMethod performanceTestMethod = new FrameworkPerformanceMethod(
 					method.getMethod(), targetObject, current, reportLevel);
-			tests.add(performaceTestMethod);
+			tests.add(performanceTestMethod);
 		}
 
 		return tests;
 	}
 
-	/**
+
+		/**
 	 * Retrieve specific method from test class
 	 * 
 	 * @param testClass
