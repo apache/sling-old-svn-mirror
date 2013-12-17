@@ -38,6 +38,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 	private Object target;
 	private PerformanceSuiteState performanceSuiteState;
 	private PerformanceRunner.ReportLevel reportLevel = PerformanceRunner.ReportLevel.ClassLevel;
+    private String testCaseName = "";
 
 	public FrameworkPerformanceMethod(Method method, Object target,
 			PerformanceSuiteState performanceSuiteState, PerformanceRunner.ReportLevel reportLevel) {
@@ -45,7 +46,10 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		this.target = target;
 		this.performanceSuiteState = performanceSuiteState;
 		this.reportLevel = reportLevel;
+        if (target instanceof IdentifiableTestCase) {
+            this.testCaseName = ((IdentifiableTestCase) target).testCaseName();
 	}
+    }
 
 	@Override
 	public Object invokeExplosively(Object target, Object... params)
@@ -173,11 +177,8 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		}
 
 		if (statistics.getN() > 0) {
-			ReportLogger
-					.writeReport(this.target.getClass().getName(),
-							this.performanceSuiteState.testSuiteName,
-							getMethod().getName(), statistics,
-							ReportLogger.ReportType.TXT, reportLevel);
+            ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, this.target.getClass().getName(),
+                    getMethod().getName(), statistics, ReportLogger.ReportType.TXT, reportLevel);
 		}
 
 		// In case of a PerformanceSuite we need to run the methods annotated
@@ -344,5 +345,13 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		}
 		return methodListResult.toArray(new Method[] {});
 	}
+
+    @Override
+    public String getName() {
+        System.out.println(testCaseName);
+        if (testCaseName == null || "".equals(testCaseName.trim())) { return super.getName(); }
+        return String.format("%s  [%s.%s]", testCaseName, target.getClass().getSimpleName(),
+                getMethod().getName());
+}
 
 }
