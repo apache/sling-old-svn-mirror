@@ -12,45 +12,57 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
 public class ReportLogger {
 
+    public static final String REPORTS_DIR = "performance-reports";
+
 	public enum ReportType {
 		TXT
 	}
 
-	public static void writeReport(String test, String testSuiteName,
-			String name, DescriptiveStatistics statistics, ReportType reportType, PerformanceRunner.ReportLevel reportlevel)
-			throws Exception {
+    /**
+     * Method the writes the performance report after a test is run
+     * @param testSuiteName
+     * @param testCaseName
+     * @param className
+     * @param methodName
+     * @param statistics
+     * @param reportType
+     * @param reportLevel
+     * @throws Exception
+     */
+    public static void writeReport(String testSuiteName, String testCaseName, String className, String methodName,
+            DescriptiveStatistics statistics, ReportType reportType, PerformanceRunner.ReportLevel reportLevel) throws Exception {
 		switch (reportType) {
 		case TXT:
-			writeReportTxt(test, testSuiteName, name, statistics, reportlevel);
+                writeReportTxt(testSuiteName, testCaseName, className, methodName, statistics, reportLevel);
 			break;
 		default:
-			throw new Exception(
-					"The specified reporting format is not yet supported");
+                throw new Exception("The specified reporting format is not yet supported");
 		}
 	}
 
 	/**
-	 * Method the writes the performance report after a test is run
+     * Method the writes the performance report after a test is run, in text format
 	 * 
-	 * @param test
-	 *            the test name
-	 * @param name
-	 *            the name that will be listed in the report
+     * @param testSuiteName
+     * @param testCaseName
+     * @param className
+     * @param methodName
 	 * @param statistics
-	 *            the statistics data to be written
-	 * @throws IOException
+     * @param reportlevel
+     * @throws Exception
 	 */
-	public static void writeReportTxt(String test, String testSuiteName, String name, DescriptiveStatistics statistics, PerformanceRunner.ReportLevel reportlevel)
-			throws Exception{
+    public static void writeReportTxt(String testSuiteName, String testCaseName, String className, String methodName,
+            DescriptiveStatistics statistics, PerformanceRunner.ReportLevel reportlevel) throws Exception {
 
-		String className = test;
-		className = className.substring(className.lastIndexOf(".") + 1);
+        // Short class form
+        String shortClassName = className.substring(className.lastIndexOf(".") + 1);
 
-		File reportDir = new File("target/performance-reports");
+        File reportDir = new File("target/" + REPORTS_DIR);
 		if (!reportDir.exists()) {
-			if (!reportDir.mkdir())
-				throw new IOException("Unable to create performance-reports directory");	
+            if (!reportDir.mkdir()) {
+                throw new IOException("Unable to create " + REPORTS_DIR + " directory");
 		}
+        }
 
 		// need this in the case a user wants to set the suite name from the
 		// command line
@@ -62,26 +74,26 @@ public class ReportLogger {
 			}
 		}
 
-		String resultFileName = className;
+        String resultFileName = shortClassName;
 		if (reportlevel.equals(PerformanceRunner.ReportLevel.ClassLevel)){
 			writeReportClassLevel(resultFileName, testSuiteName, statistics);
 			}else if (reportlevel.equals(PerformanceRunner.ReportLevel.MethodLevel)){
-				resultFileName = test + "." + name;
-				writeReportMethodLevel(resultFileName, testSuiteName, statistics);
+            resultFileName = shortClassName + "." + methodName;
+            writeReportMethodLevel(resultFileName, testSuiteName, testCaseName, className, methodName, statistics);
 			}
 	}
 	
 	/**
      * Write report for class level tests
+     *
      * @param resultFileName the name of the result file (without extension)
      * @param testSuiteName the name of the test suite name
      * @param statistics the statistics object used to compute different medians
-     * @throws IOException
      */
-    private static void writeReportClassLevel(String resultFileName, String testSuiteName, DescriptiveStatistics statistics)
-    		throws IOException{
+    private static void writeReportClassLevel(String resultFileName, String testSuiteName,
+            DescriptiveStatistics statistics) throws IOException {
     	
-    	File report = new File("target/performance-reports", resultFileName + ".txt");
+        File report = new File("target/" + REPORTS_DIR, resultFileName + ".txt");
 		boolean needsPrefix = !report.exists();
 	    PrintWriter writer = new PrintWriter(
 	    		new FileWriterWithEncoding(report, "UTF-8", true));
@@ -107,33 +119,35 @@ public class ReportLogger {
     
     /**
      * Write report for method level tests
+     *
      * @param resultFileName the name of the result file (without extension)
      * @param testSuiteName the name of the test suite name
+     * @param testCaseName
+     * @param className
+     * @param methodName
      * @param statistics the statistics object used to compute different medians
-     * @throws IOException
      */
-    private static void writeReportMethodLevel(String resultFileName, String testSuiteName, DescriptiveStatistics statistics)
-    	    throws IOException{
-    	File report = new File("target/performance-reports", resultFileName + ".txt");
+    private static void writeReportMethodLevel(String resultFileName, String testSuiteName, String testCaseName, String className,
+            String methodName, DescriptiveStatistics statistics) throws IOException {
+        File report = new File("target/" + REPORTS_DIR, resultFileName + ".txt");
 	
-    	String className = resultFileName.substring(0, resultFileName.lastIndexOf(".")); 
-    	String methodName = resultFileName.substring(resultFileName.lastIndexOf(".") + 1); 
-    	
     	boolean needsPrefix = !report.exists();
     	PrintWriter writer = new PrintWriter(
     			new FileWriterWithEncoding(report, "UTF-8", true));
     	try {
     		if (needsPrefix) {
     			writer.format(
-    					"%-40.40s|%-80.80s|%-40.40s|      DateTime      |  min  |   10%%   |   50%%   |   90%%   |   max%n",
+                        "%-40.40s|%-120.120s|%-80.80s|%-40.40s|      DateTime      |  min  |   10%%   |   50%%   |   90%%   |   max%n",
     					"Test Suite",
+                        "Test Case",
     					"Test Class",
     					"Test Method");
     		}
     		
     		writer.format(
-    				"%-40.40s|%-80.80s|%-40.40s|%-20.20s|%7.0f|%9.0f|%9.0f|%9.0f|%9.0f%n",
+                    "%-40.40s|%-120.120s|%-80.80s|%-40.40s|%-20.20s|%7.0f|%9.0f|%9.0f|%9.0f|%9.0f%n",
     				testSuiteName,
+                    (testCaseName.length() < 120) ? (testCaseName) : (testCaseName.substring(0, 115) + "[...]"),
     				className,
     				methodName,
     				getDate(),
@@ -148,12 +162,8 @@ public class ReportLogger {
     }
 	    
 	
-	
-
 	/**
 	 * Get the date that will be written into the result file
-	 * 
-	 * @return
 	 */
 	private static String getDate() {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
