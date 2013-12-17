@@ -348,7 +348,6 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 
     @Override
     public String getName() {
-        System.out.println(testCaseName);
         if (testCaseName == null || "".equals(testCaseName.trim())) { return super.getName(); }
         return String.format("%s  [%s.%s]", testCaseName, target.getClass().getSimpleName(),
                 getMethod().getName());
