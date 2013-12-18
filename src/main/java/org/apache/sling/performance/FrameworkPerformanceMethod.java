@@ -177,7 +177,7 @@ class FrameworkPerformanceMethod extends FrameworkMethod {
 		}
 
 		if (statistics.getN() > 0) {
-            ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, this.target.getClass().getName(),
+		    ReportLogger.writeReport(this.performanceSuiteState.testSuiteName, testCaseName, ((String )this.target.getClass().getMethod("toString", null).invoke(this.target, null)),
                     getMethod().getName(), statistics, ReportLogger.ReportType.TXT, reportLevel);
 		}
 
