@@ -27,7 +27,14 @@ import org.apache.sling.jcr.api.SlingRepository;
 
   
 public abstract class AbstractRepositoryTest {
-	
+
+    protected String testInstanceName;
+
+    public AbstractRepositoryTest(String testInstanceName) {
+        super();
+        this.testInstanceName = testInstanceName;
+    }
+
 	private static class ShutdownThread extends Thread {
         @Override
         public void run() {
@@ -79,6 +86,10 @@ public abstract class AbstractRepositoryTest {
             testRoot = classRoot.addNode(System.currentTimeMillis() + "_" + (++counter));
         }
         return testRoot;
+    }
+    
+    public String toString(){
+    	return testInstanceName;
     }
 
 }

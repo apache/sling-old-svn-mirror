@@ -32,12 +32,8 @@ import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFactory;
 import org.apache.sling.performance.annotation.PerformanceTestSuite;
-import org.apache.sling.performance.tests.ResolveNonExistingWith10000AliasTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith10000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith1000AliasTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith1000VanityPathTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith5000AliasTest;
-import org.apache.sling.performance.tests.ResolveNonExistingWith5000VanityPathTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWithManyAliasTest;
+import org.apache.sling.performance.tests.ResolveNonExistingWithManyVanityPathTest;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
@@ -112,18 +108,18 @@ public class PerformanceTest {
     @PerformanceTestSuite
     public ParameterizedTestList testPerformance() throws Exception {
         Helper helper = new Helper();
-        
+
         ParameterizedTestList testCenter = new ParameterizedTestList();
         testCenter.setTestSuiteTitle("jcr.resource-2.2.0");
-        testCenter.addTestObject(new ResolveNonExistingWith1000VanityPathTest(helper));
-        testCenter.addTestObject(new ResolveNonExistingWith5000VanityPathTest(helper));
-        testCenter.addTestObject(new ResolveNonExistingWith10000VanityPathTest(helper));
-        //tests.add(new ResolveNonExistingWith30000VanityPathTest(helper));
-        testCenter.addTestObject(new ResolveNonExistingWith1000AliasTest(helper));
-        testCenter.addTestObject(new ResolveNonExistingWith5000AliasTest(helper));
-        testCenter.addTestObject(new ResolveNonExistingWith10000AliasTest(helper));
-        //tests.add(new ResolveNonExistingWith30000AliasTest(helper));
         
+        testCenter.addTestObject(new ResolveNonExistingWithManyVanityPathTest("ResolveNonExistingWith1000VanityPathTest",helper, 100, 10));
+        testCenter.addTestObject(new ResolveNonExistingWithManyVanityPathTest("ResolveNonExistingWith5000VanityPathTest",helper, 100, 50));
+        testCenter.addTestObject(new ResolveNonExistingWithManyVanityPathTest("ResolveNonExistingWith10000VanityPathTest",helper, 100, 100));
+        
+        testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith1000AliasTest",helper, 1000));
+        testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith5000AliasTest",helper, 5000));
+        testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith10000AliasTest",helper, 10000));
+
         return testCenter;
     }
 }

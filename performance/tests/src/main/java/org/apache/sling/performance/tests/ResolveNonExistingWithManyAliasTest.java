@@ -30,10 +30,11 @@ import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.performance.AbstractRepositoryTest;
 import org.apache.sling.performance.TestHelper;
 import org.apache.sling.performance.ResourceResolverTestRequest;
+import org.apache.sling.performance.annotation.PerformanceTest;
 import org.junit.After;
 import org.junit.Before;
 
-class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
+public class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
     
     private static final String PN_SLING_ALIAS = "sling:alias";
     
@@ -49,7 +50,8 @@ class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
 
     private final int nodeCount;
     
-    public ResolveNonExistingWithManyAliasTest(TestHelper helper, int nodeCount) {
+    public ResolveNonExistingWithManyAliasTest(String testInstanceName, TestHelper helper, int nodeCount) {
+        super(testInstanceName);
         this.helper = helper;
         this.nodeCount = nodeCount;
     }
@@ -113,7 +115,8 @@ class ResolveNonExistingWithManyAliasTest extends AbstractRepositoryTest {
 
     }
 
-    protected void runTest() throws Exception {
+    @PerformanceTest
+    public void runTest() throws Exception {
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/" + "testNonExistingAlias"
                 + ".print.html");
         HttpServletRequest request = new ResourceResolverTestRequest(path);

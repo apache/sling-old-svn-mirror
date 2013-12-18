@@ -29,10 +29,11 @@ import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.performance.AbstractRepositoryTest;
 import org.apache.sling.performance.TestHelper;
 import org.apache.sling.performance.ResourceResolverTestRequest;
+import org.apache.sling.performance.annotation.PerformanceTest;
 import org.junit.After;
 import org.junit.Before;
 
-class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
+public class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
     
     private static final String NT_VANITY_PATH = "sling:VanityPath";
 
@@ -52,7 +53,9 @@ class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
     
     private final int childNodeCount;
     
-    public ResolveNonExistingWithManyVanityPathTest(TestHelper helper, int nodeCount, int childNodeCount) {
+    public ResolveNonExistingWithManyVanityPathTest(String testInstanceName,
+            TestHelper helper, int nodeCount, int childNodeCount) {
+        super(testInstanceName);
         this.helper = helper;
         this.nodeCount = nodeCount;
         this.childNodeCount = childNodeCount;
@@ -123,8 +126,8 @@ class ResolveNonExistingWithManyVanityPathTest extends AbstractRepositoryTest {
 
     }
 
-
-    protected void runTest() throws Exception {
+    @PerformanceTest
+    public void runTest() throws Exception {
         String path = ResourceUtil.normalize(ResourceUtil.getParent(rootPath) + "/" + "testNonExistingVanity"
                 + ".print.html");
         HttpServletRequest request = new ResourceResolverTestRequest(path);
