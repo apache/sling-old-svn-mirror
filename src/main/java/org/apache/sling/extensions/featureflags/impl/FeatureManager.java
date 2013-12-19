@@ -28,10 +28,13 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.extensions.featureflags.ExecutionContext;
-import org.apache.sling.extensions.featureflags.Feature;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.extensions.featureflags.ClientContext;
+import org.apache.sling.extensions.featureflags.ProviderContext;
 import org.apache.sling.extensions.featureflags.FeatureProvider;
+import org.apache.sling.extensions.featureflags.Features;
 import org.osgi.framework.Constants;
 
 /**
@@ -43,11 +46,11 @@ import org.osgi.framework.Constants;
            cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
            policy=ReferencePolicy.DYNAMIC,
            referenceInterface=FeatureProvider.class)
-public class FeatureManager implements Feature {
+public class FeatureManager implements Features {
 
     private final Map<String, List<FeatureProviderDescription>> providers = new HashMap<String, List<FeatureProviderDescription>>();
 
-    private Map<String, FeatureProviderDescription> activeProviders = new HashMap<String, FeatureProviderDescription>();
+    private Map<String, FeatureProvider> activeProviders = new HashMap<String, FeatureProvider>();
 
     /**
      * Bind a new feature provider
@@ -112,22 +115,63 @@ public class FeatureManager implements Feature {
     }
 
     private void calculateActiveProviders() {
-        final Map<String, FeatureProviderDescription> activeMap = new HashMap<String, FeatureManager.FeatureProviderDescription>();
+        final Map<String, FeatureProvider> activeMap = new HashMap<String, FeatureProvider>();
         for(final Map.Entry<String, List<FeatureProviderDescription>> entry : this.providers.entrySet()) {
-            activeMap.put(entry.getKey(), entry.getValue().get(0));
+            activeMap.put(entry.getKey(), entry.getValue().get(0).getProvider());
         }
         this.activeProviders = activeMap;
     }
 
+    private final ThreadLocal<ClientContextImpl> perThreadClientContext = new ThreadLocal<ClientContextImpl>();
+
     @Override
-    public boolean isEnabled(final String featureName, final ExecutionContext context) {
-        boolean result = false;
-        final FeatureProviderDescription desc = this.activeProviders.get(featureName);
-        if ( desc != null ) {
-            final FeatureProvider prod = desc.getProvider();
-            result = prod.isEnabled(featureName, context);
+    public ClientContext getCurrentClientContext() {
+        return perThreadClientContext.get();
+    }
+
+    public void setCurrentClientContext(final SlingHttpServletRequest request) {
+        final ProviderContext featureContext = new FeatureContextImpl(request);
+        final ClientContextImpl ctx = this.createClientContext(featureContext);
+        perThreadClientContext.set(ctx);
+    }
+
+    public void unsetCurrentClientContext() {
+        perThreadClientContext.remove();
+    }
+
+    @Override
+    public ClientContext createClientContext(final ResourceResolver resolver) {
+        if ( resolver == null ) {
+            throw new IllegalArgumentException("Resolver must not be null.");
         }
-        return result;
+        final ProviderContext featureContext = new FeatureContextImpl(resolver);
+        final ClientContext ctx = this.createClientContext(featureContext);
+        return ctx;
+    }
+
+    @Override
+    public ClientContext createClientContext(final SlingHttpServletRequest request) {
+        if ( request == null ) {
+            throw new IllegalArgumentException("Request must not be null.");
+        }
+        final ProviderContext featureContext = new FeatureContextImpl(request);
+        final ClientContext ctx = this.createClientContext(featureContext);
+        return ctx;
+    }
+
+    private ClientContextImpl createClientContext(final ProviderContext featureContext) {
+        final ClientContextImpl ctx = new ClientContextImpl(featureContext);
+
+        for(final Map.Entry<String, FeatureProvider> entry : this.activeProviders.entrySet()) {
+            final String name = entry.getKey();
+            final FeatureProvider provider = entry.getValue();
+
+            if ( provider.isEnabled(name, featureContext) ) {
+                ctx.addFeature(name);
+            }
+        }
+
+        return ctx;
     }
 
     @Override
@@ -142,13 +186,12 @@ public class FeatureManager implements Feature {
 
     /**
      * Checks whether a resource should be hidden for a feature.
-     * This check is only executed if {@link #isEnabled(String, ExecutionContext)}
+     * This check is only executed if {@link #isEnabled(String, ClientContext)}
      * return true for the given feature/context.
      */
     public boolean hideResource(final String featureName, final Resource resource) {
-        final FeatureProviderDescription desc = this.activeProviders.get(featureName);
-        if ( desc != null ) {
-            final FeatureProvider prod = desc.getProvider();
+        final FeatureProvider prod = this.activeProviders.get(featureName);
+        if ( prod != null ) {
             return prod.hideResource(featureName, resource);
         }
         return false;
@@ -207,9 +250,8 @@ public class FeatureManager implements Feature {
     }
 
     public String getResourceType(final String featureName, final String resourceType) {
-        final FeatureProviderDescription desc = this.activeProviders.get(featureName);
-        if ( desc != null ) {
-            final FeatureProvider prod = desc.getProvider();
+        final FeatureProvider prod = this.activeProviders.get(featureName);
+        if ( prod != null ) {
             final Map<String, String> mapping = prod.getResourceTypeMapping(featureName);
             if ( mapping != null ) {
                 return mapping.get(resourceType);

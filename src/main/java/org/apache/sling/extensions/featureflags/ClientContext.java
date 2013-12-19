@@ -18,37 +18,26 @@
  */
 package org.apache.sling.extensions.featureflags;
 
+import java.util.Collection;
+
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The feature service is the central gateway for feature handling.
- * It can be used to query the available features and to
- * check whether a feature is enabled for the current execution
- * context.
+ * The client context can be used by client code to check whether
+ * a specific feature is enable.
+ * A client context can be created through the {@link Features} service.
  */
 @ProviderType
-public interface Feature {
-
-
-    /**
-     * Checks whether the feature is enabled for the given
-     * execution context.
-     *
-     * The actual check is delegated to the {@link FeatureProvider}
-     * providing the feature.
-     */
-    boolean isEnabled(String featureName, ExecutionContext context);
-
-    /** Get the list of active feature flags */
-    String[] getFeatureNames();
+public interface ClientContext {
 
     /**
-     * Checks whether a feature with the given name is available.
-     * A feature is available if there is a {@link FeatureProvider}
-     * for that feature.
-     * @param featureName
-     * @return
+     * Returns <code>true</code> if the feature is enabled.
      */
-    boolean isAvailable(String featureName);
+    boolean isEnabled(String featureName);
 
+    /**
+     * Returns a list of all enabled features
+     * @return The list of features, the list might be empty.
+     */
+    Collection<String> getEnabledFeatures();
 }

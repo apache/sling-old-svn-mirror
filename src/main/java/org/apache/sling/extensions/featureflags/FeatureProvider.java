@@ -34,7 +34,7 @@ public interface FeatureProvider {
      * Checks whether the feature is enabled for the current execution
      * context.
      */
-    boolean isEnabled(String featureName, ExecutionContext context);
+    boolean isEnabled(String featureName, ProviderContext context);
 
     /**
      * Return the list of available features from this provider.

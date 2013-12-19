@@ -19,9 +19,6 @@
 package org.apache.sling.extensions.featureflags.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -35,68 +32,40 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.extensions.featureflags.ExecutionContext;
-import org.apache.sling.extensions.featureflags.Feature;
 
+/**
+ * This general servlet filter sets the current client context to the
+ * current request.
+ */
 @Component
 @Service(value=Filter.class)
 @Property(name="pattern", value="/.*")
-public class ExecutionContextFilter implements Filter {
-
-    private static ThreadLocal<ExecutionContextInfo> EXECUTION_CONTEXT;
+public class CurrentClientContextFilter implements Filter {
 
     @Reference
-    private Feature feature;
-
-    public static ExecutionContextInfo getCurrentExecutionContextInfo() {
-        final ThreadLocal<ExecutionContextInfo> local = EXECUTION_CONTEXT;
-        if ( local != null ) {
-            return local.get();
-        }
-        return null;
-    }
-
-    @Override
-    public void destroy() {
-        EXECUTION_CONTEXT = null;
-    }
+    private FeatureManager manager;
 
     @Override
     public void doFilter(final ServletRequest req, final ServletResponse res,
             final FilterChain chain)
     throws IOException, ServletException {
-        final ThreadLocal<ExecutionContextInfo> local = EXECUTION_CONTEXT;
-        if ( local != null && req instanceof SlingHttpServletRequest ) {
-            local.set(new ExecutionContextInfo((SlingHttpServletRequest)req, feature));
+        if ( req instanceof SlingHttpServletRequest ) {
+            manager.setCurrentClientContext((SlingHttpServletRequest)req);
         }
         try {
             chain.doFilter(req, res);
         } finally {
-            if ( local != null && req instanceof SlingHttpServletRequest ) {
-                local.set(null);
-            }
+            manager.unsetCurrentClientContext();
         }
     }
 
     @Override
     public void init(final FilterConfig config) throws ServletException {
-        EXECUTION_CONTEXT = new ThreadLocal<ExecutionContextInfo>();
+        // nothing to do
     }
 
-    public final class ExecutionContextInfo {
-
-        public final ExecutionContext context;
-        public final List<String> enabledFeatures = new ArrayList<String>();
-
-        public ExecutionContextInfo(final SlingHttpServletRequest req,
-                final Feature feature) {
-            this.context = ExecutionContext.fromRequest(req);
-            for(final String name : feature.getFeatureNames()) {
-                if ( feature.isEnabled(name, context) ) {
-                    enabledFeatures.add(name);
-                }
-            }
-            Collections.sort(enabledFeatures);
-        }
+    @Override
+    public void destroy() {
+        // nothing to do
     }
 }

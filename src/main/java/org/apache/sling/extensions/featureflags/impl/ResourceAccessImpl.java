@@ -22,9 +22,13 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
+import org.apache.sling.extensions.featureflags.ClientContext;
 import org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 
+/**
+ * Resource access gate implementing the hiding of resources.
+ */
 @Component
 @Service(value=ResourceAccessGate.class)
 public class ResourceAccessImpl
@@ -37,10 +41,9 @@ public class ResourceAccessImpl
     @Override
     public GateResult canRead(final Resource resource) {
         boolean available = true;
-        final ExecutionContextFilter.ExecutionContextInfo info = ExecutionContextFilter.getCurrentExecutionContextInfo();
+        final ClientContext info = manager.getCurrentClientContext();
         if ( info != null ) {
-            for(final String name : info.enabledFeatures) {
-                // we can't check as Feature does not have the api (TODO - we deny for now)
+            for(final String name : info.getEnabledFeatures()) {
                 available = !manager.hideResource(name, resource);
                 if ( !available) {
                     break;

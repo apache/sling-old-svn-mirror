@@ -26,7 +26,11 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceWrapper;
+import org.apache.sling.extensions.featureflags.ClientContext;
 
+/**
+ * Resource decorator implementing the resource type mapping
+ */
 @Component
 @Service(value=ResourceDecorator.class)
 public class ResourceDecoratorImpl implements ResourceDecorator {
@@ -36,9 +40,9 @@ public class ResourceDecoratorImpl implements ResourceDecorator {
 
     @Override
     public Resource decorate(final Resource resource) {
-        final ExecutionContextFilter.ExecutionContextInfo info = ExecutionContextFilter.getCurrentExecutionContextInfo();
+        final ClientContext info = manager.getCurrentClientContext();
         if ( info != null ) {
-            for(final String name : info.enabledFeatures) {
+            for(final String name : info.getEnabledFeatures()) {
 
                 final String resourceType = resource.getResourceType();
                 final String overwriteType = manager.getResourceType(name, resourceType);

@@ -21,36 +21,25 @@ package org.apache.sling.extensions.featureflags;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 
-public class ExecutionContext {
+import aQute.bnd.annotation.ProviderType;
 
-    private final ResourceResolver resourceResolver;
+/**
+ * The provider context contains all information that is passed to a
+ * {@link FeatureProvider} in order to check whether a feature
+ * is enabled.
+ */
+@ProviderType
+public interface ProviderContext {
 
-    private final SlingHttpServletRequest request;
+    /**
+     * Return the associated request if available
+     * @return the request or <code>null</code>
+     */
+    SlingHttpServletRequest getRequest();
 
-    public static ExecutionContext fromRequest(final SlingHttpServletRequest request) {
-        return new ExecutionContext(request);
-    }
-
-    public static ExecutionContext fromResourceResolver(final ResourceResolver resourceResolver) {
-        return new ExecutionContext(resourceResolver);
-    }
-
-    private ExecutionContext(final ResourceResolver resourceResolver) {
-        this.request = null;
-        this.resourceResolver = resourceResolver;
-    }
-
-
-    private ExecutionContext(final SlingHttpServletRequest request) {
-        this.request = request;
-        this.resourceResolver = request.getResourceResolver();
-    }
-
-    public SlingHttpServletRequest getRequest() {
-        return this.request;
-    }
-
-    public ResourceResolver getResourceResolver() {
-        return this.resourceResolver;
-    }
+    /**
+     * Return the associated resource resolver.
+     * @return the resource resolver
+     */
+    ResourceResolver getResourceResolver();
 }

@@ -21,25 +21,20 @@ package org.apache.sling.extensions.featureflags.impl;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.extensions.featureflags.ExecutionContext;
-import org.apache.sling.extensions.featureflags.Feature;
-import org.apache.sling.extensions.featureflags.FeatureProvider;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.extensions.featureflags.ClientContext;
+import org.apache.sling.extensions.featureflags.Features;
 
 /**
- * This service implements the feature handling.
- * It keeps track of all {@link FeatureProvider} services.
+ * This is a wrapper around the internal feature manager.
  */
 @Component
-@Service(value=Feature.class)
-public class FeatureImpl implements Feature {
+@Service(value=Features.class)
+public class FeaturesImpl implements Features {
 
     @Reference
     private FeatureManager manager;
-
-    @Override
-    public boolean isEnabled(final String featureName, final ExecutionContext context) {
-        return this.manager.isEnabled(featureName, context);
-    }
 
     @Override
     public String[] getFeatureNames() {
@@ -48,7 +43,21 @@ public class FeatureImpl implements Feature {
 
     @Override
     public boolean isAvailable(final String featureName) {
-        // TODO Auto-generated method stub
         return this.manager.isAvailable(featureName);
+    }
+
+    @Override
+    public ClientContext getCurrentClientContext() {
+        return this.manager.getCurrentClientContext();
+    }
+
+    @Override
+    public ClientContext createClientContext(final ResourceResolver resolver) {
+        return this.manager.createClientContext(resolver);
+    }
+
+    @Override
+    public ClientContext createClientContext(final SlingHttpServletRequest request) {
+        return this.manager.createClientContext(request);
     }
 }
