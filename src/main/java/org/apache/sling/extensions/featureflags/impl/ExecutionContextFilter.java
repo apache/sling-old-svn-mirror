@@ -19,8 +19,9 @@
 package org.apache.sling.extensions.featureflags.impl;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -85,7 +86,7 @@ public class ExecutionContextFilter implements Filter {
     public final class ExecutionContextInfo {
 
         public final ExecutionContext context;
-        public final Set<String> enabledFeatures = new HashSet<String>();
+        public final List<String> enabledFeatures = new ArrayList<String>();
 
         public ExecutionContextInfo(final SlingHttpServletRequest req,
                 final Feature feature) {
@@ -95,6 +96,7 @@ public class ExecutionContextFilter implements Filter {
                     enabledFeatures.add(name);
                 }
             }
+            Collections.sort(enabledFeatures);
         }
     }
 }

@@ -18,35 +18,51 @@
  */
 package org.apache.sling.extensions.featureflags.impl;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
-import org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate;
-import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
+import org.apache.sling.api.resource.ResourceDecorator;
+import org.apache.sling.api.resource.ResourceWrapper;
 
 @Component
-@Service(value=ResourceAccessGate.class)
-public class ResourceAccessImpl
-    extends AllowingResourceAccessGate
-    implements ResourceAccessGate {
+@Service(value=ResourceDecorator.class)
+public class ResourceDecoratorImpl implements ResourceDecorator {
 
     @Reference
     private FeatureManager manager;
 
     @Override
-    public GateResult canRead(final Resource resource) {
-        boolean available = true;
+    public Resource decorate(final Resource resource) {
         final ExecutionContextFilter.ExecutionContextInfo info = ExecutionContextFilter.getCurrentExecutionContextInfo();
         if ( info != null ) {
             for(final String name : info.enabledFeatures) {
-                // we can't check as Feature does not have the api (TODO - we deny for now)
-                available = !manager.hideResource(name, resource);
-                if ( !available) {
-                    break;
+
+                final String resourceType = resource.getResourceType();
+                final String overwriteType = manager.getResourceType(name, resourceType);
+                if ( overwriteType != null ) {
+                    return new ResourceWrapper(resource) {
+
+                        @Override
+                        public String getResourceType() {
+                            return overwriteType;
+                        }
+
+                        @Override
+                        public String getResourceSuperType() {
+                            return resourceType;
+                        }
+                    };
                 }
             }
         }
-        return (available ? GateResult.DONTCARE : GateResult.DENIED);
+        return resource;
+    }
+
+    @Override
+    public Resource decorate(final Resource resource, final HttpServletRequest request) {
+        return this.decorate(resource);
     }
 }
