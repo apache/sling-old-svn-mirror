@@ -22,18 +22,21 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.extensions.featureflags.ProviderContext;
 
-public class FeatureContextImpl implements ProviderContext {
+/**
+ * Implementation of the provider context.
+ */
+public class ProviderContextImpl implements ProviderContext {
 
     private final ResourceResolver resourceResolver;
 
     private final SlingHttpServletRequest request;
 
-    public FeatureContextImpl(final ResourceResolver resourceResolver) {
+    public ProviderContextImpl(final ResourceResolver resourceResolver) {
         this.request = null;
         this.resourceResolver = resourceResolver;
     }
 
-    public FeatureContextImpl(final SlingHttpServletRequest request) {
+    public ProviderContextImpl(final SlingHttpServletRequest request) {
         this.request = request;
         this.resourceResolver = request.getResourceResolver();
     }

@@ -32,9 +32,9 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.extensions.featureflags.ClientContext;
-import org.apache.sling.extensions.featureflags.ProviderContext;
 import org.apache.sling.extensions.featureflags.FeatureProvider;
 import org.apache.sling.extensions.featureflags.Features;
+import org.apache.sling.extensions.featureflags.ProviderContext;
 import org.osgi.framework.Constants;
 
 /**
@@ -130,8 +130,8 @@ public class FeatureManager implements Features {
     }
 
     public void setCurrentClientContext(final SlingHttpServletRequest request) {
-        final ProviderContext featureContext = new FeatureContextImpl(request);
-        final ClientContextImpl ctx = this.createClientContext(featureContext);
+        final ProviderContext providerContext = new ProviderContextImpl(request);
+        final ClientContextImpl ctx = this.createClientContext(providerContext);
         perThreadClientContext.set(ctx);
     }
 
@@ -144,8 +144,8 @@ public class FeatureManager implements Features {
         if ( resolver == null ) {
             throw new IllegalArgumentException("Resolver must not be null.");
         }
-        final ProviderContext featureContext = new FeatureContextImpl(resolver);
-        final ClientContext ctx = this.createClientContext(featureContext);
+        final ProviderContext providerContext = new ProviderContextImpl(resolver);
+        final ClientContext ctx = this.createClientContext(providerContext);
         return ctx;
     }
 
@@ -154,19 +154,19 @@ public class FeatureManager implements Features {
         if ( request == null ) {
             throw new IllegalArgumentException("Request must not be null.");
         }
-        final ProviderContext featureContext = new FeatureContextImpl(request);
-        final ClientContext ctx = this.createClientContext(featureContext);
+        final ProviderContext providerContext = new ProviderContextImpl(request);
+        final ClientContext ctx = this.createClientContext(providerContext);
         return ctx;
     }
 
-    private ClientContextImpl createClientContext(final ProviderContext featureContext) {
-        final ClientContextImpl ctx = new ClientContextImpl(featureContext);
+    private ClientContextImpl createClientContext(final ProviderContext providerContext) {
+        final ClientContextImpl ctx = new ClientContextImpl(providerContext);
 
         for(final Map.Entry<String, FeatureProvider> entry : this.activeProviders.entrySet()) {
             final String name = entry.getKey();
             final FeatureProvider provider = entry.getValue();
 
-            if ( provider.isEnabled(name, featureContext) ) {
+            if ( provider.isEnabled(name, providerContext) ) {
                 ctx.addFeature(name);
             }
         }
