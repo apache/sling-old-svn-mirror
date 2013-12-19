@@ -175,7 +175,7 @@ public class FeatureManager implements Features {
     }
 
     @Override
-    public String[] getFeatureNames() {
+    public String[] getAvailableFeatureNames() {
         return this.activeProviders.keySet().toArray(new String[this.activeProviders.size()]);
     }
 

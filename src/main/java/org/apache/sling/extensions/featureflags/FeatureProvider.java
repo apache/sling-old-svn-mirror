@@ -44,14 +44,20 @@ public interface FeatureProvider {
     /**
      * Returns the resource type mapping for a feature.
      * This mapping is only used if {@link #isEnabled(String, ExecutionContext)}
-     * return true for the given feature/context.
+     * return true for the given feature/context. The caller of this
+     * method must ensure to call {@link #isEnabled(String, ExecutionContext)}
+     * before calling this method and only call this method if
+     * {@link #isEnabled(String, ExecutionContext)} return <code>true</code>
      */
     Map<String, String> getResourceTypeMapping(String featureName);
 
     /**
      * Checks whether a resource should be hidden for a feature.
      * This check is only executed if {@link #isEnabled(String, ExecutionContext)}
-     * return true for the given feature/context.
+     * return true for the given feature/context. The caller of this
+     * method must ensure to call {@link #isEnabled(String, ExecutionContext)}
+     * before calling this method and only call this method if
+     * {@link #isEnabled(String, ExecutionContext)} return <code>true</code>
      */
     boolean hideResource(String featureName, Resource resource);
 }

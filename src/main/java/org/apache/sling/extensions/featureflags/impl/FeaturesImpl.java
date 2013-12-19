@@ -37,8 +37,8 @@ public class FeaturesImpl implements Features {
     private FeatureManager manager;
 
     @Override
-    public String[] getFeatureNames() {
-        return this.manager.getFeatureNames();
+    public String[] getAvailableFeatureNames() {
+        return this.manager.getAvailableFeatureNames();
     }
 
     @Override
