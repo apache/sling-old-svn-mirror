@@ -141,7 +141,7 @@ public class TriggerPathReplicationRule implements ReplicationRule {
                     agent.send(new ReplicationRequest(System.currentTimeMillis(), action, replicatingPath));
                 } catch (AgentReplicationException e) {
                     if (log.isErrorEnabled()) {
-                        log.error("triggered replication resulted in an error {}", e);
+                        log.error("triggered replication resulted in an error", e);
                     }
                 }
             }

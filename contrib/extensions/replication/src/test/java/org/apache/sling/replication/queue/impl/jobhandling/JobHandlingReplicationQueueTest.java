@@ -18,6 +18,19 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.Map;
+import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobBuilder;
+import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
+import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -25,19 +38,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Map;
-
-import org.apache.sling.event.jobs.JobBuilder;
-import org.apache.sling.event.jobs.JobManager;
-import org.junit.Test;
-
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * Testcase for {@link JobHandlingReplicationQueue}
@@ -51,6 +51,7 @@ public class JobHandlingReplicationQueueTest {
         JobBuilder builder = mock(JobBuilder.class);
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + "/aname";
         when(jobManager.createJob(topic)).thenReturn(builder);
+        when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         ReplicationQueue queue = new JobHandlingReplicationQueue("aname", topic, jobManager);
         ReplicationPackage pkg = mock(ReplicationPackage.class);
@@ -66,6 +67,7 @@ public class JobHandlingReplicationQueueTest {
         JobBuilder builder = mock(JobBuilder.class);
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + "/aname";
         when(jobManager.createJob(topic)).thenReturn(builder);
+        when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         ReplicationQueue queue = new JobHandlingReplicationQueue("aname", topic, jobManager);
         ReplicationPackage pkg = mock(ReplicationPackage.class);

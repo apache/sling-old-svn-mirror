@@ -34,8 +34,9 @@ public class ReplicationAgentConfigurationTest {
         assertNotNull(replicationAgentConfiguration.getEndpoint());
         assertNotNull(replicationAgentConfiguration.getName());
         assertNotNull(replicationAgentConfiguration.getTargetAuthenticationHandlerFactory());
-        assertNotNull(replicationAgentConfiguration.getTargetReplicationBuilder());
+        assertNotNull(replicationAgentConfiguration.getTargetReplicationPackageBuilder());
         assertNotNull(replicationAgentConfiguration.getTargetReplicationQueueProvider());
+        assertNotNull(replicationAgentConfiguration.getTargetReplicationQueueDistributionStrategy());
         assertNotNull(replicationAgentConfiguration.getTargetTransportHandler());
     }
 

@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.agent;
 
+import java.net.URI;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
@@ -53,7 +54,7 @@ public interface ReplicationAgent {
     String[] getRules();
 
     /**
-     * execute a {@link ReplicationRequest} against this agent waiting for a {@link ReplicationResponse}
+     * Synchronously sends a {@link ReplicationRequest} waiting for a {@link ReplicationResponse}
      *
      * @param replicationRequest the replication request
      * @return a {@link ReplicationResponse}
@@ -71,7 +72,7 @@ public interface ReplicationAgent {
     void send(ReplicationRequest replicationRequest) throws AgentReplicationException;
 
     /**
-     * process the replication of a certain item
+     * synchronously process the replication of a certain item skipping the underlying queue(s)
      *
      * @param item a {@link ReplicationPackage} to process
      * @return <code>true</code> if process was successful, <code>false</code> otherwise
@@ -79,4 +80,10 @@ public interface ReplicationAgent {
      */
     boolean process(ReplicationPackage item) throws AgentReplicationException;
 
+    /**
+     * get the agent configured endpoint
+     *
+     * @return an <code>URI</code> specifying its endpoint
+     */
+    URI getEndpoint();
 }

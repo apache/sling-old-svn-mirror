@@ -32,7 +32,12 @@ public enum ReplicationActionType {
     /**
      * Content is deleted
      */
-    DELETE("Delete");
+    DELETE("Delete"),
+
+    /**
+     * Content is polled
+     */
+    POLL("Poll");
 
     /**
      * internal human readable name

@@ -27,11 +27,10 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvider;
+import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
@@ -52,42 +51,43 @@ public class PollingTransportHandler implements TransportHandler {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference
-    private ReplicationPackageBuilderProvider packageBuilderProvider;
+    private ReplicationPackageImporter replicationPackageImporter;
 
     @SuppressWarnings("unchecked")
     public void transport(ReplicationPackage replicationPackage,
-                    ReplicationEndpoint replicationEndpoint,
-                    TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
-                    throws ReplicationTransportException {
+                          ReplicationEndpoint replicationEndpoint,
+                          TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
+            throws ReplicationTransportException {
         if (log.isInfoEnabled()) {
             log.info("polling from {}", replicationEndpoint.getUri());
         }
+
         try {
             Executor executor = Executor.newInstance();
             TransportAuthenticationContext context = new TransportAuthenticationContext();
             context.addAttribute("endpoint", replicationEndpoint);
             executor = ((TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider)
-                            .authenticate(executor, context);
+                    .authenticate(executor, context);
 
             Request req = Request.Get(replicationEndpoint.getUri()).useExpectContinue();
-            // TODO : missing queue header
-            Response response = executor.execute(req);
-            HttpResponse httpResponse = response.returnResponse();
-            HttpEntity entity = httpResponse.getEntity();
-            Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
+            // TODO : add queue header
 
-            if (typeHeader != null) {
-                String type = typeHeader.getValue();
-                ReplicationPackage readPackage = packageBuilderProvider
-                                .getReplicationPackageBuilder(type).readPackage(entity.getContent(), true);
+            // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
+            HttpResponse httpResponse;
+            while ((httpResponse = executor.execute(req).returnResponse()).containsHeader(ReplicationHeader.TYPE.toString())) {
+                HttpEntity entity = httpResponse.getEntity();
+                Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
 
-                if (log.isInfoEnabled()) {
-                    log.info("package {} fetched and installed", readPackage.getId());
-                }
+                if (entity.getContentLength() > 0) {
+                    replicationPackageImporter.scheduleImport(entity.getContent(), typeHeader.getValue());
+                    if (log.isInfoEnabled()) {
+                        log.info("scheduled import of package stream");
+                    }
 
-            } else {
-                if (log.isInfoEnabled()) {
-                    log.info("nothing to fetch");
+                } else {
+                    if (log.isInfoEnabled()) {
+                        log.info("nothing to fetch");
+                    }
                 }
             }
         } catch (Exception e) {

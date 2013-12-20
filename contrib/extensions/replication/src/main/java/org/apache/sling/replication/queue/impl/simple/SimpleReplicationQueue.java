@@ -18,24 +18,24 @@
  */
 package org.apache.sling.replication.queue.impl.simple;
 
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple implementation of a {@link ReplicationQueue}.
- * 
+ * <p/>
  * Note that, at the moment, this is a transient in memory queue not persisted on the repository and
  * therefore not usable for production.
  */
@@ -70,6 +70,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         boolean result = false;
         try {
             result = queue.offer(replicationPackage, 10, TimeUnit.SECONDS);
+            status.setEntered(Calendar.getInstance());
         } catch (InterruptedException e) {
             log.error("cannot add an item to the queue", e);
             status.setSuccessful(false);
@@ -109,6 +110,26 @@ public class SimpleReplicationQueue implements ReplicationQueue {
 
     public boolean isEmpty() {
         return queue.isEmpty();
+    }
+
+    public Collection<ReplicationPackage> getItems() {
+        return queue;
+    }
+
+    public void remove(String id) {
+        ReplicationPackage toRemove = null;
+        for (ReplicationPackage item : queue) {
+            if (id.equals(item.getId())) {
+                toRemove = item;
+            }
+        }
+        boolean removed = false;
+        if (toRemove != null) {
+            removed = queue.remove(toRemove);
+        }
+        if (log.isInfoEnabled()) {
+            log.info("item with id {} removed from the queue: {}", id, removed);
+        }
     }
 
 }

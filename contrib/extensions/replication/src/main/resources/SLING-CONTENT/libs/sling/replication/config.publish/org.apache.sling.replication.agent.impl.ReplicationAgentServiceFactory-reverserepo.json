@@ -1,12 +1,8 @@
 {
     "jcr:primaryType" : "sling:OsgiConfig",
     "name" : "reverserepo",
-    "endpoint" : "repo://var/replication/outbox/reverserepo",
-    "TransportHandler.target" : "(name=repository)", 
     "ReplicationPackageBuilder.target" : "(name=vlt)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
-    "TransportAuthenticationProviderFactory.target" : "(name=repo-user)",
-    "authentication.properties" : ["user=admin","password=admin"],
     "ReplicationQueueDistributionStrategy.target" : "(name=error)",
     "rules" : ["trigger on path: /content/usergenerated"]
 }

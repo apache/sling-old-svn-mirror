@@ -7,5 +7,6 @@
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "TransportAuthenticationProviderFactory.target" : "(name=user)",
     "authentication.properties" : ["user=admin","password=admin"],
-    "ReplicationQueueDistributionStrategy.target" : "(name=single)"
+    "ReplicationQueueDistributionStrategy.target" : "(name=single)",
+    "rules" : ["scheduled poll every 30 sec"]
 }

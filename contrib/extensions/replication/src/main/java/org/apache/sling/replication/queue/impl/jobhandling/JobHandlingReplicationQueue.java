@@ -23,20 +23,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
-
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * a {@link ReplicationQueue} based on Sling Job Handling facilities
@@ -67,7 +65,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         boolean result = true;
         try {
             Map<String, Object> properties = JobHandlingUtils
-                            .createFullPropertiesFromPackage(replicationPackage);
+                    .createFullPropertiesFromPackage(replicationPackage);
 
             Job job = jobManager.createJob(topic).properties(properties).add();
             if (log.isInfoEnabled()) {
@@ -83,15 +81,16 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
     }
 
     public ReplicationQueueItemState getStatus(ReplicationPackage replicationPackage)
-                    throws ReplicationQueueException {
+            throws ReplicationQueueException {
         ReplicationQueueItemState itemStatus = new ReplicationQueueItemState();
         try {
             Map<String, Object> properties = JobHandlingUtils
-                            .createIdPropertiesFromPackage(replicationPackage);
+                    .createIdPropertiesFromPackage(replicationPackage);
             Job job = jobManager.getJob(topic, properties);
             if (job != null) {
                 itemStatus.setAttempts(job.getRetryCount());
                 itemStatus.setItemState(ItemState.valueOf(job.getJobState().toString()));
+                itemStatus.setEntered(job.getCreated());
                 if (log.isInfoEnabled()) {
                     log.info("status of job {} is {}", job.getId(), job.getJobState());
                 }
@@ -102,10 +101,6 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
             throw new ReplicationQueueException("unable to retrieve the queue status", e);
         }
         return itemStatus;
-    }
-
-    public ReplicationAgent getAgent() {
-        throw new RuntimeException("not implemented");
     }
 
     public ReplicationPackage getHead() {
@@ -136,15 +131,14 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         if (jobs.size() > 0) {
             ArrayList<Job> list = new ArrayList<Job>(jobs);
             Collections.sort(list, new Comparator<Job>() {
-
                 public int compare(Job o1, Job o2) {
                     return o2.getRetryCount() - o1.getRetryCount();
                 }
             });
             Job firstItem = list.get(0);
             if (log.isInfoEnabled()) {
-                log.info("first item in the queue is {} retried {} times", firstItem.getId(),
-                                firstItem.getRetryCount());
+                log.info("first item in the queue is {}, retried {} times", firstItem.getId(),
+                        firstItem.getRetryCount());
             }
             return firstItem;
         }
@@ -152,9 +146,23 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
     }
 
     public boolean isEmpty() {
-        // TODO : fix this
-//        return jobManager.getQueue(name).getStatistics().getNumberOfJobs() == 0;
-        return false;
+        return getItems().isEmpty();
+    }
+
+    public Collection<ReplicationPackage> getItems() {
+        Collection<ReplicationPackage> items = new LinkedList<ReplicationPackage>();
+        Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, -1);
+        for (Job job : jobs) {
+            items.add(JobHandlingUtils.getPackage(job));
+        }
+        return Collections.unmodifiableCollection(items);
+    }
+
+    public void remove(String id) {
+        boolean removed = jobManager.removeJobById(id);
+        if (log.isInfoEnabled()) {
+            log.info("item with id {} removed from the queue: {}", id, removed);
+        }
     }
 
 }

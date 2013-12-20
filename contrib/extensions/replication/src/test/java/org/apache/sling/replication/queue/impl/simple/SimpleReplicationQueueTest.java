@@ -25,6 +25,7 @@ import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -40,6 +41,7 @@ public class SimpleReplicationQueueTest {
         ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         assertTrue(queue.add(pkg));
+        assertFalse(queue.isEmpty());
     }
 
     @Test
@@ -48,7 +50,9 @@ public class SimpleReplicationQueueTest {
         ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         assertTrue(queue.add(pkg));
+        assertFalse(queue.isEmpty());
         queue.removeHead();
+        assertTrue(queue.isEmpty());
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);
         assertTrue(status.isSuccessful());
@@ -60,8 +64,11 @@ public class SimpleReplicationQueueTest {
         ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         assertTrue(queue.add(pkg));
+        assertFalse(queue.isEmpty());
         assertEquals(pkg, queue.getHead());
+        assertFalse(queue.isEmpty());
         queue.removeHead();
+        assertTrue(queue.isEmpty());
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);
         assertTrue(status.isSuccessful());

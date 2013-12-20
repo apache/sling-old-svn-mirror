@@ -58,7 +58,7 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
                     throws ReplicationQueueException {
         try {
             String name = agent.getName() + queueName;
-            String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agent.getName() + queueName;
+            String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
             if (jobManager.getQueue(name) == null) {
                 Configuration config = configAdmin.createFactoryConfiguration(
                                 QueueConfiguration.class.getName(), null);
@@ -80,8 +80,8 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
 
     @Override
     protected void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException {
-        Queue q = jobManager.getQueue(queue.getAgent().getName());
-        q.removeAll(); // need to check if this is correct
+        Queue q = jobManager.getQueue(queue.getName());
+        q.removeAll();
     }
 
 }
