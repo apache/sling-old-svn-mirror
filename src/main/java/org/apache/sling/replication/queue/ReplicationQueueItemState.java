@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.queue;
 
+import java.util.Calendar;
+
 /**
  * the current status of a certain item in a {@link ReplicationQueue}
  */
@@ -27,6 +29,8 @@ public class ReplicationQueueItemState {
     private int attempts;
 
     private ItemState state;
+
+    private Calendar entered;
 
     public boolean isSuccessful() {
         return ItemState.SUCCEEDED.equals(state);
@@ -55,6 +59,14 @@ public class ReplicationQueueItemState {
     @Override
     public String toString() {
         return "{\"attempts\":\"" + attempts + "\",\"" + "successful\":\"" + isSuccessful() + "\",\"" + "state\":\"" + state + "\"}";
+    }
+
+    public Calendar getEntered() {
+        return entered;
+    }
+
+    public void setEntered(Calendar entered) {
+        this.entered = entered;
     }
 
     public enum ItemState {

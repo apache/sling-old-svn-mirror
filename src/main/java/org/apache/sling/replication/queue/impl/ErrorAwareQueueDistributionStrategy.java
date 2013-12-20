@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.queue.impl;
 
+import java.util.Calendar;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
@@ -54,8 +55,11 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
     @Property
     private static final String ATTEMPTS_THRESHOLD = "attempts.threshold";
 
+    @Property
+    private static final String TIME_THRESHOLD = "time.threshold";
+
     @Property(name = "Stuck Queue Handling", options = {
-            @PropertyOption(name = ERROR, value = "Error"),
+            @PropertyOption(name = "ERROR", value = "Error"),
             @PropertyOption(name = "DROP", value = "Drop")})
     private static final String STUCK_HANDLING = "stuck.handling";
 
@@ -63,11 +67,13 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
 
     private Integer attemptsThreshold;
 
+    private Integer timeThreshold;
+
     protected void activate(final ComponentContext ctx) {
         stuckQueueHandling = PropertiesUtil
                 .toString(ctx.getProperties().get(STUCK_HANDLING), ERROR);
-        attemptsThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(ATTEMPTS_THRESHOLD),
-                100);
+        attemptsThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(ATTEMPTS_THRESHOLD), 100);
+        timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 10800000);
     }
 
     public ReplicationQueueItemState add(ReplicationPackage replicationPackage,
@@ -128,13 +134,11 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
             ReplicationQueueItemState status = defaultQueue.getStatus(firstItem);
             // if item is still in the queue after a max no. of attempts, move it to the error queue
             int attempts = status.getAttempts();
-            if (log.isInfoEnabled()) {
-                log.info("attempts for item {}: {}", firstItem.getId(), attempts);
-            }
-            if (attempts > attemptsThreshold) {
+            Calendar entered = status.getEntered();
+            if (attempts > attemptsThreshold || Calendar.getInstance().getTimeInMillis() - entered.getTimeInMillis() > timeThreshold) {
                 if (ERROR.equals(stuckQueueHandling)) {
                     if (log.isWarnEnabled()) {
-                        log.warn("item moved to the error queue");
+                        log.warn("item {} moved to the error queue", firstItem);
                     }
                     ReplicationQueue errorQueue = queueProvider.getQueue(agent, "-error");
                     if (!errorQueue.add(firstItem)) {
@@ -145,7 +149,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                     }
                 }
                 if (log.isWarnEnabled()) {
-                    log.warn("item dropped from the default queue");
+                    log.warn("item {} dropped from the default queue", firstItem);
                 }
                 defaultQueue.removeHead();
             }

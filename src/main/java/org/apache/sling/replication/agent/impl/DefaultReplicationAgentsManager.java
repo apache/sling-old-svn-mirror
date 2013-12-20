@@ -21,6 +21,7 @@ package org.apache.sling.replication.agent.impl;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -34,6 +35,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentsManager;
 import org.apache.sling.replication.communication.ReplicationActionType;
+import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +65,16 @@ public class DefaultReplicationAgentsManager implements ReplicationAgentsManager
 
     public Collection<ReplicationAgent> getAllAvailableAgents() {
         return Collections.unmodifiableCollection(replicationAgents);
+    }
+
+    public Collection<ReplicationAgent> getAgentsFor(ReplicationEndpoint endpoint) {
+        Collection<ReplicationAgent> agents = new LinkedList<ReplicationAgent>();
+        for (ReplicationAgent replicationAgent : replicationAgents) {
+            if (endpoint.getUri().equals(replicationAgent.getEndpoint())) {
+                agents.add(replicationAgent);
+            }
+        }
+        return Collections.unmodifiableCollection(agents);
     }
 
     @Deactivate

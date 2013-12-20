@@ -45,11 +45,11 @@ public class JobHandlingUtilsTest {
         when(replicationPackage.getType()).thenReturn("vlt");
         Map<String,Object> fullPropertiesFromPackage = JobHandlingUtils.createFullPropertiesFromPackage(replicationPackage);
         assertNotNull(fullPropertiesFromPackage);
-        assertEquals(5, fullPropertiesFromPackage.size());
+        assertEquals(6, fullPropertiesFromPackage.size());
         assertNotNull(fullPropertiesFromPackage.get("replication.package.paths"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.id"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.length"));
-//        assertNotNull(fullPropertiesFromPackage.get("replication.package.stream"));
+        assertNotNull(fullPropertiesFromPackage.get("replication.package.stream"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.type"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.action"));
     }

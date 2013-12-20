@@ -77,7 +77,6 @@ public class ReplicationAgentPollServlet extends SlingAllMethodsServlet {
                         log.info("{} bytes written into the response", bytesCopied);
                     }
                     // remove the item from the queue
-                    // TODO : this should be conditional to successful import on polling instance
                     queue.removeHead();
                 } else {
                     if (log.isInfoEnabled()) {

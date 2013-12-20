@@ -18,7 +18,7 @@
  */
 package org.apache.sling.replication.queue;
 
-import org.apache.sling.replication.agent.ReplicationAgent;
+import java.util.Collection;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
@@ -28,6 +28,7 @@ public interface ReplicationQueue {
 
     /**
      * get this queue name
+     *
      * @return queue name as a <code>String</code>
      */
     String getName();
@@ -35,10 +36,9 @@ public interface ReplicationQueue {
     /**
      * add a replication package to this queue
      *
-     * @param replicationPackage
-     *            a replication package to replicate
+     * @param replicationPackage a replication package to replicate
      * @return <code>true</code> if the replication package was added correctly to the queue,
-     *         <code>false</code otherwise
+     * <code>false</code otherwise
      * @throws ReplicationQueueException
      */
     boolean add(ReplicationPackage replicationPackage) throws ReplicationQueueException;
@@ -46,20 +46,12 @@ public interface ReplicationQueue {
     /**
      * get the status of a certain package in the queue
      *
-     * @param replicationPackage
-     *            the replication package to get the status for
+     * @param replicationPackage the replication package to get the status for
      * @return the item status in the queue
      * @throws ReplicationQueueException
      */
     ReplicationQueueItemState getStatus(ReplicationPackage replicationPackage)
-                    throws ReplicationQueueException;
-
-    /**
-     * get the agent this queue is used for
-     *
-     * @return a replication agent
-     */
-    ReplicationAgent getAgent();
+            throws ReplicationQueueException;
 
     /**
      * get the first item (FIFO wise, the next to be processed) into the queue
@@ -81,4 +73,17 @@ public interface ReplicationQueue {
      * @return <code>true</code> if the queue is empty, <code>false</code> otherwise
      */
     boolean isEmpty();
+
+    /**
+     * get the items in the queue
+     *
+     * @return a <code>Collection</code> of {@link org.apache.sling.replication.serialization.ReplicationPackage}s
+     */
+    Collection<ReplicationPackage> getItems();
+
+    /**
+     * remove an item from the queue by specifying its id
+     * @param id <code>String</code> representing an item's identifier
+     */
+    void remove(String id);
 }

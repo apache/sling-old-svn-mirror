@@ -41,7 +41,7 @@ public class JobHandlingUtils {
 
     private static final String LENGTH = "replication.package.length";
 
-//    private static final String BIN = "replication.package.stream";
+    private static final String BIN = "replication.package.stream";
 
     private static final String TYPE = "replication.package.type";
 
@@ -111,11 +111,10 @@ public class JobHandlingUtils {
             }
 
             public InputStream getInputStream() throws IOException {
-                // TODO : use this once SLING-3140 gets released
-                // return new ByteArrayInputStream((byte[]) job.getProperty(BIN));
+                return IOUtils.toInputStream(String.valueOf(job.getProperty(BIN)));
 
                 // workaround to make void package work while we get SLING-3140 to be released
-                return IOUtils.toInputStream(String.valueOf(job.getProperty(ID)));
+//                return IOUtils.toInputStream(String.valueOf(job.getProperty(ID)));
             }
 
             public String getId() {
@@ -134,13 +133,13 @@ public class JobHandlingUtils {
     }
 
     public static Map<String, Object> createFullPropertiesFromPackage(
-                    ReplicationPackage replicationPackage) {
+                    ReplicationPackage replicationPackage) throws IOException {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(ID, replicationPackage.getId());
         properties.put(PATHS, replicationPackage.getPaths());
         properties.put(LENGTH, replicationPackage.getLength());
         properties.put(ACTION, replicationPackage.getAction());
-//        properties.put(BIN, IOUtils.toByteArray(replicationPackage.getInputStream()));
+        properties.put(BIN, IOUtils.toString(replicationPackage.getInputStream()));
         properties.put(TYPE, replicationPackage.getType());
         return properties;
     }

@@ -45,6 +45,8 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
             replicationPackage = createPackageForAdd(request);
         } else if (ReplicationActionType.DELETE.equals(request.getAction())) {
             replicationPackage = new VoidReplicationPackage(request, getName());
+        } else if (ReplicationActionType.POLL.equals(request.getAction())) {
+            replicationPackage = new VoidReplicationPackage(request, getName()); // TODO : change this
         } else {
             throw new ReplicationPackageBuildingException("unknown action type "
                     + request.getAction());

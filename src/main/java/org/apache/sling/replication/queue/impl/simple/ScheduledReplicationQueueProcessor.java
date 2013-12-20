@@ -59,7 +59,7 @@ public class ScheduledReplicationQueueProcessor implements Runnable {
                     ReplicationPackage item = queue.getHead();
                     if (item != null) {
                         try {
-                            if (queue.getAgent().process(item)) {
+                            if (((SimpleReplicationQueue)queue).getAgent().process(item)) {
                                 queue.removeHead();
                             } else {
                                 if (log.isWarnEnabled()) {

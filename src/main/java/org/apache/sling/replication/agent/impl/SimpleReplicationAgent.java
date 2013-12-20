@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import java.net.URI;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
@@ -125,20 +126,23 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     public boolean process(ReplicationPackage item) throws AgentReplicationException {
         try {
-            if (transportHandler != null) {
+            if (transportHandler != null || (endpoint != null && endpoint.length() > 0)) {
                 transportHandler.transport(item, new ReplicationEndpoint(endpoint),
                         transportAuthenticationProvider);
                 return true;
             } else {
-                if (log.isWarnEnabled()) {
-                    log.warn("could not process an item as a transport handler is not bound to agent {}",
-                            name);
+                if (log.isInfoEnabled()) {
+                    log.info("agent {} processing skipped", name);
                 }
                 return false;
             }
         } catch (ReplicationTransportException e) {
             throw new AgentReplicationException(e);
         }
+    }
+
+    public URI getEndpoint() {
+        return new ReplicationEndpoint(endpoint).getUri();
     }
 
     public String getName() {

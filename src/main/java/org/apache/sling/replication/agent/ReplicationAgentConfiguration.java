@@ -20,7 +20,6 @@ package org.apache.sling.replication.agent;
 
 import java.util.Arrays;
 import java.util.Dictionary;
-
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 /**
@@ -42,7 +41,7 @@ public class ReplicationAgentConfiguration {
 
     public static final String AUTHENTICATION_PROPERTIES = "authentication.properties";
 
-    public static final String DISTRIBUTION = "ReplicationQueueDistributionStrategy.target";
+    public static final String QUEUE_DISTRIBUTION = "ReplicationQueueDistributionStrategy.target";
 
     public static final String RULES = "rules";
 
@@ -54,9 +53,11 @@ public class ReplicationAgentConfiguration {
 
     private final String targetTransportHandler;
 
-    private final String targetReplicationBuilder;
+    private final String targetReplicationPackageBuilder;
 
     private final String targetReplicationQueueProvider;
+
+    private final String targetReplicationQueueDistributionStrategy;
 
     private final String targetAuthenticationHandlerFactory;
 
@@ -68,10 +69,11 @@ public class ReplicationAgentConfiguration {
         this.name = PropertiesUtil.toString(dictionary.get(NAME), "");
         this.endpoint = PropertiesUtil.toString(dictionary.get(ENDPOINT), "");
         this.targetAuthenticationHandlerFactory = PropertiesUtil.toString(
-                        dictionary.get(TRANSPORT_AUTHENTICATION_FACTORY), "");
-        this.targetReplicationBuilder = PropertiesUtil.toString(dictionary.get(PACKAGING), "");
+                dictionary.get(TRANSPORT_AUTHENTICATION_FACTORY), "");
+        this.targetReplicationPackageBuilder = PropertiesUtil.toString(dictionary.get(PACKAGING), "");
         this.targetReplicationQueueProvider = PropertiesUtil.toString(
-                        dictionary.get(QUEUEPROVIDER), "");
+                dictionary.get(QUEUEPROVIDER), "");
+        this.targetReplicationQueueDistributionStrategy = PropertiesUtil.toString(dictionary.get(QUEUE_DISTRIBUTION), "");
         this.targetTransportHandler = PropertiesUtil.toString(dictionary.get(TRANSPORT), "");
         String[] ap = PropertiesUtil.toStringArray(dictionary.get(AUTHENTICATION_PROPERTIES));
         this.authenticationProperties = ap != null ? ap : new String[0];
@@ -94,8 +96,8 @@ public class ReplicationAgentConfiguration {
         return targetAuthenticationHandlerFactory;
     }
 
-    public String getTargetReplicationBuilder() {
-        return targetReplicationBuilder;
+    public String getTargetReplicationPackageBuilder() {
+        return targetReplicationPackageBuilder;
     }
 
     public String getTargetReplicationQueueProvider() {
@@ -106,15 +108,19 @@ public class ReplicationAgentConfiguration {
         return targetTransportHandler;
     }
 
+    public String getTargetReplicationQueueDistributionStrategy() { return targetReplicationQueueDistributionStrategy; }
+
     @Override
     public String toString() {
-        return "{\"name\":\"" + name + "\", \"endpoint\":\"" + endpoint + "\", \"targetTransportHandler\":\""
-                        + targetTransportHandler + "\", \"targetReplicationBuilder\":\""
-                        + targetReplicationBuilder + "\", \"targetReplicationQueueProvider\":\""
-                        + targetReplicationQueueProvider + "\", \"targetAuthenticationHandlerFactory\":\""
-                        + targetAuthenticationHandlerFactory + "\", \"authenticationProperties\":\""
-                        + Arrays.toString(authenticationProperties) + "\", \"rules\":\""
-                        + Arrays.toString(rules) + "\"}";
+        return "{\"" + NAME + "\":\"" + name + "\", \""
+                + ENDPOINT + "\":\"" + endpoint + "\", \""
+                + TRANSPORT + "\":\"" + targetTransportHandler + "\", \""
+                + PACKAGING + "\":\"" + targetReplicationPackageBuilder + "\", \""
+                + QUEUEPROVIDER + "\":\"" + targetReplicationQueueProvider + "\", \""
+                + QUEUE_DISTRIBUTION + "\":\"" + targetReplicationQueueDistributionStrategy+ "\", \""
+                + TRANSPORT_AUTHENTICATION_FACTORY + "\":\"" + targetAuthenticationHandlerFactory + "\", \""
+                + AUTHENTICATION_PROPERTIES + "\":\"" + Arrays.toString(authenticationProperties) + "\", \""
+                + RULES + "\":\"" + Arrays.toString(rules) + "\"}";
     }
 
 }

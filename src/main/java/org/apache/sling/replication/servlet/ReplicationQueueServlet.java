@@ -31,6 +31,8 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
 import org.apache.sling.replication.agent.impl.ReplicationAgentQueueResource;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.serialization.ReplicationPackage;
 
 @SuppressWarnings("serial")
 @Component(metatype = false)
@@ -48,14 +50,56 @@ public class ReplicationQueueServlet extends SlingAllMethodsServlet {
         ReplicationQueue queue = resource
                 .adaptTo(ReplicationQueue.class);
         if (queue != null) {
-            response.getWriter().write(toJSoN(queue));
+            try {
+                response.getWriter().write(toJSoN(queue));
+            } catch (Exception e) {
+                response.getWriter().write("{\"status\" : \"error\",\"message\":\"error reading from the queue\"}");
+            }
         } else {
-            response.getWriter().write("{\"status\" : \"error\", \"message\":\"queue not found\"}");
+            response.getWriter().write("{\"status\" : \"error\",\"message\":\"queue not found\"}");
         }
     }
 
-    private String toJSoN(ReplicationQueue queue) {
-        return "{" + "\"name\":\"" + queue.getName() + "\",\"empty\":" + queue.isEmpty() + "}";
+    private String toJSoN(ReplicationQueue queue) throws Exception {
+        StringBuilder builder = new StringBuilder("{\"name\":\"" + queue.getName() + "\",\"empty\":" + queue.isEmpty());
+        if (!queue.isEmpty()) {
+            builder.append(",\"items\":[");
+            for (ReplicationPackage item : queue.getItems()) {
+                builder.append('{');
+                builder.append(toJSoN(item));
+                builder.append(',');
+                builder.append(toJSoN(queue.getStatus(item)));
+                builder.append("},");
+            }
+            if (queue.getItems().size() > 0) {
+                builder.deleteCharAt(builder.length() - 1);
+            }
+            builder.append(']');
+        }
+        builder.append('}');
+        return builder.toString();
+    }
+
+    private String toJSoN(ReplicationQueueItemState status) {
+        return "\"attempts\":" + status.getAttempts() + ",\"state\":\"" + status.getItemState().name() + "\",\"entered\":\"" + status.getEntered().getTime() + "\"";
+    }
+
+    private String toJSoN(ReplicationPackage item) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("\"id\":\"").append(item.getId());
+        builder.append("\",\"paths\":[");
+        for (int i = 0; i < item.getPaths().length; i++) {
+            builder.append("\"");
+            builder.append(item.getPaths()[i]);
+            builder.append("\",");
+        }
+        builder.deleteCharAt(builder.length() - 1);
+        builder.append(']');
+        builder.append(",\"action\":\"").append(item.getAction());
+        builder.append("\",\"type\":\"").append(item.getType());
+        builder.append("\",\"length\":").append(item.getLength());
+
+        return builder.toString();
     }
 
 }
