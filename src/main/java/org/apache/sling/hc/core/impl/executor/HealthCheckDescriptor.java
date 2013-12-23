@@ -32,17 +32,18 @@ import org.osgi.service.component.ComponentConstants;
  */
 public class HealthCheckDescriptor {
 
+    private final long serviceId;
     private final transient ServiceReference serviceReference;
     private final String name;
     private final String className;
     private final List<String> tags;
 
-    public HealthCheckDescriptor(ServiceReference healthCheckRef) {
+    public HealthCheckDescriptor(final ServiceReference healthCheckRef) {
         if (healthCheckRef == null) {
             throw new IllegalArgumentException("HealthCheck reference must not be null");
         }
-
         this.serviceReference = healthCheckRef;
+        this.serviceId = (Long) healthCheckRef.getProperty(Constants.SERVICE_ID);
 
         this.name = getHealthCheckName(healthCheckRef);
         this.className = (String) healthCheckRef.getProperty(ComponentConstants.COMPONENT_NAME);
@@ -89,38 +90,27 @@ public class HealthCheckDescriptor {
     }
 
     public ServiceReference getServiceReference() {
-        return serviceReference;
+        return this.serviceReference;
+    }
+
+    public long getServiceId() {
+        return this.serviceId;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((className == null) ? 0 : className.hashCode());
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + (int) (serviceId ^ (serviceId >>> 32));
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
+    public boolean equals(final Object obj) {
+        if ( !(obj instanceof HealthCheckDescriptor)) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        HealthCheckDescriptor other = (HealthCheckDescriptor) obj;
-        if (className == null) {
-            if (other.className != null)
-                return false;
-        } else if (!className.equals(other.className))
-            return false;
-        if (name == null) {
-            if (other.name != null)
-                return false;
-        } else if (!name.equals(other.name))
-            return false;
-        return true;
+        }
+        final HealthCheckDescriptor other = (HealthCheckDescriptor) obj;
+        return serviceId == other.serviceId;
     }
-
 }
