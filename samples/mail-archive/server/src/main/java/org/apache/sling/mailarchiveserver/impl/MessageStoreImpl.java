@@ -82,8 +82,11 @@ public class MessageStoreImpl implements MessageStore {
     private BundleContext bundleContext = null;
 
     static final String FIELD_SEPARATOR = " : ";
-    private static final String[] RE_PREFIXES = { "re:", "aw:", "fw:", "re ", "aw ", "fw ", "答复"};
-    // for testing
+    
+    // TODO should be configurable, and should probably be in ThreadKeyGeneratorImpl
+    private static final String[] RE_PREFIXES = { "re:", "aw:", "fw:", "re ", "aw ", "fw ", "\u7B54\u590D"};
+    
+    // TODO for testing??
     String archivePath = MailArchiveServerConstants.ARCHIVE_PATH;
     String resourceTypeKey = MailArchiveServerConstants.RT_KEY;
 

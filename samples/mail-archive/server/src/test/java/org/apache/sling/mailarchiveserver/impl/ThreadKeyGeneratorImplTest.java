@@ -36,7 +36,7 @@ public class ThreadKeyGeneratorImplTest {
 		result.add(new Object[] {null, UNADDRESSABLE_SUBJECT_KEY} ); 
 		result.add(new Object[] {"*", UNADDRESSABLE_SUBJECT_KEY} ); 
 		result.add(new Object[] {"1.5.0", "0/00/1_5_0"} ); 
-		result.add(new Object[] {"把握正确方向,做个效率为先的领导助手", UNADDRESSABLE_SUBJECT_KEY} ); 
+		result.add(new Object[] {"\"\u628A\u63E1\u6B63\u786E\u65B9\u5411,\u505A\u4E2A\u6548\u7387\u4E3A\u5148\u7684\u9886\u5BFC\u52A9\u624B\"", UNADDRESSABLE_SUBJECT_KEY} ); 
 		result.add(new Object[] {"remove   consecutive - . - whitespaces", "c/cs/remove_consecutive_whitespaces"} ); 
 
 		return result;

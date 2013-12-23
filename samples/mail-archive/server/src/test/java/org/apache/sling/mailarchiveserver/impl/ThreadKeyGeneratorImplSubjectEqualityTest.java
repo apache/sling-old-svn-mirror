@@ -25,11 +25,10 @@ public class ThreadKeyGeneratorImplSubjectEqualityTest {
     public static List<Object[]> data() {
         final List<Object[]> result = new ArrayList<Object[]>();
 
-        result.add(new Object[] {"Chef cookbooks for Installing CQ & packages", "Re: Chef cookbooks for Installing CQ & packages"} ); 
+        result.add(new Object[] {"Chef cookbooks for Installing FAQ & packages", "Re: Chef cookbooks for Installing FAQ & packages"} ); 
         result.add(new Object[] {"Dropbox to throw random files in and be accessible through http/ ftp?", "Re: Dropbox to throw random files in and be accessible through http/ ftp?"} ); 
         result.add(new Object[] {"Dropbox to throw random files in and be accessible through http/ ftp?", "RE: Dropbox to throw random files in and be accessible through http/ ftp?"} ); 
-        result.add(new Object[] {"CRX integration guidelines for ES3", "答复: CRX integration guidelines for ES3"} ); 
-        //        result.add(new Object[] {, } ); 
+        result.add(new Object[] {"FAQ integration guidelines for ES3", " \u7B54\u590D: FAQ integration guidelines for ES3"} ); 
 
         return result;
     }

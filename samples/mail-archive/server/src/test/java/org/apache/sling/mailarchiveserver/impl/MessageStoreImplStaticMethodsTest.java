@@ -6,19 +6,13 @@ import static org.apache.sling.mailarchiveserver.impl.MessageStoreImpl.makeJcrFr
 import static org.apache.sling.mailarchiveserver.impl.MessageStoreImpl.removeRe;
 import static org.junit.Assert.assertEquals;
 
-import java.util.Date;
-import java.util.Map;
-
-import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.message.MessageImpl;
-import org.apache.sling.mailarchiveserver.util.MailArchiveServerConstants;
 import org.junit.Test;
 
 public class MessageStoreImplStaticMethodsTest {
 	
 	@Test
 	public void testMakeJcrFriendly() {
-		assertEquals("Remove each char", "", makeJcrFriendly("��!@#$%^&*()+={}[]<>,/?\\;:'\""));
+		assertEquals("Remove each char", "", makeJcrFriendly("\"\uFFFD\uFFFD!@#$%^&*()+={}[]<>,/?\\\\;:'\\\""));
 		assertEquals("Substitute each char with _ char, trimming", "a", makeJcrFriendly(".a_")); 
 		assertEquals("Substitute each char with _ char", "b_e", makeJcrFriendly("b_ .-e"));
 	}
