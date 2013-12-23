@@ -57,10 +57,10 @@ import org.slf4j.LoggerFactory;
  * Runs health checks for a given list of tags in parallel.
  *
  */
-@Service
+@Service(value = HealthCheckExecutor.class)
 @Component(label = "Apache Sling Health Check Executor",
         description = "Runs health checks for a given list of tags in parallel.",
-        metatype = true)
+        metatype = true, immediate = true)
 public class HealthCheckExecutorImpl implements HealthCheckExecutor {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
