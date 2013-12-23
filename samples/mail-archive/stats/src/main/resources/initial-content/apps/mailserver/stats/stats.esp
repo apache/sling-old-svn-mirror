@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<%
+var title = "Mail archive stats prototype"
+%>
+
+<head>
+<meta charset="utf-8">
+<title><%= title %></title>
+</head>
+
+<body>
+<h1><%= title %></h1>
+
+Statistics are available for the following destinations:
+
+<ul>
+<%
+it = resource.getResourceResolver().listChildren(resource);
+while(it.hasNext()) {
+  child = it.next();
+  %>
+  <li>
+    <a href="<%= child.getPath() %>.html">
+    <%= child.getPath().replace(/.*\/(.*)/g,"$1") %>
+    </a>
+  </li>
+  <%
+}
+%>
+
+</ul>
+</script>
+</body>

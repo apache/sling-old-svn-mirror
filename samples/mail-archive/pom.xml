@@ -11,5 +11,6 @@
     <modules>
         <module>server</module>
         <module>ui</module>
+        <module>stats</module>
     </modules>
 </project>
