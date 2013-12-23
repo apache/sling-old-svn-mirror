@@ -20,7 +20,7 @@ package org.apache.sling.hc.webconsole.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.util.Collection;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
@@ -28,27 +28,23 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
-import org.apache.sling.hc.api.HealthCheck;
+import org.apache.sling.hc.api.HealthCheckExecutor;
+import org.apache.sling.hc.api.HealthCheckResult;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
-import org.apache.sling.hc.util.HealthCheckFilter;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 
 /** Webconsole plugin to execute health check services */
-@Component(immediate=true)
+@Component
 @Service(Servlet.class)
 @SuppressWarnings("serial")
 @Properties({
     @Property(name=org.osgi.framework.Constants.SERVICE_DESCRIPTION, value="Sling Health Check Web Console Plugin"),
-    @Property(name=org.osgi.framework.Constants.SERVICE_VENDOR, value="The Apache Software Foundation"),
     @Property(name="felix.webconsole.label", value=HealthCheckWebconsolePlugin.LABEL),
     @Property(name="felix.webconsole.title", value=HealthCheckWebconsolePlugin.TITLE),
     @Property(name="felix.webconsole.category", value=HealthCheckWebconsolePlugin.CATEGORY),
@@ -63,12 +59,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     public static final String PARAM_DEBUG = "debug";
     public static final String PARAM_QUIET = "quiet";
 
-    private BundleContext bundleContext;
-
-    @Activate
-    protected void activate(ComponentContext ctx) {
-        bundleContext = ctx.getBundleContext();
-    }
+    @Reference
+    private HealthCheckExecutor healthCheckExecutor;
 
     /** Serve static resource if applicable, and return true in that case */
     private boolean getStaticResource(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -104,28 +96,22 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         // Execute health checks only if tags are specified (even if empty)
         if(req.getParameter(PARAM_TAGS) != null) {
-            final ServiceReference[] references = new HealthCheckFilter(bundleContext).getTaggedHealthCheckServiceReferences(tags.split(","));
+            Collection<HealthCheckResult> results = healthCheckExecutor.executeAllForTags(tags.split(","));
 
             final PrintWriter pw = resp.getWriter();
             pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
             int total = 0;
             int failed = 0;
-            for(final ServiceReference ref : references) {
-                final HealthCheck hc = (HealthCheck) this.bundleContext.getService(ref);
-                if ( hc != null ) {
-                    try {
-                        final Result r = hc.execute();
-                        total++;
-                        if (!r.isOk()) {
-                            failed++;
-                        }
-                        if (!quiet || !r.isOk()) {
-                            renderResult(resp, ref, hc, r, debug);
-                        }
-                    } finally {
-                        this.bundleContext.ungetService(ref);
-                    }
+            for (final HealthCheckResult r : results) {
+
+                total++;
+                if (!r.isOk()) {
+                    failed++;
                 }
+                if (!quiet || !r.isOk()) {
+                    renderResult(resp, r, debug);
+                }
+
             }
             final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
             c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
@@ -133,21 +119,13 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         }
     }
 
-    private void renderResult(HttpServletResponse resp, final ServiceReference ref, HealthCheck hc, Result result, boolean debug) throws IOException {
+    private void renderResult(HttpServletResponse resp, HealthCheckResult result, boolean debug) throws IOException {
         final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
 
         final StringBuilder status = new StringBuilder();
-        final Object tags = ref.getProperty(HealthCheck.TAGS);
-        final String tagString;
-        if ( tags == null ) {
-            tagString = "";
-        } else if ( tags instanceof String[] ) {
-            tagString = Arrays.toString((String[])tags);
-        } else {
-            tagString = tags.toString();
-        }
-        status.append("Tags: ").append(tagString);
-        c.titleHtml(getName(ref, hc), null);
+
+        status.append("Tags: ").append(result.getHealthCheckTags());
+        c.titleHtml(result.getHealthCheckName(), null);
 
         c.tr();
         c.tdContent();
@@ -175,14 +153,6 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
             c.writer().println(sb.toString());
         }
         c.closeTd();
-    }
-
-    private String getName(final ServiceReference ref, HealthCheck hc) {
-        Object result = ref.getProperty(HealthCheck.NAME);
-        if (result == null) {
-            result = hc;
-        }
-        return result.toString();
     }
 
     private void doForm(HttpServletRequest req, HttpServletResponse resp, String tags, boolean debug, boolean quiet)
