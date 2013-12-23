@@ -59,9 +59,11 @@ public class U {
                     mavenBundle("org.apache.sling", "org.apache.sling.settings", "1.2.2"),
                     mavenBundle("org.apache.sling", "org.apache.sling.launchpad.api", "1.1.0"),
                     mavenBundle("org.apache.sling", "org.apache.sling.scripting.api", "2.1.0"),
+                    mavenBundle("org.apache.sling", "org.apache.sling.commons.threads", "3.1.0"),
                     mavenBundle("commons-collections", "commons-collections", "3.2.1"),
                     mavenBundle("commons-io", "commons-io", "1.4"),
                     mavenBundle("commons-fileupload", "commons-fileupload", "1.2.2"),
+                    mavenBundle("commons-lang", "commons-lang", "2.5"),
                     mavenBundle("org.mortbay.jetty", "servlet-api-2.5", "6.1.14")
             )
         );
