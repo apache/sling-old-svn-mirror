@@ -1,7 +1,7 @@
 package org.apache.sling.mailarchiveserver.impl;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.sling.mailarchiveserver.impl.Mime4jMboxParserImpl.Mime4jParserIterator;
+import org.apache.sling.mailarchiveserver.util.TU;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +24,10 @@ public class Mime4jMboxParserImplStreamingTest {
 	private Mime4jMboxParserImpl parser = new Mime4jMboxParserImpl();
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final String TEST_FOLDER = Mime4jMboxParserImplCountTest.TEST_FOLDER;
-	private static final String TEST_FILE_NAME = TEST_FOLDER  + "mbox/tomcat-dev-201204.mbox";
+	private static final String TEST_FILE_NAME = "mbox/tomcat-dev-201204.mbox";
 	private static final double TEST_FILE_RATIO = 1.2;
 
+	@Ignore("TODO - fails if running tests with lots of memory")
 	@Test
 	public void testParserIsStreaming() throws IOException {
 		File tempf = null;
@@ -35,7 +37,7 @@ public class Mime4jMboxParserImplStreamingTest {
             final long maxMem = Runtime.getRuntime().maxMemory();
 		    log.info("Max memory={}, reading from {}, might take a while...", maxMem, TEST_FILE_NAME);
 		    log.info("TODO: this test fails with 'Size exceeds Integer.MAX_VALUE' if maxMem is over a certain limit");
-			final File fileToSample = new File(TEST_FILE_NAME);
+			final File fileToSample = new File(TU.TEST_FOLDER, TEST_FILE_NAME);
 			final int count = (int) (maxMem * TEST_FILE_RATIO / fileToSample.length()) + 1;
 
 			fis = new FileInputStream(fileToSample);
@@ -70,7 +72,7 @@ public class Mime4jMboxParserImplStreamingTest {
 
 	@Test
 	public void testTempFileIsDeleted() throws IOException {
-		File testFile = new File(TEST_FOLDER + "mbox/tomcat-dev-201204.mbox");
+		File testFile = new File(TU.TEST_FOLDER, TEST_FILE_NAME);
 		Mime4jParserIterator iter = (Mime4jParserIterator) parser.parse(new FileInputStream(testFile));
 		assertFalse("Expecting temp file to be deleted", new File(iter.tempFileAbsPath).exists());
 	}	

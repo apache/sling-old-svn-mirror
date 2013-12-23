@@ -1,0 +1,109 @@
+Return-Path: <common-dev-return-77410-apmail-hadoop-common-dev-archive=hadoop.apache.org@hadoop.apache.org>
+X-Original-To: apmail-hadoop-common-dev-archive@www.apache.org
+Delivered-To: apmail-hadoop-common-dev-archive@www.apache.org
+Received: from mail.apache.org (hermes.apache.org [140.211.11.3])
+	by minotaur.apache.org (Postfix) with SMTP id 275929C5F
+	for <apmail-hadoop-common-dev-archive@www.apache.org>; Sun,  1 Jan 2012 05:31:21 +0000 (UTC)
+Received: (qmail 5467 invoked by uid 500); 1 Jan 2012 05:31:20 -0000
+Delivered-To: apmail-hadoop-common-dev-archive@hadoop.apache.org
+Received: (qmail 4867 invoked by uid 500); 1 Jan 2012 05:31:08 -0000
+Mailing-List: contact common-dev-help@hadoop.apache.org; run by ezmlm
+Precedence: bulk
+List-Help: <mailto:common-dev-help@hadoop.apache.org>
+List-Unsubscribe: <mailto:common-dev-unsubscribe@hadoop.apache.org>
+List-Post: <mailto:common-dev@hadoop.apache.org>
+List-Id: <common-dev.hadoop.apache.org>
+Reply-To: common-dev@hadoop.apache.org
+Delivered-To: mailing list common-dev@hadoop.apache.org
+Received: (qmail 4859 invoked by uid 99); 1 Jan 2012 05:31:05 -0000
+Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Sun, 01 Jan 2012 05:31:05 +0000
+X-ASF-Spam-Status: No, hits=1.5 required=5.0
+	tests=HTML_MESSAGE,RCVD_IN_DNSWL_LOW,SPF_PASS
+X-Spam-Check-By: apache.org
+Received-SPF: pass (athena.apache.org: domain of ronald.petty@gmail.com designates 74.125.82.176 as permitted sender)
+Received: from [74.125.82.176] (HELO mail-we0-f176.google.com) (74.125.82.176)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Sun, 01 Jan 2012 05:31:00 +0000
+Received: by werm10 with SMTP id m10so10570169wer.35
+        for <common-dev@hadoop.apache.org>; Sat, 31 Dec 2011 21:30:39 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=mime-version:from:date:message-id:subject:to:content-type;
+        bh=zbylm9gc+1ZZdrKyuZCh2myzsS2W9C01CCAV9oo6vkA=;
+        b=czzeM+s45qAT+QBYb+swdHIsKQUHn1mocaeE0Jd4ZbBZfepTDA3IjAgX0QPxeibfOx
+         phTYdcY0ZaqeOoCVxIrwlZs0vfwF5FkH33yOIIJ9mJ1iGxFHtWTlYWDTrSDkVRhH6Jgj
+         BWMpsbhh5I8p56G9zhKI0xS4joa6Wssnq83WQ=
+Received: by 10.216.138.101 with SMTP id z79mr31006394wei.7.1325395838866;
+ Sat, 31 Dec 2011 21:30:38 -0800 (PST)
+MIME-Version: 1.0
+Received: by 10.216.6.27 with HTTP; Sat, 31 Dec 2011 21:30:17 -0800 (PST)
+From: Ronald Petty <ronald.petty@gmail.com>
+Date: Sun, 1 Jan 2012 00:30:17 -0500
+Message-ID: <CA+mbt7jXoOyp+zXFV2GEyVGTqDQ4atxVKGmec5gfoVhP=32bRw@mail.gmail.com>
+Subject: Building Trunk on EC2
+To: common-dev@hadoop.apache.org
+Content-Type: multipart/alternative; boundary=0016e6d6417629976904b570c4d2
+
+--0016e6d6417629976904b570c4d2
+Content-Type: text/plain; charset=ISO-8859-1
+
+Hello,
+
+If anyone is interested, here are my notes on how to build trunk on bare
+bones AWS EC2 instance.
+
+   1. Create a XL 64-bit AWS EC2 instance (anything smaller fails due to
+   lack of RAM)
+   2. SSH to EC2 instance
+   3. sudo useradd -u 1000 hadoop
+   4. sudo yum install svn gcc.x86_64 gcc-c++.x86_64 libtool.x86_64
+   make.x86_64 automake.noarch autoconf.noarch java-1.6.0-openjdk-devel.x86_64
+   zlib-devel.x86_64
+   5. set JAVA_HOME in vi /etc/profile.d/aws-apitools-common.sh to
+   /usr/lib/jvm/java  (if you don't the native components will not build due
+   to using an incorrect JAVA_HOME even if you set evn JAVA_HOME)
+   6. reboot
+   7. login
+   8. su hadoop
+   9. sudo mkdir /data
+   10. sudo chown -R hadoop:hadoop /data
+   11. cd /data
+   12. wget http://apache.petsads.us//forrest/apache-forrest-0.9.tar.gz
+   13. wget
+   http://mirror.cc.columbia.edu/pub/software/apache//maven/binaries/apache-maven-3.0.3-bin.tar.gz
+   14. wget http://protobuf.googlecode.com/files/protobuf-2.4.1.tar.gz
+   15. wget
+   http://superb-sea2.dl.sourceforge.net/project/findbugs/findbugs/2.0.0/findbugs-2.0.0.tar.gz
+   16. gunzip *.gz
+   17. tar xf apache-forrest-0.9.tar
+   18. tar xf apache-maven-3.0.3-bin.tar
+   19. tar xf findbugs-2.0.0.tar
+   20. tar xf protobuf-2.4.1.tar
+   21. export FORREST_HOME=/data/apache-forrest-0.9
+   22. export MAVEN_HOME=/data/apache-maven-3.0.3
+   23. export FINDBUGS_HOME=/data/findbugs-2.0.0
+   24. cd protobuf-2.4.1
+   25. ./configure
+   26. make
+   27. sudo make install
+   28. cd ..
+   29. export
+   PATH=/usr/local/bin/:/data/apache-maven-3.0.3/bin/:/data/apache-forrest-0.9/bin/:/data/findbugs-2.0.0/bin/:$PATH
+   30. svn checkout
+http://svn.apache.org/repos/asf/hadoop/common/trunk/hadoop-trunk
+   31. cd hadoop-trunk
+   32. mvn package -Pdist,native,docs -DskipTests -Dtar
+
+I have not actually used the constructed tar yet, but wanted to share my
+notes.  I did notice two things missing (compared to the regular pre-yarn
+releases), there is no conf directory, nor example jars.  I know trunk is
+being worked on but I am not sure what the plan is there (or if I simply
+missed something.)
+
+If you have any comments, questions, or advice I love to here it.
+
+Kindest regards.
+
+Ron
+
+--0016e6d6417629976904b570c4d2--

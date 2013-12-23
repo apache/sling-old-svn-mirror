@@ -1,4 +1,0 @@
-See <https://builds.apache.org/job/sling-trunk-1.6/1288/changes>
-
-
-

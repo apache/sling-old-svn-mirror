@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.james.mime4j.dom.Message;
+import org.apache.sling.mailarchiveserver.util.TU;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -25,16 +26,14 @@ public class Mime4jMboxParserImplCountTest {
 	private String filePath;
 	private int expectedMessagesCount;
 	
-	static final String TEST_FOLDER = "test_files/";
-	
 	@Parameters(name="{0}")
     public static Collection<Object[]> data() {
         List<Object[]> params = new ArrayList<Object[]>();
-        params.add(new Object[] {TEST_FOLDER+"three_messages.mbox", 3} );
-        params.add(new Object[] {TEST_FOLDER+"mbox/jackrabbit-dev-201201.mbox", 323} );
-        params.add(new Object[] {TEST_FOLDER+"mbox/hadoop-common-dev-201202.mbox", 296} );
-        params.add(new Object[] {TEST_FOLDER+"mbox/sling-dev-201203.mbox", 227} );
-        params.add(new Object[] {TEST_FOLDER+"mbox/tomcat-dev-201204.mbox", 658} );
+        params.add(new Object[] {"three_messages.mbox", 3} );
+        params.add(new Object[] {"mbox/jackrabbit-dev-201201.mbox", 323} );
+        params.add(new Object[] {"mbox/hadoop-common-dev-201202.mbox", 296} );
+        params.add(new Object[] {"mbox/sling-dev-201203.mbox", 227} );
+        params.add(new Object[] {"mbox/tomcat-dev-201204.mbox", 658} );
         return params;
     }
     
@@ -45,7 +44,7 @@ public class Mime4jMboxParserImplCountTest {
 
 	@Test
 	public void testParse() throws IOException {
-		Iterator<Message> iter = parser.parse(new FileInputStream(new File(filePath)));
+		Iterator<Message> iter = parser.parse(new FileInputStream(new File(TU.TEST_FOLDER, filePath)));
 		
 		int cnt = 0;
 		Set<Message> set = new HashSet<Message>();

@@ -24,6 +24,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.discovery.impl.setup.MockedResourceResolver;
 import org.apache.sling.mailarchiveserver.api.MboxParser;
 import org.apache.sling.mailarchiveserver.util.MailArchiveServerConstants;
+import org.apache.sling.mailarchiveserver.util.TU;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +35,6 @@ public class MessageStoreImplRepositoryTest {
 	private MessageStoreImpl store;
 
 	static final String TEST_RT_KEY = "sling_resourceType";
-	private static final String TEST_FOLDER = "test_files/";
 	private static final String BODY_SUFFIX = "_body";
 	private static final String HEADERS_SUFFIX = "_headers";
 
@@ -85,14 +85,14 @@ public class MessageStoreImplRepositoryTest {
 	@Test
 	public void testStructure() throws IOException {
 		MboxParser parser = new Mime4jMboxParserImpl();
-		final File file = new File(TEST_FOLDER + MBOX_FILE);
+		final File file = new File(TU.TEST_FOLDER, MBOX_FILE);
 		store.saveAll(parser.parse(new FileInputStream(file)));
 		assertStructure();
 	}
 
 	private void assertSaveMessage(String messageFile) throws MimeException, IOException, FileNotFoundException {
 		MessageBuilder builder = new DefaultMessageBuilder();
-		Message msg = builder.parseMessage(new FileInputStream(TEST_FOLDER + messageFile));
+		Message msg = builder.parseMessage(new FileInputStream(new File(TU.TEST_FOLDER, messageFile)));
 
 		store.save(msg);
 
@@ -100,13 +100,13 @@ public class MessageStoreImplRepositoryTest {
 		assertNotNull("Expecting non-null Resource", r);
 		final ModifiableValueMap m = r.adaptTo(ModifiableValueMap.class);
 
-		File bodyFile = new File(TEST_FOLDER + specialPathFromFilePath(messageFile, BODY_SUFFIX));
+		File bodyFile = new File(TU.TEST_FOLDER, specialPathFromFilePath(messageFile, BODY_SUFFIX));
 		if (bodyFile.exists()) {
 			String expectedBody = readTextFile(bodyFile);
 			assertValueMap(m, "Body", expectedBody);
 		}
 
-		File headersFile = new File(TEST_FOLDER + specialPathFromFilePath(messageFile, HEADERS_SUFFIX));
+		File headersFile = new File(TU.TEST_FOLDER, specialPathFromFilePath(messageFile, HEADERS_SUFFIX));
 		if (headersFile.exists()) {
 			MessageStoreImplRepositoryTestUtil.assertHeaders(headersFile, m);
 		}

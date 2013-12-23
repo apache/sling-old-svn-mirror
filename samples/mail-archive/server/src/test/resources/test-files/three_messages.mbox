@@ -1,0 +1,250 @@
+From common-dev-return-77881-apmail-hadoop-common-dev-archive=hadoop.apache.org@hadoop.apache.org  Thu Mar  1 02:57:25 2012
+Return-Path: <common-dev-return-77881-apmail-hadoop-common-dev-archive=hadoop.apache.org@hadoop.apache.org>
+X-Original-To: apmail-hadoop-common-dev-archive@www.apache.org
+Delivered-To: apmail-hadoop-common-dev-archive@www.apache.org
+Received: from mail.apache.org (hermes.apache.org [140.211.11.3])
+	by minotaur.apache.org (Postfix) with SMTP id 8C416925D
+	for <apmail-hadoop-common-dev-archive@www.apache.org>; Thu,  1 Mar 2012 02:57:25 +0000 (UTC)
+Received: (qmail 9815 invoked by uid 500); 1 Mar 2012 02:57:24 -0000
+Delivered-To: apmail-hadoop-common-dev-archive@hadoop.apache.org
+Received: (qmail 9089 invoked by uid 500); 1 Mar 2012 02:57:22 -0000
+Mailing-List: contact common-dev-help@hadoop.apache.org; run by ezmlm
+Precedence: bulk
+List-Help: <mailto:common-dev-help@hadoop.apache.org>
+List-Unsubscribe: <mailto:common-dev-unsubscribe@hadoop.apache.org>
+List-Post: <mailto:common-dev@hadoop.apache.org>
+List-Id: <common-dev.hadoop.apache.org>
+Reply-To: common-dev@hadoop.apache.org
+Delivered-To: mailing list common-dev@hadoop.apache.org
+Received: (qmail 9040 invoked by uid 99); 1 Mar 2012 02:57:20 -0000
+Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Thu, 01 Mar 2012 02:57:20 +0000
+X-ASF-Spam-Status: No, hits=1.5 required=5.0
+	tests=HTML_MESSAGE,RCVD_IN_DNSWL_LOW,SPF_PASS
+X-Spam-Check-By: apache.org
+Received-SPF: pass (athena.apache.org: domain of masmertoz@gmail.com designates 209.85.210.176 as permitted sender)
+Received: from [209.85.210.176] (HELO mail-iy0-f176.google.com) (209.85.210.176)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Thu, 01 Mar 2012 02:57:14 +0000
+Received: by iagw33 with SMTP id w33so272974iag.35
+        for <common-dev@hadoop.apache.org>; Wed, 29 Feb 2012 18:56:53 -0800 (PST)
+Received-SPF: pass (google.com: domain of masmertoz@gmail.com designates 10.42.147.199 as permitted sender) client-ip=10.42.147.199;
+Authentication-Results: mr.google.com; spf=pass (google.com: domain of masmertoz@gmail.com designates 10.42.147.199 as permitted sender) smtp.mail=masmertoz@gmail.com; dkim=pass header.i=masmertoz@gmail.com
+Received: from mr.google.com ([10.42.147.199])
+        by 10.42.147.199 with SMTP id o7mr2309493icv.50.1330570613677 (num_hops = 1);
+        Wed, 29 Feb 2012 18:56:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=mime-version:in-reply-to:references:date:message-id:subject:from:to
+         :content-type;
+        bh=ca6tWWewYqZQb+wuqEDo3x908P9XiZM0DtWMOMrehQ4=;
+        b=CF9YqcgV+7bycKErB/pbmhFQldN1wxWkybLoH3+W9Oek4/FwP6kaZxPRuO5KeyLamw
+         eFmk3EBAa16qxEX0tul8Ik3BxFC72fK8JmZti78aTmdREjtet/C4a52ho8/bAaSkOCry
+         +eJqQtx2fh0Kn6ZaoMIgZiRbGaj9zXftmWexM=
+MIME-Version: 1.0
+Received: by 10.42.147.199 with SMTP id o7mr1907969icv.50.1330570613623; Wed,
+ 29 Feb 2012 18:56:53 -0800 (PST)
+Received: by 10.42.241.132 with HTTP; Wed, 29 Feb 2012 18:56:53 -0800 (PST)
+In-Reply-To: <CAENBeZZYO8sTZcQjWQ8aUndBJo3mcQKbxJiL2S47qryM8KN7tw@mail.gmail.com>
+References: <CAENBeZZYO8sTZcQjWQ8aUndBJo3mcQKbxJiL2S47qryM8KN7tw@mail.gmail.com>
+Date: Thu, 1 Mar 2012 03:56:53 +0100
+Message-ID: <CAENBeZbtbnESj6s0Bgkv5h7uSRUEQnZ+aWZm6z6pxGjxaSFiqg@mail.gmail.com>
+Subject: Re: Developing and deploying hadoop
+From: Merto Mertek <masmertoz@gmail.com>
+To: common-dev@hadoop.apache.org
+Content-Type: multipart/alternative; boundary=90e6ba6e8c04c60cb804ba259c76
+X-Virus-Checked: Checked by ClamAV on apache.org
+
+--90e6ba6e8c04c60cb804ba259c76
+Content-Type: text/plain; charset=ISO-8859-1
+
+I would be glad to hear what is your development cycle and how you deploy
+new features to production cluster...  How do you deploy them to the
+production cluster? With bash scripts and rsync, ant, maven or any other
+automation tool? I would be thankfull if you could point me to any resource
+describing best practices in developing, deploying and automatization of
+java project in unix/linux environment..
+
+thanks..
+
+
+On 13 February 2012 11:26, Merto Mertek <masmertoz@gmail.com> wrote:
+
+> I am interested in some general tips on how to develop and deploy new
+> versions of hadoop. I've been trying to compile a new version of  hadoop
+> and place the new jar to the cluster in the lib folder, however it was not
+> picked despite the classpath was explicitly set to the lib folder. I am
+> interested in the following questions:
+>
+> a) How to deploy a new version? Just copy the new compiled jar file to all
+> lib folders on all nodes?
+> b) Should I make just a new compile or a new release ('ant' vs 'ant tar')?
+> c) How do you develop and deploy hadoop locally and how remotely?  For
+> deploying builds are you using your own sh scripts or are you using any
+> tools like ant/maven?
+> d) What is the purpose of the folder $HADOOP_HOME/share/hadoop?
+>
+>
+> Any other tips are welcomed..
+>
+> Thank you
+>
+
+--90e6ba6e8c04c60cb804ba259c76--
+
+From dev-return-126904-apmail-tomcat-dev-archive=tomcat.apache.org@tomcat.apache.org  Mon Apr  2 02:59:53 2012
+Return-Path: <dev-return-126904-apmail-tomcat-dev-archive=tomcat.apache.org@tomcat.apache.org>
+X-Original-To: apmail-tomcat-dev-archive@www.apache.org
+Delivered-To: apmail-tomcat-dev-archive@www.apache.org
+Received: from mail.apache.org (hermes.apache.org [140.211.11.3])
+    by minotaur.apache.org (Postfix) with SMTP id 334159308
+    for <apmail-tomcat-dev-archive@www.apache.org>; Mon,  2 Apr 2012 02:59:53 +0000 (UTC)
+Received: (qmail 36894 invoked by uid 500); 2 Apr 2012 02:59:51 -0000
+Delivered-To: apmail-tomcat-dev-archive@tomcat.apache.org
+Received: (qmail 36800 invoked by uid 500); 2 Apr 2012 02:59:51 -0000
+Mailing-List: contact dev-help@tomcat.apache.org; run by ezmlm
+Precedence: bulk
+List-Help: <mailto:dev-help@tomcat.apache.org>
+List-Unsubscribe: <mailto:dev-unsubscribe@tomcat.apache.org>
+List-Post: <mailto:dev@tomcat.apache.org>
+List-Id: <dev.tomcat.apache.org>
+Reply-To: "Tomcat Developers List" <dev@tomcat.apache.org>
+Delivered-To: mailing list dev@tomcat.apache.org
+Received: (qmail 36740 invoked by uid 99); 2 Apr 2012 02:59:51 -0000
+Received: from nike.apache.org (HELO nike.apache.org) (192.87.106.230)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 02 Apr 2012 02:59:50 +0000
+X-ASF-Spam-Status: No, hits=-1996.0 required=5.0
+    tests=ALL_TRUSTED,DCC_CHECK
+X-Spam-Check-By: apache.org
+Received: from [140.211.11.115] (HELO eir.zones.apache.org) (140.211.11.115)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Mon, 02 Apr 2012 02:59:48 +0000
+Received: by eir.zones.apache.org (Postfix, from userid 80)
+    id EE2AA3D94; Mon,  2 Apr 2012 02:59:27 +0000 (UTC)
+From: bugzilla@apache.org
+To: dev@tomcat.apache.org
+Subject: DO NOT REPLY [Bug 53022] session is expired/removed/not found by
+ unknown reason
+Date: Mon, 02 Apr 2012 02:59:27 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: Tomcat 7
+X-Bugzilla-Component: Catalina
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: critical
+X-Bugzilla-Who: lu4242@apache.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Priority: P2
+X-Bugzilla-Assigned-To: dev@tomcat.apache.org
+X-Bugzilla-Target-Milestone: ---
+X-Bugzilla-Changed-Fields: CC
+In-Reply-To: <bug-53022-78@https.issues.apache.org/bugzilla/>
+References: <bug-53022-78@https.issues.apache.org/bugzilla/>
+X-Bugzilla-URL: https://issues.apache.org/bugzilla/
+Auto-Submitted: auto-generated
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+
+https://issues.apache.org/bugzilla/show_bug.cgi?id=53022
+
+Leonardo Uribe <lu4242@apache.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |lu4242@apache.org
+
+-- 
+Configure bugmail: https://issues.apache.org/bugzilla/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
+
+---------------------------------------------------------------------
+To unsubscribe, e-mail: dev-unsubscribe@tomcat.apache.org
+For additional commands, e-mail: dev-help@tomcat.apache.org
+
+
+From dev-return-33924-apmail-jackrabbit-dev-archive=jackrabbit.apache.org@jackrabbit.apache.org  Wed Jan 25 17:04:43 2012
+Return-Path: <dev-return-33924-apmail-jackrabbit-dev-archive=jackrabbit.apache.org@jackrabbit.apache.org>
+X-Original-To: apmail-jackrabbit-dev-archive@www.apache.org
+Delivered-To: apmail-jackrabbit-dev-archive@www.apache.org
+Received: from mail.apache.org (hermes.apache.org [140.211.11.3])
+    by minotaur.apache.org (Postfix) with SMTP id A60F99C19
+    for <apmail-jackrabbit-dev-archive@www.apache.org>; Wed, 25 Jan 2012 17:04:43 +0000 (UTC)
+Received: (qmail 52953 invoked by uid 500); 25 Jan 2012 17:04:43 -0000
+Delivered-To: apmail-jackrabbit-dev-archive@jackrabbit.apache.org
+Received: (qmail 52911 invoked by uid 500); 25 Jan 2012 17:04:42 -0000
+Mailing-List: contact dev-help@jackrabbit.apache.org; run by ezmlm
+Precedence: bulk
+List-Help: <mailto:dev-help@jackrabbit.apache.org>
+List-Unsubscribe: <mailto:dev-unsubscribe@jackrabbit.apache.org>
+List-Post: <mailto:dev@jackrabbit.apache.org>
+List-Id: <dev.jackrabbit.apache.org>
+Reply-To: dev@jackrabbit.apache.org
+Delivered-To: mailing list dev@jackrabbit.apache.org
+Received: (qmail 52903 invoked by uid 99); 25 Jan 2012 17:04:42 -0000
+Received: from athena.apache.org (HELO athena.apache.org) (140.211.11.136)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Wed, 25 Jan 2012 17:04:42 +0000
+X-ASF-Spam-Status: No, hits=-1.6 required=5.0
+    tests=RCVD_IN_DNSWL_MED,SPF_NEUTRAL
+X-Spam-Check-By: apache.org
+Received-SPF: neutral (athena.apache.org: local policy)
+Received: from [64.18.1.31] (HELO exprod6og113.obsmtp.com) (64.18.1.31)
+    by apache.org (qpsmtpd/0.29) with ESMTP; Wed, 25 Jan 2012 17:04:33 +0000
+Received: from outbound-smtp-2.corp.adobe.com ([193.104.215.16]) by exprod6ob113.postini.com ([64.18.5.12]) with SMTP
+    ID DSNKTyA2DGVL/RbMVKoAyiWEtOdqxaX7p0B0@postini.com; Wed, 25 Jan 2012 09:04:13 PST
+Received: from inner-relay-1.corp.adobe.com (inner-relay-1.corp.adobe.com [153.32.1.51])
+    by outbound-smtp-2.corp.adobe.com (8.12.10/8.12.10) with ESMTP id q0PH4A2U021951
+    for <dev@jackrabbit.apache.org>; Wed, 25 Jan 2012 09:04:11 -0800 (PST)
+Received: from nacas02.corp.adobe.com (nacas02.corp.adobe.com [10.8.189.100])
+    by inner-relay-1.corp.adobe.com (8.12.10/8.12.10) with ESMTP id q0PH49MN015128
+    for <dev@jackrabbit.apache.org>; Wed, 25 Jan 2012 09:04:10 -0800 (PST)
+Received: from eurcas01.eur.adobe.com (10.128.4.27) by nacas02.corp.adobe.com
+ (10.8.189.100) with Microsoft SMTP Server (TLS) id 8.3.192.1; Wed, 25 Jan
+ 2012 09:04:09 -0800
+Received: from susi.local (10.136.140.49) by eurcas01.eur.adobe.com
+ (10.128.4.111) with Microsoft SMTP Server id 8.3.192.1; Wed, 25 Jan 2012
+ 17:04:08 +0000
+Message-ID: <4F203608.3050200@apache.org>
+Date: Wed, 25 Jan 2012 17:04:08 +0000
+From: =?ISO-8859-1?Q?Michael_D=FCrig?= <mduerig@apache.org>
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; rv:9.0) Gecko/20111222 Thunderbird/9.0.1
+MIME-Version: 1.0
+To: <dev@jackrabbit.apache.org>
+Subject: [jr3 Microkernel] how should we handle failed save operations?
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+Hi,
+
+In an earlier discussion (probably offline), we decided to not implement 
+Item.refresh() since it doesn't go well with the MVCC model jr3 is based 
+on. Furthermore, JCR doesn't have an Item.undo() method for undoing changes.
+
+This may lead to problems when a Session.save() fails due to the 
+underlying Microkernel.commit failing because it detected a conflict. 
+Now there might be some transient changes (like deletions) which can't 
+be selectively undone by the user. So the user is left with a transient 
+space containing his changes but he can only discard them as a whole. 
+Not very satisfactory.
+
+Possible solutions:
+
+1) The Microkernel makes as much effort as possible to three way merge 
+changes.
+
+2) The user needs to do a session refresh with keep changes = true and 
+save again.
+
+3) Introduce a Item.undo method on the JCR API.
+
+
+1) Mitigates the problem such that it only occurs rarely.
+
+2) Is really nothing more than moving the problem of the failed commit 
+due to a conflict from the Microkernel to the transient space: now the 
+transient space needs to do conflict resolution.
+
+3) Is what I think we should do. This enable the user to resolve his 
+conflicts selectively.
+
+Michael

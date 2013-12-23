@@ -15,6 +15,7 @@ import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPart;
+import org.apache.sling.mailarchiveserver.util.TU;
 import org.junit.Test;
 
 /**
@@ -24,19 +25,17 @@ public class Mime4jMboxParserImplTest {
 
     private Mime4jMboxParserImpl parser = new Mime4jMboxParserImpl();
 
-    private static final String TEST_FOLDER = Mime4jMboxParserImplCountTest.TEST_FOLDER;
     private static final String WRONGBODY_MBOX = "wrongbody.mbox";
 
     @Test
     public void testMboxParsing() throws IOException {
-        final String testPath = TEST_FOLDER + WRONGBODY_MBOX;
-        Iterator<Message> iter = parser.parse(new FileInputStream(new File(testPath)));
+        Iterator<Message> iter = parser.parse(new FileInputStream(new File(TU.TEST_FOLDER, WRONGBODY_MBOX)));
 
         boolean fail = true;
         int i = 1;
         while (iter.hasNext()) {
             final Message message = iter.next();
-            File bodyFile = new File(specialPathFromFilePath(testPath, "_bodyOf" + i, "txt"));
+            File bodyFile = new File(TU.TEST_FOLDER, specialPathFromFilePath(WRONGBODY_MBOX, "_bodyOf" + i, "txt"));
             if (bodyFile.exists()) {
                 final String actual = getPlainBody(message);
                 final String expected = readTextFile(bodyFile);
