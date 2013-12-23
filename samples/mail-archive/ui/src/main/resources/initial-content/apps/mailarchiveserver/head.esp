@@ -1,0 +1,36 @@
+<link rel="stylesheet" href="/apps/mailarchiveserver/styles.css"/>
+<script type="text/javascript" src="/apps/mailarchiveserver/util.js"></script>
+<% 
+	var threadNodesNumber = 3
+
+	var startPage = "/mailarchiveserver/archive.html"
+	var homePage = "/mailarchiveserver.html?noredirect"
+
+	function dateComparator (a, b) {
+	if (a.date > b.date)
+		return 1;
+	else if (a.date < b.date)
+		return -1;
+	else
+		return 0;
+	}
+
+	function OrderedRenderer (comparator, renderOptions) {
+		this.list = []
+		this.addMsg = function (msg) {
+			var obj = new Object();
+			obj.path = msg.getPath();
+			obj.date = new Date(msg["Date"]);
+			this.list.push(obj);
+		}
+		this.sort = function () {
+			this.list.sort(comparator);
+		}
+		this.render = function () {
+			while (this.list.length > 0) {
+				 sling.include(this.list.pop().path, renderOptions); 
+			}
+		}
+	}
+	
+%>

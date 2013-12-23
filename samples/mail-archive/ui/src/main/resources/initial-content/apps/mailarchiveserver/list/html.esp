@@ -1,0 +1,32 @@
+<html>
+<head>
+<% load("../head.esp"); %>
+<title><%= currentNode["jcr:text"] %></title>
+</head>
+
+<body>
+<% sling.include(currentNode.getPath(), "forceResourceType=mailarchiveserver,replaceSelectors=navbar"); %>
+
+<%
+
+function iterate(renderer, node, lvl) {
+	for (i in node.getChildren()) {
+		var child = node[i]
+		if (child) {
+			if (lvl == 0) {
+				renderer.addMsg(child)
+			} else {
+				iterate(renderer, child, lvl-1)
+			}
+		}
+	}
+}
+
+var renderer = new OrderedRenderer(dateComparator, "replaceSelectors=preview")
+iterate(renderer, currentNode, threadNodesNumber)
+renderer.sort()
+renderer.render()
+
+%>
+</body>
+</html>

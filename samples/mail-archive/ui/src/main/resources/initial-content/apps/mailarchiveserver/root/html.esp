@@ -1,0 +1,26 @@
+<html>
+
+<head>
+<%
+	load("../head.esp"); 
+	if (! request.getRequestParameter("noredirect") ) {
+		response.sendRedirect(startPage)
+	}
+%>
+	<title>Mail Archive Server</title>
+</head>
+
+<body>
+	<div class="content">
+		<h1>Welcome to the Mail Archive Server!</h1> <br>
+
+		<dl>
+		  <dt>Choose what you want to do:</dt> <br>
+		  <dd><a href="<%= currentNode.getPath() %>/import.mbox.html">Import mbox file to the archive</a></dd> <br>
+		  <dd><a href="<%= currentNode.getPath() %>/archive.html">Browse archive</a></dd> <br>
+		  <dd><a href="<%= currentNode.getPath() %>/search.html">Search archive</a></dd> <br>
+		</dl>
+	</div>
+</body>
+
+</html>

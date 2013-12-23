@@ -1,0 +1,60 @@
+<div>
+
+<a class="nolinkstyle" href=<% 
+		out.print("\"")			
+		out.print(currentNode.getPath())			
+		out.print(".html")
+		out.print("\"")
+%>>
+
+	<div class="message"> 
+		<b>
+		<span>	
+		From 
+		<% 
+			var from = currentNode["From"];
+			if (from.indexOf(" ") > 0)
+				out.print(from.substring(0, from.indexOf(" ")))
+			else
+				out.print(from)
+		%> 
+		</span>
+		<span>
+		<%
+			var d = new Date(currentNode["Date"])
+			var now = Date.now()
+			if (now - d.value < 79200000) {
+				out.print(" at ")
+				out.print(d.getHours()+":"+d.getMinutes())
+			} else {
+				out.print(" on ")
+				var m_names = new Array("Jan", "Feb", "Mar", 
+					"Apr", "May", "Jun", "Jul", "Aug", "Sep", 
+					"Oct", "Nov", "Dec")
+				out.print(m_names[d.getMonth()]+" "+d.getDate())
+			}
+		%>
+		</span>
+		</b>
+
+		<br>
+		<%= currentNode["Subject"] %> <br>
+
+		<div class="bodypreview">
+		<%
+			var lines = currentNode["Body"].split('\n');
+			for (i=0; i<Math.min(5,lines.length); i++ ) {
+				var line = lines[i];
+		%>
+		<script type="text/javascript">
+			document.write(toHtmlString("<%= new String(line) %>"));
+		</script>
+		<%
+				out.print("<br>");
+			}
+		%>
+		</div>
+	</div>
+
+</a>
+</div>

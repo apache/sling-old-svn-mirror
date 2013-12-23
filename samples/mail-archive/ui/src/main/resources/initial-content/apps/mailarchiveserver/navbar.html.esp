@@ -1,0 +1,68 @@
+<div class="navbar">
+	<% load("head.esp"); %>
+
+<!-- NAVIGATION BAR -->
+
+	<a href=<%= homePage %>>home</a> > 
+<%
+	if (currentNode.getName() == "search") {
+%>
+		<a href="/mailarchiveserver/search.html">search</a>
+<%
+	} else {
+%>
+		<a href="/mailarchiveserver/archive.html">archive</a>
+<%		
+		var name = [];
+		var href = [];
+		var node = currentNode;
+		var folding = false;
+		var fname = "";
+		var fhref = "";
+		while (node.getName() != "archive") {
+			var rt = node["sling:resourceType"];
+			if (rt == "mailarchiveserver/list") 
+				folding = true;
+			
+			if (rt != undefined) {
+				if (!folding) {
+					name.push(node["jcr:text"]);
+					href.push(node.getPath()+".html");
+				} else {
+					fname += node["jcr:text"]+".";
+					if (fhref == "")
+						fhref = node.getPath()+".html";
+				}
+			}
+			node = node.getParent();
+		}
+		if (folding) {
+			name.push(fname.substring(0, fname.length-1));
+			href.push(fhref);
+		}
+
+		while (name.length > 0) {
+			out.print(" > <a href="+href.pop()+">"+name.pop()+"</a>");
+		}
+	}
+%>
+</div>
+
+<!-- SAERCH BAR -->
+
+<form method="GET" action="/mailarchiveserver/search.html" style="width: 40%; margin: 1em auto;">
+    <input type="text" name="q" style="width: 70%;" value='<%= request.getParameter('q') ? request.getParameter('q') : '' %>' /> 
+    <input type="submit" value="Search" style="width: 23%;" /> <span 
+title='You can search in the following ways
+(similar to Markmail)
+General terms:	server
+Or phrases: 	"latest news"
+Sender field:	from:"Roy Fielding", from:adobe.com
+Subject field:	subject:"how to"
+List field:		list:sling
+
+Search is NOT case sensitive, i.e. searching for list:oak and LIST:OAK will produce same results.
+
+Constraints are ANDed together except in the case of multiple fielded constraints of the same type which will be ORed together.
+'>(?)</span> <br> 
+</form>

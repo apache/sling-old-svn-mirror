@@ -1,0 +1,31 @@
+<html>
+
+<head>
+<% load("../head.esp"); %>
+<title>Search mail archive</title>
+</head>
+
+<body>
+	<% sling.include(currentNode.getPath(), "forceResourceType=mailarchiveserver,replaceSelectors=navbar"); %>
+
+	<div class="content">
+<%
+	var phrase = request.getParameter("q")
+	if (phrase) {
+		var service = sling.getService(Packages.org.apache.sling.mailarchiveserver.api.SearchService) 
+		var resIter = service.find(phrase)
+		var renderer = new OrderedRenderer(dateComparator, "forceResourceType=mailarchiveserver/message,replaceSelectors=preview")
+		while (resIter.hasNext()) {
+			var resource = resIter.next()
+			var node = resource.adaptTo(Packages.javax.jcr.Node)
+			renderer.addMsg(node)
+		}
+		out.print("Found " + renderer.list.length + " messages <br>")
+		renderer.sort()
+		renderer.render()
+	}
+%>
+	</div>
+</body>
+
+</html>

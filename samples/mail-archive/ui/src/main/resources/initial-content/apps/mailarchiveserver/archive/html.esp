@@ -1,0 +1,59 @@
+<html>
+
+<head>
+<% load("../head.esp"); %>
+<title>Mail archive</title>
+</head>
+
+<body>
+
+<% sling.include(currentNode.getPath(), "forceResourceType=mailarchiveserver,replaceSelectors=navbar"); %>
+
+<div class="content">
+
+<table width="100%">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<%
+	var cnt = 0;
+	var archiveChildren = currentNode.getChildren();
+	for(i in archiveChildren) {
+		var domain = archiveChildren[i];
+%>
+
+	<td>
+	<div class="domain">
+		<h4><%= domain["jcr:text"] %>  lists:</h4>
+		<ul>
+<%
+		var domainChildren = domain.getChildren();
+		for(k in domainChildren) {
+			var list = domainChildren[k];
+%>
+			<li><a href="<%= list.getPath() %>.html">  <%= list["jcr:text"] %></a></li>
+<% 
+		}
+%>
+		</ul>
+	</div>
+	</td>
+
+<% 
+		if (cnt % 3 == 2)
+			out.print("</tr>");
+		cnt++;
+	}
+	if (cnt % 3 != 2)
+		out.print("</tr>");
+%>
+
+</table>
+</div>
+
+
+</body>
+
+</html>

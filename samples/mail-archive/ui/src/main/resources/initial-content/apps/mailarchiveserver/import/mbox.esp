@@ -1,0 +1,22 @@
+<html>
+	<head>
+		<% load("../head.esp"); %>
+	</head>
+
+	<body>
+	<div class="navbar">
+	<a href=<%= homePage %>>< back</a>
+	</div>
+
+	<div class="content">
+		<form method="POST" enctype="multipart/form-data" >
+
+		    Select .mbox file: <input type="file" name="mboxfile" /> <br> 
+		    <input type="submit" value="Import to archive" />
+		
+		</form>
+	</div>
+
+
+	</body>
+</html>

@@ -1,0 +1,49 @@
+/*
+ * Modified version of slingbucks styles:
+ * http://svn.apache.org/repos/asf/sling/trunk/samples/slingbucks/src/main/resources/SLING-CONTENT/apps/slingbucks/common/slingbucks.css
+ */
+
+body {
+  font-family: Georgia, Verdana, Arial, Sans-Serif;
+}
+
+.message {
+  margin-bottom: 1em;
+  border: solid #CCCCCC 1px;
+  padding: 1em;
+}
+
+.header {
+  font-size:120%;
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  border-bottom: solid thin blue;
+  text-align: justify;
+}
+
+.from, .date {
+  font-weight: bold;
+}
+
+.date {
+  float: right;
+}
+
+.content {
+  width:75%;
+  margin:1em auto;
+}
+
+.navbar {
+  margin: 1em;
+}
+
+.nolinkstyle {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bodypreview {
+  margin-top: 1em;
+  font-size:80%;
+}

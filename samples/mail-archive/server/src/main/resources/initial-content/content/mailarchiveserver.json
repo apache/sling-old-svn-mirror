@@ -1,0 +1,16 @@
+{
+    "sling:resourceType":"mailarchiveserver/root",
+    "jcr:primaryType": "nt:unstructured",
+
+    "archive" : {
+        "sling:resourceType": "mailarchiveserver/archive"
+    },
+
+    "import" : {
+        "sling:resourceType": "mailarchiveserver/import"
+    },
+
+    "search" : {
+        "sling:resourceType": "mailarchiveserver/search"
+    }
+}

@@ -1,0 +1,25 @@
+<html>
+	<head>
+	<% load("../head.esp"); %>
+	<title>
+	<%= currentNode["jcr:text"] %>
+	</title>
+	</head>
+
+	<body>
+
+		<% sling.include(currentNode.getPath(), "forceResourceType=mailarchiveserver,replaceSelectors=navbar"); %>
+
+		<h2> <%= currentNode["jcr:text"] %> </h2>
+		
+		<%
+		var messages = currentNode.getChildren()
+		for(i in messages) {
+			var m = messages[i]
+		%>
+		
+		<% sling.include(m.getPath(), "replaceSelectors=preview"); %>
+	
+		<%}%>
+	</body>
+</html>
