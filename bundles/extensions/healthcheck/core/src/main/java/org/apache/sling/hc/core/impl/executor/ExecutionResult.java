@@ -20,7 +20,6 @@ package org.apache.sling.hc.core.impl.executor;
 import java.text.Collator;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
@@ -33,23 +32,27 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
 
     private final HealthCheckResult resultFromHC;
 
-    private final HealthCheckDescriptor healthCheckDescriptor;
+    private final String name;
+    private final List<String> tags;
     private final Date finishedAt;
     private final long elapsedTimeInMs;
+    private final long serviceId;
 
     /** Build a single-value Result
      *  @param s if lower than OK, our status is set to OK */
     ExecutionResult(final HealthCheckDescriptor healthCheckDescriptor, HealthCheckResult simpleResult,
             long elapsedTimeInMs) {
-        this.healthCheckDescriptor = healthCheckDescriptor;
+        this.name = healthCheckDescriptor.getName();
+        this.tags = healthCheckDescriptor.getTags();
         this.resultFromHC = simpleResult;
         this.finishedAt = new Date();
         this.elapsedTimeInMs = elapsedTimeInMs;
+        this.serviceId = healthCheckDescriptor.getServiceId();
     }
 
     /**
      * Shortcut constructor to created error result.
-     * 
+     *
      * @param healthCheckDescriptor
      * @param status
      * @param errorMessage
@@ -60,7 +63,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
 
     /**
      * Shortcut constructor to created error result.
-     * 
+     *
      * @param healthCheckDescriptor
      * @param status
      * @param errorMessage
@@ -69,11 +72,13 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
         this(healthCheckDescriptor, new Result(status, errorMessage), elapsedTime);
     }
 
+    @Override
     public boolean isOk() {
         return resultFromHC.isOk();
     }
 
 
+    @Override
     public Result.Status getStatus() {
         return resultFromHC.getStatus();
     }
@@ -88,24 +93,27 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
         return "ExecutionResult [status=" + getStatus() + ", finishedAt=" + finishedAt + ", elapsedTimeInMs=" + elapsedTimeInMs + "]";
     }
 
+    @Override
     public long getElapsedTimeInMs() {
         return elapsedTimeInMs;
     }
 
-    HealthCheckDescriptor getHealthCheckDescriptor() {
-        return healthCheckDescriptor;
+    Long getServiceId() {
+        return this.serviceId;
     }
 
+    @Override
     public String getHealthCheckName() {
-        return healthCheckDescriptor != null ? healthCheckDescriptor.getName() : toString();
+        return this.name;
     }
 
 
     @Override
     public List<String> getHealthCheckTags() {
-        return healthCheckDescriptor != null ? healthCheckDescriptor.getTags() : new LinkedList<String>();
+        return this.tags;
     }
 
+    @Override
     public Date getFinishedAt() {
         return finishedAt;
     }
