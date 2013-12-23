@@ -38,7 +38,7 @@ public interface HealthCheck {
     /**
      * Optional service property: the name of the MBean for registering
      * the health check as an MBean. If this property is missing the
-     * health check is not registered.
+     * health check is not registered as a JMX MBean.
      * If there is more than one service with the same value for this
      * property, the one with the highest service ranking is registered
      * only.
