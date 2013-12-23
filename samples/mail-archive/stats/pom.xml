@@ -104,8 +104,8 @@
             <version>2.0.6</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.sling.mailarchiveserver</groupId>
-            <artifactId>server</artifactId>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.mailarchive.server</artifactId>
             <version>0.1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
