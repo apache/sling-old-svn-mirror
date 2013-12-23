@@ -38,7 +38,7 @@ public class HealthCheckResultCache {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private Map<HealthCheckDescriptor, HealthCheckResult> cache = new ConcurrentHashMap<HealthCheckDescriptor, HealthCheckResult>();
+    private final Map<Long, HealthCheckResult> cache = new ConcurrentHashMap<Long, HealthCheckResult>();
 
     @Override
     public String toString() {
@@ -47,21 +47,21 @@ public class HealthCheckResultCache {
 
     public void updateWith(final Collection<HealthCheckResult> results) {
         for (final HealthCheckResult result : results) {
-            ExecutionResult executionResult = (ExecutionResult) result;
-            cache.put(executionResult.getHealthCheckDescriptor(), executionResult);
+            final ExecutionResult executionResult = (ExecutionResult) result;
+            cache.put(executionResult.getServiceId(), result);
         }
     }
 
-    public void useValidCacheResults(List<HealthCheckDescriptor> healthCheckDescriptors,
+    public void useValidCacheResults(final List<HealthCheckDescriptor> healthCheckDescriptors,
             final Collection<HealthCheckResult> results,
-            long resultCacheTtlInMs) {
+            final long resultCacheTtlInMs) {
 
-        Iterator<HealthCheckDescriptor> checksIt = healthCheckDescriptors.iterator();
 
-        Set<HealthCheckResult> cachedResults = new TreeSet<HealthCheckResult>();
+        final Set<HealthCheckResult> cachedResults = new TreeSet<HealthCheckResult>();
+        final Iterator<HealthCheckDescriptor> checksIt = healthCheckDescriptors.iterator();
         while (checksIt.hasNext()) {
-            HealthCheckDescriptor descriptor = checksIt.next();
-            HealthCheckResult result = get(descriptor, resultCacheTtlInMs);
+            final HealthCheckDescriptor descriptor = checksIt.next();
+            final HealthCheckResult result = get(descriptor, resultCacheTtlInMs);
             if (result != null) {
                 cachedResults.add(result);
                 checksIt.remove();
@@ -71,12 +71,14 @@ public class HealthCheckResultCache {
         results.addAll(cachedResults);
     }
 
-    private HealthCheckResult get(HealthCheckDescriptor healthCheckDescriptor, long resultCacheTtlInMs) {
-        HealthCheckResult cachedResult = cache.get(healthCheckDescriptor);
+    private HealthCheckResult get(final HealthCheckDescriptor healthCheckDescriptor, final long resultCacheTtlInMs) {
+        final Long key = healthCheckDescriptor.getServiceId();
+        final HealthCheckResult cachedResult = cache.get(key);
         if (cachedResult != null) {
             Date finishedAt = cachedResult.getFinishedAt();
             if (finishedAt == null) {
-                // never cache without proper meta data
+                // never cache without proper meta data -> remove it
+                cache.remove(key);
                 return null;
             }
 
@@ -87,7 +89,8 @@ public class HealthCheckResultCache {
                 logger.debug("Cache hit: validUntil={} cachedResult={}", validUntil, cachedResult);
                 return cachedResult;
             } else {
-                logger.trace("Outdated result: validUntil={} cachedResult={}", validUntil, cachedResult);
+                logger.debug("Outdated result: validUntil={} cachedResult={}", validUntil, cachedResult);
+                cache.remove(key);
             }
         }
 
