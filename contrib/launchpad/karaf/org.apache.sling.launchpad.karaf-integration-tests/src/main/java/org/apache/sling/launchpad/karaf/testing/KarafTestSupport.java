@@ -21,7 +21,12 @@ package org.apache.sling.launchpad.karaf.testing;
 import javax.inject.Inject;
 
 import org.apache.karaf.features.BootFinished;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.util.Filter;
+import org.osgi.framework.Constants;
+
+import static org.ops4j.pax.exam.CoreOptions.streamBundle;
+import static org.ops4j.pax.tinybundles.core.TinyBundles.bundle;
 
 public abstract class KarafTestSupport {
 
@@ -29,7 +34,7 @@ public abstract class KarafTestSupport {
 
     public static final String KARAF_ARTIFACT_ID = "apache-karaf";
 
-    public static final String KARAF_VERSION = "3.0.0.RC1";
+    public static final String KARAF_VERSION = "3.0.0";
 
     public static final String KARAF_NAME = "Apache Karaf";
 
@@ -54,6 +59,17 @@ public abstract class KarafTestSupport {
 
     public String karafName() {
         return KARAF_NAME;
+    }
+
+    protected Option karafTestSupportBundle() {
+        return streamBundle(
+            bundle()
+                .add(KarafTestSupport.class)
+                .set(Constants.BUNDLE_SYMBOLICNAME, "org.apache.sling.launchpad.karaf-integration-tests")
+                .set(Constants.EXPORT_PACKAGE, "org.apache.sling.launchpad.karaf.testing")
+                .set(Constants.IMPORT_PACKAGE, "javax.inject, org.apache.karaf.features, org.ops4j.pax.exam, org.ops4j.pax.exam.util, org.ops4j.pax.tinybundles.core, org.osgi.framework")
+                .build()
+        ).start();
     }
 
 }

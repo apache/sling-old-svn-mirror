@@ -52,7 +52,7 @@
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
       <artifactId>org.apache.karaf.features.core</artifactId>
-      <version>3.0.0.RC1</version>
+      <version>3.0.0</version>
       <scope>provided</scope>
     </dependency>
     <!-- Apache Sling -->
@@ -78,39 +78,38 @@
     <!-- testing -->
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
+      <artifactId>pax-exam</artifactId>
+      <version>3.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.tinybundles</groupId>
+      <artifactId>tinybundles</artifactId>
+      <version>2.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-container-karaf</artifactId>
-      <version>3.3.0</version>
+      <version>3.4.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-junit4</artifactId>
-      <version>3.3.0</version>
+      <version>3.4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.karaf</groupId>
       <artifactId>apache-karaf</artifactId>
       <type>tar.gz</type>
-      <version>3.0.0.RC1</version>
+      <version>3.0.0</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
           <groupId>org.apache.karaf</groupId>
           <artifactId>org.apache.karaf.client</artifactId>
         </exclusion>
-        <!-- Remove after fix for KARAF-2397 is released -->
-        <exclusion>
-          <groupId>org.eclipse</groupId>
-          <artifactId>osgi</artifactId>
-        </exclusion>
       </exclusions>
-    </dependency>
-    <!-- Remove after fix for KARAF-2397 is released -->
-    <dependency>
-      <groupId>org.eclipse</groupId>
-      <artifactId>org.eclipse.osgi</artifactId>
-      <version>3.8.0.v20120529-1548</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

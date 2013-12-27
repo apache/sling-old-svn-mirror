@@ -36,8 +36,8 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.util.Filter;
 
 import static org.junit.Assert.assertNotNull;
-import static org.ops4j.pax.exam.CoreOptions.bundle;
 import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFileExtend;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
@@ -54,12 +54,13 @@ public class BootstrapSlingLaunchpadJackrabbitIT extends KarafTestSupport {
     @Configuration
     public Option[] configuration() {
         return new Option[]{
-            karafDistributionConfiguration().frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz")).karafVersion(karafVersion()).name(karafName()).unpackDirectory(new File("target/paxexam/")),
+            karafDistributionConfiguration().frameworkUrl(maven().groupId(karafGroupId()).artifactId(karafArtifactId()).version(karafVersion()).type("tar.gz")).karafVersion(karafVersion()).useDeployFolder(false).name(karafName()).unpackDirectory(new File("target/paxexam/")),
             keepRuntimeFolder(),
             logLevel(LogLevelOption.LogLevel.INFO),
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresRepositories", ",mvn:org.apache.sling/org.apache.sling.launchpad.karaf-features/0.1.1-SNAPSHOT/xml/features"),
             editConfigurationFileExtend("etc/org.apache.karaf.features.cfg", "featuresBoot", ",sling-launchpad-jackrabbit"),
-            bundle("file:target/org.apache.sling.launchpad.karaf-integration-tests-0.1.1-SNAPSHOT.jar")
+            mavenBundle().groupId("org.ops4j.pax.tinybundles").artifactId("tinybundles").version("2.0.0"),
+            karafTestSupportBundle()
         };
     }
 

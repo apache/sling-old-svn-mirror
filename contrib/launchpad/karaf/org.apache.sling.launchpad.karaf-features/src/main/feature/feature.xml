@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<features name="sling" version="${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
+<features name="sling" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
   <!-- infrastructure services for Sling -->
   <feature name="infrastructure-sling" version="${project.version}">
     <feature>config</feature>
