@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.sling.hc.api.HealthCheckResult;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -49,7 +49,7 @@ public class HealthCheckExecutorImplTest {
 
         List<HealthCheckFuture> futures = new LinkedList<HealthCheckFuture>();
         futures.add(future);
-        Collection<HealthCheckResult> results = new TreeSet<HealthCheckResult>();
+        Collection<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
 
         when(future.isDone()).thenReturn(true);
         ExecutionResult testResult = new ExecutionResult(healthCheckDescriptor, new Result(Result.Status.OK, "test"), 10L);
@@ -69,7 +69,7 @@ public class HealthCheckExecutorImplTest {
 
         List<HealthCheckFuture> futures = new LinkedList<HealthCheckFuture>();
         futures.add(future);
-        Set<HealthCheckResult> results = new TreeSet<HealthCheckResult>();
+        Set<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
 
         when(future.isDone()).thenReturn(false);
         when(future.getCreatedTime()).thenReturn(new Date());
@@ -80,9 +80,9 @@ public class HealthCheckExecutorImplTest {
         verify(future, times(0)).get();
 
         assertEquals(1, results.size());
-        HealthCheckResult result = results.iterator().next();
+        HealthCheckExecutionResult result = results.iterator().next();
 
-        assertEquals(Result.Status.WARN, result.getStatus());
+        assertEquals(Result.Status.WARN, result.getHealthCheckResult().getStatus());
 
     }
 
@@ -91,7 +91,7 @@ public class HealthCheckExecutorImplTest {
 
         List<HealthCheckFuture> futures = new LinkedList<HealthCheckFuture>();
         futures.add(future);
-        Set<HealthCheckResult> results = new TreeSet<HealthCheckResult>();
+        Set<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
 
         when(future.isDone()).thenReturn(false);
 
@@ -100,11 +100,11 @@ public class HealthCheckExecutorImplTest {
 
         healthCheckExecutorImpl.collectResultsFromFutures(futures, results);
         assertEquals(1, results.size());
-        HealthCheckResult result = results.iterator().next();
+        HealthCheckExecutionResult result = results.iterator().next();
 
         verify(future, times(0)).get();
 
-        assertEquals(Result.Status.CRITICAL, result.getStatus());
+        assertEquals(Result.Status.CRITICAL, result.getHealthCheckResult().getStatus());
 
     }
 

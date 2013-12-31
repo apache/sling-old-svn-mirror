@@ -32,7 +32,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -43,10 +42,9 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
-import org.apache.sling.hc.api.HealthCheckExecutor;
-import org.apache.sling.hc.api.HealthCheckResult;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.util.HealthCheckFilter;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -138,51 +136,28 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     }
 
     /**
-     * @see org.apache.sling.hc.api.HealthCheckExecutor#executeAll()
+     * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(org.osgi.framework.ServiceReference[])
      */
     @Override
-    public Collection<HealthCheckResult> executeAll() {
-        return executeAllForTags(new String[0]);
-    }
-
-    /**
-     * @see org.apache.sling.hc.api.HealthCheckExecutor#executeAllForTags(java.lang.String[])
-     */
-    @Override
-    public Collection<HealthCheckResult> executeAllForTags(final String... tags) {
-
+    public Collection<HealthCheckExecutionResult> execute(final ServiceReference... healthCheckReferences) {
         logger.debug("Starting executing all checks... ");
 
         final StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        final Collection<HealthCheckResult> results = new TreeSet<HealthCheckResult>();
-        final List<HealthCheckDescriptor> healthCheckDescriptors = getHealthCheckDescriptors(tags);
+        final Collection<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
+        final List<HealthCheckDescriptor> healthCheckDescriptors = getHealthCheckDescriptors(healthCheckReferences);
 
         createResultsForDescriptors(healthCheckDescriptors, results);
 
         stopWatch.stop();
-        logger.debug("Time consumed for all checks: " + msHumanReadable(stopWatch.getTime()));
+        logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
 
         return results;
     }
 
-    @Override
-    public HealthCheckResult execute(ServiceReference healthCheckReference) {
-
-        final List<HealthCheckDescriptor> healthCheckDescriptors = new LinkedList<HealthCheckDescriptor>();
-        healthCheckDescriptors.add(new HealthCheckDescriptor(healthCheckReference));
-
-        final Collection<HealthCheckResult> results = new TreeSet<HealthCheckResult>();
-
-        createResultsForDescriptors(healthCheckDescriptors, results);
-
-        return results.iterator().next();
-    }
-
-
     private void createResultsForDescriptors(final List<HealthCheckDescriptor> healthCheckDescriptors,
-            final Collection<HealthCheckResult> results) {
+            final Collection<HealthCheckExecutionResult> results) {
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
         // -- if yes the descriptor is removed from the list and the result added
 
@@ -200,10 +175,8 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     }
 
 
-    private List<HealthCheckDescriptor> getHealthCheckDescriptors(final String... tags) {
-        HealthCheckFilter healthCheckFilter = new HealthCheckFilter(bundleContext);
-        final ServiceReference[] healthCheckReferences = healthCheckFilter.getTaggedHealthCheckServiceReferences(tags);
-        List<HealthCheckDescriptor> descriptors = new LinkedList<HealthCheckDescriptor>();
+    private List<HealthCheckDescriptor> getHealthCheckDescriptors(final ServiceReference... healthCheckReferences) {
+        final List<HealthCheckDescriptor> descriptors = new LinkedList<HealthCheckDescriptor>();
         for (ServiceReference serviceReference : healthCheckReferences) {
             HealthCheckDescriptor descriptor = new HealthCheckDescriptor(serviceReference);
 
@@ -215,7 +188,6 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
             descriptors.add(descriptor);
         }
 
-        logger.debug("Found {} health check descriptors for tags {}", descriptors.size(), StringUtils.join(tags));
         return descriptors;
     }
 
@@ -259,7 +231,7 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
         } while (!allFuturesDone && callExcutionTimeStopWatch.getTime() < this.timeoutInMs);
     }
 
-    void collectResultsFromFutures(List<HealthCheckFuture> futuresForResultOfThisCall, Collection<HealthCheckResult> results) {
+    void collectResultsFromFutures(List<HealthCheckFuture> futuresForResultOfThisCall, Collection<HealthCheckExecutionResult> results) {
 
         Set<ExecutionResult> resultsFromFutures = new HashSet<ExecutionResult>();
 

@@ -24,7 +24,6 @@ import java.util.concurrent.FutureTask;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.sling.hc.api.HealthCheck;
-import org.apache.sling.hc.api.HealthCheckResult;
 import org.apache.sling.hc.api.Result;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Future to be able to schedule a health check for parallel execution.
- * 
+ *
  */
 class HealthCheckFuture extends FutureTask<ExecutionResult> {
     private final static Logger LOG = LoggerFactory.getLogger(HealthCheckFuture.class);
@@ -50,7 +49,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
 
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
-                HealthCheckResult resultFromHealthCheck = null;
+                Result resultFromHealthCheck = null;
                 ExecutionResult executionResult = null;
 
                 final HealthCheck healthCheck = (HealthCheck) bundleContext.getService(healthCheckDescriptor.getServiceReference());

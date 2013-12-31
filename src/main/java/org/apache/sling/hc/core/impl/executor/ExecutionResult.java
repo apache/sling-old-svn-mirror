@@ -19,18 +19,16 @@ package org.apache.sling.hc.core.impl.executor;
 
 import java.text.Collator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
-import org.apache.sling.hc.api.HealthCheckResult;
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 
 /** The result of executing a {@link HealthCheck} */
-public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheckResult {
+public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheckExecutionResult {
 
-    private final HealthCheckResult resultFromHC;
+    private final Result resultFromHC;
 
     private final String name;
     private final List<String> tags;
@@ -40,7 +38,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
 
     /** Build a single-value Result
      *  @param s if lower than OK, our status is set to OK */
-    ExecutionResult(final HealthCheckDescriptor healthCheckDescriptor, HealthCheckResult simpleResult,
+    ExecutionResult(final HealthCheckDescriptor healthCheckDescriptor, Result simpleResult,
             long elapsedTimeInMs) {
         this.name = healthCheckDescriptor.getName();
         this.tags = healthCheckDescriptor.getTags();
@@ -72,25 +70,15 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
         this(healthCheckDescriptor, new Result(status, errorMessage), elapsedTime);
     }
 
-    @Override
-    public boolean isOk() {
-        return resultFromHC.isOk();
-    }
-
 
     @Override
-    public Result.Status getStatus() {
-        return resultFromHC.getStatus();
-    }
-
-    @Override
-    public Iterator<ResultLog.Entry> iterator() {
-        return resultFromHC.iterator();
+    public Result getHealthCheckResult() {
+        return this.resultFromHC;
     }
 
     @Override
     public String toString() {
-        return "ExecutionResult [status=" + getStatus() + ", finishedAt=" + finishedAt + ", elapsedTimeInMs=" + elapsedTimeInMs + "]";
+        return "ExecutionResult [status=" + this.resultFromHC.getStatus() + ", finishedAt=" + finishedAt + ", elapsedTimeInMs=" + elapsedTimeInMs + "]";
     }
 
     @Override
@@ -124,7 +112,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      */
     @Override
     public int compareTo(ExecutionResult otherResult) {
-        int retVal = otherResult.getStatus().compareTo(this.getStatus());
+        int retVal = otherResult.getHealthCheckResult().getStatus().compareTo(this.getHealthCheckResult().getStatus());
         if (retVal == 0) {
             retVal = Collator.getInstance().compare(getHealthCheckName(), otherResult.getHealthCheckName());
         }
