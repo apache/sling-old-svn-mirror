@@ -18,26 +18,29 @@
  */
 package org.apache.sling.featureflags;
 
-import java.util.Collection;
+import org.apache.sling.api.adapter.Adaptable;
 
-import aQute.bnd.annotation.ProviderType;
+import aQute.bnd.annotation.ConsumerType;
 
 /**
- * The client context can be used by client code to check whether
- * a specific feature is enable.
- * A client context can be created through the {@link Features} service.
+ * A feature is defined by its name.
+ * Depending on the functionality the feature implements it can
+ * be adapted to different services, like
+ * <ul>
+ *   <li>{@link ResourceHiding}</li>
+ *   <li>{@link ResourceTypeMapper}</li>
+ * </ul>
  */
-@ProviderType
-public interface ClientContext {
+@ConsumerType
+public interface Feature extends Adaptable {
 
     /**
-     * Returns <code>true</code> if the feature is enabled.
+     * The name of the feature.
      */
-    boolean isEnabled(String featureName);
+    String getName();
 
     /**
-     * Returns a list of all enabled features
-     * @return The list of features, the list might be empty.
+     * The description of the feature.
      */
-    Collection<Feature> getEnabledFeatures();
+    String getDescription();
 }

@@ -21,10 +21,14 @@ package org.apache.sling.featureflags.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.ProviderContext;
+import org.apache.sling.featureflags.ResourceHiding;
+import org.apache.sling.featureflags.ResourceTypeMapper;
 
 /**
  * Implementation of the client context
@@ -33,15 +37,37 @@ public class ClientContextImpl implements ClientContext {
 
     private final ProviderContext featureContext;
 
-    private final List<String> enabledFeatures = new ArrayList<String>();
+    private final List<Feature> enabledFeatures;
 
-    public ClientContextImpl(final ProviderContext featureContext) {
+    private final List<ResourceHiding> hidingFeatures;
+
+    private final List<ResourceTypeMapper> mapperFeatures;
+
+    public ClientContextImpl(final ProviderContext featureContext, final List<Feature> features) {
+        Collections.sort(features, new Comparator<Feature>() {
+
+            @Override
+            public int compare(final Feature arg0, final Feature arg1) {
+                return arg0.getName().compareTo(arg1.getName());
+            }
+
+        });
+        this.enabledFeatures = Collections.unmodifiableList(features);
+        final List<ResourceHiding> hiding = new ArrayList<ResourceHiding>();
+        final List<ResourceTypeMapper> mapping = new ArrayList<ResourceTypeMapper>();
+        for(final Feature f : this.enabledFeatures) {
+            final ResourceHiding rh = f.adaptTo(ResourceHiding.class);
+            if ( rh != null ) {
+                hiding.add(rh);
+            }
+            final ResourceTypeMapper rm = f.adaptTo(ResourceTypeMapper.class);
+            if ( rm != null ) {
+                mapping.add(rm);
+            }
+        }
+        this.hidingFeatures = hiding;
+        this.mapperFeatures = mapping;
         this.featureContext = featureContext;
-    }
-
-    public void addFeature(final String name) {
-        this.enabledFeatures.add(name);
-        Collections.sort(this.enabledFeatures);
     }
 
     public ProviderContext getFeatureContext() {
@@ -50,11 +76,24 @@ public class ClientContextImpl implements ClientContext {
 
     @Override
     public boolean isEnabled(final String featureName) {
-        return this.enabledFeatures.contains(featureName);
+        for(final Feature f : this.enabledFeatures) {
+            if ( featureName.equals(f.getName()) ) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
-    public Collection<String> getEnabledFeatures() {
+    public Collection<Feature> getEnabledFeatures() {
         return this.enabledFeatures;
+    }
+
+    public Collection<ResourceHiding> getHidingFeatures() {
+        return this.hidingFeatures;
+    }
+
+    public Collection<ResourceTypeMapper> getMappingFeatures() {
+        return this.mapperFeatures;
     }
 }

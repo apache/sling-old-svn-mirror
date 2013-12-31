@@ -23,6 +23,7 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.ResourceHiding;
 import org.apache.sling.resourceaccesssecurity.AllowingResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 
@@ -43,8 +44,8 @@ public class ResourceAccessImpl
         boolean available = true;
         final ClientContext info = manager.getCurrentClientContext();
         if ( info != null ) {
-            for(final String name : info.getEnabledFeatures()) {
-                available = !manager.hideResource(name, resource);
+            for(final ResourceHiding f : ((ClientContextImpl)info).getHidingFeatures() ) {
+                available = !f.hideResource(resource);
                 if ( !available) {
                     break;
                 }

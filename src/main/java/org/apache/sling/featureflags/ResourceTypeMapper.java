@@ -18,26 +18,24 @@
  */
 package org.apache.sling.featureflags;
 
-import java.util.Collection;
+import java.util.Map;
 
-import aQute.bnd.annotation.ProviderType;
+import aQute.bnd.annotation.ConsumerType;
 
 /**
- * The client context can be used by client code to check whether
- * a specific feature is enable.
- * A client context can be created through the {@link Features} service.
+ * A {@link Feature} which is mapping resource types can be adapted to
+ * this service interface.
  */
-@ProviderType
-public interface ClientContext {
+@ConsumerType
+public interface ResourceTypeMapper {
 
     /**
-     * Returns <code>true</code> if the feature is enabled.
+     * Returns the resource type mapping for a feature.
+     * This mapping is only executed if {@link FeatureProvider#isEnabled(Feature, ExecutionContext)}
+     * return true for the given feature/context. The caller of this
+     * method must ensure to call {@link FeatureProvider#isEnabled(Feature, ExecutionContext)}
+     * before calling this method and only call this method if
+     * {@link FeatureProvider#isEnabled(Feature, ExecutionContext)} returned <code>true</code>
      */
-    boolean isEnabled(String featureName);
-
-    /**
-     * Returns a list of all enabled features
-     * @return The list of features, the list might be empty.
-     */
-    Collection<Feature> getEnabledFeatures();
+    Map<String, String> getResourceTypeMapping();
 }

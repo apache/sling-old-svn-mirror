@@ -27,6 +27,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.ResourceTypeMapper;
 
 /**
  * Resource decorator implementing the resource type mapping
@@ -42,10 +43,10 @@ public class ResourceDecoratorImpl implements ResourceDecorator {
     public Resource decorate(final Resource resource) {
         final ClientContext info = manager.getCurrentClientContext();
         if ( info != null ) {
-            for(final String name : info.getEnabledFeatures()) {
+            for(final ResourceTypeMapper f : ((ClientContextImpl)info).getMappingFeatures() ) {
 
                 final String resourceType = resource.getResourceType();
-                final String overwriteType = manager.getResourceType(name, resourceType);
+                final String overwriteType = f.getResourceTypeMapping().get(resourceType);
                 if ( overwriteType != null ) {
                     return new ResourceWrapper(resource) {
 

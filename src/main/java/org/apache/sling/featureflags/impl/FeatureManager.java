@@ -29,13 +29,15 @@ import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.FeatureProvider;
 import org.apache.sling.featureflags.Features;
 import org.apache.sling.featureflags.ProviderContext;
 import org.osgi.framework.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This service implements the feature handling.
@@ -48,33 +50,32 @@ import org.osgi.framework.Constants;
            referenceInterface=FeatureProvider.class)
 public class FeatureManager implements Features {
 
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     private final Map<String, List<FeatureProviderDescription>> providers = new HashMap<String, List<FeatureProviderDescription>>();
 
-    private Map<String, FeatureProvider> activeProviders = new HashMap<String, FeatureProvider>();
+    private Map<String, FeatureDescription> activeProviders = new HashMap<String, FeatureDescription>();
 
     /**
      * Bind a new feature provider
      */
     protected void bindFeatureProvider(final FeatureProvider provider, final Map<String, Object> props) {
-        final String[] features = provider.getFeatureNames();
+        final Feature[] features = provider.getFeatures();
         if ( features != null && features.length > 0 ) {
-            final FeatureProviderDescription info = new FeatureProviderDescription(provider, props);
             synchronized ( this.providers ) {
                 boolean changed = false;
-                for(final String n : features) {
-                    if ( n != null ) {
-                        final String name = n.trim();
-                        if ( name.length() > 0 ) {
-                            List<FeatureProviderDescription> candidates = this.providers.get(name);
-                            if ( candidates == null ) {
-                                candidates = new ArrayList<FeatureProviderDescription>();
-                                this.providers.put(name, candidates);
-                            }
-                            candidates.add(info);
-                            Collections.sort(candidates);
-                            changed = true;
-                        }
+                for(final Feature f : features) {
+                    final String name = f.getName();
+                    final FeatureProviderDescription info = new FeatureProviderDescription(provider, props, f);
+
+                    List<FeatureProviderDescription> candidates = this.providers.get(name);
+                    if ( candidates == null ) {
+                        candidates = new ArrayList<FeatureProviderDescription>();
+                        this.providers.put(name, candidates);
                     }
+                    candidates.add(info);
+                    Collections.sort(candidates);
+                    changed = true;
                 }
                 if ( changed ) {
                     this.calculateActiveProviders();
@@ -87,23 +88,20 @@ public class FeatureManager implements Features {
      * Unbind a feature provider
      */
     protected void unbindFeatureProvider(final FeatureProvider provider, final Map<String, Object> props) {
-        final String[] features = provider.getFeatureNames();
+        final Feature[] features = provider.getFeatures();
         if ( features != null && features.length > 0 ) {
-            final FeatureProviderDescription info = new FeatureProviderDescription(provider, props);
             synchronized ( this.providers ) {
                 boolean changed = false;
-                for(final String n : features) {
-                    if ( n != null ) {
-                        final String name = n.trim();
-                        if ( name.length() > 0 ) {
-                            final List<FeatureProviderDescription> candidates = this.providers.get(name);
-                            if ( candidates != null ) { // sanity check
-                                candidates.remove(info);
-                                if ( candidates.size() == 0 ) {
-                                    this.providers.remove(name);
-                                    changed = true;
-                                }
-                            }
+                for(final Feature f : features) {
+                    final String name = f.getName();
+                    final FeatureProviderDescription info = new FeatureProviderDescription(provider, props, f);
+
+                    final List<FeatureProviderDescription> candidates = this.providers.get(name);
+                    if ( candidates != null ) { // sanity check
+                        candidates.remove(info);
+                        if ( candidates.size() == 0 ) {
+                            this.providers.remove(name);
+                            changed = true;
                         }
                     }
                 }
@@ -115,9 +113,16 @@ public class FeatureManager implements Features {
     }
 
     private void calculateActiveProviders() {
-        final Map<String, FeatureProvider> activeMap = new HashMap<String, FeatureProvider>();
+        final Map<String, FeatureDescription> activeMap = new HashMap<String, FeatureDescription>();
         for(final Map.Entry<String, List<FeatureProviderDescription>> entry : this.providers.entrySet()) {
-            activeMap.put(entry.getKey(), entry.getValue().get(0).getProvider());
+            final FeatureProviderDescription desc = entry.getValue().get(0);
+            final FeatureDescription info = new FeatureDescription();
+            info.feature = desc.feature;
+            info.provider = desc.provider;
+            activeMap.put(entry.getKey(), info);
+            if ( entry.getValue().size() > 1 ) {
+                logger.warn("More than one feature provider for feature {}", entry.getKey());
+            }
         }
         this.activeProviders = activeMap;
     }
@@ -160,18 +165,37 @@ public class FeatureManager implements Features {
     }
 
     private ClientContextImpl createClientContext(final ProviderContext providerContext) {
-        final ClientContextImpl ctx = new ClientContextImpl(providerContext);
+        final List<Feature> enabledFeatures = new ArrayList<Feature>();
 
-        for(final Map.Entry<String, FeatureProvider> entry : this.activeProviders.entrySet()) {
-            final String name = entry.getKey();
-            final FeatureProvider provider = entry.getValue();
+        for(final Map.Entry<String, FeatureDescription> entry : this.activeProviders.entrySet()) {
+            final Feature f = entry.getValue().feature;
 
-            if ( provider.isEnabled(name, providerContext) ) {
-                ctx.addFeature(name);
+            if ( entry.getValue().provider.isEnabled(f, providerContext) ) {
+                enabledFeatures.add(f);
             }
         }
 
+        final ClientContextImpl ctx = new ClientContextImpl(providerContext, enabledFeatures);
         return ctx;
+    }
+
+    @Override
+    public Feature[] getAvailableFeatures() {
+        final List<Feature> result = new ArrayList<Feature>();
+        for(final Map.Entry<String, FeatureDescription> entry : this.activeProviders.entrySet()) {
+            final Feature f = entry.getValue().feature;
+            result.add(f);
+        }
+        return result.toArray(new Feature[result.size()]);
+    }
+
+    @Override
+    public Feature getFeature(final String name) {
+        final FeatureDescription desc = this.activeProviders.get(name);
+        if ( desc != null ) {
+            return desc.feature;
+        }
+        return null;
     }
 
     @Override
@@ -185,29 +209,20 @@ public class FeatureManager implements Features {
     }
 
     /**
-     * Checks whether a resource should be hidden for a feature.
-     * This check is only executed if {@link #isEnabled(String, ClientContext)}
-     * return true for the given feature/context.
-     */
-    public boolean hideResource(final String featureName, final Resource resource) {
-        final FeatureProvider prod = this.activeProviders.get(featureName);
-        if ( prod != null ) {
-            return prod.hideResource(featureName, resource);
-        }
-        return false;
-    }
-
-    /**
      * Internal class caching some provider infos like service id and ranking.
      */
     private final static class FeatureProviderDescription implements Comparable<FeatureProviderDescription> {
 
-        public FeatureProvider provider;
+        public final FeatureProvider provider;
         public final int ranking;
         public final long serviceId;
+        public final Feature feature;
 
-        public FeatureProviderDescription(final FeatureProvider provider, final Map<String, Object> props) {
+        public FeatureProviderDescription(final FeatureProvider provider,
+                final Map<String, Object> props,
+                final Feature feature) {
             this.provider = provider;
+            this.feature = feature;
             final Object sr = props.get(Constants.SERVICE_RANKING);
             if ( sr == null || !(sr instanceof Integer)) {
                 this.ranking = 0;
@@ -243,20 +258,11 @@ public class FeatureManager implements Features {
             result = prime * result + (int) (serviceId ^ (serviceId >>> 32));
             return result;
         }
-
-        public FeatureProvider getProvider() {
-            return provider;
-        }
     }
 
-    public String getResourceType(final String featureName, final String resourceType) {
-        final FeatureProvider prod = this.activeProviders.get(featureName);
-        if ( prod != null ) {
-            final Map<String, String> mapping = prod.getResourceTypeMapping(featureName);
-            if ( mapping != null ) {
-                return mapping.get(resourceType);
-            }
-        }
-        return null;
+    private final static class FeatureDescription {
+        public Feature feature;
+        public FeatureProvider provider;
+
     }
 }

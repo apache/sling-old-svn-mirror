@@ -24,6 +24,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.Features;
 
 /**
@@ -44,6 +45,16 @@ public class FeaturesImpl implements Features {
     @Override
     public boolean isAvailable(final String featureName) {
         return this.manager.isAvailable(featureName);
+    }
+
+    @Override
+    public Feature[] getAvailableFeatures() {
+        return this.manager.getAvailableFeatures();
+    }
+
+    @Override
+    public Feature getFeature(final String name) {
+        return this.manager.getFeature(name);
     }
 
     @Override

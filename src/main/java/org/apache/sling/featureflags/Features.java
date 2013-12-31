@@ -32,10 +32,22 @@ import aQute.bnd.annotation.ProviderType;
 public interface Features {
 
     /**
-     * Get the list of all available features. A feature is available
+     * Get the list of all available feature names. A feature is available
      * if there is a {@link FeatureProvider}
      */
     String[] getAvailableFeatureNames();
+
+    /**
+     * Get the list of all available features. A feature is available
+     * if there is a {@link FeatureProvider}
+     */
+    Feature[] getAvailableFeatures();
+
+    /**
+     * Returns the feature with the given name.
+     * @return The feature or <code>null</code>
+     */
+    Feature getFeature(String name);
 
     /**
      * Checks whether a feature with the given name is available.

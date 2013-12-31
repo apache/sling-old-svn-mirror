@@ -18,10 +18,6 @@
  */
 package org.apache.sling.featureflags;
 
-import java.util.Map;
-
-import org.apache.sling.api.resource.Resource;
-
 import aQute.bnd.annotation.ConsumerType;
 
 /**
@@ -34,30 +30,10 @@ public interface FeatureProvider {
      * Checks whether the feature is enabled for the current execution
      * context.
      */
-    boolean isEnabled(String featureName, ProviderContext context);
+    boolean isEnabled(Feature feature, ProviderContext context);
 
     /**
      * Return the list of available features from this provider.
      */
-    String [] getFeatureNames();
-
-    /**
-     * Returns the resource type mapping for a feature.
-     * This mapping is only used if {@link #isEnabled(String, ExecutionContext)}
-     * return true for the given feature/context. The caller of this
-     * method must ensure to call {@link #isEnabled(String, ExecutionContext)}
-     * before calling this method and only call this method if
-     * {@link #isEnabled(String, ExecutionContext)} return <code>true</code>
-     */
-    Map<String, String> getResourceTypeMapping(String featureName);
-
-    /**
-     * Checks whether a resource should be hidden for a feature.
-     * This check is only executed if {@link #isEnabled(String, ExecutionContext)}
-     * return true for the given feature/context. The caller of this
-     * method must ensure to call {@link #isEnabled(String, ExecutionContext)}
-     * before calling this method and only call this method if
-     * {@link #isEnabled(String, ExecutionContext)} return <code>true</code>
-     */
-    boolean hideResource(String featureName, Resource resource);
+    Feature[] getFeatures();
 }
