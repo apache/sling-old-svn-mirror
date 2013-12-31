@@ -17,12 +17,10 @@
  */
 package org.apache.sling.hc.api;
 
-import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 
 /** The result of executing a {@link HealthCheck} */
-public class Result implements HealthCheckResult {
+public class Result implements Iterable <ResultLog.Entry> {
 
     private final ResultLog resultLog;
 
@@ -48,25 +46,19 @@ public class Result implements HealthCheckResult {
         resultLog = new ResultLog(log);
     }
 
-    /**
-     * @see org.apache.sling.hc.api.HealthCheckResult#isOk()
+    /** True if our status is OK - provides a convenient way of
+     *  checking that.
      */
-    @Override
     public boolean isOk() {
         return getStatus().equals(Status.OK);
     }
 
-    /**
-     * @see org.apache.sling.hc.api.HealthCheckResult#getStatus()
-     */
-    @Override
+    /** Return our Status */
     public Status getStatus() {
         return resultLog.getAggregateStatus();
     }
 
-    /**
-     * @see org.apache.sling.hc.api.HealthCheckResult#iterator()
-     */
+    /** Return an Iterator on the entries of our ResultLog */
     @Override
     public Iterator<ResultLog.Entry> iterator() {
         return resultLog.iterator();
@@ -77,25 +69,4 @@ public class Result implements HealthCheckResult {
         return "Result [status=" + getStatus() + ", resultLog=" + resultLog + "]";
     }
 
-    @Override
-    public long getElapsedTimeInMs() {
-        throw new UnsupportedOperationException(
-                "Property ElapsedTimeInMs is only available if health check is executed by HealthCheckExecutor");
-    }
-
-    @Override
-    public String getHealthCheckName() {
-        throw new UnsupportedOperationException("Name is only available if health check is executed by HealthCheckExecutor");
-    }
-
-    @Override
-    public Date getFinishedAt() {
-        throw new UnsupportedOperationException("Property FinishedAt is only available if health check is executed by HealthCheckExecutor");
-    }
-
-    @Override
-    public List<String> getHealthCheckTags() {
-        throw new UnsupportedOperationException(
-                "Tags of health check are only available if health check is executed by HealthCheckExecutor");
-    }
 }

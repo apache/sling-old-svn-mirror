@@ -15,10 +15,11 @@
  * KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package org.apache.sling.hc.api;
+package org.apache.sling.hc.api.execution;
 
 import java.util.Collection;
 
+import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.ServiceReference;
 
 import aQute.bnd.annotation.ProviderType;
@@ -27,30 +28,14 @@ import aQute.bnd.annotation.ProviderType;
  * Executes health checks registered as OSGi services and
  * implementing the interface {@link HealthCheck}.
  *
- * @since 1.1
  */
 @ProviderType
 public interface HealthCheckExecutor {
 
     /**
-     * Executes all health checks registered as OSGi services.
+     * Executes all health checks
      *
      * @return Collection of results. The collection might be empty.
      */
-    Collection<HealthCheckResult> executeAll();
-
-    /**
-     * Executes all health checks for given tags.
-     *
-     * @return Collection of results. The collection might be empty.
-     */
-    Collection<HealthCheckResult> executeAllForTags(String... tags);
-
-    /**
-     * Executes one health check
-     *
-     * @return Single result or <code>null</code>
-     */
-    HealthCheckResult execute(ServiceReference healthCheckReference);
-
+    Collection<HealthCheckExecutionResult> execute(ServiceReference... healthCheckReferences);
 }

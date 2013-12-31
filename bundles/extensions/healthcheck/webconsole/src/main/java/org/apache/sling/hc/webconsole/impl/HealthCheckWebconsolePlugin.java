@@ -28,16 +28,21 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.request.ResponseUtil;
-import org.apache.sling.hc.api.HealthCheckExecutor;
-import org.apache.sling.hc.api.HealthCheckResult;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.util.HealthCheckFilter;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 /** Webconsole plugin to execute health check services */
 @Component
@@ -61,6 +66,18 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
     @Reference
     private HealthCheckExecutor healthCheckExecutor;
+
+    private BundleContext bundleContext;
+
+    @Activate
+    protected void activate(final BundleContext bc) {
+        this.bundleContext = bc;
+    }
+
+    @Deactivate
+    protected void deactivate() {
+        this.bundleContext = null;
+    }
 
     /** Serve static resource if applicable, and return true in that case */
     private boolean getStaticResource(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -96,36 +113,44 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         // Execute health checks only if tags are specified (even if empty)
         if(req.getParameter(PARAM_TAGS) != null) {
-            Collection<HealthCheckResult> results = healthCheckExecutor.executeAllForTags(tags.split(","));
+            final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
+            try {
+                final ServiceReference[] refs = filter.getTaggedHealthCheckServiceReferences(tags.split(","));
+                Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(refs);
 
-            final PrintWriter pw = resp.getWriter();
-            pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
-            int total = 0;
-            int failed = 0;
-            for (final HealthCheckResult r : results) {
+                final PrintWriter pw = resp.getWriter();
+                pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
+                int total = 0;
+                int failed = 0;
+                for (final HealthCheckExecutionResult exR : results) {
 
-                total++;
-                if (!r.isOk()) {
-                    failed++;
+                    final Result r = exR.getHealthCheckResult();
+                    total++;
+                    if (!r.isOk()) {
+                        failed++;
+                    }
+                    if (!quiet || !r.isOk()) {
+                        renderResult(resp, exR, debug);
+                    }
+
                 }
-                if (!quiet || !r.isOk()) {
-                    renderResult(resp, r, debug);
-                }
-
+                final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
+                c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
+                pw.println("</table>");
+            } finally {
+                filter.dispose();
             }
-            final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
-            c.titleHtml("Summary", total + " HealthCheck executed, " + failed + " failures");
-            pw.println("</table>");
         }
     }
 
-    private void renderResult(HttpServletResponse resp, HealthCheckResult result, boolean debug) throws IOException {
+    private void renderResult(HttpServletResponse resp, HealthCheckExecutionResult exResult, boolean debug) throws IOException {
+        final Result result = exResult.getHealthCheckResult();
         final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
 
         final StringBuilder status = new StringBuilder();
 
-        status.append("Tags: ").append(result.getHealthCheckTags());
-        c.titleHtml(result.getHealthCheckName(), null);
+        status.append("Tags: ").append(exResult.getHealthCheckTags());
+        c.titleHtml(exResult.getHealthCheckName(), null);
 
         c.tr();
         c.tdContent();
