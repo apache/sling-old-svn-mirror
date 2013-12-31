@@ -44,7 +44,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
             @Override
             public ExecutionResult call() throws Exception {
                 Thread.currentThread().setName(
-                        "Health-Check-" + StringUtils.substringAfterLast(healthCheckDescriptor.getClassName(), "."));
+                        "Health-Check-" + StringUtils.substringAfterLast(healthCheckDescriptor.getMetaData().getTitle(), "."));
                 LOG.debug("Starting check {}", healthCheckDescriptor);
 
                 StopWatch stopWatch = new StopWatch();
@@ -73,7 +73,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                     long elapsedTime = stopWatch.getTime();
                     if (resultFromHealthCheck != null) {
                         // wrap the result in an execution result
-                        executionResult = new ExecutionResult(healthCheckDescriptor, resultFromHealthCheck, elapsedTime);
+                        executionResult = new ExecutionResult(healthCheckDescriptor.getMetaData(), resultFromHealthCheck, elapsedTime);
                     }
                     LOG.debug("Time consumed for {}: {}", healthCheckDescriptor, HealthCheckExecutorImpl.msHumanReadable(elapsedTime));
                 }

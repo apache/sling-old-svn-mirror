@@ -20,7 +20,6 @@ package org.apache.sling.hc.core.impl.executor;
 import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,7 +30,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
@@ -39,6 +37,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.commons.threads.ModifiableThreadPoolConfig;
 import org.apache.sling.commons.threads.ThreadPool;
 import org.apache.sling.commons.threads.ThreadPoolManager;
@@ -47,7 +46,6 @@ import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +67,6 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     @Property(name = PROP_TIMEOUT_MS, label = "Timeout",
             description = "Timeout in ms until a check is marked as timed out",
             longValue = TIMEOUT_DEFAULT_MS)
-    private Long timeoutInMs;
 
     private static final long LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS = 1000 * 60 * 5;
 
@@ -77,20 +74,19 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     @Property(name = PROP_LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_MS, label = "Timeout threshold for CRITICAL",
             description = "Threshold in ms until a check is marked as 'exceedingly' timed out and will marked CRITICAL instead of WARN only",
             longValue = LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS)
-    private Long longRunningFutureThresholdForRedMs;
-
-    static final String PROP_DISABLED_CHECKS = "disabledChecks";
-    @Property(name = PROP_DISABLED_CHECKS, label = "Disabled Checks", cardinality = Integer.MAX_VALUE,
-            description = "Empty by default, allows to disable checks if necessary (add fully qualified class names here)",
-            value = {})
-    private String[] disabledChecks;
 
     private static final long RESULT_CACHE_TTLL_DEFAULT_MS = 1000 * 2;
     public static final String PROP_RESULT_CACHE_TTL_MS = "resultCacheTtlInMs";
     @Property(name = PROP_RESULT_CACHE_TTL_MS, label = "Results Cache TTL in Ms",
             description = "Result Cache time to live - results will be cached for the given time",
             longValue = RESULT_CACHE_TTLL_DEFAULT_MS)
-    private Long resultCacheTtlInMs;
+
+
+    private long timeoutInMs;
+
+    private long longRunningFutureThresholdForRedMs;
+
+    private long resultCacheTtlInMs;
 
     private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
@@ -103,34 +99,33 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     private BundleContext bundleContext;
 
     @Activate
-    protected final void activate(final ComponentContext componentContext) {
-        this.bundleContext = componentContext.getBundleContext();
+    protected final void activate(final Map<String, Object> properties, final BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
 
         ModifiableThreadPoolConfig hcThreadPoolConfig = new ModifiableThreadPoolConfig();
         hcThreadPoolConfig.setMaxPoolSize(25);
         hcThreadPool = threadPoolManager.create(hcThreadPoolConfig, "Health Check Thread Pool");
 
-        final Dictionary<?, ?> properties = componentContext.getProperties();
-        this.disabledChecks = (String[]) properties.get(PROP_DISABLED_CHECKS);
-        this.timeoutInMs = (Long) properties.get(PROP_TIMEOUT_MS);
+        this.timeoutInMs = PropertiesUtil.toLong(properties.get(PROP_TIMEOUT_MS), TIMEOUT_DEFAULT_MS);
 
-        if (this.timeoutInMs == null || this.timeoutInMs == 0L) {
+        if ( this.timeoutInMs <= 0L) {
             this.timeoutInMs = TIMEOUT_DEFAULT_MS;
         }
 
-        this.longRunningFutureThresholdForRedMs = (Long) properties.get(PROP_LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_MS);
-        if (this.longRunningFutureThresholdForRedMs == null || this.longRunningFutureThresholdForRedMs == 0L) {
+        this.longRunningFutureThresholdForRedMs = PropertiesUtil.toLong(properties.get(PROP_LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_MS),
+                LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS);
+        if (this.longRunningFutureThresholdForRedMs <= 0L) {
             this.longRunningFutureThresholdForRedMs = LONGRUNNING_FUTURE_THRESHOLD_CRITICAL_DEFAULT_MS;
         }
 
-        this.resultCacheTtlInMs = (Long) properties.get(PROP_RESULT_CACHE_TTL_MS);
-        if (this.resultCacheTtlInMs == null || this.resultCacheTtlInMs == 0L) {
+        this.resultCacheTtlInMs = PropertiesUtil.toLong(properties.get(PROP_RESULT_CACHE_TTL_MS), RESULT_CACHE_TTLL_DEFAULT_MS);
+        if (this.resultCacheTtlInMs <= 0L) {
             this.resultCacheTtlInMs = RESULT_CACHE_TTLL_DEFAULT_MS;
         }
     }
 
     @Deactivate
-    protected final void deactivate(final ComponentContext componentContext) {
+    protected final void deactivate() {
         threadPoolManager.release(hcThreadPool);
         this.bundleContext = null;
     }
@@ -179,11 +174,6 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
         final List<HealthCheckDescriptor> descriptors = new LinkedList<HealthCheckDescriptor>();
         for (ServiceReference serviceReference : healthCheckReferences) {
             HealthCheckDescriptor descriptor = new HealthCheckDescriptor(serviceReference);
-
-            if (ArrayUtils.contains(this.disabledChecks, descriptor.getClassName())) {
-                logger.debug("Skipping check {} because it is disabled in OSGi configuration", descriptor);
-                continue;
-            }
 
             descriptors.add(descriptor);
         }
@@ -246,7 +236,7 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
                     result = future.get();
                 } catch (Exception e) {
                     logger.warn("Unexpected Exception during future.get(): " + e, e);
-                    result = new ExecutionResult(future.getHealthCheckDescriptor(), Result.Status.HEALTH_CHECK_ERROR,
+                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetaData(), Result.Status.HEALTH_CHECK_ERROR,
                             "Unexpected Exception during future.get(): " + e);
                 }
 
@@ -266,11 +256,11 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
                 // future we turn the result CRITICAL
                 long futureElapsedTimeMs = new Date().getTime() - future.getCreatedTime().getTime();
                 if (futureElapsedTimeMs < this.longRunningFutureThresholdForRedMs) {
-                    result = new ExecutionResult(future.getHealthCheckDescriptor(), Result.Status.WARN,
+                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetaData(), Result.Status.WARN,
                             "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs), futureElapsedTimeMs);
 
                 } else {
-                    result = new ExecutionResult(future.getHealthCheckDescriptor(), Result.Status.CRITICAL,
+                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetaData(), Result.Status.CRITICAL,
                             "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs)
                                     + " (exceeding the configured threshold for CRITICAL: "
                                     + msHumanReadable(this.longRunningFutureThresholdForRedMs) + ")", futureElapsedTimeMs);
@@ -306,21 +296,13 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
         return result;
     }
 
-    void setTimeoutInMs(final Long timeoutInMs) {
+    public void setTimeoutInMs(final long timeoutInMs) {
         this.timeoutInMs = timeoutInMs;
     }
 
-    public Long getTimeoutInMs() {
-        return this.timeoutInMs;
-    }
-
-    public void setLongRunningFutureThresholdForRedMs(Long longRunningFutureThresholdForRedMs) {
+    public void setLongRunningFutureThresholdForRedMs(
+            final long longRunningFutureThresholdForRedMs) {
         this.longRunningFutureThresholdForRedMs = longRunningFutureThresholdForRedMs;
     }
-
-    void setExcludedChecks(final String[] excludedChecks) {
-        this.disabledChecks = excludedChecks;
-    }
-
 
 }
