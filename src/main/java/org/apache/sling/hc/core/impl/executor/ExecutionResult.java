@@ -19,33 +19,30 @@ package org.apache.sling.hc.core.impl.executor;
 
 import java.text.Collator;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.util.HealthCheckMetaData;
 
 /** The result of executing a {@link HealthCheck} */
 public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheckExecutionResult {
 
     private final Result resultFromHC;
 
-    private final String name;
-    private final List<String> tags;
+    private final HealthCheckMetaData metaData;
+
     private final Date finishedAt;
     private final long elapsedTimeInMs;
-    private final long serviceId;
 
     /** Build a single-value Result
      *  @param s if lower than OK, our status is set to OK */
-    ExecutionResult(final HealthCheckDescriptor healthCheckDescriptor, Result simpleResult,
+    ExecutionResult(final HealthCheckMetaData healthCheckDescriptor, Result simpleResult,
             long elapsedTimeInMs) {
-        this.name = healthCheckDescriptor.getName();
-        this.tags = healthCheckDescriptor.getTags();
+        this.metaData = healthCheckDescriptor;
         this.resultFromHC = simpleResult;
         this.finishedAt = new Date();
         this.elapsedTimeInMs = elapsedTimeInMs;
-        this.serviceId = healthCheckDescriptor.getServiceId();
     }
 
     /**
@@ -55,7 +52,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      * @param status
      * @param errorMessage
      */
-    ExecutionResult(HealthCheckDescriptor healthCheckDescriptor, Result.Status status, String errorMessage) {
+    ExecutionResult(HealthCheckMetaData healthCheckDescriptor, Result.Status status, String errorMessage) {
         this(healthCheckDescriptor, new Result(status, errorMessage), 0L);
     }
 
@@ -66,7 +63,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      * @param status
      * @param errorMessage
      */
-    ExecutionResult(HealthCheckDescriptor healthCheckDescriptor, Result.Status status, String errorMessage, long elapsedTime) {
+    ExecutionResult(HealthCheckMetaData healthCheckDescriptor, Result.Status status, String errorMessage, long elapsedTime) {
         this(healthCheckDescriptor, new Result(status, errorMessage), elapsedTime);
     }
 
@@ -86,26 +83,15 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
         return elapsedTimeInMs;
     }
 
-    Long getServiceId() {
-        return this.serviceId;
-    }
-
     @Override
-    public String getHealthCheckName() {
-        return this.name;
-    }
-
-
-    @Override
-    public List<String> getHealthCheckTags() {
-        return this.tags;
+    public HealthCheckMetaData getHealthCheckMetaData() {
+        return this.metaData;
     }
 
     @Override
     public Date getFinishedAt() {
         return finishedAt;
     }
-
 
     /**
      * Natural order of results (failed results are sorted before ok results).
@@ -114,10 +100,12 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     public int compareTo(ExecutionResult otherResult) {
         int retVal = otherResult.getHealthCheckResult().getStatus().compareTo(this.getHealthCheckResult().getStatus());
         if (retVal == 0) {
-            retVal = Collator.getInstance().compare(getHealthCheckName(), otherResult.getHealthCheckName());
+            retVal = Collator.getInstance().compare(this.getHealthCheckMetaData().getTitle(), otherResult.getHealthCheckMetaData().getTitle());
         }
         return retVal;
     }
 
-
+    long getServiceId() {
+        return this.metaData.getServiceId();
+    }
 }
