@@ -16,38 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.featureflags.impl;
+package org.apache.sling.featureflags;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.extensions.featureflags.ProviderContext;
+
+import aQute.bnd.annotation.ProviderType;
 
 /**
- * Implementation of the provider context.
+ * The provider context contains all information that is passed to a
+ * {@link FeatureProvider} in order to check whether a feature
+ * is enabled.
  */
-public class ProviderContextImpl implements ProviderContext {
+@ProviderType
+public interface ProviderContext {
 
-    private final ResourceResolver resourceResolver;
+    /**
+     * Return the associated request if available
+     * @return the request or <code>null</code>
+     */
+    SlingHttpServletRequest getRequest();
 
-    private final SlingHttpServletRequest request;
-
-    public ProviderContextImpl(final ResourceResolver resourceResolver) {
-        this.request = null;
-        this.resourceResolver = resourceResolver;
-    }
-
-    public ProviderContextImpl(final SlingHttpServletRequest request) {
-        this.request = request;
-        this.resourceResolver = request.getResourceResolver();
-    }
-
-    @Override
-    public SlingHttpServletRequest getRequest() {
-        return this.request;
-    }
-
-    @Override
-    public ResourceResolver getResourceResolver() {
-        return this.resourceResolver;
-    }
+    /**
+     * Return the associated resource resolver.
+     * @return the resource resolver
+     */
+    ResourceResolver getResourceResolver();
 }

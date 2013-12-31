@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.featureflags.impl;
+package org.apache.sling.featureflags.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,10 +31,10 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.extensions.featureflags.ClientContext;
-import org.apache.sling.extensions.featureflags.FeatureProvider;
-import org.apache.sling.extensions.featureflags.Features;
-import org.apache.sling.extensions.featureflags.ProviderContext;
+import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.FeatureProvider;
+import org.apache.sling.featureflags.Features;
+import org.apache.sling.featureflags.ProviderContext;
 import org.osgi.framework.Constants;
 
 /**

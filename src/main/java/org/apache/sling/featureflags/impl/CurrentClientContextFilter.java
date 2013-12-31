@@ -16,48 +16,56 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.featureflags.impl;
+package org.apache.sling.featureflags.impl;
+
+import java.io.IOException;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.extensions.featureflags.ClientContext;
-import org.apache.sling.extensions.featureflags.Features;
 
 /**
- * This is a wrapper around the internal feature manager.
+ * This general servlet filter sets the current client context to the
+ * current request.
  */
 @Component
-@Service(value=Features.class)
-public class FeaturesImpl implements Features {
+@Service(value=Filter.class)
+@Property(name="pattern", value="/.*")
+public class CurrentClientContextFilter implements Filter {
 
     @Reference
     private FeatureManager manager;
 
     @Override
-    public String[] getAvailableFeatureNames() {
-        return this.manager.getAvailableFeatureNames();
+    public void doFilter(final ServletRequest req, final ServletResponse res,
+            final FilterChain chain)
+    throws IOException, ServletException {
+        if ( req instanceof SlingHttpServletRequest ) {
+            manager.setCurrentClientContext((SlingHttpServletRequest)req);
+        }
+        try {
+            chain.doFilter(req, res);
+        } finally {
+            manager.unsetCurrentClientContext();
+        }
     }
 
     @Override
-    public boolean isAvailable(final String featureName) {
-        return this.manager.isAvailable(featureName);
+    public void init(final FilterConfig config) throws ServletException {
+        // nothing to do
     }
 
     @Override
-    public ClientContext getCurrentClientContext() {
-        return this.manager.getCurrentClientContext();
-    }
-
-    @Override
-    public ClientContext createClientContext(final ResourceResolver resolver) {
-        return this.manager.createClientContext(resolver);
-    }
-
-    @Override
-    public ClientContext createClientContext(final SlingHttpServletRequest request) {
-        return this.manager.createClientContext(request);
+    public void destroy() {
+        // nothing to do
     }
 }

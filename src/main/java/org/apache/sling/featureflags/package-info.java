@@ -16,30 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.extensions.featureflags;
-
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.resource.ResourceResolver;
-
-import aQute.bnd.annotation.ProviderType;
 
 /**
- * The provider context contains all information that is passed to a
- * {@link FeatureProvider} in order to check whether a feature
- * is enabled.
+ * Provides a service to interface which may be implemented by applications
+ * to get notified on cluster topology changes.
+ *
+ * @version 1.0
  */
-@ProviderType
-public interface ProviderContext {
+@Version("1.0")
+package org.apache.sling.featureflags;
 
-    /**
-     * Return the associated request if available
-     * @return the request or <code>null</code>
-     */
-    SlingHttpServletRequest getRequest();
+import aQute.bnd.annotation.Version;
 
-    /**
-     * Return the associated resource resolver.
-     * @return the resource resolver
-     */
-    ResourceResolver getResourceResolver();
-}
