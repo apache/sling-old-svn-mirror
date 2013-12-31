@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.sling.hc.api.HealthCheckResult;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,30 +38,30 @@ public class HealthCheckResultCache {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final Map<Long, HealthCheckResult> cache = new ConcurrentHashMap<Long, HealthCheckResult>();
+    private final Map<Long, HealthCheckExecutionResult> cache = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
 
     @Override
     public String toString() {
         return "[HealthCheckResultCache size=" + cache.size() + "]";
     }
 
-    public void updateWith(final Collection<HealthCheckResult> results) {
-        for (final HealthCheckResult result : results) {
+    public void updateWith(final Collection<HealthCheckExecutionResult> results) {
+        for (final HealthCheckExecutionResult result : results) {
             final ExecutionResult executionResult = (ExecutionResult) result;
             cache.put(executionResult.getServiceId(), result);
         }
     }
 
     public void useValidCacheResults(final List<HealthCheckDescriptor> healthCheckDescriptors,
-            final Collection<HealthCheckResult> results,
+            final Collection<HealthCheckExecutionResult> results,
             final long resultCacheTtlInMs) {
 
 
-        final Set<HealthCheckResult> cachedResults = new TreeSet<HealthCheckResult>();
+        final Set<HealthCheckExecutionResult> cachedResults = new TreeSet<HealthCheckExecutionResult>();
         final Iterator<HealthCheckDescriptor> checksIt = healthCheckDescriptors.iterator();
         while (checksIt.hasNext()) {
             final HealthCheckDescriptor descriptor = checksIt.next();
-            final HealthCheckResult result = get(descriptor, resultCacheTtlInMs);
+            final HealthCheckExecutionResult result = get(descriptor, resultCacheTtlInMs);
             if (result != null) {
                 cachedResults.add(result);
                 checksIt.remove();
@@ -71,9 +71,9 @@ public class HealthCheckResultCache {
         results.addAll(cachedResults);
     }
 
-    private HealthCheckResult get(final HealthCheckDescriptor healthCheckDescriptor, final long resultCacheTtlInMs) {
+    private HealthCheckExecutionResult get(final HealthCheckDescriptor healthCheckDescriptor, final long resultCacheTtlInMs) {
         final Long key = healthCheckDescriptor.getServiceId();
-        final HealthCheckResult cachedResult = cache.get(key);
+        final HealthCheckExecutionResult cachedResult = cache.get(key);
         if (cachedResult != null) {
             Date finishedAt = cachedResult.getFinishedAt();
             if (finishedAt == null) {
