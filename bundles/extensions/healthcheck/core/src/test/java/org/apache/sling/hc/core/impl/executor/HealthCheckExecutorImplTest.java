@@ -39,7 +39,7 @@ public class HealthCheckExecutorImplTest {
         MockitoAnnotations.initMocks(this);
 
         when(future.getHealthCheckDescriptor()).thenReturn(healthCheckDescriptor);
-        when(healthCheckDescriptor.getMetaData()).thenReturn(this.HealthCheckMetadata);
+        when(healthCheckDescriptor.getMetadata()).thenReturn(this.HealthCheckMetadata);
         when(HealthCheckMetadata.getTitle()).thenReturn("Test Check");
 
         healthCheckExecutorImpl = new HealthCheckExecutorImpl();
@@ -57,7 +57,7 @@ public class HealthCheckExecutorImplTest {
         Collection<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
 
         when(future.isDone()).thenReturn(true);
-        ExecutionResult testResult = new ExecutionResult(healthCheckDescriptor.getMetaData(), new Result(Result.Status.OK, "test"), 10L);
+        ExecutionResult testResult = new ExecutionResult(healthCheckDescriptor.getMetadata(), new Result(Result.Status.OK, "test"), 10L);
         when(future.get()).thenReturn(testResult);
 
         healthCheckExecutorImpl.collectResultsFromFutures(futures, results);

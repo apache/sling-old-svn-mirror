@@ -250,7 +250,7 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
                     result = future.get();
                 } catch (Exception e) {
                     logger.warn("Unexpected Exception during future.get(): " + e, e);
-                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetaData(), Result.Status.HEALTH_CHECK_ERROR,
+                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetadata(), Result.Status.HEALTH_CHECK_ERROR,
                             "Unexpected Exception during future.get(): " + e);
                 }
 
@@ -270,11 +270,11 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
                 // future we turn the result CRITICAL
                 long futureElapsedTimeMs = new Date().getTime() - future.getCreatedTime().getTime();
                 if (futureElapsedTimeMs < this.longRunningFutureThresholdForRedMs) {
-                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetaData(), Result.Status.WARN,
+                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetadata(), Result.Status.WARN,
                             "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs), futureElapsedTimeMs);
 
                 } else {
-                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetaData(), Result.Status.CRITICAL,
+                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetadata(), Result.Status.CRITICAL,
                             "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs)
                                     + " (exceeding the configured threshold for CRITICAL: "
                                     + msHumanReadable(this.longRunningFutureThresholdForRedMs) + ")", futureElapsedTimeMs);
