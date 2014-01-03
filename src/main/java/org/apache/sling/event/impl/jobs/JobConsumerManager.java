@@ -69,7 +69,10 @@ import org.slf4j.LoggerFactory;
             cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
             policy=ReferencePolicy.DYNAMIC)
 })
-@Property(name="org.apache.sling.installer.configuration.persist", boolValue=false, propertyPrivate=true)
+@Property(name="org.apache.sling.installer.configuration.persist", boolValue=false,
+          label="Distribute config",
+          description="If this is disabled, the configuration is not persisted on save in the cluster and is "
+                    + "only used on the current instance. This option should always be disabled!")
 public class JobConsumerManager {
 
     @Property(unbounded=PropertyUnbounded.ARRAY, value = "*")
