@@ -17,7 +17,7 @@
  */
 package org.apache.sling.hc.api.execution;
 
-import java.util.Collection;
+import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.ServiceReference;
@@ -35,7 +35,7 @@ public interface HealthCheckExecutor {
     /**
      * Executes all health checks
      *
-     * @return Collection of results. The collection might be empty.
+     * @return List of results. The list might be empty.
      */
-    Collection<HealthCheckExecutionResult> execute(ServiceReference... healthCheckReferences);
+    List<HealthCheckExecutionResult> execute(ServiceReference... healthCheckReferences);
 }

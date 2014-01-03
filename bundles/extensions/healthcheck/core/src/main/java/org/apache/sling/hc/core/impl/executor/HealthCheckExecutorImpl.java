@@ -18,7 +18,10 @@
 package org.apache.sling.hc.core.impl.executor;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.time.StopWatch;
@@ -134,20 +136,32 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
      * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(org.osgi.framework.ServiceReference[])
      */
     @Override
-    public Collection<HealthCheckExecutionResult> execute(final ServiceReference... healthCheckReferences) {
+    public List<HealthCheckExecutionResult> execute(final ServiceReference... healthCheckReferences) {
         logger.debug("Starting executing all checks... ");
 
         final StopWatch stopWatch = new StopWatch();
         stopWatch.start();
 
-        final Collection<HealthCheckExecutionResult> results = new TreeSet<HealthCheckExecutionResult>();
+        final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
         final List<HealthCheckDescriptor> healthCheckDescriptors = getHealthCheckDescriptors(healthCheckReferences);
 
         createResultsForDescriptors(healthCheckDescriptors, results);
 
         stopWatch.stop();
-        logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
+        }
 
+        // sort result
+        Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
+
+            @Override
+            public int compare(final HealthCheckExecutionResult arg0,
+                    final HealthCheckExecutionResult arg1) {
+                return ((ExecutionResult)arg0).compareTo((ExecutionResult)arg1);
+            }
+
+        });
         return results;
     }
 
