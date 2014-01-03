@@ -84,9 +84,9 @@
     </build>
     <profiles>
         <profile>
-            <id>java6</id>
+            <id>java6plus</id>
             <activation>
-                <jdk>1.6</jdk>
+                <jdk>[1.6,)</jdk>
             </activation>
             <build>
                 <plugins>
