@@ -72,7 +72,7 @@ public class HealthCheckResultCache {
     }
 
     private HealthCheckExecutionResult get(final HealthCheckDescriptor healthCheckDescriptor, final long resultCacheTtlInMs) {
-        final Long key = healthCheckDescriptor.getMetaData().getServiceId();
+        final Long key = healthCheckDescriptor.getMetadata().getServiceId();
         final HealthCheckExecutionResult cachedResult = cache.get(key);
         if (cachedResult != null) {
             Date finishedAt = cachedResult.getFinishedAt();
