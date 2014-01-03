@@ -93,6 +93,7 @@
           <module>extensions/ftpserver</module>
           <module>extensions/gwt/sample</module>
           <module>extensions/gwt/servlet</module>
+          <module>extensions/feature-flags</module>
           <module>extensions/i18n</module>
           <module>extensions/jmxprovider</module>
           <module>extensions/mongodb</module>
