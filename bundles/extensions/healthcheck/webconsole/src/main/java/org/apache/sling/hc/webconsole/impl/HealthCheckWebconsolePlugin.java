@@ -149,8 +149,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         final StringBuilder status = new StringBuilder();
 
-        status.append("Tags: ").append(exResult.getHealthCheckTags());
-        c.titleHtml(exResult.getHealthCheckName(), null);
+        status.append("Tags: ").append(exResult.getHealthCheckMetaData().getTags());
+        c.titleHtml(exResult.getHealthCheckMetaData().getTitle(), null);
 
         c.tr();
         c.tdContent();
