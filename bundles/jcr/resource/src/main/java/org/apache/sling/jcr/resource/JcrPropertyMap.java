@@ -68,8 +68,11 @@ public class JcrPropertyMap
     /** A cache for the values. */
     final Map<String, Object> valueCache;
 
-    /** Has the node been read completly? */
+    /** Has the node been read completely? */
     boolean fullyRead;
+
+    /** keep all prefixes for escaping */
+    private String[] namespacePrefixes;
 
     private final ClassLoader dynamicClassLoader;
 
@@ -380,8 +383,7 @@ public class JcrPropertyMap
         // check if colon is neither the first nor the last character
         if (indexOfPrefix > 0 && key.length() > indexOfPrefix + 1) {
             final String prefix = key.substring(0, indexOfPrefix);
-            for (final String existingPrefix : getNode().getSession()
-                    .getNamespacePrefixes()) {
+            for (final String existingPrefix : getNamespacePrefixes()) {
                 if (existingPrefix.equals(prefix)) {
                     return prefix
                             + ":"
@@ -391,6 +393,16 @@ public class JcrPropertyMap
             }
         }
         return Text.escapeIllegalJcrChars(key);
+    }
+
+    /**
+    * Read namespace prefixes and store as member variable to minimize number of JCR API calls
+    */
+    private String[] getNamespacePrefixes() throws RepositoryException {
+        if (this.namespacePrefixes == null) {
+            this.namespacePrefixes = getNode().getSession().getNamespacePrefixes();
+        }
+        return this.namespacePrefixes;
     }
 
     /**
