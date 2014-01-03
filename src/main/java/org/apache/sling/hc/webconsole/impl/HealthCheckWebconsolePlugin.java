@@ -19,6 +19,7 @@ package org.apache.sling.hc.webconsole.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collection;
 
@@ -83,18 +84,27 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp)
    throws ServletException, IOException {
         final String pathInfo = req.getPathInfo();
-        if(pathInfo!= null && pathInfo.contains("res/ui")) {
+        if (pathInfo!= null && pathInfo.contains("res/ui")) {
             final String prefix = "/" + LABEL;
             final InputStream is = getClass().getResourceAsStream(pathInfo.substring(prefix.length()));
-            if(is == null) {
+            if (is == null) {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND, pathInfo);
+            } else {
+                final OutputStream os = resp.getOutputStream();
+                try {
+                    final byte [] buffer = new byte[16384];
+                    int n=0;
+                    while( (n = is.read(buffer, 0, buffer.length)) > 0) {
+                        os.write(buffer, 0, n);
+                    }
+                } finally {
+                    try {
+                        is.close();
+                    } catch ( final IOException ignore ) {
+                        // ignore
+                    }
+                }
             }
-            final byte [] buffer = new byte[16384];
-            int n=0;
-            while( (n = is.read(buffer, 0, buffer.length)) > 0) {
-                resp.getOutputStream().write(buffer, 0, n);
-            }
-            resp.getOutputStream().flush();
             return true;
         }
         return false;
