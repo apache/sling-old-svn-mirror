@@ -80,7 +80,8 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     }
 
     /** Serve static resource if applicable, and return true in that case */
-    private boolean getStaticResource(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    private boolean getStaticResource(final HttpServletRequest req, final HttpServletResponse resp)
+   throws ServletException, IOException {
         final String pathInfo = req.getPathInfo();
         if(pathInfo!= null && pathInfo.contains("res/ui")) {
             final String prefix = "/" + LABEL;
@@ -100,25 +101,26 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        if(getStaticResource(req, resp)) {
+    protected void doGet(final HttpServletRequest req, final HttpServletResponse resp)
+    throws ServletException, IOException {
+        if (getStaticResource(req, resp)) {
             return;
         }
 
-        final String tags = getParam(req, PARAM_TAGS, "");
+        final String tags = getParam(req, PARAM_TAGS, null);
         final boolean debug = Boolean.valueOf(getParam(req, PARAM_DEBUG, "false"));
         final boolean quiet = Boolean.valueOf(getParam(req, PARAM_QUIET, "false"));
 
-        doForm(req, resp, tags, debug, quiet);
+        final PrintWriter pw = resp.getWriter();
+        doForm(pw, tags, debug, quiet);
 
         // Execute health checks only if tags are specified (even if empty)
-        if(req.getParameter(PARAM_TAGS) != null) {
+        if (tags != null) {
             final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
             try {
                 final ServiceReference[] refs = filter.getTaggedHealthCheckServiceReferences(tags.split(","));
                 Collection<HealthCheckExecutionResult> results = healthCheckExecutor.execute(refs);
 
-                final PrintWriter pw = resp.getWriter();
                 pw.println("<table class='content healthcheck' cellpadding='0' cellspacing='0' width='100%'>");
                 int total = 0;
                 int failed = 0;
@@ -130,7 +132,7 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
                         failed++;
                     }
                     if (!quiet || !r.isOk()) {
-                        renderResult(resp, exR, debug);
+                        renderResult(pw, exR, debug);
                     }
 
                 }
@@ -143,9 +145,12 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         }
     }
 
-    private void renderResult(HttpServletResponse resp, HealthCheckExecutionResult exResult, boolean debug) throws IOException {
+    private void renderResult(final PrintWriter pw,
+            final HealthCheckExecutionResult exResult,
+            final boolean debug)
+   throws IOException {
         final Result result = exResult.getHealthCheckResult();
-        final WebConsoleHelper c = new WebConsoleHelper(resp.getWriter());
+        final WebConsoleHelper c = new WebConsoleHelper(pw);
 
         final StringBuilder status = new StringBuilder();
 
@@ -165,24 +170,26 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
 
         c.tr();
         c.tdContent();
-        for(ResultLog.Entry e : result) {
-            if(!debug && e.getStatus().equals(Result.Status.DEBUG)) {
+        for(final ResultLog.Entry e : result) {
+            if (!debug && e.getStatus().equals(Result.Status.DEBUG)) {
                 continue;
             }
-            final StringBuilder sb = new StringBuilder();
-            sb.append("<div class='log").append(e.getStatus()).append("'>");
-            sb.append(e.getStatus())
-                .append(" ")
-                .append(ResponseUtil.escapeXml(e.getMessage()))
-                .append("</div>");
-            c.writer().println(sb.toString());
+            c.writer().print("<div class='log");
+            c.writer().print(e.getStatus().toString());
+            c.writer().print("'>");
+            c.writer().print(e.getStatus().toString());
+            c.writer().print(' ');
+            c.writer().print(ResponseUtil.escapeXml(e.getMessage()));
+            c.writer().println("</div>");
         }
         c.closeTd();
     }
 
-    private void doForm(HttpServletRequest req, HttpServletResponse resp, String tags, boolean debug, boolean quiet)
-            throws IOException {
-        final PrintWriter pw = resp.getWriter();
+    private void doForm(final PrintWriter pw,
+            final String tags,
+            final boolean debug,
+            final boolean quiet)
+    throws IOException {
         final WebConsoleHelper c = new WebConsoleHelper(pw);
         pw.print("<form method='get'>");
         pw.println("<table class='content' cellpadding='0' cellspacing='0' width='100%'>");
@@ -193,36 +200,46 @@ public class HealthCheckWebconsolePlugin extends HttpServlet {
         c.tr();
         c.tdLabel("Health Check tags (comma-separated)");
         c.tdContent();
-        pw.println("<input type='text' name='" + PARAM_TAGS + "' value='" + tags + "' class='input' size='80'>");
+        c.writer().print("<input type='text' name='" + PARAM_TAGS + "' value='");
+        if ( tags != null ) {
+            c.writer().print(ResponseUtil.escapeXml(tags));
+        }
+        c.writer().println("' class='input' size='80'>");
         c.closeTd();
         c.closeTr();
 
         c.tr();
         c.tdLabel("Show DEBUG logs");
         c.tdContent();
-        pw.println("<input type='checkbox' name='" + PARAM_DEBUG + "' class='input' value='true'"
-                + (debug ? " checked=true " : "") + ">");
+        c.writer().print("<input type='checkbox' name='" + PARAM_DEBUG + "' class='input' value='true'");
+        if ( debug ) {
+            c.writer().print(" checked=true");
+        }
+        c.writer().println(">");
         c.closeTd();
         c.closeTr();
 
         c.tr();
         c.tdLabel("Show failed checks only");
         c.tdContent();
-        pw.println("<input type='checkbox' name='" + PARAM_QUIET + "' class='input' value='true'"
-                + (quiet ? " checked=true " : "") + ">");
+        c.writer().print("<input type='checkbox' name='" + PARAM_QUIET + "' class='input' value='true'");
+        if ( quiet ) {
+            c.writer().print(" checked=true");
+        }
+        c.writer().println(">");
         c.closeTd();
         c.closeTr();
 
         c.tr();
         c.tdContent();
-        pw.println("<input type='submit' value='Execute selected health checks'/>");
+        c.writer().println("<input type='submit' value='Execute selected health checks'/>");
         c.closeTd();
         c.closeTr();
 
-        pw.println("</table></form>");
+        c.writer().println("</table></form>");
     }
 
-    private String getParam(HttpServletRequest req, String name, String defaultValue) {
+    private String getParam(final HttpServletRequest req, final String name, final String defaultValue) {
         String result = req.getParameter(name);
         if(result == null) {
             result = defaultValue;
