@@ -17,7 +17,7 @@
  */
 package org.apache.sling.hc.core.impl.executor;
 
-import org.apache.sling.hc.util.HealthCheckMetaData;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.osgi.framework.ServiceReference;
 
 /**
@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class HealthCheckDescriptor {
 
-    private final HealthCheckMetaData metaData;
+    private final HealthCheckMetadata metaData;
     private final transient ServiceReference serviceReference;
 
     public HealthCheckDescriptor(final ServiceReference healthCheckRef) {
@@ -33,7 +33,7 @@ public class HealthCheckDescriptor {
             throw new IllegalArgumentException("HealthCheck reference must not be null");
         }
         this.serviceReference = healthCheckRef;
-        this.metaData = new HealthCheckMetaData(healthCheckRef);
+        this.metaData = new HealthCheckMetadata(healthCheckRef);
     }
 
     @Override
@@ -41,7 +41,7 @@ public class HealthCheckDescriptor {
         return "HealthCheck '" + this.metaData.getTitle() + "'";
     }
 
-    public HealthCheckMetaData getMetaData() {
+    public HealthCheckMetadata getMetaData() {
         return this.metaData;
     }
 

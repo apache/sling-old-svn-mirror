@@ -31,7 +31,7 @@ import org.osgi.service.component.ComponentConstants;
  * This class helps retrieving meta data information about a health check service.
  * @since 1.1
  */
-public class HealthCheckMetaData {
+public class HealthCheckMetadata {
 
     private final String name;
 
@@ -41,7 +41,7 @@ public class HealthCheckMetaData {
 
     private final List<String> tags;
 
-    public HealthCheckMetaData(final ServiceReference ref) {
+    public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
         this.title = getHealthCheckTitle(ref);
@@ -76,10 +76,10 @@ public class HealthCheckMetaData {
 
     @Override
     public boolean equals(final Object obj) {
-        if ( !(obj instanceof HealthCheckMetaData)) {
+        if ( !(obj instanceof HealthCheckMetadata)) {
             return false;
         }
-        final HealthCheckMetaData other = (HealthCheckMetaData) obj;
+        final HealthCheckMetadata other = (HealthCheckMetadata) obj;
         return serviceId == other.serviceId;
     }
 

@@ -3,7 +3,7 @@ package org.apache.sling.hc.api.execution;
 import java.util.Date;
 
 import org.apache.sling.hc.api.Result;
-import org.apache.sling.hc.util.HealthCheckMetaData;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -26,5 +26,5 @@ public interface HealthCheckExecutionResult {
     /**
      * Get the meta data about the health check service
      */
-    HealthCheckMetaData getHealthCheckMetaData();
+    HealthCheckMetadata getHealthCheckMetadata();
 }
