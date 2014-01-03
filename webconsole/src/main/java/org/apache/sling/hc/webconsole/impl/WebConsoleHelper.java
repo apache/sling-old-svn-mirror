@@ -21,19 +21,19 @@ import java.io.PrintWriter;
 
 import org.apache.sling.api.request.ResponseUtil;
 
-/** Webconsole plugin to execute health check rules */ 
+/** Webconsole plugin to execute health check rules */
 class WebConsoleHelper {
-    
+
     final PrintWriter pw;
-    
-    WebConsoleHelper(PrintWriter w) {
+
+    WebConsoleHelper(final PrintWriter w) {
         pw = w;
     }
 
     PrintWriter writer() {
         return pw;
     }
-    
+
     void tdContent() {
         pw.print("<td class='content' colspan='2'>");
     }
@@ -47,7 +47,9 @@ class WebConsoleHelper {
     }
 
     void tdLabel(final String label) {
-        pw.println("<td class='content'>" + ResponseUtil.escapeXml(label) + "</td>");
+        pw.print("<td class='content'>");
+        pw.print(ResponseUtil.escapeXml(label));
+        pw.println("</td>");
     }
 
     void tr() {
@@ -56,12 +58,16 @@ class WebConsoleHelper {
 
     void titleHtml(String title, String description) {
         tr();
-        pw.println("<th colspan='3' class='content container'>" + ResponseUtil.escapeXml(title) + "</th>");
+        pw.print("<th colspan='3' class='content container'>");
+        pw.print(ResponseUtil.escapeXml(title));
+        pw.println("</th>");
         closeTr();
 
         if (description != null) {
             tr();
-            pw.println("<td colspan='3' class='content'>" +ResponseUtil.escapeXml(description) + "</th>");
+            pw.print("<td colspan='3' class='content'>");
+            pw.print(ResponseUtil.escapeXml(description));
+            pw.println("</th>");
             closeTr();
         }
     }
