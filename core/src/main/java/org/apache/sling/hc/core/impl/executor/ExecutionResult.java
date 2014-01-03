@@ -23,21 +23,21 @@ import java.util.Date;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.sling.hc.util.HealthCheckMetaData;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 
 /** The result of executing a {@link HealthCheck} */
 public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheckExecutionResult {
 
     private final Result resultFromHC;
 
-    private final HealthCheckMetaData metaData;
+    private final HealthCheckMetadata metaData;
 
     private final Date finishedAt;
     private final long elapsedTimeInMs;
 
     /** Build a single-value Result
      *  @param s if lower than OK, our status is set to OK */
-    ExecutionResult(final HealthCheckMetaData healthCheckDescriptor, Result simpleResult,
+    ExecutionResult(final HealthCheckMetadata healthCheckDescriptor, Result simpleResult,
             long elapsedTimeInMs) {
         this.metaData = healthCheckDescriptor;
         this.resultFromHC = simpleResult;
@@ -52,7 +52,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      * @param status
      * @param errorMessage
      */
-    ExecutionResult(HealthCheckMetaData healthCheckDescriptor, Result.Status status, String errorMessage) {
+    ExecutionResult(HealthCheckMetadata healthCheckDescriptor, Result.Status status, String errorMessage) {
         this(healthCheckDescriptor, new Result(status, errorMessage), 0L);
     }
 
@@ -63,7 +63,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      * @param status
      * @param errorMessage
      */
-    ExecutionResult(HealthCheckMetaData healthCheckDescriptor, Result.Status status, String errorMessage, long elapsedTime) {
+    ExecutionResult(HealthCheckMetadata healthCheckDescriptor, Result.Status status, String errorMessage, long elapsedTime) {
         this(healthCheckDescriptor, new Result(status, errorMessage), elapsedTime);
     }
 
@@ -84,7 +84,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     }
 
     @Override
-    public HealthCheckMetaData getHealthCheckMetaData() {
+    public HealthCheckMetadata getHealthCheckMetadata() {
         return this.metaData;
     }
 
@@ -100,7 +100,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     public int compareTo(ExecutionResult otherResult) {
         int retVal = otherResult.getHealthCheckResult().getStatus().compareTo(this.getHealthCheckResult().getStatus());
         if (retVal == 0) {
-            retVal = Collator.getInstance().compare(this.getHealthCheckMetaData().getTitle(), otherResult.getHealthCheckMetaData().getTitle());
+            retVal = Collator.getInstance().compare(this.getHealthCheckMetadata().getTitle(), otherResult.getHealthCheckMetadata().getTitle());
         }
         return retVal;
     }
