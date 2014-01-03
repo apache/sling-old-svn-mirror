@@ -334,11 +334,20 @@ public class ResourceMetadata extends HashMap<String, Object> {
         this.checkReadOnly();
         return super.remove(key);
     }
+    
+    @Override
+    public Object clone() {
+        ResourceMetadata result = (ResourceMetadata) super.clone();
+        result.lockedEntrySet = null;
+        result.lockedKeySet = null;
+        result.lockedValues = null;
+        return result;
+    }
 
-    // volatile for correct double-checked locking in getLockedData()
-    private volatile Set<Map.Entry<String, Object>> lockedEntrySet;
-    private Set<String> lockedKeySet;
-    private Collection<Object> lockedValues;
+	// volatile for correct double-checked locking in getLockedData()
+    private transient volatile Set<Map.Entry<String, Object>> lockedEntrySet;
+    private transient Set<String> lockedKeySet;
+    private transient Collection<Object> lockedValues;
 
     private void getLockedData() {
         if(isReadOnly && lockedEntrySet == null) {
