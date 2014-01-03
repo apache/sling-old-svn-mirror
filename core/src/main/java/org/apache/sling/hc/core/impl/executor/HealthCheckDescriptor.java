@@ -25,7 +25,7 @@ import org.osgi.framework.ServiceReference;
  */
 public class HealthCheckDescriptor {
 
-    private final HealthCheckMetadata metaData;
+    private final HealthCheckMetadata metadata;
     private final transient ServiceReference serviceReference;
 
     public HealthCheckDescriptor(final ServiceReference healthCheckRef) {
@@ -33,16 +33,16 @@ public class HealthCheckDescriptor {
             throw new IllegalArgumentException("HealthCheck reference must not be null");
         }
         this.serviceReference = healthCheckRef;
-        this.metaData = new HealthCheckMetadata(healthCheckRef);
+        this.metadata = new HealthCheckMetadata(healthCheckRef);
     }
 
     @Override
     public String toString() {
-        return "HealthCheck '" + this.metaData.getTitle() + "'";
+        return "HealthCheck '" + this.metadata.getTitle() + "'";
     }
 
-    public HealthCheckMetadata getMetaData() {
-        return this.metaData;
+    public HealthCheckMetadata getMetadata() {
+        return this.metadata;
     }
 
     public ServiceReference getServiceReference() {
@@ -51,7 +51,7 @@ public class HealthCheckDescriptor {
 
     @Override
     public int hashCode() {
-        return this.metaData.hashCode();
+        return this.metadata.hashCode();
     }
 
     @Override
@@ -60,6 +60,6 @@ public class HealthCheckDescriptor {
             return false;
         }
         final HealthCheckDescriptor other = (HealthCheckDescriptor) obj;
-        return this.metaData.equals(other.metaData);
+        return this.metadata.equals(other.metadata);
     }
 }
