@@ -15,7 +15,7 @@ import java.util.TreeSet;
 
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
-import org.apache.sling.hc.util.HealthCheckMetaData;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -32,15 +32,15 @@ public class HealthCheckExecutorImplTest {
     private HealthCheckDescriptor healthCheckDescriptor;
 
     @Mock
-    private HealthCheckMetaData healthCheckMetaData;
+    private HealthCheckMetadata HealthCheckMetadata;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
         when(future.getHealthCheckDescriptor()).thenReturn(healthCheckDescriptor);
-        when(healthCheckDescriptor.getMetaData()).thenReturn(this.healthCheckMetaData);
-        when(healthCheckMetaData.getTitle()).thenReturn("Test Check");
+        when(healthCheckDescriptor.getMetaData()).thenReturn(this.HealthCheckMetadata);
+        when(HealthCheckMetadata.getTitle()).thenReturn("Test Check");
 
         healthCheckExecutorImpl = new HealthCheckExecutorImpl();
         // 2 sec normal timeout
