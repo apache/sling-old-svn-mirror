@@ -21,14 +21,15 @@ package org.apache.sling.featureflags.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.sling.featureflags.ClientContext;
 import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.ProviderContext;
 import org.apache.sling.featureflags.ResourceHiding;
-import org.apache.sling.featureflags.ResourceTypeMapper;
+import org.apache.sling.featureflags.ResourceTypeMapping;
 
 /**
  * Implementation of the client context
@@ -41,32 +42,23 @@ public class ClientContextImpl implements ClientContext {
 
     private final List<ResourceHiding> hidingFeatures;
 
-    private final List<ResourceTypeMapper> mapperFeatures;
+    private final Map<String, String> mapperFeatures = new HashMap<String, String>();
 
     public ClientContextImpl(final ProviderContext featureContext, final List<Feature> features) {
-        Collections.sort(features, new Comparator<Feature>() {
-
-            @Override
-            public int compare(final Feature arg0, final Feature arg1) {
-                return arg0.getName().compareTo(arg1.getName());
-            }
-
-        });
         this.enabledFeatures = Collections.unmodifiableList(features);
         final List<ResourceHiding> hiding = new ArrayList<ResourceHiding>();
-        final List<ResourceTypeMapper> mapping = new ArrayList<ResourceTypeMapper>();
         for(final Feature f : this.enabledFeatures) {
             final ResourceHiding rh = f.adaptTo(ResourceHiding.class);
             if ( rh != null ) {
                 hiding.add(rh);
             }
-            final ResourceTypeMapper rm = f.adaptTo(ResourceTypeMapper.class);
+            final ResourceTypeMapping rm = f.adaptTo(ResourceTypeMapping.class);
             if ( rm != null ) {
-                mapping.add(rm);
+                final Map<String, String> mapping = rm.getResourceTypeMapping();
+                mapperFeatures.putAll(mapping);
             }
         }
         this.hidingFeatures = hiding;
-        this.mapperFeatures = mapping;
         this.featureContext = featureContext;
     }
 
@@ -93,7 +85,7 @@ public class ClientContextImpl implements ClientContext {
         return this.hidingFeatures;
     }
 
-    public Collection<ResourceTypeMapper> getMappingFeatures() {
+    public Map<String, String> getResourceTypeMapping() {
         return this.mapperFeatures;
     }
 }

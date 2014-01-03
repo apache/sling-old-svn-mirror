@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -54,7 +55,7 @@ public class FeatureManager implements Features {
 
     private final Map<String, List<FeatureProviderDescription>> providers = new HashMap<String, List<FeatureProviderDescription>>();
 
-    private Map<String, FeatureDescription> activeProviders = new HashMap<String, FeatureDescription>();
+    private Map<String, FeatureDescription> activeProviders = new TreeMap<String, FeatureDescription>();
 
     /**
      * Bind a new feature provider
@@ -113,7 +114,7 @@ public class FeatureManager implements Features {
     }
 
     private void calculateActiveProviders() {
-        final Map<String, FeatureDescription> activeMap = new HashMap<String, FeatureDescription>();
+        final Map<String, FeatureDescription> activeMap = new TreeMap<String, FeatureDescription>();
         for(final Map.Entry<String, List<FeatureProviderDescription>> entry : this.providers.entrySet()) {
             final FeatureProviderDescription desc = entry.getValue().get(0);
             final FeatureDescription info = new FeatureDescription();
