@@ -28,7 +28,7 @@ import aQute.bnd.annotation.ConsumerType;
  * be adapted to different services, like
  * <ul>
  *   <li>{@link ResourceHiding}</li>
- *   <li>{@link ResourceTypeMapper}</li>
+ *   <li>{@link ResourceTypeMapping}</li>
  * </ul>
  */
 @ConsumerType

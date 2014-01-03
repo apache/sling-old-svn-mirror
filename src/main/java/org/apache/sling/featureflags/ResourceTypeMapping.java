@@ -27,7 +27,7 @@ import aQute.bnd.annotation.ConsumerType;
  * this service interface.
  */
 @ConsumerType
-public interface ResourceTypeMapper {
+public interface ResourceTypeMapping {
 
     /**
      * Returns the resource type mapping for a feature.
