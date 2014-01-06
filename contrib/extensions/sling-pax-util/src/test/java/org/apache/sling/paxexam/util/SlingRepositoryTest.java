@@ -60,10 +60,7 @@ public class SlingRepositoryTest {
     @Test
     public void testLogin() throws RepositoryException {
         final Session s = repository.loginAdministrative(null);
-        try {
-            assertNotNull(s);
-        } finally {
-            s.logout();
-        }
+        assertNotNull(s);
+        s.logout();
     }
  }
