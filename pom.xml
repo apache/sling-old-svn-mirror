@@ -184,6 +184,7 @@
         <module>bundles/extensions/groovy</module>
         <module>bundles/extensions/explorer</module>
         <module>bundles/extensions/healthcheck</module>
+        <module>bundles/resourceaccesssecurity</module>
         
         <!-- Testing Support -->
         <module>testing/tools</module>
