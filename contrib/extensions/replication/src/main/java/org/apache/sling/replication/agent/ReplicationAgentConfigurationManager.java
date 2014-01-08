@@ -46,4 +46,11 @@ public interface ReplicationAgentConfigurationManager {
     ReplicationAgentConfiguration updateConfiguration(ReplicationAgent agent,
                                                       Map<String, Object> properties) throws AgentConfigurationException;
 
+    /**
+     * creates a configuration for a {@link ReplicationAgent}
+     *
+     * @param properties the configuration of the agent to create
+     * @throws AgentConfigurationException
+     */
+    void createAgentConfiguration(Map<String, Object> properties) throws AgentConfigurationException;
 }
