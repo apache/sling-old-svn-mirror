@@ -60,7 +60,9 @@ public class ReplicationAgentPollServlet extends SlingAllMethodsServlet {
 
         ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
 
-        if (agent != null) {
+        /* directly polling an agent queue is only possible if such an agent doesn't have its own endpoint
+        (that is it just adds items to its queue to be polled remotely)*/
+        if (agent != null && (agent.getEndpoint() == null || agent.getEndpoint().toString().length() == 0 )) {
             try {
                 // TODO : consider using queue distribution strategy and validating who's making this request
                 if (log.isInfoEnabled()) {
