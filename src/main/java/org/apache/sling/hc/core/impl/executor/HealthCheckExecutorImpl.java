@@ -46,6 +46,8 @@ import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.api.execution.HealthCheckExecutor;
+import org.apache.sling.hc.util.HealthCheckFilter;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
@@ -92,7 +94,7 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
 
     private HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
-    private Map<HealthCheckDescriptor, HealthCheckFuture> stillRunningFutures = new ConcurrentHashMap<HealthCheckDescriptor, HealthCheckFuture>();
+    private Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new ConcurrentHashMap<HealthCheckMetadata, HealthCheckFuture>();
 
     @Reference
     private ThreadPoolManager threadPoolManager;
@@ -133,39 +135,45 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     }
 
     /**
-     * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(org.osgi.framework.ServiceReference[])
+     * @see org.apache.sling.hc.api.execution.HealthCheckExecutor#execute(String[])
      */
     @Override
-    public List<HealthCheckExecutionResult> execute(final ServiceReference... healthCheckReferences) {
-        logger.debug("Starting executing all checks... ");
+    public List<HealthCheckExecutionResult> execute(final String... tags) {
+        logger.debug("Starting executing checks for {}", tags == null ? "*" : tags);
 
-        final StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        final HealthCheckFilter filter = new HealthCheckFilter(this.bundleContext);
+        try {
+            final ServiceReference[] healthCheckReferences = filter.getTaggedHealthCheckServiceReferences(tags);
 
-        final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
-        final List<HealthCheckDescriptor> healthCheckDescriptors = getHealthCheckDescriptors(healthCheckReferences);
+            final StopWatch stopWatch = new StopWatch();
+            stopWatch.start();
 
-        createResultsForDescriptors(healthCheckDescriptors, results);
+            final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
+            final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckDescriptors(healthCheckReferences);
 
-        stopWatch.stop();
-        if ( logger.isDebugEnabled() ) {
-            logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
-        }
+            createResultsForDescriptors(healthCheckDescriptors, results);
 
-        // sort result
-        Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
-
-            @Override
-            public int compare(final HealthCheckExecutionResult arg0,
-                    final HealthCheckExecutionResult arg1) {
-                return ((ExecutionResult)arg0).compareTo((ExecutionResult)arg1);
+            stopWatch.stop();
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
             }
+            // sort result
+            Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
 
-        });
-        return results;
+                @Override
+                public int compare(final HealthCheckExecutionResult arg0,
+                        final HealthCheckExecutionResult arg1) {
+                    return ((ExecutionResult)arg0).compareTo((ExecutionResult)arg1);
+                }
+
+            });
+            return results;
+        } finally {
+            filter.dispose();
+        }
     }
 
-    private void createResultsForDescriptors(final List<HealthCheckDescriptor> healthCheckDescriptors,
+    private void createResultsForDescriptors(final List<HealthCheckMetadata> healthCheckDescriptors,
             final Collection<HealthCheckExecutionResult> results) {
         // -- All methods below check if they can transform a healthCheckDescriptor into a result
         // -- if yes the descriptor is removed from the list and the result added
@@ -183,11 +191,13 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
         healthCheckResultCache.updateWith(results);
     }
 
-
-    private List<HealthCheckDescriptor> getHealthCheckDescriptors(final ServiceReference... healthCheckReferences) {
-        final List<HealthCheckDescriptor> descriptors = new LinkedList<HealthCheckDescriptor>();
-        for (ServiceReference serviceReference : healthCheckReferences) {
-            HealthCheckDescriptor descriptor = new HealthCheckDescriptor(serviceReference);
+    /**
+     * Create the health check descriptors
+     */
+    private List<HealthCheckMetadata> getHealthCheckDescriptors(final ServiceReference... healthCheckReferences) {
+        final List<HealthCheckMetadata> descriptors = new LinkedList<HealthCheckMetadata>();
+        for (final ServiceReference serviceReference : healthCheckReferences) {
+            final HealthCheckMetadata descriptor = new HealthCheckMetadata(serviceReference);
 
             descriptors.add(descriptor);
         }
@@ -195,10 +205,10 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
         return descriptors;
     }
 
-    private List<HealthCheckFuture> createOrReuseFutures(final List<HealthCheckDescriptor> healthCheckDescriptors) {
+    private List<HealthCheckFuture> createOrReuseFutures(final List<HealthCheckMetadata> healthCheckDescriptors) {
         List<HealthCheckFuture> futuresForResultOfThisCall = new LinkedList<HealthCheckFuture>();
 
-        for (final HealthCheckDescriptor healthCheckDescriptor : healthCheckDescriptors) {
+        for (final HealthCheckMetadata healthCheckDescriptor : healthCheckDescriptors) {
 
             HealthCheckFuture stillRunningFuture = this.stillRunningFutures.get(healthCheckDescriptor);
             HealthCheckFuture resultFuture;
@@ -244,37 +254,37 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
             HealthCheckFuture future = futuresIt.next();
             ExecutionResult result;
             if (future.isDone()) {
-                logger.debug("Health Check is done: {}", future.getHealthCheckDescriptor());
+                logger.debug("Health Check is done: {}", future.getHealthCheckMetadata());
 
                 try {
                     result = future.get();
                 } catch (Exception e) {
                     logger.warn("Unexpected Exception during future.get(): " + e, e);
-                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetadata(), Result.Status.HEALTH_CHECK_ERROR,
+                    result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.HEALTH_CHECK_ERROR,
                             "Unexpected Exception during future.get(): " + e);
                 }
 
                 // if the future came from a previous call remove it from stillRunningFutures
-                if (this.stillRunningFutures.containsKey(future.getHealthCheckDescriptor())) {
-                    this.stillRunningFutures.remove(future.getHealthCheckDescriptor());
+                if (this.stillRunningFutures.containsKey(future.getHealthCheckMetadata())) {
+                    this.stillRunningFutures.remove(future.getHealthCheckMetadata());
                 }
 
             } else {
-                logger.debug("Health Check timed out: {}", future.getHealthCheckDescriptor());
+                logger.debug("Health Check timed out: {}", future.getHealthCheckMetadata());
                 // Futures must not be cancelled as interrupting a health check might could cause a corrupted repository index
                 // (CrxRoundtripCheck) or ugly messages/stack traces in the log file
 
-                this.stillRunningFutures.put(future.getHealthCheckDescriptor(), future);
+                this.stillRunningFutures.put(future.getHealthCheckMetadata(), future);
 
                 // normally we turn the check into WARN (normal timeout), but if the threshold time for CRITICAL is reached for a certain
                 // future we turn the result CRITICAL
                 long futureElapsedTimeMs = new Date().getTime() - future.getCreatedTime().getTime();
                 if (futureElapsedTimeMs < this.longRunningFutureThresholdForRedMs) {
-                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetadata(), Result.Status.WARN,
+                    result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.WARN,
                             "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs), futureElapsedTimeMs);
 
                 } else {
-                    result = new ExecutionResult(future.getHealthCheckDescriptor().getMetadata(), Result.Status.CRITICAL,
+                    result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.CRITICAL,
                             "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs)
                                     + " (exceeding the configured threshold for CRITICAL: "
                                     + msHumanReadable(this.longRunningFutureThresholdForRedMs) + ")", futureElapsedTimeMs);
@@ -318,5 +328,4 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
             final long longRunningFutureThresholdForRedMs) {
         this.longRunningFutureThresholdForRedMs = longRunningFutureThresholdForRedMs;
     }
-
 }

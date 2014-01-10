@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,29 +37,29 @@ import org.slf4j.LoggerFactory;
 class HealthCheckFuture extends FutureTask<ExecutionResult> {
     private final static Logger LOG = LoggerFactory.getLogger(HealthCheckFuture.class);
 
-    private final HealthCheckDescriptor healthCheckDescriptor;
+    private final HealthCheckMetadata metadata;
     private final Date createdTime;
 
-    HealthCheckFuture(final HealthCheckDescriptor healthCheckDescriptor, final BundleContext bundleContext) {
+    HealthCheckFuture(final HealthCheckMetadata metadata, final BundleContext bundleContext) {
         super(new Callable<ExecutionResult>() {
             @Override
             public ExecutionResult call() throws Exception {
                 Thread.currentThread().setName(
-                        "Health-Check-" + StringUtils.substringAfterLast(healthCheckDescriptor.getMetadata().getTitle(), "."));
-                LOG.debug("Starting check {}", healthCheckDescriptor);
+                        "Health-Check-" + StringUtils.substringAfterLast(metadata.getTitle(), "."));
+                LOG.debug("Starting check {}", metadata);
 
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
                 Result resultFromHealthCheck = null;
                 ExecutionResult executionResult = null;
 
-                final HealthCheck healthCheck = (HealthCheck) bundleContext.getService(healthCheckDescriptor.getServiceReference());
+                final HealthCheck healthCheck = (HealthCheck) bundleContext.getService(metadata.getServiceReference());
 
                 try {
                     if (healthCheck != null) {
                         resultFromHealthCheck = healthCheck.execute();
                     } else {
-                        throw new IllegalStateException("Service for " + healthCheckDescriptor + " is gone");
+                        throw new IllegalStateException("Service for " + metadata + " is gone");
                     }
 
                 } catch (Exception e) {
@@ -66,16 +67,16 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                     // TODO ResultLog should be improved to be able to store exceptions
                 } finally {
                     // unget service ref
-                    bundleContext.ungetService(healthCheckDescriptor.getServiceReference());
+                    bundleContext.ungetService(metadata.getServiceReference());
 
                     // update result with information about this run
                     stopWatch.stop();
                     long elapsedTime = stopWatch.getTime();
                     if (resultFromHealthCheck != null) {
                         // wrap the result in an execution result
-                        executionResult = new ExecutionResult(healthCheckDescriptor.getMetadata(), resultFromHealthCheck, elapsedTime);
+                        executionResult = new ExecutionResult(metadata, resultFromHealthCheck, elapsedTime);
                     }
-                    LOG.debug("Time consumed for {}: {}", healthCheckDescriptor, HealthCheckExecutorImpl.msHumanReadable(elapsedTime));
+                    LOG.debug("Time consumed for {}: {}", metadata, HealthCheckExecutorImpl.msHumanReadable(elapsedTime));
                 }
 
                 Thread.currentThread().setName("Health-Check-idle");
@@ -83,7 +84,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
             }
         });
         this.createdTime = new Date();
-        this.healthCheckDescriptor = healthCheckDescriptor;
+        this.metadata = metadata;
 
     }
 
@@ -91,13 +92,13 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
         return this.createdTime;
     }
 
-    public HealthCheckDescriptor getHealthCheckDescriptor() {
-        return healthCheckDescriptor;
+    public HealthCheckMetadata getHealthCheckMetadata() {
+        return metadata;
     }
 
     @Override
     public String toString() {
-        return "[Future for " + this.healthCheckDescriptor + ", createdTime=" + this.createdTime + "]";
+        return "[Future for " + this.metadata + ", createdTime=" + this.createdTime + "]";
     }
 
 }
