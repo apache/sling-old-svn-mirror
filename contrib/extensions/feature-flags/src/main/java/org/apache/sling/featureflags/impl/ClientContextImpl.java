@@ -27,7 +27,7 @@ import java.util.Map;
 
 import org.apache.sling.featureflags.ClientContext;
 import org.apache.sling.featureflags.Feature;
-import org.apache.sling.featureflags.ProviderContext;
+import org.apache.sling.featureflags.ExecutionContext;
 import org.apache.sling.featureflags.ResourceHiding;
 import org.apache.sling.featureflags.ResourceTypeMapping;
 
@@ -36,7 +36,7 @@ import org.apache.sling.featureflags.ResourceTypeMapping;
  */
 public class ClientContextImpl implements ClientContext {
 
-    private final ProviderContext featureContext;
+    private final ExecutionContext featureContext;
 
     private final List<Feature> enabledFeatures;
 
@@ -44,7 +44,7 @@ public class ClientContextImpl implements ClientContext {
 
     private final Map<String, String> mapperFeatures = new HashMap<String, String>();
 
-    public ClientContextImpl(final ProviderContext featureContext, final List<Feature> features) {
+    public ClientContextImpl(final ExecutionContext featureContext, final List<Feature> features) {
         this.enabledFeatures = Collections.unmodifiableList(features);
         final List<ResourceHiding> hiding = new ArrayList<ResourceHiding>();
         for(final Feature f : this.enabledFeatures) {
@@ -62,7 +62,7 @@ public class ClientContextImpl implements ClientContext {
         this.featureContext = featureContext;
     }
 
-    public ProviderContext getFeatureContext() {
+    public ExecutionContext getFeatureContext() {
         return this.featureContext;
     }
 

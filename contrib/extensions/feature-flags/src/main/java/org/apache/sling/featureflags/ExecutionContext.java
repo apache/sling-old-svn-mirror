@@ -18,22 +18,27 @@
  */
 package org.apache.sling.featureflags;
 
-import aQute.bnd.annotation.ConsumerType;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ResourceResolver;
+
+import aQute.bnd.annotation.ProviderType;
 
 /**
- * A feature provider activates one more features.
+ * The provider context contains all information that is passed to a
+ * {@link Feature} in order to check whether a feature is enabled.
  */
-@ConsumerType
-public interface FeatureProvider {
+@ProviderType
+public interface ExecutionContext {
 
     /**
-     * Checks whether the feature is enabled for the current execution
-     * context.
+     * Return the associated request if available
+     * @return the request or <code>null</code>
      */
-    boolean isEnabled(Feature feature, ProviderContext context);
+    SlingHttpServletRequest getRequest();
 
     /**
-     * Return the list of available features from this provider.
+     * Return the associated resource resolver.
+     * @return the resource resolver
      */
-    Feature[] getFeatures();
+    ResourceResolver getResourceResolver();
 }
