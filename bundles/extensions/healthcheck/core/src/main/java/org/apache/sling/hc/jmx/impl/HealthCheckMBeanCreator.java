@@ -30,7 +30,9 @@ import javax.management.DynamicMBean;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.sling.hc.api.HealthCheck;
+import org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -52,6 +54,9 @@ public class HealthCheckMBeanCreator {
     private final Map<String, List<ServiceReference>> sortedRegistrations = new HashMap<String, List<ServiceReference>>();
 
     private ServiceTracker hcTracker;
+
+    @Reference
+    private ExtendedHealthCheckExecutor executor;
 
     @Activate
     protected void activate(final BundleContext btx) {
@@ -98,7 +103,7 @@ public class HealthCheckMBeanCreator {
      * @return The registered mbean or <code>null</code>
      */
     private synchronized Object registerHCMBean(final BundleContext bundleContext, final ServiceReference reference) {
-        final Registration reg = Registration.getRegistration(bundleContext, reference);
+        final Registration reg = Registration.getRegistration(this.executor, reference);
         if ( reg != null ) {
             this.registeredServices.put(reference, reg);
 
@@ -151,15 +156,12 @@ public class HealthCheckMBeanCreator {
             this.mbean = mbean;
         }
 
-        public static Registration getRegistration(final BundleContext bundleContext, final ServiceReference ref) {
+        public static Registration getRegistration(final ExtendedHealthCheckExecutor executor, final ServiceReference ref) {
             final Object nameObj = ref.getProperty(HealthCheck.MBEAN_NAME);
             if ( nameObj != null ) {
-                final HealthCheck service = (HealthCheck) bundleContext.getService(ref);
-                if ( service != null ) {
-                    final HealthCheckMBean mbean = new HealthCheckMBean(ref, service);
+                final HealthCheckMBean mbean = new HealthCheckMBean(ref, executor);
 
-                    return new Registration(nameObj.toString().replace(',', '.'), mbean);
-                }
+                return new Registration(nameObj.toString().replace(',', '.'), mbean);
             }
             return null;
         }
