@@ -45,14 +45,12 @@ import javax.management.openmbean.TabularType;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /** A {@link DynamicMBean} used to execute a {@link HealthCheck} service */
 public class HealthCheckMBean implements DynamicMBean {
-
-    /** A HC result is cached for this time (ms) */
-    private static final long RESULT_TTL = 1500;
 
     public static final String HC_OK_ATTRIBUTE_NAME = "ok";
     public static final String HC_STATUS_ATTRIBUTE_NAME = "status";
@@ -69,17 +67,16 @@ public class HealthCheckMBean implements DynamicMBean {
     public static final String JMX_DOMAIN = "org.apache.sling.healthcheck";
 
     /** The health check service to call. */
-    private final HealthCheck healthCheck;
+    private final ServiceReference healthCheckRef;
+
+    /** The executor service. */
+    private final ExtendedHealthCheckExecutor executor;
 
     /** The mbean info. */
     private final MBeanInfo mbeanInfo;
 
     /** The default attributes. */
     private final Map<String, Object> defaultAttributes;
-
-    private long healthCheckInvocationTime;
-
-    private Result healthCheckResult;
 
     static {
         try {
@@ -98,8 +95,9 @@ public class HealthCheckMBean implements DynamicMBean {
         }
     }
 
-    public HealthCheckMBean(final ServiceReference ref, final HealthCheck hc) {
-        this.healthCheck = hc;
+    public HealthCheckMBean(final ServiceReference ref, final ExtendedHealthCheckExecutor executor) {
+        this.healthCheckRef = ref;
+        this.executor = executor;
         this.mbeanInfo = this.createMBeanInfo(ref);
         this.defaultAttributes = this.createDefaultAttributes(ref);
     }
@@ -246,16 +244,10 @@ public class HealthCheckMBean implements DynamicMBean {
 
     @Override
     public String toString() {
-        return "HealthCheckMBean [healthCheck=" + healthCheck + "]";
+        return "HealthCheckMBean [healthCheck=" + this.healthCheckRef + "]";
     }
 
     private Result getHealthCheckResult() {
-        synchronized ( this ) {
-            if ( this.healthCheckResult == null || this.healthCheckInvocationTime < System.currentTimeMillis() ) {
-                this.healthCheckResult = this.healthCheck.execute();
-                this.healthCheckInvocationTime = System.currentTimeMillis() + RESULT_TTL;
-            }
-            return this.healthCheckResult;
-        }
+        return this.executor.execute(this.healthCheckRef).getHealthCheckResult();
     }
 }

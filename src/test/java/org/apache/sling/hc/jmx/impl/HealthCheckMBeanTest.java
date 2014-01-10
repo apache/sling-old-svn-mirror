@@ -21,6 +21,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.lang.management.ManagementFactory;
+import java.util.Date;
+import java.util.List;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -28,6 +30,9 @@ import javax.management.ObjectName;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.apache.sling.hc.util.SimpleConstraintChecker;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
@@ -97,7 +102,44 @@ public class HealthCheckMBeanTest {
                 return 0;
             }
         };
-        final HealthCheckMBean mbean = new HealthCheckMBean(ref, testHealthCheck);
+        final HealthCheckMBean mbean = new HealthCheckMBean(ref, new ExtendedHealthCheckExecutor() {
+
+            @Override
+            public List<HealthCheckExecutionResult> execute(String... tags) {
+                return null;
+            }
+
+            @Override
+            public HealthCheckExecutionResult execute(ServiceReference ref) {
+                // TODO Auto-generated method stub
+                return new HealthCheckExecutionResult() {
+
+                    @Override
+                    public Result getHealthCheckResult() {
+                        // TODO Auto-generated method stub
+                        return testHealthCheck.execute();
+                    }
+
+                    @Override
+                    public HealthCheckMetadata getHealthCheckMetadata() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public Date getFinishedAt() {
+                        // TODO Auto-generated method stub
+                        return null;
+                    }
+
+                    @Override
+                    public long getElapsedTimeInMs() {
+                        // TODO Auto-generated method stub
+                        return 0;
+                    }
+                };
+            }
+        });
         final ObjectName name = new ObjectName(OBJECT_NAME);
         jmxServer.registerMBean(mbean, name);
         try {
