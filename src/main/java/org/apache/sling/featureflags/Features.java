@@ -33,13 +33,13 @@ public interface Features {
 
     /**
      * Get the list of all available feature names. A feature is available
-     * if there is a {@link FeatureProvider}
+     * if there is a registered {@link Feature} service.
      */
     String[] getAvailableFeatureNames();
 
     /**
      * Get the list of all available features. A feature is available
-     * if there is a {@link FeatureProvider}
+     * if there is a registered {@link Feature} service.
      */
     Feature[] getAvailableFeatures();
 
@@ -51,13 +51,14 @@ public interface Features {
 
     /**
      * Checks whether a feature with the given name is available.
-     * A feature is available if there is a {@link FeatureProvider}
-     * for that feature.
+     * A feature is available if there is a registered {@link Feature} service.
      */
     boolean isAvailable(String featureName);
 
     /**
-     * Returns the current client context, if available
+     * Returns the current client context.
+     * This method always returns a client context object
+     * @return A client context.
      */
     ClientContext getCurrentClientContext();
 

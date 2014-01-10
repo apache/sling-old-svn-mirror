@@ -35,6 +35,12 @@ import aQute.bnd.annotation.ConsumerType;
 public interface Feature extends Adaptable {
 
     /**
+     * Checks whether the feature is enabled for the current execution
+     * context.
+     */
+    boolean isEnabled(ExecutionContext context);
+
+    /**
      * The name of the feature.
      */
     String getName();

@@ -31,11 +31,11 @@ public interface ResourceHiding {
 
     /**
      * Checks whether a resource should be hidden for a feature.
-     * This check is only executed if {@link FeatureProvider#isEnabled(Feature, ExecutionContext)}
+     * This check is only executed if {@link Feature#isEnabled(ExecutionContext)}
      * return true for the given feature/context. The caller of this
-     * method must ensure to call {@link FeatureProvider#isEnabled(Feature, ExecutionContext)}
+     * method must ensure to call {@link Feature#isEnabled(ExecutionContext)}
      * before calling this method and only call this method if
-     * {@link FeatureProvider#isEnabled(Feature, ExecutionContext)} returned <code>true</code>
+     * {@link Feature#isEnabled(ExecutionContext)} returned <code>true</code>
      */
     boolean hideResource(Resource resource);
 }
