@@ -30,6 +30,8 @@ import aQute.bnd.annotation.ConsumerType;
  *   <li>{@link ResourceHiding}</li>
  *   <li>{@link ResourceTypeMapping}</li>
  * </ul>
+ *
+ * Features are registered as OSGi services.
  */
 @ConsumerType
 public interface Feature extends Adaptable {
