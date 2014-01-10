@@ -20,7 +20,6 @@ package org.apache.sling.hc.api.execution;
 import java.util.List;
 
 import org.apache.sling.hc.api.HealthCheck;
-import org.osgi.framework.ServiceReference;
 
 import aQute.bnd.annotation.ProviderType;
 
@@ -33,9 +32,10 @@ import aQute.bnd.annotation.ProviderType;
 public interface HealthCheckExecutor {
 
     /**
-     * Executes all health checks
+     * Executes all health checks with the supplied list of tags.
+     * If no tags are supplied, all health checks are executed.
      *
      * @return List of results. The list might be empty.
      */
-    List<HealthCheckExecutionResult> execute(ServiceReference... healthCheckReferences);
+    List<HealthCheckExecutionResult> execute(String... tags);
 }
