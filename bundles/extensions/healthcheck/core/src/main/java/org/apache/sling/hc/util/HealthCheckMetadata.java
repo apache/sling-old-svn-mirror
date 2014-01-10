@@ -25,7 +25,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.sling.hc.api.HealthCheck;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentConstants;
 
 /**
  * This class helps retrieving meta data information about a health check service.
@@ -35,35 +34,74 @@ public class HealthCheckMetadata {
 
     private final String name;
 
+    private final String mbeanName;
+
     private final String title;
 
     private final long serviceId;
 
     private final List<String> tags;
 
+    private final transient ServiceReference serviceReference;
+
     public HealthCheckMetadata(final ServiceReference ref) {
         this.serviceId = (Long) ref.getProperty(Constants.SERVICE_ID);
         this.name = (String) ref.getProperty(HealthCheck.NAME);
+        this.mbeanName = (String) ref.getProperty(HealthCheck.MBEAN_NAME);
         this.title = getHealthCheckTitle(ref);
         this.tags = arrayPropertyToListOfStr(ref.getProperty(HealthCheck.TAGS));
-
+        this.serviceReference = ref;
     }
 
+    /**
+     * The name of the health check as defined through the {@link HealthCheck#NAME}
+     * property.
+     * @return The name or <code>null</code>
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * The mbean name of the health check as defined through the {@link HealthCheck#MBEAN_NAME}
+     * property.
+     * @return The mbean name or <code>null</code>
+     */
+    public String getMBeanName() {
+        return mbeanName;
+    }
+
+    /**
+     * The title of the health check.
+     * If the health check has a name, this is used as the title.
+     * Otherwise the description, PID and service ID are checked
+     * for values.
+     */
     public String getTitle() {
         return title;
     }
 
-
+    /**
+     * Return the list of defined tags for this check as set
+     * through {@link HealthCheckMetadata#tags}
+     * @return
+     */
     public List<String> getTags() {
         return tags;
     }
 
+    /**
+     * Return the service id.
+     */
     public long getServiceId() {
         return this.serviceId;
+    }
+
+    /**
+     * Get the service reference.
+     */
+    public ServiceReference getServiceReference() {
+        return this.serviceReference;
     }
 
     @Override
@@ -94,7 +132,10 @@ public class HealthCheckMetadata {
             name = (String) ref.getProperty(Constants.SERVICE_DESCRIPTION);
         }
         if (StringUtils.isBlank(name)) {
-            name = (String) ref.getProperty(ComponentConstants.COMPONENT_NAME);
+            name = (String) ref.getProperty(Constants.SERVICE_PID);
+        }
+        if (StringUtils.isBlank(name)) {
+            name = "HealthCheck:" + ref.getProperty(Constants.SERVICE_ID);
         }
         return name;
     }

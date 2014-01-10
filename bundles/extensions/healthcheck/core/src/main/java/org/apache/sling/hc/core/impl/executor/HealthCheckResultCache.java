@@ -27,6 +27,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
+import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,15 +53,15 @@ public class HealthCheckResultCache {
         }
     }
 
-    public void useValidCacheResults(final List<HealthCheckDescriptor> healthCheckDescriptors,
+    public void useValidCacheResults(final List<HealthCheckMetadata> metadatas,
             final Collection<HealthCheckExecutionResult> results,
             final long resultCacheTtlInMs) {
 
 
         final Set<HealthCheckExecutionResult> cachedResults = new TreeSet<HealthCheckExecutionResult>();
-        final Iterator<HealthCheckDescriptor> checksIt = healthCheckDescriptors.iterator();
+        final Iterator<HealthCheckMetadata> checksIt = metadatas.iterator();
         while (checksIt.hasNext()) {
-            final HealthCheckDescriptor descriptor = checksIt.next();
+            final HealthCheckMetadata descriptor = checksIt.next();
             final HealthCheckExecutionResult result = get(descriptor, resultCacheTtlInMs);
             if (result != null) {
                 cachedResults.add(result);
@@ -71,8 +72,8 @@ public class HealthCheckResultCache {
         results.addAll(cachedResults);
     }
 
-    private HealthCheckExecutionResult get(final HealthCheckDescriptor healthCheckDescriptor, final long resultCacheTtlInMs) {
-        final Long key = healthCheckDescriptor.getMetadata().getServiceId();
+    private HealthCheckExecutionResult get(final HealthCheckMetadata metadata, final long resultCacheTtlInMs) {
+        final Long key = metadata.getServiceId();
         final HealthCheckExecutionResult cachedResult = cache.get(key);
         if (cachedResult != null) {
             Date finishedAt = cachedResult.getFinishedAt();

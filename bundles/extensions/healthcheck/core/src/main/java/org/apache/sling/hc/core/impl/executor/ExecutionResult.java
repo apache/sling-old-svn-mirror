@@ -25,7 +25,9 @@ import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 
-/** The result of executing a {@link HealthCheck} */
+/**
+ * The result of executing a {@link HealthCheck}.
+ */
 public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheckExecutionResult {
 
     private final Result resultFromHC;
@@ -37,9 +39,9 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
 
     /** Build a single-value Result
      *  @param s if lower than OK, our status is set to OK */
-    ExecutionResult(final HealthCheckMetadata healthCheckDescriptor, Result simpleResult,
+    ExecutionResult(final HealthCheckMetadata metadata, Result simpleResult,
             long elapsedTimeInMs) {
-        this.metaData = healthCheckDescriptor;
+        this.metaData = metadata;
         this.resultFromHC = simpleResult;
         this.finishedAt = new Date();
         this.elapsedTimeInMs = elapsedTimeInMs;
@@ -52,8 +54,8 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      * @param status
      * @param errorMessage
      */
-    ExecutionResult(HealthCheckMetadata healthCheckDescriptor, Result.Status status, String errorMessage) {
-        this(healthCheckDescriptor, new Result(status, errorMessage), 0L);
+    ExecutionResult(HealthCheckMetadata metadata, Result.Status status, String errorMessage) {
+        this(metadata, new Result(status, errorMessage), 0L);
     }
 
     /**
@@ -63,8 +65,8 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
      * @param status
      * @param errorMessage
      */
-    ExecutionResult(HealthCheckMetadata healthCheckDescriptor, Result.Status status, String errorMessage, long elapsedTime) {
-        this(healthCheckDescriptor, new Result(status, errorMessage), elapsedTime);
+    ExecutionResult(HealthCheckMetadata metadata, Result.Status status, String errorMessage, long elapsedTime) {
+        this(metadata, new Result(status, errorMessage), elapsedTime);
     }
 
 

@@ -8,8 +8,7 @@ import org.apache.sling.hc.util.HealthCheckMetadata;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * Interface for health check results.
- *
+ * Interface for health check executions via the {@link HealthCheckExecutor}.
  */
 @ProviderType
 public interface HealthCheckExecutionResult {
@@ -19,8 +18,14 @@ public interface HealthCheckExecutionResult {
      */
     Result getHealthCheckResult();
 
+    /**
+     * Get the elapsed time in ms
+     */
     long getElapsedTimeInMs();
 
+    /**
+     * Get the date, the health check finished.
+     */
     Date getFinishedAt();
 
     /**
