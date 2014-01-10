@@ -32,7 +32,6 @@
         <module>core</module>
         <module>samples</module>
         <module>support</module>
-        <module>jmx</module>
         <module>webconsole</module>
         <module>it</module>
     </modules>
