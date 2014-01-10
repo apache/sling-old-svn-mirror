@@ -36,6 +36,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
@@ -57,11 +58,11 @@ import org.slf4j.LoggerFactory;
  * Runs health checks for a given list of tags in parallel.
  *
  */
-@Service(value = HealthCheckExecutor.class)
+@Service(value = {HealthCheckExecutor.class, ExtendedHealthCheckExecutor.class})
 @Component(label = "Apache Sling Health Check Executor",
         description = "Runs health checks for a given list of tags in parallel.",
         metatype = true, immediate = true)
-public class HealthCheckExecutorImpl implements HealthCheckExecutor {
+public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -106,10 +107,15 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
     protected final void activate(final Map<String, Object> properties, final BundleContext bundleContext) {
         this.bundleContext = bundleContext;
 
-        ModifiableThreadPoolConfig hcThreadPoolConfig = new ModifiableThreadPoolConfig();
+        final ModifiableThreadPoolConfig hcThreadPoolConfig = new ModifiableThreadPoolConfig();
         hcThreadPoolConfig.setMaxPoolSize(25);
         hcThreadPool = threadPoolManager.create(hcThreadPoolConfig, "Health Check Thread Pool");
 
+        this.modified(properties);
+    }
+
+    @Modified
+    protected final void modified(final Map<String, Object> properties) {
         this.timeoutInMs = PropertiesUtil.toLong(properties.get(PROP_TIMEOUT_MS), TIMEOUT_DEFAULT_MS);
 
         if ( this.timeoutInMs <= 0L) {
@@ -145,32 +151,51 @@ public class HealthCheckExecutorImpl implements HealthCheckExecutor {
         try {
             final ServiceReference[] healthCheckReferences = filter.getTaggedHealthCheckServiceReferences(tags);
 
-            final StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-
-            final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
-            final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckDescriptors(healthCheckReferences);
-
-            createResultsForDescriptors(healthCheckDescriptors, results);
-
-            stopWatch.stop();
-            if ( logger.isDebugEnabled() ) {
-                logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
-            }
-            // sort result
-            Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
-
-                @Override
-                public int compare(final HealthCheckExecutionResult arg0,
-                        final HealthCheckExecutionResult arg1) {
-                    return ((ExecutionResult)arg0).compareTo((ExecutionResult)arg1);
-                }
-
-            });
-            return results;
+            return this.execute(healthCheckReferences);
         } finally {
             filter.dispose();
         }
+    }
+
+    /**
+     * @see org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor#execute(org.osgi.framework.ServiceReference)
+     */
+    @Override
+    public HealthCheckExecutionResult execute(final ServiceReference ref) {
+        final List<HealthCheckExecutionResult> result = this.execute(new ServiceReference[] {ref});
+        if ( result.size() > 0 ) {
+            return result.get(0);
+        }
+        return null;
+    }
+
+    /**
+     * Execute a set of health checks
+     */
+    private List<HealthCheckExecutionResult> execute(final ServiceReference[] healthCheckReferences) {
+        final StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+
+        final List<HealthCheckExecutionResult> results = new ArrayList<HealthCheckExecutionResult>();
+        final List<HealthCheckMetadata> healthCheckDescriptors = getHealthCheckDescriptors(healthCheckReferences);
+
+        createResultsForDescriptors(healthCheckDescriptors, results);
+
+        stopWatch.stop();
+        if ( logger.isDebugEnabled() ) {
+            logger.debug("Time consumed for all checks: {}", msHumanReadable(stopWatch.getTime()));
+        }
+        // sort result
+        Collections.sort(results, new Comparator<HealthCheckExecutionResult>() {
+
+            @Override
+            public int compare(final HealthCheckExecutionResult arg0,
+                    final HealthCheckExecutionResult arg1) {
+                return ((ExecutionResult)arg0).compareTo((ExecutionResult)arg1);
+            }
+
+        });
+        return results;
     }
 
     private void createResultsForDescriptors(final List<HealthCheckMetadata> healthCheckDescriptors,
