@@ -33,36 +33,47 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Caches health check results.
- *
  */
 public class HealthCheckResultCache {
 
+    /**
+     * The logger.
+     */
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * The map holding the cached results.
+     */
     private final Map<Long, HealthCheckExecutionResult> cache = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
 
-    @Override
-    public String toString() {
-        return "[HealthCheckResultCache size=" + cache.size() + "]";
-    }
-
+    /**
+     * Update the cache with the results
+     */
     public void updateWith(final Collection<HealthCheckExecutionResult> results) {
         for (final HealthCheckExecutionResult result : results) {
-            final ExecutionResult executionResult = (ExecutionResult) result;
-            cache.put(executionResult.getServiceId(), result);
+            this.updateWith(result);
         }
     }
 
+    /**
+     * Update the cache with the result
+     */
+    public void updateWith(HealthCheckExecutionResult result) {
+        final ExecutionResult executionResult = (ExecutionResult) result;
+        cache.put(executionResult.getServiceId(), result);
+    }
+
+    /**
+     * Get the valid cache results
+     */
     public void useValidCacheResults(final List<HealthCheckMetadata> metadatas,
             final Collection<HealthCheckExecutionResult> results,
             final long resultCacheTtlInMs) {
-
-
         final Set<HealthCheckExecutionResult> cachedResults = new TreeSet<HealthCheckExecutionResult>();
         final Iterator<HealthCheckMetadata> checksIt = metadatas.iterator();
         while (checksIt.hasNext()) {
-            final HealthCheckMetadata descriptor = checksIt.next();
-            final HealthCheckExecutionResult result = get(descriptor, resultCacheTtlInMs);
+            final HealthCheckMetadata md = checksIt.next();
+            final HealthCheckExecutionResult result = useValidCacheResults(md, resultCacheTtlInMs);
             if (result != null) {
                 cachedResults.add(result);
                 checksIt.remove();
@@ -70,6 +81,14 @@ public class HealthCheckResultCache {
         }
         logger.debug("Adding {} results from cache", cachedResults.size());
         results.addAll(cachedResults);
+    }
+
+    /**
+     * Return the cached result if it's still valid.
+     */
+    public HealthCheckExecutionResult useValidCacheResults(final HealthCheckMetadata metadata,
+            final long resultCacheTtlInMs) {
+        return get(metadata, resultCacheTtlInMs);
     }
 
     private HealthCheckExecutionResult get(final HealthCheckMetadata metadata, final long resultCacheTtlInMs) {
@@ -97,6 +116,25 @@ public class HealthCheckResultCache {
 
         // null => no cache hit
         return null;
+    }
+
+    /**
+     * Clear the whole cache
+     */
+    public void clear() {
+        this.cache.clear();
+    }
+
+    /**
+     * Remove entry from cache
+     */
+    public void removeCachedResult(final Long serviceId) {
+        this.cache.remove(serviceId);
+    }
+
+    @Override
+    public String toString() {
+        return "[HealthCheckResultCache size=" + cache.size() + "]";
     }
 
 }
