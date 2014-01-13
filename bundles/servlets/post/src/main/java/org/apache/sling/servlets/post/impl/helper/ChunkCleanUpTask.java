@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
  * default workspace assuming users are stored in that workspace and the
  * administrative user has full access.
  */
-@Component(metatype = true, label = "Sling Post Chunk Upload : Cleanup Task", description = "Task to regularly purge incomplete chunks from the repository")
+@Component(metatype = true, label = "Apache Sling Post Chunk Upload : Cleanup Task", description = "Task to regularly purge incomplete chunks from the repository")
 @Service(value = Runnable.class)
 @Properties({
     @Property(name = "scheduler.expression", value = "31 41 0/12 * * ?", label = "Schedule", description = "Cron expression scheudling this job. Default is hourly 17m23s after the hour. "
@@ -158,7 +158,7 @@ public class ChunkCleanUpTask implements Runnable {
      * eligible the age of last
      * {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE} uploaded should be
      * greater than @link {@link #chunkCleanUpAge}
-     * 
+     *
      * @param node {@link Node} containing
      *            {@link SlingPostConstants#NT_SLING_CHUNK_NODETYPE}
      *            {@link Node}s
