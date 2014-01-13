@@ -57,10 +57,14 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
-@Component
+@Component(metatype=true,
+    label="Apache Sling JMX Resource Provider",
+    description="This provider mounts JMX mbeans into the resource tree.")
 @Service(value = ResourceProvider.class)
 @Properties({
-    @Property(name = ResourceProvider.ROOTS, value="/system/sling/monitoring/mbeans")
+    @Property(name = ResourceProvider.ROOTS, value="/system/sling/monitoring/mbeans",
+            label="Root",
+            description="The mount point of the JMX beans")
 })
 /**
  * Brief summary of a "good" object name:
