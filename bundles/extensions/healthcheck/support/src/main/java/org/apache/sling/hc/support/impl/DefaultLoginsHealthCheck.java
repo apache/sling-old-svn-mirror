@@ -48,18 +48,29 @@ import org.slf4j.LoggerFactory;
         name="org.apache.sling.hc.support.DefaultLoginsHealthCheck",
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
+        metatype=true,
+        label="Apache Sling Default Logins Health Check",
+        description="Expects default logins to fail, used to verify " +
+                "that they are disabled on production systems")
 @Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME)
+    @Property(name=HealthCheck.NAME,
+            label="Health Check Name", description="Name of this Health Check service."),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY,
+             label="Health Check tags", description="List of tags for this Health Check service, used to select " +
+               "subsets of Health Check services for execution"),
+    @Property(name=HealthCheck.MBEAN_NAME,
+             label="MBean Name", description="Name of the MBean to create for this Health Check.")
 })
 @Service(value=HealthCheck.class)
 public class DefaultLoginsHealthCheck implements HealthCheck {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(unbounded=PropertyUnbounded.ARRAY)
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+            label="Login credentials",
+            description="Which credentials to check. Each one is in the format \"user:password\" " +
+                "like \"admin:admin\" for example. Do *not* put any confidential passwords here, the goal " +
+                "is just to check that the default/demo logins, which passwords are known anyway, are disabled.")
     private static final String PROP_LOGINS = "logins";
 
     private List<String> logins;

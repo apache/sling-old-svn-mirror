@@ -47,11 +47,17 @@ import org.slf4j.LoggerFactory;
         name="org.apache.sling.hc.support.SlingRequestStatusHealthCheck",
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
+        metatype=true,
+        label="Apache Sling Request Status Health Check",
+        description="Checks the HTTP status of Sling requests.")
 @Properties({
-    @Property(name=HealthCheck.NAME),
-    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
-    @Property(name=HealthCheck.MBEAN_NAME)
+    @Property(name=HealthCheck.NAME,
+            label="Health Check Name", description="Name of this Health Check service."),
+    @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY,
+             label="Health Check tags", description="List of tags for this Health Check service, used to select " +
+               "subsets of Health Check services for execution"),
+    @Property(name=HealthCheck.MBEAN_NAME,
+             label="MBean Name", description="Name of the MBean to create for this Health Check.")
 })
 @Service(value=HealthCheck.class)
 public class SlingRequestStatusHealthCheck implements HealthCheck {
@@ -79,7 +85,11 @@ public class SlingRequestStatusHealthCheck implements HealthCheck {
         }
     }
 
-    @Property(unbounded=PropertyUnbounded.ARRAY)
+    @Property(unbounded=PropertyUnbounded.ARRAY,
+            label="Paths to Check",
+            description="The list of paths to check, optionally with expected HTTP status responses. " +
+                        "An entry like \"/tmp/test.txt:301\", for example, checks that /tmp/test.txt returns a " +
+                        "301 response.")
     private static final String PROP_PATH = "path";
 
     @Reference
