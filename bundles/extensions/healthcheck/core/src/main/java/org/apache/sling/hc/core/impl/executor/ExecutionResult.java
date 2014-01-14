@@ -37,18 +37,30 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     private final Date finishedAt;
     private final long elapsedTimeInMs;
 
-    /** Build a single-value Result
-     *  @param s if lower than OK, our status is set to OK */
-    ExecutionResult(final HealthCheckMetadata metadata, Result simpleResult,
-            long elapsedTimeInMs) {
+    /**
+     * Full constructor
+     */
+    ExecutionResult(final HealthCheckMetadata metadata,
+            final Result simpleResult,
+            final long elapsedTimeInMs,
+            final Date finishedAt) {
         this.metaData = metadata;
         this.resultFromHC = simpleResult;
-        this.finishedAt = new Date();
+        this.finishedAt = finishedAt;
         this.elapsedTimeInMs = elapsedTimeInMs;
     }
 
     /**
-     * Shortcut constructor to created error result.
+     * Shortcut constructor for a result
+     */
+    ExecutionResult(final HealthCheckMetadata metadata,
+            final Result simpleResult,
+            final long elapsedTimeInMs) {
+        this(metadata, simpleResult, elapsedTimeInMs, new Date());
+    }
+
+    /**
+     * Shortcut constructor to create error result.
      *
      * @param healthCheckDescriptor
      * @param status
@@ -59,7 +71,7 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     }
 
     /**
-     * Shortcut constructor to created error result.
+     * Shortcut constructor to create error/timed out result.
      *
      * @param healthCheckDescriptor
      * @param status
