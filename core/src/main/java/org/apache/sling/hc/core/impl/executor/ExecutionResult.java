@@ -35,7 +35,10 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     private final HealthCheckMetadata metaData;
 
     private final Date finishedAt;
+
     private final long elapsedTimeInMs;
+
+    private final boolean timedOut;
 
     /**
      * Full constructor
@@ -43,10 +46,11 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     ExecutionResult(final HealthCheckMetadata metadata,
             final Result simpleResult,
             final long elapsedTimeInMs,
-            final Date finishedAt) {
+            final boolean timedout) {
         this.metaData = metadata;
         this.resultFromHC = simpleResult;
-        this.finishedAt = finishedAt;
+        this.finishedAt = new Date();
+        this.timedOut = timedout;
         this.elapsedTimeInMs = elapsedTimeInMs;
     }
 
@@ -56,29 +60,26 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     ExecutionResult(final HealthCheckMetadata metadata,
             final Result simpleResult,
             final long elapsedTimeInMs) {
-        this(metadata, simpleResult, elapsedTimeInMs, new Date());
+        this(metadata, simpleResult, elapsedTimeInMs, false);
     }
 
     /**
      * Shortcut constructor to create error result.
-     *
-     * @param healthCheckDescriptor
-     * @param status
-     * @param errorMessage
      */
-    ExecutionResult(HealthCheckMetadata metadata, Result.Status status, String errorMessage) {
-        this(metadata, new Result(status, errorMessage), 0L);
+    ExecutionResult(final HealthCheckMetadata metadata,
+            final Result.Status status,
+            final String errorMessage) {
+        this(metadata, new Result(status, errorMessage), 0L, false);
     }
 
     /**
      * Shortcut constructor to create error/timed out result.
-     *
-     * @param healthCheckDescriptor
-     * @param status
-     * @param errorMessage
      */
-    ExecutionResult(HealthCheckMetadata metadata, Result.Status status, String errorMessage, long elapsedTime) {
-        this(metadata, new Result(status, errorMessage), elapsedTime);
+    ExecutionResult(final HealthCheckMetadata metadata,
+            final Result.Status status,
+            final String errorMessage,
+            final long elapsedTime) {
+        this(metadata, new Result(status, errorMessage), elapsedTime, true);
     }
 
 
@@ -89,7 +90,11 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
 
     @Override
     public String toString() {
-        return "ExecutionResult [status=" + this.resultFromHC.getStatus() + ", finishedAt=" + finishedAt + ", elapsedTimeInMs=" + elapsedTimeInMs + "]";
+        return "ExecutionResult [status=" + this.resultFromHC.getStatus() +
+                ", finishedAt=" + finishedAt +
+                ", elapsedTimeInMs=" + elapsedTimeInMs +
+                ", timedOut=" + timedOut +
+                "]";
     }
 
     @Override
@@ -105,6 +110,11 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     @Override
     public Date getFinishedAt() {
         return finishedAt;
+    }
+
+    @Override
+    public boolean hasTimedOut() {
+        return this.timedOut;
     }
 
     /**
