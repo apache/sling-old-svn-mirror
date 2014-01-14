@@ -39,10 +39,7 @@ public class ScriptableItemMap extends ScriptableObject {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Map<String, Item> items = new LinkedHashMap<String, Item>();
-
-    public ScriptableItemMap() {
-    }
+    private final Map<String, Item> items = new LinkedHashMap<String, Item>();
 
     public void jsConstructor(Object res) {
         if (res instanceof Iterator<?>) {

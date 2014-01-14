@@ -55,6 +55,11 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    /**
+     * The wrapped JCR Node instance. Will be {@code null} if the
+     * {@link #jsConstructor(Object)} method is not called, which particularly
+     * is the case for the Node host object prototype.
+     */
     private Node node;
 
     public void jsConstructor(Object res) {
@@ -68,7 +73,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     public Class<?> [] getWrappedClasses() {
         return WRAPPED_CLASSES;
     }
-    
+
     @Override
     protected Class<?> getStaticType() {
         return Node.class;
@@ -78,7 +83,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     protected Object getWrappedObject() {
         return node;
     }
-    
+
     public Object jsFunction_addNode(String path, String primaryType) throws RepositoryException {
         Node n = null;
         if(primaryType == null || "undefined".equals(primaryType)) {
@@ -118,7 +123,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
             return toScriptableItemMap(null);
         }
     }
-    
+
     public Object jsFunction_getProperties() {
         try {
             return toScriptableItemMap(node.getProperties());
@@ -135,7 +140,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
             return Undefined.instance;
         }
     }
-    
+
     public Object jsFunction_getProperty(String name) throws RepositoryException {
         Object[] args = { node.getProperty(name) };
         return ScriptRuntime.newObject(Context.getCurrentContext(), this,
@@ -253,7 +258,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
             return node.toString();
         }
     }
-    
+
     public Object jsFunction_getParent() {
         try {
             return ScriptRuntime.toObject(this, node.getParent());
@@ -277,7 +282,7 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     public boolean jsFunction_getModified() {
         return node.isModified();
     }
-    
+
     public void jsFunction_remove() throws RepositoryException {
         node.remove();
     }
@@ -338,10 +343,10 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
 
         if (items.size()==0) {
             return getNative(name, start);
-            
+
         } else if (items.size()==1 && !isMulti) {
             return items.iterator().next();
-            
+
         } else {
             NativeArray result = new NativeArray(items.toArray());
             ScriptRuntime.setObjectProtoAndParent(result, this);
@@ -392,34 +397,38 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
-        try {
-            return node.getPath();
-        } catch(Exception e) {
-            return null;
-        }
+        return toString();
     }
 
     @Override
     public boolean has(String name, Scriptable start) {
-        try {
-            // TODO should this take into account our jsFunction_ members?
-            return node.hasProperty(name) || node.hasNode(name);
-        } catch (RepositoryException e) {
-            return false;
+        if (node != null) {
+            try {
+                // TODO should this take into account our jsFunction_ members?
+                return node.hasProperty(name) || node.hasNode(name);
+            } catch (RepositoryException e) {
+                // does not matter
+            }
         }
+
+        return false;
     }
 
     public Class<?> jsGet_javascriptWrapperClass() {
         return getClass();
     }
-    
+
     @Override
     public String toString() {
-        try {
-            return node.getPath();
-        } catch (RepositoryException e) {
-            return node.toString();
+        if (node != null) {
+            try {
+                return node.getPath();
+            } catch (RepositoryException e) {
+                return node.toString();
+            }
         }
+
+        return String.valueOf((Object) null);
     }
 
     // ---------- Wrapper interface --------------------------------------------
@@ -428,9 +437,9 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
     public Object unwrap() {
         return node;
     }
-    
+
     //---------- Helper -------------------------------------------------------
-    
+
     private Object toScriptableItemMap(Iterator<?> iter) {
         Object[] args = (iter != null) ? new Object[] { iter } : null;
         return ScriptRuntime.newObject(Context.getCurrentContext(), this,

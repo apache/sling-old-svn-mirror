@@ -137,9 +137,9 @@
             <artifactId>jcr</artifactId>
         </dependency>
         <dependency>
-            <groupId>rhino</groupId>
-            <artifactId>js</artifactId>
-            <version>1.6R6</version>
+            <groupId>org.mozilla</groupId>
+            <artifactId>rhino</artifactId>
+            <version>1.7R4</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

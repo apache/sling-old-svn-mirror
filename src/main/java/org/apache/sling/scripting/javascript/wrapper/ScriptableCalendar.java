@@ -19,7 +19,6 @@ package org.apache.sling.scripting.javascript.wrapper;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-
 import org.apache.sling.scripting.javascript.SlingWrapper;
 import org.mozilla.javascript.ScriptRuntime;
 import org.mozilla.javascript.Scriptable;
@@ -31,12 +30,17 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 
 	public static final String CLASSNAME = "Calendar";
 	private SimpleDateFormat calendarFormat;
-	
+
 	/** Calendar is a class, not an interface - so we need to enumerate possible implementations here */
     public static final Class<?> [] WRAPPED_CLASSES = { Calendar.class, GregorianCalendar.class };
 
+    /**
+     * The wrapped Calendar. Will be {@code null} if the
+     * {@link #jsConstructor(Object)} method is not called, which particularly
+     * is the case for the Calendar host object prototype.
+     */
 	private Calendar calendar;
-	
+
     public Class<?>[] getWrappedClasses() {
 		return WRAPPED_CLASSES;
 	}
@@ -44,7 +48,7 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
     public void jsConstructor(Object o) {
         this.calendar = (Calendar) o;
     }
-	
+
     @Override
     public Object get(String name, Scriptable start) {
 
@@ -57,14 +61,14 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
         if(calendar == null) {
             return Undefined.instance;
         }
-        
+
         if("date".equals(name)) {
         	return ScriptRuntime.toObject(this, calendar.getTime());
         }
-        
+
         return getNative(name, start);
     }
-    
+
 	@Override
 	protected Class<?> getStaticType() {
 		return Calendar.class;
@@ -92,7 +96,7 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
         }
         return calendarFormat.format(calendar.getTime());
 	}
-	
+
     public Object unwrap() {
         return calendar;
     }
