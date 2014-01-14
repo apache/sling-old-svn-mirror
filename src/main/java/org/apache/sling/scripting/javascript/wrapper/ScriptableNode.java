@@ -414,10 +414,6 @@ public class ScriptableNode extends ScriptableBase implements SlingWrapper {
         return false;
     }
 
-    public Class<?> jsGet_javascriptWrapperClass() {
-        return getClass();
-    }
-
     @Override
     public String toString() {
         if (node != null) {

@@ -52,13 +52,6 @@ public class ScriptableVersionTest extends RepositoryScriptingTestBase {
         assertEquals("nt:version", script.eval("node.versionHistory.rootVersion['jcr:primaryType']", data));
     }
 
-    public void testVersionHistoryWrapperClass() throws Exception {
-        assertEquals(
-                "org.apache.sling.scripting.javascript.wrapper.ScriptableVersionHistory", 
-                script.eval("node.versionHistory.javascriptWrapperClass.getName()", data)
-        );
-    }
-
     public void testVersionAccess() throws Exception {
         Object result = script.eval("node.getBaseVersion().getCreated()", data);
         assertNotNull(result);
@@ -67,12 +60,5 @@ public class ScriptableVersionTest extends RepositoryScriptingTestBase {
     public void testVersionIsWrapped() throws Exception {
         assertEquals("nt:version", script.eval("node.baseVersion['jcr:primaryType']", data));
         assertNotNull(script.eval("node.baseVersion.created", data));
-    }
-    
-    public void testVersionWrapperClass() throws Exception {
-        assertEquals(
-                "org.apache.sling.scripting.javascript.wrapper.ScriptableVersion", 
-                script.eval("node.baseVersion.javascriptWrapperClass.getName()", data)
-        );
     }
 }

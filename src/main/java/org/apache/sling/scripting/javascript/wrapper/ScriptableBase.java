@@ -28,23 +28,23 @@ import org.mozilla.javascript.ScriptableObject;
  *  default wrapping of methods and properties (SLING-397)
  */
 public abstract class ScriptableBase extends ScriptableObject {
-    
+
     private NativeJavaObject njo;
     private final Set<String> jsMethods = getJsMethodNames();
-    
+
     public static final String JSFUNC_PREFIX = "jsFunction_";
-    
+
     protected Object getNative(String name, Scriptable start) {
         final Object wrapped = getWrappedObject();
-        
+
         if(wrapped == null) {
             return Scriptable.NOT_FOUND;
         }
-        
+
         if(jsMethods.contains(name)) {
             return Scriptable.NOT_FOUND;
         }
-        
+
         if(njo == null) {
             synchronized (this) {
                 if(njo == null) {
@@ -52,35 +52,29 @@ public abstract class ScriptableBase extends ScriptableObject {
                 }
             }
         }
-        
+
         return njo.get(name, start);
     }
-    
+
     /** @return the Java object that we're wrapping, used to create a NativeJavaObject
      *  instance for default wrapping.
      */
     protected abstract Object getWrappedObject();
-    
+
     /** @return the static type to use for NativeJavaObject wrapping */
     protected abstract Class<?> getStaticType();
-    
-    /** Used in testing, to check that the right wrapper is used. 
-     *  For some reason, defining the method here didn't work, it had to be
-     *  defined in all descendant classes.      
-     */
-    public abstract Class<?> jsGet_javascriptWrapperClass();
-    
+
     /** @return the Set of method names that clazz defines, i.e. all public methods
      *  with names that start with jsFunction_ */
     private Set<String> getJsMethodNames() {
         final Set<String> result = new HashSet<String>();
-        
+
         for(Method m : getClass().getMethods()) {
             if(m.getName().startsWith(JSFUNC_PREFIX)) {
                 result.add(m.getName().substring(JSFUNC_PREFIX.length()));
             }
         }
-        
+
         return result;
     }
 }
