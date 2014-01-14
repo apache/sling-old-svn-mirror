@@ -24,7 +24,9 @@ public interface HealthCheckExecutionResult {
     long getElapsedTimeInMs();
 
     /**
-     * Get the date, the health check finished.
+     * Get the date, the health check finished or if the
+     * execution timed out, <code>null</code> is returned.
+     * @return The finished date of the execution or <code>null</code>
      */
     Date getFinishedAt();
 
