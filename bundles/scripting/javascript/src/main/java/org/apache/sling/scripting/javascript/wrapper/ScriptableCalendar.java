@@ -80,11 +80,6 @@ public class ScriptableCalendar extends ScriptableBase implements SlingWrapper {
 	}
 
 	@Override
-	public Class<?> jsGet_javascriptWrapperClass() {
-		return getClass();
-	}
-
-	@Override
 	public String getClassName() {
 		return CLASSNAME;
 	}

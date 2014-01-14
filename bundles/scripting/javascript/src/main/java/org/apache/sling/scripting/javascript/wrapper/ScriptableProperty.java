@@ -210,10 +210,6 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
         return property.isModified();
     }
 
-    public Class<?> jsGet_javascriptWrapperClass() {
-        return getClass();
-    }
-
     public Object jsFunction_valueOf(String hint) {
         if ("undefined".equals(hint)) {
 

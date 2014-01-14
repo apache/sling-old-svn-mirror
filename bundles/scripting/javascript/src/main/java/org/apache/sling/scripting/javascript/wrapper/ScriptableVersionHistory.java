@@ -24,9 +24,9 @@ public class ScriptableVersionHistory extends ScriptableNode {
 
     public static final String CLASSNAME = "VersionHistory";
     public static final Class<?> [] WRAPPED_CLASSES = { VersionHistory.class };
-    
+
     private VersionHistory versionHistory;
-    
+
     @Override
     public void jsConstructor(Object res) {
         super.jsConstructor(res);
@@ -51,9 +51,5 @@ public class ScriptableVersionHistory extends ScriptableNode {
     @Override
     protected Object getWrappedObject() {
         return versionHistory;
-    }
-    
-    public Class<?> jsGet_javascriptWrapperClass() {
-        return getClass();
     }
 }
