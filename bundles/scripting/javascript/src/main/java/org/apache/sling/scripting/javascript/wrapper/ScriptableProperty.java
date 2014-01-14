@@ -35,6 +35,11 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
 
     public static final Class<?>[] WRAPPED_CLASSES = { Property.class };
 
+    /**
+     * The wrapped JCR Property instance. Will be {@code null} if the
+     * {@link #jsConstructor(Object)} method is not called, which particularly
+     * is the case for the Property host object prototype.
+     */
     private Property property;
 
     public ScriptableProperty() {
@@ -208,10 +213,10 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
     public Class<?> jsGet_javascriptWrapperClass() {
         return getClass();
     }
-    
+
     public Object jsFunction_valueOf(String hint) {
         if ("undefined".equals(hint)) {
-            
+
             try {
                 switch (property.getType()) {
                     case PropertyType.BOOLEAN:
@@ -229,15 +234,15 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
                 // don't care, just return the string value
                 return toString();
             }
-            
+
         } else if ("object".equals(hint)) {
             // return this as a Scriptable :-)
             return this;
-            
+
         } else if ("function".equals(hint)) {
             // cannot return this as a Function
             return Undefined.instance;
-            
+
         } else if ("boolean".equals(hint)) {
             // boolean value
             try {
@@ -245,7 +250,7 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
             } catch (RepositoryException re) {
                 return false;
             }
-            
+
         } else if ("number".equals(hint)) {
             // numeric value
             try {
@@ -258,7 +263,7 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
         // unknown hint or "string"
         return toString();
     }
-    
+
     @Override
     public Object get(String name, Scriptable start) {
         final Object fromSuperclass = super.get(name, start);
@@ -269,7 +274,7 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
         if(property == null) {
             return Undefined.instance;
         }
-        
+
         return getNative(name, start);
     }
 
@@ -279,11 +284,15 @@ public class ScriptableProperty extends ScriptableBase implements SlingWrapper {
 
     @Override
     public String toString() {
-        try {
-            return property.getValue().getString();
-        } catch (RepositoryException e) {
-            return property.toString();
+        if (property != null) {
+            try {
+                return property.getValue().getString();
+            } catch (RepositoryException e) {
+                return property.toString();
+            }
         }
+
+        return String.valueOf((Object) null);
     }
 
     // ---------- Wrapper interface --------------------------------------------

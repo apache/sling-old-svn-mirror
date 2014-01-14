@@ -240,7 +240,11 @@ public class ScriptableResource extends ScriptableObject implements
     @SuppressWarnings("unchecked")
     @Override
     public Object getDefaultValue(Class typeHint) {
-        return resource.getPath();
+        if (resource != null) {
+            return resource.getPath();
+        }
+
+        return String.valueOf((Object) null);
     }
 
     public void setResource(Resource entry) {
