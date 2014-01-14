@@ -391,7 +391,7 @@ public class ScheduleInfoImpl implements ScheduleInfo, Serializable {
             sb.append(String.valueOf(this.hourOfDay));
             sb.append(' ');
             sb.append(String.valueOf(this.dayOfWeek));
-            sb.append(" *?*");
+            sb.append(" * ?");
             return sb.toString();
         } else if ( this.scheduleType == ScheduleType.YEARLY ) {
             final StringBuilder sb = new StringBuilder("0 ");
