@@ -77,11 +77,10 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
     @Property(intValue = DEFAULT_NUMBER_OF_RETRIES_ALLOWED, description = "Number of allowed retries", label = "Allowed retries")
     private static final String NUMBER_OF_RETRIES_ALLOWED = "numberOfRetriesAllowed";
 
-    private Collection<ReplicationQueueProvider> replicationQueueProviders;
+    private final Collection<ReplicationQueueProvider> replicationQueueProviders = new LinkedList<ReplicationQueueProvider>();
 
     @Activate
     public void activate(final Map<String, Object> properties) {
-        replicationQueueProviders = new LinkedList<ReplicationQueueProvider>();
         numberOfRetriesAllowed = PropertiesUtil.toInteger(properties.get(NUMBER_OF_RETRIES_ALLOWED), DEFAULT_NUMBER_OF_RETRIES_ALLOWED);
         log.info("Activated, numberOfRetriesAllowed={}", numberOfRetriesAllowed);
     }
