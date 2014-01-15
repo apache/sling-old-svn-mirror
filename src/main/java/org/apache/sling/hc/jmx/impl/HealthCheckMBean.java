@@ -19,6 +19,7 @@ package org.apache.sling.hc.jmx.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.api.ResultLog;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.core.impl.executor.ExtendedHealthCheckExecutor;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -52,19 +54,18 @@ import org.osgi.framework.ServiceReference;
 /** A {@link DynamicMBean} used to execute a {@link HealthCheck} service */
 public class HealthCheckMBean implements DynamicMBean {
 
-    public static final String HC_OK_ATTRIBUTE_NAME = "ok";
-    public static final String HC_STATUS_ATTRIBUTE_NAME = "status";
-    public static final String HC_LOG_ATTRIBUTE_NAME = "log";
-
+    private static final String HC_OK_ATTRIBUTE_NAME = "ok";
+    private static final String HC_STATUS_ATTRIBUTE_NAME = "status";
+    private static final String HC_LOG_ATTRIBUTE_NAME = "log";
+    private static final String HC_TIMED_OUT_ATTRIBUTE_NAME = "timedOut";
+    private static final String HC_ELAPSED_TIMED_ATTRIBUTE_NAME = "elapsedTime";
+    private static final String HC_FINISHED_AT_ATTRIBUTE_NAME = "finishedAt";
     private static CompositeType LOG_ROW_TYPE;
     private static TabularType LOG_TABLE_TYPE;
 
-    public static final String INDEX_COLUMN = "index";
-    public static final String LEVEL_COLUMN = "level";
-    public static final String MESSAGE_COLUMN = "message";
-
-    public static final String JMX_TYPE_NAME = "HealthCheck";
-    public static final String JMX_DOMAIN = "org.apache.sling.healthcheck";
+    private static final String INDEX_COLUMN = "index";
+    private static final String LEVEL_COLUMN = "level";
+    private static final String MESSAGE_COLUMN = "message";
 
     /** The health check service to call. */
     private final ServiceReference healthCheckRef;
@@ -133,7 +134,7 @@ public class HealthCheckMBean implements DynamicMBean {
     public AttributeList getAttributes(final String[] attributes) {
         final AttributeList result = new AttributeList();
         if ( attributes != null ) {
-            Result hcResult = null;
+            HealthCheckExecutionResult hcResult = null;
             for(final String key : attributes) {
                 final Object defaultValue = this.defaultAttributes.get(key);
                 if ( defaultValue != null ) {
@@ -146,15 +147,21 @@ public class HealthCheckMBean implements DynamicMBean {
                     }
 
                     if ( HC_OK_ATTRIBUTE_NAME.equals(key) ) {
-                        result.add(new Attribute(key, hcResult.isOk()));
+                        result.add(new Attribute(key, hcResult.getHealthCheckResult().isOk()));
                     } else if ( HC_LOG_ATTRIBUTE_NAME.equals(key) ) {
                         try {
-                            result.add(new Attribute(key, logData(hcResult)));
+                            result.add(new Attribute(key, logData(hcResult.getHealthCheckResult())));
                         } catch ( final OpenDataException ignore ) {
                             // we ignore this and simply don't add the attribute
                         }
                     } else if ( HC_STATUS_ATTRIBUTE_NAME.equals(key) ) {
-                        result.add(new Attribute(key, hcResult.getStatus().toString()));
+                        result.add(new Attribute(key, hcResult.getHealthCheckResult().getStatus().toString()));
+                    } else if ( HC_ELAPSED_TIMED_ATTRIBUTE_NAME.equals(key) ) {
+                        result.add(new Attribute(key, hcResult.getElapsedTimeInMs()));
+                    } else if ( HC_FINISHED_AT_ATTRIBUTE_NAME.equals(key) ) {
+                        result.add(new Attribute(key, hcResult.getFinishedAt()));
+                    } else if ( HC_TIMED_OUT_ATTRIBUTE_NAME.equals(key) ) {
+                        result.add(new Attribute(key, hcResult.hasTimedOut()));
                     }
                 }
             }
@@ -183,7 +190,9 @@ public class HealthCheckMBean implements DynamicMBean {
         // add standard attributes
         attrs.add(new MBeanAttributeInfo(HC_OK_ATTRIBUTE_NAME, Boolean.class.getName(), "The health check result", true, false, false));
         attrs.add(new MBeanAttributeInfo(HC_STATUS_ATTRIBUTE_NAME, String.class.getName(), "The health check status", true, false, false));
-
+        attrs.add(new MBeanAttributeInfo(HC_ELAPSED_TIMED_ATTRIBUTE_NAME, Long.class.getName(), "The elapsed time in miliseconds", true, false, false));
+        attrs.add(new MBeanAttributeInfo(HC_FINISHED_AT_ATTRIBUTE_NAME, Date.class.getName(), "The date when the execution finished", true, false, false));
+        attrs.add(new MBeanAttributeInfo(HC_TIMED_OUT_ATTRIBUTE_NAME, Boolean.class.getName(), "Indicates of the execution timed out", true, false, false));
         attrs.add(new OpenMBeanAttributeInfoSupport(HC_LOG_ATTRIBUTE_NAME, "The health check result log", LOG_TABLE_TYPE, true, false, false));
 
         final String description;
@@ -247,7 +256,7 @@ public class HealthCheckMBean implements DynamicMBean {
         return "HealthCheckMBean [healthCheck=" + this.healthCheckRef + "]";
     }
 
-    private Result getHealthCheckResult() {
-        return this.executor.execute(this.healthCheckRef).getHealthCheckResult();
+    private HealthCheckExecutionResult getHealthCheckResult() {
+        return this.executor.execute(this.healthCheckRef);
     }
 }
