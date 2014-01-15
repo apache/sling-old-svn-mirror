@@ -47,6 +47,9 @@ import org.slf4j.LoggerFactory;
 @Component
 public class HealthCheckMBeanCreator {
 
+    private static final String JMX_TYPE_NAME = "HealthCheck";
+    private static final String JMX_DOMAIN = "org.apache.sling.healthcheck";
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Map<ServiceReference, Registration> registeredServices = new HashMap<ServiceReference, Registration>();
@@ -167,9 +170,9 @@ public class HealthCheckMBeanCreator {
         }
 
         public void register(final Logger logger, final BundleContext btx) {
-            final StringBuilder sb = new StringBuilder(HealthCheckMBean.JMX_DOMAIN);
+            final StringBuilder sb = new StringBuilder(JMX_DOMAIN);
             sb.append(":type=");
-            sb.append(HealthCheckMBean.JMX_TYPE_NAME);
+            sb.append(JMX_TYPE_NAME);
             sb.append(",name=");
             sb.append(this.name);
             final String objectName = sb.toString();
