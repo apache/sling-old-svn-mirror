@@ -64,22 +64,13 @@ public class ExecutionResult implements Comparable<ExecutionResult>, HealthCheck
     }
 
     /**
-     * Shortcut constructor to create error result.
-     */
-    ExecutionResult(final HealthCheckMetadata metadata,
-            final Result.Status status,
-            final String errorMessage) {
-        this(metadata, new Result(status, errorMessage), 0L, false);
-    }
-
-    /**
      * Shortcut constructor to create error/timed out result.
      */
     ExecutionResult(final HealthCheckMetadata metadata,
             final Result.Status status,
             final String errorMessage,
-            final long elapsedTime) {
-        this(metadata, new Result(status, errorMessage), elapsedTime, true);
+            final long elapsedTime, boolean timedOut) {
+        this(metadata, new Result(status, errorMessage), elapsedTime, timedOut);
     }
 
 
