@@ -367,8 +367,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
                 result = future.get();
             } catch (Exception e) {
                 logger.warn("Unexpected Exception during future.get(): " + e, e);
+                long futureElapsedTimeMs = new Date().getTime() - future.getCreatedTime().getTime();
                 result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.HEALTH_CHECK_ERROR,
-                        "Unexpected Exception during future.get(): " + e);
+                        "Unexpected Exception during future.get(): " + e, futureElapsedTimeMs, false);
             }
 
             // if the future came from a previous call remove it from stillRunningFutures
@@ -388,13 +389,13 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             long futureElapsedTimeMs = new Date().getTime() - future.getCreatedTime().getTime();
             if (futureElapsedTimeMs < this.longRunningFutureThresholdForRedMs) {
                 result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.WARN,
-                        "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs), futureElapsedTimeMs);
+                        "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs), futureElapsedTimeMs, true);
 
             } else {
                 result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.CRITICAL,
                         "Timeout: Check still running after " + msHumanReadable(futureElapsedTimeMs)
                                 + " (exceeding the configured threshold for CRITICAL: "
-                                + msHumanReadable(this.longRunningFutureThresholdForRedMs) + ")", futureElapsedTimeMs);
+                                + msHumanReadable(this.longRunningFutureThresholdForRedMs) + ")", futureElapsedTimeMs, true);
             }
         }
         return result;
