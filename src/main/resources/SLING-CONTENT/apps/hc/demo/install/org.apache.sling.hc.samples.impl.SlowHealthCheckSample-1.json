@@ -1,0 +1,8 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "hc.name" : "Slow Health Check sample (1200-3700 msec)", 
+    "hc.tags" : [slow],
+    "hc.mbean.name" : "SlowHealthCheckSample",
+    "execution.time.min.msec" : "1200", 
+    "execution.time.max.msec" : "3700" 
+}
