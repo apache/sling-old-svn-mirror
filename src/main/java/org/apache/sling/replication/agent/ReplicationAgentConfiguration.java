@@ -45,10 +45,11 @@ public class ReplicationAgentConfiguration {
     public static final String AUTHENTICATION_PROPERTIES = "authentication.properties";
 
     public static final String QUEUE_DISTRIBUTION = "ReplicationQueueDistributionStrategy.target";
-
     public static final String RULES = "rules";
 
     public static final String ENABLED = "enabled";
+
+    public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
     public static final String[] COMPONENTS = { TRANSPORT, PACKAGING };
 
@@ -72,6 +73,8 @@ public class ReplicationAgentConfiguration {
 
     private final String[] rules;
 
+    private final boolean useAggregatePaths;
+
     private final Dictionary<String, Dictionary> componentConfiguration;
 
     public ReplicationAgentConfiguration(Dictionary<?, ?> dictionary, Dictionary<String, Dictionary> componentConfiguration) {
@@ -88,9 +91,11 @@ public class ReplicationAgentConfiguration {
         String[] ap = PropertiesUtil.toStringArray(dictionary.get(AUTHENTICATION_PROPERTIES));
         this.authenticationProperties = ap != null ? ap : new String[0];
         this.rules = PropertiesUtil.toStringArray(dictionary.get(RULES), new String[0]);
+        this.useAggregatePaths = PropertiesUtil.toBoolean(dictionary.get(USE_AGGREGATE_PATHS), true);
 
         this.componentConfiguration = componentConfiguration;
     }
+
 
     public String[] getAuthenticationProperties() {
         return authenticationProperties;
@@ -133,6 +138,7 @@ public class ReplicationAgentConfiguration {
                 + QUEUEPROVIDER + "\":\"" + targetReplicationQueueProvider + "\", \""
                 + QUEUE_DISTRIBUTION + "\":\"" + targetReplicationQueueDistributionStrategy+ "\", \""
                 + TRANSPORT_AUTHENTICATION_FACTORY + "\":\"" + targetAuthenticationHandlerFactory + "\", \""
+                + USE_AGGREGATE_PATHS + "\":\"" + useAggregatePaths + "\", \""
                 + AUTHENTICATION_PROPERTIES + "\":\"" + Arrays.toString(authenticationProperties) + "\", \"";
 
         result += toComponentString();

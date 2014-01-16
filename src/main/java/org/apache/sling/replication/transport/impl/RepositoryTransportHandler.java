@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Dictionary;
 import java.util.Properties;
@@ -25,6 +26,7 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.nodetype.NodeType;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -83,8 +85,15 @@ public class RepositoryTransportHandler implements TransportHandler {
                             NodeType.NT_FILE);
                     Node contentNode = addedNode.addNode(JcrConstants.JCR_CONTENT, NodeType.NT_RESOURCE);
                     if (contentNode != null) {
-                        contentNode.setProperty(JcrConstants.JCR_DATA, session.getValueFactory().createBinary(replicationPackage.getInputStream()));
-                        session.save();
+                        InputStream inputStream = null;
+                        try {
+                            inputStream = replicationPackage.createInputStream();
+                            contentNode.setProperty(JcrConstants.JCR_DATA, session.getValueFactory().createBinary(inputStream));
+                            session.save();
+                        }
+                        finally {
+                            IOUtils.closeQuietly(inputStream);
+                        }
                     }
                     if (log.isInfoEnabled()) {
                         log.info("package {} delivered to the repository as node {} ",

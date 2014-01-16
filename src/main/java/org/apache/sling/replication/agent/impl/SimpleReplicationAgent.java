@@ -38,6 +38,9 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Basic implementation of a {@link ReplicationAgent}
  */
@@ -61,8 +64,12 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     private final String[] rules;
 
+    private final boolean useAggregatePaths;
+
     public SimpleReplicationAgent(String name, String endpoint, String[] rules,
-                                  TransportHandler transportHandler, ReplicationPackageBuilder packageBuilder,
+                                  boolean useAggregatePaths,
+                                  TransportHandler transportHandler,
+                                  ReplicationPackageBuilder packageBuilder,
                                   ReplicationQueueProvider queueProvider,
                                   TransportAuthenticationProvider<?, ?> transportAuthenticationProvider,
                                   ReplicationQueueDistributionStrategy queueDistributionHandler) {
@@ -74,42 +81,29 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         this.queueProvider = queueProvider;
         this.transportAuthenticationProvider = transportAuthenticationProvider;
         this.queueDistributionStrategy = queueDistributionHandler;
+        this.useAggregatePaths = useAggregatePaths;
     }
 
     public ReplicationResponse execute(ReplicationRequest replicationRequest)
             throws AgentReplicationException {
 
-        // create package from request
-        ReplicationPackage replicationPackage;
-        try {
-            replicationPackage = packageBuilder.createPackage(replicationRequest);
-        } catch (ReplicationPackageBuildingException e) {
-            throw new AgentReplicationException(e);
-        }
+        // create packages from request
+        ReplicationPackage[] replicationPackages = buildPackages(replicationRequest);
 
-        ReplicationResponse replicationResponse = new ReplicationResponse();
-
-        // send the replication package to the queue distribution handler
-        try {
-            ReplicationQueueItemState state = queueDistributionStrategy.add(replicationPackage,
-                    this, queueProvider);
-            if (state != null) {
-                replicationResponse.setStatus(state.getItemState().toString());
-                replicationResponse.setSuccessful(state.isSuccessful());
-            } else {
-                replicationResponse.setStatus(ReplicationQueueItemState.ItemState.ERROR.toString());
-            }
-        } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("an error happened during queue processing", e);
-            }
-            replicationResponse.setSuccessful(false);
-        }
+        ReplicationResponse replicationResponse = schedule(replicationPackages, false);
 
         return replicationResponse;
     }
 
     public void send(ReplicationRequest replicationRequest) throws AgentReplicationException {
+        // create packages from request
+        ReplicationPackage[] replicationPackages = buildPackages(replicationRequest);
+
+        schedule(replicationPackages, true);
+    }
+
+
+    private ReplicationPackage buildPackage(ReplicationRequest replicationRequest) throws AgentReplicationException {
         // create package from request
         ReplicationPackage replicationPackage;
         try {
@@ -117,12 +111,78 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         } catch (ReplicationPackageBuildingException e) {
             throw new AgentReplicationException(e);
         }
-        try {
-            queueDistributionStrategy.offer(replicationPackage, this, queueProvider);
-        } catch (ReplicationQueueException e) {
-            throw new AgentReplicationException(e);
-        }
+
+        return replicationPackage;
     }
+
+    private ReplicationPackage[] buildPackages(ReplicationRequest replicationRequest) throws AgentReplicationException {
+
+        List<ReplicationPackage> packages = new ArrayList<ReplicationPackage>();
+
+        if(useAggregatePaths){
+            ReplicationPackage replicationPackage = buildPackage(replicationRequest);
+            packages.add(replicationPackage);
+        }
+        else {
+            for (String path : replicationRequest.getPaths()){
+                ReplicationPackage replicationPackage = buildPackage(new ReplicationRequest(replicationRequest.getTime(),
+                        replicationRequest.getAction(),
+                        new String[] { path }));
+
+                packages.add(replicationPackage);
+            }
+        }
+
+        return packages.toArray(new ReplicationPackage[0]);
+    }
+
+    // offer option throws an exception at first error
+    private ReplicationResponse schedule(ReplicationPackage[] packages, boolean offer) throws AgentReplicationException {
+        ReplicationResponse replicationResponse = new ReplicationResponse();
+
+        for (ReplicationPackage replicationPackage : packages){
+            ReplicationResponse currentReplicationResponse = schedule(replicationPackage, offer);
+
+            replicationResponse.setSuccessful(currentReplicationResponse.isSuccessful());
+            replicationResponse.setStatus(currentReplicationResponse.getStatus());
+        }
+
+        return replicationResponse;
+    }
+
+    private ReplicationResponse schedule(ReplicationPackage replicationPackage, boolean offer) throws AgentReplicationException {
+        ReplicationResponse replicationResponse = new ReplicationResponse();
+
+        if(offer){
+            try {
+                queueDistributionStrategy.offer(replicationPackage, this, queueProvider);
+            } catch (ReplicationQueueException e) {
+                replicationResponse.setSuccessful(false);
+                throw new AgentReplicationException(e);
+            }
+        }
+        else {
+            // send the replication package to the queue distribution handler
+            try {
+                ReplicationQueueItemState state = queueDistributionStrategy.add(replicationPackage,
+                        this, queueProvider);
+                if (state != null) {
+                    replicationResponse.setStatus(state.getItemState().toString());
+                    replicationResponse.setSuccessful(state.isSuccessful());
+                } else {
+                    replicationResponse.setStatus(ReplicationQueueItemState.ItemState.ERROR.toString());
+                    replicationResponse.setSuccessful(false);
+                }
+            } catch (Exception e) {
+                if (log.isErrorEnabled()) {
+                    log.error("an error happened during queue processing", e);
+                }
+                replicationResponse.setSuccessful(false);
+            }
+        }
+        return replicationResponse;
+    }
+
 
     public boolean process(ReplicationPackage item) throws AgentReplicationException {
         try {

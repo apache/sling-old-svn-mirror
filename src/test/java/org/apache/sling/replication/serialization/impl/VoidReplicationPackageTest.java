@@ -43,6 +43,6 @@ public class VoidReplicationPackageTest {
         assertEquals(createdPackage.getType(), readPackage.getType());
         assertEquals(createdPackage.getLength(), readPackage.getLength());
         assertEquals(Arrays.toString(createdPackage.getPaths()), Arrays.toString(readPackage.getPaths()));
-        assertTrue(IOUtils.contentEquals(createdPackage.getInputStream(), readPackage.getInputStream()));
+        assertTrue(IOUtils.contentEquals(createdPackage.createInputStream(), readPackage.createInputStream()));
     }
 }

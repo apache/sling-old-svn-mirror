@@ -19,6 +19,7 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -137,8 +138,16 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
                 // get first item
                 ReplicationPackage head = queue.getHead();
                 if (head != null) {
-                    int bytesCopied = IOUtils.copy(head.getInputStream(),
-                            response.getOutputStream());
+                    InputStream inputStream = null;
+                    int bytesCopied = -1;
+                    try {
+                        inputStream = head.createInputStream();
+                        bytesCopied = IOUtils.copy(inputStream, response.getOutputStream());
+                    }
+                    finally {
+                        IOUtils.closeQuietly(inputStream);
+                    }
+
                     response.setHeader(ReplicationHeader.TYPE.toString(), head.getType());
                     if (log.isInfoEnabled()) {
                         log.info("{} bytes written into the response", bytesCopied);

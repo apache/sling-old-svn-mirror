@@ -110,7 +110,7 @@ public class JobHandlingUtils {
                 return (Long) job.getProperty(LENGTH);
             }
 
-            public InputStream getInputStream() throws IOException {
+            public InputStream createInputStream() throws IOException {
                 return IOUtils.toInputStream(String.valueOf(job.getProperty(BIN)));
 
                 // workaround to make void package work while we get SLING-3140 to be released
@@ -139,7 +139,7 @@ public class JobHandlingUtils {
         properties.put(PATHS, replicationPackage.getPaths());
         properties.put(LENGTH, replicationPackage.getLength());
         properties.put(ACTION, replicationPackage.getAction());
-        properties.put(BIN, IOUtils.toString(replicationPackage.getInputStream()));
+        properties.put(BIN, IOUtils.toString(replicationPackage.createInputStream()));
         properties.put(TYPE, replicationPackage.getType());
         return properties;
     }
