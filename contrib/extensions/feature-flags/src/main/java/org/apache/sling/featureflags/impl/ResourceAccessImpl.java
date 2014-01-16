@@ -19,6 +19,7 @@
 package org.apache.sling.featureflags.impl;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
@@ -32,6 +33,7 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
  */
 @Component
 @Service(value=ResourceAccessGate.class)
+@Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.APPLICATION_CONTEXT)
 public class ResourceAccessImpl
     extends AllowingResourceAccessGate
     implements ResourceAccessGate {
