@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyUnbounded;
@@ -31,6 +32,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Sample Health Check that takes N msec to execute,
  *  used to demonstrate execution timeouts and caching.
@@ -47,6 +50,7 @@ import org.apache.sling.hc.util.FormattingResultLog;
 @Service(value=HealthCheck.class)
 public class SlowHealthCheckSample implements HealthCheck{
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private final AtomicInteger counter = new AtomicInteger();
     private long minExecutionTime;
     private long maxExecutionTime;
@@ -72,6 +76,12 @@ public class SlowHealthCheckSample implements HealthCheck{
     protected void activate(Map<String, Object> config) {
         minExecutionTime = PropertiesUtil.toInteger(config.get(PROP_MIN_EXEC_TIME), DEFAULT_MIN_EXEC_TIME);
         maxExecutionTime = PropertiesUtil.toInteger(config.get(PROP_MAX_EXEC_TIME), DEFAULT_MAX_EXEC_TIME);
+        log.debug("{} activated", this);
+    }
+    
+    @Deactivate
+    protected void deactivate(Map<String, Object> config) {
+        log.debug("{} deactivated", this);
     }
     
     @Override
@@ -85,7 +95,9 @@ public class SlowHealthCheckSample implements HealthCheck{
         } catch(InterruptedException iex) {
             resultLog.warn("{} during execution", iex.getClass().getSimpleName());
         }
-        resultLog.debug("Done executing, {} has been executed {} times", this, counter.incrementAndGet());
+        final String execMsg = "Done executing, execution counter=" + counter.incrementAndGet(); 
+        resultLog.debug("{}:{}", this, execMsg);
+        log.debug("{}:{}", this, execMsg);
         return new Result(resultLog);
     }
 }
