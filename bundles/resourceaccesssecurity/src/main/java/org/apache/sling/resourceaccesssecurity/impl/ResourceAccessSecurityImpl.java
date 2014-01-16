@@ -23,44 +23,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
-import org.osgi.framework.Constants;
-import org.osgi.service.component.ComponentContext;
 
-@Component(name = "org.apache.sling.api.security.ResourceAccessSecurity")
-@Service(value = { ResourceAccessSecurity.class })
-@Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling ResourceAccessSecurity")
 public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
 
-    private ResourceAccessGateTracker resourceAccessGateTracker;
+    private final ResourceAccessGateTracker resourceAccessGateTracker;
 
-    // ---------- SCR Integration ---------------------------------------------
+    private final boolean appContext;
 
-    /** Activates this component, called by SCR before registering as a service */
-    @Activate
-    protected void activate(final ComponentContext componentContext) {
-        resourceAccessGateTracker = new ResourceAccessGateTracker(
-                componentContext.getBundleContext());
-        resourceAccessGateTracker.open();
-
-    }
-
-    /**
-     * Deativates this component (called by SCR to take out of service)
-     */
-    @Deactivate
-    protected void deactivate() {
-        resourceAccessGateTracker.close();
+    public ResourceAccessSecurityImpl(
+            final ResourceAccessGateTracker resourceAccessGateTracker, final boolean appContext) {
+        this.resourceAccessGateTracker = resourceAccessGateTracker;
+        this.appContext = appContext;
     }
 
     /**
@@ -73,7 +52,8 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         // TODO: maybe caching some frequent paths with read operation would be
         // a good idea
         //
-        final List<ResourceAccessGateHandler> handlers = resourceAccessGateTracker.getResourceAccessGateHandlers();
+        final List<ResourceAccessGateHandler> handlers = (this.appContext ? resourceAccessGateTracker.getApplicationResourceAccessGateHandlers()
+                                                                          : resourceAccessGateTracker.getProviderResourceAccessGateHandlers());
 
         if (handlers.size() > 0) {
 

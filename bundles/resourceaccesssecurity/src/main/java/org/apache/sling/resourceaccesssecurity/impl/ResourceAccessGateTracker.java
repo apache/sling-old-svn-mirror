@@ -30,7 +30,8 @@ import org.osgi.framework.ServiceReference;
 public class ResourceAccessGateTracker extends
         SortingServiceTracker<ResourceAccessGate> {
 
-    private List<ResourceAccessGateHandler> resourceAccessGateHandlers;
+    private List<ResourceAccessGateHandler> providerResourceAccessGateHandlers;
+    private List<ResourceAccessGateHandler> applicationResourceAccessGateHandlers;
 
     /**
      * Constructor
@@ -44,9 +45,9 @@ public class ResourceAccessGateTracker extends
      *      java.lang.Object)
      */
     @Override
-    public void removedService(ServiceReference reference, Object service) {
+    public void removedService(final ServiceReference reference, final Object service) {
         super.removedService(reference, service);
-        resourceAccessGateHandlers = null;
+        this.clearCache();
     }
 
     /**
@@ -54,36 +55,59 @@ public class ResourceAccessGateTracker extends
      *      java.lang.Object)
      */
     @Override
-    public void modifiedService(ServiceReference reference, Object service) {
+    public void modifiedService(final ServiceReference reference, final Object service) {
         super.modifiedService(reference, service);
-        resourceAccessGateHandlers = null;
+        this.clearCache();
     }
 
     /**
      * @see org.osgi.util.tracker.ServiceTrackerCustomizer#addingService(org.osgi.framework.ServiceReference)
      */
     @Override
-    public Object addingService(ServiceReference reference) {
-        Object returnValue = super.addingService(reference);
-        resourceAccessGateHandlers = null;
+    public Object addingService(final ServiceReference reference) {
+        final Object returnValue = super.addingService(reference);
+        this.clearCache();
         return returnValue;
     }
 
-    public List<ResourceAccessGateHandler> getResourceAccessGateHandlers() {
-        List<ResourceAccessGateHandler> returnValue = resourceAccessGateHandlers;
+    private void clearCache() {
+        this.providerResourceAccessGateHandlers = null;
+        this.applicationResourceAccessGateHandlers = null;
+    }
+
+    public List<ResourceAccessGateHandler> getApplicationResourceAccessGateHandlers() {
+        List<ResourceAccessGateHandler> returnValue = this.applicationResourceAccessGateHandlers;
 
         if (returnValue == null) {
-            resourceAccessGateHandlers = new ArrayList<ResourceAccessGateHandler>();
+            returnValue = new ArrayList<ResourceAccessGateHandler>();
             for (ServiceReference serviceReference : getSortedServiceReferences()) {
-                resourceAccessGateHandlers.add(new ResourceAccessGateHandler(
-                        serviceReference));
+                final String context = (String) serviceReference.getProperty(ResourceAccessGate.CONTEXT);
+                if ( ResourceAccessGate.APPLICATION_CONTEXT.equals(context) ) {
+                    returnValue.add(new ResourceAccessGateHandler(serviceReference));
+                }
             }
-            resourceAccessGateHandlers = Collections
-                    .unmodifiableList(resourceAccessGateHandlers);
-            returnValue = resourceAccessGateHandlers;
+            returnValue = Collections.unmodifiableList(returnValue);
+            this.applicationResourceAccessGateHandlers = returnValue;
         }
 
         return returnValue;
     }
 
+    public List<ResourceAccessGateHandler> getProviderResourceAccessGateHandlers() {
+        List<ResourceAccessGateHandler> returnValue = this.providerResourceAccessGateHandlers;
+
+        if (returnValue == null) {
+            returnValue = new ArrayList<ResourceAccessGateHandler>();
+            for (ServiceReference serviceReference : getSortedServiceReferences()) {
+                final String context = (String) serviceReference.getProperty(ResourceAccessGate.CONTEXT);
+                if ( ResourceAccessGate.PROVIDER_CONTEXT.equals(context) || context == null || context.trim().length() == 0 ) {
+                    returnValue.add(new ResourceAccessGateHandler(serviceReference));
+                }
+            }
+            returnValue = Collections.unmodifiableList(returnValue);
+            this.providerResourceAccessGateHandlers = returnValue;
+        }
+
+        return returnValue;
+    }
 }

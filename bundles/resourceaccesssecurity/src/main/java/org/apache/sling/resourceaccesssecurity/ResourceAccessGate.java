@@ -45,6 +45,10 @@ import aQute.bnd.annotation.ConsumerType;
  * final an no other service should be called (default none of them)</li>
  * </ul>
  *
+ * The resource access gate can either have the context {@link #PROVIDER_CONTEXT},
+ * in this case the gate is only applied to resource providers requesting the
+ * security checks. Or the context can be {@link #APPLICATION_CONTEXT}. In this
+ * case the access gate is invoked for the whole resource tree.
  */
 @ConsumerType
 public interface ResourceAccessGate {
@@ -55,6 +59,30 @@ public interface ResourceAccessGate {
      * "org.apache.sling.api.resource.ResourceAccessGate").
      */
     String SERVICE_NAME = ResourceAccessGate.class.getName();
+
+    /**
+     * The name of the service registration property containing the context
+     * of this service. Allowed values are {@link #APPLICATION_CONTEXT} and
+     * {@link #PROVIDER_CONTEXT}.
+     * The default for this value is <code>{@link #PROVIDER_CONTEXT}</code>.
+     * (value is "access.context")
+     */
+    String CONTEXT = "access.context";
+
+    /**
+     * Allowed value for the {@link #CONTEXT} service registration property.
+     * Services marked with this context are applied to all resources.
+     */
+    String APPLICATION_CONTEXT = "application";
+
+    /**
+     * Allowed value for the {@link #CONTEXT} service registration property.
+     * Services marked with this context are only applied to resource
+     * providers which indicate the additional checks with the
+     * {@link org.apache.sling.api.resource.ResourceProvider#USE_RESOURCE_ACCESS_SECURITY}
+     * property.
+     */
+    String PROVIDER_CONTEXT = "provider";
 
     /**
      * The name of the service registration property containing the path as a

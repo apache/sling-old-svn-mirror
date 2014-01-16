@@ -77,6 +77,9 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>
+                            org.apache.sling.resourceaccesssecurity.impl.Activator
+                        </Bundle-Activator>
                     </instructions>
                 </configuration>
             </plugin>
