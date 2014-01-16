@@ -53,8 +53,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** The activator */
     private final ResourceResolverFactoryActivator activator;
 
-    private ResourceAccessSecurityTracker resourceAccessSecurityTracker;
-
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
     }
@@ -102,7 +100,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
                     final boolean isAdmin)
     throws LoginException {
         // create context
-        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, resourceAccessSecurityTracker);
+        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker());
 
         // login
         this.activator.getRootProviderEntry().loginToRequiredFactories(ctx);
@@ -130,9 +128,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         } catch (final Exception e) {
             logger.error("activate: Cannot access repository, failed setting up Mapping Support", e);
         }
-
-        // create and open service tracker for ResourceAccessSecurity
-        resourceAccessSecurityTracker = new ResourceAccessSecurityTracker(bundleContext);
     }
 
     /**
@@ -148,9 +143,6 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             mapEntries.dispose();
             mapEntries = MapEntries.EMPTY;
         }
-
-        this.resourceAccessSecurityTracker.dispose();
-        this.resourceAccessSecurityTracker = null;
     }
 
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
@@ -189,7 +181,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */
     public ResourceAccessSecurityTracker getResourceAccessSecurityTracker () {
-        return resourceAccessSecurityTracker;
+        return this.activator.getResourceAccessSecurityTracker();
     }
 
     public ResourceResolver getServiceResourceResolver(

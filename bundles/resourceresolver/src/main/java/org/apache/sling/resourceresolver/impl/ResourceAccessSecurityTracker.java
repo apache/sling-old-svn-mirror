@@ -18,32 +18,39 @@
  */
 package org.apache.sling.resourceresolver.impl;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferencePolicyOption;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.security.ResourceAccessSecurity;
-import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * This internal helper class keeps track of the resource access security services
  * and always returns the one with the highest service ranking.
  */
+@Component
+@Service(value=ResourceAccessSecurityTracker.class)
 public class ResourceAccessSecurityTracker {
 
-    private final ServiceTracker resourceAccessSecurityTracker;
+    @Reference(policyOption=ReferencePolicyOption.GREEDY,
+               cardinality=ReferenceCardinality.OPTIONAL_UNARY,
+               policy=ReferencePolicy.DYNAMIC,
+               target="(" + ResourceAccessSecurity.CONTEXT + "=" + ResourceAccessSecurity.APPLICATION_CONTEXT + ")")
+    private ResourceAccessSecurity applicationResourceAccessSecurity;
 
-    public ResourceAccessSecurityTracker(final BundleContext bundleContext) {
-        resourceAccessSecurityTracker = new ServiceTracker(bundleContext, ResourceAccessSecurity.class.getName(), null);
-        resourceAccessSecurityTracker.open();
-    }
-
-    public void dispose() {
-        this.resourceAccessSecurityTracker.close();
-    }
+    @Reference(policyOption=ReferencePolicyOption.GREEDY,
+            cardinality=ReferenceCardinality.OPTIONAL_UNARY,
+            policy=ReferencePolicy.DYNAMIC,
+            target="(" + ResourceAccessSecurity.CONTEXT + "=" + ResourceAccessSecurity.PROVIDER_CONTEXT + ")")
+    private ResourceAccessSecurity providerResourceAccessSecurity;
 
     public ResourceAccessSecurity getApplicationResourceAccessSecurity() {
-        return (ResourceAccessSecurity) this.resourceAccessSecurityTracker.getService();
+        return this.applicationResourceAccessSecurity;
     }
 
     public ResourceAccessSecurity getProviderResourceAccessSecurity() {
-        return (ResourceAccessSecurity) this.resourceAccessSecurityTracker.getService();
+        return this.providerResourceAccessSecurity;
     }
 }
