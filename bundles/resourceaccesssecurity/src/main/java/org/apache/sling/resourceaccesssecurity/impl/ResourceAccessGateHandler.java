@@ -15,7 +15,8 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */package org.apache.sling.resourceaccesssecurity.impl;
+ */
+package org.apache.sling.resourceaccesssecurity.impl;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,9 +27,11 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.osgi.framework.ServiceReference;
 
-public class ResourceAccessGateHandler {
+public class ResourceAccessGateHandler implements Comparable<ResourceAccessGateHandler> {
 
     private final ResourceAccessGate resourceAccessGate;
+
+    private final ServiceReference reference;
 
     private final Pattern pathPattern;
     private final Set<ResourceAccessGate.Operation> operations = new HashSet<ResourceAccessGate.Operation>();
@@ -38,6 +41,7 @@ public class ResourceAccessGateHandler {
      * constructor
      */
     public ResourceAccessGateHandler ( final ServiceReference resourceAccessGateRef ) {
+        this.reference = resourceAccessGateRef;
 
         resourceAccessGate = (ResourceAccessGate) resourceAccessGateRef.getBundle().
                 getBundleContext().getService(resourceAccessGateRef);
@@ -45,9 +49,7 @@ public class ResourceAccessGateHandler {
         String path = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.PATH);
         if ( path != null ) {
             pathPattern = Pattern.compile(path);
-        }
-        else
-        {
+        } else {
             pathPattern = Pattern.compile(".*");
         }
 
@@ -100,4 +102,21 @@ public class ResourceAccessGateHandler {
         return resourceAccessGate;
     }
 
+    @Override
+    public int compareTo(final ResourceAccessGateHandler o) {
+        return this.reference.compareTo(o.reference);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if ( obj instanceof ResourceAccessGateHandler ) {
+            return ((ResourceAccessGateHandler)obj).reference.equals(this.reference);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.reference.hashCode();
+    }
 }

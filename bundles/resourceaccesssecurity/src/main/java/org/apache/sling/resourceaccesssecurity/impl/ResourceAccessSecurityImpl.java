@@ -19,28 +19,31 @@
 package org.apache.sling.resourceaccesssecurity.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferencePolicyOption;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.AccessSecurityException;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
+import org.osgi.framework.ServiceReference;
+
+@Reference(policyOption=ReferencePolicyOption.GREEDY,
+cardinality=ReferenceCardinality.OPTIONAL_UNARY,
+policy=ReferencePolicy.DYNAMIC,
+target="(" + ResourceAccessSecurity.CONTEXT + "=" + ResourceAccessSecurity.PROVIDER_CONTEXT + ")")
 
 public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
 
-    private final ResourceAccessGateTracker resourceAccessGateTracker;
-
-    private final boolean appContext;
-
-    public ResourceAccessSecurityImpl(
-            final ResourceAccessGateTracker resourceAccessGateTracker, final boolean appContext) {
-        this.resourceAccessGateTracker = resourceAccessGateTracker;
-        this.appContext = appContext;
-    }
+    private List<ResourceAccessGateHandler> allHandlers = Collections.emptyList();
 
     /**
      * This method returns either an iterator delivering the matching handlers
@@ -52,9 +55,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         // TODO: maybe caching some frequent paths with read operation would be
         // a good idea
         //
-        final List<ResourceAccessGateHandler> handlers = (this.appContext ? resourceAccessGateTracker.getApplicationResourceAccessGateHandlers()
-                                                                          : resourceAccessGateTracker.getProviderResourceAccessGateHandlers());
-
+        final List<ResourceAccessGateHandler> handlers = allHandlers;
         if (handlers.size() > 0) {
 
             final Iterator<ResourceAccessGateHandler> iter = handlers.iterator();
@@ -200,4 +201,25 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         return query;
     }
 
+
+    protected void bindResourceAccessGate(final ServiceReference ref) {
+        synchronized ( this ) {
+            final List<ResourceAccessGateHandler> newList = new ArrayList<ResourceAccessGateHandler>(this.allHandlers);
+
+            final ResourceAccessGateHandler h = new ResourceAccessGateHandler(ref);
+            newList.add(h);
+            Collections.sort(newList);
+            this.allHandlers = newList;
+        }
+    }
+
+    protected void unbindResourceAccessGate(final ServiceReference ref) {
+        synchronized ( this ) {
+            final List<ResourceAccessGateHandler> newList = new ArrayList<ResourceAccessGateHandler>(this.allHandlers);
+
+            final ResourceAccessGateHandler h = new ResourceAccessGateHandler(ref);
+            newList.remove(h);
+            this.allHandlers = newList;
+        }
+    }
 }
