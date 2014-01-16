@@ -216,6 +216,9 @@ public class ResourceResolverFactoryActivator {
     @Reference
     private ServiceUserMapper serviceUserMapper;
 
+    @Reference
+    private ResourceAccessSecurityTracker resourceAccessSecurityTracker;
+
     /** ComponentContext */
     private volatile ComponentContext componentContext;
 
@@ -234,6 +237,10 @@ public class ResourceResolverFactoryActivator {
      */
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
         return this.resourceDecoratorTracker;
+    }
+
+    public ResourceAccessSecurityTracker getResourceAccessSecurityTracker() {
+        return this.resourceAccessSecurityTracker;
     }
 
     public EventAdmin getEventAdmin() {
