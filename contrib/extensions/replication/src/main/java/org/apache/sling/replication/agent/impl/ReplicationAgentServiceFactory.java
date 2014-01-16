@@ -18,10 +18,8 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -108,6 +106,9 @@ public class ReplicationAgentServiceFactory {
     @Property
     private static final String RULES = ReplicationAgentConfiguration.RULES;
 
+    @Property(boolValue = true)
+    private static final String USE_AGGREGATE_PATHS = ReplicationAgentConfiguration.USE_AGGREGATE_PATHS;
+
     @Property(name = TRANSPORT, value = DEFAULT_TRANSPORT)
     @Reference(name = "TransportHandler", target = DEFAULT_TRANSPORT, policy = ReferencePolicy.DYNAMIC)
     private TransportHandler transportHandler;
@@ -173,6 +174,10 @@ public class ReplicationAgentServiceFactory {
             String af = PropertiesUtil.toString(config.get(TRANSPORT_AUTHENTICATION_FACTORY), "");
             props.put(TRANSPORT_AUTHENTICATION_FACTORY, af);
 
+
+            boolean useAggregatePaths = PropertiesUtil.toBoolean(config.get(USE_AGGREGATE_PATHS), true);
+            props.put(USE_AGGREGATE_PATHS, useAggregatePaths);
+
             // check configuration is valid
             if (name == null || packageBuilder == null || queueProvider == null || queueDistributionStrategy == null) {
                 throw new AgentConfigurationException("configuration for this agent is not valid");
@@ -192,7 +197,8 @@ public class ReplicationAgentServiceFactory {
                         transportHandler, transportAuthenticationProvider, endpoint, packageBuilder, queueProvider, queueDistributionStrategy});
             }
 
-            ReplicationAgent agent = new SimpleReplicationAgent(name, endpoint, rules, transportHandler, packageBuilder, queueProvider, transportAuthenticationProvider, queueDistributionStrategy);
+            ReplicationAgent agent = new SimpleReplicationAgent(name, endpoint, rules, useAggregatePaths,
+                    transportHandler, packageBuilder, queueProvider, transportAuthenticationProvider, queueDistributionStrategy);
 
             // register agent service
             agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);

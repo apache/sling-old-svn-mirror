@@ -107,7 +107,7 @@ public class ReplicationAgentResourceProviderTest {
         String filter = "(name=" + path + ")";
         when(context.getServiceReferences(ReplicationAgent.class.getName(), filter)).thenReturn(
                         agentServiceReferences);
-        SimpleReplicationAgent replicationAgent = new SimpleReplicationAgent(path, null, null,
+        SimpleReplicationAgent replicationAgent = new SimpleReplicationAgent(path, null, null, true,
                         null, null, null, null, null);
         when(context.getService(serviceReference)).thenReturn(replicationAgent);
         return replicationAgent;

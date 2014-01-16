@@ -56,7 +56,7 @@ public class JobHandlingReplicationQueueTest {
         ReplicationQueue queue = new JobHandlingReplicationQueue("aname", topic, jobManager);
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         InputStream stream = new ByteArrayInputStream("rep".getBytes());
-        when(pkg.getInputStream()).thenReturn(stream);
+        when(pkg.createInputStream()).thenReturn(stream);
         assertTrue(queue.add(pkg));
     }
 
@@ -72,7 +72,7 @@ public class JobHandlingReplicationQueueTest {
         ReplicationQueue queue = new JobHandlingReplicationQueue("aname", topic, jobManager);
         ReplicationPackage pkg = mock(ReplicationPackage.class);
         InputStream stream = new ByteArrayInputStream("rep".getBytes());
-        when(pkg.getInputStream()).thenReturn(stream);
+        when(pkg.createInputStream()).thenReturn(stream);
         assertTrue(queue.add(pkg));
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);

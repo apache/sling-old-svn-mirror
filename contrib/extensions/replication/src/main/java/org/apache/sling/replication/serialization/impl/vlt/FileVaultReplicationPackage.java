@@ -64,7 +64,7 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
         return paths;
     }
 
-    public InputStream getInputStream() throws IOException {
+    public InputStream createInputStream() throws IOException {
         return new FileInputStream(pkg.getFile());
     }
 
