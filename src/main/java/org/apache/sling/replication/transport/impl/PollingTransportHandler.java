@@ -29,6 +29,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.serialization.ReplicationPackage;
@@ -82,7 +83,9 @@ public class PollingTransportHandler implements TransportHandler {
             executor = ((TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider)
                     .authenticate(executor, context);
 
-            Request req = Request.Get(replicationEndpoint.getUri()).useExpectContinue();
+            Request req = Request.Post(replicationEndpoint.getUri())
+                    .addHeader(ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.getName())
+                    .useExpectContinue();
             // TODO : add queue header
 
             int polls = pollItems;

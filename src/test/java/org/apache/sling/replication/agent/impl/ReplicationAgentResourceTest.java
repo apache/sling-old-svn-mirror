@@ -57,7 +57,7 @@ public class ReplicationAgentResourceTest {
         assertNotNull(replicationAgentResource.getResourceType());
         assertEquals(ReplicationAgentResource.RESOURCE_TYPE, replicationAgentResource.getResourceType());
         assertNotNull(replicationAgentResource.getResourceMetadata());
-        assertEquals(ReplicationAgentResource.BASE_PATH, replicationAgentResource.getResourceMetadata().getResolutionPath());
+        assertEquals(ReplicationAgentResource.BASE_PATH +"/null", replicationAgentResource.getResourceMetadata().getResolutionPath());
         assertNull(replicationAgentResource.getResourceSuperType());
     }
 }

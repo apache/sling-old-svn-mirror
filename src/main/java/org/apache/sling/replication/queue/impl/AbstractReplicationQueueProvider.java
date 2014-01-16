@@ -49,11 +49,11 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
                     throws ReplicationQueueException {
         String key = agent.getName() + queueName;
 
-        if (log.isInfoEnabled()) {
-            log.info("creating a queue with key {}", key);
-        }
         ReplicationQueue queue = queueMap.get(key);
         if (queue == null) {
+            if (log.isInfoEnabled()) {
+                log.info("creating a queue with key {}", key);
+            }
             queue = getOrCreateQueue(agent, queueName);
             queueMap.put(key, queue);
             if (log.isInfoEnabled()) {

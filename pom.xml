@@ -67,7 +67,8 @@
               <configuration>
                 <instructions>
                   <Bundle-SymbolicName>org.apache.sling.replication</Bundle-SymbolicName>
-                  <Sling-Initial-Content>SLING-CONTENT/libs/sling/replication;path:=/apps/system;overwrite:=true</Sling-Initial-Content>
+                  <Sling-Initial-Content>SLING-CONTENT/libs/sling/replication;path:=/apps/system;overwrite:=true,
+                      SLING-CONTENT/system/replication;path:=/system/replication;overwrite:=true</Sling-Initial-Content>
                   <Export-Package>
                     org.apache.sling.replication.agent,
                     org.apache.sling.replication.transport.authentication,

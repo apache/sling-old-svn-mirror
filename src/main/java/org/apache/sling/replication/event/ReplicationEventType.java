@@ -24,6 +24,7 @@ package org.apache.sling.replication.event;
 public enum ReplicationEventType {
 
     PACKAGE_CREATED,
+    PACKAGE_QUEUED,
     PACKAGE_DELETED,
     PACKAGE_REPLICATED,
     PACKAGE_INSTALLED,

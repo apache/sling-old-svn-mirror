@@ -20,6 +20,9 @@ package org.apache.sling.replication.agent;
 
 import java.util.Arrays;
 import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Map;
+
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 /**
@@ -47,6 +50,10 @@ public class ReplicationAgentConfiguration {
 
     public static final String ENABLED = "enabled";
 
+    public static final String[] COMPONENTS = { TRANSPORT, PACKAGING };
+
+    private final boolean enabled;
+
     private final String name;
 
     private final String endpoint;
@@ -65,8 +72,11 @@ public class ReplicationAgentConfiguration {
 
     private final String[] rules;
 
-    public ReplicationAgentConfiguration(Dictionary<?, ?> dictionary) {
+    private final Dictionary<String, Dictionary> componentConfiguration;
+
+    public ReplicationAgentConfiguration(Dictionary<?, ?> dictionary, Dictionary<String, Dictionary> componentConfiguration) {
         this.name = PropertiesUtil.toString(dictionary.get(NAME), "");
+        this.enabled = PropertiesUtil.toBoolean(dictionary.get(ENABLED), true);
         this.endpoint = PropertiesUtil.toString(dictionary.get(ENDPOINT), "");
         this.targetAuthenticationHandlerFactory = PropertiesUtil.toString(
                 dictionary.get(TRANSPORT_AUTHENTICATION_FACTORY), "");
@@ -78,6 +88,8 @@ public class ReplicationAgentConfiguration {
         String[] ap = PropertiesUtil.toStringArray(dictionary.get(AUTHENTICATION_PROPERTIES));
         this.authenticationProperties = ap != null ? ap : new String[0];
         this.rules = PropertiesUtil.toStringArray(dictionary.get(RULES), new String[0]);
+
+        this.componentConfiguration = componentConfiguration;
     }
 
     public String[] getAuthenticationProperties() {
@@ -112,15 +124,58 @@ public class ReplicationAgentConfiguration {
 
     @Override
     public String toString() {
-        return "{\"" + NAME + "\":\"" + name + "\", \""
+        String result = "{\"";
+
+        result += NAME + "\":\"" + name + "\", \""
                 + ENDPOINT + "\":\"" + endpoint + "\", \""
                 + TRANSPORT + "\":\"" + targetTransportHandler + "\", \""
                 + PACKAGING + "\":\"" + targetReplicationPackageBuilder + "\", \""
                 + QUEUEPROVIDER + "\":\"" + targetReplicationQueueProvider + "\", \""
                 + QUEUE_DISTRIBUTION + "\":\"" + targetReplicationQueueDistributionStrategy+ "\", \""
                 + TRANSPORT_AUTHENTICATION_FACTORY + "\":\"" + targetAuthenticationHandlerFactory + "\", \""
-                + AUTHENTICATION_PROPERTIES + "\":\"" + Arrays.toString(authenticationProperties) + "\", \""
-                + RULES + "\":\"" + Arrays.toString(rules) + "\"}";
+                + AUTHENTICATION_PROPERTIES + "\":\"" + Arrays.toString(authenticationProperties) + "\", \"";
+
+        result += toComponentString();
+
+        result += RULES + "\":\"" + Arrays.toString(rules) + "\"}";
+        return result;
     }
 
+
+    private String toComponentString() {
+
+        String result = "";
+
+        if(componentConfiguration == null)
+            return result;
+
+        for (String component : COMPONENTS){
+            Dictionary properties = componentConfiguration.get(component);
+            if(properties == null) continue;
+
+            Enumeration keys = properties.keys();
+
+            while (keys.hasMoreElements()){
+                String key = (String) keys.nextElement();
+                Object value = properties.get(key);
+
+                if(key.equals("service.pid")) continue;
+
+                result += component + "." + key + "\":\"" +  PropertiesUtil.toString(value, "")  + "\", \"";
+            }
+        }
+
+        return  result;
+    }
+
+    public String toSimpleString() {
+        String result = "{";
+
+        result += "\"" + NAME + "\": \"" + name + "\""
+                + ", \"" + ENABLED + "\": " + enabled;
+
+        result += "}";
+
+        return result;
+    }
 }
