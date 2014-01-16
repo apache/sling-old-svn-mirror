@@ -46,12 +46,14 @@ public class Activator implements BundleActivator {
 
         final Dictionary<String, Object> appProps = new Hashtable<String, Object>();
         appProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Application Resource Access Security");
+        appProps.put(ResourceAccessSecurity.CONTEXT, ResourceAccessSecurity.APPLICATION_CONTEXT);
 
         this.appReg = context.registerService(ResourceAccessSecurity.class.getName(),
                 new ResourceAccessSecurityImpl(this.resourceAccessGateTracker, true), appProps);
 
         final Dictionary<String, Object> provProps = new Hashtable<String, Object>();
         provProps.put(Constants.SERVICE_DESCRIPTION, "Apache Sling Provider Resource Access Security");
+        provProps.put(ResourceAccessSecurity.CONTEXT, ResourceAccessSecurity.PROVIDER_CONTEXT);
 
         this.provReg = context.registerService(ResourceAccessSecurity.class.getName(),
                 new ResourceAccessSecurityImpl(this.resourceAccessGateTracker, false), provProps);
