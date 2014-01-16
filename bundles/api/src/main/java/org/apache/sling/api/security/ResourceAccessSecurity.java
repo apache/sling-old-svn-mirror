@@ -31,9 +31,8 @@ import aQute.bnd.annotation.ProviderType;
  *
  * A resource access security service is registered with the service
  * property {@link #CONTEXT}. Allowed values are {@link #APPLICATION_CONTEXT}
- * and {@link #PROVIDER_CONTEXT}. If the value is missing it defaults
- * to {@link #PROVIDER_CONTEXT}. Services registered with an invalid
- * value, will be ignored.
+ * and {@link #PROVIDER_CONTEXT}. If the value is missing or invalid,
+ * the service will be ignored.
  *
  * In the context of resource providers, this service might be used
  * for implementations of resource providers where the underlying persistence
@@ -58,7 +57,7 @@ public interface ResourceAccessSecurity {
      * The name of the service registration property containing the context
      * of this service. Allowed values are {@link #APPLICATION_CONTEXT} and
      * {@link #PROVIDER_CONTEXT}.
-     * The default for this value is <code>{@link #PROVIDER_CONTEXT}</code>.
+     * This property is required and has no default value.
      * (value is "access.context")
      */
     String CONTEXT = "access.context";
