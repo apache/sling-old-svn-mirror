@@ -33,6 +33,13 @@ public class ReplicationAgentResource extends AbstractResource {
 
     public static final String RESOURCE_TYPE = "sling/replication/agent";
 
+    public static final String RESOURCE_ROOT_TYPE = "sling/replication/agent/root";
+
+    public static final String IMPORTER_RESOURCE_TYPE = "sling/replication/agent/importer";
+
+    public static final String IMPORTER_BASE_PATH =  "/system/replication/receive";
+
+
     private ReplicationAgent replicationAgent;
 
     private ResourceResolver resourceResolver;
@@ -60,7 +67,7 @@ public class ReplicationAgentResource extends AbstractResource {
 
     public ResourceMetadata getResourceMetadata() {
         ResourceMetadata metadata = new ResourceMetadata();
-        metadata.setResolutionPath(BASE_PATH);
+        metadata.setResolutionPath(getPath());
         return metadata;
     }
 

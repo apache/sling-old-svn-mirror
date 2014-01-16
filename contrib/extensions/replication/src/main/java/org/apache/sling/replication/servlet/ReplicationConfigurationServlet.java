@@ -47,7 +47,7 @@ import org.apache.sling.replication.agent.impl.ReplicationAgentConfigurationReso
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentConfigurationResource.RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = { "POST", "GET" }) })
+        @Property(name = "sling.servlet.methods", value = { "POST", "PUT", "GET", "DELETE" }) })
 public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -58,19 +58,29 @@ public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
                     throws ServletException, IOException {
-        response.setContentType("application/json");
+
+
+
         @SuppressWarnings("unchecked")
-        Map<String, Object> parameterMap = request.getParameterMap();
-        Resource agentResource = request.getResource().getParent();
-        ReplicationAgent agent = agentResource.adaptTo(ReplicationAgent.class);
-        ReplicationAgentConfiguration configuration;
+        String operation = request.getParameter(":operation");
+
+        if("delete".equals(operation)) {
+            doDelete(request, response);
+            return;
+        };
+
+        response.setContentType("application/json");
+
+        Resource configurationResource = request.getResource();
+        ReplicationAgentConfiguration configuration = configurationResource.adaptTo(ReplicationAgentConfiguration.class);
+        String agentName = configuration.getName();
+
+        Map parameterMap = request.getParameterMap();
         try {
-            configuration = agentConfigurationManager.updateConfiguration(agent, parameterMap);
+            configuration = agentConfigurationManager.updateConfiguration(agentName, parameterMap);
             response.getWriter().write(configuration.toString());
         } catch (AgentConfigurationException e) {
-            if (log.isErrorEnabled()) {
-                log.error("cannot update configuration for agent {}", agent, e);
-            }
+            log.error("cannot update configuration for agent {}", agentName, e);
         }
     }
 
@@ -79,9 +89,27 @@ public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
                     throws ServletException, IOException {
         response.setContentType("application/json");
         Resource resource = request.getResource();
-        ReplicationAgentConfiguration configuration = resource
-                        .adaptTo(ReplicationAgentConfiguration.class);
+        ReplicationAgentConfiguration configuration = resource.adaptTo(ReplicationAgentConfiguration.class);
         response.getWriter().write(configuration.toString());
+    }
+
+
+    @Override
+    protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
+
+        @SuppressWarnings("unchecked")
+
+        Resource configurationResource = request.getResource();
+        ReplicationAgentConfiguration configuration = configurationResource.adaptTo(ReplicationAgentConfiguration.class);
+        String agentName = configuration.getName();
+        try {
+            agentConfigurationManager.deleteAgentConfiguration(agentName);
+            response.setStatus(204);
+        } catch (AgentConfigurationException e) {
+            log.error("cannot update configuration for agent {}", agentName, e);
+            response.setStatus(400);
+        }
     }
 
 }

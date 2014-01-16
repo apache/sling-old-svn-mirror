@@ -30,6 +30,8 @@ public class ReplicationAgentQueueResource extends AbstractResource {
 
     public static final String RESOURCE_TYPE = "sling/replication/agent/queue";
 
+    public static final String SUFFIX_PATH = "/queue";
+
     private final ReplicationQueue queue;
 
     private final ResourceResolver resourceResolver;

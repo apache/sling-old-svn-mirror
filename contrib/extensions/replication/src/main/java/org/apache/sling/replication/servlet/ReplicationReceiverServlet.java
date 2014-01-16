@@ -30,6 +30,8 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
+import org.apache.sling.replication.agent.impl.ReplicationAgentResourceProvider;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.slf4j.Logger;
@@ -41,7 +43,8 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 @Component(metatype = false)
 @Service(value = Servlet.class)
-@Properties({@Property(name = "sling.servlet.paths", value = "/system/replication/receive"),
+@Properties({
+        @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.IMPORTER_RESOURCE_TYPE),
         @Property(name = "sling.servlet.methods", value = "POST")})
 public class ReplicationReceiverServlet extends SlingAllMethodsServlet {
 

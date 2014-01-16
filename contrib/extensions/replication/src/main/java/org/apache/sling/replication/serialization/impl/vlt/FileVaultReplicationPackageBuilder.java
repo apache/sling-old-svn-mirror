@@ -24,11 +24,9 @@ import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
@@ -37,8 +35,10 @@ import org.apache.jackrabbit.vault.packaging.ExportOptions;
 import org.apache.jackrabbit.vault.packaging.JcrPackage;
 import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 
+import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
@@ -46,6 +46,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuildingExce
 
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,15 +56,26 @@ import org.slf4j.LoggerFactory;
  * Each {@link ReplicationPackage} created by <code>FileVaultReplicationPackageBuilder</code> is
  * backed by a {@link VaultPackage}. 
  */
-@Component(metatype = false)
+@Component(metatype = true,
+        label = "Replication Package Builder - FileVault",
+        description = "OSGi configuration based PackageBuilder service factory",
+        name = FileVaultReplicationPackageBuilder.SERVICE_PID)
 @Service(value = ReplicationPackageBuilder.class)
 @Property(name = "name", value = FileVaultReplicationPackageBuilder.NAME)
 public class FileVaultReplicationPackageBuilder extends AbstractReplicationPackageBuilder implements
         ReplicationPackageBuilder {
 
+    static final String SERVICE_PID = "org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder";
+
     public static final String NAME = "vlt";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    @Property
+    private static final String USERNAME = "username";
+
+    @Property
+    private static final String PASSWORD = "password";
 
     @Reference
     private SlingRepository repository;
@@ -71,11 +83,14 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
     @Reference
     private Packaging packaging;
 
+
+    private String username;
+    private String password;
+
     protected ReplicationPackage createPackageForAdd(ReplicationRequest request)
             throws ReplicationPackageBuildingException {
         Session session = null;
         try {
-            // TODO : replace this by using Credentials
             session = getSession();
 
             final String[] paths = request.getPaths();
@@ -119,7 +134,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
 
     @Override
     protected Session getSession() throws RepositoryException {
-        return repository.loginAdministrative(null);
+        return repository.login(new SimpleCredentials(username, password.toCharArray()));
     }
 
     @Override
@@ -134,7 +149,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
             if (log.isInfoEnabled()) {
                 log.info("reading package for addition");
             }
-            // TODO : use proper Credentials here
+
             session = getSession();
             if (session != null) {
                 final JcrPackage jcrPackage = packaging.getPackageManager(session).upload(stream, true,
@@ -172,5 +187,15 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         }
         return replicationPackage;
     }
+
+
+
+    @Activate
+    @Modified
+    protected void activate(ComponentContext ctx) {
+        username = PropertiesUtil.toString(ctx.getProperties().get(USERNAME), "").trim();
+        password = PropertiesUtil.toString(ctx.getProperties().get(PASSWORD), "").trim();
+    }
+
 
 }

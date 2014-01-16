@@ -51,13 +51,13 @@ public class ReplicationAgentConfigurationResourceTest {
         ResourceResolver resourceResolver = mock(ResourceResolver.class);
         ReplicationAgentConfigurationResource replicationAgentConfigurationResource = new ReplicationAgentConfigurationResource(agentConfiguration, resourceResolver);
         assertNotNull(replicationAgentConfigurationResource.getPath());
-        assertEquals(ReplicationAgentResource.BASE_PATH + "/null/configuration", replicationAgentConfigurationResource.getPath());
+        assertEquals(ReplicationAgentConfigurationResource.BASE_PATH + "/null", replicationAgentConfigurationResource.getPath());
         assertNotNull(replicationAgentConfigurationResource.getResourceResolver());
         assertEquals(resourceResolver, replicationAgentConfigurationResource.getResourceResolver());
         assertNotNull(replicationAgentConfigurationResource.getResourceType());
         assertEquals(ReplicationAgentConfigurationResource.RESOURCE_TYPE, replicationAgentConfigurationResource.getResourceType());
         assertNotNull(replicationAgentConfigurationResource.getResourceMetadata());
-        assertEquals("/system/replication/agent/null", replicationAgentConfigurationResource.getResourceMetadata().getResolutionPath());
+        assertEquals(ReplicationAgentConfigurationResource.BASE_PATH + "/null", replicationAgentConfigurationResource.getResourceMetadata().getResolutionPath());
         assertNull(replicationAgentConfigurationResource.getResourceSuperType());
     }
 }

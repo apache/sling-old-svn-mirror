@@ -19,6 +19,10 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
 
@@ -31,28 +35,89 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+
+import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
+import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Servlet to ask {@link ReplicationAgent}s to replicate (via HTTP POST).
+ */
+@SuppressWarnings("serial")
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = "GET") })
-public class ReplicationAgentPollServlet extends SlingAllMethodsServlet {
-
-    private static final long serialVersionUID = 1L;
+        @Property(name = "sling.servlet.methods", value = "POST") })
+public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
-                    throws ServletException, IOException {
+    protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getHeader(ReplicationHeader.ACTION.toString());
+
+        if(ReplicationActionType.POLL.getName().equalsIgnoreCase(action)){
+            doRemove(request, response);
+            return;
+        }
+        else {
+            doCreate(request, response);
+            return;
+        }
+    }
+
+    private void doCreate(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
+
+        response.setContentType("application/json");
+
+        String action = request.getHeader(ReplicationHeader.ACTION.toString());
+        String[] path = toStringArray(request.getHeaders(ReplicationHeader.PATH.toString()));
+
+        ReplicationRequest replicationRequest = new ReplicationRequest(System.currentTimeMillis(),
+                ReplicationActionType.valueOf(action), path);
+
+        ReplicationAgent agent = request.getResource().adaptTo(ReplicationAgent.class);
+
+        if (agent != null) {
+            try {
+                ReplicationResponse replicationResponse = agent.execute(replicationRequest);
+                if (replicationResponse.isSuccessful()
+                        || ItemState.DROPPED.toString().equals(
+                        replicationResponse.getStatus())) {
+                    response.setStatus(200);
+                } else if (ItemState.QUEUED.toString().equals(replicationResponse.getStatus())
+                        || ItemState.ACTIVE.toString().equals(
+                        replicationResponse.getStatus())) {
+                    response.setStatus(202);
+                } else {
+                    response.setStatus(400);
+                }
+                response.getWriter().append(replicationResponse.toString());
+            } catch (AgentReplicationException e) {
+                response.setStatus(503);
+                response.getWriter().append("{\"error\" : \"").append(e.toString()).append("\"}");
+            }
+        } else {
+            response.setStatus(404);
+            response.getWriter().append("{\"error\" : \"agent ").append(request.getServletPath())
+                    .append(" not found\"}");
+        }
+    }
+
+    private void doRemove(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
 
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.toString());
 
@@ -73,7 +138,7 @@ public class ReplicationAgentPollServlet extends SlingAllMethodsServlet {
                 ReplicationPackage head = queue.getHead();
                 if (head != null) {
                     int bytesCopied = IOUtils.copy(head.getInputStream(),
-                                    response.getOutputStream());
+                            response.getOutputStream());
                     response.setHeader(ReplicationHeader.TYPE.toString(), head.getType());
                     if (log.isInfoEnabled()) {
                         log.info("{} bytes written into the response", bytesCopied);
@@ -98,4 +163,13 @@ public class ReplicationAgentPollServlet extends SlingAllMethodsServlet {
         }
     }
 
+    String[] toStringArray(Enumeration<String> e){
+        List<String> l = new ArrayList<String>();
+        while (e.hasMoreElements()){
+            l.add(e.nextElement());
+        }
+
+        return l.toArray(new String[0]);
+
+    }
 }

@@ -32,6 +32,7 @@ import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,10 +49,10 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
-    @Property(name = "sling.servlet.paths", value = "/system/replication/agents"),
+    @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.RESOURCE_ROOT_TYPE),
     @Property(name = "sling.servlet.methods", value = "POST")
 })
-public class AggregateReplicationServlet extends SlingAllMethodsServlet {
+public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -80,9 +81,8 @@ public class AggregateReplicationServlet extends SlingAllMethodsServlet {
             try {
                 agent.send(replicationRequest);
             } catch (AgentReplicationException e) {
-                if (log.isWarnEnabled()) {
-                    log.warn("agent {} failed", agent.getName(), e);
-                }
+                log.warn("agent {} failed", agent.getName(), e);
+
                 response.getWriter().append("error :'").append(e.toString()).append("'");
                 if (!failed) {
                     failed = true;

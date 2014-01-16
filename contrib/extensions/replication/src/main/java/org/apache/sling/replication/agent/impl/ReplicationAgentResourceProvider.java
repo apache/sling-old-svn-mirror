@@ -19,42 +19,46 @@
 package org.apache.sling.replication.agent.impl;
 
 import java.util.Iterator;
+import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
-
+import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
+import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.sling.replication.agent.AgentConfigurationException;
-import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
-import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
-
 /**
  * {@link ResourceProvider} for {@link ReplicationAgent}s
  */
 @Component(metatype = false)
 @Service(value = ResourceProvider.class)
-@Property(name = ResourceProvider.ROOTS, value = ReplicationAgentResource.BASE_PATH)
+@Properties({
+        @Property(name = ResourceProvider.ROOTS,
+            value = {
+                    ReplicationAgentResource.BASE_PATH,
+                    ReplicationAgentConfigurationResource.BASE_PATH,
+                    ReplicationAgentResource.IMPORTER_BASE_PATH
+            })
+
+})
 public class ReplicationAgentResourceProvider implements ResourceProvider {
 
-    private static final String CONFIGURATION_PATH = "/configuration";
-
-    private static final String QUEUE_PATH = "/queue";
+    static final String SECURITY_OBJECT = "/system/replication/security";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -78,90 +82,119 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
 
     public Resource getResource(ResourceResolver resourceResolver, String path) {
 
+        if(!isAuthorized(resourceResolver)) return null;
+
         Resource resource = null;
-        if (path.endsWith(CONFIGURATION_PATH)) {
-            String agentPath = path.substring(0, path.lastIndexOf(CONFIGURATION_PATH));
-            if (log.isInfoEnabled()) {
-                log.info("resolving configuration for agent {}", agentPath);
-            }
-            ReplicationAgent replicationAgent = getAgentAtPath(agentPath);
-            if (replicationAgent != null) {
-                ServiceReference configurationManagerServiceReference = context
-                        .getServiceReference(ReplicationAgentConfigurationManager.class
-                                .getName());
-                if (configurationManagerServiceReference != null) {
-                    ReplicationAgentConfigurationManager agentConfigurationManager = (ReplicationAgentConfigurationManager) context
-                            .getService(configurationManagerServiceReference);
-                    ReplicationAgentConfiguration configuration;
-                    try {
-                        configuration = agentConfigurationManager
-                                .getConfiguration(replicationAgent);
-                        resource = new ReplicationAgentConfigurationResource(configuration,
-                                resourceResolver);
-                    } catch (AgentConfigurationException e) {
-                        if (log.isWarnEnabled()) {
-                            log.warn("could not find a configuration", e);
-                        }
-                    }
-                } else {
-                    if (log.isWarnEnabled()) {
-                        log.warn("could not find a configuration manager service");
-                    }
-                }
-            }
-        } else if (path.endsWith(QUEUE_PATH)) {
-            String agentPath = path.substring(0, path.lastIndexOf(QUEUE_PATH));
-            if (log.isInfoEnabled()) {
-                log.info("resolving queue for agent {}", agentPath);
-            }
-            ReplicationAgent replicationAgent = getAgentAtPath(agentPath);
-            if (replicationAgent != null) {
+
+        if (path.equals(ReplicationAgentConfigurationResource.BASE_PATH)) {
+
+            return new SyntheticResource(resourceResolver, path, ReplicationAgentConfigurationResource.RESOURCE_ROOT_TYPE);
+
+        } else if (path.equals(ReplicationAgentResource.BASE_PATH)) {
+
+            return new SyntheticResource(resourceResolver, path, ReplicationAgentResource.RESOURCE_ROOT_TYPE);
+
+        } else if (path.equals(ReplicationAgentResource.IMPORTER_BASE_PATH)) {
+
+            return new SyntheticResource(resourceResolver, path, ReplicationAgentResource.IMPORTER_RESOURCE_TYPE);
+
+        } else if (path.startsWith(ReplicationAgentConfigurationResource.BASE_PATH + "/")) {
+
+            String agentName = getAgentNameAtPath(path);
+
+            ServiceReference configurationManagerServiceReference = context
+                    .getServiceReference(ReplicationAgentConfigurationManager.class
+                            .getName());
+            if (configurationManagerServiceReference != null) {
+                ReplicationAgentConfigurationManager agentConfigurationManager = (ReplicationAgentConfigurationManager) context
+                        .getService(configurationManagerServiceReference);
+                ReplicationAgentConfiguration configuration;
                 try {
-                    resource = new ReplicationAgentQueueResource(replicationAgent.getQueue(null), resourceResolver);
-                } catch (Exception e) {
-                    if (log.isWarnEnabled()) {
-                        log.warn("could not find a queue for agent {}", replicationAgent.getName());
-                    }
+                    configuration = agentConfigurationManager.getConfiguration(agentName);
+                    resource = new ReplicationAgentConfigurationResource(configuration, resourceResolver);
+                } catch (AgentConfigurationException e) {
+                    log.warn("could not find a configuration", e);
                 }
+            } else {
+                log.warn("could not find a configuration manager service");
             }
-        } else {
-            if (log.isInfoEnabled()) {
-                log.info("resolving agent with path {}", path);
+        } else if(path.startsWith(ReplicationAgentResource.BASE_PATH+"/")) {
+
+            if (path.endsWith(ReplicationAgentQueueResource.SUFFIX_PATH)) {
+                String agentPath = path.substring(0, path.lastIndexOf('/'));
+                log.info("resolving queue with path {}", agentPath);
+
+                ReplicationAgent replicationAgent = getAgentAtPath(agentPath);
+                try {
+                    resource = replicationAgent != null ? new ReplicationAgentQueueResource(replicationAgent.getQueue(null),
+                            resourceResolver) : null;
+                } catch (ReplicationQueueException e) {
+                    log.warn("could not find a queue for agent {}", agentPath);
+                }
+            } else {
+                String agentPath = path;
+                ReplicationAgent replicationAgent = getAgentAtPath(path);
+                log.info("resolving agent with path {}", agentPath);
+
+                resource = replicationAgent != null ? new ReplicationAgentResource(replicationAgent,
+                        resourceResolver) : null;
             }
-            ReplicationAgent replicationAgent = getAgentAtPath(path);
-            resource = replicationAgent != null ? new ReplicationAgentResource(replicationAgent,
-                    resourceResolver) : null;
         }
-        if (log.isInfoEnabled()) {
-            log.info("resource found: {}", resource != null ? resource.getPath() : "none");
-        }
+
+        log.info("resource found: {}", resource != null ? resource.getPath() : "none");
         return resource;
+    }
+
+
+    private boolean isAuthorized(ResourceResolver resourceResolver){
+        boolean isAuthorized = false;
+        Session session = resourceResolver.adaptTo(Session.class);
+        if(session != null) {
+            try{
+                isAuthorized = session.nodeExists(SECURITY_OBJECT);
+            }
+            catch (Exception ex){
+            }
+        }
+
+
+        if(isAuthorized){
+            log.debug("granting access to agent resources as user can read /system/replication/security");
+        }
+        else {
+            log.debug("denying access to agent resources as user can't read /system/replication/security");
+        }
+
+        return isAuthorized;
+    }
+
+    private String getAgentNameAtPath(String path) {
+        String agentName = path.substring(path.lastIndexOf('/') + 1);
+
+        return agentName;
     }
 
     private ReplicationAgent getAgentAtPath(String path) {
         ReplicationAgent replicationAgent = null;
-        String agentName = path.substring(path.lastIndexOf('/') + 1);
-        if (log.isDebugEnabled()) {
-            log.debug("resolving agent {} at {}", agentName, path);
-        }
+        String agentName = getAgentNameAtPath(path);
+
+        log.debug("resolving agent {} at {}", agentName, path);
+
         ServiceReference[] replicationAgentReferences;
         try {
             replicationAgentReferences = context.getServiceReferences(
-                    ReplicationAgent.class.getName(),
-                    "(name=" + agentName + ")");
+                    ReplicationAgent.class.getName(), "(name=" + agentName + ")");
+
             if (replicationAgentReferences != null && replicationAgentReferences.length == 1) {
                 replicationAgent = (ReplicationAgent) context
                         .getService(replicationAgentReferences[0]);
-                if (log.isDebugEnabled()) {
-                    log.debug("replication agent found: {}", replicationAgent);
-                }
+
+                log.debug("replication agent found: {}", replicationAgent);
             } else {
                 log.warn("could not find a replication agent with name {}", agentName);
             }
         } catch (InvalidSyntaxException e) {
-            if (log.isWarnEnabled()) {
-                log.warn("there was a syntax problem while getting agent service {}", e);
-            }
+            log.warn("there was a syntax problem while getting agent service {}", e);
         }
         return replicationAgent;
     }

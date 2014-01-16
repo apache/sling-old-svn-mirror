@@ -25,8 +25,8 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.AgentConfigurationException;
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
 import org.osgi.service.cm.Configuration;
@@ -47,77 +47,165 @@ public class DefaultReplicationAgentConfigurationManager implements
     @Reference
     private ConfigurationAdmin configAdmin;
 
-    public ReplicationAgentConfiguration getConfiguration(ReplicationAgent replicationAgent)
+    public ReplicationAgentConfiguration getConfiguration(String agentName)
             throws AgentConfigurationException {
-        if (log.isInfoEnabled()) {
-            log.info("retrieving configuration for agent {}", replicationAgent);
-        }
+
+        log.info("retrieving configuration for agent {}", agentName);
+
         try {
-            Configuration configuration = getOsgiConfiguration(replicationAgent);
-            if (log.isInfoEnabled()) {
-                log.info("configuration for agent {} found {}", replicationAgent, configuration);
-            }
-            return new ReplicationAgentConfiguration(configuration.getProperties());
+            Dictionary agentProperties = getOrSetProperties(agentName, null);
+            Dictionary<String, Dictionary> componentProperties = getOrSetComponentProperties(agentName, null);
+
+            log.info("configuration for agent {} found {}", agentName, agentProperties);
+
+            return new ReplicationAgentConfiguration(agentProperties, componentProperties);
 
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("configuration for agent {} cannot be found", replicationAgent.getName());
-            }
+
+            log.error("configuration for agent {} cannot be found", agentName);
             throw new AgentConfigurationException(e);
         }
     }
 
-    private Configuration getOsgiConfiguration(ReplicationAgent replicationAgent) throws Exception {
+    private Dictionary getOrSetProperties(String agentName, Dictionary properties) throws Exception {
+        Configuration agentConfiguration = getAgentConfiguration(agentName);
 
-        String filter = "(name=" + replicationAgent.getName() + ")";
-        Configuration[] configurations = configAdmin.listConfigurations(filter);
-        if (configurations == null) {
+        if(agentConfiguration == null)
             throw new Exception("no configuration found");
-        } else if (configurations.length == 1) {
-            if (log.isInfoEnabled()) {
-                log.info("found configuration {} for agent {}", configurations[0],
-                        replicationAgent.getName());
+
+        if(properties != null)
+            agentConfiguration.update(properties);
+        return agentConfiguration.getProperties();
+    }
+
+
+    private Dictionary<String, Dictionary> getOrSetComponentProperties(String agentName, Dictionary<String, Dictionary> properties) throws Exception {
+        Dictionary<String, Dictionary> result = new Hashtable<String, Dictionary>();
+
+        Configuration agentConfiguration = getAgentConfiguration(agentName);
+
+        for(String component : ReplicationAgentConfiguration.COMPONENTS){
+            Configuration componentConfiguration = getComponentConfiguration(agentConfiguration, component);
+
+            if(componentConfiguration == null)
+                continue;
+
+            if(properties != null){
+                Dictionary componentProperties = properties.get(component);
+                if(componentProperties != null)
+                    componentConfiguration.update(componentProperties);
             }
+
+            result.put(component, componentConfiguration.getProperties());
+        }
+
+        return result;
+    }
+
+    private Configuration getAgentConfiguration(String agentName) throws Exception {
+        String filter = "(name=" + agentName + ")";
+        return getOsgiConfiguration(filter);
+    }
+
+    private Configuration getComponentConfiguration(Configuration agentConfiguration, String component) throws Exception {
+        try{
+            String filter = PropertiesUtil.toString(agentConfiguration.getProperties().get(component), "");
+            return getOsgiConfiguration(filter);
+        }
+        catch (Exception ex){
+            return null;
+        }
+    }
+
+    private Configuration getOsgiConfiguration(String filter) throws Exception {
+        Configuration[] configurations = getAllOsgiConfigurations(filter);
+        if(configurations == null || configurations.length == 0){
+            log.info("no configurations for filter {}", filter);
+            return null;
+        } else if (configurations.length == 1) {
+            log.info("found configuration {} for filter {}", configurations[0], filter);
             return configurations[0];
         } else {
-            if (log.isErrorEnabled()) {
-                log.error("{} configurations for agent {} found", configurations.length,
-                        replicationAgent.getName());
-            }
+            log.error("{} configurations for filter {} found", configurations.length, filter);
             throw new Exception("too many configurations found");
         }
     }
 
-    public ReplicationAgentConfiguration updateConfiguration(ReplicationAgent replicationAgent,
+    private Configuration[] getAllOsgiConfigurations(String filter) throws Exception {
+        Configuration[] configurations = configAdmin.listConfigurations(filter);
+        return configurations;
+    }
+
+    public ReplicationAgentConfiguration updateConfiguration(String agentName,
                                                              Map<String, Object> updateProperties) throws AgentConfigurationException {
         try {
-            Configuration configuration = getOsgiConfiguration(replicationAgent);
-            @SuppressWarnings("unchecked")
-            Dictionary<String, Object> configurationProperties = configuration.getProperties();
+
+            String configName = PropertiesUtil.toString(updateProperties.get("name"),"");
+
+            if(agentName == null || agentName.length() ==0)
+                throw new Exception("agent name cannot be empty");
+
+            if(!agentName.equals(configName))
+                throw new Exception("cannot change name of a configuration");
+
+            Dictionary agentProperties = getOrSetProperties(agentName, null);
+            Dictionary<String, Dictionary> componentProperties = getOrSetComponentProperties(agentName, null);
+
             for (Map.Entry<String, Object> entry : updateProperties.entrySet()) {
                 String key = entry.getKey();
                 if (key.startsWith("X-replication-")) {
                     key = key.substring(0, 14);
                 }
-                configurationProperties.put(key, entry.getValue());
+
+
+                String component = extractComponent(key);
+                if(component != null){
+                    key = key.substring(component.length()+1);
+                    Dictionary dictionary = componentProperties.get(component);
+                    if(dictionary!= null)
+                        dictionary.put(key, entry.getValue());
+                }
+                else {
+                    agentProperties.put(key, entry.getValue());
+                }
             }
-            configuration.update(configurationProperties);
-            return new ReplicationAgentConfiguration(configuration.getProperties());
+
+            agentProperties = getOrSetProperties(agentName, agentProperties);
+            componentProperties = getOrSetComponentProperties(agentName, componentProperties);
+
+            return new ReplicationAgentConfiguration(agentProperties, componentProperties);
+
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("configuration for agent {} was not found", replicationAgent.getName());
-            }
+            log.error("configuration for agent {} was not found", agentName);
+
             throw new AgentConfigurationException(e);
         }
-
     }
 
-    public void createAgentConfiguration(Map<String, Object> properties) throws AgentConfigurationException {
 
-        Object name = properties.get("name");
-        if (name != null) {
+    String extractComponent(String string){
+        for(String component : ReplicationAgentConfiguration.COMPONENTS){
+            if(string.startsWith(component+ "."))
+                return component;
+        }
+        return null;
+    }
+
+    public void createAgentConfiguration(String agentName, Map<String, Object> properties) throws AgentConfigurationException {
+
+        if (agentName != null) {
             try {
-                Configuration configuration = configAdmin.createFactoryConfiguration(ReplicationAgentServiceFactory.SERVICE_PID + "-" + parseString(name));
+
+                Configuration configuration = getAgentConfiguration(agentName);
+
+                if(configuration != null)
+                    throw new Exception("the agent name is already in use");
+
+                configuration = configAdmin.createFactoryConfiguration(ReplicationAgentServiceFactory.SERVICE_PID);
+
+                if(configuration == null)
+                    throw new Exception("configuration cannot be created");
+
                 @SuppressWarnings("unchecked")
                 Dictionary<String, Object> configurationProperties = new Hashtable<String, Object>();
 
@@ -130,14 +218,51 @@ public class DefaultReplicationAgentConfigurationManager implements
                     configurationProperties.put(key, value);
                 }
                 configuration.update(configurationProperties);
+
             } catch (Exception e) {
-                if (log.isErrorEnabled()) {
-                    log.error("cannot create agent {} ", name);
-                }
+                log.error("cannot create agent {} ", agentName);
+
                 throw new AgentConfigurationException(e);
             }
         } else {
             throw new AgentConfigurationException("a (unique) name is needed in order to create an agent");
+        }
+    }
+
+
+    public void deleteAgentConfiguration(String agentName) throws AgentConfigurationException {
+
+        if (agentName != null) {
+            try {
+                Configuration configuration =  getAgentConfiguration(agentName);
+
+                configuration.delete();
+            } catch (Exception e) {
+                log.error("cannot delete agent {} ", agentName);
+
+                throw new AgentConfigurationException(e);
+            }
+        } else {
+            throw new AgentConfigurationException("a (unique) name is needed in order to create an agent");
+        }
+    }
+
+    public ReplicationAgentConfiguration[] listAllAgentConfigurations() throws AgentConfigurationException {
+        try {
+            String filter = "("+ ConfigurationAdmin.SERVICE_FACTORYPID + "=" + ReplicationAgentServiceFactory.SERVICE_PID + ")";
+            Configuration[] configurations = getAllOsgiConfigurations(filter);
+
+            ReplicationAgentConfiguration[] result = new ReplicationAgentConfiguration[configurations.length];
+            for(int i=0; i< configurations.length; i++){
+                String agentName = (String) configurations[i].getProperties().get("name");
+                result[i] = getConfiguration(agentName);
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            log.error("configurations for agents cannot be retrieved");
+            throw new AgentConfigurationException(e);
         }
     }
 

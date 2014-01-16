@@ -29,7 +29,7 @@ import static org.junit.Assert.assertNotNull;
 public class ReplicationAgentConfigurationTest {
     @Test
     public void testNullsWithDefaultConfiguration() throws Exception {
-        ReplicationAgentConfiguration replicationAgentConfiguration = new ReplicationAgentConfiguration(new Properties());
+        ReplicationAgentConfiguration replicationAgentConfiguration = new ReplicationAgentConfiguration(new Properties(), null);
         assertNotNull(replicationAgentConfiguration.getAuthenticationProperties());
         assertNotNull(replicationAgentConfiguration.getEndpoint());
         assertNotNull(replicationAgentConfiguration.getName());
