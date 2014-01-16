@@ -26,7 +26,6 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.resourceresolver.impl.console.ResourceResolverWebConsolePlugin;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
@@ -35,7 +34,6 @@ import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +53,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /** The activator */
     private final ResourceResolverFactoryActivator activator;
 
-    private ServiceTracker resourceAccessSecurityTracker;
+    private ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
     public CommonResourceResolverFactoryImpl(final ResourceResolverFactoryActivator activator) {
         this.activator = activator;
@@ -134,8 +132,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
         }
 
         // create and open service tracker for ResourceAccessSecurity
-        resourceAccessSecurityTracker = new ServiceTracker(bundleContext, ResourceAccessSecurity.class.getName(), null);
-        resourceAccessSecurityTracker.open();
+        resourceAccessSecurityTracker = new ResourceAccessSecurityTracker(bundleContext);
     }
 
     /**
@@ -152,7 +149,8 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
             mapEntries = MapEntries.EMPTY;
         }
 
-        resourceAccessSecurityTracker.close();
+        this.resourceAccessSecurityTracker.dispose();
+        this.resourceAccessSecurityTracker = null;
     }
 
     public ResourceDecoratorTracker getResourceDecoratorTracker() {
@@ -190,8 +188,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
     /**
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */
-
-    public ServiceTracker getResourceAccessSecurityTracker () {
+    public ResourceAccessSecurityTracker getResourceAccessSecurityTracker () {
         return resourceAccessSecurityTracker;
     }
 

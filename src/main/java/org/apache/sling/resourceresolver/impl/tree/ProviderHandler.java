@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.sling.api.resource.QueriableResourceProvider;
@@ -33,7 +34,6 @@ import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.osgi.framework.Constants;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * The provider handler is the common base class for the
@@ -56,7 +56,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
 
     /** Owns roots? */
     private final boolean ownsRoots;
-    
+
     /** use ResourceAccessSecurity? */
     private final boolean useResourceAccessSecurity;
 
@@ -96,7 +96,7 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
         if ( languages != null) {
             for(final String l : languages) {
                 if (l != null) {
-                    String language = l.trim();
+                    final String language = l.trim();
                     if ( language.length() > 0 ) {
                         configuredLanguages.add(language);
                     }
@@ -109,52 +109,72 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
             this.queryLanguages = configuredLanguages;
         }
     }
-    
+
     /**
      * applies resource access security if configured
      */
     protected Resource getReadableResource ( final ResourceResolverContext ctx, Resource resource ) {
         Resource returnValue = null;
-        
+
         if (useResourceAccessSecurity && resource != null) {
-            ServiceTracker serviceTracker = ctx
-                    .getResourceAccessSecurityTracker();
-            if (serviceTracker != null) {
-                ResourceAccessSecurity resourceAccessSecurity = (ResourceAccessSecurity) serviceTracker
-                        .getService();
-                if (resourceAccessSecurity != null) {
-                    returnValue = resourceAccessSecurity
-                            .getReadableResource(resource);
-                }
+            final ResourceAccessSecurity resourceAccessSecurity = ctx.getResourceAccessSecurityTracker().getProviderResourceAccessSecurity();
+            if (resourceAccessSecurity != null) {
+                returnValue = resourceAccessSecurity.getReadableResource(resource);
             }
         } else {
             returnValue = resource;
         }
-            
+
+        if ( returnValue != null ) {
+            final ResourceAccessSecurity resourceAccessSecurity = ctx.getResourceAccessSecurityTracker().getApplicationResourceAccessSecurity();
+            if (resourceAccessSecurity != null) {
+                returnValue = resourceAccessSecurity.getReadableResource(resource);
+            }
+        }
         return returnValue;
     }
-    
+
     /**
      * applies resource access security if configured
      */
-    protected Iterator<Resource> getReadableChildrenIterator ( final ResourceResolverContext ctx, Iterator<Resource> childrenIterator ) {
+    protected Iterator<Resource> getReadableChildrenIterator ( final ResourceResolverContext ctx, final Iterator<Resource> childrenIterator ) {
         Iterator<Resource> returnValue = null;
-        if ( useResourceAccessSecurity && childrenIterator != null ) {
-            List<Resource> childs = new ArrayList<Resource>();
-            while ( childrenIterator.hasNext() )
-            {
-                Resource res = getReadableResource( ctx, childrenIterator.next() );
-                if ( res != null )
+        if ( childrenIterator != null ) {
+            returnValue = new Iterator<Resource>() {
+
+                private Resource nextResource;
+
                 {
-                    childs.add(res);
+                    seek();
                 }
-            }
-            returnValue = childs.iterator();
+
+                private void seek() {
+                    while( nextResource == null && childrenIterator.hasNext() ) {
+                        nextResource = getReadableResource(ctx, childrenIterator.next());
+                    }
+                }
+
+                public boolean hasNext() {
+                    return nextResource != null;
+                }
+
+                public Resource next() {
+                    if ( nextResource == null ) {
+                        throw new NoSuchElementException();
+                    }
+                    final Resource result = nextResource;
+                    nextResource = null;
+                    seek();
+                    return result;
+                }
+
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+            };
         }
-        else {
-            returnValue = childrenIterator;
-        }
-            
+
         return returnValue;
     }
 

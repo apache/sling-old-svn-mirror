@@ -32,7 +32,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 
 /**
  * This class keeps track of the used resource providers for a
@@ -62,7 +62,7 @@ public class ResourceResolverContext {
     private final Map<String, Object> originalAuthInfo;
 
     /** service tracker for ResourceAccessSecurity service */
-    private final ServiceTracker resourceAccessSecurityTracker;
+    private final ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
     /** Resource type resource resolver (admin resolver) */
     private ResourceResolver resourceTypeResourceResolver;
@@ -70,7 +70,7 @@ public class ResourceResolverContext {
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ServiceTracker resourceAccessSecurityTracker) {
+    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker) {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
         this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
@@ -189,7 +189,7 @@ public class ResourceResolverContext {
     /**
      * get's the ServiceTracker of the ResourceAccessSecurity service
      */
-    public ServiceTracker getResourceAccessSecurityTracker () {
+    public ResourceAccessSecurityTracker getResourceAccessSecurityTracker () {
         return resourceAccessSecurityTracker;
     }
 
