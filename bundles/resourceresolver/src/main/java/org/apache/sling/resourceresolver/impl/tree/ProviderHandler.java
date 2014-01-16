@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.ResourceAccessSecurity;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.osgi.framework.Constants;
 
@@ -114,19 +115,19 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
      * applies resource access security if configured
      */
     protected Resource getReadableResource ( final ResourceResolverContext ctx, Resource resource ) {
-        Resource returnValue = null;
+        final ResourceAccessSecurityTracker tracker = ctx.getResourceAccessSecurityTracker();
 
-        if (useResourceAccessSecurity && resource != null) {
-            final ResourceAccessSecurity resourceAccessSecurity = ctx.getResourceAccessSecurityTracker().getProviderResourceAccessSecurity();
+        Resource returnValue = resource;
+
+        if (useResourceAccessSecurity && tracker != null && returnValue != null) {
+            final ResourceAccessSecurity resourceAccessSecurity = tracker.getProviderResourceAccessSecurity();
             if (resourceAccessSecurity != null) {
                 returnValue = resourceAccessSecurity.getReadableResource(resource);
             }
-        } else {
-            returnValue = resource;
         }
 
-        if ( returnValue != null ) {
-            final ResourceAccessSecurity resourceAccessSecurity = ctx.getResourceAccessSecurityTracker().getApplicationResourceAccessSecurity();
+        if ( returnValue != null && tracker != null ) {
+            final ResourceAccessSecurity resourceAccessSecurity = tracker.getApplicationResourceAccessSecurity();
             if (resourceAccessSecurity != null) {
                 returnValue = resourceAccessSecurity.getReadableResource(resource);
             }

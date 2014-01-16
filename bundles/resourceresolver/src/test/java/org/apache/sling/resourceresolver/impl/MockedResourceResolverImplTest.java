@@ -478,7 +478,7 @@ public class MockedResourceResolverImplTest {
         // test path mapping without a request.
         path = resourceResolver.map("/factory/test");
         Assert.assertEquals("/factory/test", path);
-        
+
         buildResource("/content", EMPTY_RESOURCE_LIST, resourceResolver, factoryResourceProvider);
         path = resourceResolver.map("/content.html");
         Assert.assertEquals("/content.html", path);

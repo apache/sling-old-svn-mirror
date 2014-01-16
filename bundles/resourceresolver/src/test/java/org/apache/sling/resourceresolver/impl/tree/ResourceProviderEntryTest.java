@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -54,16 +55,20 @@ public class ResourceProviderEntryTest {
 
     @Test public void testRootProvider() {
         assertNull(root.getResource(null, null, "relpath"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/rootel"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/rootel/child"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/apps/sling/sample/html.js"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null,
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(null);
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/child"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/apps/sling/sample/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null,
             "/apps/sling/microsling/html.js"));
     }
 
     @Test public void testAdd1Provider() {
         String firstPath = "/rootel";
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(null);
         final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(resolver));
@@ -73,14 +78,14 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(firstPath, new ResourceProviderHandler(first, firstProps));
 
 
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(resolver, root.getResource(null, null, "/rootel"));
-        assertEqualsResolver(resolver, root.getResource(null, null, "/rootel/html.js"));
-        assertEqualsResolver(resolver, root.getResource(null, null, "/rootel/child"));
-        assertEqualsResolver(resolver, root.getResource(null, null, "/rootel/child/html.js"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null,
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel"));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/html.js"));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/child"));
+        assertEqualsResolver(resolver, root.getResource(ctx, null, "/rootel/child/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null,
             "/apps/sling/sample/html.js"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null,
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null,
             "/apps/sling/microsling/html.js"));
     }
 
@@ -89,6 +94,8 @@ public class ResourceProviderEntryTest {
         String thirdPath = "/apps/sling/sample";
         String secondPath = firstPath + "/child";
 
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(null);
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
@@ -110,14 +117,14 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(secondPath, new ResourceProviderHandler(second, secondProps));
         root.addResourceProvider(thirdPath, new ResourceProviderHandler(third, thirdProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(firstResolver, root.getResource(null, null, "/rootel"));
-        assertEqualsResolver(firstResolver, root.getResource(null, null, "/rootel/html.js"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel"));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js"));
         assertEqualsResolver(thirdResolver,
-            root.getResource(null, null, "/apps/sling/sample/html.js"));
-        final Resource resource = root.getResource(null, null,
+            root.getResource(ctx, null, "/apps/sling/sample/html.js"));
+        final Resource resource = root.getResource(ctx, null,
             "/apps/sling/microsling/html.js");
         assertEqualsResolver(this.rootResolver, resource);
     }
@@ -127,6 +134,8 @@ public class ResourceProviderEntryTest {
         String thirdPath = "/apps/sling/sample";
         String secondPath = firstPath + "/child";
 
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(null);
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
@@ -148,14 +157,14 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(secondPath, new ResourceProviderHandler(second, secondProps));
         root.addResourceProvider(thirdPath, new ResourceProviderHandler(third, thirdProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(firstResolver, root.getResource(null, null, "/rootel"));
-        assertEqualsResolver(firstResolver, root.getResource(null, null, "/rootel/html.js"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel"));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js"));
         assertEqualsResolver(thirdResolver,
-           root.getResource(null, null, "/apps/sling/sample/html.js"));
-        Resource resource = root.getResource(null, null,
+           root.getResource(ctx, null, "/apps/sling/sample/html.js"));
+        Resource resource = root.getResource(ctx, null,
               "/apps/sling/microsling/html.js");
         assertEqualsResolver(this.rootResolver, resource);
     }
@@ -165,6 +174,8 @@ public class ResourceProviderEntryTest {
         String thirdPath = "/apps/sling/sample";
         String secondPath = firstPath + "/child";
 
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(null);
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
@@ -186,22 +197,22 @@ public class ResourceProviderEntryTest {
         root.addResourceProvider(secondPath, new ResourceProviderHandler(second, secondProps));
         root.addResourceProvider(thirdPath, new ResourceProviderHandler(third, thirdProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(firstResolver, root.getResource(null, null, "/rootel/html.js"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js"));
 
         root.removeResourceProvider(firstPath, new ResourceProviderHandler(first, firstProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/rootel/sddsf/sdfsdf/html.js"));
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/rootel/html.js"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/sddsf/sdfsdf/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/html.js"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js"));
 
         root.addResourceProvider(firstPath, new ResourceProviderHandler(first, firstProps));
 
-        assertEqualsResolver(this.rootResolver, root.getResource(null, null, "/"));
-        assertEqualsResolver(firstResolver, root.getResource(null, null, "/rootel/html.js"));
-        assertEqualsResolver(secondResolver, root.getResource(null, null, "/rootel/child/html.js"));
+        assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
+        assertEqualsResolver(firstResolver, root.getResource(ctx, null, "/rootel/html.js"));
+        assertEqualsResolver(secondResolver, root.getResource(ctx, null, "/rootel/child/html.js"));
     }
 
     @Test public void testRemoveTheOnlyProvider() {
@@ -211,21 +222,23 @@ public class ResourceProviderEntryTest {
         for(String path : new String[] { "/foo", "/", "/foo/bar" }) {
             final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
             final ResourceProvider p = Mockito.mock(ResourceProvider.class);
+            final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
             Mockito.when(p.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(path))).thenReturn(new TestResource(resolver));
+            Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(null);
 
             final Map<String, Object> props = new HashMap<String, Object>();
             props.put(Constants.SERVICE_ID, ++counter);
 
             e.addResourceProvider(path, new ResourceProviderHandler(p, props));
             {
-                final Resource r = e.getResource(null, null, path);
+                final Resource r = e.getResource(ctx, null, path);
                 assertEqualsResolver(resolver, r);
                 assertFalse(r instanceof SyntheticResource);
             }
 
             e.removeResourceProvider(path, new ResourceProviderHandler(p, props));
             {
-                final Resource r = e.getResource(null, null, path);
+                final Resource r = e.getResource(ctx, null, path);
                 // If our provider is indeed gone, we should get one of the following conditions
                 if(r == null) {
                     //fine
@@ -275,7 +288,8 @@ public class ResourceProviderEntryTest {
             return null;
         }
 
-		public boolean hasChildren() {
+		@Override
+        public boolean hasChildren() {
 			return false;
 		}
     }
