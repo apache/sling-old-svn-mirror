@@ -49,6 +49,8 @@ import aQute.bnd.annotation.ConsumerType;
  * in this case the gate is only applied to resource providers requesting the
  * security checks. Or the context can be {@link #APPLICATION_CONTEXT}. In this
  * case the access gate is invoked for the whole resource tree.
+ * This is indicated by the required service property {@link #CONTEXT}. If the
+ * property is missing or invalid, the service is ignored.
  */
 @ConsumerType
 public interface ResourceAccessGate {
@@ -64,7 +66,7 @@ public interface ResourceAccessGate {
      * The name of the service registration property containing the context
      * of this service. Allowed values are {@link #APPLICATION_CONTEXT} and
      * {@link #PROVIDER_CONTEXT}.
-     * The default for this value is <code>{@link #PROVIDER_CONTEXT}</code>.
+     * This property is required and has no default value.
      * (value is "access.context")
      */
     String CONTEXT = "access.context";

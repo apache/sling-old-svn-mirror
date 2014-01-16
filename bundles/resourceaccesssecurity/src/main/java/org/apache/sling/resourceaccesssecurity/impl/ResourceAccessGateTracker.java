@@ -100,7 +100,7 @@ public class ResourceAccessGateTracker extends
             returnValue = new ArrayList<ResourceAccessGateHandler>();
             for (ServiceReference serviceReference : getSortedServiceReferences()) {
                 final String context = (String) serviceReference.getProperty(ResourceAccessGate.CONTEXT);
-                if ( ResourceAccessGate.PROVIDER_CONTEXT.equals(context) || context == null || context.trim().length() == 0 ) {
+                if ( ResourceAccessGate.PROVIDER_CONTEXT.equals(context) ) {
                     returnValue.add(new ResourceAccessGateHandler(serviceReference));
                 }
             }
