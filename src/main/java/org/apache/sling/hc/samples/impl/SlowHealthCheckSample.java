@@ -38,10 +38,17 @@ import org.slf4j.LoggerFactory;
 /** Sample Health Check that takes N msec to execute,
  *  used to demonstrate execution timeouts and caching.
  */
+
+// Need to make the component immediate to make sure a single 
+// instance is used, otherwise the lazy DS activation policy
+// might cause a different instance to be used for every
+// execution. In this sample this is just done to allow the
+// counter to persist as long as this service's bundle is active.
 @Component(
         configurationFactory=true,
         policy=ConfigurationPolicy.REQUIRE,
-        metatype=true)
+        metatype=true,
+        immediate=true)
 @Properties({
     @Property(name=HealthCheck.NAME),
     @Property(name=HealthCheck.TAGS, unbounded=PropertyUnbounded.ARRAY),
