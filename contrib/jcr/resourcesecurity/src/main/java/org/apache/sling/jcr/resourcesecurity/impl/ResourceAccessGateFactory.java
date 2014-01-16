@@ -48,7 +48,8 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
     @Property(name=ResourceAccessGateFactory.PROP_JCR_PATH,
               label="JCR Node",
               description="This node is checked for permissions to the resources."),
-    @Property(name=ResourceAccessGate.OPERATIONS, value="read", propertyPrivate=true)
+    @Property(name=ResourceAccessGate.OPERATIONS, value="read", propertyPrivate=true),
+    @Property(name=ResourceAccessGate.CONTEXT, value=ResourceAccessGate.PROVIDER_CONTEXT, propertyPrivate=true)
 })
 public class ResourceAccessGateFactory
     extends AllowingResourceAccessGate
