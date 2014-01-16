@@ -75,6 +75,7 @@ public interface ResourceProvider {
      * the underlying storage already provides it.
      * The default for this value is <code>false</code>.
      * (value is "provider.useResourceAccessSecurity")
+     * @since 2.4
      */
     String USE_RESOURCE_ACCESS_SECURITY = "provider.useResourceAccessSecurity";
 

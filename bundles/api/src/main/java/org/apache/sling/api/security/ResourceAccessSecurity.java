@@ -24,22 +24,59 @@ import org.apache.sling.api.resource.ResourceResolver;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The <code>ResourceAccessSecurity</code> defines a service API which might be
- * used in implementations of resource providers where the underlying
- * persistence layer does not implement access control. The goal is to make it
- * easy to implement a lightweight access control in such providers.
+ * The <code>ResourceAccessSecurity</code> defines a service API which is
+ * used in two different context: for securing resource providers which
+ * have no own access control and on the application level to further
+ * restrict the access to resources in general.
  *
- * Expected to only be implemented once in the framework/application (much
- * like the OSGi LogService or ConfigurationAdmin Service) - ResourceProvider
- * implementations are encouraged to use this service for access control unless
- * the underlying storage already provides it.
+ * A resource access security service is registered with the service
+ * property {@link #CONTEXT}. Allowed values are {@link #APPLICATION_CONTEXT}
+ * and {@link #PROVIDER_CONTEXT}. If the value is missing it defaults
+ * to {@link #PROVIDER_CONTEXT}. Services registered with an invalid
+ * value, will be ignored.
  *
- * JCR resource providers should *not* use this - in a JCR context, security is
- * fully delegated to the underlying repository, and mixing security models would
- * be a bad idea.
+ * In the context of resource providers, this service might be used
+ * for implementations of resource providers where the underlying persistence
+ * layer does not implement access control. The goal is to make it easy to implement
+ * a lightweight access control for such providers. For example, a JCR resource
+ * providers should *not* use the provider context resource access security - in a
+ * JCR context, security is fully delegated to the underlying repository, and
+ * mixing security models would be a bad idea.
+ *
+ * In the context of the application, this service might be used to add
+ * additional or temporary constraints across the whole resource tree.
+ *
+ * It is expected to only have a single service per context in the
+ * framework/application (much like the OSGi LogService or ConfigurationAdmin Service).
+ * In the case of multiple services per context, the one with the highest
+ * service ranking is used.
  */
 @ProviderType
 public interface ResourceAccessSecurity {
+
+    /**
+     * The name of the service registration property containing the context
+     * of this service. Allowed values are {@link #APPLICATION_CONTEXT} and
+     * {@link #PROVIDER_CONTEXT}.
+     * The default for this value is <code>{@link #PROVIDER_CONTEXT}</code>.
+     * (value is "access.context")
+     */
+    String CONTEXT = "access.context";
+
+    /**
+     * Allowed value for the {@link #CONTEXT} service registration property.
+     * Services marked with this context are applied to all resources.
+     */
+    String APPLICATION_CONTEXT = "application";
+
+    /**
+     * Allowed value for the {@link #CONTEXT} service registration property.
+     * Services marked with this context are only applied to resource
+     * providers which indicate the additional checks with the
+     * {@link org.apache.sling.api.resource.ResourceProvider#USE_RESOURCE_ACCESS_SECURITY}
+     * property.
+     */
+    String PROVIDER_CONTEXT = "provider";
 
     /** If supplied Resource can be read, return it (or a wrapped
      *  variant of it). The returned Resource should then be used
