@@ -61,9 +61,13 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
             final Iterator<ResourceAccessGateHandler> iter = handlers.iterator();
             return new Iterator<ResourceAccessGateHandler>() {
 
-                private ResourceAccessGateHandler next = peek();
+                private ResourceAccessGateHandler next;
 
-                private ResourceAccessGateHandler peek() {
+                {
+                    peek();
+                }
+
+                private void peek() {
                     this.next = null;
                     while ( iter.hasNext() && next == null ) {
                         final ResourceAccessGateHandler handler = iter.next();
@@ -71,7 +75,6 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
                             next = handler;
                         }
                     }
-                    return next;
                 }
 
                 @Override
@@ -85,7 +88,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
                         throw new NoSuchElementException();
                     }
                     final ResourceAccessGateHandler handler = this.next;
-                    this.next = peek();
+                    peek();
                     return handler;
                 }
 
@@ -93,7 +96,6 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
                 public void remove() {
                     throw new UnsupportedOperationException();
                 }
-
             };
         }
 
@@ -153,55 +155,151 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     }
 
     @Override
-    public boolean canCreate(String absPathName,
-            ResourceResolver resourceResolver) {
+    public boolean canCreate(final String path,
+            final ResourceResolver resolver) {
+        final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
+                path, ResourceAccessGate.Operation.CREATE);
+        boolean result = true;
+        if ( handlers != null ) {
+            GateResult finalGateResult = null;
+
+            while ( handlers.hasNext() ) {
+                final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
+
+                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canCreate(path, resolver);
+                if ( gateResult == GateResult.GRANTED || gateResult == GateResult.DENIED ) {
+                    finalGateResult = gateResult;
+                    if (resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.CREATE)) {
+                        break;
+                    }
+                }
+            }
+
+            if ( finalGateResult == GateResult.GRANTED ) {
+                result = true;
+            } else if ( finalGateResult == GateResult.DENIED ) {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean canUpdate(final Resource resource) {
+        final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
+                resource.getPath(), ResourceAccessGate.Operation.UPDATE);
+        boolean result = true;
+        if ( handlers != null ) {
+            GateResult finalGateResult = null;
+
+            while ( handlers.hasNext() ) {
+                final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
+
+                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canUpdate(resource);
+                if ( gateResult == GateResult.GRANTED || gateResult == GateResult.DENIED ) {
+                    finalGateResult = gateResult;
+                    if (resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.UPDATE)) {
+                        break;
+                    }
+                }
+            }
+
+            if ( finalGateResult == GateResult.GRANTED ) {
+                result = true;
+            } else if ( finalGateResult == GateResult.DENIED ) {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean canDelete(final Resource resource) {
+        final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
+                resource.getPath(), ResourceAccessGate.Operation.DELETE);
+        boolean result = true;
+        if ( handlers != null ) {
+            GateResult finalGateResult = null;
+
+            while ( handlers.hasNext() ) {
+                final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
+
+                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canDelete(resource);
+                if ( gateResult == GateResult.GRANTED || gateResult == GateResult.DENIED ) {
+                    finalGateResult = gateResult;
+                    if (resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.DELETE)) {
+                        break;
+                    }
+                }
+            }
+
+            if ( finalGateResult == GateResult.GRANTED ) {
+                result = true;
+            } else if ( finalGateResult == GateResult.DENIED ) {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean canExecute(final Resource resource) {
+        final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
+                resource.getPath(), ResourceAccessGate.Operation.EXECUTE);
+        boolean result = true;
+        if ( handlers != null ) {
+            GateResult finalGateResult = null;
+
+            while ( handlers.hasNext() ) {
+                final ResourceAccessGateHandler resourceAccessGateHandler  = handlers.next();
+
+                final GateResult gateResult = resourceAccessGateHandler.getResourceAccessGate().canExecute(resource);
+                if ( gateResult == GateResult.GRANTED || gateResult == GateResult.DENIED ) {
+                    finalGateResult = gateResult;
+                    if (resourceAccessGateHandler.isFinalOperation(ResourceAccessGate.Operation.EXECUTE)) {
+                        break;
+                    }
+                }
+            }
+
+            if ( finalGateResult == GateResult.GRANTED ) {
+                result = true;
+            } else if ( finalGateResult == GateResult.DENIED ) {
+                result = false;
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public boolean canReadValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean canUpdate(Resource resource) {
+    public boolean canSetValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean canDelete(Resource resource) {
+    public boolean canDeleteValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
         return false;
     }
 
     @Override
-    public boolean canExecute(Resource resource) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean canReadValue(Resource resource, String valueName) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean canSetValue(Resource resource, String valueName) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean canDeleteValue(Resource resource, String valueName) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public String transformQuery(String query, String language,
-            ResourceResolver resourceResolver) throws AccessSecurityException {
+    public String transformQuery(final String query,
+            final String language,
+            final ResourceResolver resourceResolver)
+    throws AccessSecurityException {
         return query;
     }
 
-
+    /**
+     * Add a new resource access gate
+     */
     protected void bindResourceAccessGate(final ServiceReference ref) {
         synchronized ( this ) {
             final List<ResourceAccessGateHandler> newList = new ArrayList<ResourceAccessGateHandler>(this.allHandlers);
@@ -213,6 +311,9 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
         }
     }
 
+    /**
+     * Remove a resource access gate
+     */
     protected void unbindResourceAccessGate(final ServiceReference ref) {
         synchronized ( this ) {
             final List<ResourceAccessGateHandler> newList = new ArrayList<ResourceAccessGateHandler>(this.allHandlers);

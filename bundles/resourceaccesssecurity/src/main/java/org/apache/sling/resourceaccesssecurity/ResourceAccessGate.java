@@ -42,7 +42,7 @@ import aQute.bnd.annotation.ConsumerType;
  * <li><b>operations</b>: set of operations on which the service should be
  * called ("read,create,update,delete,execute", default all of them)</li>
  * <li><b>finaloperations</b>: set of operations on which the service answer is
- * final an no other service should be called (default none of them)</li>
+ * final and no other service should be called (default none of them)</li>
  * </ul>
  *
  * The resource access gate can either have the context {@link #PROVIDER_CONTEXT},
