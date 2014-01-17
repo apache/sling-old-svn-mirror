@@ -37,7 +37,6 @@ import org.apache.sling.adapter.annotations.Adapter;
 import org.apache.sling.api.SlingException;
 import org.apache.sling.api.adapter.SlingAdaptable;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.ModifyingResourceProvider;
 import org.apache.sling.api.resource.NonExistingResource;
 import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
@@ -1032,14 +1031,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             return;
         }
         // if resource is null, we get an NPE as stated in the API
-        final String path = resource.getPath();
-        final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
-                this,
-                path);
-        if ( mrp == null ) {
-            throw new UnsupportedOperationException("delete at '" + path + "'");
-        }
-        mrp.delete(this, path);
+        this.factory.getRootProviderEntry().delete(this.context, this, resource);
     }
 
     /**
@@ -1065,13 +1057,8 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         if ( ResourceUtil.isSyntheticResource(parent) ) {
             this.create(parent.getParent(), parent.getName(), null);
         }
-        final ModifyingResourceProvider mrp = this.factory.getRootProviderEntry().getModifyingProvider(this.context,
-                this,
-                path);
-        if ( mrp == null ) {
-            throw new UnsupportedOperationException("Create '" + name + "' at " + parent.getPath());
-        }
-        return this.factory.getResourceDecoratorTracker().decorate(mrp.create(this, path, properties));
+        final Resource rsrc = this.factory.getRootProviderEntry().create(this.context, this, path, properties);
+        return this.factory.getResourceDecoratorTracker().decorate(rsrc);
     }
 
     /**

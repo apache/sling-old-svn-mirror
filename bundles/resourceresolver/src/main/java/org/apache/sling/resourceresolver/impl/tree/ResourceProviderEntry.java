@@ -24,14 +24,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.FastTreeMap;
 import org.apache.sling.api.resource.ModifyingResourceProvider;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.SyntheticResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.slf4j.Logger;
@@ -41,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * The <code>ResourceProviderEntry</code> class represents a node in the tree of
  * resource providers spanned by the root paths of the provider resources.
  * <p>
- * That means this class has a map of child ResourceProviderEntries, keyed by the child name 
+ * That means this class has a map of child ResourceProviderEntries, keyed by the child name
  * and a list of ProviderHandlers that are mapped to the path that this ResourceProviderEntry represents.
  * To locate a list of potential ResourceProviders the path is split into elements and then that list used to
  * walk down the tree of ResourceProviders. eg: for a path /a/b/c/d the list of ProviderHandlers would be accessed
@@ -199,7 +202,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 	 * will expand the tree of ResourceProviderEntries down the supplied prefix
 	 * and add the provider to a ResourceProviderEntry that represents the last
 	 * element of the path.
-	 * 
+	 *
 	 * @return <code>true</code> if the provider could be entered into the
 	 *         subtree below this entry. Otherwise <code>false</code> is
 	 *         returned.
@@ -269,7 +272,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
 	 * the list, then it will inspect that child entry for a child "b", then
 	 * child "b" for child "c" etc until the list of elements is exhausted or
 	 * the child does not exist.
-	 * 
+	 *
 	 * @param entries
 	 *            List to add the entries to.
 	 * @param elements
@@ -399,7 +402,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return fallbackResource;
     }
 
-    public ModifyingResourceProvider getModifyingProvider(final ResourceResolverContext ctx,
+    private ProviderHandler getModifyingProviderHandler(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final String fullPath) {
         final String[] elements = split(fullPath);
@@ -411,7 +414,7 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
             for (final ProviderHandler rp : rps) {
                 final ResourceProvider provider = rp.getResourceProvider(ctx);
                 if ( provider instanceof ModifyingResourceProvider ) {
-                    return (ModifyingResourceProvider) provider;
+                    return rp;
                 }
                 if ( rp.ownsRoots() ) {
                     return null;
@@ -422,10 +425,34 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         for(final ProviderHandler rp : this.providers) {
             final ResourceProvider provider = rp.getResourceProvider(ctx);
             if ( provider instanceof ModifyingResourceProvider) {
-                return (ModifyingResourceProvider) provider;
+                return rp;
             }
         }
         return null;
+    }
+
+    public void delete(final ResourceResolverContext ctx,
+            final ResourceResolver resourceResolver,
+            final Resource resource) throws PersistenceException {
+        final String fullPath = resource.getPath();
+        final ProviderHandler handler = this.getModifyingProviderHandler(ctx, resourceResolver, fullPath);
+        if ( handler == null || !handler.canDelete(ctx, resource) ) {
+            throw new UnsupportedOperationException("delete at '" + fullPath + "'");
+        }
+        final ModifyingResourceProvider mrp = (ModifyingResourceProvider) handler.getResourceProvider(ctx);
+        mrp.delete(resourceResolver, fullPath);
+    }
+
+    public Resource create(final ResourceResolverContext ctx,
+            final ResourceResolver resourceResolver,
+            final String fullPath,
+            final Map<String, Object> properties) throws PersistenceException {
+        final ProviderHandler handler = this.getModifyingProviderHandler(ctx, resourceResolver, fullPath);
+        if ( handler == null || !handler.canCreate(ctx, resourceResolver, fullPath) ) {
+            throw new UnsupportedOperationException("Create '" + ResourceUtil.getName(fullPath) + "' at " + ResourceUtil.getParent(fullPath));
+        }
+        final ModifyingResourceProvider mrp = (ModifyingResourceProvider) handler.getResourceProvider(ctx);
+        return mrp.create(resourceResolver, fullPath, properties);
     }
 
     private static final char SPLIT_SEP = '/';
