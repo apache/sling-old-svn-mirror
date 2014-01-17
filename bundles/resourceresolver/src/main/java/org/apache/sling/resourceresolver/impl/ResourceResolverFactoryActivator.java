@@ -217,7 +217,7 @@ public class ResourceResolverFactoryActivator {
     private ServiceUserMapper serviceUserMapper;
 
     @Reference
-    private ResourceAccessSecurityTracker resourceAccessSecurityTracker;
+    ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
     /** ComponentContext */
     private volatile ComponentContext componentContext;

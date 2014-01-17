@@ -77,7 +77,7 @@ public class ResourceResolverMangleNamespacesTest {
             }
         };
 
-        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, null));
+        rr = new ResourceResolverImpl(fac, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
     }
 
     @Test
