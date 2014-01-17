@@ -57,11 +57,11 @@ public class ResourceResolverImplTest {
     @Before public void setup() {
         commonFactory = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
         resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
-        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, null));
+        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
     }
 
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, null));
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -358,7 +358,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null, null));
+                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
         resolvers.add(resolver);
 
         // the resources to test
@@ -394,7 +394,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null, null));
+                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
         resolvers.add(resolver);
         final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
             @Override

@@ -128,6 +128,7 @@ public class MockedResourceResolverImplTest {
         Mockito.when(componentContext.getBundleContext()).thenReturn(
             bundleContext);
         activator.eventAdmin = eventAdmin;
+        activator.resourceAccessSecurityTracker = new ResourceAccessSecurityTracker();
 
         activator.bindResourceProvider(resourceProvider,
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.DummyTestProvider",
