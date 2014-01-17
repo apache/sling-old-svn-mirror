@@ -23,9 +23,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Method;
+
 import junit.framework.TestCase;
 
-import org.apache.sling.resourceresolver.impl.mapping.MapEntry;
 import org.junit.Test;
 
 public class MapEntryTest {
@@ -152,7 +152,6 @@ public class MapEntryTest {
         TestCase.assertNull(filterRegExp(new String[0]));
 
         String aString = "plain";
-        String aString2 = "plain2";
         String aPattern = "http/[^.]+.www.example.com.8080/bla";
 
         TestCase.assertNull(filterRegExp(aPattern));
