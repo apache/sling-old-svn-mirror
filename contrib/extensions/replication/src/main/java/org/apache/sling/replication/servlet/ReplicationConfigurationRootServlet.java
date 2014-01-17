@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Servlet to create {@link org.apache.sling.replication.agent.ReplicationAgent}s (via HTTP PUT).
+ * Servlet to :
+ * - create {@link org.apache.sling.replication.agent.ReplicationAgent}s (via HTTP POST).
+ * - retrieve the list of existing {@link org.apache.sling.replication.agent.ReplicationAgent}s (via HTTP GET)
  */
 @SuppressWarnings("serial")
 @Component(metatype = false)

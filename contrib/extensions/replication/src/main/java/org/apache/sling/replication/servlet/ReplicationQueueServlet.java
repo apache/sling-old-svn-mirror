@@ -19,46 +19,30 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-
-import org.apache.commons.io.IOUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.http.entity.ContentType;
-import org.apache.jackrabbit.util.Text;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-
-import org.apache.sling.replication.agent.AgentReplicationException;
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.impl.ReplicationAgentQueueResource;
-import org.apache.sling.replication.agent.impl.ReplicationAgentResource;
-import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationHeader;
-import org.apache.sling.replication.communication.ReplicationRequest;
-import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * Servlet to ask {@link ReplicationAgent}s to replicate (via HTTP POST).
+ * Servlet to retrieve a {@link org.apache.sling.replication.queue.ReplicationQueue} status.
  */
 @SuppressWarnings("serial")
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentQueueResource.RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = { "GET" } ) })
+        @Property(name = "sling.servlet.methods", value = {"GET"})})
 public class ReplicationQueueServlet extends SlingAllMethodsServlet {
 
     @Override
@@ -107,7 +91,7 @@ public class ReplicationQueueServlet extends SlingAllMethodsServlet {
 
     private String toJSoN(ReplicationPackage item) {
         StringBuilder builder = new StringBuilder();
-        builder.append("\"id\":\"").append(item.getId().replace("\\","\\\\"));
+        builder.append("\"id\":\"").append(item.getId().replace("\\", "\\\\"));
         builder.append("\",\"paths\":[");
         for (int i = 0; i < item.getPaths().length; i++) {
             builder.append("\"");

@@ -20,10 +20,8 @@ package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
 import java.util.Map;
-
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
-
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -33,21 +31,22 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingAllMethodsServlet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.sling.replication.agent.AgentConfigurationException;
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
 import org.apache.sling.replication.agent.impl.ReplicationAgentConfigurationResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * ReST API for {@link org.apache.sling.replication.agent.ReplicationAgentConfiguration}s
+ */
 @SuppressWarnings("serial")
 @Component(metatype = false)
 @Service(value = Servlet.class)
 @Properties({
         @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentConfigurationResource.RESOURCE_TYPE),
-        @Property(name = "sling.servlet.methods", value = { "POST", "PUT", "GET", "DELETE" }) })
+        @Property(name = "sling.servlet.methods", value = {"POST", "PUT", "GET", "DELETE"})})
 public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -57,49 +56,44 @@ public class ReplicationConfigurationServlet extends SlingAllMethodsServlet {
 
     @Override
     protected void doPost(SlingHttpServletRequest request, SlingHttpServletResponse response)
-                    throws ServletException, IOException {
+            throws ServletException, IOException {
 
-
-
-        @SuppressWarnings("unchecked")
         String operation = request.getParameter(":operation");
 
-        if("delete".equals(operation)) {
+        if ("delete".equals(operation)) {
             doDelete(request, response);
-            return;
-        };
+        } else {
+            response.setContentType("application/json");
 
-        response.setContentType("application/json");
+            Resource configurationResource = request.getResource();
+            ReplicationAgentConfiguration configuration = configurationResource.adaptTo(ReplicationAgentConfiguration.class);
+            String agentName = configuration.getName();
 
-        Resource configurationResource = request.getResource();
-        ReplicationAgentConfiguration configuration = configurationResource.adaptTo(ReplicationAgentConfiguration.class);
-        String agentName = configuration.getName();
-
-        Map parameterMap = request.getParameterMap();
-        try {
-            configuration = agentConfigurationManager.updateConfiguration(agentName, parameterMap);
-            response.getWriter().write(configuration.toString());
-        } catch (AgentConfigurationException e) {
-            log.error("cannot update configuration for agent {}", agentName, e);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> parameterMap = request.getParameterMap();
+            try {
+                configuration = agentConfigurationManager.updateConfiguration(agentName, parameterMap);
+                response.getWriter().write(configuration.toString());
+            } catch (AgentConfigurationException e) {
+                log.error("cannot update configuration for agent {}", agentName, e);
+            }
         }
     }
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
-                    throws ServletException, IOException {
+            throws ServletException, IOException {
         response.setContentType("application/json");
         Resource resource = request.getResource();
         ReplicationAgentConfiguration configuration = resource.adaptTo(ReplicationAgentConfiguration.class);
         response.getWriter().write(configuration.toString());
     }
 
-
     @Override
     protected void doDelete(SlingHttpServletRequest request, SlingHttpServletResponse response)
             throws ServletException, IOException {
 
         @SuppressWarnings("unchecked")
-
         Resource configurationResource = request.getResource();
         ReplicationAgentConfiguration configuration = configurationResource.adaptTo(ReplicationAgentConfiguration.class);
         String agentName = configuration.getName();
