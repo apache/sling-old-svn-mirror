@@ -138,7 +138,7 @@ public class MockedResourceResolverImplTest {
         // setup mapping resources at /etc/map to exercise vanity etc.
         // hmm, can't provide the resolver since its not up and ready.
         // mapping almost certainly work properly until this can be setup correctly.
-        Resource etcMapResource = buildMappingResource("/etc/map", mappingResourceProvider, null);
+        buildMappingResource("/etc/map", mappingResourceProvider, null);
 
         activator.bindResourceProvider(mappingResourceProvider,
             buildResourceProviderProperties("org.apache.sling.resourceresolver.impl.MapProvider",
