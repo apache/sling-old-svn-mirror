@@ -402,6 +402,11 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return fallbackResource;
     }
 
+    /**
+     * Internal method getting the provider handler containing a modifying resource provider
+     * for the given path
+     * @return The provider handler if such a provider exists or <code>null</code>
+     */
     private ProviderHandler getModifyingProviderHandler(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final String fullPath) {
@@ -431,6 +436,12 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         return null;
     }
 
+    /**
+     * Delete the resource
+     * @throws NullPointerException if resource is null
+     * @throws UnsupportedOperationException If deletion is not allowed/possible
+     * @throws PersistenceException If deletion fails
+     */
     public void delete(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final Resource resource) throws PersistenceException {
@@ -443,13 +454,19 @@ public class ResourceProviderEntry implements Comparable<ResourceProviderEntry> 
         mrp.delete(resourceResolver, fullPath);
     }
 
+    /**
+     * Create a resource
+     * @throws UnsupportedOperationException If creation is not allowed/possible
+     * @throws PersistenceException If creation fails
+     * @return The new resource
+     */
     public Resource create(final ResourceResolverContext ctx,
             final ResourceResolver resourceResolver,
             final String fullPath,
             final Map<String, Object> properties) throws PersistenceException {
         final ProviderHandler handler = this.getModifyingProviderHandler(ctx, resourceResolver, fullPath);
         if ( handler == null || !handler.canCreate(ctx, resourceResolver, fullPath) ) {
-            throw new UnsupportedOperationException("Create '" + ResourceUtil.getName(fullPath) + "' at " + ResourceUtil.getParent(fullPath));
+            throw new UnsupportedOperationException("create '" + ResourceUtil.getName(fullPath) + "' at " + ResourceUtil.getParent(fullPath));
         }
         final ModifyingResourceProvider mrp = (ModifyingResourceProvider) handler.getResourceProvider(ctx);
         return mrp.create(resourceResolver, fullPath, properties);
