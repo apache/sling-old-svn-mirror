@@ -398,10 +398,7 @@ public class MapEntries implements EventHandler {
      */
     private void sendChangeEvent() {
         if (this.eventAdmin != null) {
-            // we hard code the topic here and don't use
-            // SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED
-            // to avoid requiring the latest API version for this bundle to work
-            final Event event = new Event("org/apache/sling/api/resource/ResourceResolverMapping/CHANGED",
+            final Event event = new Event(SlingConstants.TOPIC_RESOURCE_RESOLVER_MAPPING_CHANGED,
                             (Dictionary<?, ?>) null);
             this.eventAdmin.postEvent(event);
         }
