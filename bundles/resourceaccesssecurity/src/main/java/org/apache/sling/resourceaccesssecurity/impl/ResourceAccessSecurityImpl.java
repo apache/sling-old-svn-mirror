@@ -24,10 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.ReferencePolicyOption;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.security.AccessSecurityException;
@@ -36,14 +32,15 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
 import org.apache.sling.resourceaccesssecurity.ResourceAccessGate.GateResult;
 import org.osgi.framework.ServiceReference;
 
-@Reference(policyOption=ReferencePolicyOption.GREEDY,
-cardinality=ReferenceCardinality.OPTIONAL_UNARY,
-policy=ReferencePolicy.DYNAMIC,
-target="(" + ResourceAccessSecurity.CONTEXT + "=" + ResourceAccessSecurity.PROVIDER_CONTEXT + ")")
-
-public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
+public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
 
     private List<ResourceAccessGateHandler> allHandlers = Collections.emptyList();
+
+    private final boolean defaultAllow;
+
+    public ResourceAccessSecurityImpl(final boolean defaultAllow) {
+        this.defaultAllow = defaultAllow;
+    }
 
     /**
      * This method returns either an iterator delivering the matching handlers
@@ -104,7 +101,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
 
     @Override
     public Resource getReadableResource(final Resource resource) {
-        Resource returnValue = resource;
+        Resource returnValue = (this.defaultAllow ? resource : null);
 
         final Iterator<ResourceAccessGateHandler> accessGateHandlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.READ);
@@ -143,7 +140,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
             if (finalGateResult == null || finalGateResult == GateResult.DENIED) {
                 returnValue = null;
             } else if (finalGateResult == GateResult.DONTCARE) {
-                returnValue = resource;
+                returnValue = (this.defaultAllow ? resource : null);
             }
             // wrap Resource if read access is not or partly (values) not granted
             else if (!canReadAllValues) {
@@ -159,7 +156,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
             final ResourceResolver resolver) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 path, ResourceAccessGate.Operation.CREATE);
-        boolean result = true;
+        boolean result = this.defaultAllow;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
 
@@ -188,7 +185,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     public boolean canUpdate(final Resource resource) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.UPDATE);
-        boolean result = true;
+        boolean result = this.defaultAllow;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
 
@@ -217,7 +214,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     public boolean canDelete(final Resource resource) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.DELETE);
-        boolean result = true;
+        boolean result = this.defaultAllow;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
 
@@ -246,7 +243,7 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     public boolean canExecute(final Resource resource) {
         final Iterator<ResourceAccessGateHandler> handlers = getMatchingResourceAccessGateHandlerIterator(
                 resource.getPath(), ResourceAccessGate.Operation.EXECUTE);
-        boolean result = true;
+        boolean result = this.defaultAllow;
         if ( handlers != null ) {
             GateResult finalGateResult = null;
 
@@ -274,19 +271,19 @@ public class ResourceAccessSecurityImpl implements ResourceAccessSecurity {
     @Override
     public boolean canReadValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
-        return false;
+        return this.defaultAllow;
     }
 
     @Override
     public boolean canSetValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
-        return false;
+        return this.defaultAllow;
     }
 
     @Override
     public boolean canDeleteValue(final Resource resource, final String valueName) {
         // TODO Auto-generated method stub
-        return false;
+        return this.defaultAllow;
     }
 
     @Override

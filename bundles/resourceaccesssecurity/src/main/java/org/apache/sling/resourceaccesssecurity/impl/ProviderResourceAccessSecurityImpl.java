@@ -36,4 +36,7 @@ import org.apache.sling.resourceaccesssecurity.ResourceAccessGate;
            target="(" + ResourceAccessGate.CONTEXT + "=" + ResourceAccessGate.PROVIDER_CONTEXT + ")")
 public class ProviderResourceAccessSecurityImpl extends ResourceAccessSecurityImpl {
 
+    public ProviderResourceAccessSecurityImpl() {
+        super(false);
+    }
 }
