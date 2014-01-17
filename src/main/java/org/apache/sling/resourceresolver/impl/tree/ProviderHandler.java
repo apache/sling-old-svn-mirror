@@ -111,6 +111,48 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
         }
     }
 
+    public boolean canCreate(final ResourceResolverContext ctx, final ResourceResolver resolver, final String path) {
+        final ResourceAccessSecurityTracker tracker = ctx.getResourceAccessSecurityTracker();
+        boolean allowed = true;
+        if ( useResourceAccessSecurity ) {
+            final ResourceAccessSecurity security = tracker.getProviderResourceAccessSecurity();
+            if ( security != null ) {
+                allowed = security.canCreate(path, resolver);
+            } else {
+                allowed = false;
+            }
+        }
+
+        if ( allowed ) {
+            final ResourceAccessSecurity security = tracker.getApplicationResourceAccessSecurity();
+            if (security != null) {
+                allowed = security.canCreate(path, resolver);
+            }
+        }
+        return allowed;
+    }
+
+    public boolean canDelete(final ResourceResolverContext ctx, final Resource resource) {
+        final ResourceAccessSecurityTracker tracker = ctx.getResourceAccessSecurityTracker();
+        boolean allowed = true;
+        if ( useResourceAccessSecurity ) {
+            final ResourceAccessSecurity security = tracker.getProviderResourceAccessSecurity();
+            if ( security != null ) {
+                allowed = security.canDelete(resource);
+            } else {
+                allowed = false;
+            }
+        }
+
+        if ( allowed ) {
+            final ResourceAccessSecurity security = tracker.getApplicationResourceAccessSecurity();
+            if (security != null) {
+                allowed = security.canDelete(resource);
+            }
+        }
+        return allowed;
+    }
+
     /**
      * applies resource access security if configured
      */
