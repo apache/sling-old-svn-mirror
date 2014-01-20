@@ -38,9 +38,9 @@ import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.hc.util.FormattingResultLog;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +112,7 @@ public class ReplicationQueueHealthCheck implements HealthCheck {
             for (ReplicationQueueProvider replicationQueueProvider : replicationQueueProviders) {
                 for (ReplicationQueue q : replicationQueueProvider.getAllQueues())
                     try {
-                        ReplicationPackage item = q.getHead();
+                        ReplicationQueueItem item = q.getHead();
                         if (item != null) {
                             ReplicationQueueItemState status = q.getStatus(item);
                             if (status.getAttempts() <= numberOfRetriesAllowed) {

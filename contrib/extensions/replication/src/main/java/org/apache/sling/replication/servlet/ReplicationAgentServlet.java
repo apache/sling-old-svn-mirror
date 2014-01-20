@@ -44,7 +44,6 @@ import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
-import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.slf4j.Logger;
@@ -131,12 +130,11 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         if (agent != null && (agent.getEndpoint() == null || agent.getEndpoint().toString().length() == 0 )) {
             try {
                 // TODO : consider using queue distribution strategy and validating who's making this request
-                if (log.isInfoEnabled()) {
-                    log.info("getting item from queue {}", queueName);
-                }
-                ReplicationQueue queue = agent.getQueue(queueName);
+                log.info("getting item from queue {}", queueName);
+
                 // get first item
-                ReplicationPackage head = queue.getHead();
+                ReplicationPackage head = agent.removeHead(queueName);
+
                 if (head != null) {
                     InputStream inputStream = null;
                     int bytesCopied = -1;
@@ -147,23 +145,19 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
                     finally {
                         IOUtils.closeQuietly(inputStream);
                     }
-
                     response.setHeader(ReplicationHeader.TYPE.toString(), head.getType());
-                    if (log.isInfoEnabled()) {
-                        log.info("{} bytes written into the response", bytesCopied);
-                    }
-                    // remove the item from the queue
-                    queue.removeHead();
+
+                    // delete the package permanently
+                    head.delete();
+
+                    log.info("{} bytes written into the response", bytesCopied);
+
                 } else {
-                    if (log.isInfoEnabled()) {
-                        log.info("nothing to fetch");
-                    }
+                    log.info("nothing to fetch");
                 }
             } catch (Exception e) {
                 response.setStatus(503);
-                if (log.isErrorEnabled()) {
-                    log.error("error while reverse replicating from agent", e);
-                }
+                log.error("error while reverse replicating from agent", e);
             }
             // everything ok
             response.setStatus(200);

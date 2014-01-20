@@ -25,13 +25,9 @@ import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +72,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         timeThreshold = PropertiesUtil.toInteger(ctx.getProperties().get(TIME_THRESHOLD), 10800000);
     }
 
-    public ReplicationQueueItemState add(ReplicationPackage replicationPackage,
+    public ReplicationQueueItemState add(ReplicationQueueItem replicationPackage,
                                          ReplicationAgent agent, ReplicationQueueProvider queueProvider)
             throws ReplicationQueueException {
         try {
@@ -111,7 +107,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
         }
     }
 
-    public boolean offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
+    public boolean offer(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         boolean added;
         ReplicationQueue queue = queueProvider.getDefaultQueue(agent);
@@ -129,7 +125,7 @@ public class ErrorAwareQueueDistributionStrategy implements ReplicationQueueDist
                                           ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueue defaultQueue = queueProvider.getDefaultQueue(agent);
         // get first item in the queue with its status
-        ReplicationPackage firstItem = defaultQueue.getHead();
+        ReplicationQueueItem firstItem = defaultQueue.getHead();
         if (firstItem != null) {
             ReplicationQueueItemState status = defaultQueue.getStatus(firstItem);
             // if item is still in the queue after a max no. of attempts, move it to the error queue

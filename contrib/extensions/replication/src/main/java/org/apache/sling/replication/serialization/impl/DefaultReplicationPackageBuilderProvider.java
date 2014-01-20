@@ -29,6 +29,7 @@ import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,8 +64,8 @@ public class DefaultReplicationPackageBuilderProvider implements ReplicationPack
                     final ReplicationPackageBuilder replicationPackageBuilder,
                     Map<String, Object> properties) {
         synchronized (replicationPackageBuilders) {
-            replicationPackageBuilders.put(String.valueOf(properties.get("name")),
-                            replicationPackageBuilder);
+            String name =  PropertiesUtil.toString(properties.get("name"), "");
+            replicationPackageBuilders.put(name, replicationPackageBuilder);
         }
         log.debug("Registering Replication Package Builder {} ", replicationPackageBuilder);
     }

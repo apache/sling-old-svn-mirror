@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.serialization;
 
+import org.apache.sling.replication.queue.ReplicationQueueItem;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -64,5 +66,16 @@ public interface ReplicationPackage extends Serializable {
      * @return the package length as a <code>long</code>
      */
     long getLength();
+
+
+    /**
+     * releases resources associated with this object
+     */
+    void close();
+
+    /**
+     * releases all resources associated with the package id
+     */
+    void delete();
 
 }

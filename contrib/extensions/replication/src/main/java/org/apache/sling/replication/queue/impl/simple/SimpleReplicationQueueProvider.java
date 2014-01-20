@@ -20,9 +20,13 @@ package org.apache.sling.replication.queue.impl.simple;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 
+import org.apache.sling.commons.scheduler.ScheduleOptions;
+import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.replication.agent.ReplicationAgent;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
@@ -38,6 +42,9 @@ import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
 public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProvider implements
                 ReplicationQueueProvider {
 
+    @Reference
+    Scheduler scheduler;
+
     public static final String NAME = "simple";
 
     protected ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String selector)
@@ -49,4 +56,18 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
         // do nothing as queues just exist in the cache
     }
 
+    public void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor) {
+        ScheduleOptions options = scheduler.NOW(-1, 10)
+                .canRunConcurrently(false)
+                .name(getJobName(agent));
+        scheduler.schedule(new ScheduledReplicationQueueProcessor(this, queueProcessor), options);
+    }
+
+    public void disableQueueProcessing(ReplicationAgent agent) {
+        scheduler.unschedule(getJobName(agent));
+    }
+
+    private String getJobName(ReplicationAgent agent){
+        return SimpleReplicationQueueProvider.NAME+"-queueProcessor-"+agent.getName();
+    }
 }

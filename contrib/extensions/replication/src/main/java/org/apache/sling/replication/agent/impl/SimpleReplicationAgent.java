@@ -24,14 +24,11 @@ import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -44,7 +41,7 @@ import java.util.List;
 /**
  * Basic implementation of a {@link ReplicationAgent}
  */
-public class SimpleReplicationAgent implements ReplicationAgent {
+public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueueProcessor {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -152,10 +149,15 @@ public class SimpleReplicationAgent implements ReplicationAgent {
 
     private ReplicationResponse schedule(ReplicationPackage replicationPackage, boolean offer) throws AgentReplicationException {
         ReplicationResponse replicationResponse = new ReplicationResponse();
+        ReplicationQueueItem replicationQueueItem = new ReplicationQueueItem(replicationPackage.getId(),
+                replicationPackage.getPaths(),
+                replicationPackage.getAction(),
+                replicationPackage.getType());
 
         if(offer){
             try {
-                queueDistributionStrategy.offer(replicationPackage, this, queueProvider);
+
+                queueDistributionStrategy.offer(replicationQueueItem, this, queueProvider);
             } catch (ReplicationQueueException e) {
                 replicationResponse.setSuccessful(false);
                 throw new AgentReplicationException(e);
@@ -164,7 +166,7 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         else {
             // send the replication package to the queue distribution handler
             try {
-                ReplicationQueueItemState state = queueDistributionStrategy.add(replicationPackage,
+                ReplicationQueueItemState state = queueDistributionStrategy.add(replicationQueueItem,
                         this, queueProvider);
                 if (state != null) {
                     replicationResponse.setStatus(state.getItemState().toString());
@@ -183,22 +185,43 @@ public class SimpleReplicationAgent implements ReplicationAgent {
         return replicationResponse;
     }
 
-
-    public boolean process(ReplicationPackage item) throws AgentReplicationException {
+    public boolean process(ReplicationQueueItem itemInfo)  {
         try {
-            if (transportHandler != null || (endpoint != null && endpoint.length() > 0)) {
-                transportHandler.transport(item, new ReplicationEndpoint(endpoint),
-                        transportAuthenticationProvider);
-                return true;
-            } else {
-                if (log.isInfoEnabled()) {
-                    log.info("agent {} processing skipped", name);
-                }
+            ReplicationPackage replicationPackage = packageBuilder.getPackage(itemInfo.getId());
+            if(replicationPackage == null){
                 return false;
             }
+
+            try {
+                if (transportHandler != null || (endpoint != null && endpoint.length() > 0)) {
+                    transportHandler.transport(replicationPackage,
+                            new ReplicationEndpoint(endpoint),
+                            transportAuthenticationProvider);
+
+                    return true;
+                } else {
+                    log.info("agent {} processing skipped", name);
+                    return false;
+                }
+            }
+            finally {
+                replicationPackage.delete();
+            }
         } catch (ReplicationTransportException e) {
-            throw new AgentReplicationException(e);
+            log.error("transport error", e);
+            return false;
         }
+    }
+
+    public ReplicationPackage removeHead(String queueName) throws ReplicationQueueException {
+        ReplicationQueue queue = getQueue(queueName);
+        ReplicationQueueItem info = queue.getHead();
+        if(info == null) return null;
+
+        queue.removeHead();
+
+        ReplicationPackage replicationPackage = packageBuilder.getPackage(info.getId());
+        return replicationPackage;
     }
 
     public URI getEndpoint() {
@@ -222,4 +245,5 @@ public class SimpleReplicationAgent implements ReplicationAgent {
     public String[] getRules() {
         return rules;
     }
+
 }

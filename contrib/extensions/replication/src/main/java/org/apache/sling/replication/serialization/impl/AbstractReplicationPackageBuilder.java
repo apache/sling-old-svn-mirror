@@ -19,6 +19,8 @@
 package org.apache.sling.replication.serialization.impl;
 
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -76,9 +78,7 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
                 replicationPackage = readPackageForDelete(stream);
             }
         } catch (Exception e) {
-            if (log.isWarnEnabled()) {
-                log.warn("{}", e);
-            }
+            log.warn("cannot parse stream", e);
         }
         stream.mark(-1);
         if (replicationPackage == null) {
@@ -91,22 +91,17 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
         ReplicationPackage replicationPackage = null;
         Session session = null;
         try {
-            VoidReplicationPackage voidReplicationPackage = VoidReplicationPackage.fromStream(stream);
-            if (voidReplicationPackage != null) {
+            replicationPackage = VoidReplicationPackage.fromStream(stream);
+
+            if(replicationPackage != null){
                 session = getSession();
-                if (session != null) {
-                    for (String path : voidReplicationPackage.getPaths()) {
-                        if (session.itemExists(path)) {
-                            session.removeItem(path);
-                        }
+                for (String path : replicationPackage.getPaths()) {
+                    if (session.itemExists(path)) {
+                        session.removeItem(path);
                     }
-                    session.save();
-                    ReplicationRequest request = new ReplicationRequest(System.currentTimeMillis(),
-                            ReplicationActionType.DELETE, voidReplicationPackage.getPaths());
-                    replicationPackage = new VoidReplicationPackage(request, getName());
                 }
+                session.save();
             }
-            return replicationPackage;
         } catch (Exception e) {
             throw new ReplicationPackageReadingException(e);
         } finally {
@@ -115,6 +110,20 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
             }
         }
 
+        return replicationPackage;
+    }
+
+    public ReplicationPackage getPackage(String id) {
+        ReplicationPackage replicationPackage = null;
+        try {
+            replicationPackage = VoidReplicationPackage.fromStream(new ByteArrayInputStream(id.getBytes()));
+        }
+        catch (IOException ex){
+        }
+
+        if(replicationPackage != null) return replicationPackage;
+
+        return getPackageInternal(id);
     }
 
     protected abstract String getName();
@@ -123,5 +132,8 @@ public abstract class AbstractReplicationPackageBuilder implements ReplicationPa
 
     protected abstract ReplicationPackage readPackageForAdd(InputStream stream, boolean install)
             throws ReplicationPackageReadingException;
+
+
+    protected abstract ReplicationPackage getPackageInternal(String id);
 
 }

@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import org.apache.sling.hc.api.Result;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -72,7 +72,7 @@ public class ReplicationQueueHealthCheckTest {
 
         replicationQueueHealthCheck.activate(Collections.<String, Object>emptyMap());
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        ReplicationPackage item = mock(ReplicationPackage.class);
+        ReplicationQueueItem item = mock(ReplicationQueueItem.class);
         ReplicationQueueItemState status = mock(ReplicationQueueItemState.class);
         when(status.getAttempts()).thenReturn(1);
         when(queue.getStatus(item)).thenReturn(status);
@@ -94,7 +94,7 @@ public class ReplicationQueueHealthCheckTest {
 
         replicationQueueHealthCheck.activate(Collections.<String, Object>emptyMap());
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        ReplicationPackage item = mock(ReplicationPackage.class);
+        ReplicationQueueItem item = mock(ReplicationQueueItem.class);
         ReplicationQueueItemState status = mock(ReplicationQueueItemState.class);
         when(status.getAttempts()).thenReturn(10);
         when(queue.getStatus(item)).thenReturn(status);

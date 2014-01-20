@@ -21,9 +21,9 @@ package org.apache.sling.replication.queue.impl;
 import java.util.Dictionary;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 import org.osgi.service.component.ComponentContext;
 
@@ -43,7 +43,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -60,7 +60,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -83,7 +83,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(properties.get("stuck.handling")).thenReturn(new String[]{"ERROR"});
         when(context.getProperties()).thenReturn(properties);
         errorAwareDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -96,7 +96,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
-        when(queue.getStatus(any(ReplicationPackage.class))).thenReturn(state);
+        when(queue.getStatus(any(ReplicationQueueItem.class))).thenReturn(state);
         ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add(replicationPackage, agent, queueProvider);
         assertNotNull(returnedState);
         assertFalse(returnedState.isSuccessful());
@@ -111,7 +111,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
         when(properties.get("stuck.handling")).thenReturn(new String[]{"DROP"});
         when(context.getProperties()).thenReturn(properties);
         errorAwareDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -121,7 +121,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(state.getAttempts()).thenReturn(2);
-        when(queue.getStatus(any(ReplicationPackage.class))).thenReturn(state);
+        when(queue.getStatus(any(ReplicationQueueItem.class))).thenReturn(state);
         ReplicationQueueItemState returnedState = errorAwareDistributionStrategy.add(replicationPackage, agent, queueProvider);
         assertNotNull(returnedState);
         assertFalse(returnedState.isSuccessful());
@@ -130,7 +130,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -143,7 +143,7 @@ public class ErrorAwareQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
         ErrorAwareQueueDistributionStrategy errorAwareDistributionStrategy = new ErrorAwareQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);

@@ -19,6 +19,7 @@
 package org.apache.sling.replication.servlet;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.SortedSet;
 
 import javax.servlet.Servlet;
@@ -50,7 +51,7 @@ import org.apache.sling.replication.communication.ReplicationRequest;
 @Service(value = Servlet.class)
 @Properties({
     @Property(name = "sling.servlet.resourceTypes", value = ReplicationAgentResource.RESOURCE_ROOT_TYPE),
-    @Property(name = "sling.servlet.methods", value = "POST")
+    @Property(name = "sling.servlet.methods", value = {"POST", "GET" })
 })
 public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
 
@@ -96,5 +97,50 @@ public class ReplicationAgentRootServlet extends SlingAllMethodsServlet {
         else {
             response.setStatus(200);
         }
+    }
+
+
+
+    @Override
+    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
+
+        Collection<ReplicationAgent> agents = replicationAgentsManager.getAllAvailableAgents();
+
+        response.getWriter().append(toJson(agents));
+    }
+
+    String toJson(Collection<ReplicationAgent> agents) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("{");
+
+        sb.append("\"items\": ");
+
+        sb.append("[");
+
+        for(ReplicationAgent agent : agents) {
+            sb.append(toJson(agent));
+            sb.append(",");
+        }
+
+        if(sb.charAt(sb.length()-1) == ',')
+            sb.deleteCharAt(sb.length()-1);
+
+        sb.append("]");
+
+        sb.append("}");
+
+        return sb.toString();
+    }
+
+
+    String toJson(ReplicationAgent agent) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        sb.append("\"name\": "+ agent.getName());
+        sb.append("}");
+
+        return sb.toString();
     }
 }

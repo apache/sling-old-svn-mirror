@@ -20,9 +20,9 @@ package org.apache.sling.replication.queue.impl;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -40,7 +40,7 @@ public class SingleQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithSucceedingItemDelivery() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -57,7 +57,7 @@ public class SingleQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithFailingItemDelivery() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -74,7 +74,7 @@ public class SingleQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithNullItemStateFromTheQueue() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
@@ -87,7 +87,7 @@ public class SingleQueueDistributionStrategyTest {
     @Test
     public void testPackageAdditionWithNotNullItemStateFromTheQueue() throws Exception {
         SingleQueueDistributionStrategy singleQueueDistributionStrategy = new SingleQueueDistributionStrategy();
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);

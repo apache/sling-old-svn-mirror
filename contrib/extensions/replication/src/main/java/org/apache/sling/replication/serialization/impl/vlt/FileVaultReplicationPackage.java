@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.serialization.impl.vlt;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,6 +79,21 @@ public class FileVaultReplicationPackage implements ReplicationPackage {
 
     public String getAction() {
         return action;
+    }
+
+    public void close() {
+        pkg.close();
+    }
+
+    public void delete() {
+        close();
+        try {
+            File file = new File(id);
+            if (file.exists()) {
+                file.delete();
+            }
+        } catch (Exception e) {
+        }
     }
 
 }

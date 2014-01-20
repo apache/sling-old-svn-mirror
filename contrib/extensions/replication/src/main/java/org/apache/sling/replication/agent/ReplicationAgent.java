@@ -72,18 +72,19 @@ public interface ReplicationAgent {
     void send(ReplicationRequest replicationRequest) throws AgentReplicationException;
 
     /**
-     * synchronously process the replication of a certain item skipping the underlying queue(s)
-     *
-     * @param item a {@link ReplicationPackage} to process
-     * @return <code>true</code> if process was successful, <code>false</code> otherwise
-     * @throws AgentReplicationException
-     */
-    boolean process(ReplicationPackage item) throws AgentReplicationException;
-
-    /**
      * get the agent configured endpoint
      *
      * @return an <code>URI</code> specifying its endpoint
      */
     URI getEndpoint();
+
+
+    /**
+     * removes a package from the top of the queue
+     * @param queueName
+     *          the name of a {@link ReplicationQueue} bound tothis agent
+     * @return
+     * @throws ReplicationQueueException
+     */
+    ReplicationPackage removeHead(String queueName) throws ReplicationQueueException;
 }

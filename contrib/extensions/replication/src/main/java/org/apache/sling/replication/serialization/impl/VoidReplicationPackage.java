@@ -26,6 +26,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.vault.util.Text;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
@@ -45,31 +46,36 @@ public class VoidReplicationPackage implements ReplicationPackage {
         this.type = type;
         this.paths = request.getPaths();
         this.action = request.getAction().toString();
-        this.id = request.getAction().toString() + ':' + Arrays.toString(request.getPaths()) + ':' + request.getTime();
+        this.id = request.getAction().toString()
+                + ':' + Arrays.toString(request.getPaths())
+                + ':' + request.getTime()
+                + ':' + type;
     }
 
     public static VoidReplicationPackage fromStream(InputStream stream) throws IOException {
-        VoidReplicationPackage replicationPackage = null;
         String streamString = IOUtils.toString(stream);
 
-        int beginIndex = streamString.indexOf(':');
-        int endIndex = streamString.lastIndexOf(':');
-        if (beginIndex >= 0 && endIndex > beginIndex){
-            String actionString = streamString.substring(0, beginIndex);
-            String pathsString = streamString.substring(beginIndex+1, endIndex);
-            String timeString =  streamString.substring(endIndex + 1);
+        String[] parts = streamString.split(":");
 
-            ReplicationActionType replicationActionType = ReplicationActionType.fromName(actionString);
+        if(parts == null || parts.length < 4) return null;
 
-            if(replicationActionType != null){
-                pathsString = Text.unescape(pathsString);
-                String[] paths = pathsString.replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
+        String actionString = parts[0];
+        String pathsString = parts[1];
+        String timeString = parts[2];
+        String typeString = parts[3];
 
-                ReplicationRequest request = new ReplicationRequest(Long.valueOf(timeString),
-                        replicationActionType, paths);
-                replicationPackage = new VoidReplicationPackage(request, "VOID");
-            }
+        ReplicationActionType replicationActionType = ReplicationActionType.fromName(actionString);
+
+        VoidReplicationPackage replicationPackage = null;
+        if(replicationActionType != null){
+            pathsString = Text.unescape(pathsString);
+            String[] paths = pathsString.replaceAll("\\[", "").replaceAll("\\]", "").split(", ");
+
+            ReplicationRequest request = new ReplicationRequest(Long.valueOf(timeString),
+                    replicationActionType, paths);
+            replicationPackage = new VoidReplicationPackage(request, typeString);
         }
+
         return replicationPackage;
     }
 
@@ -88,6 +94,7 @@ public class VoidReplicationPackage implements ReplicationPackage {
         return id.getBytes().length;
     }
 
+
     public InputStream createInputStream() throws IOException {
         return new ByteArrayInputStream(id.getBytes());
     }
@@ -98,5 +105,12 @@ public class VoidReplicationPackage implements ReplicationPackage {
 
     public String getAction() {
         return action;
+    }
+
+    public void close() {
+    }
+
+    public void delete() {
+
     }
 }
