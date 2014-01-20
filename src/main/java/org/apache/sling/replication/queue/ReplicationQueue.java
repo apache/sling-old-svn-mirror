@@ -19,7 +19,6 @@
 package org.apache.sling.replication.queue;
 
 import java.util.Collection;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * a queue for handling {@link org.apache.sling.replication.agent.ReplicationAgent}s' requests
@@ -36,21 +35,23 @@ public interface ReplicationQueue {
     /**
      * add a replication package to this queue
      *
+     *
      * @param replicationPackage a replication package to replicate
      * @return <code>true</code> if the replication package was added correctly to the queue,
      * <code>false</code otherwise
      * @throws ReplicationQueueException
      */
-    boolean add(ReplicationPackage replicationPackage) throws ReplicationQueueException;
+    boolean add(ReplicationQueueItem replicationPackage) throws ReplicationQueueException;
 
     /**
      * get the status of a certain package in the queue
+     *
      *
      * @param replicationPackage the replication package to get the status for
      * @return the item status in the queue
      * @throws ReplicationQueueException
      */
-    ReplicationQueueItemState getStatus(ReplicationPackage replicationPackage)
+    ReplicationQueueItemState getStatus(ReplicationQueueItem replicationPackage)
             throws ReplicationQueueException;
 
     /**
@@ -58,7 +59,7 @@ public interface ReplicationQueue {
      *
      * @return the first replication package into the queue
      */
-    ReplicationPackage getHead();
+    ReplicationQueueItem getHead();
 
     /**
      * remove the first package into the queue from it
@@ -79,7 +80,7 @@ public interface ReplicationQueue {
      *
      * @return a <code>Collection</code> of {@link org.apache.sling.replication.serialization.ReplicationPackage}s
      */
-    Collection<ReplicationPackage> getItems();
+    Collection<ReplicationQueueItem> getItems();
 
     /**
      * remove an item from the queue by specifying its id

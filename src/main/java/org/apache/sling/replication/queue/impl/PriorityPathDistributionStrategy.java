@@ -25,18 +25,14 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.replication.queue.*;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * Distribution algorithm which keeps one specific queue to handle specific paths and another queue
@@ -61,7 +57,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
-    public ReplicationQueueItemState add(ReplicationPackage replicationPackage,
+    public ReplicationQueueItemState add(ReplicationQueueItem replicationPackage,
                     ReplicationAgent agent, ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
         if (log.isInfoEnabled()) {
@@ -95,7 +91,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
 
     }
 
-    private ReplicationQueue getQueue(ReplicationPackage replicationPackage,
+    private ReplicationQueue getQueue(ReplicationQueueItem replicationPackage,
                     ReplicationAgent agent, ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
         String[] paths = replicationPackage.getPaths();
@@ -131,7 +127,7 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         return queue;
     }
 
-    public boolean offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
+    public boolean offer(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueue queue = getQueue(replicationPackage, agent, queueProvider);
         if (queue != null) {

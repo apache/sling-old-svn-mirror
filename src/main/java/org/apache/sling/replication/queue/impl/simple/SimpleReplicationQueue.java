@@ -27,9 +27,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +47,9 @@ public class SimpleReplicationQueue implements ReplicationQueue {
 
     private final String name;
 
-    private final BlockingQueue<ReplicationPackage> queue;
+    private final BlockingQueue<ReplicationQueueItem> queue;
 
-    private final Map<ReplicationPackage, ReplicationQueueItemState> statusMap;
+    private final Map<ReplicationQueueItem, ReplicationQueueItemState> statusMap;
 
     public SimpleReplicationQueue(ReplicationAgent agent, String name) {
         if (log.isInfoEnabled()) {
@@ -57,15 +57,15 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         }
         this.agent = agent;
         this.name = name;
-        this.queue = new LinkedBlockingQueue<ReplicationPackage>();
-        this.statusMap = new WeakHashMap<ReplicationPackage, ReplicationQueueItemState>(10);
+        this.queue = new LinkedBlockingQueue<ReplicationQueueItem>();
+        this.statusMap = new WeakHashMap<ReplicationQueueItem, ReplicationQueueItemState>(10);
     }
 
     public String getName() {
         return name;
     }
 
-    public boolean add(ReplicationPackage replicationPackage) {
+    public boolean add(ReplicationQueueItem replicationPackage) {
         ReplicationQueueItemState status = new ReplicationQueueItemState();
         boolean result = false;
         try {
@@ -80,7 +80,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         return result;
     }
 
-    public ReplicationQueueItemState getStatus(ReplicationPackage replicationPackage) {
+    public ReplicationQueueItemState getStatus(ReplicationQueueItem replicationPackage) {
         ReplicationQueueItemState status = statusMap.get(replicationPackage);
         if (queue.contains(replicationPackage)) {
             status.setItemState(ItemState.QUEUED);
@@ -94,8 +94,8 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         return agent;
     }
 
-    public ReplicationPackage getHead() {
-        ReplicationPackage element = queue.peek();
+    public ReplicationQueueItem getHead() {
+        ReplicationQueueItem element = queue.peek();
         if (element != null) {
             ReplicationQueueItemState replicationQueueItemStatus = statusMap.get(element);
             replicationQueueItemStatus.setAttempts(replicationQueueItemStatus.getAttempts() + 1);
@@ -104,7 +104,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
     }
 
     public void removeHead() {
-        ReplicationPackage element = queue.remove();
+        ReplicationQueueItem element = queue.remove();
         statusMap.get(element).setSuccessful(true);
     }
 
@@ -112,13 +112,13 @@ public class SimpleReplicationQueue implements ReplicationQueue {
         return queue.isEmpty();
     }
 
-    public Collection<ReplicationPackage> getItems() {
+    public Collection<ReplicationQueueItem> getItems() {
         return queue;
     }
 
     public void remove(String id) {
-        ReplicationPackage toRemove = null;
-        for (ReplicationPackage item : queue) {
+        ReplicationQueueItem toRemove = null;
+        for (ReplicationQueueItem item : queue) {
             if (id.equals(item.getId())) {
                 toRemove = item;
             }

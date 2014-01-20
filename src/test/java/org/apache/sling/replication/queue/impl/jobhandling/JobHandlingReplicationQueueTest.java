@@ -18,17 +18,15 @@
  */
 package org.apache.sling.replication.queue.impl.jobhandling;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -54,9 +52,7 @@ public class JobHandlingReplicationQueueTest {
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         ReplicationQueue queue = new JobHandlingReplicationQueue("aname", topic, jobManager);
-        ReplicationPackage pkg = mock(ReplicationPackage.class);
-        InputStream stream = new ByteArrayInputStream("rep".getBytes());
-        when(pkg.createInputStream()).thenReturn(stream);
+        ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
     }
 
@@ -70,9 +66,7 @@ public class JobHandlingReplicationQueueTest {
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
         when(builder.properties(any(Map.class))).thenReturn(builder);
         ReplicationQueue queue = new JobHandlingReplicationQueue("aname", topic, jobManager);
-        ReplicationPackage pkg = mock(ReplicationPackage.class);
-        InputStream stream = new ByteArrayInputStream("rep".getBytes());
-        when(pkg.createInputStream()).thenReturn(stream);
+        ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         ReplicationQueueItemState status = queue.getStatus(pkg);
         assertNotNull(status);

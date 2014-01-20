@@ -21,7 +21,7 @@ package org.apache.sling.replication.queue.impl.jobhandling;
 import java.io.InputStream;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,28 +35,24 @@ import static org.mockito.Mockito.when;
 public class JobHandlingUtilsTest {
     @Test
     public void testFullPropertiesFromPackageCreation() throws Exception {
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         InputStream stream = IOUtils.toInputStream("some text");
-        when(replicationPackage.createInputStream()).thenReturn(stream);
         when(replicationPackage.getAction()).thenReturn("ADD");
         when(replicationPackage.getId()).thenReturn("an-id");
-        when(replicationPackage.getLength()).thenReturn(10l);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content", "/apps"});
         when(replicationPackage.getType()).thenReturn("vlt");
         Map<String,Object> fullPropertiesFromPackage = JobHandlingUtils.createFullPropertiesFromPackage(replicationPackage);
         assertNotNull(fullPropertiesFromPackage);
-        assertEquals(6, fullPropertiesFromPackage.size());
+        assertEquals(4, fullPropertiesFromPackage.size());
         assertNotNull(fullPropertiesFromPackage.get("replication.package.paths"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.id"));
-        assertNotNull(fullPropertiesFromPackage.get("replication.package.length"));
-        assertNotNull(fullPropertiesFromPackage.get("replication.package.stream"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.type"));
         assertNotNull(fullPropertiesFromPackage.get("replication.package.action"));
     }
 
     @Test
     public void testIdPropertiesFromPackageCreation() throws Exception {
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getId()).thenReturn("an-id");
         Map<String,Object> idPropertiesFromPackage = JobHandlingUtils.createIdPropertiesFromPackage(replicationPackage);
         assertNotNull(idPropertiesFromPackage);

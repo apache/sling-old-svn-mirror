@@ -40,10 +40,6 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
 
     private final Map<String, ReplicationQueue> queueMap = new HashMap<String, ReplicationQueue>();
 
-    public ReplicationQueue getQueue(ReplicationAgent agent,
-                                     ReplicationPackage replicationPackage) throws ReplicationQueueException {
-        return getQueue(agent, replicationPackage.getAction());
-    }
 
     public ReplicationQueue getQueue(ReplicationAgent agent, String queueName)
                     throws ReplicationQueueException {

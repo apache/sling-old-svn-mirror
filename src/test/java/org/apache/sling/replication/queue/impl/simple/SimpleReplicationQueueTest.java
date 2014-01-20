@@ -20,8 +20,8 @@ package org.apache.sling.replication.queue.impl.simple;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +39,7 @@ public class SimpleReplicationQueueTest {
     public void testPackageAddition() throws Exception {
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
-        ReplicationPackage pkg = mock(ReplicationPackage.class);
+        ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
     }
@@ -48,7 +48,7 @@ public class SimpleReplicationQueueTest {
     public void testPackageAdditionAndRemoval() throws Exception {
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
-        ReplicationPackage pkg = mock(ReplicationPackage.class);
+        ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
         queue.removeHead();
@@ -62,7 +62,7 @@ public class SimpleReplicationQueueTest {
     public void testPackageAdditionRetrievalAndRemoval() throws Exception {
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
-        ReplicationPackage pkg = mock(ReplicationPackage.class);
+        ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
         assertEquals(pkg, queue.getHead());

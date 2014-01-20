@@ -21,15 +21,18 @@ package org.apache.sling.replication.queue.impl.jobhandling;
 import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.event.impl.jobs.config.ConfigurationConstants;
 import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.cm.ConfigurationAdmin;
 
@@ -52,6 +55,10 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
 
     @Reference
     private ConfigurationAdmin configAdmin;
+
+    private Map<String, ServiceRegistration> jobs = new ConcurrentHashMap<String, ServiceRegistration>();
+    private BundleContext context;
+
 
     @Override
     protected ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String queueName)
@@ -84,4 +91,37 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
         q.removeAll();
     }
 
+    public void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor) {
+        // TODO: make this configurable (whether to create self processing queues or not)
+        if (agent.getEndpoint() == null || agent.getEndpoint().toString().length() == 0) return;
+
+        // eventually register job consumer for sling job handling based queues
+        Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
+        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agent.getName();
+        String childTopic = topic + "/*";
+        jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
+        ServiceRegistration jobReg = context.registerService(JobConsumer.class.getName(),
+                new ReplicationAgentJobConsumer(agent, queueProcessor), jobProps);
+        jobs.put(agent.getName(), jobReg);
+    }
+
+
+    public void disableQueueProcessing(ReplicationAgent agent) {
+        ServiceRegistration jobReg = jobs.remove(agent.getName());
+        if (jobReg != null) {
+            jobReg.unregister();
+        }
+    }
+
+    @Activate
+    private void activate(BundleContext context){
+        this.context = context;
+    }
+
+    @Deactivate
+    private void deactivate(BundleContext context){
+        for (ServiceRegistration jobReg : jobs.values()){
+            jobReg.unregister();
+        }
+    }
 }

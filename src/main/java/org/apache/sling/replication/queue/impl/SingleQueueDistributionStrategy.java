@@ -21,17 +21,13 @@ package org.apache.sling.replication.queue.impl;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.replication.queue.*;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueException;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
@@ -46,7 +42,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public ReplicationQueueItemState add(ReplicationPackage replicationPackage,
+    public ReplicationQueueItemState add(ReplicationQueueItem replicationPackage,
                     ReplicationAgent agent, ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
         if (log.isInfoEnabled()) {
@@ -78,7 +74,7 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     }
 
-    public boolean offer(ReplicationPackage replicationPackage, ReplicationAgent agent,
+    public boolean offer(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
         ReplicationQueue queue = queueProvider.getDefaultQueue(agent);
         if (queue != null) {

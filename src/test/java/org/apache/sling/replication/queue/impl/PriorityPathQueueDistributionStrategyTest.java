@@ -21,9 +21,9 @@ package org.apache.sling.replication.queue.impl;
 import java.util.Dictionary;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.junit.Test;
 import org.osgi.service.component.ComponentContext;
 
@@ -47,7 +47,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -70,7 +70,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content/sample1"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -93,7 +93,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -116,7 +116,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content/sample2"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -139,7 +139,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -158,7 +158,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps/some/stuff"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -177,7 +177,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
@@ -198,7 +198,7 @@ public class PriorityPathQueueDistributionStrategyTest {
         when(properties.get("priority.paths")).thenReturn(new String[]{"/content", "/apps"});
         when(context.getProperties()).thenReturn(properties);
         priorityPathDistributionStrategy.activate(context);
-        ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
+        ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps"});
         ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);

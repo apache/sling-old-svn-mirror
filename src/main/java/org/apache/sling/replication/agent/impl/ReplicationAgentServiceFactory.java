@@ -18,8 +18,10 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.util.*;
-
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Random;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -28,14 +30,12 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
-import org.apache.sling.event.jobs.consumer.JobConsumer;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
-import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueue;
 import org.apache.sling.replication.queue.impl.jobhandling.JobHandlingReplicationQueueProvider;
 import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
@@ -197,7 +197,7 @@ public class ReplicationAgentServiceFactory {
                         transportHandler, transportAuthenticationProvider, endpoint, packageBuilder, queueProvider, queueDistributionStrategy});
             }
 
-            ReplicationAgent agent = new SimpleReplicationAgent(name, endpoint, rules, useAggregatePaths,
+            SimpleReplicationAgent agent = new SimpleReplicationAgent(name, endpoint, rules, useAggregatePaths,
                     transportHandler, packageBuilder, queueProvider, transportAuthenticationProvider, queueDistributionStrategy);
 
             // register agent service
@@ -208,14 +208,7 @@ public class ReplicationAgentServiceFactory {
                 replicationRuleEngine.applyRules(agent, rules);
             }
 
-            // eventually register job consumer for sling job handling based queues
-            if (DEFAULT_QUEUEPROVIDER.equals(queue) && (transportHandler != null && endpoint != null && endpoint.length() > 0)) {
-                Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
-                String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
-                String childTopic = topic + "/*";
-                jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
-                jobReg = context.registerService(JobConsumer.class.getName(), new ReplicationAgentJobConsumer(agent, packageBuilder), jobProps);
-            }
+            queueProvider.enableQueueProcessing(agent, agent);
         }
     }
 
@@ -230,9 +223,7 @@ public class ReplicationAgentServiceFactory {
                 replicationRuleEngine.unapplyRules(replicationAgent, rules);
             }
 
-            if (jobReg != null) {
-                jobReg.unregister();
-            }
+           queueProvider.disableQueueProcessing(replicationAgent);
 
             if (agentReg != null) {
                 agentReg.unregister();

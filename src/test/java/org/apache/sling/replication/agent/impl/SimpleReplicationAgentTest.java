@@ -21,13 +21,11 @@ package org.apache.sling.replication.agent.impl;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
-import org.apache.sling.replication.queue.ReplicationQueue;
-import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
-import org.apache.sling.replication.queue.ReplicationQueueItemState;
-import org.apache.sling.replication.queue.ReplicationQueueProvider;
+import org.apache.sling.replication.queue.*;
 import org.apache.sling.replication.queue.impl.simple.SimpleReplicationQueue;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.junit.Test;
@@ -36,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -51,12 +49,13 @@ public class SimpleReplicationAgentTest {
         String endpoint = "/tmp";
         TransportHandler transportHandler = mock(TransportHandler.class);
         ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
+        when(packageBuilder.getPackage(anyString())).thenReturn(mock(ReplicationPackage.class));
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         TransportAuthenticationProvider transportAuthenticationProvider = mock(TransportAuthenticationProvider.class);
         ReplicationQueueDistributionStrategy distributionHandler = mock(ReplicationQueueDistributionStrategy.class);
         SimpleReplicationAgent agent = new SimpleReplicationAgent(name, endpoint, new String[0], true,
                         transportHandler, packageBuilder, queueProvider, transportAuthenticationProvider, distributionHandler);
-        ReplicationPackage item = mock(ReplicationPackage.class);
+        ReplicationQueueItem item = mock(ReplicationQueueItem.class);
         assertTrue(agent.process(item));
     }
 
@@ -75,8 +74,6 @@ public class SimpleReplicationAgentTest {
                         ReplicationActionType.ADD, "/");
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(packageBuilder.createPackage(request)).thenReturn(replicationPackage);
-        when(queueProvider.getQueue(agent, replicationPackage)).thenReturn(
-                        new SimpleReplicationQueue(agent, "name"));
         when(queueProvider.getDefaultQueue(agent)).thenReturn(
               new SimpleReplicationQueue(agent, "name"));
         ReplicationResponse response = agent.execute(request);
@@ -100,10 +97,8 @@ public class SimpleReplicationAgentTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         ReplicationQueueItemState state = new ReplicationQueueItemState();
         state.setItemState(ReplicationQueueItemState.ItemState.SUCCEEDED);
-        when(distributionHandler.add(replicationPackage, agent, queueProvider)).thenReturn(state);
+        when(distributionHandler.add(any(ReplicationQueueItem.class), eq(agent), eq(queueProvider))).thenReturn(state);
         when(packageBuilder.createPackage(any(ReplicationRequest.class))).thenReturn(replicationPackage);
-        when(queueProvider.getQueue(agent, replicationPackage)).thenReturn(
-                new SimpleReplicationQueue(agent, "name"));
         when(queueProvider.getDefaultQueue(agent)).thenReturn(
                 new SimpleReplicationQueue(agent, "name"));
         ReplicationResponse response = agent.execute(request);
@@ -126,8 +121,6 @@ public class SimpleReplicationAgentTest {
                 ReplicationActionType.ADD, "/");
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(packageBuilder.createPackage(request)).thenReturn(replicationPackage);
-        when(queueProvider.getQueue(agent, replicationPackage)).thenReturn(
-                new SimpleReplicationQueue(agent, "name"));
         when(queueProvider.getDefaultQueue(agent)).thenReturn(
                 new SimpleReplicationQueue(agent, "name"));
         agent.send(request);

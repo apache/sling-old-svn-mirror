@@ -30,9 +30,9 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.JobManager.QueryType;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.queue.ReplicationQueueItemState;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +61,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return name;
     }
 
-    public boolean add(ReplicationPackage replicationPackage) {
+    public boolean add(ReplicationQueueItem replicationPackage) {
         boolean result = true;
         try {
             Map<String, Object> properties = JobHandlingUtils
@@ -80,7 +80,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return result;
     }
 
-    public ReplicationQueueItemState getStatus(ReplicationPackage replicationPackage)
+    public ReplicationQueueItemState getStatus(ReplicationQueueItem replicationPackage)
             throws ReplicationQueueException {
         ReplicationQueueItemState itemStatus = new ReplicationQueueItemState();
         try {
@@ -103,7 +103,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return itemStatus;
     }
 
-    public ReplicationPackage getHead() {
+    public ReplicationQueueItem getHead() {
         Job firstItem = getFirstItem();
         if (firstItem != null) {
             return JobHandlingUtils.getPackage(firstItem);
@@ -149,8 +149,8 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
         return getItems().isEmpty();
     }
 
-    public Collection<ReplicationPackage> getItems() {
-        Collection<ReplicationPackage> items = new LinkedList<ReplicationPackage>();
+    public Collection<ReplicationQueueItem> getItems() {
+        Collection<ReplicationQueueItem> items = new LinkedList<ReplicationQueueItem>();
         Collection<Job> jobs = jobManager.findJobs(QueryType.ALL, topic, -1);
         for (Job job : jobs) {
             items.add(JobHandlingUtils.getPackage(job));

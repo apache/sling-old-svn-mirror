@@ -146,9 +146,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         Session session = null;
         ReplicationPackage pkg = null;
         try {
-            if (log.isInfoEnabled()) {
-                log.info("reading package for addition");
-            }
+            log.info("reading package for addition");
 
             session = getSession();
             if (session != null) {
@@ -160,9 +158,7 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 pkg = new FileVaultReplicationPackage(jcrPackage.getPackage());
             }
         } catch (Exception e) {
-            if (log.isErrorEnabled()) {
-                log.error("could not read / install the package", e);
-            }
+            log.error("could not read / install the package", e);
             throw new ReplicationPackageReadingException(e);
         } finally {
             if (session != null) {
@@ -172,7 +168,8 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
         return pkg;
     }
 
-    public ReplicationPackage getPackage(String id) {
+    @Override
+    protected ReplicationPackage getPackageInternal(String id) {
         ReplicationPackage replicationPackage = null;
         try {
             File file = new File(id);
@@ -181,14 +178,10 @@ public class FileVaultReplicationPackageBuilder extends AbstractReplicationPacka
                 replicationPackage = new FileVaultReplicationPackage(pkg);
             }
         } catch (Exception e) {
-            if (log.isWarnEnabled()) {
-                log.info("could not find a package with id : {}", id);
-            }
+            log.info("could not find a package with id : {}", id);
         }
         return replicationPackage;
     }
-
-
 
     @Activate
     @Modified

@@ -21,7 +21,6 @@ package org.apache.sling.replication.queue;
 import java.util.Collection;
 
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.serialization.ReplicationPackage;
 
 /**
  * A provider for {@link ReplicationQueue}s
@@ -42,19 +41,6 @@ public interface ReplicationQueueProvider {
     ReplicationQueue getQueue(ReplicationAgent agent, String name)
                     throws ReplicationQueueException;
 
-    /**
-     * provide the queue to be used for a certain agent and package or creates it if it doesn't
-     * exist
-     * 
-     * @param agent
-     *            the replication agent needing the queue
-     * @param replicationPackage
-     *            the package for which the queue should be used
-     * @return a replication queue to be used for the given parameters
-     * @throws ReplicationQueueException
-     */
-    ReplicationQueue getQueue(ReplicationAgent agent, ReplicationPackage replicationPackage)
-                    throws ReplicationQueueException;
 
     /**
      * get the default queue to be used for a certain agent
@@ -83,4 +69,21 @@ public interface ReplicationQueueProvider {
      * @throws ReplicationQueueException
      */
     void removeQueue(ReplicationQueue queue) throws ReplicationQueueException;
+
+    /**
+     * enables queue driven processing for an agent.
+     * @param agent
+     *          a replication agent
+     * @param queueProcessor
+     *          the callback that is called when an item needs processing
+     */
+    void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor);
+
+
+    /**
+     * disables queue driven processing for an agent
+     * @param agent
+     *          a replication agent
+     */
+    void disableQueueProcessing(ReplicationAgent agent);
 }

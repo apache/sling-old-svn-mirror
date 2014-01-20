@@ -55,4 +55,5 @@ public interface ReplicationPackageBuilder {
      * @return a {@link ReplicationPackage} if one with such an id exists, <code>null</code> otherwise
      */
     ReplicationPackage getPackage(String id);
+
 }
