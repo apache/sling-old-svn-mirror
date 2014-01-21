@@ -74,22 +74,22 @@ public class SlingTestBase {
 
     /** Get configuration but do not start server yet, that's done on demand */
     public SlingTestBase() {
-        if(jarExecutor == null) {
-            synchronized(this) {
-                try {
-                    jarExecutor = new JarExecutor(System.getProperties());
-                } catch(Exception e) {
-                    log.error("JarExecutor setup failed", e);
-                    fail("JarExecutor setup failed: " + e);
-                }
-            }
-        }
 
         final String configuredUrl = System.getProperty(TEST_SERVER_URL_PROP, System.getProperty("launchpad.http.server.url"));
         if(configuredUrl != null) {
             serverBaseUrl = configuredUrl;
             serverStarted = true;
         } else {
+            if(jarExecutor == null) {
+                synchronized(this) {
+                    try {
+                        jarExecutor = new JarExecutor(System.getProperties());
+                    } catch(Exception e) {
+                        log.error("JarExecutor setup failed", e);
+                        fail("JarExecutor setup failed: " + e);
+                    }
+                }
+            }
             String serverHost = System.getProperty(SERVER_HOSTNAME_PROP);
             if(serverHost == null || serverHost.trim().length() == 0) {
                 serverHost = "localhost";
