@@ -60,7 +60,11 @@ public final class OrderedJobQueue extends AbstractJobQueue {
             if ( o2.getJob() == null ) {
                 return 1;
             }
-            return o1.getJob().getCreated().compareTo(o2.getJob().getCreated());
+            int result = o1.getJob().getCreated().compareTo(o2.getJob().getCreated());
+            if (result == 0 ) {
+                result = o1.getJob().getId().compareTo(o2.getJob().getId());
+            }
+            return result;
         }
     });
 
