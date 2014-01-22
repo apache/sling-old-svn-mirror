@@ -21,8 +21,6 @@ package org.apache.sling.replication.serialization.impl;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.Map;
 import org.apache.sling.event.jobs.Job;
 import org.apache.sling.event.jobs.JobBuilder;
@@ -113,13 +111,10 @@ public class DefaultReplicationPackageImporterTest {
         ReplicationPackageBuilder packageBuilder = mock(ReplicationPackageBuilder.class);
         ReplicationPackage replicationPackage = new VoidReplicationPackage(new ReplicationRequest(System.currentTimeMillis(), ReplicationActionType.DELETE, "/content"), "void");
         when(packageBuilder.readPackage(any(InputStream.class), eq(true))).thenReturn(replicationPackage);
-        Collection<ReplicationPackageBuilder> packageBuilders = new LinkedList<ReplicationPackageBuilder>();
-        packageBuilders.add(packageBuilder);
-        when(replicationPackageBuilderProvider.getAvailableReplicationPackageBuilders()).thenReturn(packageBuilders);
         replicationPackageBuilderProviderField.set(importer, replicationPackageBuilderProvider);
 
         InputStream stream = mock(InputStream.class);
-        assertTrue(importer.importStream(stream, null));
+        assertFalse(importer.importStream(stream, null));
     }
 
     @Test
