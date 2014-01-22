@@ -98,7 +98,7 @@ public class PollingTransportHandler implements TransportHandler {
                 Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
 
                 if (entity.getContentLength() > 0) {
-                    replicationPackageImporter.importStream(entity.getContent(), typeHeader.getValue());
+                    replicationPackageImporter.scheduleImport(entity.getContent(), typeHeader.getValue());
                     polls--;
                     if (log.isInfoEnabled()) {
                         log.info("scheduled import of package stream");
