@@ -39,6 +39,15 @@ public class Result implements Iterable <ResultLog.Entry> {
         resultLog = new ResultLog().add(new ResultLog.Entry(s, explanation));
     }
 
+    /**
+     * Build a single-value Result with exception
+     * 
+     * @param s if lower than OK, our status is set to OK
+     */
+    public Result(final Status s, final String explanation, final Exception e) {
+        resultLog = new ResultLog().add(new ResultLog.Entry(s, explanation, e));
+    }
+
     /** Build a a Result based on a ResultLog, which can provide
      *  more details than a single-value Result.
      */
