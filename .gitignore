@@ -12,3 +12,4 @@ coverage.ec
 coverage/
 .DS_Store
 .idea/
+bundles/extensions/models/integration-tests/sling
