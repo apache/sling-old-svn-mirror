@@ -35,15 +35,25 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
     public static class Entry {
         private final Status status;
         private final String message;
+        private final Exception exception;
 
         public Entry(Status s, String message) {
+            this(s, message, null);
+        }
+
+        public Entry(Status s, String message, Exception exception) {
             this.status = s;
             this.message = message;
+            this.exception = exception;
         }
 
         @Override
         public String toString() {
-            return new StringBuilder(status.toString()).append(" ").append(message).toString();
+            StringBuilder builder = new StringBuilder(status.toString()).append(" ").append(message);
+            if (exception != null) {
+                builder.append(" Exception: " + exception.getMessage());
+            }
+            return builder.toString();
         }
 
         public Status getStatus() {
@@ -53,6 +63,11 @@ public class ResultLog implements Iterable<ResultLog.Entry> {
         public String getMessage() {
             return message;
         }
+
+        public Exception getException() {
+            return exception;
+        }
+
     }
 
     /** Build a log. Initial aggregate status is
