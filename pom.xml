@@ -187,7 +187,6 @@
         <module>bundles/resourceaccesssecurity</module>
         <module>bundles/extensions/models/api</module>
         <module>bundles/extensions/models/impl</module>
-        <module>bundles/extensions/models/server-side-tests</module>
         <module>bundles/extensions/models/integration-tests</module>
 
         <!-- Testing Support -->

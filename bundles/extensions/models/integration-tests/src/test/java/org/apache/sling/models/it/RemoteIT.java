@@ -22,7 +22,7 @@ import org.apache.sling.testing.tools.sling.SlingTestBase;
 import org.junit.runner.RunWith;
 
 @RunWith(SlingRemoteTestRunner.class)
-public class RemoteTest extends SlingTestBase implements SlingRemoteTestParameters {
+public class RemoteIT extends SlingTestBase implements SlingRemoteTestParameters {
 
     public String getJunitServletUrl() {
         return getServerBaseUrl() + "/system/sling/junit";

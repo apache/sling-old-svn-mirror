@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.models.integration-tests</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>bundle</packaging>
 
     <name>Apache Sling Models Integration Tests</name>
     <description>Apache Sling Models Integration Tests</description>
@@ -79,9 +79,6 @@
         <!-- Options for the jar to execute. $JAREXEC_SERVER_PORT$ is replaced by the
             selected port number -->
         <jar.executor.jar.options>-p $JAREXEC_SERVER_PORT$</jar.executor.jar.options>
-        
-        <!-- Change this to run selected tests only -->
-        <tests.to.run>**/**Test.java</tests.to.run>
     </properties>
 
     <build>
@@ -98,6 +95,20 @@
                             </includes>
                         </fileset>
                     </filesets>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Sling-Model-Packages>
+                            org.apache.sling.models.it.models
+                        </Sling-Model-Packages>
+                        <Sling-Test-Regexp>.*Test</Sling-Test-Regexp>
+                        <Export-Package>org.apache.sling.models.it</Export-Package>
+                    </instructions>
                 </configuration>
             </plugin>
             <plugin>
@@ -158,16 +169,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- We run all tests in the integration-tests phase -->
-                    <excludes>
-                        <exclude>**</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <executions>
                     <execution>
@@ -185,9 +186,6 @@
                 </executions>
                 <configuration>
                     <debugForkedProcess>${maven.surefire.debug}</debugForkedProcess>
-                    <includes>
-                        <include>${tests.to.run}</include>
-                    </includes>
                     <systemPropertyVariables>
                         <test.server.url>${test.server.url}</test.server.url>
                         <test.server.hostname>${test.server.hostname}</test.server.hostname>
@@ -199,7 +197,7 @@
                         <jar.executor.jar.name.regexp>org.apache.sling.launchpad.*jar$</jar.executor.jar.name.regexp>
                         <jar.executor.work.folder>${jar.executor.work.folder}</jar.executor.work.folder>
                         <jar.executor.jar.options>${jar.executor.jar.options}</jar.executor.jar.options>
-                        <additional.bundles.path>${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
+                        <additional.bundles.path>${project.basedir}/target,${project.basedir}/target/sling/additional-bundles</additional.bundles.path>
                         <keepJarRunning>${keepJarRunning}</keepJarRunning>
                         <server.ready.timeout.seconds>60</server.ready.timeout.seconds>
                         <sling.testing.timeout.multiplier>${sling.testing.timeout.multiplier}</sling.testing.timeout.multiplier>
@@ -217,14 +215,7 @@
                         <sling.additional.bundle.1>org.apache.sling.junit.core</sling.additional.bundle.1>
                         <sling.additional.bundle.10>org.apache.sling.models.api</sling.additional.bundle.10>
                         <sling.additional.bundle.11>org.apache.sling.models.impl</sling.additional.bundle.11>
-                        <sling.additional.bundle.12>org.apache.sling.models.server-side-tests</sling.additional.bundle.12>
-                        <!-- 
-                        <sling.additional.bundle.2>org.apache.sling.junit.scriptable</sling.additional.bundle.2>
-                        <sling.additional.bundle.3>org.apache.sling.junit.remote</sling.additional.bundle.3>
-                        <sling.additional.bundle.4>org.apache.sling.testing.tools</sling.additional.bundle.4>
-                        <sling.additional.bundle.5>httpclient-osgi</sling.additional.bundle.5>
-                        <sling.additional.bundle.6>httpcore-osgi</sling.additional.bundle.6>
-                         -->
+                        <sling.additional.bundle.12>${project.build.finalName}.jar</sling.additional.bundle.12>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
@@ -248,7 +239,7 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.testing.tools</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.7-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -260,12 +251,6 @@
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.models.impl</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.models.server-side-tests</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
@@ -285,6 +270,33 @@
         </dependency>
         
         <!-- actual dependencies -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+            <version>2.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.json</artifactId>
@@ -313,7 +325,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
