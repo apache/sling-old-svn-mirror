@@ -18,12 +18,16 @@ package org.apache.sling.performance;
 
 
 import static org.mockito.Mockito.mock;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Session;
+
 import junitx.util.PrivateAccessor;
+
 import org.apache.sling.api.SlingConstants;
 import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -35,7 +39,9 @@ import org.apache.sling.jcr.resource.internal.helper.jcr.JcrResourceProviderFact
 import org.apache.sling.performance.annotation.PerformanceTestSuite;
 import org.apache.sling.performance.tests.ResolveNonExistingWithManyAliasTest;
 import org.apache.sling.performance.tests.ResolveNonExistingWithManyVanityPathTest;
+import org.apache.sling.performance.tests.StartupWithManyAliasTest;
 import org.apache.sling.resourceresolver.impl.CommonResourceResolverFactoryImpl;
+import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryActivator;
 import org.apache.sling.resourceresolver.impl.ResourceResolverFactoryImpl;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
@@ -86,6 +92,10 @@ public class PerformanceTest {
 
             // ensure namespace mangling
             PrivateAccessor.setField(activator, "mangleNamespacePrefixes", true);
+            
+            ResourceAccessSecurityTracker rast = new ResourceAccessSecurityTracker();
+            PrivateAccessor.setField(activator, "resourceAccessSecurityTracker",rast);
+            
 
             CommonResourceResolverFactoryImpl commonFactory = new CommonResourceResolverFactoryImpl(activator);
             
@@ -119,10 +129,12 @@ public class PerformanceTest {
         testCenter.addTestObject(new ResolveNonExistingWithManyVanityPathTest("ResolveNonExistingWith1000VanityPathTest",helper, 100, 10));
         testCenter.addTestObject(new ResolveNonExistingWithManyVanityPathTest("ResolveNonExistingWith5000VanityPathTest",helper, 100, 50));
         testCenter.addTestObject(new ResolveNonExistingWithManyVanityPathTest("ResolveNonExistingWith10000VanityPathTest",helper, 100, 100));
-        
+        testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith100AliasTest",helper, 100));
         testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith1000AliasTest",helper, 1000));
         testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith5000AliasTest",helper, 5000));
         testCenter.addTestObject(new ResolveNonExistingWithManyAliasTest("ResolveNonExistingWith10000AliasTest",helper, 10000));
+        
+        testCenter.addTestObject(new StartupWithManyAliasTest("StartupWithManyAliasTest",helper, 10000));
       
         return testCenter;
     }
