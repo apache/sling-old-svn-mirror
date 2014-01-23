@@ -32,7 +32,11 @@
     <packaging>bundle</packaging>
 
     <name>Apache Sling Models Integration Tests</name>
-    <description>Apache Sling Models Integration Tests</description>
+    <description>
+        Apache Sling Models Integration Tests - builds a bundle
+        with Sling server-side tests, and executes them via a
+        remote test proxy that runs in the integration-tests phase.
+    </description>
     
     <!-- 
         To keep the instance under test running and run individual tests
