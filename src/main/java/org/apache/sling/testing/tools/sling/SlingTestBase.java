@@ -153,14 +153,19 @@ public class SlingTestBase {
         if(installBundlesFailed) {
             fail("Bundles could not be installed, cannot run tests");
         } else if(!extraBundlesInstalled) {
-            final String path = System.getProperty(ADDITONAL_BUNDLES_PATH);
-            if(path == null) {
+            final String paths = System.getProperty(ADDITONAL_BUNDLES_PATH);
+            if(paths == null) {
                 log.info("System property {} not set, additional bundles won't be installed",
                         ADDITONAL_BUNDLES_PATH);
             } else {
-                final List<File> toInstall = getBundlesToInstall(path);
-
+                final List<File> toInstall = new ArrayList<File>();
                 try {
+                    // Paths can contain a comma-separated list
+                    final String [] allPaths = paths.split(",");
+                    for(String path : allPaths) {
+                        toInstall.addAll(getBundlesToInstall(path.trim()));
+                    }
+                    
                     // Install bundles, check that they are installed and start them all
                     bundlesInstaller.installBundles(toInstall, false);
                     final List<String> symbolicNames = new LinkedList<String>();
