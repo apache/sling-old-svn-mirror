@@ -100,7 +100,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private final HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
-    private Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new ConcurrentHashMap<HealthCheckMetadata, HealthCheckFuture>();
+    private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new ConcurrentHashMap<HealthCheckMetadata, HealthCheckFuture>();
 
     @Reference
     private ThreadPoolManager threadPoolManager;
@@ -232,8 +232,6 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         // wait for futures at most until timeout (but will return earlier if all futures are finished)
         waitForFuturesRespectingTimeout(futures);
         collectResultsFromFutures(futures, results);
-
-        healthCheckResultCache.updateWith(results);
     }
 
     private HealthCheckExecutionResult createResultsForDescriptor(final HealthCheckMetadata metadata) {
@@ -250,17 +248,15 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             final HealthCheckFuture future = createOrReuseFuture(metadata);
 
             // wait for futures at most until timeout (but will return earlier if all futures are finished)
-            waitForFuturesRespectingTimeout(future);
+            waitForFuturesRespectingTimeout(Collections.singletonList(future));
             result = collectResultFromFuture(future);
         }
-
-        healthCheckResultCache.updateWith(result);
 
         return result;
     }
 
     /**
-     * Create the health check metadata
+     * Create the health check meta data
      */
     private List<HealthCheckMetadata> getHealthCheckMetadata(final ServiceReference... healthCheckReferences) {
         final List<HealthCheckMetadata> descriptors = new LinkedList<HealthCheckMetadata>();
@@ -274,13 +270,16 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     }
 
     /**
-     * Create the health check metadata
+     * Create the health check meta data
      */
     private HealthCheckMetadata getHealthCheckMetadata(final ServiceReference healthCheckReference) {
         final HealthCheckMetadata descriptor = new HealthCheckMetadata(healthCheckReference);
         return descriptor;
     }
 
+    /**
+     * Create or reuse future for the list of health checks
+     */
     private List<HealthCheckFuture> createOrReuseFutures(final List<HealthCheckMetadata> healthCheckDescriptors) {
         final List<HealthCheckFuture> futuresForResultOfThisCall = new LinkedList<HealthCheckFuture>();
 
@@ -292,6 +291,9 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         return futuresForResultOfThisCall;
     }
 
+    /**
+     * Create or reuse future for the health check
+     */
     private HealthCheckFuture createOrReuseFuture(final HealthCheckMetadata metadata) {
         HealthCheckFuture stillRunningFuture = this.stillRunningFutures.get(metadata);
         HealthCheckFuture resultFuture;
@@ -300,51 +302,51 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             resultFuture = stillRunningFuture;
         } else {
             logger.debug("Creating future for {}", metadata);
-            resultFuture = new HealthCheckFuture(metadata, bundleContext);
+            resultFuture = new HealthCheckFuture(metadata, bundleContext, new HealthCheckFuture.Callback() {
+
+                @Override
+                public void finished(final HealthCheckExecutionResult result) {
+                    healthCheckResultCache.updateWith(result);
+                    stillRunningFutures.remove(metadata);
+                }
+            });
             this.hcThreadPool.execute(resultFuture);
         }
 
         return resultFuture;
     }
 
-    private void waitForFuturesRespectingTimeout(final HealthCheckFuture healthCheckFuture) {
-        StopWatch callExcutionTimeStopWatch = new StopWatch();
+    /**
+     * Wait for the futures until the timeout is reached
+     */
+    private void waitForFuturesRespectingTimeout(final List<HealthCheckFuture> futuresForResultOfThisCall) {
+        final StopWatch callExcutionTimeStopWatch = new StopWatch();
         callExcutionTimeStopWatch.start();
         boolean allFuturesDone;
         do {
             try {
                 Thread.sleep(50);
-            } catch (InterruptedException ie) {
-                logger.warn("Unexpected InterruptedException while waiting for healthCheckContributors", ie);
-            }
-
-            allFuturesDone = healthCheckFuture.isDone();
-        } while (!allFuturesDone && callExcutionTimeStopWatch.getTime() < this.timeoutInMs);
-    }
-
-    private void waitForFuturesRespectingTimeout(List<HealthCheckFuture> futuresForResultOfThisCall) {
-        StopWatch callExcutionTimeStopWatch = new StopWatch();
-        callExcutionTimeStopWatch.start();
-        boolean allFuturesDone;
-        do {
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException ie) {
+            } catch (final InterruptedException ie) {
                 logger.warn("Unexpected InterruptedException while waiting for healthCheckContributors", ie);
             }
 
             allFuturesDone = true;
-            for (HealthCheckFuture healthCheckFuture : futuresForResultOfThisCall) {
+            for (final HealthCheckFuture healthCheckFuture : futuresForResultOfThisCall) {
                 allFuturesDone &= healthCheckFuture.isDone();
             }
         } while (!allFuturesDone && callExcutionTimeStopWatch.getTime() < this.timeoutInMs);
     }
 
-    void collectResultsFromFutures(List<HealthCheckFuture> futuresForResultOfThisCall, Collection<HealthCheckExecutionResult> results) {
+    /**
+     * Collect the results from all futures
+     * @param futuresForResultOfThisCall The list of futures
+     * @param results The result collection
+     */
+    void collectResultsFromFutures(final List<HealthCheckFuture> futuresForResultOfThisCall, final Collection<HealthCheckExecutionResult> results) {
 
-        Set<HealthCheckExecutionResult> resultsFromFutures = new HashSet<HealthCheckExecutionResult>();
+        final Set<HealthCheckExecutionResult> resultsFromFutures = new HashSet<HealthCheckExecutionResult>();
 
-        Iterator<HealthCheckFuture> futuresIt = futuresForResultOfThisCall.iterator();
+        final Iterator<HealthCheckFuture> futuresIt = futuresForResultOfThisCall.iterator();
         while (futuresIt.hasNext()) {
             final HealthCheckFuture future = futuresIt.next();
             final HealthCheckExecutionResult result = this.collectResultFromFuture(future);
@@ -357,6 +359,11 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         results.addAll(resultsFromFutures);
     }
 
+    /**
+     * Collect the result from a single future
+     * @param future The future
+     * @return The execution result or a result for a reached timeout
+     */
     HealthCheckExecutionResult collectResultFromFuture(final HealthCheckFuture future) {
 
         HealthCheckExecutionResult result;
@@ -365,16 +372,11 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
             try {
                 result = future.get();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 logger.warn("Unexpected Exception during future.get(): " + e, e);
                 long futureElapsedTimeMs = new Date().getTime() - future.getCreatedTime().getTime();
                 result = new ExecutionResult(future.getHealthCheckMetadata(), Result.Status.HEALTH_CHECK_ERROR,
                         "Unexpected Exception during future.get(): " + e, futureElapsedTimeMs, false);
-            }
-
-            // if the future came from a previous call remove it from stillRunningFutures
-            if (this.stillRunningFutures.containsKey(future.getHealthCheckMetadata())) {
-                this.stillRunningFutures.remove(future.getHealthCheckMetadata());
             }
 
         } else {

@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.sling.hc.api.HealthCheck;
 import org.apache.sling.hc.api.Result;
+import org.apache.sling.hc.api.execution.HealthCheckExecutionResult;
 import org.apache.sling.hc.util.HealthCheckMetadata;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -35,12 +36,17 @@ import org.slf4j.LoggerFactory;
  *
  */
 class HealthCheckFuture extends FutureTask<ExecutionResult> {
+
+    public interface Callback {
+        public void finished(final HealthCheckExecutionResult result);
+    }
+
     private final static Logger LOG = LoggerFactory.getLogger(HealthCheckFuture.class);
 
     private final HealthCheckMetadata metadata;
     private final Date createdTime;
 
-    HealthCheckFuture(final HealthCheckMetadata metadata, final BundleContext bundleContext) {
+    HealthCheckFuture(final HealthCheckMetadata metadata, final BundleContext bundleContext, final Callback callback) {
         super(new Callable<ExecutionResult>() {
             @Override
             public ExecutionResult call() throws Exception {
@@ -48,7 +54,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                         "Health-Check-" + StringUtils.substringAfterLast(metadata.getTitle(), "."));
                 LOG.debug("Starting check {}", metadata);
 
-                StopWatch stopWatch = new StopWatch();
+                final StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
                 Result resultFromHealthCheck = null;
                 ExecutionResult executionResult = null;
@@ -62,9 +68,8 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                         throw new IllegalStateException("Service for " + metadata + " is gone");
                     }
 
-                } catch (Exception e) {
-                    resultFromHealthCheck = new Result(Result.Status.CRITICAL, "Exception during execution of " + this + ": " + e);
-                    // TODO ResultLog should be improved to be able to store exceptions
+                } catch (final Exception e) {
+                    resultFromHealthCheck = new Result(Result.Status.CRITICAL, "Exception during execution of " + this + ": " + e, e);
                 } finally {
                     // unget service ref
                     bundleContext.ungetService(metadata.getServiceReference());
@@ -80,6 +85,7 @@ class HealthCheckFuture extends FutureTask<ExecutionResult> {
                 }
 
                 Thread.currentThread().setName("Health-Check-idle");
+                callback.finished(executionResult);
                 return executionResult;
             }
         });
