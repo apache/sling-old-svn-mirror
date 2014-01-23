@@ -47,15 +47,6 @@ public class HealthCheckResultCache {
     private final Map<Long, HealthCheckExecutionResult> cache = new ConcurrentHashMap<Long, HealthCheckExecutionResult>();
 
     /**
-     * Update the cache with the results
-     */
-    public void updateWith(final Collection<HealthCheckExecutionResult> results) {
-        for (final HealthCheckExecutionResult result : results) {
-            this.updateWith(result);
-        }
-    }
-
-    /**
      * Update the cache with the result
      */
     public void updateWith(HealthCheckExecutionResult result) {
