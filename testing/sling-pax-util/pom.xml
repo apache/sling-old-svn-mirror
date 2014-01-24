@@ -27,6 +27,11 @@
     <packaging>jar</packaging>
 
     <name>Apache Sling Pax Exam Utilities</name>
+    
+    <description>
+        Utilities that make it easier to test Sling code with Pax Exam.
+        See this module's tests for usage examples.
+    </description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

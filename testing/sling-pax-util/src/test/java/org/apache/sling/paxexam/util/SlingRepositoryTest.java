@@ -34,11 +34,10 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 /** Verify that our tests have access to a functional Sling instance,
  *  and demonstrate how a simple test is setup.
  *  
- *  To create a test like this that runs against a full Sling launchpad 
- *  instance, one only needs the pax exam setup in the pom and a test 
- *  like this one that runs with @RunWith PaxExam, that provides a 
- *  Configuration method and can access services or the BundleContext
- *  using @Inject. 
+ *  Note how little boilerplate this example test has. You basically just 
+ *  define which version of the Sling launchpad bundle list you want to use, 
+ *  and you can then @Inject any OSGi services to be tested, along with the 
+ *  BundleContext.  
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
@@ -46,9 +45,12 @@ public class SlingRepositoryTest {
     @Inject
     private SlingRepository repository;
     
+    /** Use a released launchpad for this example */
+    public static final String SLING_LAUNCHPAD_VERSION = "6";
+    
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
-        return SlingPaxOptions.defaultLaunchpadOptions("6").getOptions();
+        return SlingPaxOptions.defaultLaunchpadOptions(SLING_LAUNCHPAD_VERSION).getOptions();
     }
 
     @Test
