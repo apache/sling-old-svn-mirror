@@ -48,7 +48,7 @@ public class SlingRepositoryTest {
     
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
-        return SlingPaxOptions.defaultLaunchpadOptions("7-SNAPSHOT").getOptions();
+        return SlingPaxOptions.defaultLaunchpadOptions("6").getOptions();
     }
 
     @Test
