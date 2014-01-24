@@ -40,6 +40,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
 import org.apache.sling.jcr.resource.JcrResourceUtil;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,8 +67,33 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
 
             public Iterator<Resource> findResources(String query,
                     String language) {
-                // TODO Auto-generated method stub
-                return null;
+                try {
+                    final Query q = getSession().getWorkspace().getQueryManager().createQuery(query, language);
+                    final QueryResult result = q.execute();
+                    final NodeIterator nodes = result.getNodes();
+                    return new Iterator<Resource>() {
+                        public boolean hasNext() {
+                            return nodes.hasNext();
+                        }
+
+                        public Resource next() {
+                            Node node = nodes.nextNode();
+                            try {
+                                return new JcrNodeResource(resolver, node, null ,null);
+                            } catch (RepositoryException e) {
+                                throw new IllegalStateException(e);
+                            }
+                        }
+
+                        public void remove() {
+                            throw new UnsupportedOperationException("remove");
+                        }
+                    };
+                } catch (NamingException ne) {
+                    return null;
+                } catch (RepositoryException re) {
+                    return null;
+                }
             }
 
             public Resource getResource(Resource base, String path) {
@@ -109,7 +135,7 @@ public class JcrResourceBundleTest extends RepositoryTestBase {
                     return new Iterator<Map<String, Object>>() {
                         public boolean hasNext() {
                             return rows.hasNext();
-                        };
+                        }
 
                         public Map<String, Object> next() {
                             Map<String, Object> row = new HashMap<String, Object>();

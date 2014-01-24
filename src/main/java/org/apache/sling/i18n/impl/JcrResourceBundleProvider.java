@@ -22,6 +22,7 @@ import static org.apache.sling.i18n.impl.JcrResourceBundle.PROP_BASENAME;
 import static org.apache.sling.i18n.impl.JcrResourceBundle.PROP_LANGUAGE;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
@@ -67,8 +69,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(immediate = true, metatype = true, label = "%provider.name", description = "%provider.description")
 @Service(ResourceBundleProvider.class)
-public class JcrResourceBundleProvider implements ResourceBundleProvider,
-        EventListener {
+public class JcrResourceBundleProvider implements ResourceBundleProvider {
 
     private static final boolean DEFAULT_PRELOAD_BUNDLES = false;
 
@@ -117,7 +118,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * base name and <code>Locale</code> used to load and identify the
      * <code>ResourceBundle</code>.
      */
-    private final ConcurrentHashMap<Key, ResourceBundle> resourceBundleCache = new ConcurrentHashMap<JcrResourceBundleProvider.Key, ResourceBundle>();
+    private final ConcurrentHashMap<Key, JcrResourceBundle> resourceBundleCache = new ConcurrentHashMap<JcrResourceBundleProvider.Key, JcrResourceBundle>();
+
+    private final Set<String> languageRootPaths = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
 
     /**
      * Return root resource bundle as created on-demand by
@@ -168,21 +171,45 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
     // ---------- EventListener ------------------------------------------------
 
     /**
-     * Called whenever something is changed inside of <code>jcr:language</code>
-     * or <code>sling:Message</code> nodes. We just removed all cached
+     * Observation support class that is used whenever something is changed inside of
+     * <code>sling:Message</code> nodes. We just removed all cached
      * resource bundles in this case to force reloading them.
      * <p>
      * This is much simpler than analyzing the events and trying to be clever
      * about which exact resource bundles to remove from the cache and at the
      * same time care for any resource bundle dependencies.
-     *
-     * @param events The actual JCR events are ignored by this implementation.
      */
-    public void onEvent(EventIterator events) {
-        log.debug("onEvent: Resource changes, removing cached ResourceBundles");
-        clearCache();
-        preloadBundles();
-    }
+    private final EventListener messageChangeHandler = new EventListener() {
+
+        public void onEvent(EventIterator events) {
+            log.debug("onEvent: Resource changes, removing cached ResourceBundles");
+            clearCache();
+            preloadBundles();
+        }
+    };
+
+    /**
+     * Observation support class that listens for changes of <code>mix:language</code> nodes.
+     * In this case we check if the given language is already loaded and only then invalidate the cache.
+     */
+    private final EventListener languageChangeHandler = new EventListener() {
+        public void onEvent(EventIterator events) {
+            log.debug("onEvent: Resource changes. checking for cached bundle.");
+            while (events.hasNext()) {
+                Event e = events.nextEvent();
+                try {
+                    if (languageRootPaths.contains(e.getPath())) {
+                        log.debug("onEvent: Detected change of cached language root {}, removing cached ResourceBundles", e.getPath());
+                        clearCache();
+                        preloadBundles();
+                        return;
+                    }
+                } catch (RepositoryException e1) {
+                    // ignore
+                }
+            }
+        }
+    };
 
     // ---------- SCR Integration ----------------------------------------------
 
@@ -267,7 +294,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
             Locale locale) {
 
         final Key key = new Key(baseName, locale);
-        ResourceBundle resourceBundle = resourceBundleCache.get(key);
+        JcrResourceBundle resourceBundle = resourceBundleCache.get(key);
 
         if (resourceBundle == null) {
             log.debug(
@@ -291,6 +318,9 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                 synchronized (this) {
                     bundleServiceRegistrations.add(serviceReg);
                 }
+
+                // register language root paths
+                languageRootPaths.addAll(resourceBundle.getLanguageRootPaths());
             }
         }
 
@@ -308,7 +338,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
      * @throws MissingResourceException If the <code>ResourceResolver</code>
      *             is not available to access the resources.
      */
-    private ResourceBundle createResourceBundle(String baseName, Locale locale) {
+    private JcrResourceBundle createResourceBundle(String baseName, Locale locale) {
 
         ResourceResolver resolver = getResourceResolver();
         if (resolver == null) {
@@ -399,6 +429,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
                 ResourceResolver resolver = null;
                 try {
                     if (repoCredentials == null) {
+                    	// TODO: use ServiceResourceResolver if available
                         resolver = fac.getAdministrativeResourceResolver(null);
                     } else {
                         resolver = fac.getResourceResolver(repoCredentials);
@@ -406,8 +437,10 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
                     final Session s = resolver.adaptTo(Session.class);
                     ObservationManager om = s.getWorkspace().getObservationManager();
-                    om.addEventListener(this, 255, "/", true, null,
-                        new String[] { "mix:language", "sling:Message" }, true);
+                    om.addEventListener(messageChangeHandler, 255, "/", true, null,
+                        new String[] { "sling:Message" }, true);
+                    om.addEventListener(languageChangeHandler, 255, "/", true, null,
+                        new String[] { "mix:language" }, true);
 
                     resourceResolver = resolver;
 
@@ -433,6 +466,7 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
     private void clearCache() {
         resourceBundleCache.clear();
+        languageRootPaths.clear();
 
         ServiceRegistration[] serviceRegs;
         synchronized (this) {
@@ -484,7 +518,8 @@ public class JcrResourceBundleProvider implements ResourceBundleProvider,
 
                 try {
                     ObservationManager om = s.getWorkspace().getObservationManager();
-                    om.removeEventListener(this);
+                    om.removeEventListener(messageChangeHandler);
+                    om.removeEventListener(languageChangeHandler);
                 } catch (Throwable t) {
                     log.info(
                         "releaseRepository: Problem unregistering as event listener",
