@@ -40,12 +40,15 @@ import org.osgi.framework.ServiceReference;
 @ExamReactorStrategy(PerClass.class)
 public class SlingSetupTest {
     
+    /** Use a released launchpad for this example */
+    public static final String SLING_LAUNCHPAD_VERSION = "6";
+    
     @Inject
     private BundleContext bundleContext;
     
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
-        return SlingPaxOptions.defaultLaunchpadOptions("6").getOptions();
+        return SlingPaxOptions.defaultLaunchpadOptions(SLING_LAUNCHPAD_VERSION).getOptions();
     }
 
     private void assertBundleActive(String symbolicName) {
