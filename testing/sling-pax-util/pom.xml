@@ -22,7 +22,7 @@
 
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.paxexam.util</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Apache Sling Pax Exam Utilities</name>
@@ -38,6 +38,12 @@
         <url.version>1.5.2</url.version>
         <pax.exam.log.level>INFO</pax.exam.log.level>
     </properties>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/testing/sling-pax-util</connection>
+        <developerConnection> scm:svn:https://svn.apache.org/repos/asf/sling/trunk/testing/sling-pax-util</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/testing/sling-pax-util</url>
+    </scm>
 
     <build>
         <plugins>
@@ -162,9 +168,4 @@
         </dependency>
     </dependencies>
 
-  <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.paxexam.util-1.0.2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.paxexam.util-1.0.2</developerConnection>
-    <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.paxexam.util-1.0.2</url>
-  </scm>
 </project>
