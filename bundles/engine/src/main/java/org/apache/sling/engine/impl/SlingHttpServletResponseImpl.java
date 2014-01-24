@@ -362,6 +362,6 @@ public class SlingHttpServletResponseImpl extends HttpServletResponseWrapper imp
     }
 
     private String map(String url) {
-        return getRequestData().getResourceResolver().map(url);
+        return getRequestData().getResourceResolver().map(getRequestData().getServletRequest(), url);
     }
 }
