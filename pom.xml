@@ -196,6 +196,7 @@
         <module>testing/junit/healthcheck</module>
         <module>testing/junit/remote</module>
         <module>testing/resourceresolver-mock</module>
+        <module>testing/sling-pax-util</module>
         
         <!-- Installer -->
         <module>installer/core</module>

@@ -26,7 +26,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Sling Pax Exam Utilities</name>
+    <name>Apache Sling Pax Exam Utilities</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
