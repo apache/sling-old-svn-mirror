@@ -296,11 +296,14 @@ public class JcrResourceListener implements EventListener {
             final ChangedAttributes changedAttributes) {
 
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
-        if ( event.getUserID() != null ) {
-            properties.put(SlingConstants.PROPERTY_USERID, event.getUserID());
-        }
+
         if (this.isExternal(event)) {
             properties.put("event.application", "unknown");
+        } else {
+            final String userID = event.getUserID();
+            if (userID != null) {
+                properties.put(SlingConstants.PROPERTY_USERID, userID);
+            }
         }
         if (changedAttributes != null) {
             changedAttributes.addProperties(properties);
