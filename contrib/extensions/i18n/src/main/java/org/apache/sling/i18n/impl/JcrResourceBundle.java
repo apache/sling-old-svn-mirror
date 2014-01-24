@@ -19,8 +19,10 @@
 package org.apache.sling.i18n.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -32,9 +34,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 
+import org.apache.jackrabbit.util.ISO9075;
 import org.apache.sling.api.SlingException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,23 +57,36 @@ public class JcrResourceBundle extends ResourceBundle {
 
     static final String PROP_LANGUAGE = "jcr:language";
 
+    /**
+     * java.util.Formatter pattern to build the XPath query to search for
+     * messages in a given root path (%s argument).
+     *
+     * @see #loadFully(ResourceResolver, Set, Set)
+     */
+    private static final String QUERY_MESSAGES_FORMAT = "/jcr:root%s//element(*,sling:Message)";
+
     private final Map<String, Object> resources;
 
     private final Locale locale;
 
+    private final Set<String> languageRoots = new HashSet<String>();
+
     JcrResourceBundle(Locale locale, String baseName,
             ResourceResolver resourceResolver) {
         this.locale = locale;
-        
+
         long start = System.currentTimeMillis();
         refreshSession(resourceResolver, true);
-        final String loadQuery = getFullLoadQuery(locale, baseName);
-        this.resources = loadFully(resourceResolver, loadQuery);
+        Set<String> roots = loadPotentialLanguageRoots(resourceResolver, locale, baseName);
+        this.resources = loadFully(resourceResolver, roots, this.languageRoots);
         long end = System.currentTimeMillis();
-        log.debug(
-            "JcrResourceBundle: Fully loaded {} entries for {} (base: {}) in {}ms",
-            new Object[] { resources.size(), locale, baseName,
-                (end - start) });
+        if (log.isDebugEnabled()) {
+            log.debug(
+                "JcrResourceBundle: Fully loaded {} entries for {} (base: {}) in {}ms",
+                new Object[] { resources.size(), locale, baseName,
+                    (end - start) });
+            log.debug("JcrResourceBundle: Language roots: {}", languageRoots);
+        }
     }
 
     static void refreshSession(ResourceResolver resolver, boolean keepChanges) {
@@ -82,6 +100,10 @@ public class JcrResourceBundle extends ResourceBundle {
                 throw new RuntimeException("RepositoryException in session.refresh", re);
             }
         }
+    }
+
+    protected Set<String> getLanguageRootPaths() {
+        return languageRoots;
     }
 
     @Override
@@ -120,98 +142,113 @@ public class JcrResourceBundle extends ResourceBundle {
         return resources.get(key);
     }
 
+    /**
+     * Fully loads the resource bundle from the storage.
+     * <p>
+     * This method adds entries to the {@code languageRoots} set of strings.
+     * Therefore this method must not be called concurrently or the set
+     * must either be thread safe.
+     *
+     * @param resourceResolver The storage access (must not be {@code null})
+     * @param roots The set of (potential) disctionary subtrees. This must
+     *      not be {@code null}. If empty, no resources will actually be
+     *      loaded.
+     * @param languageRoots The set of actualy dictionary subtrees. While
+     *      processing the resources, all subtrees listed in the {@code roots}
+     *      set is added to this set if it actually contains resources. This
+     *      must not be {@code null}.
+     * @return
+     *
+     * @throws NullPointerException if either of the parameters is {@code null}.
+     */
     @SuppressWarnings("deprecation")
-    private Map<String, Object> loadFully(
-            final ResourceResolver resourceResolver, final String fullLoadQuery) {
-        log.debug("Executing full load query {}", fullLoadQuery);
-
-        // do an XPath query because this won't go away soon and still
-        // (2011/04/04) is the fastest query language ...
-        Iterator<Map<String, Object>> bundles = null;
-        try {
-            bundles = resourceResolver.queryResources(fullLoadQuery, Query.XPATH);
-        } catch (final SlingException se) {
-            log.error("Exception during resource query " + fullLoadQuery, se);
-        }
-
+    private Map<String, Object> loadFully(final ResourceResolver resourceResolver, Set<String> roots, Set<String> languageRoots) {
         final Map<String, Object> rest = new HashMap<String, Object>();
-        if ( bundles != null ) {
-            final String[] path = resourceResolver.getSearchPath();
+        for (String root: roots) {
+            String fullLoadQuery = String.format(QUERY_MESSAGES_FORMAT, ISO9075.encodePath(root));
 
-            final List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
-            for (int i = 0; i < path.length; i++) {
-                res0.add(new HashMap<String, Object>());
+            log.debug("Executing full load query {}", fullLoadQuery);
+
+            // do an XPath query because this won't go away soon and still
+            // (2011/04/04) is the fastest query language ...
+            Iterator<Map<String, Object>> bundles = null;
+            try {
+                bundles = resourceResolver.queryResources(fullLoadQuery, Query.XPATH);
+            } catch (final SlingException se) {
+                log.error("Exception during resource query " + fullLoadQuery, se);
             }
 
-            while (bundles.hasNext()) {
-                final Map<String, Object> row = bundles.next();
-                final String jcrPath = (String) row.get(JCR_PATH);
-                String key = (String) row.get(PROP_KEY);
+            if ( bundles != null ) {
+                final String[] path = resourceResolver.getSearchPath();
 
-                if (key == null) {
-                    key = ResourceUtil.getName(jcrPath);
+                final List<Map<String, Object>> res0 = new ArrayList<Map<String, Object>>();
+                for (int i = 0; i < path.length; i++) {
+                    res0.add(new HashMap<String, Object>());
                 }
 
-                Map<String, Object> dst = rest;
-                for (int i = 0; i < path.length; i++) {
-                    if (jcrPath.startsWith(path[i])) {
-                        dst = res0.get(i);
-                        break;
+                while (bundles.hasNext()) {
+                    final Map<String, Object> row = bundles.next();
+                    if (row.containsKey(PROP_VALUE)) {
+                        final String jcrPath = (String) row.get(JCR_PATH);
+                        String key = (String) row.get(PROP_KEY);
+
+                        if (key == null) {
+                            key = ResourceUtil.getName(jcrPath);
+                        }
+
+                        Map<String, Object> dst = rest;
+                        for (int i = 0; i < path.length; i++) {
+                            if (jcrPath.startsWith(path[i])) {
+                                dst = res0.get(i);
+                                break;
+                            }
+                        }
+
+                        dst.put(key, row.get(PROP_VALUE));
                     }
                 }
 
-                dst.put(key, row.get(PROP_VALUE));
-            }
+                for (int i = path.length - 1; i >= 0; i--) {
+                    final Map<String, Object> resources = res0.get(i);
+                    if (!resources.isEmpty()) {
+                        rest.putAll(resources);
+                        // also remember root
+                        languageRoots.add(root);
 
-            for (int i = path.length - 1; i >= 0; i--) {
-                rest.putAll(res0.get(i));
+                    }
+                }
             }
         }
+
         return rest;
     }
 
-    private static String getFullLoadQuery(final Locale locale,
-            final String baseName) {
-        final StringBuilder buf = new StringBuilder(64);
-
-        buf.append("//element(*,mix:language)[");
-
+    private Set<String> loadPotentialLanguageRoots(ResourceResolver resourceResolver, Locale locale, String baseName) {
         final String localeString = locale.toString();
-        buf.append("@jcr:language='").
-            append(localeString).
-            append('\'');
         final String localeStringLower = localeString.toLowerCase();
-        if (!localeStringLower.equals(localeString)) {
-            buf.append(" or @jcr:language='").
-                append(localeStringLower).
-                append('\'');
-        }
         final String localeRFC4646String = toRFC4646String(locale);
-        if (!localeRFC4646String.equals(localeString)) {
-            buf.append(" or @jcr:language='").
-                append(localeRFC4646String).
-                append('\'');
-            final String localeRFC4646StringLower = localeRFC4646String.toLowerCase();
-            if (!localeRFC4646StringLower.equals(localeRFC4646String)) {
-                buf.append(" or @jcr:language='").
-                    append(localeRFC4646StringLower).
-                    append('\'');
+        final String localeRFC4646StringLower = localeRFC4646String.toLowerCase();
+
+        Set<String> paths = new HashSet<String>();
+        @SuppressWarnings("deprecation")
+        Iterator<Resource> bundles = resourceResolver.findResources("//element(*,mix:language)", Query.XPATH);
+        while (bundles.hasNext()) {
+            Resource bundle = bundles.next();
+            ValueMap properties = bundle.adaptTo(ValueMap.class);
+            String language = properties.get(PROP_LANGUAGE, String.class);
+            if (language != null && language.length() > 0) {
+                if (language.equals(localeString)
+                        || language.equals(localeStringLower)
+                        || language.equals(localeRFC4646String)
+                        || language.equals(localeRFC4646StringLower)) {
+
+                    if (baseName == null || baseName.equals(properties.get(PROP_BASENAME, ""))) {
+                        paths.add(bundle.getPath());
+                    }
+                }
             }
         }
-
-        if (baseName != null) {
-            buf.append(" and @");
-            buf.append(PROP_BASENAME);
-            if (baseName.length() > 0) {
-                buf.append("='").append(baseName).append('\'');
-            }
-        }
-
-        buf.append("]//element(*,sling:Message)");
-        buf.append("[@").append(PROP_VALUE).append("]/(@");
-        buf.append(PROP_KEY).append("|@").append(PROP_VALUE).append(")");
-
-        return buf.toString();
+        return Collections.unmodifiableSet(paths);
     }
 
     // Would be nice if Locale.toString() output RFC 4646, but it doesn't
