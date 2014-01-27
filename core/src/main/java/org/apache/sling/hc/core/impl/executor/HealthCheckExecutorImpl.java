@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.felix.scr.annotations.Activate;
@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
 @Service(value = {HealthCheckExecutor.class, ExtendedHealthCheckExecutor.class})
 @Component(label = "Apache Sling Health Check Executor",
         description = "Runs health checks for a given list of tags in parallel.",
-        metatype = true, immediate = true)
+        metatype = true, immediate = true) // immediate = true to keep the cache!
 public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, ServiceListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -100,7 +100,7 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
 
     private final HealthCheckResultCache healthCheckResultCache = new HealthCheckResultCache();
 
-    private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new ConcurrentHashMap<HealthCheckMetadata, HealthCheckFuture>();
+    private final Map<HealthCheckMetadata, HealthCheckFuture> stillRunningFutures = new HashMap<HealthCheckMetadata, HealthCheckFuture>();
 
     @Reference
     private ThreadPoolManager threadPoolManager;
@@ -244,8 +244,10 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
         result = healthCheckResultCache.useValidCacheResults(metadata, resultCacheTtlInMs);
 
         if ( result == null ) {
-            // everything else is executed in parallel via futures
-            final HealthCheckFuture future = createOrReuseFuture(metadata);
+            final HealthCheckFuture future;
+            synchronized ( this.stillRunningFutures ) {
+                future = createOrReuseFuture(metadata);
+            }
 
             // wait for futures at most until timeout (but will return earlier if all futures are finished)
             waitForFuturesRespectingTimeout(Collections.singletonList(future));
@@ -283,37 +285,42 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
     private List<HealthCheckFuture> createOrReuseFutures(final List<HealthCheckMetadata> healthCheckDescriptors) {
         final List<HealthCheckFuture> futuresForResultOfThisCall = new LinkedList<HealthCheckFuture>();
 
-        for (final HealthCheckMetadata md : healthCheckDescriptors) {
+        synchronized ( this.stillRunningFutures ) {
+            for (final HealthCheckMetadata md : healthCheckDescriptors) {
 
-            futuresForResultOfThisCall.add(createOrReuseFuture(md));
+                futuresForResultOfThisCall.add(createOrReuseFuture(md));
 
+            }
         }
         return futuresForResultOfThisCall;
     }
 
     /**
      * Create or reuse future for the health check
+     * This method must be synchronized by the caller(!) on stillRunningFutures
      */
     private HealthCheckFuture createOrReuseFuture(final HealthCheckMetadata metadata) {
-        HealthCheckFuture stillRunningFuture = this.stillRunningFutures.get(metadata);
-        HealthCheckFuture resultFuture;
-        if (stillRunningFuture != null && !stillRunningFuture.isDone()) {
+        HealthCheckFuture future = this.stillRunningFutures.get(metadata);
+        if (future != null ) {
             logger.debug("Found a future that is still running for {}", metadata);
-            resultFuture = stillRunningFuture;
         } else {
             logger.debug("Creating future for {}", metadata);
-            resultFuture = new HealthCheckFuture(metadata, bundleContext, new HealthCheckFuture.Callback() {
+            future = new HealthCheckFuture(metadata, bundleContext, new HealthCheckFuture.Callback() {
 
                 @Override
                 public void finished(final HealthCheckExecutionResult result) {
                     healthCheckResultCache.updateWith(result);
-                    stillRunningFutures.remove(metadata);
+                    synchronized ( stillRunningFutures ) {
+                        stillRunningFutures.remove(metadata);
+                    }
                 }
             });
-            this.hcThreadPool.execute(resultFuture);
+            this.stillRunningFutures.put(metadata, future);
+
+            this.hcThreadPool.execute(future);
         }
 
-        return resultFuture;
+        return future;
     }
 
     /**
@@ -383,8 +390,6 @@ public class HealthCheckExecutorImpl implements ExtendedHealthCheckExecutor, Ser
             logger.debug("Health Check timed out: {}", future.getHealthCheckMetadata());
             // Futures must not be cancelled as interrupting a health check might could cause a corrupted repository index
             // (CrxRoundtripCheck) or ugly messages/stack traces in the log file
-
-            this.stillRunningFutures.put(future.getHealthCheckMetadata(), future);
 
             // normally we turn the check into WARN (normal timeout), but if the threshold time for CRITICAL is reached for a certain
             // future we turn the result CRITICAL
