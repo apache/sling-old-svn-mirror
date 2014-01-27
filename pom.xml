@@ -13,7 +13,7 @@
     <groupId>org.apache.sling</groupId>
     <artifactId>org.apache.sling.hc.webconsole</artifactId>
     <packaging>bundle</packaging>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
 
     <name>Apache Sling Health Check Webconsole Plugin</name>
     <inceptionYear>2013</inceptionYear>
@@ -27,9 +27,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.webconsole-1.1.0</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.hc.webconsole-1.1.0</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.hc.webconsole-1.1.0</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/webconsole</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/healthcheck/webconsole</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/healthcheck/webconsole</url>
     </scm>
 
     <build>
