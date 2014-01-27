@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -98,7 +97,9 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     private final Semaphore resetLock = new Semaphore(1);
 
-    private final AtomicBoolean configChanged = new AtomicBoolean();
+    private final Object configChangedFlagLock = new Object();
+
+    private boolean configChanged = false;
 
     private final AppenderTracker appenderTracker;
 
@@ -182,17 +183,85 @@ public class LogbackManager extends LoggerContextAwareBase {
         getLoggerContext().stop();
     }
 
+    //-------------------------------------- Config reset handling ----------
+
     public void configChanged() {
         if (!started) {
             return;
         }
 
-        if (resetLock.tryAcquire()) {
-            scheduleConfigReload();
-        } else {
-            configChanged.set(true);
-            addInfo("LoggerContext reset in progress. Marking config changed to true");
+        /*
+        Logback reset cannot be done concurrently. So when Logback is being reset
+        we note down any new request for reset. Later when the thread which performs
+        reset finishes, then it checks if any request for reset pending. if yes
+        then it again tries to reschedules a job to perform reset in rescheduleIfConfigChanged
+
+        Logback reset is done under a lock 'resetLock' so that Logback
+        is not reconfigured concurrently. Only the thread which acquires the
+        'resetLock' can submit the task for reload (actual reload done async)
+
+        Once the reload is done the lock is released in LoggerReconfigurer#run
+
+        The way locking works is any thread which changes config
+        invokes configChanged. Here two things are possible
+
+        1. Log reset in progress i.e. resetLock already acquired
+           In this case the thread would just set the 'configChanged' flag to true
+
+        2. No reset in progress. Thread would acquire the  resetLock and submit the
+          job to reset Logback
+
+
+        Any such change is synchronized with configChangedFlagLock such that a request
+         for config changed is not missed
+        */
+
+        synchronized (configChangedFlagLock){
+            if (resetLock.tryAcquire()) {
+                configChanged = false;
+                scheduleConfigReload();
+            } else {
+                configChanged = true;
+                addInfo("LoggerContext reset in progress. Marking config changed to true");
+            }
         }
+    }
+
+    private void rescheduleIfConfigChanged(){
+        synchronized (configChangedFlagLock){
+            //If config changed then only acquire a lock
+            //and proceed to reload
+            if(configChanged){
+                if(resetLock.tryAcquire()){
+                    configChanged = false;
+                    scheduleConfigReload();
+                }
+                //else some other thread acquired the resetlock
+                //and reset is in progress. That job would
+                //eventually call rescheduleIfConfigChanged again
+                //and configChanged request would be taken care of
+            }
+        }
+    }
+
+    private void scheduleConfigReload() {
+        getLoggerContext().getExecutorService().submit(new Runnable() {
+            @Override
+            public void run() {
+                // TODO Might be better to run a job to monitor refreshRequirement
+                try {
+                    addInfo("Performing configuration");
+                    configure();
+                } catch (Exception e) {
+                    log.warn("Error occurred while re-configuring logger", e);
+                    addError("Error occurred while re-configuring logger", e);
+                } finally {
+                    resetLock.release();
+                    addInfo("Re configuration done");
+                    rescheduleIfConfigChanged();
+                }
+            }
+        });
     }
 
     public void fireResetCompleteListeners(){
@@ -261,7 +330,8 @@ public class LogbackManager extends LoggerContextAwareBase {
             success = true;
         } catch (Throwable t) {
             //Need to catch any error as Logback must work in all scenarios
-            addError("Error configuring Logback", t);
+            //The error would be dumped to sysout in later call to Status printer
+            addError("Error occurred while configuring Logback", t);
         } finally {
             if(!success){
                 cb.fallbackConfiguration(eventList, createConfigurator(), statusListener);
@@ -284,10 +354,6 @@ public class LogbackManager extends LoggerContextAwareBase {
         if (statusListener != null && !getStatusManager().getCopyOfStatusListenerList().contains(statusListener)) {
             getStatusManager().add(statusListener);
         }
-    }
-
-    private void scheduleConfigReload() {
-        getLoggerContext().getExecutorService().submit(new LoggerReconfigurer());
     }
 
     private String getRootDir(BundleContext bundleContext) {
@@ -374,30 +440,6 @@ public class LogbackManager extends LoggerContextAwareBase {
      */
     @SuppressWarnings("UnusedDeclaration")
     public static class DummyLogManagerConfiguration {
-    }
-
-    private class LoggerReconfigurer implements Runnable {
-
-        public void run() {
-            // TODO Might be better to run a job to monitor refreshRequirement
-            boolean configChanged = false;
-            try {
-                addInfo("Performing configuration");
-                configure();
-                configChanged = LogbackManager.this.configChanged.getAndSet(false);
-                if (configChanged) {
-                    scheduleConfigReload();
-                }
-            } catch (Exception e) {
-                log.warn("Error occurred while re-configuring logger", e);
-                addError("Error occurred while re-configuring logger", e);
-            } finally {
-                if (!configChanged) {
-                    resetLock.release();
-                    addInfo("Re configuration done");
-                }
-            }
-        }
     }
 
     // ~-------------------------------LoggerContextListener
