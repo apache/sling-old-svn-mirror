@@ -122,7 +122,6 @@ public class LogbackManager extends LoggerContextAwareBase {
     private volatile long resetStartTime;
 
     public LogbackManager(BundleContext bundleContext) throws InvalidSyntaxException {
-        final long startTime = System.currentTimeMillis();
         this.bundleContext = bundleContext;
 
         setLoggerContext((LoggerContext) LoggerFactory.getILoggerFactory());
@@ -154,13 +153,11 @@ public class LogbackManager extends LoggerContextAwareBase {
         serviceTrackers.add(turboFilterTracker);
 
         getLoggerContext().addListener(osgiIntegrationListener);
-
-        configure();
         registerWebConsoleSupport();
         registerEventHandler();
-        StatusPrinter.printInCaseOfErrorsOrWarnings(getLoggerContext(), startTime);
 
         started = true;
+        configChanged();
     }
 
     public void shutdown() {
