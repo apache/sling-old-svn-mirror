@@ -42,6 +42,7 @@
         <org.ops4j.pax.logging.DefaultServiceLog.level>INFO</org.ops4j.pax.logging.DefaultServiceLog.level>
         <bundle.file.name>${basedir}/target/${project.build.finalName}.jar</bundle.file.name>
         <sling.java.version>6</sling.java.version>
+        <sling.launchpad.version>7-SNAPSHOT</sling.launchpad.version>
     </properties>
 
     <scm>
@@ -102,6 +103,7 @@
                         <pax.exam.log.level>${pax.exam.log.level}</pax.exam.log.level>
                         <java.protocol.handler.pkgs>org.ops4j.pax.url</java.protocol.handler.pkgs>
                         <bundle.file.name>${bundle.file.name}</bundle.file.name>
+                        <sling.launchpad.version>${sling.launchpad.version}</sling.launchpad.version>
                     </systemPropertyVariables>
                     <classpathDependencyExcludes>
                         <!-- The osgi.org dependencies cause trouble with pax exam -->
@@ -117,8 +119,8 @@
                         <fileset>
                             <directory>${basedir}</directory>
                             <includes>
-                                <include>oak</include>
-                                <include>jackrabbit</include>
+                                <include>oak/**</include>
+                                <include>jackrabbit/**</include>
                                 <include>derby.log</include>
                             </includes>
                         </fileset>
@@ -139,6 +141,14 @@
             <artifactId>org.apache.sling.commons.osgi</artifactId>
             <version>2.1.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.launchpad</artifactId>
+            <version>${sling.launchpad.version}</version>
+            <type>xml</type>
+            <classifier>bundlelist</classifier>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -186,15 +196,12 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--
-        No release yet available, omit for now
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.paxexam.util</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.2</version>
             <scope>test</scope>
         </dependency>
-        -->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.commons.testing</artifactId>

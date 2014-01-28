@@ -18,44 +18,63 @@
  */
 package org.apache.sling.i18n.it;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
+import javax.inject.Inject;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import org.apache.sling.i18n.ResourceBundleProvider;
+import org.apache.sling.i18n.impl.Message;
+import org.apache.sling.jcr.api.SlingRepository;
+import org.apache.sling.paxexam.util.SlingPaxOptions;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.CoreOptions;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.DefaultCompositeOption;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class ResourceBundleProviderIT {
 
-//    private final Logger log = LoggerFactory.getLogger(getClass());
-//
-//    public static final int RETRY_TIMEOUT_MSEC = 5000;
-//    public static final String MSG_KEY = "foo";
-//
-//    @Inject
-//    private SlingRepository repository;
-//
-//    @Inject
-//    private ResourceBundleProvider resourceBundleProvider;
-//
-//    private Session session;
-//    private Node i18nRoot;
-//    private Node deRoot;
-//    private Node frRoot;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    public static final int RETRY_TIMEOUT_MSEC = 5000;
+    public static final String MSG_KEY = "foo";
+
+    @Inject
+    private SlingRepository repository;
+
+    @Inject
+    private ResourceBundleProvider resourceBundleProvider;
+
+    private Session session;
+    private Node i18nRoot;
+    private Node deRoot;
+    private Node frRoot;
 
     @org.ops4j.pax.exam.Configuration
     public Option[] config() {
         final File thisProjectsBundle = new File(System.getProperty( "bundle.file.name", "BUNDLE_FILE_NOT_SET" ));
+        final String launchpadVersion = System.getProperty("sling.launchpad.version", "LAUNCHPAD_VERSION_NOT_SET");
         return new DefaultCompositeOption(
-//                SlingPaxOptions.defaultLaunchpadOptions("7-SNAPSHOT"),
-//                provision(bundle(thisProjectsBundle.toURI().toString()))
+                SlingPaxOptions.defaultLaunchpadOptions(launchpadVersion),
+                CoreOptions.provision(CoreOptions.bundle(thisProjectsBundle.toURI().toString()))
                 ).getOptions();
     }
 
@@ -86,7 +105,6 @@ public class ResourceBundleProviderIT {
         System.err.println("All tests are disabled for now ....");
     }
 
-/*
     @Before
     public void setup() throws RepositoryException {
         session = repository.loginAdministrative(null);
@@ -163,5 +181,4 @@ public class ResourceBundleProviderIT {
         session.save();
         assertMessages("DE_changed", "FR_changed");
     }
-*/
 }
