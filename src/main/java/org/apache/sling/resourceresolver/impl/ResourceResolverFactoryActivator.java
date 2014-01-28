@@ -35,6 +35,7 @@ import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
+import org.apache.felix.scr.annotations.ReferenceStrategy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -77,7 +78,9 @@ import org.osgi.service.event.EventAdmin;
 @References({
     @Reference(name = "ResourceProvider", referenceInterface = ResourceProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-    @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC) })
+    @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
+    @Reference(name = ResourceResolverFactoryActivator.FEATURES_NAME, referenceInterface = Features.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, strategy = ReferenceStrategy.LOOKUP)
+})
 public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
     private static final class FactoryRegistration {
@@ -186,6 +189,9 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
                             "are processed and added to the mappoing table.")
     private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
 
+    // name of the Features service reference
+    static final String FEATURES_NAME = "features";
+
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
 
@@ -221,11 +227,6 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
-    @Reference(
-            policy = ReferencePolicy.DYNAMIC,
-            cardinality = ReferenceCardinality.OPTIONAL_UNARY)
-    private Features featuresService;
-
     /** ComponentContext */
     private volatile ComponentContext componentContext;
 
@@ -250,8 +251,13 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
         return this.resourceAccessSecurityTracker;
     }
 
-    public Features getFeatures() {
-        return this.featuresService;
+    public Object getFeatures() {
+        // This calls into the ComponentContext on each access to this method
+        // which will happen at least once for each resource being resolved.
+        // we might want to consider performance of this mechanism and maybe
+        // fall back to event based lookup with a marker value to indicate
+        // whether the service has to be retrieved or not
+        return this.componentContext.locateService(FEATURES_NAME);
     }
 
     public EventAdmin getEventAdmin() {
