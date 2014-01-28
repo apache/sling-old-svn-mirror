@@ -45,7 +45,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ResourceWrapper;
-import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.resourceresolver.impl.helper.RedirectResource;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIterator;
 import org.apache.sling.resourceresolver.impl.helper.ResourceIteratorDecorator;
@@ -426,7 +425,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
             while (path != null) {
                 String alias = null;
                 if (current != null && !path.endsWith(JCR_CONTENT_LEAF)) {
-                    alias = getProperty(current, PROP_ALIAS);
+                    alias = ResourceResolverContext.getProperty(current, PROP_ALIAS);
                 }
                 if (alias == null || alias.length() == 0) {
                     alias = ResourceUtil.getName(path);
@@ -870,7 +869,7 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
         Resource child = getResourceInternal( ResourceUtil.normalize(path) );
         if (child != null) {
-            final String alias = getProperty(child, PROP_REDIRECT_INTERNAL);
+            final String alias = ResourceResolverContext.getProperty(child, PROP_REDIRECT_INTERNAL);
             if (alias != null) {
                 // TODO: might be a redirect ??
                 logger.warn("getChildInternal: Internal redirect to {} for Resource {} is not supported yet, ignoring", alias,
@@ -917,33 +916,6 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
         }
 
         logger.debug("getResourceInternal: Cannot resolve path '{}' to a resource", path);
-        return null;
-    }
-
-    private String getProperty(final Resource res, final String propName) {
-        return getProperty(res, propName, String.class);
-    }
-
-    private <Type> Type getProperty(final Resource res, final String propName, final Class<Type> type) {
-
-        // check the property in the resource itself
-        final ValueMap props = res.adaptTo(ValueMap.class);
-        if (props != null) {
-            Type prop = props.get(propName, type);
-            if (prop != null) {
-                logger.debug("getProperty: Resource {} has property {}={}", new Object[] { res, propName, prop });
-                return prop;
-            }
-            // otherwise, check it in the jcr:content child resource
-            // This is a special case checking for JCR based resources
-            // we directly use the deep resolution of properties of the
-            // JCR value map implementation - this does not work
-            // in non JCR environments, however in non JCR envs there
-            // is usually no "jcr:content" child node anyway
-            prop = props.get("jcr:content/" + propName, type);
-            return prop;
-        }
-
         return null;
     }
 
