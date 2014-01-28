@@ -80,16 +80,16 @@ public class ResourceResolverContext {
     private ResourceResolver resourceTypeResourceResolver;
 
     /** Features ServiceTracker */
-    private final FeaturesHolder featuresService;
+    private final FeaturesHolder featuresHolder;
 
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker, final FeaturesHolder featuresService) {
+    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker, final FeaturesHolder featuresHolder) {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
         this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
-        this.featuresService = featuresService;
+        this.featuresHolder = featuresHolder;
     }
 
     /**
@@ -103,7 +103,7 @@ public class ResourceResolverContext {
      * @return the Features service tracker used by this context
      */
     public FeaturesHolder getFeaturesHolder() {
-        return this.featuresService;
+        return this.featuresHolder;
     }
 
     /**
@@ -281,11 +281,11 @@ public class ResourceResolverContext {
      */
     public Resource applyFeatures(final Resource resource) {
         if (resource != null) {
-            Features featuresService = this.featuresService.getFeatures();
-            if (featuresService != null) {
+            Object featuresService = this.featuresHolder.getFeatures();
+            if (featuresService instanceof Features) {
                 String[] features = getProperty(resource, RESOURCE_PROPERTY, String[].class);
                 if (features != null && features.length > 0) {
-                    ClientContext featureContext = featuresService.getCurrentClientContext();
+                    ClientContext featureContext = ((Features) featuresService).getCurrentClientContext();
                     for (String feature : features) {
 
                         // check whether the feature must be disabled

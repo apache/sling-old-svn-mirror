@@ -18,8 +18,6 @@
  */
 package org.apache.sling.resourceresolver.impl.helper;
 
-import org.apache.sling.featureflags.Features;
-
 /**
  * The <code>FeaturesHolder</code> interface is an API to provide dynamic
  * access to the Features service without having to hold on to the
@@ -30,6 +28,6 @@ public interface FeaturesHolder {
     /**
      * @return The {@code Features} service if available, {@code null} otherwise
      */
-    public Features getFeatures();
+    public Object getFeatures();
 
 }
