@@ -47,7 +47,7 @@
  *  </tr>
  *  <tr>
  *      <td>{@code description}</td>
- *      <td>Description for the feature. The intent is to descibe the behaviour
+ *      <td>Description for the feature. The intent is to describe the behavior
  *          of the application if this feature would be enabled. It is recommended
  *          to define this property. The default value is the value of the name property.</td>
  *  </tr>

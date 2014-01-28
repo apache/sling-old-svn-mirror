@@ -37,7 +37,7 @@ import aQute.bnd.annotation.ProviderType;
  * This object provides access to live data and must only be used to read
  * information. Modifying content through a {@code ResourceResolver} directly or
  * indirectly provided by this object is considered inappropriate and faulty
- * behaviour.
+ * behavior.
  */
 @ProviderType
 public interface ExecutionContext {

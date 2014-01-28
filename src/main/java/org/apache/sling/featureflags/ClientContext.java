@@ -28,7 +28,7 @@ import aQute.bnd.annotation.ProviderType;
  * <p>
  * Prepared {@code ClientContext} instances are available through the
  * {@link Features} service. Consumers of this interface are not expected to
- * implent it.
+ * implement it.
  */
 @ProviderType
 public interface ClientContext {
