@@ -660,7 +660,12 @@ public class SlingLogPanel extends HttpServlet {
             return String.format("File : [%s] %s", appender.getName(), ((FileAppender) appender).getFile());
         }
 
-        return String.format("%s (%s)", appender.getName(), appender.getClass().getName());
+        final String appenderName = appender.getName();
+        if(appenderName == null){
+            return appender.getClass().getName();
+        } else {
+            return String.format("%s (%s)", appender.getName(), appender.getClass().getName());
+        }
     }
 
     private static String formatPid(final String consoleAppRoot, final Appender<ILoggingEvent> appender,
