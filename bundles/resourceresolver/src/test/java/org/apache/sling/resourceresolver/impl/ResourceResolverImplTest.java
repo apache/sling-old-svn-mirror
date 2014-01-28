@@ -41,6 +41,7 @@ import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.SyntheticResource;
+import org.apache.sling.resourceresolver.impl.helper.MockFeaturesHolder;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,11 +58,11 @@ public class ResourceResolverImplTest {
     @Before public void setup() {
         commonFactory = new CommonResourceResolverFactoryImpl(new ResourceResolverFactoryActivator());
         resFac = new ResourceResolverFactoryImpl(commonFactory, /* TODO: using Bundle */ null, null);
-        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        resResolver = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), MockFeaturesHolder.INSTANCE));
     }
 
     @Test public void testClose() throws Exception {
-        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        final ResourceResolver rr = new ResourceResolverImpl(commonFactory, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), MockFeaturesHolder.INSTANCE));
         assertTrue(rr.isLive());
         rr.close();
         assertFalse(rr.isLive());
@@ -358,7 +359,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), null));
         resolvers.add(resolver);
 
         // the resources to test
@@ -394,7 +395,7 @@ public class ResourceResolverImplTest {
                     }
 
                 },
-                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+                new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), null));
         resolvers.add(resolver);
         final Resource r = new SyntheticResource(resolver, "/a", "a:b") {
             @Override

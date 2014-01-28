@@ -37,6 +37,8 @@ import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.Constants;
 
 public class ResourceProviderEntryTest {
@@ -56,8 +58,7 @@ public class ResourceProviderEntryTest {
 
     @Test public void testRootProvider() {
         assertNull(root.getResource(null, null, "relpath"));
-        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
-        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = getResourceResolverContext();
         assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/"));
         assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel"));
         assertEqualsResolver(this.rootResolver, root.getResource(ctx, null, "/rootel/child"));
@@ -68,8 +69,7 @@ public class ResourceProviderEntryTest {
 
     @Test public void testAdd1Provider() {
         String firstPath = "/rootel";
-        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
-        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(resolver));
@@ -95,8 +95,7 @@ public class ResourceProviderEntryTest {
         String thirdPath = "/apps/sling/sample";
         String secondPath = firstPath + "/child";
 
-        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
-        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
@@ -135,8 +134,7 @@ public class ResourceProviderEntryTest {
         String thirdPath = "/apps/sling/sample";
         String secondPath = firstPath + "/child";
 
-        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
-        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
@@ -175,8 +173,7 @@ public class ResourceProviderEntryTest {
         String thirdPath = "/apps/sling/sample";
         String secondPath = firstPath + "/child";
 
-        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
-        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = getResourceResolverContext();
         final ResourceResolver firstResolver = Mockito.mock(ResourceResolver.class);
         final ResourceProvider first = Mockito.mock(ResourceProvider.class);
         Mockito.when(first.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(firstPath))).thenReturn(new TestResource(firstResolver));
@@ -223,9 +220,8 @@ public class ResourceProviderEntryTest {
         for(String path : new String[] { "/foo", "/", "/foo/bar" }) {
             final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
             final ResourceProvider p = Mockito.mock(ResourceProvider.class);
-            final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
             Mockito.when(p.getResource(Mockito.any(ResourceResolver.class), Mockito.startsWith(path))).thenReturn(new TestResource(resolver));
-            Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+            final ResourceResolverContext ctx = getResourceResolverContext();
 
             final Map<String, Object> props = new HashMap<String, Object>();
             props.put(Constants.SERVICE_ID, ++counter);
@@ -254,6 +250,17 @@ public class ResourceProviderEntryTest {
 
     private void assertEqualsResolver(final ResourceResolver resolver, final Resource res) {
         assertEquals(resolver, res.getResourceResolver());
+    }
+
+    private ResourceResolverContext getResourceResolverContext() {
+        final ResourceResolverContext ctx = Mockito.mock(ResourceResolverContext.class);
+        Mockito.when(ctx.getResourceAccessSecurityTracker()).thenReturn(new ResourceAccessSecurityTracker());
+        Mockito.when(ctx.applyFeatures(Mockito.any(Resource.class))).then(new Answer<Resource>() {
+            public Resource answer(InvocationOnMock invocation) {
+                return (Resource) invocation.getArguments()[0];
+            }
+        });
+        return ctx;
     }
 
     private static class TestResource extends AbstractResource {

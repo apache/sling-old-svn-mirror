@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.resourceresolver.impl.helper.MockFeaturesHolder;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.helper.ResourceResolverContext;
 import org.apache.sling.resourceresolver.impl.tree.RootResourceProviderEntry;
@@ -132,7 +133,7 @@ public abstract class ResourceDecoratorTestBase {
                 return rrp;
             }
         };
-        resolver = new ResourceResolverImpl(crf, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker()));
+        resolver = new ResourceResolverImpl(crf, new ResourceResolverContext(false, null, new ResourceAccessSecurityTracker(), MockFeaturesHolder.INSTANCE));
     }
 
     protected void assertExistent(Resource r, boolean existent) {

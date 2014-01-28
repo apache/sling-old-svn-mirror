@@ -78,6 +78,7 @@
                 <configuration>
                     <instructions>
                         <Import-Package>
+                            org.apache.sling.featureflags;resolution:=optional,
                             javax.annotation;resolution:=optional,
                             org.apache.sling.api.resource;provide:=true,
                             org.apache.sling.commons.osgi;version="$(@)",
@@ -87,6 +88,9 @@
                             org.apache.sling.resourceresolver.impl.*,
                             org.apache.sling.resourceresolver.accessgate.impl.*
                         </Private-Package>
+                        <DynamicImport-Package>
+                            org.apache.sling.featureflags;version="[1.0,2.0)"
+                        </DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
@@ -142,6 +146,14 @@
             <groupId>org.apache.sling</groupId>
             <artifactId>adapter-annotations</artifactId>
             <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Feature Flag Support -->
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.featureflags</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
 

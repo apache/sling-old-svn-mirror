@@ -32,6 +32,9 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.Features;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 
 /**
@@ -40,6 +43,15 @@ import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
  * Like a resource resolver itself, this class is not thread safe.
  */
 public class ResourceResolverContext {
+
+    /**
+     * The name of the property listing feature requirements for a resource.
+     *
+     * @see <a
+     *      href="http://sling.apache.org/documentation/the-sling-engine/featureflags.html">Feature
+     *      Flags</a>
+     */
+    private static final String RESOURCE_PROPERTY = "sling:features";
 
     /** A map of all used providers created by a factory. */
     private final Map<Long, ResourceProvider> providers = new HashMap<Long, ResourceProvider>();
@@ -67,13 +79,17 @@ public class ResourceResolverContext {
     /** Resource type resource resolver (admin resolver) */
     private ResourceResolver resourceTypeResourceResolver;
 
+    /** Features ServiceTracker */
+    private final FeaturesHolder featuresService;
+
     /**
      * Create a new resource resolver context.
      */
-    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker) {
+    public ResourceResolverContext(final boolean isAdmin, final Map<String, Object> originalAuthInfo, final ResourceAccessSecurityTracker resourceAccessSecurityTracker, final FeaturesHolder featuresService) {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
         this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
+        this.featuresService = featuresService;
     }
 
     /**
@@ -81,6 +97,13 @@ public class ResourceResolverContext {
      */
     public boolean isAdmin() {
         return this.isAdmin;
+    }
+
+    /**
+     * @return the Features service tracker used by this context
+     */
+    public FeaturesHolder getFeaturesHolder() {
+        return this.featuresService;
     }
 
     /**
@@ -234,5 +257,60 @@ public class ResourceResolverContext {
             }
         }
         return resourceSuperType;
+    }
+
+    /**
+     * Checks whether the resource has a sling:features property. If so the
+     * Features service is consulted to indicate whether any of the named
+     * features is enabled and thus the resource is visible at all.
+     * <p>
+     * If none of the listed features is enabled, the resource is not visible
+     * and null is returned. Otherwise the list of features configured on the
+     * Resource is stored in the ResourceMetadata and the resource is returned.
+     * <p>
+     * If the Features service is not available, the features property is not
+     * consulted and not added to the ResourceMetadata. The resource is returned
+     * unmodified in this case.
+     *
+     * @param resource The resource to check for features
+     * @return The unmodified resource if the Features service is not available
+     *         or no features are set on the property. Otherwise the features
+     *         are added to the ResourceMetadata and the resource is returned if
+     *         one of the listed features is enabled. Otherwise null is
+     *         returned.
+     */
+    public Resource applyFeatures(final Resource resource) {
+        if (resource != null) {
+            Features featuresService = this.featuresService.getFeatures();
+            if (featuresService != null) {
+                ValueMap props = resource.adaptTo(ValueMap.class);
+                if (props != null) {
+                    ClientContext featureContext = featuresService.getCurrentClientContext();
+                    String[] features = props.get(RESOURCE_PROPERTY, String[].class);
+                    if (features != null && features.length > 0) {
+                        for (String feature : features) {
+
+                            // check whether the feature must be disabled
+                            boolean negative = false;
+                            if (feature.charAt(0) == '-') {
+                                feature = feature.substring(1);
+                                negative = false;
+                            }
+
+                            if (featureContext.isEnabled(feature) ^ negative) {
+                                resource.getResourceMetadata().put(RESOURCE_PROPERTY, features);
+                                return resource;
+                            }
+                        }
+
+                        // invariant: none of the named features enabled
+                        return null;
+                    }
+                }
+            }
+        }
+
+        // invariant: null resource or no feature check on resource
+        return resource;
     }
 }
