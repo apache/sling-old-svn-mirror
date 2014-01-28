@@ -100,7 +100,7 @@ public class CommonResourceResolverFactoryImpl implements ResourceResolverFactor
                     final boolean isAdmin)
     throws LoginException {
         // create context
-        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker());
+        final ResourceResolverContext ctx = new ResourceResolverContext(isAdmin, authenticationInfo, this.activator.getResourceAccessSecurityTracker(), this.activator);
 
         // login
         this.activator.getRootProviderEntry().loginToRequiredFactories(ctx);

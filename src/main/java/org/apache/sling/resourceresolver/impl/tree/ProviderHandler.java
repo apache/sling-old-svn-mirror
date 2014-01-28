@@ -176,7 +176,8 @@ public abstract class ProviderHandler implements Comparable<ProviderHandler> {
                 returnValue = resourceAccessSecurity.getReadableResource(resource);
             }
         }
-        return returnValue;
+
+        return ctx.applyFeatures(returnValue);
     }
 
     /**

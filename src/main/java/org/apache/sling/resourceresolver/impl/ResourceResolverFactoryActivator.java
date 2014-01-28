@@ -41,6 +41,8 @@ import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.featureflags.Features;
+import org.apache.sling.resourceresolver.impl.helper.FeaturesHolder;
 import org.apache.sling.resourceresolver.impl.helper.ResourceDecoratorTracker;
 import org.apache.sling.resourceresolver.impl.mapping.MapEntries;
 import org.apache.sling.resourceresolver.impl.mapping.Mapping;
@@ -76,7 +78,7 @@ import org.osgi.service.event.EventAdmin;
     @Reference(name = "ResourceProvider", referenceInterface = ResourceProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC) })
-public class ResourceResolverFactoryActivator {
+public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
     private static final class FactoryRegistration {
         /** Registration .*/
@@ -219,6 +221,11 @@ public class ResourceResolverFactoryActivator {
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
+    @Reference(
+            policy = ReferencePolicy.DYNAMIC,
+            cardinality = ReferenceCardinality.OPTIONAL_UNARY)
+    private Features featuresService;
+
     /** ComponentContext */
     private volatile ComponentContext componentContext;
 
@@ -241,6 +248,10 @@ public class ResourceResolverFactoryActivator {
 
     public ResourceAccessSecurityTracker getResourceAccessSecurityTracker() {
         return this.resourceAccessSecurityTracker;
+    }
+
+    public Features getFeatures() {
+        return this.featuresService;
     }
 
     public EventAdmin getEventAdmin() {
