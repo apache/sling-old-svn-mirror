@@ -283,34 +283,85 @@ public class ResourceResolverContext {
         if (resource != null) {
             Features featuresService = this.featuresService.getFeatures();
             if (featuresService != null) {
-                ValueMap props = resource.adaptTo(ValueMap.class);
-                if (props != null) {
+                String[] features = getProperty(resource, RESOURCE_PROPERTY, String[].class);
+                if (features != null && features.length > 0) {
                     ClientContext featureContext = featuresService.getCurrentClientContext();
-                    String[] features = props.get(RESOURCE_PROPERTY, String[].class);
-                    if (features != null && features.length > 0) {
-                        for (String feature : features) {
+                    for (String feature : features) {
 
-                            // check whether the feature must be disabled
-                            boolean negative = false;
-                            if (feature.charAt(0) == '-') {
-                                feature = feature.substring(1);
-                                negative = false;
-                            }
-
-                            if (featureContext.isEnabled(feature) ^ negative) {
-                                resource.getResourceMetadata().put(RESOURCE_PROPERTY, features);
-                                return resource;
-                            }
+                        // check whether the feature must be disabled
+                        boolean negative = false;
+                        if (feature.charAt(0) == '-') {
+                            feature = feature.substring(1);
+                            negative = false;
                         }
 
-                        // invariant: none of the named features enabled
-                        return null;
+                        if (featureContext.isEnabled(feature) ^ negative) {
+                            resource.getResourceMetadata().put(RESOURCE_PROPERTY, features);
+                            return resource;
+                        }
                     }
+
+                    // invariant: none of the named features enabled
+                    return null;
                 }
             }
         }
 
         // invariant: null resource or no feature check on resource
         return resource;
+    }
+
+    /**
+     * Returns {@link #getProperty(Resource, String, Class) getProperty(res,
+     * propName, String.class)}
+     *
+     * @param res The resource to access the property from
+     * @param propName The name of the property to access
+     * @return The property as a {@code String} or {@code null} if the property
+     *         does not exist or cannot be converted into a {@code String}
+     */
+    public static String getProperty(final Resource res, final String propName) {
+        return getProperty(res, propName, String.class);
+    }
+
+    /**
+     * Returns the value of the name property of the resource converted to the
+     * requested {@code type}.
+     * <p>
+     * If the resource itself does not have the property, the property is looked
+     * up in the {@code jcr:content} child node. This access is done through the
+     * same {@code ValueMap} as is used to access the property directly. This
+     * generally only works for JCR based {@code ValueMap} instances which
+     * provide access to relative path property names. This may not work in non
+     * JCR {@code ValueMap}, however in non JCR envs there is usually no
+     * "jcr:content" child node anyway
+     *
+     * @param res The resource to access the property from
+     * @param propName The name of the property to access
+     * @param type The type into which to convert the property
+     * @return The property converted to the requested {@code type} or
+     *         {@code null} if the property does not exist or cannot be
+     *         converted into the requested {@code type}
+     */
+    public static <Type> Type getProperty(final Resource res, final String propName, final Class<Type> type) {
+
+        // check the property in the resource itself
+        final ValueMap props = res.adaptTo(ValueMap.class);
+        if (props != null) {
+            Type prop = props.get(propName, type);
+            if (prop != null) {
+                return prop;
+            }
+            // otherwise, check it in the jcr:content child resource
+            // This is a special case checking for JCR based resources
+            // we directly use the deep resolution of properties of the
+            // JCR value map implementation - this does not work
+            // in non JCR environments, however in non JCR envs there
+            // is usually no "jcr:content" child node anyway
+            prop = props.get("jcr:content/" + propName, type);
+            return prop;
+        }
+
+        return null;
     }
 }
