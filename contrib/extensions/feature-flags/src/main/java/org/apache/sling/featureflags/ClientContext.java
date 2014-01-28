@@ -23,21 +23,31 @@ import java.util.Collection;
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The client context can be used by client code to check whether
- * a specific feature is enable.
- * A client context can be created through the {@link Features} service.
+ * The client context can be used by client code to check whether a specific
+ * feature is enable.
+ * <p>
+ * Prepared {@code ClientContext} instances are available through the
+ * {@link Features} service. Consumers of this interface are not expected to
+ * implent it.
  */
 @ProviderType
 public interface ClientContext {
 
     /**
-     * Returns <code>true</code> if the feature is enabled.
+     * Returns {@code true} if the named feature is enabled.
+     *
+     * @param featureName The name of the feature.
+     * @return {@code true} if the named feature is enabled. {@code false} is
+     *         returned if the named feature is not enabled, is not known or the
+     *         {@code featureName} parameter is {@code null} or an empty String.
      */
     boolean isEnabled(String featureName);
 
     /**
-     * Returns a list of all enabled features
-     * @return The list of features, the list might be empty.
+     * Returns a possibly empty collection of enabled {@link Feature} instances.
+     *
+     * @return The collection of enabled {@link Feature} instances. This
+     *         collection may be empty and is not modifiable.
      */
     Collection<Feature> getEnabledFeatures();
 }

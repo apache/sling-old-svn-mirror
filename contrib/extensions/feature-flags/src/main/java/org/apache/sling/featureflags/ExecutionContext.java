@@ -18,26 +18,49 @@
  */
 package org.apache.sling.featureflags;
 
-import org.apache.sling.api.SlingHttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.resource.ResourceResolver;
 
 import aQute.bnd.annotation.ProviderType;
 
 /**
- * The provider context contains all information that is passed to a
- * {@link Feature} in order to check whether a feature is enabled.
+ * The {@code ExecutionContext} interface provides access to the context for
+ * evaluating whether a feature is enabled or not. Instances of this object are
+ * provided to the {@link Feature#isEnabled(ExecutionContext)} to help
+ * evaluating whether the feature is enabled or not.
+ * <p>
+ * The {@link Features} service {@link ClientContext} generating methods create
+ * an instance of this to collect the enabled {@link Feature} services for the
+ * creation of the {@link ClientContext} instance.
+ * <p>
+ * This object provides access to live data and must only be used to read
+ * information. Modifying content through a {@code ResourceResolver} directly or
+ * indirectly provided by this object is considered inappropriate and faulty
+ * behaviour.
  */
 @ProviderType
 public interface ExecutionContext {
 
     /**
-     * Return the associated request if available
+     * Returns a {@code HttpServletRequest} object to retrieve information which
+     * may influence the decision whether a {@link Feature} is enabled or not.
+     * If a {@code HttpServletRequest} object is not available in the context,
+     * this method may return {@code null}.
+     * <p>
+     * In a Sling request processing context, the {@code HttpServletRequest}
+     * object returned may actually be a {@code SlingHttpServletRequest}.
+     *
      * @return the request or <code>null</code>
      */
-    SlingHttpServletRequest getRequest();
+    HttpServletRequest getRequest();
 
     /**
-     * Return the associated resource resolver.
+     * Returns a {@code ResourceResolver} object to retrieve information which
+     * may influence the decision whether a {@link Feature} is enabled or not.
+     * If a {@code ResourceResolver} object is not available in the context,
+     * this method may return {@code null}.
+     *
      * @return the resource resolver
      */
     ResourceResolver getResourceResolver();

@@ -18,6 +18,8 @@
  */
 package org.apache.sling.featureflags.impl;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.featureflags.ExecutionContext;
@@ -29,20 +31,22 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     private final ResourceResolver resourceResolver;
 
-    private final SlingHttpServletRequest request;
+    private final HttpServletRequest request;
 
     public ExecutionContextImpl(final ResourceResolver resourceResolver) {
         this.request = null;
         this.resourceResolver = resourceResolver;
     }
 
-    public ExecutionContextImpl(final SlingHttpServletRequest request) {
+    public ExecutionContextImpl(final HttpServletRequest request) {
         this.request = request;
-        this.resourceResolver = request.getResourceResolver();
+        this.resourceResolver = (request instanceof SlingHttpServletRequest)
+                ? ((SlingHttpServletRequest) request).getResourceResolver()
+                : null;
     }
 
     @Override
-    public SlingHttpServletRequest getRequest() {
+    public HttpServletRequest getRequest() {
         return this.request;
     }
 

@@ -26,42 +26,35 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.featureflags.ClientContext;
 
 /**
- * This general servlet filter sets the current client context to the
- * current request.
+ * This general servlet filter sets the current client context to the current
+ * request.
  */
-@Component
-@Service(value=Filter.class)
-@Property(name="pattern", value="/.*")
 public class CurrentClientContextFilter implements Filter {
 
-    @Reference
-    private FeatureManager manager;
+    private final FeatureManager featureManager;
 
-    @Override
-    public void doFilter(final ServletRequest req, final ServletResponse res,
-            final FilterChain chain)
-    throws IOException, ServletException {
-        if ( req instanceof SlingHttpServletRequest ) {
-            manager.setCurrentClientContext((SlingHttpServletRequest)req);
-        }
-        try {
-            chain.doFilter(req, res);
-        } finally {
-            manager.unsetCurrentClientContext();
-        }
+    public CurrentClientContextFilter(final FeatureManager featureManager) {
+        this.featureManager = featureManager;
     }
 
     @Override
-    public void init(final FilterConfig config) throws ServletException {
+    public void init(final FilterConfig config) {
         // nothing to do
+    }
+
+    @Override
+    public void doFilter(final ServletRequest req, final ServletResponse res, final FilterChain chain)
+            throws IOException, ServletException {
+
+        ClientContext current = this.featureManager.setCurrentClientContext(req);
+        try {
+            chain.doFilter(req, res);
+        } finally {
+            this.featureManager.unsetCurrentClientContext(current);
+        }
     }
 
     @Override
