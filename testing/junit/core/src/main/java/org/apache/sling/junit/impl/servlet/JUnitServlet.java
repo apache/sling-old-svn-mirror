@@ -59,6 +59,8 @@ public class JUnitServlet extends HttpServlet {
     /** Non-null if we are registered with HttpService */ 
     private String servletPath;
     
+    private static final String EMPTY_STRING = "";
+    
     @Reference
     private TestsManager testsManager;
     
@@ -223,10 +225,13 @@ public class JUnitServlet extends HttpServlet {
     
     /** Return path to which to POST to execute specified test */
     protected String getTestExecutionPath(HttpServletRequest request, TestSelector selector, String extension) {
-        return request.getContextPath() 
-        + servletPath
-        + "/"
-        + selector.getTestSelectorString()
+    	String testExecutionPath = request.getContextPath() + servletPath
+    	        + "/"
+    	        + selector.getTestSelectorString();
+    	if (selector.getSelectedTestMethodName() != EMPTY_STRING) {
+    		testExecutionPath = testExecutionPath + "/" + selector.getSelectedTestMethodName();
+    	}
+        return testExecutionPath
         + "."
         + extension
         ;

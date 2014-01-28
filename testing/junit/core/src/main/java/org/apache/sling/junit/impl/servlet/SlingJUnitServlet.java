@@ -50,6 +50,8 @@ public class SlingJUnitServlet extends JUnitServlet {
     
     public static final String EXTENSION = ".junit";
     
+    private static final String EMPTY_STRING = "";
+    
     /** Do not register this servlet with HttpService ourselves,
      *  Sling will take care of that.
      */
@@ -72,8 +74,12 @@ public class SlingJUnitServlet extends JUnitServlet {
     
     /** Return path to which to POST to execute specified test */
     protected String getTestExecutionPath(HttpServletRequest request, TestSelector selector, String extension) {
-        return  "./"
-        + selector.getTestSelectorString()
+    	String testExecutionPath = "./"
+    	        + selector.getTestSelectorString();
+    	if (selector.getSelectedTestMethodName() != EMPTY_STRING) {
+    		testExecutionPath = testExecutionPath + "/" + selector.getSelectedTestMethodName();
+    	}
+        return testExecutionPath
         + "."
         + extension
         ;
