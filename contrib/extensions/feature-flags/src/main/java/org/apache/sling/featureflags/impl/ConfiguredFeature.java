@@ -37,7 +37,7 @@ import org.osgi.framework.Constants;
         metatype = true,
         configurationFactory = true,
         policy = ConfigurationPolicy.REQUIRE,
-        label = "Statically Configured Feature",
+        label = "Apache Sling Configured Feature",
         description = "Allows for the definition of statically configured features which are defined and enabled through OSGi configuration")
 @Service
 public class ConfiguredFeature implements Feature {
