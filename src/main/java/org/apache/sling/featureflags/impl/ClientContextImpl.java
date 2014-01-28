@@ -21,15 +21,13 @@ package org.apache.sling.featureflags.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.featureflags.ClientContext;
 import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.ExecutionContext;
-import org.apache.sling.featureflags.ResourceHiding;
-import org.apache.sling.featureflags.ResourceTypeMapping;
 
 /**
  * Implementation of the client context
@@ -38,28 +36,22 @@ public class ClientContextImpl implements ClientContext {
 
     private final ExecutionContext featureContext;
 
-    private final List<Feature> enabledFeatures;
+    private final Map<String, Feature> enabledFeatures;
 
-    private final List<ResourceHiding> hidingFeatures;
+    private final List<ResourceDecorator> resourceDecorators;
 
-    private final Map<String, String> mapperFeatures = new HashMap<String, String>();
-
-    public ClientContextImpl(final ExecutionContext featureContext, final List<Feature> features) {
-        this.enabledFeatures = Collections.unmodifiableList(features);
-        final List<ResourceHiding> hiding = new ArrayList<ResourceHiding>();
-        for(final Feature f : this.enabledFeatures) {
-            final ResourceHiding rh = f.adaptTo(ResourceHiding.class);
-            if ( rh != null ) {
-                hiding.add(rh);
-            }
-            final ResourceTypeMapping rm = f.adaptTo(ResourceTypeMapping.class);
-            if ( rm != null ) {
-                final Map<String, String> mapping = rm.getResourceTypeMapping();
-                mapperFeatures.putAll(mapping);
+    public ClientContextImpl(final ExecutionContext featureContext, final Map<String, Feature> features) {
+        ArrayList<ResourceDecorator> resourceDecorators = new ArrayList<ResourceDecorator>(features.size());
+        for (final Feature f : features.values()) {
+            if (f instanceof ResourceDecorator) {
+                resourceDecorators.add((ResourceDecorator) f);
             }
         }
-        this.hidingFeatures = hiding;
+        resourceDecorators.trimToSize();
+
         this.featureContext = featureContext;
+        this.enabledFeatures = Collections.unmodifiableMap(features);
+        this.resourceDecorators = Collections.unmodifiableList(resourceDecorators);
     }
 
     public ExecutionContext getFeatureContext() {
@@ -68,24 +60,15 @@ public class ClientContextImpl implements ClientContext {
 
     @Override
     public boolean isEnabled(final String featureName) {
-        for(final Feature f : this.enabledFeatures) {
-            if ( featureName.equals(f.getName()) ) {
-                return true;
-            }
-        }
-        return false;
+        return this.enabledFeatures.get(featureName) != null;
     }
 
     @Override
     public Collection<Feature> getEnabledFeatures() {
-        return this.enabledFeatures;
+        return this.enabledFeatures.values();
     }
 
-    public Collection<ResourceHiding> getHidingFeatures() {
-        return this.hidingFeatures;
-    }
-
-    public Map<String, String> getResourceTypeMapping() {
-        return this.mapperFeatures;
+    public List<ResourceDecorator> getResourceDecorators() {
+        return this.resourceDecorators;
     }
 }

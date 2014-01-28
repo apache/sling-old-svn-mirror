@@ -22,97 +22,50 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.featureflags.ClientContext;
+import org.apache.sling.featureflags.ExecutionContext;
 import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.Features;
-import org.apache.sling.featureflags.ExecutionContext;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This service implements the feature handling.
- * It keeps track of all {@link Feature} services.
+ * This service implements the feature handling. It keeps track of all
+ * {@link Feature} services.
  */
 @Component
-@Reference(name="feature",
-           cardinality=ReferenceCardinality.OPTIONAL_MULTIPLE,
-           policy=ReferencePolicy.DYNAMIC,
-           referenceInterface=Feature.class)
-public class FeatureManager implements Features {
+@Reference(
+        name = "feature",
+        cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
+        policy = ReferencePolicy.DYNAMIC,
+        referenceInterface = Feature.class)
+public class FeatureManager {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final Map<String, List<FeatureDescription>> allFeatures = new HashMap<String, List<FeatureDescription>>();
-
-    private Map<String, FeatureDescription> activeFeatures = new TreeMap<String, FeatureDescription>();
-
-    /**
-     * Bind a new feature
-     */
-    protected void bindFeature(final Feature f, final Map<String, Object> props) {
-        synchronized ( this.allFeatures ) {
-            final String name = f.getName();
-            final FeatureDescription info = new FeatureDescription(f, props);
-
-            List<FeatureDescription> candidates = this.allFeatures.get(name);
-            if ( candidates == null ) {
-                candidates = new ArrayList<FeatureDescription>();
-                this.allFeatures.put(name, candidates);
-            }
-            candidates.add(info);
-            Collections.sort(candidates);
-
-            this.calculateActiveProviders();
-        }
-    }
-
-    /**
-     * Unbind a feature
-     */
-    protected void unbindFeature(final Feature f, final Map<String, Object> props) {
-        synchronized ( this.allFeatures ) {
-            final String name = f.getName();
-            final FeatureDescription info = new FeatureDescription(f, props);
-
-            final List<FeatureDescription> candidates = this.allFeatures.get(name);
-            if ( candidates != null ) { // sanity check
-                candidates.remove(info);
-                if ( candidates.size() == 0 ) {
-                    this.allFeatures.remove(name);
-                }
-            }
-            this.calculateActiveProviders();
-        }
-    }
-
-    private void calculateActiveProviders() {
-        final Map<String, FeatureDescription> activeMap = new TreeMap<String, FeatureDescription>();
-        for(final Map.Entry<String, List<FeatureDescription>> entry : this.allFeatures.entrySet()) {
-            final FeatureDescription desc = entry.getValue().get(0);
-
-            activeMap.put(entry.getKey(), desc);
-            if ( entry.getValue().size() > 1 ) {
-                logger.warn("More than one feature service for feature {}", entry.getKey());
-            }
-        }
-        this.activeFeatures = activeMap;
-    }
-
-    private final ThreadLocal<ClientContextImpl> perThreadClientContext = new ThreadLocal<ClientContextImpl>();
+    private final ThreadLocal<ClientContext> perThreadClientContext = new ThreadLocal<ClientContext>();
 
     private final ClientContext defaultClientContext = new ClientContext() {
-
         @Override
         public boolean isEnabled(final String featureName) {
             return false;
@@ -124,28 +77,133 @@ public class FeatureManager implements Features {
         }
     };
 
-    @Override
-    public ClientContext getCurrentClientContext() {
+    private final Map<String, List<FeatureDescription>> allFeatures = new HashMap<String, List<FeatureDescription>>();
+
+    private Map<String, Feature> activeFeatures = Collections.emptyMap();
+
+    private List<ServiceRegistration> services;
+
+    @SuppressWarnings("serial")
+    @Activate
+    private void activate(BundleContext bundleContext) {
+        ArrayList<ServiceRegistration> services = new ArrayList<ServiceRegistration>();
+        services.add(bundleContext.registerService(Features.class.getName(), new FeaturesImpl(this), null));
+        services.add(bundleContext.registerService(ResourceDecorator.class.getName(),
+            new FeatureResourceDecorator(this), null));
+        services.add(bundleContext.registerService(Servlet.class.getName(), new FeatureWebConsolePlugin(this),
+            new Hashtable<String, Object>() {
+                {
+                    put("felix.webconsole.label", "features");
+                    put("felix.webconsole.title", "Features");
+                    put("felix.webconsole.category", "Sling");
+                }
+            }));
+        services.add(bundleContext.registerService(Filter.class.getName(), new CurrentClientContextFilter(this),
+            new Hashtable<String, Object>() {
+                {
+                    put("sling.filter.scope", "REQUEST");
+                    put("service.ranking", Integer.MIN_VALUE);
+                }
+            }));
+        this.services = services;
+    }
+
+    @Deactivate
+    private void deactivate() {
+        if (this.services != null) {
+            for (ServiceRegistration service : this.services) {
+                if (service != null) {
+                    service.unregister();
+                }
+            }
+            this.services.clear();
+            this.services = null;
+        }
+    }
+
+    //--- Feature binding
+
+    // bind method for Feature services
+    @SuppressWarnings("unused")
+    private void bindFeature(final Feature f, final Map<String, Object> props) {
+        synchronized (this.allFeatures) {
+            final String name = f.getName();
+            final FeatureDescription info = new FeatureDescription(f, props);
+
+            List<FeatureDescription> candidates = this.allFeatures.get(name);
+            if (candidates == null) {
+                candidates = new ArrayList<FeatureDescription>();
+                this.allFeatures.put(name, candidates);
+            }
+            candidates.add(info);
+            Collections.sort(candidates);
+
+            this.calculateActiveProviders();
+        }
+    }
+
+    // unbind method for Feature services
+    @SuppressWarnings("unused")
+    private void unbindFeature(final Feature f, final Map<String, Object> props) {
+        synchronized (this.allFeatures) {
+            final String name = f.getName();
+            final FeatureDescription info = new FeatureDescription(f, props);
+
+            final List<FeatureDescription> candidates = this.allFeatures.get(name);
+            if (candidates != null) { // sanity check
+                candidates.remove(info);
+                if (candidates.size() == 0) {
+                    this.allFeatures.remove(name);
+                }
+            }
+            this.calculateActiveProviders();
+        }
+    }
+
+    // calculates map of active features (eliminating Feature name
+    // collisions). Must be called while synchronized on this.allFeatures
+    private void calculateActiveProviders() {
+        final Map<String, Feature> activeMap = new HashMap<String, Feature>();
+        for (final Map.Entry<String, List<FeatureDescription>> entry : this.allFeatures.entrySet()) {
+            final FeatureDescription desc = entry.getValue().get(0);
+            activeMap.put(entry.getKey(), desc.feature);
+            if (entry.getValue().size() > 1) {
+                logger.warn("More than one feature service for feature {}", entry.getKey());
+            }
+        }
+        this.activeFeatures = activeMap;
+    }
+
+    //--- Client Context management and access
+
+    ClientContext getCurrentClientContext() {
         ClientContext result = perThreadClientContext.get();
-        if ( result == null ) {
+        if (result == null) {
             result = defaultClientContext;
         }
         return result;
     }
 
-    public void setCurrentClientContext(final SlingHttpServletRequest request) {
-        final ExecutionContext providerContext = new ExecutionContextImpl(request);
-        final ClientContextImpl ctx = this.createClientContext(providerContext);
-        perThreadClientContext.set(ctx);
+    ClientContext setCurrentClientContext(final ServletRequest request) {
+        final ClientContext current = perThreadClientContext.get();
+        if (request instanceof HttpServletRequest) {
+            final ExecutionContext providerContext = new ExecutionContextImpl((HttpServletRequest) request);
+            final ClientContextImpl ctx = this.createClientContext(providerContext);
+            perThreadClientContext.set(ctx);
+        }
+        return current;
     }
 
-    public void unsetCurrentClientContext() {
-        perThreadClientContext.remove();
+    void unsetCurrentClientContext(final ClientContext previous) {
+        if (previous != null) {
+            perThreadClientContext.set(previous);
+        } else {
+            perThreadClientContext.remove();
+        }
     }
 
-    @Override
-    public ClientContext createClientContext(final ResourceResolver resolver) {
-        if ( resolver == null ) {
+    ClientContext createClientContext(final ResourceResolver resolver) {
+        if (resolver == null) {
             throw new IllegalArgumentException("Resolver must not be null.");
         }
         final ExecutionContext providerContext = new ExecutionContextImpl(resolver);
@@ -153,9 +211,8 @@ public class FeatureManager implements Features {
         return ctx;
     }
 
-    @Override
-    public ClientContext createClientContext(final SlingHttpServletRequest request) {
-        if ( request == null ) {
+    ClientContext createClientContext(final HttpServletRequest request) {
+        if (request == null) {
             throw new IllegalArgumentException("Request must not be null.");
         }
         final ExecutionContext providerContext = new ExecutionContextImpl(request);
@@ -164,75 +221,64 @@ public class FeatureManager implements Features {
     }
 
     private ClientContextImpl createClientContext(final ExecutionContext providerContext) {
-        final List<Feature> enabledFeatures = new ArrayList<Feature>();
-
-        for(final Map.Entry<String, FeatureDescription> entry : this.activeFeatures.entrySet()) {
-            final Feature f = entry.getValue().feature;
-
-            if ( entry.getValue().feature.isEnabled(providerContext) ) {
-                enabledFeatures.add(f);
+        final Map<String, Feature> enabledFeatures = new HashMap<String, Feature>();
+        for (final Map.Entry<String, Feature> entry : this.activeFeatures.entrySet()) {
+            if (entry.getValue().isEnabled(providerContext)) {
+                enabledFeatures.put(entry.getKey(), entry.getValue());
             }
         }
 
-        final ClientContextImpl ctx = new ClientContextImpl(providerContext, enabledFeatures);
-        return ctx;
+        return new ClientContextImpl(providerContext, enabledFeatures);
     }
 
-    @Override
-    public Feature[] getAvailableFeatures() {
-        final List<Feature> result = new ArrayList<Feature>();
-        for(final Map.Entry<String, FeatureDescription> entry : this.activeFeatures.entrySet()) {
-            final Feature f = entry.getValue().feature;
-            result.add(f);
-        }
-        return result.toArray(new Feature[result.size()]);
+    //--- Feature access
+
+    Feature[] getAvailableFeatures() {
+        final Map<String, Feature> activeFeatures = this.activeFeatures;
+        return activeFeatures.values().toArray(new Feature[activeFeatures.size()]);
     }
 
-    @Override
-    public Feature getFeature(final String name) {
-        final FeatureDescription desc = this.activeFeatures.get(name);
-        if ( desc != null ) {
-            return desc.feature;
-        }
-        return null;
+    Feature getFeature(final String name) {
+        return this.activeFeatures.get(name);
     }
 
-    @Override
-    public String[] getAvailableFeatureNames() {
-        return this.activeFeatures.keySet().toArray(new String[this.activeFeatures.size()]);
+    String[] getAvailableFeatureNames() {
+        final Map<String, Feature> activeFeatures = this.activeFeatures;
+        return activeFeatures.keySet().toArray(new String[activeFeatures.size()]);
     }
 
-    @Override
-    public boolean isAvailable(final String featureName) {
+    boolean isAvailable(final String featureName) {
         return this.activeFeatures.containsKey(featureName);
     }
 
     /**
-     * Internal class caching some feature meta data like service id and ranking.
+     * Internal class caching some feature meta data like service id and
+     * ranking.
      */
     private final static class FeatureDescription implements Comparable<FeatureDescription> {
 
         public final int ranking;
+
         public final long serviceId;
+
         public final Feature feature;
 
-        public FeatureDescription(final Feature feature,
-                final Map<String, Object> props) {
+        public FeatureDescription(final Feature feature, final Map<String, Object> props) {
             this.feature = feature;
             final Object sr = props.get(Constants.SERVICE_RANKING);
-            if ( sr == null || !(sr instanceof Integer)) {
-                this.ranking = 0;
+            if (sr instanceof Integer) {
+                this.ranking = (Integer) sr;
             } else {
-                this.ranking = (Integer)sr;
+                this.ranking = 0;
             }
-            this.serviceId = (Long)props.get(Constants.SERVICE_ID);
+            this.serviceId = (Long) props.get(Constants.SERVICE_ID);
         }
 
         @Override
         public int compareTo(final FeatureDescription o) {
-            if ( this.ranking < o.ranking ) {
+            if (this.ranking < o.ranking) {
                 return 1;
-            } else if (this.ranking > o.ranking ) {
+            } else if (this.ranking > o.ranking) {
                 return -1;
             }
             // If ranks are equal, then sort by service id in descending order.
@@ -241,8 +287,8 @@ public class FeatureManager implements Features {
 
         @Override
         public boolean equals(final Object obj) {
-            if ( obj instanceof FeatureDescription ) {
-                return ((FeatureDescription)obj).serviceId == this.serviceId;
+            if (obj instanceof FeatureDescription) {
+                return ((FeatureDescription) obj).serviceId == this.serviceId;
             }
             return false;
         }

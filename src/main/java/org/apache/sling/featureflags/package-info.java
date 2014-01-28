@@ -18,10 +18,48 @@
  */
 
 /**
- * Provides a service to interface which may be implemented by applications
- * to get notified on cluster topology changes.
+ * The <i>Feature Flags</i> feature allows applications to dynamically
+ * provide features to clients and consumers depending on various criteria such as
+ * <ul>
+ * <li>Time of Day</li>
+ * <li>Static Configuration</li>
+ * <li>Request Parameter</li>
+ * <li>Some Resource</li>
+ * </ul>
+ * <p>
+ * Feature flag support consists of two parts: The feature flag itself represented
+ * by the {@link org.apache.sling.featureflags.Feature Feature} interface and the
+ * the application providing a feature guarded by a feature flag. Such applications
+ * make use of the {@link org.apache.sling.featureflags.Features Features} service to
+ * query feature flags.
+ * <p>
+ * Feature flags can be provided by registering
+ * {@link org.apache.sling.featureflags.Feature Feature} services. Alternatively
+ * feature flags can be provided by factory configuration with factory PID
+ * {@code org.apache.sling.featureflags.Feature} as follows:
+ * <table>
+ *  <tr>
+ *      <td>{@code name}</td>
+ *      <td>Short name of this feature. This name is used to refer to this feature
+ *          when checking for it to be enabled or not. This property is required
+ *          and defaults to a name derived from the feature's class name and object
+ *          identity. It is strongly recommended to define a useful and unique for the feature</td>
+ *  </tr>
+ *  <tr>
+ *      <td>{@code description}</td>
+ *      <td>Description for the feature. The intent is to descibe the behaviour
+ *          of the application if this feature would be enabled. It is recommended
+ *          to define this property. The default value is the value of the name property.</td>
+ *  </tr>
+ *  <tr>
+ *      <td>{@code enabled}</td>
+ *      <td>Boolean flag indicating whether the feature is enabled or not by
+ *          this configuration</td>
+ *  </tr>
+ * </table>
  *
  * @version 1.0
+ * @see <a href="http://sling.apache.org/documentation/the-sling-engine/featureflags.html">Feature Flags</a>
  */
 @Version("1.0")
 package org.apache.sling.featureflags;

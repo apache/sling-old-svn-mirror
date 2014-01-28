@@ -18,37 +18,47 @@
  */
 package org.apache.sling.featureflags;
 
-import org.apache.sling.api.adapter.Adaptable;
-
 import aQute.bnd.annotation.ConsumerType;
 
 /**
- * A feature is defined by its name.
- * Depending on the functionality the feature implements it can
- * be adapted to different services, like
- * <ul>
- *   <li>{@link ResourceHiding}</li>
- *   <li>{@link ResourceTypeMapping}</li>
- * </ul>
- *
- * Features are registered as OSGi services.
+ * A feature is defined by its name. Features are registered as OSGi services.
+ * This interface is expected to be implemented by feature providers.
+ * <p>
+ * Feature {@link #getName() names} should be globally unique. If multiple
+ * features have the same name, the feature with the highest service ranking is
+ * accessible through the {@link Features} service and the {@link ClientContext}.
  */
 @ConsumerType
-public interface Feature extends Adaptable {
+public interface Feature {
 
     /**
-     * Checks whether the feature is enabled for the current execution
-     * context.
+     * Checks whether the feature is enabled for the given execution context.
+     * <p>
+     * Multiple calls to this method may but are not required to return the same
+     * value. For example the return value may depend on the time of day, some
+     * random number or some information provided by the given
+     * {@link ExecutionContext}.
+     *
+     * @param context The {@link ExecutionContext} providing a context to
+     *            evaluate whether the feature is enabled or not.
+     * @return {@code true} if this {@code Feature} is enabled in the given
+     *         {@link ExecutionContext}.
      */
     boolean isEnabled(ExecutionContext context);
 
     /**
      * The name of the feature.
+     *
+     * @return The name of this feature which must not be {@code null} or an
+     *         empty string.
      */
     String getName();
 
     /**
      * The description of the feature.
+     *
+     * @return The optional description of this feature, which may be
+     *         {@code null} or an empty string.
      */
     String getDescription();
 }

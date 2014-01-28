@@ -18,10 +18,8 @@
  */
 package org.apache.sling.featureflags.impl;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.api.SlingHttpServletRequest;
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.featureflags.ClientContext;
 import org.apache.sling.featureflags.Feature;
@@ -30,12 +28,13 @@ import org.apache.sling.featureflags.Features;
 /**
  * This is a wrapper around the internal feature manager.
  */
-@Component
-@Service(value=Features.class)
 public class FeaturesImpl implements Features {
 
-    @Reference
-    private FeatureManager manager;
+    private final FeatureManager manager;
+
+    FeaturesImpl(final FeatureManager manager) {
+        this.manager = manager;
+    }
 
     @Override
     public String[] getAvailableFeatureNames() {
@@ -68,7 +67,7 @@ public class FeaturesImpl implements Features {
     }
 
     @Override
-    public ClientContext createClientContext(final SlingHttpServletRequest request) {
+    public ClientContext createClientContext(final HttpServletRequest request) {
         return this.manager.createClientContext(request);
     }
 }

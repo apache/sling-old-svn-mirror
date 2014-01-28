@@ -20,46 +20,34 @@ package org.apache.sling.featureflags.impl;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.api.resource.ResourceWrapper;
 import org.apache.sling.featureflags.ClientContext;
 
 /**
  * Resource decorator implementing the resource type mapping
  */
-@Component
-@Service(value=ResourceDecorator.class)
-public class ResourceDecoratorImpl implements ResourceDecorator {
+public class FeatureResourceDecorator implements ResourceDecorator {
 
-    @Reference
-    private FeatureManager manager;
+    private final FeatureManager manager;
+
+    FeatureResourceDecorator(final FeatureManager manager) {
+        this.manager = manager;
+    }
 
     @Override
     public Resource decorate(final Resource resource) {
+        Resource result = resource;
         final ClientContext info = manager.getCurrentClientContext();
-        if ( info != null ) {
-            final String resourceType = resource.getResourceType();
-            final String overwriteType = ((ClientContextImpl)info).getResourceTypeMapping().get(resourceType);
-            if ( overwriteType != null ) {
-                return new ResourceWrapper(resource) {
-
-                    @Override
-                    public String getResourceType() {
-                        return overwriteType;
-                    }
-
-                    @Override
-                    public String getResourceSuperType() {
-                        return resourceType;
-                    }
-                };
+        if (info instanceof ClientContextImpl) {
+            for (ResourceDecorator rd : ((ClientContextImpl) info).getResourceDecorators()) {
+                Resource r = rd.decorate(resource);
+                if (r != null) {
+                    result = r;
+                }
             }
         }
-        return resource;
+        return result;
     }
 
     @Override
