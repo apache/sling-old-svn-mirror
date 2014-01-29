@@ -25,7 +25,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -55,24 +54,26 @@ public class MergedResourceProvider implements ResourceProvider {
      * {@inheritDoc}
      */
     public Resource getResource(final ResourceResolver resolver, final String path) {
-        List<String> mappedResources = new ArrayList<String>();
 
         if (resolver.getSearchPath() != null) {
             final String relativePath = getRelativePath(path);
 
-            // Loop over provided base paths
-            for (final String basePath : resolver.getSearchPath()) {
-                // Try to get the corresponding physical resource for this base path
-                final Resource baseRes = resolver.getResource(ResourceUtil.normalize(basePath + "/" + relativePath));
-                if (baseRes != null) {
-                    // Physical resource exists, add it to the list of mapped resources
-                    mappedResources.add(0, baseRes.getPath());
+            if ( relativePath != null ) {
+                final List<String> mappedResources = new ArrayList<String>();
+                // Loop over provided base paths
+                for (final String basePath : resolver.getSearchPath()) {
+                    // Try to get the corresponding physical resource for this base path
+                    final Resource baseRes = resolver.getResource(ResourceUtil.normalize(basePath + "/" + relativePath));
+                    if (baseRes != null) {
+                        // Physical resource exists, add it to the list of mapped resources
+                        mappedResources.add(0, baseRes.getPath());
+                    }
                 }
-            }
 
-            if (!mappedResources.isEmpty()) {
-                // Create a new merged resource based on the list of mapped physical resources
-                return new MergedResource(resolver, mergeRootPath, relativePath, mappedResources);
+                if (!mappedResources.isEmpty()) {
+                    // Create a new merged resource based on the list of mapped physical resources
+                    return new MergedResource(resolver, mergeRootPath, relativePath, mappedResources);
+                }
             }
         }
 
@@ -179,7 +180,15 @@ public class MergedResourceProvider implements ResourceProvider {
      * @return Relative path
      */
     private String getRelativePath(String path) {
-        return StringUtils.removeStart(path, mergeRootPath);
+        if ( path.startsWith(mergeRootPath) ) {
+            path = path.substring(mergeRootPath.length());
+            if ( path.length() == 0 ) {
+                return path;
+            } else if ( path.charAt(0) == '/' ) {
+                return path.substring(1);
+            }
+        }
+        return null;
     }
 
 }

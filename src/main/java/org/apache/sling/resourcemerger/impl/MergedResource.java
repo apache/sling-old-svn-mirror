@@ -19,14 +19,12 @@
 package org.apache.sling.resourcemerger.impl;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.sling.api.resource.AbstractResource;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 
 /**
@@ -35,9 +33,11 @@ import org.apache.sling.api.resource.ValueMap;
 public class MergedResource extends AbstractResource {
 
     private final ResourceResolver resolver;
-    private final String mergeRootPath;
+    private final String path;
     private final String relativePath;
     private final List<String> mappedResources = new ArrayList<String>();
+
+    private final ResourceMetadata metadata = new ResourceMetadata();
 
     /**
      * Constructor
@@ -49,9 +49,7 @@ public class MergedResource extends AbstractResource {
     MergedResource(final ResourceResolver resolver,
                    final String mergeRootPath,
                    final String relativePath) {
-        this.resolver = resolver;
-        this.mergeRootPath = mergeRootPath;
-        this.relativePath = relativePath;
+        this(resolver, mergeRootPath, relativePath, null);
     }
 
     /**
@@ -67,9 +65,14 @@ public class MergedResource extends AbstractResource {
                    final String relativePath,
                    final List<String> mappedResources) {
         this.resolver = resolver;
-        this.mergeRootPath = mergeRootPath;
-        this.relativePath = relativePath;
-        this.mappedResources.addAll(mappedResources);
+        this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
+        this.relativePath = (relativePath.length() == 0 ? "/" : relativePath);
+        if ( mappedResources != null ) {
+            this.mappedResources.addAll(mappedResources);
+        }
+        metadata.put(ResourceMetadata.RESOLUTION_PATH, getPath());
+        metadata.put("sling.mergedResource", true);
+        metadata.put("sling.mappedResources", mappedResources.toArray(new String[mappedResources.size()]));
     }
 
 
@@ -100,22 +103,14 @@ public class MergedResource extends AbstractResource {
      * {@inheritDoc}
      */
     public String getPath() {
-        return ResourceUtil.normalize(mergeRootPath + "/" + relativePath);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Iterator<Resource> listChildren() {
-        return resolver.listChildren(this);
+        return this.path;
     }
 
     /**
      * {@inheritDoc}
      */
     public String getResourceType() {
-        return relativePath;
+        return this.relativePath;
     }
 
     /**
@@ -130,10 +125,6 @@ public class MergedResource extends AbstractResource {
      * {@inheritDoc}
      */
     public ResourceMetadata getResourceMetadata() {
-        ResourceMetadata metadata = new ResourceMetadata();
-        metadata.put(ResourceMetadata.RESOLUTION_PATH, getPath());
-        metadata.put("sling.mergedResource", true);
-        metadata.put("sling.mappedResources", mappedResources.toArray(new String[mappedResources.size()]));
         return metadata;
     }
 
