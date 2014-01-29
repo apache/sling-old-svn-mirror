@@ -38,13 +38,11 @@
         repository or the Sling ResourceResolver.
     </description>
 
-    <!--
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/ftpserver</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/ftpserver</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/ftpserver</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/serviceusermapper</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/extensions/serviceusermapper</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/extensions/serviceusermapper</url>
     </scm>
-    -->
 
     <build>
         <plugins>
@@ -112,7 +110,6 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.9.0</version>
         </dependency>
         <dependency>
             <groupId>biz.aQute</groupId>
