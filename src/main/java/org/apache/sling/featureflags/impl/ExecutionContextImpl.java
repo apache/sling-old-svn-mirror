@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.featureflags.ExecutionContext;
 
 /**
@@ -40,9 +41,18 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     public ExecutionContextImpl(final HttpServletRequest request) {
         this.request = request;
-        this.resourceResolver = (request instanceof SlingHttpServletRequest)
+        ResourceResolver resolver = (request instanceof SlingHttpServletRequest)
                 ? ((SlingHttpServletRequest) request).getResourceResolver()
                 : null;
+        if ( resolver == null ) {
+            // get ResourceResolver (set by AuthenticationSupport)
+            final Object resolverObject = request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
+            resolver = (resolverObject instanceof ResourceResolver)
+                    ? (ResourceResolver) resolverObject
+                    : null;
+
+        }
+        this.resourceResolver = resolver;
     }
 
     @Override
