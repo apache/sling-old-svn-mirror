@@ -99,6 +99,7 @@
           <module>extensions/mongodb</module>
           <module>extensions/obr</module>
           <module>extensions/reqanalyzer</module>
+          <module>extensions/resourcemerger</module>
           <module>extensions/rewriter</module>
           <module>extensions/tenant</module>
           <module>extensions/replication</module>
