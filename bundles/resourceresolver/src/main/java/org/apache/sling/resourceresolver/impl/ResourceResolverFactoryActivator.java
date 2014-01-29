@@ -35,7 +35,6 @@ import org.apache.felix.scr.annotations.PropertyUnbounded;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.ReferenceStrategy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.sling.api.resource.ResourceDecorator;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -53,6 +52,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.event.EventAdmin;
@@ -78,8 +78,7 @@ import org.osgi.service.event.EventAdmin;
 @References({
     @Reference(name = "ResourceProvider", referenceInterface = ResourceProvider.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
     @Reference(name = "ResourceProviderFactory", referenceInterface = ResourceProviderFactory.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-    @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC),
-    @Reference(name = ResourceResolverFactoryActivator.FEATURES_NAME, referenceInterface = Features.class, cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC, strategy = ReferenceStrategy.LOOKUP)
+    @Reference(name = "ResourceDecorator", referenceInterface = ResourceDecorator.class, cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE, policy = ReferencePolicy.DYNAMIC)
 })
 public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
@@ -190,7 +189,7 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
 
     // name of the Features service reference
-    static final String FEATURES_NAME = "features";
+    private static final String FEATURES_NAME = "features";
 
     /** Tracker for the resource decorators. */
     private final ResourceDecoratorTracker resourceDecoratorTracker = new ResourceDecoratorTracker();
@@ -227,6 +226,30 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     @Reference
     ResourceAccessSecurityTracker resourceAccessSecurityTracker;
 
+    /**
+     * Keeps the Features service object if available. This is kind of a
+     * tri-state variable:
+     * <ul>
+     * <li>If the service has not been accessed yet, the value is
+     * {@link #FEATURES_NAME}. This field is also set to {@link #FEATURES_NAME}
+     * by the {@link #featuresServiceChanged(ServiceReference)} if the service
+     * is registered or unregistered.</li>
+     * <li>{@code null} if the Features service is not available.</li>
+     * <li>The reference to the Features service object if available</li>
+     * </ul>
+     *
+     * @see #FEATURES_NAME
+     * @see #featuresServiceChanged(ServiceReference)
+     */
+    @Reference(
+            name = FEATURES_NAME,
+            referenceInterface = Features.class,
+            cardinality = ReferenceCardinality.OPTIONAL_UNARY,
+            policy = ReferencePolicy.DYNAMIC,
+            bind = "featuresServiceChanged",
+            unbind = "featuresServiceChanged")
+    private volatile Object featuresService = FEATURES_NAME;
+
     /** ComponentContext */
     private volatile ComponentContext componentContext;
 
@@ -252,12 +275,10 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     }
 
     public Object getFeatures() {
-        // This calls into the ComponentContext on each access to this method
-        // which will happen at least once for each resource being resolved.
-        // we might want to consider performance of this mechanism and maybe
-        // fall back to event based lookup with a marker value to indicate
-        // whether the service has to be retrieved or not
-        return this.componentContext.locateService(FEATURES_NAME);
+        if (this.featuresService == FEATURES_NAME) {
+            this.featuresService = this.componentContext.locateService(FEATURES_NAME);
+        }
+        return this.featuresService;
     }
 
     public EventAdmin getEventAdmin() {
@@ -533,5 +554,18 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
      */
     protected void unbindResourceDecorator(final ResourceDecorator decorator, final Map<String, Object> props) {
         this.resourceDecoratorTracker.unbindResourceDecorator(decorator, props);
+    }
+
+    /**
+     * Signal method to be called if the Features service is bound
+     * or unbound. This method does not really care for the event, it
+     * just marks the {@link #featuresService} field to be checked
+     * again on the next access.
+     *
+     * @param ref ServiceReference is ignored but required by the DS spec
+     */
+    @SuppressWarnings("unused")
+    private void featuresServiceChanged(final ServiceReference ref) {
+        this.featuresService = FEATURES_NAME;
     }
 }
