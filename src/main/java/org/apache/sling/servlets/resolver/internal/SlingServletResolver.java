@@ -260,19 +260,21 @@ public class SlingServletResolver
 
         Servlet servlet = null;
 
-        if (this.useRequestWorkspace) {
-            final String wspName = getWorkspaceName(request);
-            // First, we use a resource resolver using the same workspace as the
-            // resource
-            servlet = resolveServlet(request, type, scriptResolver, wspName);
+        if ( type != null && type.length() > 0 ) {
+            if (this.useRequestWorkspace) {
+                final String wspName = getWorkspaceName(request);
+                // First, we use a resource resolver using the same workspace as the
+                // resource
+                servlet = resolveServlet(request, type, scriptResolver, wspName);
 
-            // now we try the default workspace
-            if (servlet == null && this.useDefaultWorkspace && wspName != null ) {
+                // now we try the default workspace
+                if (servlet == null && this.useDefaultWorkspace && wspName != null ) {
+                    servlet = resolveServlet(request, type, scriptResolver, this.defaultWorkspaceName);
+                }
+
+            } else {
                 servlet = resolveServlet(request, type, scriptResolver, this.defaultWorkspaceName);
             }
-
-        } else {
-            servlet = resolveServlet(request, type, scriptResolver, this.defaultWorkspaceName);
         }
 
         // last resort, use the core bundle default servlet
@@ -1180,8 +1182,8 @@ public class SlingServletResolver
             if (StringUtils.isBlank(method)) {
                 method = "GET";
             }
-            
-            final String CONSOLE_PATH_WARNING = 
+
+            final String CONSOLE_PATH_WARNING =
                     "<em>"
                     + "Note that in a real Sling request, the path might vary depending on the existence of"
                     + " resources that partially match it."
