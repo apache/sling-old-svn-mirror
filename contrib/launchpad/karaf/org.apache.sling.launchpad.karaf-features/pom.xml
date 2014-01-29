@@ -63,14 +63,4 @@
     </plugins>
   </build>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>org.apache.repository.snapshots</id>
-      <url>https://repository.apache.org/content/groups/snapshots-group/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
-
 </project>
