@@ -20,6 +20,7 @@ package org.apache.sling.jcr.resourcesecurity.impl;
 
 import java.util.Map;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -69,8 +70,16 @@ public class ResourceAccessGateFactory
         return true;
     }
 
+    private boolean skipCheck(final Resource resource) {
+        // if resource is backed by a jcr node, skip check
+        return resource.adaptTo(Node.class) != null;
+    }
+
     @Override
     public GateResult canRead(final Resource resource) {
+        if ( this.skipCheck(resource) ) {
+            return GateResult.GRANTED;
+        }
         final Session session = resource.getResourceResolver().adaptTo(Session.class);
         boolean canRead = false;
         if ( session != null ) {
