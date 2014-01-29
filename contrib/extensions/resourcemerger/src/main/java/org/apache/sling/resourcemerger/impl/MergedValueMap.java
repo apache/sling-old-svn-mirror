@@ -18,21 +18,20 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
 
 /**
  * A <code>MergedValueMap</code> is a {@link ValueMap} aggregated from the
  * different resources mapped to a {@link MergedResource}.
  */
-public class MergedValueMap implements ValueMap {
+public class MergedValueMap extends ValueMapDecorator {
 
     /**
      * Set of properties to exclude from override
@@ -47,120 +46,50 @@ public class MergedValueMap implements ValueMap {
     }
 
     /**
-     * Final properties
-     */
-    private Map<String, Object> properties = new LinkedHashMap<String, Object>();
-
-    /**
      * Constructor
      *
      * @param resource The merged resource to get properties from
      */
-    public MergedValueMap(MergedResource resource) {
+    public MergedValueMap(final MergedResource resource) {
+        super(new HashMap<String, Object>());
         // Iterate over physical resources
-        for (String r : resource.getMappedResources()) {
-            ValueMap vm = ResourceUtil.getValueMap(resource.getResourceResolver().getResource(r));
-            if (properties.isEmpty()) {
-                // Add all properties
-                properties.putAll(vm);
-            } else {
-                // Get properties to add or override
-                for (String key : vm.keySet()) {
-                    if (!isExcludedProperty(key)) {
-                        properties.put(key, vm.get(key));
+        for (final String r : resource.getMappedResources()) {
+            final Resource rsrc = resource.getResourceResolver().getResource(r);
+            if ( rsrc != null ) {
+                final ValueMap vm = ResourceUtil.getValueMap(rsrc);
+                if (this.isEmpty()) {
+                    // Add all properties
+                    this.putAll(vm);
+                } else {
+                    // Get properties to add or override
+                    for (final String key : vm.keySet()) {
+                        if (!isExcludedProperty(key)) {
+                            this.put(key, vm.get(key));
+                        }
                     }
-                }
 
-                // Get properties to hide
-                String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, new String[0]);
-                if (propertiesToHide.length == 0) {
-                    String propertyToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String.class);
-                    if (propertyToHide != null) {
-                        propertiesToHide = new String[]{propertyToHide};
-                    }
-                }
-                for (String propName : propertiesToHide) {
-                    if (propName.equals("*")) {
-                        properties.clear();
-                        break;
-                    } else {
-                        properties.remove(propName);
+                    // Get properties to hide
+                    final String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
+                    if ( propertiesToHide != null ) {
+                        for (final String propName : propertiesToHide) {
+                            if (propName.equals("*")) {
+                                this.clear();
+                                break;
+                            } else {
+                                this.remove(propName);
+                            }
+                        }
                     }
                 }
             }
-
-            // Hide excluded properties
-            for (String excludedProperty : EXCLUDED_PROPERTIES) {
-                properties.remove(excludedProperty);
-            }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(String name, Class<T> type) {
-        return (T) properties.get(name);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(String name, T defaultValue) {
-        Object o = properties.get(name);
-        return o == null ? defaultValue : (T) o;
-    }
-
-    public int size() {
-        return properties != null ? properties.size() : 0;
-    }
-
-    public boolean isEmpty() {
-        return properties == null || properties.isEmpty();
-    }
-
-    public boolean containsKey(Object o) {
-        return properties != null && properties.containsKey(o);
-    }
-
-    public boolean containsValue(Object o) {
-        return properties != null && properties.containsValue(o);
-    }
-
-    public Object get(Object o) {
-        return properties != null ? properties.get(o) : null;
-    }
-
-    public Object put(String s, Object o) {
-        return properties != null ? properties.put(s, o) : null;
-    }
-
-    public Object remove(Object o) {
-        return properties != null ? properties.remove(o) : null;
-    }
-
-    public void putAll(Map<? extends String, ?> map) {
-        if (properties != null) {
-            properties.putAll(map);
+        // Hide excluded properties
+        for (final String excludedProperty : EXCLUDED_PROPERTIES) {
+            this.remove(excludedProperty);
         }
-    }
-
-    public void clear() {
-        if (properties != null) {
-            properties.clear();
-        }
-    }
-
-    public Set<String> keySet() {
-        return properties != null ? properties.keySet() : Collections.<String>emptySet();
-    }
-
-    public Collection<Object> values() {
-        return properties != null ? properties.values() : Collections.emptyList();
-    }
-
-    public Set<Entry<String, Object>> entrySet() {
-        return properties != null ? properties.entrySet() : Collections.<Entry<String, Object>>emptySet();
     }
 
     private boolean isExcludedProperty(String key) {
         return EXCLUDED_PROPERTIES.contains(key);
     }
-
 }
