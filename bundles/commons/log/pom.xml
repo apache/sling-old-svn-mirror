@@ -104,14 +104,8 @@
             </Bundle-DocURL>
             <_exportcontents>
               org.slf4j.impl;version=${slf4j.version},
-              ch.qos.logback.core;
-              ch.qos.logback.core.filter;
-              ch.qos.logback.core.spi;
-              ch.qos.logback.classic;
-              ch.qos.logback.classic.encoder;
-              ch.qos.logback.classic.pattern*;
-              ch.qos.logback.classic.turbo;
-              ch.qos.logback.classic.spi;version=${logback.version}
+              ch.qos.logback.classic*;
+              ch.qos.logback.core*;version=${logback.version}
             </_exportcontents>
             <Import-Package>
               !org.slf4j.impl,
