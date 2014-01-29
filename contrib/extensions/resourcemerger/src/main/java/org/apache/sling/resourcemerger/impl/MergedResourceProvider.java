@@ -40,30 +40,30 @@ public class MergedResourceProvider implements ResourceProvider {
 
     private final String mergeRootPath;
 
-    public MergedResourceProvider(String mergeRootPath) {
+    public MergedResourceProvider(final String mergeRootPath) {
         this.mergeRootPath = mergeRootPath;
     }
 
     /**
      * {@inheritDoc}
      */
-    public Resource getResource(ResourceResolver resolver, HttpServletRequest request, String path) {
+    public Resource getResource(final ResourceResolver resolver, final HttpServletRequest request, final String path) {
         return getResource(resolver, path);
     }
 
     /**
      * {@inheritDoc}
      */
-    public Resource getResource(ResourceResolver resolver, String path) {
+    public Resource getResource(final ResourceResolver resolver, final String path) {
         List<String> mappedResources = new ArrayList<String>();
 
         if (resolver.getSearchPath() != null) {
-            String relativePath = getRelativePath(path);
+            final String relativePath = getRelativePath(path);
 
             // Loop over provided base paths
-            for (String basePath : resolver.getSearchPath()) {
+            for (final String basePath : resolver.getSearchPath()) {
                 // Try to get the corresponding physical resource for this base path
-                Resource baseRes = resolver.getResource(ResourceUtil.normalize(basePath + "/" + relativePath));
+                final Resource baseRes = resolver.getResource(ResourceUtil.normalize(basePath + "/" + relativePath));
                 if (baseRes != null) {
                     // Physical resource exists, add it to the list of mapped resources
                     mappedResources.add(0, baseRes.getPath());
@@ -83,7 +83,7 @@ public class MergedResourceProvider implements ResourceProvider {
     /**
      * {@inheritDoc}
      */
-    public Iterator<Resource> listChildren(Resource resource) {
+    public Iterator<Resource> listChildren(final Resource resource) {
         if (resource instanceof MergedResource) {
             MergedResource mergedResource = (MergedResource) resource;
             ResourceResolver resolver = mergedResource.getResourceResolver();
