@@ -171,7 +171,7 @@ public class MergedResource extends AbstractResource {
             return false;
         }
 
-        Resource r = (Resource) o;
+        final Resource r = (Resource) o;
         return r.getPath().equals(getPath());
     }
 
