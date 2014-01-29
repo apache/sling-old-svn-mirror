@@ -68,6 +68,8 @@ public class MergedResourceProviderFactory implements ResourceProviderFactory {
     @Activate
     protected void configure(final Map<String, Object> properties) {
         mergeRootPath = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), DEFAULT_ROOT);
+        if ( mergeRootPath.endsWith("/") ) {
+            mergeRootPath = mergeRootPath.substring(mergeRootPath.length() - 1);
+        }
     }
-
 }
