@@ -141,11 +141,14 @@ public abstract class ResourceAccessSecurityImpl implements ResourceAccessSecuri
                 returnValue = null;
             } else if (finalGateResult == GateResult.DONTCARE) {
                 returnValue = (this.defaultAllow ? resource : null);
-            }
-            // wrap Resource if read access is not or partly (values) not granted
-            else if (!canReadAllValues) {
-                returnValue = new AccessGateResourceWrapper(resource,
+            } else if (finalGateResult == GateResult.GRANTED ) {
+                // wrap Resource if read access is not or partly (values) not granted
+                if (!canReadAllValues) {
+                    returnValue = new AccessGateResourceWrapper(resource,
                         accessGatesForValues);
+                } else {
+                    returnValue = resource;
+                }
             }
         }
         return returnValue;
