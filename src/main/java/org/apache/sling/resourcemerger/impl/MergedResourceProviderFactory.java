@@ -37,9 +37,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 @Properties({
     @Property(name = ResourceProvider.ROOTS, value=MergedResourceProviderFactory.DEFAULT_ROOT,
             label="Root",
-            description="The mount point of merged resources"),
-    @Property(name = ResourceProvider.USE_RESOURCE_ACCESS_SECURITY, boolValue=true,
-              label="Secure", description="If enabled additional access checks are performed")
+            description="The mount point of merged resources")
 })
 /**
  * The <code>MergedResourceProviderFactory</code> creates merged resource
