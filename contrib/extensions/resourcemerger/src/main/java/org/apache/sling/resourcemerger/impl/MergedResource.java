@@ -70,7 +70,6 @@ public class MergedResource extends AbstractResource {
         if ( mappedResources != null ) {
             this.mappedResources.addAll(mappedResources);
         }
-        metadata.put(ResourceMetadata.RESOLUTION_PATH, getPath());
         metadata.put("sling.mergedResource", true);
         metadata.put("sling.mappedResources", mappedResources.toArray(new String[mappedResources.size()]));
     }
