@@ -24,17 +24,22 @@ import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
-@Component(metatype = false)
+@Component(name = "Apache Sling Merged Resource Provider Factory",
+           description = "This resource provider delivers merged resources based on the search paths.",
+           metatype=true)
 @Service(value = ResourceProviderFactory.class)
 @Properties({
-        @Property(name = ResourceProvider.ROOTS, value = {"/merge"}, propertyPrivate = true)
+    @Property(name = ResourceProvider.ROOTS, value=MergedResourceProviderFactory.DEFAULT_ROOT,
+            label="Root",
+            description="The mount point of merged resources"),
+    @Property(name = ResourceProvider.USE_RESOURCE_ACCESS_SECURITY, boolValue=true,
+              label="Secure", description="If enabled additional access checks are performed")
 })
 /**
  * The <code>MergedResourceProviderFactory</code> creates merged resource
@@ -42,28 +47,29 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
  */
 public class MergedResourceProviderFactory implements ResourceProviderFactory {
 
+    public static final String DEFAULT_ROOT = "/merged";
+
     private String mergeRootPath;
 
     /**
      * {@inheritDoc}
      */
-    public ResourceProvider getResourceProvider(Map<String, Object> stringObjectMap) throws LoginException {
+    public ResourceProvider getResourceProvider(final Map<String, Object> stringObjectMap)
+    throws LoginException {
         return new MergedResourceProvider(mergeRootPath);
     }
 
     /**
      * {@inheritDoc}
      */
-    public ResourceProvider getAdministrativeResourceProvider(Map<String, Object> stringObjectMap) throws LoginException {
+    public ResourceProvider getAdministrativeResourceProvider(final Map<String, Object> stringObjectMap)
+    throws LoginException {
         return new MergedResourceProvider(mergeRootPath);
     }
 
     @Activate
-    private void configure(Map<String, ?> properties) {
-        String[] mergeRootPaths = PropertiesUtil.toStringArray(properties.get(ResourceProvider.ROOTS), new String[0]);
-        if (mergeRootPaths.length > 0) {
-            mergeRootPath = mergeRootPaths[0];
-        }
+    protected void configure(final Map<String, Object> properties) {
+        mergeRootPath = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), DEFAULT_ROOT);
     }
 
 }

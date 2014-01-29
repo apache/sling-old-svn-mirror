@@ -46,7 +46,9 @@ public class MergedResource extends AbstractResource {
      * @param mergeRootPath Merge root path
      * @param relativePath  Relative path
      */
-    MergedResource(ResourceResolver resolver, String mergeRootPath, String relativePath) {
+    MergedResource(final ResourceResolver resolver,
+                   final String mergeRootPath,
+                   final String relativePath) {
         this.resolver = resolver;
         this.mergeRootPath = mergeRootPath;
         this.relativePath = relativePath;
@@ -60,7 +62,10 @@ public class MergedResource extends AbstractResource {
      * @param relativePath    Relative path
      * @param mappedResources List of physical mapped resources' paths
      */
-    MergedResource(ResourceResolver resolver, String mergeRootPath, String relativePath, List<String> mappedResources) {
+    MergedResource(final ResourceResolver resolver,
+                   final String mergeRootPath,
+                   final String relativePath,
+                   final List<String> mappedResources) {
         this.resolver = resolver;
         this.mergeRootPath = mergeRootPath;
         this.relativePath = relativePath;
@@ -77,7 +82,7 @@ public class MergedResource extends AbstractResource {
     /**
      * {@inheritDoc}
      */
-    public void addMappedResource(String path) {
+    public void addMappedResource(final String path) {
         mappedResources.add(path);
     }
 
@@ -101,6 +106,7 @@ public class MergedResource extends AbstractResource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<Resource> listChildren() {
         return resolver.listChildren(this);
     }
@@ -142,13 +148,14 @@ public class MergedResource extends AbstractResource {
     /**
      * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == ValueMap.class) {
             return (AdapterType) new MergedValueMap(this);
         }
 
-        return null;
+        return super.adaptTo(type);
     }
 
 
@@ -162,7 +169,8 @@ public class MergedResource extends AbstractResource {
      * @return Returns <code>true</code> if the two merged resources have the
      *         same path.
      */
-    public boolean equals(Object o) {
+    @Override
+    public boolean equals(final Object o) {
         if (o == null) {
             return false;
         }
