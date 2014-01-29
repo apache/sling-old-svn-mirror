@@ -87,6 +87,8 @@ public class MergedResourceProvider implements ResourceProvider {
                         if ( !hidden ) {
                             // Physical resource exists, add it to the list of mapped resources
                             mappedResources.add(0, baseRes.getPath());
+                        } else {
+                            mappedResources.clear();
                         }
                     }
                 }
