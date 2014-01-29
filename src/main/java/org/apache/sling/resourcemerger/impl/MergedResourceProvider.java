@@ -63,10 +63,31 @@ public class MergedResourceProvider implements ResourceProvider {
                 // Loop over provided base paths
                 for (final String basePath : resolver.getSearchPath()) {
                     // Try to get the corresponding physical resource for this base path
-                    final Resource baseRes = resolver.getResource(ResourceUtil.normalize(basePath + "/" + relativePath));
+                    final Resource baseRes = resolver.getResource(basePath + "/" + relativePath);
                     if (baseRes != null) {
-                        // Physical resource exists, add it to the list of mapped resources
-                        mappedResources.add(0, baseRes.getPath());
+                        // check if resource is hidden
+                        boolean hidden = false;
+                        final ValueMap props = ResourceUtil.getValueMap(baseRes);
+                        if ( props.get(MergedResourceConstants.PN_HIDE_RESOURCE, Boolean.FALSE) ) {
+                            hidden = true;
+                        }
+                        if ( !hidden ) {
+                            // check parent
+                            final ValueMap parentProps = ResourceUtil.getValueMap(baseRes.getParent());
+                            final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+                            if ( childrenToHideArray != null ) {
+                                for(final String name : childrenToHideArray ) {
+                                    if ( name.equals(baseRes.getName()) ) {
+                                        hidden = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if ( !hidden ) {
+                            // Physical resource exists, add it to the list of mapped resources
+                            mappedResources.add(0, baseRes.getPath());
+                        }
                     }
                 }
 
@@ -119,9 +140,9 @@ public class MergedResourceProvider implements ResourceProvider {
 
                 // Browse children of current physical resource
                 for (final Resource child : mappedResource.getChildren()) {
-                    final String childRelativePath = ResourceUtil.normalize(mergedResource.getRelativePath() + "/" + child.getName());
+                    final String childRelativePath = mergedResource.getRelativePath() + "/" + child.getName();
 
-                    if (child.adaptTo(ValueMap.class).get(MergedResourceConstants.PN_HIDE_RESOURCE, Boolean.FALSE)) {
+                    if (ResourceUtil.getValueMap(child).get(MergedResourceConstants.PN_HIDE_RESOURCE, Boolean.FALSE)) {
                         // Child resource has to be hidden
                         children.remove(new MergedResource(resolver, mergeRootPath, childRelativePath));
 
