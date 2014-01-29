@@ -101,10 +101,17 @@ public class FeatureManager {
         services.add(bundleContext.registerService(Filter.class.getName(), new CurrentClientContextFilter(this),
             new Hashtable<String, Object>() {
                 {
-                    put("sling.filter.scope", "REQUEST");
+                    put("pattern", "/.*");
                     put("service.ranking", Integer.MIN_VALUE);
                 }
             }));
+        services.add(bundleContext.registerService(Filter.class.getName(), new CurrentClientContextFilter(this),
+            new Hashtable<String, Object>() {
+            {
+                put("sling.filter.scope", "REQUEST");
+                put("service.ranking", Integer.MIN_VALUE);
+            }
+        }));
         this.services = services;
     }
 
