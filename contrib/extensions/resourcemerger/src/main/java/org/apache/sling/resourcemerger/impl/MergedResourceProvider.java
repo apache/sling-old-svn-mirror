@@ -86,12 +86,12 @@ public class MergedResourceProvider implements ResourceProvider {
      */
     public Iterator<Resource> listChildren(final Resource resource) {
         if (resource instanceof MergedResource) {
-            MergedResource mergedResource = (MergedResource) resource;
-            ResourceResolver resolver = mergedResource.getResourceResolver();
-            List<Resource> children = new ArrayList<Resource>();
+            final MergedResource mergedResource = (MergedResource) resource;
+            final ResourceResolver resolver = mergedResource.getResourceResolver();
+            final List<Resource> children = new ArrayList<Resource>();
 
-            for (String mappedResourcePath : mergedResource.getMappedResources()) {
-                Resource mappedResource = resolver.getResource(mappedResourcePath);
+            for (final String mappedResourcePath : mergedResource.getMappedResources()) {
+                final Resource mappedResource = resolver.getResource(mappedResourcePath);
 
                 // Check if the resource exists
                 if (mappedResource == null) {
@@ -99,30 +99,27 @@ public class MergedResourceProvider implements ResourceProvider {
                 }
 
                 // Check if some previously defined children have to be ignored
-                ValueMap mappedResourceProps = mappedResource.adaptTo(ValueMap.class);
-                List<String> childrenToHide = Arrays.asList(mappedResourceProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, new String[0]));
-                if (childrenToHide.isEmpty()) {
-                    String childToHide = mappedResourceProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String.class);
-                    if (childToHide != null) {
-                        childrenToHide.add(childToHide);
-                    }
-                }
-                if (childrenToHide.contains("*")) {
-                    // Clear current children list
-                    children.clear();
-                } else {
-                    // Go through current children in order to hide them individually
-                    Iterator<Resource> it = children.iterator();
-                    while (it.hasNext()) {
-                        if (childrenToHide.contains(it.next().getName())) {
-                            it.remove();
+                final ValueMap mappedResourceProps = mappedResource.adaptTo(ValueMap.class);
+                final String[] childrenToHideArray = mappedResourceProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
+                if ( childrenToHideArray != null ) {
+                    final List<String> childrenToHide = Arrays.asList(childrenToHideArray);
+                    if ( childrenToHide.contains("*") ) {
+                        // Clear current children list
+                        children.clear();
+                    } else {
+                        // Go through current children in order to hide them individually
+                        final Iterator<Resource> it = children.iterator();
+                        while (it.hasNext()) {
+                            if (childrenToHide.contains(it.next().getName())) {
+                                it.remove();
+                            }
                         }
                     }
                 }
 
                 // Browse children of current physical resource
-                for (Resource child : mappedResource.getChildren()) {
-                    String childRelativePath = ResourceUtil.normalize(mergedResource.getRelativePath() + "/" + child.getName());
+                for (final Resource child : mappedResource.getChildren()) {
+                    final String childRelativePath = ResourceUtil.normalize(mergedResource.getRelativePath() + "/" + child.getName());
 
                     if (child.adaptTo(ValueMap.class).get(MergedResourceConstants.PN_HIDE_RESOURCE, Boolean.FALSE)) {
                         // Child resource has to be hidden
