@@ -292,7 +292,7 @@ public class ResourceResolverContext {
                         boolean negative = false;
                         if (feature.charAt(0) == '-') {
                             feature = feature.substring(1);
-                            negative = false;
+                            negative = true;
                         }
 
                         if (featureContext.isEnabled(feature) ^ negative) {
