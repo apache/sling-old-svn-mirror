@@ -37,6 +37,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.apache.sling.jcr.resource.JcrResourceResolverFactory;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrItemAdapterFactory;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.ComponentContext;
 
@@ -82,7 +83,7 @@ public class JcrResourceResolverFactoryImpl implements
     }
 
     /** Get the dynamic class loader if available */
-    ClassLoader getDynamicClassLoader() {
+    public ClassLoader getDynamicClassLoader() {
         final DynamicClassLoaderManager dclm = this.dynamicClassLoaderManager;
         if (dclm != null) {
             return dclm.getDynamicClassLoader();
