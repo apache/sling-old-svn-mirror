@@ -18,34 +18,36 @@
  */
 package org.apache.sling.featureflags.impl;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.sling.api.resource.ResourceDecorator;
-import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.featureflags.ClientContext;
-import org.apache.sling.featureflags.ExecutionContext;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.featureflags.Feature;
 import org.apache.sling.featureflags.Features;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,71 +55,114 @@ import org.slf4j.LoggerFactory;
  * This service implements the feature handling. It keeps track of all
  * {@link Feature} services.
  */
-@Component
+@Component(policy = ConfigurationPolicy.IGNORE)
+@Service
 @Reference(
         name = "feature",
         cardinality = ReferenceCardinality.OPTIONAL_MULTIPLE,
         policy = ReferencePolicy.DYNAMIC,
         referenceInterface = Feature.class)
-public class FeatureManager {
+@Properties({
+    @Property(name = "felix.webconsole.label", value = "features"),
+    @Property(name = "felix.webconsole.title", value = "Features"),
+    @Property(name = "felix.webconsole.category", value = "Sling"),
+    @Property(name = "pattern", value = "/.*"),
+    @Property(name = "service.ranking", intValue = 0x4000)
+})
+public class FeatureManager implements Features, Filter, Servlet {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private final ThreadLocal<ClientContext> perThreadClientContext = new ThreadLocal<ClientContext>();
-
-    private final ClientContext defaultClientContext = new ClientContext() {
-        @Override
-        public boolean isEnabled(final String featureName) {
-            return false;
-        }
-
-        @Override
-        public Collection<Feature> getEnabledFeatures() {
-            return Collections.emptyList();
-        }
-    };
+    private final ThreadLocal<ExecutionContextImpl> perThreadClientContext = new ThreadLocal<ExecutionContextImpl>();
 
     private final Map<String, List<FeatureDescription>> allFeatures = new HashMap<String, List<FeatureDescription>>();
 
     private Map<String, Feature> activeFeatures = Collections.emptyMap();
 
-    private List<ServiceRegistration> services;
+    private ServletConfig servletConfig;
 
-    @SuppressWarnings("serial")
-    @Activate
-    private void activate(BundleContext bundleContext) {
-        ArrayList<ServiceRegistration> services = new ArrayList<ServiceRegistration>();
-        services.add(bundleContext.registerService(Features.class.getName(), new FeaturesImpl(this), null));
-        services.add(bundleContext.registerService(ResourceDecorator.class.getName(),
-            new FeatureResourceDecorator(this), null));
-        services.add(bundleContext.registerService(Servlet.class.getName(), new FeatureWebConsolePlugin(this),
-            new Hashtable<String, Object>() {
-                {
-                    put("felix.webconsole.label", "features");
-                    put("felix.webconsole.title", "Features");
-                    put("felix.webconsole.category", "Sling");
-                }
-            }));
-        services.add(bundleContext.registerService(Filter.class.getName(), new CurrentClientContextFilter(this),
-            new Hashtable<String, Object>() {
-                {
-                    put("pattern", "/.*");
-                    put("service.ranking", Integer.MIN_VALUE);
-                }
-            }));
-        this.services = services;
+    //--- Features
+
+    public Feature[] getFeatures() {
+        final Map<String, Feature> activeFeatures = this.activeFeatures;
+        return activeFeatures.values().toArray(new Feature[activeFeatures.size()]);
     }
 
-    @Deactivate
-    private void deactivate() {
-        if (this.services != null) {
-            for (ServiceRegistration service : this.services) {
-                if (service != null) {
-                    service.unregister();
+    public Feature getFeature(final String name) {
+        return this.activeFeatures.get(name);
+    }
+
+    public boolean isEnabled(String featureName) {
+        final Feature feature = this.getFeature(featureName);
+        if (feature != null) {
+            return getCurrentExecutionContext().isEnabled(feature);
+        }
+        return false;
+    }
+
+    //--- Filter
+
+    @Override
+    public void init(FilterConfig filterConfig) {
+        // nothing todo do
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException,
+            ServletException {
+        try {
+            this.pushContext((HttpServletRequest) request);
+            chain.doFilter(request, response);
+        } finally {
+            this.popContext();
+        }
+    }
+
+    @Override
+    public void destroy() {
+        // method shared by Servlet and Filter interface
+        this.servletConfig = null;
+    }
+
+    //--- Servlet
+
+    @Override
+    public void init(ServletConfig config) {
+        this.servletConfig = config;
+    }
+
+    @Override
+    public ServletConfig getServletConfig() {
+        return this.servletConfig;
+    }
+
+    @Override
+    public String getServletInfo() {
+        return "Features";
+    }
+
+    @Override
+    public void service(ServletRequest req, ServletResponse res) throws IOException {
+        if ("GET".equals(((HttpServletRequest) req).getMethod())) {
+            final PrintWriter pw = res.getWriter();
+            final Feature[] features = getFeatures();
+            if (features == null || features.length == 0) {
+                pw.println("<p class='statline ui-state-highlight'>No Features currently defined</p>");
+            } else {
+                pw.printf("<p class='statline ui-state-highlight'>%d Feature(s) currently defined</p>%n",
+                    features.length);
+                pw.println("<table class='nicetable'>");
+                pw.println("<tr><th>Name</th><th>Description</th><th>Enabled</th></tr>");
+                final ExecutionContextImpl ctx = getCurrentExecutionContext();
+                for (final Feature feature : features) {
+                    pw.printf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>%n", feature.getName(),
+                        feature.getDescription(), ctx.isEnabled(feature));
                 }
+                pw.println("</table>");
             }
-            this.services.clear();
-            this.services = null;
+        } else {
+            ((HttpServletResponse) res).sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+            res.flushBuffer();
         }
     }
 
@@ -176,79 +221,17 @@ public class FeatureManager {
 
     //--- Client Context management and access
 
-    ClientContext getCurrentClientContext() {
-        ClientContext result = perThreadClientContext.get();
-        if (result == null) {
-            result = defaultClientContext;
-        }
-        return result;
+    void pushContext(final HttpServletRequest request) {
+        this.perThreadClientContext.set(new ExecutionContextImpl(request));
     }
 
-    ClientContext setCurrentClientContext(final ServletRequest request) {
-        final ClientContext current = perThreadClientContext.get();
-        if (request instanceof HttpServletRequest) {
-            final ExecutionContext providerContext = new ExecutionContextImpl((HttpServletRequest) request);
-            final ClientContextImpl ctx = this.createClientContext(providerContext);
-            perThreadClientContext.set(ctx);
-        }
-        return current;
+    void popContext() {
+        this.perThreadClientContext.set(null);
     }
 
-    void unsetCurrentClientContext(final ClientContext previous) {
-        if (previous != null) {
-            perThreadClientContext.set(previous);
-        } else {
-            perThreadClientContext.remove();
-        }
-    }
-
-    ClientContext createClientContext(final ResourceResolver resolver) {
-        if (resolver == null) {
-            throw new IllegalArgumentException("Resolver must not be null.");
-        }
-        final ExecutionContext providerContext = new ExecutionContextImpl(resolver);
-        final ClientContext ctx = this.createClientContext(providerContext);
-        return ctx;
-    }
-
-    ClientContext createClientContext(final HttpServletRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("Request must not be null.");
-        }
-        final ExecutionContext providerContext = new ExecutionContextImpl(request);
-        final ClientContext ctx = this.createClientContext(providerContext);
-        return ctx;
-    }
-
-    private ClientContextImpl createClientContext(final ExecutionContext providerContext) {
-        final Map<String, Feature> enabledFeatures = new HashMap<String, Feature>();
-        for (final Map.Entry<String, Feature> entry : this.activeFeatures.entrySet()) {
-            if (entry.getValue().isEnabled(providerContext)) {
-                enabledFeatures.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-        return new ClientContextImpl(providerContext, enabledFeatures);
-    }
-
-    //--- Feature access
-
-    Feature[] getAvailableFeatures() {
-        final Map<String, Feature> activeFeatures = this.activeFeatures;
-        return activeFeatures.values().toArray(new Feature[activeFeatures.size()]);
-    }
-
-    Feature getFeature(final String name) {
-        return this.activeFeatures.get(name);
-    }
-
-    String[] getAvailableFeatureNames() {
-        final Map<String, Feature> activeFeatures = this.activeFeatures;
-        return activeFeatures.keySet().toArray(new String[activeFeatures.size()]);
-    }
-
-    boolean isAvailable(final String featureName) {
-        return this.activeFeatures.containsKey(featureName);
+    ExecutionContextImpl getCurrentExecutionContext() {
+        ExecutionContextImpl ctx = this.perThreadClientContext.get();
+        return (ctx != null) ? ctx : new ExecutionContextImpl(null);
     }
 
     /**
