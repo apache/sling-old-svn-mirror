@@ -117,22 +117,24 @@ public class MergedResourceProvider implements ResourceProvider {
                 for (final String basePath : resolver.getSearchPath()) {
                     final Resource baseResource = resolver.getResource(basePath + "/" + relativePath);
                     if ( baseResource != null ) {
-                        final String rsrcName = baseResource.getName();
-                        if ( !names.contains(rsrcName) ) {
-                            names.add(rsrcName);
-                        }
-                        // Check if children need reordering
-                        int orderBeforeIndex = -1;
-                        final ValueMap vm = ResourceUtil.getValueMap(baseResource);
-                        final String orderBefore = vm.get(MergedResourceConstants.PN_ORDER_BEFORE, String.class);
-                        if (orderBefore != null && !orderBefore.equals(rsrcName)) {
-                            // search entry
-                            orderBeforeIndex = names.indexOf(orderBefore);
-                        }
+                        for(final Resource child : baseResource.getChildren()) {
+                            final String rsrcName = child.getName();
+                            if ( !names.contains(rsrcName) ) {
+                                names.add(rsrcName);
+                            }
+                            // Check if children need reordering
+                            int orderBeforeIndex = -1;
+                            final ValueMap vm = ResourceUtil.getValueMap(child);
+                            final String orderBefore = vm.get(MergedResourceConstants.PN_ORDER_BEFORE, String.class);
+                            if (orderBefore != null && !orderBefore.equals(rsrcName)) {
+                                // search entry
+                                orderBeforeIndex = names.indexOf(orderBefore);
+                            }
 
-                        if (orderBeforeIndex > -1) {
-                            names.add(orderBeforeIndex, rsrcName);
-                            names.remove(names.size() - 1);
+                            if (orderBeforeIndex > -1) {
+                                names.add(orderBeforeIndex, rsrcName);
+                                names.remove(names.size() - 1);
+                            }
                         }
                     }
                 }
