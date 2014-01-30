@@ -32,6 +32,7 @@ import org.apache.sling.api.resource.ResourceUtil;
  *
  * MockHelper.create(resolver).resource("/libs").p("prop", "value")
  *                              .resource("sub").p("sub", "hello")
+ *                              .resource(".sameLevel")
  *                            .resource("/apps").p("foo", "baa").commit()
  *
  */
@@ -45,17 +46,30 @@ public class MockHelper {
         this.resolver = r;
     }
 
+
+    /**
+     * Create a new helper
+     */
     public static MockHelper create(final ResourceResolver resolver) {
         return new MockHelper(resolver);
     }
 
+    /**
+     * Add a new resource
+     * If the path is relative, this resource is added as a child to the previous resource.
+     * If the path is relative and starts with a dot, this resource is added as a peer to
+     * the previous resource.
+     */
     public MockHelper resource(final String path) {
         final String fullPath;
-        if ( !path.startsWith("/") ) {
+        if ( path.startsWith("/") ) {
+            fullPath = path;
+        } else if ( path.startsWith(".") ) {
+            final Description d = this.stack.peek();
+            fullPath = ResourceUtil.normalize(d.path + "/../" + path.substring(1));
+        } else {
             final Description d = this.stack.peek();
             fullPath = d.path + "/" + path;
-        } else {
-            fullPath = path;
         }
         final Description d = new Description();
         d.path = fullPath;
@@ -64,6 +78,9 @@ public class MockHelper {
         return this;
     }
 
+    /**
+     * Add a property to the current resource
+     */
     public MockHelper p(final String name, final Object value) {
         final Description d = this.stack.peek();
         d.properties.put(name, value);
@@ -71,6 +88,9 @@ public class MockHelper {
         return this;
     }
 
+    /**
+     * Finish building and add all resources to the resource tree.
+     */
     public void add() throws PersistenceException {
         for(int i=0; i<this.stack.size(); i++) {
             final Description d = this.stack.get(i);
@@ -79,6 +99,11 @@ public class MockHelper {
         this.stack.clear();
     }
 
+    /**
+     * Finish building, add all resources to the resource tree and commit
+     * changes.
+     * @throws PersistenceException
+     */
     public void commit() throws PersistenceException {
         this.add();
         this.resolver.commit();
