@@ -33,7 +33,7 @@ import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.testing.jcr.EventHelper;
 import org.apache.sling.commons.testing.jcr.RepositoryTestBase;
 import org.apache.sling.commons.testing.jcr.RepositoryUtil;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
+import org.apache.sling.jcr.resource.internal.helper.jcr.JcrTestNodeResource;
 import org.mockito.Mockito;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.event.Event;
@@ -122,7 +122,7 @@ public class JcrResourceListenerTest extends RepositoryTestBase {
 
             final ResourceResolver resolver = Mockito.mock(ResourceResolver.class);
             Mockito.when(resolver.adaptTo(Mockito.any(Class.class))).thenReturn(session);
-            Mockito.when(resolver.getResource(Mockito.anyString())).thenReturn(new JcrNodeResource(resolver, session.getNode("/"), null));
+            Mockito.when(resolver.getResource(Mockito.anyString())).thenReturn(new JcrTestNodeResource(resolver, session.getNode("/"), null));
 
             final ResourceResolverFactory factory = Mockito.mock(ResourceResolverFactory.class);
             Mockito.when(factory.getAdministrativeResourceResolver(Mockito.anyMap())).thenReturn(resolver);

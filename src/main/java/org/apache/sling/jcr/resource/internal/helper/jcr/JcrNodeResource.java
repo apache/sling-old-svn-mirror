@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
         @Adapter(value=PersistableValueMap.class, condition="If the resource is a JcrNodeResource and the user has set property privileges on the node."),
         @Adapter(value=InputStream.class, condition="If the resource is a JcrNodeResource and has a jcr:data property or is an nt:file node.")
 })
-public class JcrNodeResource extends JcrItemResource {
+class JcrNodeResource extends JcrItemResource { // this should be package private, see SLING-1414
 
     /** marker value for the resourceSupertType before trying to evaluate */
     private static final String UNSET_RESOURCE_SUPER_TYPE = "<unset>";

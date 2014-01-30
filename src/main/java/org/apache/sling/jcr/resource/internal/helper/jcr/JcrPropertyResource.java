@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
                 Double.class, BigDecimal.class, Calendar.class, InputStream.class, Value[].class, String[].class,
                 Boolean[].class, Long[].class, Double[].class, BigDecimal[].class }),
         @Adapter(value = Node.class, condition = "If the resource is a JcrPropertyResource and the property is a reference or weak reference property.") })
-public class JcrPropertyResource extends JcrItemResource {
+class JcrPropertyResource extends JcrItemResource { // this should be package private, see SLING-1414
 
     /** default log */
     private static final Logger LOGGER = LoggerFactory.getLogger(JcrPropertyResource.class);
@@ -82,6 +82,7 @@ public class JcrPropertyResource extends JcrItemResource {
         return null;
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
 
@@ -208,6 +209,7 @@ public class JcrPropertyResource extends JcrItemResource {
         return super.adaptTo(type);
     }
 
+    @Override
     public String toString() {
         return getClass().getSimpleName() + ", type=" + getResourceType()
             + ", path=" + getPath();

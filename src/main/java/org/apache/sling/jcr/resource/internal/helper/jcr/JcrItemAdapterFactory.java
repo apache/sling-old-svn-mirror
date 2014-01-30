@@ -5,16 +5,16 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.sling.jcr.resource.internal;
+package org.apache.sling.jcr.resource.internal.helper.jcr;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -28,8 +28,7 @@ import org.apache.sling.api.adapter.AdapterFactory;
 import org.apache.sling.api.resource.PersistableValueMap;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrNodeResource;
-import org.apache.sling.jcr.resource.internal.helper.jcr.JcrPropertyResource;
+import org.apache.sling.jcr.resource.internal.JcrResourceResolverFactoryImpl;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -39,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * AdapterFactory which adapts JCR Nodes and Properties into Resources.
  */
-class JcrItemAdapterFactory implements AdapterFactory {
+public class JcrItemAdapterFactory implements AdapterFactory {
 
     private final Logger logger = LoggerFactory.getLogger(JcrItemAdapterFactory.class);
 

@@ -34,7 +34,9 @@ import org.apache.sling.jcr.resource.JcrResourceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class JcrItemResource extends AbstractResource implements Resource {
+abstract class JcrItemResource // this should be package private, see SLING-1414
+    extends AbstractResource
+    implements Resource {
 
     /**
      * default log
