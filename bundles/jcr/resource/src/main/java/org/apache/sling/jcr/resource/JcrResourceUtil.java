@@ -19,6 +19,7 @@
 package org.apache.sling.jcr.resource;
 
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.StringTokenizer;
@@ -174,10 +175,11 @@ public class JcrResourceUtil {
         if ( propertyValue == null ) {
             node.setProperty(propertyName, (String)null);
         } else if ( propertyValue.getClass().isArray() ) {
-            final Object[] values = (Object[])propertyValue;
-            final Value[] setValues = new Value[values.length];
-            for(int i=0; i<values.length; i++) {
-                setValues[i] = createValue(values[i], node.getSession());
+            final int length = Array.getLength(propertyValue);
+            final Value[] setValues = new Value[length];
+            for(int i=0; i<length; i++) {
+                final Object value = Array.get(propertyValue, i);
+                setValues[i] = createValue(value, node.getSession());
             }
             node.setProperty(propertyName, setValues);
         } else {
