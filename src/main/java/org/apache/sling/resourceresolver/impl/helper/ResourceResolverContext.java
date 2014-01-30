@@ -33,7 +33,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
-import org.apache.sling.featureflags.ClientContext;
 import org.apache.sling.featureflags.Features;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 
@@ -283,20 +282,20 @@ public class ResourceResolverContext {
         if (resource != null) {
             Object featuresService = this.featuresHolder.getFeatures();
             if (featuresService instanceof Features) {
-                String[] features = getProperty(resource, RESOURCE_PROPERTY, String[].class);
-                if (features != null && features.length > 0) {
-                    ClientContext featureContext = ((Features) featuresService).getCurrentClientContext();
-                    for (String feature : features) {
+                Features features = (Features) featuresService;
+                String[] featureNames = getProperty(resource, RESOURCE_PROPERTY, String[].class);
+                if (featureNames != null && featureNames.length > 0) {
+                    for (String featureName : featureNames) {
 
                         // check whether the feature must be disabled
                         boolean negative = false;
-                        if (feature.charAt(0) == '-') {
-                            feature = feature.substring(1);
+                        if (featureName.charAt(0) == '-') {
+                            featureName = featureName.substring(1);
                             negative = true;
                         }
 
-                        if (featureContext.isEnabled(feature) ^ negative) {
-                            resource.getResourceMetadata().put(RESOURCE_PROPERTY, features);
+                        if (features.isEnabled(featureName) ^ negative) {
+                            resource.getResourceMetadata().put(RESOURCE_PROPERTY, featureNames);
                             return resource;
                         }
                     }
