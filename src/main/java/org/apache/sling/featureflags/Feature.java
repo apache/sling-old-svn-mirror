@@ -22,29 +22,16 @@ import aQute.bnd.annotation.ConsumerType;
 
 /**
  * A feature is defined by its name. Features are registered as OSGi services.
- * This interface is expected to be implemented by feature providers.
  * <p>
  * Feature {@link #getName() names} should be globally unique. If multiple
  * features have the same name, the feature with the highest service ranking is
- * accessible through the {@link Features} service and the {@link ClientContext}.
+ * accessible through the {@link Features} service while those with lower
+ * service rankings are ignored.
+ * <p>
+ * This interface is expected to be implemented by feature providers.
  */
 @ConsumerType
 public interface Feature {
-
-    /**
-     * Checks whether the feature is enabled for the given execution context.
-     * <p>
-     * Multiple calls to this method may but are not required to return the same
-     * value. For example the return value may depend on the time of day, some
-     * random number or some information provided by the given
-     * {@link ExecutionContext}.
-     *
-     * @param context The {@link ExecutionContext} providing a context to
-     *            evaluate whether the feature is enabled or not.
-     * @return {@code true} if this {@code Feature} is enabled in the given
-     *         {@link ExecutionContext}.
-     */
-    boolean isEnabled(ExecutionContext context);
 
     /**
      * The name of the feature.
@@ -61,4 +48,24 @@ public interface Feature {
      *         {@code null} or an empty string.
      */
     String getDescription();
+
+    /**
+     * Checks whether the feature is enabled for the given execution context.
+     * <p>
+     * Multiple calls to this method may but are not required to return the same
+     * value. For example the return value may depend on the time of day, some
+     * random number or some information provided by the given
+     * {@link ExecutionContext}.
+     * <p>
+     * This method is called by the {@link Feature} manager and is not intended
+     * to be called by application code directly.
+     *
+     * @param context The {@link ExecutionContext} providing a context to
+     *            evaluate whether the feature is enabled or not.
+     *            Implementations must not hold on to this context instance or
+     *            the values provided for longer than executing this method.
+     * @return {@code true} if this {@code Feature} is enabled in the given
+     *         {@link ExecutionContext}.
+     */
+    boolean isEnabled(ExecutionContext context);
 }

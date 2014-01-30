@@ -30,14 +30,14 @@ import aQute.bnd.annotation.ProviderType;
  * provided to the {@link Feature#isEnabled(ExecutionContext)} to help
  * evaluating whether the feature is enabled or not.
  * <p>
- * The {@link Features} service {@link ClientContext} generating methods create
- * an instance of this to collect the enabled {@link Feature} services for the
- * creation of the {@link ClientContext} instance.
- * <p>
  * This object provides access to live data and must only be used to read
  * information. Modifying content through a {@code ResourceResolver} directly or
  * indirectly provided by this object is considered inappropriate and faulty
  * behavior.
+ * <p>
+ * Instances of this interface are provided by the feature manager to the
+ * {@link Feature} services. This interface is not intended to be implemented by
+ * client and application code.
  */
 @ProviderType
 public interface ExecutionContext {
@@ -47,11 +47,8 @@ public interface ExecutionContext {
      * may influence the decision whether a {@link Feature} is enabled or not.
      * If a {@code HttpServletRequest} object is not available in the context,
      * this method may return {@code null}.
-     * <p>
-     * In a Sling request processing context, the {@code HttpServletRequest}
-     * object returned may actually be a {@code SlingHttpServletRequest}.
      *
-     * @return the request or <code>null</code>
+     * @return the request or {@code null}
      */
     HttpServletRequest getRequest();
 
@@ -61,7 +58,7 @@ public interface ExecutionContext {
      * If a {@code ResourceResolver} object is not available in the context,
      * this method may return {@code null}.
      *
-     * @return the resource resolver
+     * @return the resource resolver or {@code null}
      */
     ResourceResolver getResourceResolver();
 }

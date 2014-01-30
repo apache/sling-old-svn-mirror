@@ -18,41 +18,40 @@
  */
 package org.apache.sling.featureflags.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.auth.core.AuthenticationSupport;
 import org.apache.sling.featureflags.ExecutionContext;
+import org.apache.sling.featureflags.Feature;
 
 /**
  * Implementation of the provider context.
  */
 public class ExecutionContextImpl implements ExecutionContext {
 
+    private static final String REQUEST_ATTRIBUTE_RESOLVER = "org.apache.sling.auth.core.ResourceResolver";
+
     private final ResourceResolver resourceResolver;
 
     private final HttpServletRequest request;
 
-    public ExecutionContextImpl(final ResourceResolver resourceResolver) {
-        this.request = null;
-        this.resourceResolver = resourceResolver;
-    }
+    private final Map<String, Boolean> featureCache;
 
     public ExecutionContextImpl(final HttpServletRequest request) {
-        this.request = request;
-        ResourceResolver resolver = (request instanceof SlingHttpServletRequest)
-                ? ((SlingHttpServletRequest) request).getResourceResolver()
-                : null;
-        if ( resolver == null ) {
-            // get ResourceResolver (set by AuthenticationSupport)
-            final Object resolverObject = request.getAttribute(AuthenticationSupport.REQUEST_ATTRIBUTE_RESOLVER);
-            resolver = (resolverObject instanceof ResourceResolver)
-                    ? (ResourceResolver) resolverObject
-                    : null;
-
+        ResourceResolver resourceResolver = null;
+        if (request != null) {
+            Object resolverObject = request.getAttribute(REQUEST_ATTRIBUTE_RESOLVER);
+            if (resolverObject instanceof ResourceResolver) {
+                resourceResolver = (ResourceResolver) resolverObject;
+            }
         }
-        this.resourceResolver = resolver;
+
+        this.request = request;
+        this.resourceResolver = resourceResolver;
+        this.featureCache = new HashMap<String, Boolean>();
     }
 
     @Override
@@ -63,5 +62,15 @@ public class ExecutionContextImpl implements ExecutionContext {
     @Override
     public ResourceResolver getResourceResolver() {
         return this.resourceResolver;
+    }
+
+    boolean isEnabled(Feature feature) {
+        final String name = feature.getName();
+        Boolean entry = this.featureCache.get(name);
+        if (entry == null) {
+            entry = Boolean.valueOf(feature.isEnabled(this));
+            this.featureCache.put(name, entry);
+        }
+        return entry;
     }
 }

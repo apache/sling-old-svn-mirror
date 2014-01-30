@@ -40,16 +40,18 @@
  * <table>
  *  <tr>
  *      <td>{@code name}</td>
- *      <td>Short name of this feature. This name is used to refer to this feature
+ *      <td>Short name of the feature. This name is used to refer to the feature
  *          when checking for it to be enabled or not. This property is required
  *          and defaults to a name derived from the feature's class name and object
- *          identity. It is strongly recommended to define a useful and unique for the feature</td>
+ *          identity. It is strongly recommended to define a useful and unique name
+ *          for the feature</td>
  *  </tr>
  *  <tr>
  *      <td>{@code description}</td>
  *      <td>Description for the feature. The intent is to describe the behavior
  *          of the application if this feature would be enabled. It is recommended
- *          to define this property. The default value is the value of the name property.</td>
+ *          to define this property. The default value is the name of the feature
+ *          as derived from the {@code name} property.</td>
  *  </tr>
  *  <tr>
  *      <td>{@code enabled}</td>
