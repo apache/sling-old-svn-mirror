@@ -19,6 +19,7 @@
 package org.apache.sling.testing.resourceresolver;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.sling.api.resource.LoginException;
@@ -28,7 +29,7 @@ import org.osgi.service.event.EventAdmin;
 
 public class MockResourceResolverFactory implements ResourceResolverFactory {
 
-    private final Map<String, Map<String, Object>> resources = new HashMap<String, Map<String, Object>>();
+    private final Map<String, Map<String, Object>> resources = new LinkedHashMap<String, Map<String, Object>>();
 
     private final EventAdmin eventAdmin;
 
@@ -53,4 +54,9 @@ public class MockResourceResolverFactory implements ResourceResolverFactory {
         return new MockResourceResolver(this.eventAdmin, resources);
     }
 
+    @Override
+    public ResourceResolver getServiceResourceResolver(
+            Map<String, Object> authenticationInfo) throws LoginException {
+        return new MockResourceResolver(this.eventAdmin, resources);
+    }
 }

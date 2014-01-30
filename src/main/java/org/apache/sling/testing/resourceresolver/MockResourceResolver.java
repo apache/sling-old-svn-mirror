@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class MockResourceResolver implements ResourceResolver {
 
     private final Map<String, Map<String, Object>> resources;
 
-    private final Map<String, Map<String, Object>> temporaryResources = new HashMap<String, Map<String,Object>>();
+    private final Map<String, Map<String, Object>> temporaryResources = new LinkedHashMap<String, Map<String,Object>>();
 
     private final Set<String> deletedResources = new HashSet<String>();
 
@@ -129,7 +130,7 @@ public class MockResourceResolver implements ResourceResolver {
 
     @Override
     public String[] getSearchPath() {
-        return new String[] {"/libs", "/apps"};
+        return new String[] {"/apps", "/libs"};
     }
 
     @Override
@@ -321,5 +322,10 @@ public class MockResourceResolver implements ResourceResolver {
 
     public void addChanged(final String path, final Map<String, Object> props) {
         this.temporaryResources.put(path, props);
+    }
+
+    @Override
+    public boolean hasChildren(Resource resource) {
+        return this.listChildren(resource).hasNext();
     }
 }
