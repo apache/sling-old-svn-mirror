@@ -39,6 +39,8 @@ public class MergedResource extends AbstractResource {
 
     private final ResourceMetadata metadata = new ResourceMetadata();
 
+    private final String resourceType;
+
     /** Cache value map. */
     private ValueMap properties;
 
@@ -73,6 +75,7 @@ public class MergedResource extends AbstractResource {
         if ( mappedResources != null ) {
             this.mappedResources.addAll(mappedResources);
         }
+        this.resourceType = this.adaptTo(ValueMap.class).get(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.relativePath);
         metadata.put("sling.mergedResource", true);
         metadata.put("sling.mappedResources", mappedResources.toArray(new String[mappedResources.size()]));
     }
@@ -112,7 +115,7 @@ public class MergedResource extends AbstractResource {
      * {@inheritDoc}
      */
     public String getResourceType() {
-        return this.relativePath;
+        return this.resourceType;
     }
 
     /**
