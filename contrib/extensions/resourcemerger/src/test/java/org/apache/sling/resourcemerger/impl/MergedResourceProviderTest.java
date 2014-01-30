@@ -58,8 +58,8 @@ public class MergedResourceProviderTest {
 
         this.resolver.create(appsA, "1", new map().p("a", "1").p("b", "2"));
         this.resolver.create(libsA, "1", new map().p("a", "5").p("c", "2"));
-        this.resolver.create(appsA, "2", null);
-        this.resolver.create(libsA, "2", null);
+        this.resolver.create(appsA, "2", new map().p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "apps"));
+        this.resolver.create(libsA, "2", new map().p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "libs"));
         this.resolver.create(appsA, "X", null);
         this.resolver.create(libsA, "Y", null);
 
@@ -92,6 +92,17 @@ public class MergedResourceProviderTest {
         assertEquals("1", vm.get("a"));
         assertEquals("2", vm.get("b"));
         assertEquals("2", vm.get("c"));
+    }
+
+    @Test public void testResourceType() {
+        // a/2 defines the property and it's overlayed
+        final Resource rsrcA2 = this.provider.getResource(this.resolver, "/merged/a/2");
+        assertEquals("apps", rsrcA2.getResourceType());
+
+        // a/12 doesn't define the property and it's overlayed
+        final Resource rsrcA1 = this.provider.getResource(this.resolver, "/merged/a/1");
+        assertEquals("a/1", rsrcA1.getResourceType());
+
     }
 
     protected static final class map extends HashMap<String, Object> {
