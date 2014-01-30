@@ -90,13 +90,6 @@ public class MergedResource extends AbstractResource {
     /**
      * {@inheritDoc}
      */
-    public void addMappedResource(final String path) {
-        mappedResources.add(path);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public Iterable<String> getMappedResources() {
         return mappedResources;
     }
