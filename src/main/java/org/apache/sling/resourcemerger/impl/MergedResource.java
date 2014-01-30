@@ -39,6 +39,9 @@ public class MergedResource extends AbstractResource {
 
     private final ResourceMetadata metadata = new ResourceMetadata();
 
+    /** Cache value map. */
+    private ValueMap properties;
+
     /**
      * Constructor
      *
@@ -142,7 +145,10 @@ public class MergedResource extends AbstractResource {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == ValueMap.class) {
-            return (AdapterType) new MergedValueMap(this);
+            if ( this.properties == null ) {
+                this.properties = new MergedValueMap(this);
+            }
+            return (AdapterType) this.properties;
         }
 
         return super.adaptTo(type);
@@ -175,4 +181,14 @@ public class MergedResource extends AbstractResource {
         return r.getPath().equals(getPath());
     }
 
+    @Override
+    public int hashCode() {
+        return this.getPath().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "MergedResource [path=" + this.path +
+               ", resources=" + this.mappedResources + "]";
+    }
 }
