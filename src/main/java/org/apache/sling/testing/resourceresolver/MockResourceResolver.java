@@ -36,7 +36,6 @@ import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventAdmin;
 
 public class MockResourceResolver implements ResourceResolver {
 
@@ -46,11 +45,11 @@ public class MockResourceResolver implements ResourceResolver {
 
     private final Set<String> deletedResources = new HashSet<String>();
 
-    private final EventAdmin eventAdmin;
+    private final MockResourceResolverFactoryOptions options;
 
-    public MockResourceResolver(final EventAdmin eventAdmin,
+    public MockResourceResolver(final MockResourceResolverFactoryOptions options,
             final Map<String, Map<String, Object>> resources) {
-        this.eventAdmin = eventAdmin;
+        this.options = options;
         this.resources = resources;
     }
 
@@ -130,7 +129,7 @@ public class MockResourceResolver implements ResourceResolver {
 
     @Override
     public String[] getSearchPath() {
-        return new String[] {"/apps", "/libs"};
+        return this.options.getSearchPaths();
     }
 
     @Override
@@ -270,25 +269,25 @@ public class MockResourceResolver implements ResourceResolver {
     public void commit() throws PersistenceException {
         synchronized ( this.resources ) {
             for(final String path : this.deletedResources ) {
-                if ( this.resources.remove(path) != null && this.eventAdmin != null ) {
+                if ( this.resources.remove(path) != null && this.options.getEventAdmin() != null ) {
                     final Map<String, Object> props = new HashMap<String, Object>();
                     props.put(SlingConstants.PROPERTY_PATH, path);
                     final Event e = new Event(SlingConstants.TOPIC_RESOURCE_REMOVED, props);
-                    this.eventAdmin.sendEvent(e);
+                    this.options.getEventAdmin().sendEvent(e);
                 }
                 this.temporaryResources.remove(path);
             }
             for(final String path : this.temporaryResources.keySet() ) {
                 final boolean changed = this.resources.containsKey(path);
                 this.resources.put(path, this.temporaryResources.get(path));
-                if ( this.eventAdmin != null ) {
+                if ( this.options.getEventAdmin() != null ) {
                     final Map<String, Object> props = new HashMap<String, Object>();
                     props.put(SlingConstants.PROPERTY_PATH, path);
                     if ( this.resources.get(path).get(ResourceResolver.PROPERTY_RESOURCE_TYPE) != null ) {
                         props.put(SlingConstants.PROPERTY_RESOURCE_TYPE, this.resources.get(path).get(ResourceResolver.PROPERTY_RESOURCE_TYPE));
                     }
                     final Event e = new Event(changed ? SlingConstants.TOPIC_RESOURCE_CHANGED : SlingConstants.TOPIC_RESOURCE_ADDED, props);
-                    this.eventAdmin.sendEvent(e);
+                    this.options.getEventAdmin().sendEvent(e);
                 }
             }
         }

@@ -27,36 +27,54 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.osgi.service.event.EventAdmin;
 
+/**
+ * Simple resource resolver factory
+ */
 public class MockResourceResolverFactory implements ResourceResolverFactory {
 
+    /** We use a linked hash map to preserve creation order. */
     private final Map<String, Map<String, Object>> resources = new LinkedHashMap<String, Map<String, Object>>();
 
-    private final EventAdmin eventAdmin;
+    private final MockResourceResolverFactoryOptions options;
 
+    /**
+     * Create a new resource resolver factory
+     * @param eventAdmin All resource events are sent to this event admin
+     */
     public MockResourceResolverFactory(final EventAdmin eventAdmin) {
-        this.eventAdmin = eventAdmin;
-        resources.put("/", new HashMap<String, Object>());
+        this(new MockResourceResolverFactoryOptions().setEventAdmin(eventAdmin));
     }
 
+    /**
+     * Create a new resource resolver factory.
+     */
     public MockResourceResolverFactory() {
-        this(null);
+        this(new MockResourceResolverFactoryOptions());
+    }
+
+    /**
+     * Create a new resource resolver factory.
+     */
+    public MockResourceResolverFactory(final MockResourceResolverFactoryOptions options) {
+        this.options = options;
+        resources.put("/", new HashMap<String, Object>());
     }
 
     @Override
     public ResourceResolver getResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        return new MockResourceResolver(this.eventAdmin, resources);
+        return new MockResourceResolver(options, resources);
     }
 
     @Override
     public ResourceResolver getAdministrativeResourceResolver(
             final Map<String, Object> authenticationInfo) throws LoginException {
-        return new MockResourceResolver(this.eventAdmin, resources);
+        return new MockResourceResolver(options, resources);
     }
 
     @Override
     public ResourceResolver getServiceResourceResolver(
             Map<String, Object> authenticationInfo) throws LoginException {
-        return new MockResourceResolver(this.eventAdmin, resources);
+        return new MockResourceResolver(options, resources);
     }
 }
