@@ -20,16 +20,19 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Type;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.adapter.Adaptable;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.osgi.framework.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
 @Service
+@Property(name = Constants.SERVICE_RANKING, intValue = 2000)
 public class ValueMapInjector implements Injector {
 
     private static final Logger log = LoggerFactory.getLogger(ValueMapInjector.class);
