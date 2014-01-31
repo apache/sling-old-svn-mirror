@@ -20,13 +20,17 @@ import java.lang.annotation.Annotation;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -69,6 +73,19 @@ import org.slf4j.LoggerFactory;
 
 @Component
 public class ModelAdapterFactory implements AdapterFactory, Runnable {
+
+    /**
+     * Comparator which sorts constructors by the number of parameters
+     * in reverse order (most params to least params).
+     */
+    public class ParameterCountComparator implements Comparator<Constructor<?>> {
+
+        @Override
+        public int compare(Constructor<?> o1, Constructor<?> o2) {
+            return Integer.compare(o2.getParameterTypes().length, o1.getParameterTypes().length);
+        }
+
+    }
 
     private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
 
@@ -282,11 +299,51 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private <AdapterType> AdapterType createObject(Object adaptable, Class<AdapterType> type)
-            throws InstantiationException, IllegalAccessException {
+            throws InstantiationException, InvocationTargetException, IllegalAccessException {
         Set<Field> injectableFields = collectInjectableFields(type);
 
-        AdapterType object = type.newInstance();
+        Constructor<?>[] constructors = type.getConstructors();
+        if (constructors.length == 0) {
+            log.warn("Model class {} does not have a public constructor.", type.getName());
+            return null;
+        }
+
+        // sort the constructor list in order from most params to least params
+        Arrays.sort(constructors, new ParameterCountComparator());
+
+        Constructor<AdapterType> constructorToUse = null;
+        boolean constructorHasParam = false;
+        for (Constructor<?> constructor : constructors) {
+            final Class<?>[] paramTypes = constructor.getParameterTypes();
+            if (paramTypes.length == 1) {
+                Class<?> paramType = constructor.getParameterTypes()[0];
+                if (paramType.isInstance(adaptable)) {
+                    constructorToUse = (Constructor<AdapterType>) constructor;
+                    constructorHasParam = true;
+                    break;
+                }
+            }
+
+            if (constructor.getParameterTypes().length == 0) {
+                constructorToUse = (Constructor<AdapterType>) constructor;
+                constructorHasParam = false;
+                break;
+            }
+        }
+
+        if (constructorToUse == null) {
+            log.warn("Model class {} does not have a usable constructor", type.getName());
+            return null;
+        }
+
+        final AdapterType object;
+        if (constructorHasParam) {
+            object = constructorToUse.newInstance(adaptable);
+        } else {
+            object = constructorToUse.newInstance();
+        }
 
         DisposalCallbackRegistryImpl registry = createAndRegisterCallbackRegistry(object);
 
