@@ -280,17 +280,30 @@ public class JcrResourceUtil {
                                   String nodeType,
                                   Session session,
                                   boolean autoSave)
-    throws RepositoryException {
+            throws RepositoryException {
         if (path == null || path.length() == 0 || "/".equals(path)) {
             return session.getRootNode();
         } else if (!session.itemExists(path)) {
-            return createPath(session.getRootNode(),
-                    path.substring(1),
+            String existingPath = findExistingPath(path, session);
+
+
+            String relativePath = null;
+            Node parentNode = null;
+            if (existingPath != null) {
+                parentNode = session.getNode(existingPath);
+                relativePath = path.substring(existingPath.length() + 1);
+            } else {
+                relativePath = path.substring(1);
+                parentNode = session.getRootNode();
+            }
+
+            return createPath(parentNode,
+                    relativePath,
                     intermediateNodeType,
                     nodeType,
                     autoSave);
         } else {
-            return (Node) session.getItem(path);
+            return session.getNode(path);
         }
     }
 
@@ -317,6 +330,15 @@ public class JcrResourceUtil {
         if (relativePath == null || relativePath.length() == 0 || "/".equals(relativePath)) {
             return parentNode;
         } else if (!parentNode.hasNode(relativePath)) {
+            Session session = parentNode.getSession();
+            String path = parentNode.getPath() + "/" + relativePath;
+            String existingPath = findExistingPath(path, session);
+
+            if (existingPath != null) {
+                parentNode = session.getNode(existingPath);
+                relativePath = path.substring(existingPath.length() + 1);
+            }
+
             Node node = parentNode;
             int pos = relativePath.lastIndexOf('/');
             if ( pos != -1 ) {
@@ -352,5 +374,25 @@ public class JcrResourceUtil {
         } else {
             return parentNode.getNode(relativePath);
         }
+    }
+
+    private static String findExistingPath(String path, Session session)
+            throws RepositoryException {
+        //find the parent that exists
+        // we can start from the youngest child in tree
+        int currentIndex = path.lastIndexOf('/');
+        String temp = path;
+        String existingPath = null;
+        while (currentIndex > 0) {
+            temp = temp.substring(0, currentIndex);
+            //break when first existing parent is found
+            if (session.itemExists(temp)) {
+                existingPath = temp;
+                break;
+            }
+            currentIndex = temp.lastIndexOf("/");
+        }
+
+        return existingPath;
     }
 }
