@@ -82,7 +82,11 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
         @Override
         public int compare(Constructor<?> o1, Constructor<?> o2) {
-            return Integer.compare(o2.getParameterTypes().length, o1.getParameterTypes().length);
+            return compare(o2.getParameterTypes().length, o1.getParameterTypes().length);
+        }
+
+        public int compare(int x, int y) {
+            return (x < y) ? -1 : ((x == y) ? 0 : 1);
         }
 
     }
