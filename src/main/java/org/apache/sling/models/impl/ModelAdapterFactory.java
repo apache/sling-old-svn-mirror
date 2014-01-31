@@ -60,8 +60,6 @@ import org.apache.sling.models.annotations.Source;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -79,7 +77,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             callbacks.add(callback);
         }
 
-        private void lock() {
+        private void seal() {
             callbacks = Collections.unmodifiableList(callbacks);
         }
 
@@ -113,7 +111,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     public void run() {
         java.lang.ref.Reference<? extends Object> ref = queue.poll();
         if (ref != null) {
-            log.info("calling disposal for " + ref.toString());
+            log.debug("calling disposal for " + ref.toString());
             DisposalCallbackRegistryImpl registry = disposalCallbacks.remove(ref);
             registry.onDisposed();
         }
@@ -223,6 +221,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             }
         }
 
+        registry.seal();
+
         Iterator<Method> it = injectableMethods.iterator();
         while (it.hasNext()) {
             Method method = it.next();
@@ -304,6 +304,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
                 }
             }
         }
+
+        registry.seal();
 
         Iterator<Field> it = injectableFields.iterator();
         while (it.hasNext()) {
