@@ -29,6 +29,7 @@ import javax.servlet.ServletRequest;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.scripting.SlingBindings;
 import org.apache.sling.api.scripting.SlingScriptHelper;
@@ -37,6 +38,7 @@ import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Service
+@Property(name = Constants.SERVICE_RANKING, intValue = 5000)
 public class OSGiServiceInjector implements Injector {
 
     private static final Logger log = LoggerFactory.getLogger(OSGiServiceInjector.class);
