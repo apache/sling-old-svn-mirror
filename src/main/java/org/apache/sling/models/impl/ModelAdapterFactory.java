@@ -55,11 +55,13 @@ import org.apache.sling.commons.osgi.ServiceUtil;
 import org.apache.sling.models.annotations.Default;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Optional;
-import org.apache.sling.models.annotations.Via;
 import org.apache.sling.models.annotations.Source;
+import org.apache.sling.models.annotations.Via;
 import org.apache.sling.models.spi.DisposalCallback;
 import org.apache.sling.models.spi.DisposalCallbackRegistry;
 import org.apache.sling.models.spi.Injector;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -68,7 +70,7 @@ import org.slf4j.LoggerFactory;
 @Component
 public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
-    public static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
+    private static class DisposalCallbackRegistryImpl implements DisposalCallbackRegistry {
 
         private List<DisposalCallback> callbacks = new ArrayList<DisposalCallback>();
 
@@ -93,7 +95,7 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     private ConcurrentMap<java.lang.ref.Reference<Object>, DisposalCallbackRegistryImpl> disposalCallbacks;
 
-    public static class MapBackedInvocationHandler implements InvocationHandler {
+    private static class MapBackedInvocationHandler implements InvocationHandler {
 
         private Map<Method, Object> methods;
 
@@ -128,6 +130,8 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
     private ModelPackageBundleListener listener;
 
     private ServiceRegistration jobRegistration;
+
+    private ServiceRegistration configPrinterRegistration;
 
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType getAdapter(Object adaptable, Class<AdapterType> type) {
@@ -579,16 +583,29 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
 
     @Activate
     protected void activate(final ComponentContext ctx) {
+        BundleContext bundleContext = ctx.getBundleContext();
         this.queue = new ReferenceQueue<Object>();
         this.disposalCallbacks = new ConcurrentHashMap<java.lang.ref.Reference<Object>, DisposalCallbackRegistryImpl>();
         Hashtable<Object, Object> properties = new Hashtable<Object, Object>();
+        properties.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        properties.put(Constants.SERVICE_DESCRIPTION, "Sling Models OSGi Service Disposal Job");
         properties.put("scheduler.concurrent", false);
         properties.put("scheduler.period", Long.valueOf(30));
 
-        this.jobRegistration = ctx.getBundleContext().registerService(Runnable.class.getName(), this,
+        this.jobRegistration = bundleContext.registerService(Runnable.class.getName(), this,
                 properties);
 
         this.listener = new ModelPackageBundleListener(ctx.getBundleContext(), this);
+
+        Hashtable<Object, Object> printerProps = new Hashtable<Object, Object>();
+        printerProps.put(Constants.SERVICE_VENDOR, "Apache Software Foundation");
+        printerProps.put(Constants.SERVICE_DESCRIPTION, "Sling Models Configuration Printer");
+        printerProps.put("felix.webconsole.label", "slingmodels");
+        printerProps.put("felix.webconsole.title", "Sling Models");
+        printerProps.put("felix.webconsole.configprinter.modes", "always");
+
+        this.configPrinterRegistration = bundleContext.registerService(Object.class.getName(),
+            new ModelConfigurationPrinter(this), printerProps);
     }
 
     @Deactivate
@@ -597,6 +614,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
         if (jobRegistration != null) {
             jobRegistration.unregister();
             jobRegistration = null;
+        }
+        if (configPrinterRegistration != null) {
+            configPrinterRegistration.unregister();
+            configPrinterRegistration = null;
         }
     }
 
@@ -612,6 +633,10 @@ public class ModelAdapterFactory implements AdapterFactory, Runnable {
             injectors.remove(ServiceUtil.getComparableForServiceRanking(props));
             sortedInjectors = injectors.values().toArray(new Injector[injectors.size()]);
         }
+    }
+
+    Injector[] getInjectors() {
+        return sortedInjectors;
     }
 
 }

@@ -107,6 +107,7 @@ public class OSGiInjectionTest {
 
         verify(bundleContext).registerService(eq(Runnable.class.getName()), eq(factory), any(Dictionary.class));
         verify(bundleContext).addBundleListener(any(BundleListener.class));
+        verify(bundleContext).registerService(eq(Object.class.getName()), any(Object.class), any(Dictionary.class));
         verify(bundleContext).getBundles();
         verifyNoMoreInteractions(bundleContext);
     }
@@ -203,6 +204,7 @@ public class OSGiInjectionTest {
 
         verify(bundleContext).registerService(eq(Runnable.class.getName()), eq(factory), any(Dictionary.class));
         verify(bundleContext).addBundleListener(any(BundleListener.class));
+        verify(bundleContext).registerService(eq(Object.class.getName()), any(Object.class), any(Dictionary.class));
         verify(bundleContext).getBundles();
         verifyNoMoreInteractions(res, bundleContext);
     }
