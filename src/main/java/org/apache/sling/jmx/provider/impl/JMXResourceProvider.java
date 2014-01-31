@@ -65,8 +65,8 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
     @Property(name = ResourceProvider.ROOTS, value="/system/sling/monitoring/mbeans",
             label="Root",
             description="The mount point of the JMX beans"),
-    @Property(name = ResourceProvider.USE_RESOURCE_ACCESS_SECURITY, boolValue=true,
-              label="Secure", description="If enabled additional access checks are performed")
+    @Property(name = ResourceProvider.USE_RESOURCE_ACCESS_SECURITY, boolValue=true, propertyPrivate=true),
+    @Property(name = ResourceProvider.OWNS_ROOTS, boolValue=true, propertyPrivate=true)
 })
 /**
  * Brief summary of a "good" object name:
