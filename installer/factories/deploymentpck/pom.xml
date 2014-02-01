@@ -75,8 +75,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.sling</groupId>
-            <artifactId>org.apache.sling.installer.api</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <artifactId>org.apache.sling.installer.core</artifactId>
+            <version>3.5.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
