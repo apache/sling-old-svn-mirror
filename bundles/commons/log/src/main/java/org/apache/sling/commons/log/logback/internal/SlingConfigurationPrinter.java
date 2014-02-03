@@ -30,12 +30,15 @@ import java.util.List;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
+import ch.qos.logback.core.status.Status;
+import ch.qos.logback.core.util.CachingDateFormatter;
 
 /**
  * The <code>SlingConfigurationPrinter</code> is an Apache Felix Web Console
  * plugin to display the currently configured log files.
  */
 public class SlingConfigurationPrinter {
+    private final CachingDateFormatter SDF = new CachingDateFormatter("yyyy-MM-dd HH:mm:ss");
     private final LogbackManager logbackManager;
 
     public SlingConfigurationPrinter(LogbackManager logbackManager) {
@@ -48,6 +51,7 @@ public class SlingConfigurationPrinter {
     @SuppressWarnings("UnusedDeclaration")
     public void printConfiguration(PrintWriter printWriter) {
         LogbackManager.LoggerStateContext ctx = logbackManager.determineLoggerState();
+        dumpLogbackStatus(logbackManager, printWriter);
         for (Appender<ILoggingEvent> appender : ctx.getAllAppenders()) {
             if (appender instanceof FileAppender) {
                 final File file = new File(((FileAppender) appender).getFile());
@@ -114,6 +118,36 @@ public class SlingConfigurationPrinter {
             if (urls.size() > 0) {
                 return urls.toArray(new URL[urls.size()]);
             }
+        }
+        return null;
+    }
+
+    private void dumpLogbackStatus(LogbackManager logbackManager, PrintWriter pw) {
+        List<Status> statusList = logbackManager.getStatusManager().getCopyOfStatusList();
+        pw.println("Logback Status");
+        pw.println("--------------------------------------------------");
+        for (Status s : statusList) {
+            pw.printf("%s *%s* %s - %s %n",
+                    SDF.format(s.getDate()),
+                    statusLevelAsString(s),
+                    SlingLogPanel.abbreviatedOrigin(s),
+                    s.getMessage());
+            if (s.getThrowable() != null) {
+                s.getThrowable().printStackTrace(pw);
+            }
+        }
+
+        pw.println();
+    }
+
+    private static String statusLevelAsString(Status s) {
+        switch (s.getEffectiveLevel()) {
+            case Status.INFO:
+                return "INFO";
+            case Status.WARN:
+                return "WARN";
+            case Status.ERROR:
+                return "ERROR";
         }
         return null;
     }

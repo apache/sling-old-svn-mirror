@@ -736,7 +736,7 @@ public class SlingLogPanel extends HttpServlet {
         return null;
     }
 
-    private static String abbreviatedOrigin(Status s) {
+    static String abbreviatedOrigin(Status s) {
         Object o = s.getOrigin();
         if (o == null) {
             return null;
