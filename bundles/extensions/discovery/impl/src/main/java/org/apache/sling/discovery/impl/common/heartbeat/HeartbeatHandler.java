@@ -113,7 +113,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     private Calendar lastHeartbeatWritten = null;
     
     /** SLING-2895: avoid heartbeats after deactivation **/
-    private boolean activated = false;
+    private volatile boolean activated = false;
     
     /** SLING-2901: the runtimeId is a unique id, set on activation, used for robust duplicate sling.id detection **/
     private String runtimeId;
@@ -165,9 +165,8 @@ public class HeartbeatHandler implements Runnable, StartupListener {
 
     @Deactivate
     protected void deactivate() {
-    	synchronized(lock) {
-	    	activated = false;
-    	}
+        // SLING-3365 : dont synchronize on deactivate
+        activated = false;
     	scheduler.removeJob(NAME);
     }
 
