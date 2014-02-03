@@ -46,7 +46,7 @@
 
   <properties>
     <slf4j.version>1.6.4</slf4j.version>
-    <logback.version>1.0.13</logback.version>
+    <logback.version>1.1.0</logback.version>
     <sling.java.version>6</sling.java.version>
     <pax-exam.version>3.0.0</pax-exam.version>
 
@@ -105,7 +105,7 @@
             <_exportcontents>
               org.slf4j.impl;version=${slf4j.version},
               ch.qos.logback.classic*;
-              ch.qos.logback.core*;version=${logback.version}
+              ch.qos.logback.core*;
             </_exportcontents>
             <Import-Package>
               !org.slf4j.impl,
