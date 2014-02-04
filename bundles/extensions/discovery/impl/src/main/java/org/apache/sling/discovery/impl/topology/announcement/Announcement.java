@@ -188,6 +188,10 @@ public class Announcement {
         final long diff = now - created;
         return diff > 1000 * config.getHeartbeatTimeout();
     }
+    
+    public Date getCreated() {
+        return new Date(created);
+    }
 
     /** Convert this announcement into a json object **/
     public JSONObject asJSONObject() throws JSONException {
