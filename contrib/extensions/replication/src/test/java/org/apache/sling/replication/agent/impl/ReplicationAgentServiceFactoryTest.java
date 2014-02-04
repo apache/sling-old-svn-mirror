@@ -26,15 +26,11 @@ import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Testcase for {@link ReplicationAgentServiceFactory}
@@ -65,14 +61,6 @@ public class ReplicationAgentServiceFactoryTest {
         TransportHandler transportHandler = mock(TransportHandler.class);
         transportField.set(serviceFactory, transportHandler);
 
-        Field transportAuthenticationField = serviceFactory.getClass().getDeclaredField("transportAuthenticationProviderFactory");
-        transportAuthenticationField.setAccessible(true);
-        TransportAuthenticationProviderFactory transportAuthenticationProviderFactory = mock(TransportAuthenticationProviderFactory.class);
-        transportAuthenticationField.set(serviceFactory, transportAuthenticationProviderFactory);
-
-        TransportAuthenticationProvider transportAuthenticationProvider = mock(TransportAuthenticationProvider.class);
-        when(transportAuthenticationProviderFactory.createAuthenticationProvider(any(Map.class))).thenReturn(transportAuthenticationProvider);
-        when(transportHandler.supportsAuthenticationProvider(any(TransportAuthenticationProvider.class))).thenReturn(true);
 
         Map<String, Object> dictionary = new HashMap<String, Object>();
         dictionary.put("endpoint", "http://somewhere.com");

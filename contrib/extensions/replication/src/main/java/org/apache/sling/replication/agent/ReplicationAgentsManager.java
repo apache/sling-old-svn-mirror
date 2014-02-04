@@ -21,7 +21,6 @@ package org.apache.sling.replication.agent;
 import java.util.Collection;
 import java.util.SortedSet;
 import org.apache.sling.replication.communication.ReplicationActionType;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
 
 /**
  * A manager for {@link ReplicationAgent}s
@@ -43,6 +42,4 @@ public interface ReplicationAgentsManager {
      * @return a <code>Collection</code> of {@link ReplicationAgent}s
      */
     Collection<ReplicationAgent> getAllAvailableAgents();
-
-    Collection<ReplicationAgent> getAgentsFor(ReplicationEndpoint endpoint);
 }

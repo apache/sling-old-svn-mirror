@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.agent;
 
-import java.net.URI;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.ReplicationQueue;
@@ -47,21 +46,13 @@ public interface ReplicationAgent {
     ReplicationQueue getQueue(String name) throws ReplicationQueueException;
 
     /**
-     * get the rules defined for this {@link ReplicationAgent}
-     *
-     * @return an <code>Array</code> of <code>String</code>s for this agent's rules
-     */
-    String[] getRules();
-
-    /**
      * Synchronously sends a {@link ReplicationRequest} waiting for a {@link ReplicationResponse}
      *
      * @param replicationRequest the replication request
      * @return a {@link ReplicationResponse}
      * @throws AgentReplicationException
      */
-    ReplicationResponse execute(ReplicationRequest replicationRequest)
-            throws AgentReplicationException;
+    ReplicationResponse execute(ReplicationRequest replicationRequest) throws AgentReplicationException;
 
     /**
      * Asynchronously sends a {@link ReplicationRequest} without waiting for any response
@@ -72,14 +63,6 @@ public interface ReplicationAgent {
     void send(ReplicationRequest replicationRequest) throws AgentReplicationException;
 
     /**
-     * get the agent configured endpoint
-     *
-     * @return an <code>URI</code> specifying its endpoint
-     */
-    URI getEndpoint();
-
-
-    /**
      * removes a package from the top of the queue
      * @param queueName
      *          the name of a {@link ReplicationQueue} bound tothis agent
@@ -87,4 +70,14 @@ public interface ReplicationAgent {
      * @throws ReplicationQueueException
      */
     ReplicationPackage removeHead(String queueName) throws ReplicationQueueException;
+
+    /**
+     * enables the current  {@link ReplicationAgent}
+     */
+    void enable();
+
+    /**
+     * disables the current  {@link ReplicationAgent}
+     */
+    void disable();
 }

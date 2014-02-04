@@ -18,25 +18,21 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import javax.jcr.Session;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.agent.ReplicationAgentConfigurationManager;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 
-import javax.jcr.Session;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -55,20 +51,6 @@ public class ReplicationAgentResourceProviderTest {
         Resource resource = agentResourceProvider.getResource(resourceResolver, path);
         assertNull(resource);
     }
-
-//    @Test
-//    public void testAgentResolutionWithSpecifiedAgentService() throws Exception {
-//        String path = "publish";
-//        BundleContext context = mock(BundleContext.class);
-//        createMockedReplicationAgent(path, context);
-//        ReplicationAgentResourceProvider agentResourceProvider = new ReplicationAgentResourceProvider();
-//        agentResourceProvider.activate(context);
-//        ResourceResolver resourceResolver = mock(ResourceResolver.class);
-//
-//        Resource resource = agentResourceProvider.getResource(resourceResolver, path);
-//        assertNotNull(resource);
-//        assertEquals(ReplicationAgentResource.RESOURCE_TYPE, resource.getResourceType());
-//    }
 
     @Test
     public void testAgentConfigurationResolutionWithSpecifiedAgentService() throws Exception {
@@ -107,7 +89,7 @@ public class ReplicationAgentResourceProviderTest {
         String filter = "(name=" + path + ")";
         when(context.getServiceReferences(ReplicationAgent.class.getName(), filter)).thenReturn(
                         agentServiceReferences);
-        SimpleReplicationAgent replicationAgent = new SimpleReplicationAgent(path, null, null, true,
+        SimpleReplicationAgent replicationAgent = new SimpleReplicationAgent(path, null, true,
                         null, null, null, null, null);
         when(context.getService(serviceReference)).thenReturn(replicationAgent);
         return replicationAgent;

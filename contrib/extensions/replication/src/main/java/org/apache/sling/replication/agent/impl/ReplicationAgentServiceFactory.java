@@ -41,10 +41,6 @@ import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.impl.HttpTransportHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -70,17 +66,11 @@ public class ReplicationAgentServiceFactory {
 
     private static final String TRANSPORT = ReplicationAgentConfiguration.TRANSPORT;
 
-    private static final String TRANSPORT_AUTHENTICATION_FACTORY = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY;
-
     private static final String QUEUEPROVIDER = ReplicationAgentConfiguration.QUEUEPROVIDER;
 
     private static final String PACKAGING = ReplicationAgentConfiguration.PACKAGING;
 
     private static final String QUEUE_DISTRIBUTION = ReplicationAgentConfiguration.QUEUE_DISTRIBUTION;
-
-    private static final String DEFAULT_TRANSPORT = "(name=" + HttpTransportHandler.NAME + ")";
-
-    private static final String DEFAULT_AUTHENTICATION_FACTORY = "(name=" + UserCredentialsTransportAuthenticationProviderFactory.TYPE + ")";
 
     private static final String DEFAULT_PACKAGING = "(name="
             + FileVaultReplicationPackageBuilder.NAME + ")";
@@ -98,19 +88,13 @@ public class ReplicationAgentServiceFactory {
     private static final String NAME = ReplicationAgentConfiguration.NAME;
 
     @Property
-    private static final String ENDPOINT = ReplicationAgentConfiguration.ENDPOINT;
-
-    @Property
-    private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
-
-    @Property
     private static final String RULES = ReplicationAgentConfiguration.RULES;
 
     @Property(boolValue = true)
     private static final String USE_AGGREGATE_PATHS = ReplicationAgentConfiguration.USE_AGGREGATE_PATHS;
 
-    @Property(name = TRANSPORT, value = DEFAULT_TRANSPORT)
-    @Reference(name = "TransportHandler", target = DEFAULT_TRANSPORT, policy = ReferencePolicy.DYNAMIC)
+    @Property(name = TRANSPORT)
+    @Reference(name = "TransportHandler", policy = ReferencePolicy.DYNAMIC)
     private TransportHandler transportHandler;
 
     @Property(name = PACKAGING, value = DEFAULT_PACKAGING)
@@ -120,10 +104,6 @@ public class ReplicationAgentServiceFactory {
     @Property(name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
     private ReplicationQueueProvider queueProvider;
-
-    @Property(name = TRANSPORT_AUTHENTICATION_FACTORY, value = DEFAULT_AUTHENTICATION_FACTORY)
-    @Reference(name = "TransportAuthenticationProviderFactory", target = DEFAULT_AUTHENTICATION_FACTORY, policy = ReferencePolicy.DYNAMIC)
-    private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
 
     @Property(name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
     @Reference(name = "ReplicationQueueDistributionStrategy", target = DEFAULT_DISTRIBUTION, policy = ReferencePolicy.DYNAMIC)
@@ -144,14 +124,11 @@ public class ReplicationAgentServiceFactory {
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
         if (enabled) {
-            props.put(ENABLED, enabled);
+            props.put(ENABLED, true);
 
             String name = PropertiesUtil
                     .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
             props.put(NAME, name);
-
-            String endpoint = PropertiesUtil.toString(config.get(ENDPOINT), "");
-            props.put(ENDPOINT, endpoint);
 
             String transport = PropertiesUtil.toString(config.get(TRANSPORT), "");
             props.put(TRANSPORT, transport);
@@ -165,14 +142,9 @@ public class ReplicationAgentServiceFactory {
             String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION), "");
             props.put(QUEUE_DISTRIBUTION, distribution);
 
-            Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(AUTHENTICATION_PROPERTIES), new String[0]);
-            props.put(AUTHENTICATION_PROPERTIES, authenticationProperties);
 
             String[] rules = PropertiesUtil.toStringArray(config.get(RULES), new String[0]);
             props.put(RULES, rules);
-
-            String af = PropertiesUtil.toString(config.get(TRANSPORT_AUTHENTICATION_FACTORY), "");
-            props.put(TRANSPORT_AUTHENTICATION_FACTORY, af);
 
 
             boolean useAggregatePaths = PropertiesUtil.toBoolean(config.get(USE_AGGREGATE_PATHS), true);
@@ -183,32 +155,19 @@ public class ReplicationAgentServiceFactory {
                 throw new AgentConfigurationException("configuration for this agent is not valid");
             }
 
-            TransportAuthenticationProvider transportAuthenticationProvider = null;
-            if (transportAuthenticationProviderFactory != null) {
-                transportAuthenticationProvider = transportAuthenticationProviderFactory.createAuthenticationProvider(authenticationProperties);
-                if (transportHandler != null && !transportHandler.supportsAuthenticationProvider(transportAuthenticationProvider)) {
-                    throw new Exception("authentication handler " + transportAuthenticationProvider
-                            + " not supported by transport handler " + transportHandler);
-                }
-            }
 
             if (log.isInfoEnabled()) {
                 log.info("bound services for {} :  {} - {} - {} - {} - {} - {}", new Object[]{name,
-                        transportHandler, transportAuthenticationProvider, endpoint, packageBuilder, queueProvider, queueDistributionStrategy});
+                        transportHandler, packageBuilder, queueProvider, queueDistributionStrategy});
             }
 
-            SimpleReplicationAgent agent = new SimpleReplicationAgent(name, endpoint, rules, useAggregatePaths,
-                    transportHandler, packageBuilder, queueProvider, transportAuthenticationProvider, queueDistributionStrategy);
+            ReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths,
+                    transportHandler, packageBuilder, queueProvider, queueDistributionStrategy, replicationRuleEngine);
 
             // register agent service
             agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
 
-            // apply rules if any
-            if (rules.length > 0) {
-                replicationRuleEngine.applyRules(agent, rules);
-            }
-
-            queueProvider.enableQueueProcessing(agent, agent);
+            agent.enable();
         }
     }
 
@@ -218,12 +177,7 @@ public class ReplicationAgentServiceFactory {
             ServiceReference reference = agentReg.getReference();
             ReplicationAgent replicationAgent = (ReplicationAgent) context.getService(reference);
 
-            String[] rules = replicationAgent.getRules();
-            if (rules != null) {
-                replicationRuleEngine.unapplyRules(replicationAgent, rules);
-            }
-
-           queueProvider.disableQueueProcessing(replicationAgent);
+            replicationAgent.disable();
 
             if (agentReg != null) {
                 agentReg.unregister();

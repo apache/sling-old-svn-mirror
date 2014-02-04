@@ -1,0 +1,7 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "http-publish-receive",
+    "TransportAuthenticationProviderFactory.target" : "(name=user)",
+    "authentication.properties" : ["user=admin","password=admin"],
+    "endpoints" : [ "http://localhost:4503/system/replication/receive" ]
+}

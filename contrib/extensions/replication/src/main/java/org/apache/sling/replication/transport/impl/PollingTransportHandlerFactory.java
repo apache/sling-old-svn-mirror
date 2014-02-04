@@ -23,6 +23,7 @@ import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
@@ -33,14 +34,15 @@ import java.util.Dictionary;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Replication Transport Handler Factory - Http Push",
-        description = "OSGi configuration based HttpTransportHandler service factory",
-        name = HttpTransportHandlerFactory.SERVICE_PID,
+        label = "Replication Transport Handler Factory - Http Poll",
+        description = "OSGi configuration based PollingTransportHandler service factory",
+        name = PollingTransportHandlerFactory.SERVICE_PID,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
-public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory {
-    static final String SERVICE_PID = "org.apache.sling.replication.transport.impl.HttpTransportHandlerFactory";
+public class PollingTransportHandlerFactory extends AbstractTransportHandlerFactory {
+    static final String SERVICE_PID = "org.apache.sling.replication.transport.impl.PollingTransportHandlerFactory";
+
 
     private static final String DEFAULT_AUTHENTICATION_FACTORY = "(name=" + UserCredentialsTransportAuthenticationProviderFactory.TYPE + ")";
 
@@ -51,23 +53,9 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     @Property
     private static final String NAME = "name";
 
+
     @Property(cardinality = 1000)
     private static final String ENDPOINT = ReplicationAgentConfiguration.ENDPOINT;
-
-
-    @Property(options = {
-            @PropertyOption(name = "All",
-                    value = "all endpoints"
-            ),
-            @PropertyOption(name = "OneSuccessful",
-                value = "one successful endpoint"
-            ),
-            @PropertyOption(name = "FirstSuccessful",
-                    value = "first successful endpoint"
-            )},
-            value = "All"
-    )
-    private static final String ENDPOINT_STRATEGY = ReplicationAgentConfiguration.ENDPOINT_STRATEGY;
 
     @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY, value = DEFAULT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", target = DEFAULT_AUTHENTICATION_FACTORY, policy = ReferencePolicy.DYNAMIC)
@@ -76,48 +64,35 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     @Property
     private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
 
+    @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = -1)
+    private static final String POLL_ITEMS = "poll.items";
 
-    @Property(boolValue = false)
-    private static final String USE_CUSTOM_HEADERS = "useCustomHeaders";
+    @Reference
+    private ReplicationPackageImporter replicationPackageImporter;
 
-    @Property(cardinality = 50)
-    private static final String CUSTOM_HEADERS = "customHeaders";
 
-    @Property(boolValue = false)
-    private static final String USE_CUSTOM_BODY = "useCustomBody";
-
-    @Property
-    private static final String CUSTOM_BODY = "customBody";
 
     protected TransportHandler createTransportHandler(Map<String, ?> config,
                                                       Dictionary<String, Object> props,
                                                       TransportAuthenticationProvider transportAuthenticationProvider,
                                                       ReplicationEndpoint[] endpoints, TransportEndpointStrategyType endpointStrategyType) {
-        boolean useCustomHeaders = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_HEADERS), false);
-        props.put(USE_CUSTOM_HEADERS, useCustomHeaders);
+        int pollItems = PropertiesUtil.toInteger(config.get(POLL_ITEMS), -1);
+        props.put(POLL_ITEMS, pollItems);
 
-        String[] customHeaders = PropertiesUtil.toStringArray(config.get(CUSTOM_HEADERS), new String[0]);
-        props.put(CUSTOM_HEADERS, customHeaders);
 
-        boolean useCustomBody = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_BODY), false);
-        props.put(USE_CUSTOM_BODY, useCustomBody);
 
-        String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
-        props.put(CUSTOM_BODY, customBody);
-
-        return new HttpTransportHandler(useCustomHeaders,
-                customHeaders,
-                useCustomBody,
-                customBody,
+        return new PollingTransportHandler(replicationPackageImporter,
+                pollItems,
                 (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider,
-                endpoints,
-                endpointStrategyType);
+                endpoints);
     }
 
     @Override
     protected TransportAuthenticationProviderFactory getAuthenticationFactory() {
         return transportAuthenticationProviderFactory;
     }
+
+
 
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {
@@ -128,6 +103,4 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     protected void deactivate() {
         super.deactivate();
     }
-
-
 }

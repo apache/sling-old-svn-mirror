@@ -69,11 +69,9 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
         if(ReplicationActionType.POLL.getName().equalsIgnoreCase(action)){
             doRemove(request, response);
-            return;
         }
         else {
             doCreate(request, response);
-            return;
         }
     }
 
@@ -127,7 +125,7 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
 
         /* directly polling an agent queue is only possible if such an agent doesn't have its own endpoint
         (that is it just adds items to its queue to be polled remotely)*/
-        if (agent != null && (agent.getEndpoint() == null || agent.getEndpoint().toString().length() == 0 )) {
+        if (agent != null) {
             try {
                 // TODO : consider using queue distribution strategy and validating who's making this request
                 log.info("getting item from queue {}", queueName);

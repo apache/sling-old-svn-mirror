@@ -33,22 +33,8 @@ public interface TransportHandler {
      * transport and the supplied {@link TransportAuthenticationProvider} for authenticating the endpoint
      *
      * @param replicationPackage  a {@link ReplicationPackage} to transport
-     * @param replicationEndpoint a {@link ReplicationEndpoint} to transport the package to
-     * @param transportAuthenticationProvider
-     *                            a {@link TransportAuthenticationProvider} to authenticate the endpoint
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    void transport(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint,
-                   TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
-            throws ReplicationTransportException;
-
-    /**
-     * defines if this {@link TransportHandler} can be authenticated using the given {@link TransportAuthenticationProvider}
-     *
-     * @param transportAuthenticationProvider
-     *         a {@link TransportAuthenticationProvider} to be used to authenticate {@link ReplicationEndpoint}s with this {@link TransportHandler}
-     * @return <code>true</code> if the given {@link TransportAuthenticationProvider} is supported by this {@link TransportHandler}
-     */
-    boolean supportsAuthenticationProvider(TransportAuthenticationProvider<?, ?> transportAuthenticationProvider);
+    void transport(ReplicationPackage replicationPackage) throws ReplicationTransportException;
 
 }
