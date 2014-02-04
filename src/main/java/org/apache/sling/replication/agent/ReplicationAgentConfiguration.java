@@ -21,8 +21,6 @@ package org.apache.sling.replication.agent;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
-import java.util.Map;
-
 import org.apache.sling.commons.osgi.PropertiesUtil;
 
 /**
@@ -40,7 +38,9 @@ public class ReplicationAgentConfiguration {
 
     public static final String NAME = "name";
 
-    public static final String ENDPOINT = "endpoint";
+    public static final String ENDPOINT = "endpoints";
+
+    public static final String ENDPOINT_STRATEGY = "endpoints.strategy";
 
     public static final String AUTHENTICATION_PROPERTIES = "authentication.properties";
 
@@ -51,7 +51,7 @@ public class ReplicationAgentConfiguration {
 
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
-    public static final String[] COMPONENTS = { TRANSPORT, PACKAGING };
+    public static final String[] COMPONENTS = {TRANSPORT, PACKAGING};
 
     private final boolean enabled;
 
@@ -125,7 +125,9 @@ public class ReplicationAgentConfiguration {
         return targetTransportHandler;
     }
 
-    public String getTargetReplicationQueueDistributionStrategy() { return targetReplicationQueueDistributionStrategy; }
+    public String getTargetReplicationQueueDistributionStrategy() {
+        return targetReplicationQueueDistributionStrategy;
+    }
 
     @Override
     public String toString() {
@@ -136,7 +138,7 @@ public class ReplicationAgentConfiguration {
                 + TRANSPORT + "\":\"" + targetTransportHandler + "\", \""
                 + PACKAGING + "\":\"" + targetReplicationPackageBuilder + "\", \""
                 + QUEUEPROVIDER + "\":\"" + targetReplicationQueueProvider + "\", \""
-                + QUEUE_DISTRIBUTION + "\":\"" + targetReplicationQueueDistributionStrategy+ "\", \""
+                + QUEUE_DISTRIBUTION + "\":\"" + targetReplicationQueueDistributionStrategy + "\", \""
                 + TRANSPORT_AUTHENTICATION_FACTORY + "\":\"" + targetAuthenticationHandlerFactory + "\", \""
                 + USE_AGGREGATE_PATHS + "\":\"" + useAggregatePaths + "\", \""
                 + AUTHENTICATION_PROPERTIES + "\":\"" + Arrays.toString(authenticationProperties) + "\", \"";
@@ -152,36 +154,30 @@ public class ReplicationAgentConfiguration {
 
         String result = "";
 
-        if(componentConfiguration == null)
+        if (componentConfiguration == null)
             return result;
 
-        for (String component : COMPONENTS){
+        for (String component : COMPONENTS) {
             Dictionary properties = componentConfiguration.get(component);
-            if(properties == null) continue;
+            if (properties == null) continue;
 
             Enumeration keys = properties.keys();
 
-            while (keys.hasMoreElements()){
+            while (keys.hasMoreElements()) {
                 String key = (String) keys.nextElement();
                 Object value = properties.get(key);
 
-                if(key.equals("service.pid")) continue;
+                if (key.equals("service.pid")) continue;
 
-                result += component + "." + key + "\":\"" +  PropertiesUtil.toString(value, "")  + "\", \"";
+                result += component + "." + key + "\":\"" + PropertiesUtil.toString(value, "") + "\", \"";
             }
         }
 
-        return  result;
+        return result;
     }
 
     public String toSimpleString() {
-        String result = "{";
-
-        result += "\"" + NAME + "\": \"" + name + "\""
-                + ", \"" + ENABLED + "\": " + enabled;
-
-        result += "}";
-
-        return result;
+        return "{\"" + NAME + "\": \"" + name + "\""
+                + ", \"" + ENABLED + "\": " + enabled + "}";
     }
 }

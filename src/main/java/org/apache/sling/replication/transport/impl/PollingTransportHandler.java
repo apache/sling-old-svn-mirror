@@ -18,106 +18,85 @@
  */
 package org.apache.sling.replication.transport.impl;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.Service;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageImporter;
-import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * basic HTTP GET {@link TransportHandler}
  */
-@Component(metatype = true)
-@Service(value = TransportHandler.class)
-@Property(name = "name", value = PollingTransportHandler.NAME, propertyPrivate = true)
-public class PollingTransportHandler implements TransportHandler {
-
-    public static final String NAME = "poll";
+public class PollingTransportHandler extends AbstractTransportHandler
+        implements TransportHandler {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = -1)
-    private static final String POLL_ITEMS = "poll.items";
+    private final TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider;
+    private final ReplicationPackageImporter replicationPackageImporter;
+    private final int pollItems;
 
-    private int pollItems;
+    public PollingTransportHandler(ReplicationPackageImporter replicationPackageImporter,
+                                   int pollItems,
+                                   TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
+                                   ReplicationEndpoint[] replicationEndpoints){
+        super(replicationEndpoints, TransportEndpointStrategyType.All);
 
-    @Reference
-    private ReplicationPackageImporter replicationPackageImporter;
-
-    @Activate
-    protected void activate(ComponentContext context) {
-        pollItems = PropertiesUtil.toInteger(context.getProperties().get(POLL_ITEMS), -1);
+        this.replicationPackageImporter = replicationPackageImporter;
+        this.pollItems = pollItems;
+        this.transportAuthenticationProvider = transportAuthenticationProvider;
     }
 
-    @SuppressWarnings("unchecked")
-    public void transport(ReplicationPackage replicationPackage,
-                          ReplicationEndpoint replicationEndpoint,
-                          TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
-            throws ReplicationTransportException {
-        if (log.isInfoEnabled()) {
-            log.info("polling from {}", replicationEndpoint.getUri());
-        }
+    @Override
+    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint)
+            throws Exception {
+        log.info("polling from {}", replicationEndpoint.getUri());
 
-        try {
-            Executor executor = Executor.newInstance();
-            TransportAuthenticationContext context = new TransportAuthenticationContext();
-            context.addAttribute("endpoint", replicationEndpoint);
-            executor = ((TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider)
-                    .authenticate(executor, context);
 
-            Request req = Request.Post(replicationEndpoint.getUri())
-                    .addHeader(ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.getName())
-                    .useExpectContinue();
-            // TODO : add queue header
+        Executor executor = Executor.newInstance();
+        TransportAuthenticationContext context = new TransportAuthenticationContext();
+        context.addAttribute("endpoint", replicationEndpoint);
+        executor = transportAuthenticationProvider.authenticate(executor, context);
 
-            int polls = pollItems;
+        Request req = Request.Post(replicationEndpoint.getUri())
+                .addHeader(ReplicationHeader.ACTION.toString(), ReplicationActionType.POLL.getName())
+                .useExpectContinue();
+        // TODO : add queue header
 
-            // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
-            HttpResponse httpResponse;
-            while ((httpResponse = executor.execute(req).returnResponse()).containsHeader(ReplicationHeader.TYPE.toString())
-                    && polls != 0) {
-                HttpEntity entity = httpResponse.getEntity();
-                Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
+        int polls = pollItems;
 
-                if (entity.getContentLength() > 0) {
-                    replicationPackageImporter.scheduleImport(entity.getContent(), typeHeader.getValue());
-                    polls--;
-                    if (log.isInfoEnabled()) {
-                        log.info("scheduled import of package stream");
-                    }
+        // continuously requests package streams as long as type header is received with the response (meaning there's a package of a certain type)
+        HttpResponse httpResponse;
+        while ((httpResponse = executor.execute(req).returnResponse()).containsHeader(ReplicationHeader.TYPE.toString())
+                && polls != 0) {
+            HttpEntity entity = httpResponse.getEntity();
+            Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
 
-                } else {
-                    if (log.isInfoEnabled()) {
-                        log.info("nothing to fetch");
-                    }
-                    break;
-                }
+            if (entity.getContentLength() > 0) {
+                replicationPackageImporter.scheduleImport(entity.getContent(), typeHeader.getValue());
+                polls--;
+                log.info("scheduled import of package stream");
+
+            } else {
+                log.info("nothing to fetch");
+                break;
             }
-        } catch (Exception e) {
-            throw new ReplicationTransportException(e);
         }
 
     }
 
-    public boolean supportsAuthenticationProvider(TransportAuthenticationProvider<?, ?> transportAuthenticationProvider) {
-        return transportAuthenticationProvider.canAuthenticate(Executor.class);
+    @Override
+    protected boolean validateEndpoint(ReplicationEndpoint endpoint) {
+        return true;
     }
 }

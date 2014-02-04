@@ -18,20 +18,18 @@
  */
 package org.apache.sling.replication.agent.impl;
 
-import java.net.URI;
 import org.apache.sling.replication.agent.AgentReplicationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.communication.ReplicationResponse;
 import org.apache.sling.replication.queue.*;
+import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
-import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,34 +49,32 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
 
     private final TransportHandler transportHandler;
 
-    private final TransportAuthenticationProvider<?, ?> transportAuthenticationProvider;
-
     private final ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
     private final String name;
 
-    private final String endpoint;
-
     private final String[] rules;
 
-    private final boolean useAggregatePaths;
+    String endpoint;
 
-    public SimpleReplicationAgent(String name, String endpoint, String[] rules,
+    private final boolean useAggregatePaths;
+    private final ReplicationRuleEngine ruleEngine;
+
+    public SimpleReplicationAgent(String name, String[] rules,
                                   boolean useAggregatePaths,
                                   TransportHandler transportHandler,
                                   ReplicationPackageBuilder packageBuilder,
                                   ReplicationQueueProvider queueProvider,
-                                  TransportAuthenticationProvider<?, ?> transportAuthenticationProvider,
-                                  ReplicationQueueDistributionStrategy queueDistributionHandler) {
+                                  ReplicationQueueDistributionStrategy queueDistributionHandler,
+                                  ReplicationRuleEngine ruleEngine) {
         this.name = name;
-        this.endpoint = endpoint;
         this.rules = rules;
         this.transportHandler = transportHandler;
         this.packageBuilder = packageBuilder;
         this.queueProvider = queueProvider;
-        this.transportAuthenticationProvider = transportAuthenticationProvider;
         this.queueDistributionStrategy = queueDistributionHandler;
         this.useAggregatePaths = useAggregatePaths;
+        this.ruleEngine = ruleEngine;
     }
 
     public ReplicationResponse execute(ReplicationRequest replicationRequest)
@@ -87,9 +83,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         // create packages from request
         ReplicationPackage[] replicationPackages = buildPackages(replicationRequest);
 
-        ReplicationResponse replicationResponse = schedule(replicationPackages, false);
-
-        return replicationResponse;
+        return schedule(replicationPackages, false);
     }
 
     public void send(ReplicationRequest replicationRequest) throws AgentReplicationException {
@@ -97,6 +91,10 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         ReplicationPackage[] replicationPackages = buildPackages(replicationRequest);
 
         schedule(replicationPackages, true);
+    }
+
+    public boolean isPassive() {
+        return transportHandler == null; // TODO : improve this
     }
 
 
@@ -124,13 +122,13 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
             for (String path : replicationRequest.getPaths()){
                 ReplicationPackage replicationPackage = buildPackage(new ReplicationRequest(replicationRequest.getTime(),
                         replicationRequest.getAction(),
-                        new String[] { path }));
+                        path));
 
                 packages.add(replicationPackage);
             }
         }
 
-        return packages.toArray(new ReplicationPackage[0]);
+        return packages.toArray(new ReplicationPackage[packages.size()]);
     }
 
     // offer option throws an exception at first error
@@ -188,25 +186,20 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
     public boolean process(ReplicationQueueItem itemInfo)  {
         try {
             ReplicationPackage replicationPackage = packageBuilder.getPackage(itemInfo.getId());
+
             if(replicationPackage == null){
                 return false;
             }
 
-            try {
-                if (transportHandler != null || (endpoint != null && endpoint.length() > 0)) {
-                    transportHandler.transport(replicationPackage,
-                            new ReplicationEndpoint(endpoint),
-                            transportAuthenticationProvider);
-
-                    return true;
-                } else {
-                    log.info("agent {} processing skipped", name);
-                    return false;
-                }
-            }
-            finally {
+            if (transportHandler != null) {
+                transportHandler.transport(replicationPackage);
                 replicationPackage.delete();
+                return true;
+            } else {
+                log.info("agent {} processing skipped", name);
+                return false;
             }
+
         } catch (ReplicationTransportException e) {
             log.error("transport error", e);
             return false;
@@ -214,18 +207,15 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
     }
 
     public ReplicationPackage removeHead(String queueName) throws ReplicationQueueException {
+        if(isPassive()) return null;
+
         ReplicationQueue queue = getQueue(queueName);
         ReplicationQueueItem info = queue.getHead();
         if(info == null) return null;
 
         queue.removeHead();
 
-        ReplicationPackage replicationPackage = packageBuilder.getPackage(info.getId());
-        return replicationPackage;
-    }
-
-    public URI getEndpoint() {
-        return new ReplicationEndpoint(endpoint).getUri();
+        return packageBuilder.getPackage(info.getId());
     }
 
     public String getName() {
@@ -242,8 +232,23 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         return queue;
     }
 
-    public String[] getRules() {
-        return rules;
+
+    public void enable() {
+        // apply rules if any
+        if (rules.length > 0) {
+            ruleEngine.applyRules(this, rules);
+        }
+
+        if(!isPassive())
+            queueProvider.enableQueueProcessing(this, this);    }
+
+    public void disable() {
+        if (rules != null) {
+            ruleEngine.unapplyRules(this, rules);
+        }
+
+        if(!isPassive())
+            queueProvider.disableQueueProcessing(this);
     }
 
 }

@@ -59,7 +59,6 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     private Map<String, ServiceRegistration> jobs = new ConcurrentHashMap<String, ServiceRegistration>();
     private BundleContext context;
 
-
     @Override
     protected ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String queueName)
                     throws ReplicationQueueException {
@@ -92,9 +91,6 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     }
 
     public void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor) {
-        // TODO: make this configurable (whether to create self processing queues or not)
-        if (agent.getEndpoint() == null || agent.getEndpoint().toString().length() == 0) return;
-
         // eventually register job consumer for sling job handling based queues
         Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agent.getName();
@@ -104,7 +100,6 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
                 new ReplicationAgentJobConsumer(agent, queueProcessor), jobProps);
         jobs.put(agent.getName(), jobReg);
     }
-
 
     public void disableQueueProcessing(ReplicationAgent agent) {
         ServiceRegistration jobReg = jobs.remove(agent.getName());

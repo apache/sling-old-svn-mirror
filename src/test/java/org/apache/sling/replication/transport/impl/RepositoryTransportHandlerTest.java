@@ -18,7 +18,6 @@
  */
 package org.apache.sling.replication.transport.impl;
 
-import java.lang.reflect.Field;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Session;
@@ -43,12 +42,13 @@ public class RepositoryTransportHandlerTest {
 
     @Test
     public void testDeliveryWithoutAuthenticatedSession() throws Exception {
-        RepositoryTransportHandler handler = new RepositoryTransportHandler();
-        @SuppressWarnings("unchecked")
         TransportAuthenticationProvider<SlingRepository, Session> transportAuthenticationProvider = mock(TransportAuthenticationProvider.class);
+
+        RepositoryTransportHandler handler = new RepositoryTransportHandler(null, null,
+                transportAuthenticationProvider,
+                new ReplicationEndpoint[] {  new ReplicationEndpoint("repo://var/outbox/replication/rev1") });
         try {
-            handler.transport(null, new ReplicationEndpoint("repo://var/outbox/replication/rev1"),
-                    transportAuthenticationProvider);
+            handler.transport(null);
             fail("cannot deliver without a proper session");
         } catch (ReplicationTransportException re) {
             // failure expected
@@ -72,21 +72,18 @@ public class RepositoryTransportHandlerTest {
         SlingRepository repo = mock(SlingRepository.class);
         when(repo.login(any(Credentials.class))).thenReturn(session);
 
-        RepositoryTransportHandler handler = new RepositoryTransportHandler();
-        Field repositoryField = handler.getClass().getDeclaredField("repository");
-        repositoryField.setAccessible(true);
-        repositoryField.set(handler, repo);
-
         ReplicationEventFactory replicationEventFactory = mock(ReplicationEventFactory.class);
-        Field replicationEventFactoryField = handler.getClass().getDeclaredField("replicationEventFactory");
-        replicationEventFactoryField.setAccessible(true);
-        replicationEventFactoryField.set(handler, replicationEventFactory);
 
         TransportAuthenticationProvider<SlingRepository, Session> transportAuthenticationProvider = new RepositoryTransportAuthenticationProvider("user-123", "p455w0rd");
+
+        RepositoryTransportHandler handler = new RepositoryTransportHandler(repo, replicationEventFactory,
+                transportAuthenticationProvider,
+                new ReplicationEndpoint[] { new ReplicationEndpoint("repo:/" + repoPath) });
+
+
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getId()).thenReturn("some-id");
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps", "/libs"});
-        handler.transport(replicationPackage, new ReplicationEndpoint("repo:/" + repoPath),
-                transportAuthenticationProvider);
+        handler.transport(replicationPackage);
     }
 }

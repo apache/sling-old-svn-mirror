@@ -19,30 +19,31 @@
 package org.apache.sling.replication.transport.impl;
 
 import org.apache.felix.scr.annotations.*;
-import org.apache.http.client.fluent.Executor;
-import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
-import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
+import org.apache.sling.replication.transport.authentication.impl.RepositoryTransportAuthenticationProviderFactory;
 import org.osgi.framework.BundleContext;
 
+import javax.jcr.Session;
 import java.util.Dictionary;
 import java.util.Map;
 
 @Component(metatype = true,
-        label = "Replication Transport Handler Factory - Http Push",
-        description = "OSGi configuration based HttpTransportHandler service factory",
-        name = HttpTransportHandlerFactory.SERVICE_PID,
+        label = "Replication Transport Handler Factory - Repository",
+        description = "OSGi configuration based RepositoryTransportHandler service factory",
+        name = RepositoryTransportHandlerFactory.SERVICE_PID,
         configurationFactory = true,
         specVersion = "1.1",
         policy = ConfigurationPolicy.REQUIRE)
-public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory {
-    static final String SERVICE_PID = "org.apache.sling.replication.transport.impl.HttpTransportHandlerFactory";
+public class RepositoryTransportHandlerFactory extends AbstractTransportHandlerFactory {
+    static final String SERVICE_PID = "org.apache.sling.replication.transport.impl.RepositoryTransportHandlerFactory";
 
-    private static final String DEFAULT_AUTHENTICATION_FACTORY = "(name=" + UserCredentialsTransportAuthenticationProviderFactory.TYPE + ")";
+    private static final String DEFAULT_AUTHENTICATION_FACTORY = "(name=" + RepositoryTransportAuthenticationProviderFactory.TYPE + ")";
 
 
     @Property(boolValue = true)
@@ -54,21 +55,6 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     @Property(cardinality = 1000)
     private static final String ENDPOINT = ReplicationAgentConfiguration.ENDPOINT;
 
-
-    @Property(options = {
-            @PropertyOption(name = "All",
-                    value = "all endpoints"
-            ),
-            @PropertyOption(name = "OneSuccessful",
-                value = "one successful endpoint"
-            ),
-            @PropertyOption(name = "FirstSuccessful",
-                    value = "first successful endpoint"
-            )},
-            value = "All"
-    )
-    private static final String ENDPOINT_STRATEGY = ReplicationAgentConfiguration.ENDPOINT_STRATEGY;
-
     @Property(name = ReplicationAgentConfiguration.TRANSPORT_AUTHENTICATION_FACTORY, value = DEFAULT_AUTHENTICATION_FACTORY)
     @Reference(name = "TransportAuthenticationProviderFactory", target = DEFAULT_AUTHENTICATION_FACTORY, policy = ReferencePolicy.DYNAMIC)
     private TransportAuthenticationProviderFactory transportAuthenticationProviderFactory;
@@ -77,41 +63,23 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
 
 
-    @Property(boolValue = false)
-    private static final String USE_CUSTOM_HEADERS = "useCustomHeaders";
+    @Reference
+    private SlingRepository repository;
 
-    @Property(cardinality = 50)
-    private static final String CUSTOM_HEADERS = "customHeaders";
+    @Reference
+    private ReplicationEventFactory replicationEventFactory;
 
-    @Property(boolValue = false)
-    private static final String USE_CUSTOM_BODY = "useCustomBody";
-
-    @Property
-    private static final String CUSTOM_BODY = "customBody";
-
+    @Override
     protected TransportHandler createTransportHandler(Map<String, ?> config,
                                                       Dictionary<String, Object> props,
                                                       TransportAuthenticationProvider transportAuthenticationProvider,
                                                       ReplicationEndpoint[] endpoints, TransportEndpointStrategyType endpointStrategyType) {
-        boolean useCustomHeaders = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_HEADERS), false);
-        props.put(USE_CUSTOM_HEADERS, useCustomHeaders);
 
-        String[] customHeaders = PropertiesUtil.toStringArray(config.get(CUSTOM_HEADERS), new String[0]);
-        props.put(CUSTOM_HEADERS, customHeaders);
 
-        boolean useCustomBody = PropertiesUtil.toBoolean(config.get(USE_CUSTOM_BODY), false);
-        props.put(USE_CUSTOM_BODY, useCustomBody);
-
-        String customBody = PropertiesUtil.toString(config.get(CUSTOM_BODY), "");
-        props.put(CUSTOM_BODY, customBody);
-
-        return new HttpTransportHandler(useCustomHeaders,
-                customHeaders,
-                useCustomBody,
-                customBody,
-                (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider,
-                endpoints,
-                endpointStrategyType);
+        return new RepositoryTransportHandler(repository,
+                replicationEventFactory,
+                (TransportAuthenticationProvider<SlingRepository,Session>) transportAuthenticationProvider,
+                endpoints);
     }
 
     @Override
@@ -128,6 +96,4 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
     protected void deactivate() {
         super.deactivate();
     }
-
-
 }

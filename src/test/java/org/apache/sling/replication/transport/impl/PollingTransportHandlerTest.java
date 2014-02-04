@@ -42,13 +42,17 @@ public class PollingTransportHandlerTest {
 
     @Test
     public void testPollingTransport() throws Exception {
-        PollingTransportHandler pollingTransportHandler = new PollingTransportHandler();
+        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = mock(TransportAuthenticationProvider.class);
+        ReplicationEndpoint replicationEndpoint = new ReplicationEndpoint(new URI("http://localhost:8080/system/replication/agent/reverse"));
+
+
+        PollingTransportHandler pollingTransportHandler = new PollingTransportHandler(null, -1,
+                transportAuthenticationProvider,
+                new ReplicationEndpoint[] { replicationEndpoint });
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getAction()).thenReturn(ReplicationActionType.ADD.toString());
         when(replicationPackage.getType()).thenReturn("test");
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content"});
-        ReplicationEndpoint replicationEndpoint = new ReplicationEndpoint(new URI("http://localhost:8080/system/replication/agent/reverse"));
-        TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider = mock(TransportAuthenticationProvider.class);
         Executor executor = mock(Executor.class);
         Response response = mock(Response.class);
         HttpEntity entity = mock(HttpEntity.class);
@@ -57,6 +61,6 @@ public class PollingTransportHandlerTest {
         when(httpResponse.getEntity()).thenReturn(entity);
         when(executor.execute(any(Request.class))).thenReturn(response);
         when(transportAuthenticationProvider.authenticate(any(Executor.class), any(TransportAuthenticationContext.class))).thenReturn(executor);
-        pollingTransportHandler.transport(replicationPackage, replicationEndpoint, transportAuthenticationProvider);
+        pollingTransportHandler.transport(replicationPackage);
     }
 }

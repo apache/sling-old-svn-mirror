@@ -1,0 +1,10 @@
+{
+    "jcr:primaryType" : "sling:OsgiConfig",
+    "name" : "author",
+    "TransportHandler.target" : "(name=http-author-receive)",
+    "ReplicationPackageBuilder.target" : "(name=vlt)",
+    "ReplicationQueueProvider.target" : "(name=sjh)",
+    "ReplicationQueueDistributionStrategy.target" : "(name=error)",
+    "rules" : ["trigger on path: /content/usergenerated"],
+    "enabled" : false
+}

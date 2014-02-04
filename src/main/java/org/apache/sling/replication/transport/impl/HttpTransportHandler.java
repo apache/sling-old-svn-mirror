@@ -21,8 +21,9 @@ package org.apache.sling.replication.transport.impl;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
@@ -32,7 +33,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
@@ -42,13 +42,14 @@ import org.slf4j.LoggerFactory;
 /**
  * basic HTTP POST {@link TransportHandler}
  */
-public class HttpTransportHandler implements TransportHandler {
-
-    public static final String NAME = "http";
+public class HttpTransportHandler extends AbstractTransportHandler
+        implements TransportHandler {
 
     private static final String PATH_VARIABLE_NAME = "{path}";
 
     private static final Logger log = LoggerFactory.getLogger(HttpTransportHandler.class);
+
+    private final TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider;
 
     private final boolean useCustomHeaders;
 
@@ -58,39 +59,43 @@ public class HttpTransportHandler implements TransportHandler {
 
     private final String customBody;
 
-    public HttpTransportHandler(boolean useCustomHeaders, String[] customHeaders, boolean useCustomBody, String customBody) {
+    public HttpTransportHandler(boolean useCustomHeaders,
+                                String[] customHeaders,
+                                boolean useCustomBody,
+                                String customBody,
+                                TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
+                                ReplicationEndpoint[] replicationEndpoints,
+                                TransportEndpointStrategyType endpointStrategyType) {
+
+        super(replicationEndpoints, endpointStrategyType);
+
         this.useCustomHeaders = useCustomHeaders;
         this.customHeaders = customHeaders;
         this.useCustomBody = useCustomBody;
         this.customBody = customBody;
+        this.transportAuthenticationProvider = transportAuthenticationProvider;
+
     }
 
-    public HttpTransportHandler(){
-        this(false, new String[0], false, "");
+    @Override
+    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
+                                         ReplicationEndpoint replicationEndpoint) throws Exception {
+        log.info("delivering package {} to {} using auth {}",
+                new Object[]{replicationPackage.getId(),
+                        replicationEndpoint.getUri(), transportAuthenticationProvider});
+
+
+        Executor executor = Executor.newInstance();
+        TransportAuthenticationContext context = new TransportAuthenticationContext();
+        context.addAttribute("endpoint", replicationEndpoint);
+        executor =  transportAuthenticationProvider.authenticate(executor, context);
+
+        deliverPackage(executor, replicationPackage, replicationEndpoint);
     }
 
-    @SuppressWarnings("unchecked")
-    public void transport(ReplicationPackage replicationPackage,
-                          ReplicationEndpoint replicationEndpoint,
-                          TransportAuthenticationProvider<?, ?> transportAuthenticationProvider)
-            throws ReplicationTransportException {
-        if (log.isInfoEnabled()) {
-            log.info("delivering package {} to {} using auth {}",
-                    new Object[]{replicationPackage.getId(),
-                            replicationEndpoint.getUri(), transportAuthenticationProvider});
-        }
-        try {
-            Executor executor = Executor.newInstance();
-            TransportAuthenticationContext context = new TransportAuthenticationContext();
-            context.addAttribute("endpoint", replicationEndpoint);
-            executor = ((TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider)
-                    .authenticate(executor, context);
-
-            deliverPackage(executor, replicationPackage, replicationEndpoint);
-
-        } catch (Exception e) {
-            throw new ReplicationTransportException(e);
-        }
+    @Override
+    protected boolean validateEndpoint(ReplicationEndpoint endpoint) {
+        return true;
     }
 
     public static String[] getCustomizedHeaders(String[] additionalHeaders, String action, String[] paths){
@@ -111,14 +116,12 @@ public class HttpTransportHandler implements TransportHandler {
             }
         }
 
-
-
         StringBuilder sb = new StringBuilder();
 
         if(paths != null && paths.length > 0) {
             sb.append(paths[0]);
             for(int i=1; i < paths.length; i++){
-                sb.append(", " + paths[i]);
+                sb.append(", ").append(paths[i]);
             }
         }
 
@@ -130,7 +133,7 @@ public class HttpTransportHandler implements TransportHandler {
             boundHeaders.add(header.replace(PATH_VARIABLE_NAME, path));
         }
 
-        return boundHeaders.toArray(new String[0]);
+        return boundHeaders.toArray(new String[boundHeaders.size()]);
     }
 
     private void deliverPackage(Executor executor, ReplicationPackage replicationPackage,
@@ -189,10 +192,5 @@ public class HttpTransportHandler implements TransportHandler {
         String headerName = header.substring(0, idx).trim();
         String headerValue = header.substring(idx+1).trim();
         req.addHeader(headerName, headerValue);
-    }
-
-
-    public boolean supportsAuthenticationProvider(TransportAuthenticationProvider<?, ?> transportAuthenticationProvider) {
-        return transportAuthenticationProvider.canAuthenticate(Executor.class);
     }
 }
