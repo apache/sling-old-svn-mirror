@@ -178,7 +178,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             InstanceDescription instance = instances.iterator().next();
             pw.println("Properties of " + instance.getSlingId() + ":<br/>");
 
-            pw.println("<table class=\"adapters nicetable ui-widget\">");
+            pw.println("<table class=\"adapters nicetable ui-widget tablesorter\">");
             pw.println("<thead>");
             pw.println("<tr>");
             pw.println("<th class=\"header ui-widget-header\">Key</th>");
@@ -223,7 +223,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<div class=\"ui-widget-header ui-corner-top buttonGroup\" style=\"height: 15px;\">");
         pw.println("<span style=\"float: left; margin-left: 1em;\">Instances in the topology</span>");
         pw.println("</div>");
-        pw.println("<table class=\"adapters nicetable ui-widget\">");
+        pw.println("<table class=\"adapters nicetable ui-widget tablesorter\">");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class=\"header ui-widget-header\">Sling id (click for properties)</th>");
@@ -364,7 +364,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<div class=\"ui-widget-header ui-corner-top buttonGroup\" style=\"height: 15px;\">");
         pw.println("<span style=\"float: left; margin-left: 1em;\">Outgoing topology connectors</span>");
         pw.println("</div>");
-        pw.println("<table class=\"adapters nicetable ui-widget\">");
+        pw.println("<table class=\"adapters nicetable ui-widget tablesorter\">");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class=\"header ui-widget-header\">Connector url</th>");
@@ -385,7 +385,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             odd = !odd;
             final String remoteSlingId = topologyConnectorClient.getRemoteSlingId();
             final boolean isConnected = topologyConnectorClient.isConnected() && remoteSlingId != null;
-            if (isConnected) {
+            final boolean autoStopped = topologyConnectorClient.isAutoStopped();
+            if (isConnected || autoStopped) {
                 pw.println("<tr class=\"" + oddEven + " ui-state-default\">");
             } else {
                 pw.println("<tr class=\"" + oddEven + " ui-state-error\">");
@@ -393,7 +394,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
             pw.println("<td>"
                     + topologyConnectorClient.getConnectorUrl().toString()
                     + "</td>");
-            if (isConnected && !topologyConnectorClient.representsLoop()) {
+            if (autoStopped) {
+            	pw.println("<td><b>auto-stopped</b></td>");
+            	pw.println("<td><b>auto-stopped due to local-loop</b></td>");
+            } else if (isConnected && !topologyConnectorClient.representsLoop()) {
                 pw.println("<td>" + remoteSlingId + "</td>");
                 pw.println("<td>ok, in use</td>");
             } else if (isConnected && topologyConnectorClient.representsLoop()) {
@@ -401,11 +405,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td>ok, unused (loop or duplicate): standby</td>");
             } else {
                 final int statusCode = topologyConnectorClient.getStatusCode();
+                final String statusDetails = topologyConnectorClient.getStatusDetails();
                 final String tooltipText;
                 switch(statusCode) {
                 case HttpServletResponse.SC_UNAUTHORIZED:
                     tooltipText = HttpServletResponse.SC_UNAUTHORIZED +
-                        ": possible setup issue of discovery.impl on target instance";
+                        ": possible setup issue of discovery.impl on target instance, or wrong URL";
                     break;
                 case HttpServletResponse.SC_NOT_FOUND:
                     tooltipText = HttpServletResponse.SC_NOT_FOUND +
@@ -418,8 +423,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     tooltipText = null;
                 }
                 final String tooltip = tooltipText==null ? "" : (" title=\""+tooltipText+"\"");
-                pw.println("<td"+tooltip+"><b>not connected ("+statusCode+")</b></td>");
-                pw.println("<td>not ok</td>");
+                pw.println("<td><b>not connected</b></td>");
+                pw.println("<td"+tooltip+"><b>not ok (HTTP Status-Code: "+statusCode+", "+statusDetails+")</b></td>");
             }
             // //TODO fallback urls are not yet implemented!
             // String fallbackConnectorUrls;
@@ -450,7 +455,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<div class=\"ui-widget-header ui-corner-top buttonGroup\" style=\"height: 15px;\">");
         pw.println("<span style=\"float: left; margin-left: 1em;\">Incoming topology connectors</span>");
         pw.println("</div>");
-        pw.println("<table class=\"adapters nicetable ui-widget\">");
+        pw.println("<table class=\"adapters nicetable ui-widget tablesorter\">");
         pw.println("<thead>");
         pw.println("<tr>");
         pw.println("<th class=\"header ui-widget-header\">Owner slingId</th>");
@@ -729,12 +734,16 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
             for(final TopologyConnectorClientInformation topologyConnectorClient : outgoingConnections) {
                 final String remoteSlingId = topologyConnectorClient.getRemoteSlingId();
+                final boolean autoStopped = topologyConnectorClient.isAutoStopped();
                 final boolean isConnected = topologyConnectorClient.isConnected() && remoteSlingId != null;
                 pw.print("Connector URL : ");
                 pw.print(topologyConnectorClient.getConnectorUrl());
                 pw.println();
 
-                if (isConnected && !topologyConnectorClient.representsLoop()) {
+                if (autoStopped) {
+                    pw.println("Conncted to Sling Id : auto-stopped");
+                    pw.println("Connector status : auto-stopped due to local-loop");
+                } else if (isConnected && !topologyConnectorClient.representsLoop()) {
                     pw.print("Connected to Sling Id : ");
                     pw.println(remoteSlingId);
                     pw.println("Connector status : ok, in use");
@@ -744,11 +753,12 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.println("Connector status : ok, unused (loop or duplicate): standby");
                 } else {
                     final int statusCode = topologyConnectorClient.getStatusCode();
+                    final String statusDetails = topologyConnectorClient.getStatusDetails();
                     final String tooltipText;
                     switch(statusCode) {
                         case HttpServletResponse.SC_UNAUTHORIZED:
                             tooltipText = HttpServletResponse.SC_UNAUTHORIZED +
-                                ": possible setup issue of discovery.impl on target instance";
+                                ": possible setup issue of discovery.impl on target instance, or wrong URL";
                             break;
                         case HttpServletResponse.SC_NOT_FOUND:
                             tooltipText = HttpServletResponse.SC_NOT_FOUND +
@@ -760,14 +770,15 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         default:
                             tooltipText = null;
                     }
-                    pw.print("Connected to Sling Id : not connected");
+                    pw.println("Connected to Sling Id : not connected");
+                    pw.print("Connector status : not ok");
                     if ( tooltipText != null ) {
                         pw.print(" (");
                         pw.print(tooltipText);
                         pw.print(")");
                     }
+                    pw.print(" (HTTP StatusCode: "+statusCode+", "+statusDetails+")");
                     pw.println();
-                    pw.println("Connector status : not ok");
                 }
                 pw.println();
             }
