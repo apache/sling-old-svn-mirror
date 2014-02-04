@@ -18,6 +18,8 @@
  */
 package org.apache.sling.jcr.resource.internal.helper.jcr;
 
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,33 +28,22 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.query.Query;
+import javax.security.auth.Subject;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Properties;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.ReferencePolicy;
-import org.apache.felix.scr.annotations.Service;
+import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.QueriableResourceProvider;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
 import org.apache.sling.jcr.resource.JcrResourceConstants;
-import org.apache.sling.jcr.resource.internal.JcrResourceListener;
+import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
-import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,59 +51,34 @@ import org.slf4j.LoggerFactory;
  * The <code>JcrResourceProviderFactory</code> creates
  * resource providers based on JCR.
  */
-@Component
-@Service(value = ResourceProviderFactory.class )
-@Properties({
-    @Property(name=ResourceProviderFactory.PROPERTY_REQUIRED, boolValue=true),
-    @Property(name=ResourceProvider.ROOTS, value="/"),
-    @Property(name = Constants.SERVICE_DESCRIPTION, value = "Apache Sling JCR Resource Provider Factory"),
-    @Property(name = Constants.SERVICE_VENDOR, value = "The Apache Software Foundation"),
-    @Property(name = QueriableResourceProvider.LANGUAGES, value = {Query.XPATH, Query.SQL, Query.JCR_SQL2})
-})
 public class JcrResourceProviderFactory implements ResourceProviderFactory {
+
+
+    private static final String ALLOWED_BUNDLE_USER_ID = "*";
 
     /** default log */
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final String REPOSITORY_REFERNENCE_NAME = "repository";
+    private final DynamicClassLoaderManager dynamicClassLoaderManager;
 
-    /** The dynamic class loader */
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL_UNARY, policy = ReferencePolicy.DYNAMIC)
-    private DynamicClassLoaderManager dynamicClassLoaderManager;
+    private final ServiceUserMapper serviceUserMapper;
 
-    @Reference(name = REPOSITORY_REFERNENCE_NAME, referenceInterface = SlingRepository.class)
+    private final Bundle usingBundle;
+
     private ServiceReference repositoryReference;
 
     private SlingRepository repository;
 
-    /** The jcr resource listner. */
-    private JcrResourceListener listener;
-
-    @Activate
-    protected void activate(final ComponentContext context) throws RepositoryException {
-
-        SlingRepository repository = (SlingRepository) context.locateService(REPOSITORY_REFERNENCE_NAME,
-            this.repositoryReference);
-        if (repository == null) {
-            // concurrent unregistration of SlingRepository service
-            // don't care, this component is going to be deactivated
-            // so we just stop working
-            log.warn("activate: Activation failed because SlingRepository may have been unregistered concurrently");
-            return;
-        }
-
-        final String root = PropertiesUtil.toString(context.getProperties().get(ResourceProvider.ROOTS), "/");
-
+    public JcrResourceProviderFactory(final DynamicClassLoaderManager dynamicClassLoaderManager,
+                                      final ServiceReference repositoryReference,
+                                      final SlingRepository repository,
+                                      final ServiceUserMapper serviceUserMapper,
+                                      final Bundle usingBundle) {
+        this.dynamicClassLoaderManager = dynamicClassLoaderManager;
+        this.repositoryReference = repositoryReference;
         this.repository = repository;
-        this.listener = new JcrResourceListener(root, null, this.repository, context.getBundleContext());
-    }
-
-    @Deactivate
-    protected void deactivate() {
-        if ( this.listener != null ) {
-            this.listener.deactivate();
-            this.listener = null;
-        }
+        this.serviceUserMapper = serviceUserMapper;
+        this.usingBundle = usingBundle;
     }
 
     /** Get the dynamic class loader if available */
@@ -122,20 +88,6 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
             return dclm.getDynamicClassLoader();
         }
         return null;
-    }
-
-    @SuppressWarnings("unused")
-    private void bindRepository(final ServiceReference ref) {
-        this.repositoryReference = ref;
-        this.repository = null; // make sure ...
-    }
-
-    @SuppressWarnings("unused")
-    private void unbindRepository(final ServiceReference ref) {
-        if (this.repositoryReference == ref) {
-            this.repositoryReference = null;
-            this.repository = null; // make sure ...
-        }
     }
 
     /**
@@ -226,6 +178,44 @@ public class JcrResourceProviderFactory implements ResourceProviderFactory {
                             }
                         }
 
+                    } else if ((authenticationInfo.get(ResourceResolverFactory.IDENTIFIED) instanceof String) &&
+                            (authenticationInfo.get(ResourceResolverFactory.USER) instanceof String)) {
+
+                        // pre-identified user access
+                        final String userName = (String) authenticationInfo.get(ResourceResolverFactory.USER);
+                        final String identifier = (String) authenticationInfo.get(ResourceResolverFactory.IDENTIFIED);
+
+                        log.info("getResourceProviderInternal: Logging in user {} identified by {}", userName, identifier);
+
+                        if (!ALLOWED_BUNDLE_USER_ID.equals(serviceUserMapper.getServiceUserID(usingBundle,
+                                ResourceResolverFactory.IDENTIFIED))) {
+                            log.info("Missing privilege to use pre-authenticated login");
+                            throw new LoginException();
+                        }
+
+                        Session tmp = null;
+                        try {
+                            tmp = session = repository.loginAdministrative(workspace);
+                            Authorizable auth = ((JackrabbitSession) tmp).getUserManager().getAuthorizable(userName);
+                            if (auth != null && ! auth.isGroup()) {
+                                Subject s = new Subject();
+                                s.getPrincipals().add(auth.getPrincipal());
+                                session = Subject.doAs(s, new PrivilegedExceptionAction<Session>() {
+                                    public Session run() throws Exception {
+                                        return repository.login(workspace);
+                                    }
+                                });
+                            } else {
+                                log.warn("getResourceProviderInternal: Cannot login user: {}", userName);
+                                throw new LoginException("Unable to login " + userName);
+                            }
+                        } catch (PrivilegedActionException pae) {
+                            throw new LoginException(pae.getCause());
+                        } finally {
+                            if (tmp != null) {
+                                tmp.logout();
+                            }
+                        }
                     } else {
 
                         // requested non-admin session to any workspace (or
