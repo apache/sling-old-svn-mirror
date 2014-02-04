@@ -78,6 +78,12 @@ public class TopologyConnectorClient implements
     /** the status code of the last post **/
     private int lastStatusCode = -1;
     
+    /** SLING-3316: whether or not this connector was auto-stopped **/
+    private boolean autoStopped = false;
+    
+    /** more details about connection failures **/
+    private String statusDetails = null;
+    
     /** SLING-2882: whether or not to suppress ping warnings **/
     private boolean suppressPingWarnings_ = false;
 
@@ -111,6 +117,11 @@ public class TopologyConnectorClient implements
 
     /** ping the server and pass the announcements between the two **/
     void ping() {
+    	if (autoStopped) {
+    		// then we suppress any further pings!
+    		logger.debug("ping: autoStopped=true, hence suppressing any further pings.");
+    		return;
+    	}
         final String uri = connectorUrl.toString()+"."+clusterViewService.getSlingId()+".json";
     	if (logger.isDebugEnabled()) {
     		logger.debug("ping: connectorUrl=" + connectorUrl + ", complete uri=" + uri);
@@ -179,6 +190,14 @@ public class TopologyConnectorClient implements
 	                        logger.debug("ping: connector response indicated a loop detected. not registering this announcement from "+
 	                                    inheritedAnnouncement.getOwnerId());
                     	}
+                    	if (inheritedAnnouncement.getOwnerId().equals(clusterViewService.getSlingId())) {
+                    		// SLING-3316 : local-loop detected. Check config to see if we should stop this connector
+                    		
+                    	    if (config.isAutoStopLocalLoopEnabled()) {
+                    			inheritedAnnouncement = null; // results in connected -> false and representsloop -> true
+                    			autoStopped = true; // results in isAutoStopped -> true
+                    		}
+                    	}
                     } else {
                         inheritedAnnouncement.setInherited(true);
                         if (!announcementRegistry
@@ -188,21 +207,26 @@ public class TopologyConnectorClient implements
 	                                    + inheritedAnnouncement);
                         	}
                             lastInheritedAnnouncement = null;
+                            statusDetails = "receiving side is seeing me via another path (connector or cluster) already (loop)";
                             return;
                         }
                     }
                     lastInheritedAnnouncement = inheritedAnnouncement;
+                    statusDetails = null;
                 } else {
                     lastInheritedAnnouncement = null;
+                    statusDetails = "no response body received";
                 }
             } else {
                 lastInheritedAnnouncement = null;
+                statusDetails = "got HTTP Status-Code: "+lastStatusCode;
             }
         	// SLING-2882 : reset suppressPingWarnings_ flag in success case
     		suppressPingWarnings_ = false;
         } catch (URIException e) {
             logger.warn("ping: Got URIException: " + e + ", uri=" + uri);
             lastInheritedAnnouncement = null;
+            statusDetails = "got URIException: "+e;
         } catch (IOException e) {
         	// SLING-2882 : set/check the suppressPingWarnings_ flag
         	if (suppressPingWarnings_) {
@@ -214,12 +238,15 @@ public class TopologyConnectorClient implements
     			logger.warn("ping: got IOException [suppressing further warns]: " + e + ", uri=" + uri);
         	}
             lastInheritedAnnouncement = null;
+            statusDetails = "got IOException: "+e;
         } catch (JSONException e) {
             logger.warn("ping: got JSONException: " + e);
             lastInheritedAnnouncement = null;
+            statusDetails = "got JSONException: "+e;
         } catch (RuntimeException re) {
             logger.warn("ping: got RuntimeException: " + re, re);
             lastInheritedAnnouncement = null;
+            statusDetails = "got RuntimeException: "+re;
         }
     }
 
@@ -232,6 +259,9 @@ public class TopologyConnectorClient implements
     }
     
     public boolean representsLoop() {
+    	if (autoStopped) {
+    		return true;
+    	}
         if (lastInheritedAnnouncement == null) {
             return false;
         } else {
@@ -240,11 +270,33 @@ public class TopologyConnectorClient implements
     }
 
     public boolean isConnected() {
+    	if (autoStopped) {
+    		return false;
+    	}
         if (lastInheritedAnnouncement == null) {
             return false;
         } else {
             return !lastInheritedAnnouncement.hasExpired(config);
         }
+    }
+    
+    public String getStatusDetails() {
+        if (autoStopped) {
+            return "auto-stopped";
+        }
+        if (lastInheritedAnnouncement == null) {
+            return statusDetails;
+        } else {
+            if (!lastInheritedAnnouncement.hasExpired(config)) {
+                return null;
+            } else {
+                return "received announcement has expired (it was created "+lastInheritedAnnouncement.getCreated()+") - consider increasing heartbeat timeout";
+            }
+        }
+    }
+    
+    public boolean isAutoStopped() {
+    	return autoStopped;
     }
 
     public String getRemoteSlingId() {

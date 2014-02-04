@@ -31,8 +31,14 @@ public interface TopologyConnectorClientInformation {
     /** return the http status code of the last post to the servlet, -1 if no post was ever done **/
     int getStatusCode();
 
+    /** SLING-3316 : whether or not this connector was auto-stopped **/
+    boolean isAutoStopped();
+    
     /** whether or not this connector was able to successfully connect **/
     boolean isConnected();
+    
+    /** provides more details about connection failures **/
+    String getStatusDetails();
 
     /** whether or not the counterpart of this connector has detected a loop in the topology connectors **/
     boolean representsLoop();
