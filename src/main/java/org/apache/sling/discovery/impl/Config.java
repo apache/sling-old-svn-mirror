@@ -97,6 +97,12 @@ public class Config {
     public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
 
     /**
+     * If set to true, local-loops of topology connectors are automatically stopped when detected so.
+     */
+    @Property(boolValue=false)
+    private static final String AUTO_STOP_LOCAL_LOOP_ENABLED = "autoStopLocalLoopEnabled";
+
+    /**
      * If set to true, hmac is enabled and the white list is disabled.
      */
     @Property(boolValue=false)
@@ -124,6 +130,9 @@ public class Config {
 
     private String leaderElectionRepositoryDescriptor ;
 
+    /** True when auto-stop of a local-loop is enabled. Default is false. **/
+    private boolean autoStopLocalLoopEnabled;
+    
     /**
      * True when the hmac is enabled and signing is disabled.
      */
@@ -225,6 +234,8 @@ public class Config {
         logger.debug("configure: leaderElectionRepositoryDescriptor='{}'",
                 this.leaderElectionRepositoryDescriptor);
 
+        autoStopLocalLoopEnabled = PropertiesUtil.toBoolean(properties.get(AUTO_STOP_LOCAL_LOOP_ENABLED), false);
+        
         hmacEnabled = PropertiesUtil.toBoolean(properties.get(HMAC_ENABLED), true);
         encryptionEnabled = PropertiesUtil.toBoolean(properties.get(ENCRYPTION_ENABLED), false);
         sharedKey = PropertiesUtil.toString(properties.get(SHARED_KEY), null);
@@ -347,5 +358,12 @@ public class Config {
      */
     public boolean isEncryptionEnabled() {
         return encryptionEnabled;
+    }
+    
+    /**
+     * @return true if the auto-stopping of local-loop topology connectors is enabled.
+     */
+    public boolean isAutoStopLocalLoopEnabled() {
+        return autoStopLocalLoopEnabled;
     }
 }
