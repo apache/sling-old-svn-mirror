@@ -20,10 +20,15 @@ package org.apache.sling.discovery.impl.topology.connector;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.felix.scr.annotations.Property;
@@ -40,6 +45,9 @@ import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementFilter;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
+import org.apache.sling.discovery.impl.topology.connector.wl.SubnetWhitelistEntry;
+import org.apache.sling.discovery.impl.topology.connector.wl.WhitelistEntry;
+import org.apache.sling.discovery.impl.topology.connector.wl.WildcardWhitelistEntry;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,23 +77,72 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
     @Reference
     private Config config;
 
-    /** the set of ips/hostnames which are allowed to connect to this servlet **/
-    private final Set<String> whitelist = new HashSet<String>();
+    /** 
+     * This list contains WhitelistEntry (ips/hostnames, cidr, wildcards),
+     * each filtering some hostname/addresses that are allowed to connect to this servlet.
+     **/
+    private final List<WhitelistEntry> whitelist = new ArrayList<WhitelistEntry>();
+    
+    /** Set of plaintext whitelist entries - for faster lookups **/
+    private final Set<String> plaintextWhitelist = new HashSet<String>();
 
     private TopologyRequestValidator requestValidator;
-
 
     protected void activate(final ComponentContext context) {
         whitelist.clear();
         if (!config.isHmacEnabled()) {
             String[] whitelistConfig = config.getTopologyConnectorWhitelist();
-            for (int i = 0; i < whitelistConfig.length; i++) {
-                String aWhitelistEntry = whitelistConfig[i];
-                logger.info("activate: adding whitelist entry: " + aWhitelistEntry);
-                whitelist.add(aWhitelistEntry);
-            }
+            initWhitelist(whitelistConfig);
         }
         requestValidator = new TopologyRequestValidator(config);
+    }
+
+    void initWhitelist(String[] whitelistConfig) {
+        if (whitelistConfig==null) {
+            return;
+        }
+        for (int i = 0; i < whitelistConfig.length; i++) {
+            String aWhitelistEntry = whitelistConfig[i];
+            
+            WhitelistEntry whitelistEntry = null;
+            if (aWhitelistEntry.contains(".") && aWhitelistEntry.contains("/")) {
+                // then this is a CIDR notation
+                try{
+                    whitelistEntry = new SubnetWhitelistEntry(aWhitelistEntry);
+                } catch(Exception e) {
+                    logger.error("activate: wrongly formatted CIDR subnet definition. Expected eg '1.2.3.4/24'. ignoring: "+aWhitelistEntry);
+                    continue;
+                }
+            } else if (aWhitelistEntry.contains(".") && aWhitelistEntry.contains(" ")) {
+                // then this is a IP/subnet-mask notation
+                try{
+                    final StringTokenizer st = new StringTokenizer(aWhitelistEntry, " ");
+                    final String ip = st.nextToken();
+                    if (st.hasMoreTokens()) {
+                        final String mask = st.nextToken();
+                        if (st.hasMoreTokens()) {
+                            logger.error("activate: wrongly formatted ip subnet definition. Expected '10.1.2.3 255.0.0.0'. Ignoring: "+aWhitelistEntry);
+                            continue;
+                        }
+                        whitelistEntry = new SubnetWhitelistEntry(ip, mask);
+                    }
+                } catch(Exception e) {
+                    logger.error("activate: wrongly formatted ip subnet definition. Expected '10.1.2.3 255.0.0.0'. Ignoring: "+aWhitelistEntry);
+                    continue;
+                }
+            }
+            if (whitelistEntry==null) {
+                if (aWhitelistEntry.contains("*") || aWhitelistEntry.contains("?")) {
+                    whitelistEntry = new WildcardWhitelistEntry(aWhitelistEntry);
+                } else {
+                    plaintextWhitelist.add(aWhitelistEntry);
+                }
+            }
+            logger.info("activate: adding whitelist entry: " + aWhitelistEntry);
+            if (whitelistEntry!=null) {
+                whitelist.add(whitelistEntry);
+            }
+        }
     }
 
     @Override
@@ -214,15 +271,26 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
         }
 
     }
-
+    
     /** Checks if the provided request's remote server is whitelisted **/
-    private boolean isWhitelisted(final SlingHttpServletRequest request) {
+    boolean isWhitelisted(final HttpServletRequest request) {
         if (config.isHmacEnabled()) {
-            return requestValidator.isTrusted(request);
-        } else {
-            if (whitelist.contains(request.getRemoteAddr())) {
-                return true;
-            } else if (whitelist.contains(request.getRemoteHost())) {
+            final boolean isTrusted = requestValidator.isTrusted(request);
+            if (!isTrusted) {
+                logger.info("isWhitelisted: rejecting distrusted " + request.getRemoteAddr()
+                        + ", " + request.getRemoteHost());
+            }
+            return isTrusted;
+        }
+        
+        if (plaintextWhitelist.contains(request.getRemoteHost()) ||
+                plaintextWhitelist.contains(request.getRemoteAddr())) {
+            return true;
+        }
+
+        for (Iterator<WhitelistEntry> it = whitelist.iterator(); it.hasNext();) {
+            WhitelistEntry whitelistEntry = it.next();
+            if (whitelistEntry.accepts(request)) {
                 return true;
             }
         }
