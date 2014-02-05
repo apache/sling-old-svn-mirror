@@ -319,7 +319,7 @@ public class SlingServlet extends GenericServlet implements Notifiable {
                 SharedConstants.DEFAULT_SLING_LAUNCHER_JAR);
             if (launcherJar == null) {
                 launcherJar = getServletContext().getResource(
-                    "/WEB-INF/" + SharedConstants.DEFAULT_SLING_LAUNCHER_JAR);
+                    "/WEB-INF" + SharedConstants.DEFAULT_SLING_LAUNCHER_JAR);
             }
 
             startSling(launcherJar);
