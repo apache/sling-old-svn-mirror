@@ -127,7 +127,7 @@ public class TopologyConnectorClient implements
     		logger.debug("ping: connectorUrl=" + connectorUrl + ", complete uri=" + uri);
     	}
         HttpClient httpClient = new HttpClient();
-        PutMethod method = new PutMethod(uri);
+        final PutMethod method = new PutMethod(uri);
         try {
             String userInfo = connectorUrl.getUserInfo();
             if (userInfo != null) {
@@ -247,6 +247,8 @@ public class TopologyConnectorClient implements
             logger.warn("ping: got RuntimeException: " + re, re);
             lastInheritedAnnouncement = null;
             statusDetails = "got RuntimeException: "+re;
+        } finally {
+            method.releaseConnection();
         }
     }
 
@@ -325,7 +327,7 @@ public class TopologyConnectorClient implements
         }
 
         HttpClient httpClient = new HttpClient();
-        DeleteMethod method = new DeleteMethod(uri);
+        final DeleteMethod method = new DeleteMethod(uri);
 
         try {
             String userInfo = connectorUrl.getUserInfo();
@@ -350,6 +352,8 @@ public class TopologyConnectorClient implements
             logger.warn("disconnect: got IOException: " + e);
         } catch (RuntimeException re) {
             logger.error("disconnect: got RuntimeException: " + re, re);
+        } finally {
+            method.releaseConnection();
         }
     }
 }
