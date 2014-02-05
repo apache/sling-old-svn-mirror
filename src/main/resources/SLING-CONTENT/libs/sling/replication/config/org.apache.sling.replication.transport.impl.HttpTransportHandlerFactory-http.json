@@ -1,4 +1,0 @@
-{
-    "jcr:primaryType" : "sling:OsgiConfig",
-    "name" : "http"
-}
