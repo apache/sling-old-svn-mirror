@@ -57,6 +57,13 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                  <instructions>
+		            <Embed-Dependency>
+		              commons-net;inline=org/apache/commons/net/util/SubnetUtils*
+		            </Embed-Dependency>
+		          </instructions>
+		        </configuration>
             </plugin>
         </plugins>
     </build>
@@ -163,6 +170,12 @@
             <version>2.4</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.3</version>
+            <scope>provided</scope>
+        </dependency>
       <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -177,6 +190,12 @@
         <dependency>
             <groupId>org.jmock</groupId>
             <artifactId>jmock-junit4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
         	<groupId>org.apache.sling</groupId>
