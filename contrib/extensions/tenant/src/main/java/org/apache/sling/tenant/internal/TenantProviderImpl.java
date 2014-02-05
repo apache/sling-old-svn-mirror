@@ -381,6 +381,10 @@ public class TenantProviderImpl implements TenantProvider, TenantManager {
                     Resource tenantRes = getTenantResource(resolver, tenant.getId());
                     if (tenantRes != null) {
                         updater.update(tenantRes.adaptTo(ModifiableValueMap.class));
+                        if (tenant instanceof TenantImpl) {
+                            ((TenantImpl) tenant).loadProperties(tenantRes);
+                        }
+                        
                         customizeTenant(tenantRes, tenant);
                         resolver.commit();
 
