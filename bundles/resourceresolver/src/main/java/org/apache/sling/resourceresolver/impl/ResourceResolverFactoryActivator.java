@@ -187,6 +187,14 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
               description = "This flag controls whether all resources with a sling:vanityPath property " +
                             "are processed and added to the mappoing table.")
     private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
+    
+    private static final boolean DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = true;
+    @Property(boolValue = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION ,
+              label = "Optimize alias resolution",
+              description ="This flag controls whether to optimize" +
+                      " the alias resolution by creating an internal cache of aliases. This might have an impact on the startup time"+
+                      " and on the alias update time if the number of aliases is huge (over 10000).")
+    private static final String PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = "resource.resolver.optimize.alias.resolution";
 
     // name of the Features service reference
     private static final String FEATURES_NAME = "features";
@@ -257,6 +265,9 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
     /** vanityPath enabled? */
     private boolean enableVanityPath = DEFAULT_ENABLE_VANITY_PATH;
+    
+    /** alias resource resolution optimization enabled? */
+    private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
 
     private final FactoryPreconditions preconds = new FactoryPreconditions();
 
@@ -326,6 +337,10 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     public boolean isVanityPathEnabled() {
         return this.enableVanityPath;
     }
+    
+    public boolean isOptimizeAliasResolutionEnabled() {
+        return this.enableOptimizeAliasResolution;
+    }
 
     // ---------- SCR Integration ---------------------------------------------
 
@@ -390,6 +405,8 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
         this.enableVanityPath = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_VANITY_PATH), DEFAULT_ENABLE_VANITY_PATH);
+        
+        this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
 
         final BundleContext bc = componentContext.getBundleContext();
 
