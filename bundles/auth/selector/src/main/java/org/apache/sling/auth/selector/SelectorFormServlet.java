@@ -23,6 +23,7 @@ import java.io.IOException;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
@@ -72,6 +73,8 @@ public class SelectorFormServlet extends AbstractAuthenticationFormServlet {
         String type = request.getParameter(SelectorAuthenticationHandler.PAR_SELECTED_AUTH_TYPE);
         if (type == null || type.length() == 0) {
             return "null";
+        } else {
+            type = StringEscapeUtils.escapeJavaScript(type);
         }
         return "\"" + type + "\"";
     }
