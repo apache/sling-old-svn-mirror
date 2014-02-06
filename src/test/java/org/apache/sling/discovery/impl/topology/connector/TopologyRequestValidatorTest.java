@@ -89,6 +89,9 @@ public class TopologyRequestValidatorTest {
                 allowing(request).getHeader(with(TopologyRequestValidator.SIG_HEADER));
                 will(returnValue(method.getRequestHeader(TopologyRequestValidator.SIG_HEADER).getValue()));
                 
+                allowing(request).getHeader(with("Content-Encoding"));
+                will(returnValue(""));
+
                 allowing(request).getRequestURI();
                 will(returnValue(method.getPath()));
                 
