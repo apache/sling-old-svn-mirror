@@ -18,19 +18,23 @@
  */
 package org.apache.sling.discovery.impl.topology.connector;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.UUID;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
@@ -88,6 +92,12 @@ public class TopologyConnectorClient implements
     private boolean suppressPingWarnings_ = false;
 
     private TopologyRequestValidator requestValidator;
+
+    /** value of Content-Encoding of the last request **/
+    private String lastRequestEncoding;
+
+    /** value of Content-Encoding of the last repsonse **/
+    private String lastResponseEncoding;
 
     TopologyConnectorClient(final ClusterViewService clusterViewService,
             final AnnouncementRegistry announcementRegistry, final Config config,
@@ -163,12 +173,30 @@ public class TopologyConnectorClient implements
                 }
             });
             final String p = requestValidator.encodeMessage(topologyAnnouncement.asJSON());
-
-        	if (logger.isDebugEnabled()) {
-        		logger.debug("ping: topologyAnnouncement json is: " + p);
-        	}
-        	requestValidator.trustMessage(method, p);
-            method.setRequestEntity(new StringRequestEntity(p, "application/json", "UTF-8"));
+            
+            if (logger.isDebugEnabled()) {
+                logger.debug("ping: topologyAnnouncement json is: " + p);
+            }
+            requestValidator.trustMessage(method, p);
+            if (config.isGzipConnectorRequestsEnabled()) {
+                // tell the server that the content is gzipped:
+                method.addRequestHeader("Content-Encoding", "gzip");
+                // and gzip the body:
+                final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                final GZIPOutputStream gzipOut = new GZIPOutputStream(baos);
+                gzipOut.write(p.getBytes("UTF-8"));
+                gzipOut.close();
+                final byte[] gzippedEncodedJson = baos.toByteArray();
+                method.setRequestEntity(new ByteArrayRequestEntity(gzippedEncodedJson, "application/json"));
+                lastRequestEncoding = "gzip";
+            } else {
+                // otherwise plaintext:
+                method.setRequestEntity(new StringRequestEntity(p, "application/json", "UTF-8"));
+                lastRequestEncoding = "plaintext";
+            }
+            // independent of request-gzipping, we do accept the response to be gzipped,
+            // so indicate this to the server:
+            method.addRequestHeader("Accept-Encoding", "gzip");
             DefaultHttpMethodRetryHandler retryhandler = new DefaultHttpMethodRetryHandler(0, false);
             httpClient.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, retryhandler);
             httpClient.executeMethod(method);
@@ -177,7 +205,15 @@ public class TopologyConnectorClient implements
 	                    + method.getStatusText());
         	}
             lastStatusCode = method.getStatusCode();
+            lastResponseEncoding = null;
             if (method.getStatusCode()==HttpServletResponse.SC_OK) {
+                final Header contentEncoding = method.getResponseHeader("Content-Encoding");
+                if (contentEncoding!=null && contentEncoding.getValue()!=null &&
+                        contentEncoding.getValue().contains("gzip")) {
+                    lastResponseEncoding = "gzip";
+                } else {
+                    lastResponseEncoding = "plaintext";
+                }
                 String responseBody = requestValidator.decodeMessage(method); // limiting to 16MB, should be way enough
             	if (logger.isDebugEnabled()) {
             		logger.debug("ping: response body=" + responseBody);
@@ -300,7 +336,15 @@ public class TopologyConnectorClient implements
     public boolean isAutoStopped() {
     	return autoStopped;
     }
+    
+    public String getLastRequestEncoding() {
+        return lastRequestEncoding==null ? "" : lastRequestEncoding;
+    }
 
+    public String getLastResponseEncoding() {
+        return lastResponseEncoding==null ? "" : lastResponseEncoding;
+    }
+    
     public String getRemoteSlingId() {
         if (lastInheritedAnnouncement == null) {
             return null;

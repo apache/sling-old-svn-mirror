@@ -370,6 +370,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<th class=\"header ui-widget-header\">Connector url</th>");
         pw.println("<th class=\"header ui-widget-header\">Connected to slingId</th>");
         pw.println("<th class=\"header ui-widget-header\">Connector status</th>");
+        pw.println("<th class=\"header ui-widget-header\">Request encoding</th>");
+        pw.println("<th class=\"header ui-widget-header\">Response encoding</th>");
         // pw.println("<th class=\"header ui-widget-header\">Fallback connector urls</th>");
         pw.println("</tr>");
         pw.println("</thead>");
@@ -426,6 +428,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td><b>not connected</b></td>");
                 pw.println("<td"+tooltip+"><b>not ok (HTTP Status-Code: "+statusCode+", "+statusDetails+")</b></td>");
             }
+            pw.println("<td>"+topologyConnectorClient.getLastRequestEncoding()+"</td>");
+            pw.println("<td>"+topologyConnectorClient.getLastResponseEncoding()+"</td>");
             // //TODO fallback urls are not yet implemented!
             // String fallbackConnectorUrls;
             // List<String> urls = topologyConnectorClient

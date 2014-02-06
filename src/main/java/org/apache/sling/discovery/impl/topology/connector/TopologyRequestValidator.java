@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.GZIPInputStream;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -535,7 +536,17 @@ public class TopologyRequestValidator {
      * @throws IOException
      */
     private String getRequestBody(HttpServletRequest request) throws IOException {
-        return IOUtils.toString(request.getReader());
+        final String contentEncoding = request.getHeader("Content-Encoding");
+        if (contentEncoding!=null && contentEncoding.contains("gzip")) {
+            // then treat the request body as gzip:
+            final GZIPInputStream gzipIn = new GZIPInputStream(request.getInputStream());
+            final String gunzippedEncodedJson = IOUtils.toString(gzipIn);
+            gzipIn.close();
+            return gunzippedEncodedJson;
+        } else {
+            // otherwise assume plain-text:
+            return IOUtils.toString(request.getReader());
+        }
     }
 
     /**
@@ -544,10 +555,21 @@ public class TopologyRequestValidator {
      * @throws IOException
      */
     private String getResponseBody(HttpMethod method) throws IOException {
-        if (method instanceof HttpMethodBase) {
-            return ((HttpMethodBase) method).getResponseBodyAsString(16 * 1024 * 1024);
+        final Header contentEncoding = method.getResponseHeader("Content-Encoding");
+        if (contentEncoding!=null && contentEncoding.getValue()!=null &&
+                contentEncoding.getValue().contains("gzip")) {
+            // then the server sent gzip - treat it so:
+            final GZIPInputStream gzipIn = new GZIPInputStream(method.getResponseBodyAsStream());
+            final String gunzippedEncodedJson = IOUtils.toString(gzipIn);
+            gzipIn.close();
+            return gunzippedEncodedJson;
+        } else {
+            // otherwise the server sent plaintext:
+            if (method instanceof HttpMethodBase) {
+                return ((HttpMethodBase) method).getResponseBodyAsString(16 * 1024 * 1024);
+            }
+            return method.getResponseBodyAsString();
         }
-        return method.getResponseBodyAsString();
     }
 
     /**

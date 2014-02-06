@@ -103,6 +103,12 @@ public class Config {
     private static final String AUTO_STOP_LOCAL_LOOP_ENABLED = "autoStopLocalLoopEnabled";
 
     /**
+     * If set to true, request body will be gzipped - only works if counter-part accepts gzip-requests!
+     */
+    @Property(boolValue=false)
+    private static final String GZIP_CONNECTOR_REQUESTS_ENABLED = "gzipConnectorRequestsEnabled";
+
+    /**
      * If set to true, hmac is enabled and the white list is disabled.
      */
     @Property(boolValue=false)
@@ -152,6 +158,11 @@ public class Config {
      * true when encryption is enabled.
      */
     private boolean encryptionEnabled;
+    
+    /**
+     * true when topology connector requests should be gzipped
+     */
+    private boolean gzipConnectorRequestsEnabled;
 
     @Activate
     protected void activate(final Map<String, Object> properties) {
@@ -235,6 +246,7 @@ public class Config {
                 this.leaderElectionRepositoryDescriptor);
 
         autoStopLocalLoopEnabled = PropertiesUtil.toBoolean(properties.get(AUTO_STOP_LOCAL_LOOP_ENABLED), false);
+        gzipConnectorRequestsEnabled = PropertiesUtil.toBoolean(properties.get(GZIP_CONNECTOR_REQUESTS_ENABLED), false);
         
         hmacEnabled = PropertiesUtil.toBoolean(properties.get(HMAC_ENABLED), true);
         encryptionEnabled = PropertiesUtil.toBoolean(properties.get(ENCRYPTION_ENABLED), false);
@@ -358,6 +370,14 @@ public class Config {
      */
     public boolean isEncryptionEnabled() {
         return encryptionEnabled;
+    }
+    
+    /**
+     * @return true if requests on the topology connector should be gzipped
+     * (which only works if the server accepts that.. ie discovery.impl 1.0.4+)
+     */
+    public boolean isGzipConnectorRequestsEnabled() {
+        return gzipConnectorRequestsEnabled;
     }
     
     /**
