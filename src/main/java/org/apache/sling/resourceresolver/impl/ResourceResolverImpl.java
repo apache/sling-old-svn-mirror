@@ -882,23 +882,44 @@ public class ResourceResolverImpl extends SlingAdaptable implements ResourceReso
 
         // we do not have a child with the exact name, so we look for
         // a child, whose alias matches the childName
-
-        final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parent.getPath());
-        if (aliases != null) {
-            final String aliasName = aliases.get(childName);
-            if (aliasName != null ) {
-                final String aliasPath;
-                if ( aliasName.startsWith("/") ) {
-                    aliasPath = aliasName;
-                } else {
-                    aliasPath = parent.getPath() + '/' + aliasName;
+        if (factory.getMapEntries().isOptimizeAliasResolutionEnabled()){
+            logger.debug("getChildInternal: Optimize Alias Resolution is Enabled");
+            //optimization made in SLING-2521
+            final Map<String, String> aliases = factory.getMapEntries().getAliasMap(parent.getPath());
+            if (aliases != null) {
+                final String aliasName = aliases.get(childName);
+                if (aliasName != null ) {
+                    final String aliasPath;
+                    if ( aliasName.startsWith("/") ) {
+                        aliasPath = aliasName;
+                    } else {
+                        aliasPath = parent.getPath() + '/' + aliasName;
+                    }
+                    final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(aliasPath) );
+                    logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
+                    return aliasedChild;
                 }
-                final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(aliasPath) );
-                logger.debug("getChildInternal: Found Resource {} with alias {} to use", aliasedChild, childName);
-                return aliasedChild;
+            }
+        } else {
+            logger.debug("getChildInternal: Optimize Alias Resolution is Disabled");
+            final Iterator<Resource> children = listChildren(parent);
+            while (children.hasNext()) {
+                child = children.next();
+                if (!child.getPath().endsWith(JCR_CONTENT_LEAF)) {
+                    final String[] aliases = ResourceResolverContext.getProperty(child, PROP_ALIAS, String[].class);
+                    if (aliases != null) {
+                        for (final String alias : aliases) {
+                            if (childName.equals(alias)) {
+                                logger.debug("getChildInternal: Found Resource {} with alias {} to use", child, childName);
+                                final Resource aliasedChild = getResourceInternal( ResourceUtil.normalize(child.getPath()) );
+                                return aliasedChild; 
+                            }
+                        }
+                    }
+                }
             }
         }
-
+ 
         // no match for the childName found
         logger.debug("getChildInternal: Resource {} has no child {}", parent, childName);
         return null;

@@ -109,6 +109,8 @@ public class MapEntries implements EventHandler {
     private final ReentrantLock initializing = new ReentrantLock();
 
     private final boolean enabledVanityPaths;
+    
+    private final boolean enableOptimizeAliasResolution;
 
     @SuppressWarnings("unchecked")
     private MapEntries() {
@@ -123,6 +125,7 @@ public class MapEntries implements EventHandler {
         this.registration = null;
         this.eventAdmin = null;
         this.enabledVanityPaths = true;
+        this.enableOptimizeAliasResolution = true;
     }
 
     @SuppressWarnings("unchecked")
@@ -132,6 +135,7 @@ public class MapEntries implements EventHandler {
         this.factory = factory;
         this.mapRoot = factory.getMapRoot();
         this.enabledVanityPaths = factory.isVanityPathEnabled();
+        this.enableOptimizeAliasResolution = factory.isOptimizeAliasResolutionEnabled();
         this.eventAdmin = eventAdmin;
 
         this.resolveMapsMap = Collections.singletonMap(GLOBAL_LIST_KEY, (List<MapEntry>)Collections.EMPTY_LIST);
@@ -216,14 +220,17 @@ public class MapEntries implements EventHandler {
             // sort global list and add to map
             Collections.sort(globalResolveMap);
             newResolveMapsMap.put(GLOBAL_LIST_KEY, globalResolveMap);
-
-            final Map<String, Map<String, String>> aliasMap = this.loadAliases(resolver);
+            
+            //optimization made in SLING-2521
+            if (enableOptimizeAliasResolution){
+                final Map<String, Map<String, String>> aliasMap = this.loadAliases(resolver);
+                this.aliasMap = makeUnmodifiableMap(aliasMap);
+            }            
 
             this.vanityTargets = Collections.unmodifiableCollection(vanityTargets);
             this.resolveMapsMap = Collections.unmodifiableMap(newResolveMapsMap);
             this.mapMaps = Collections.unmodifiableSet(new TreeSet<MapEntry>(newMapMaps.values()));
-            this.aliasMap = makeUnmodifiableMap(aliasMap);
-
+ 
             sendChangeEvent();
 
         } catch (final Exception e) {
@@ -236,6 +243,11 @@ public class MapEntries implements EventHandler {
 
         }
     }
+    
+    public boolean isOptimizeAliasResolutionEnabled(){
+        return this.enableOptimizeAliasResolution;
+    }
+    
 
     private <K1, K2, V> Map<K1, Map<K2, V>> makeUnmodifiableMap(final Map<K1, Map<K2, V>> map) {
         final Map<K1, Map<K2, V>> newMap = new HashMap<K1, Map<K2, V>>();
