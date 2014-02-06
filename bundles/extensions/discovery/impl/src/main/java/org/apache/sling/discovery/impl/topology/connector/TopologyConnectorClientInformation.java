@@ -49,4 +49,10 @@ public interface TopologyConnectorClientInformation {
     /** the unique id of this connector **/
     String getId();
 
+    /** the Content-Encoding of the last request **/
+    String getLastRequestEncoding();
+
+    /** the Content-Encoding of the last response **/
+    String getLastResponseEncoding();
+
 }

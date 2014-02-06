@@ -18,6 +18,7 @@
  */
 package org.apache.sling.discovery.impl.topology.connector;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -26,11 +27,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.sling.SlingServlet;
@@ -262,9 +265,22 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             }
             final String p = requestValidator.encodeMessage(replyAnnouncement.asJSON());
             requestValidator.trustMessage(response, request, p);
-            final PrintWriter pw = response.getWriter();
-            pw.print(p);
-            pw.flush();
+            // gzip the response if the client accepts this
+            final String acceptEncodingHeader = request.getHeader("Accept-Encoding");
+            if (acceptEncodingHeader!=null && acceptEncodingHeader.contains("gzip")) {
+                // tell the client that the content is gzipped:
+                response.setHeader("Content-Encoding", "gzip");
+                
+                // then gzip the body
+                final GZIPOutputStream gzipOut = new GZIPOutputStream(response.getOutputStream());
+                gzipOut.write(p.getBytes("UTF-8"));
+                gzipOut.close();
+            } else {
+                // otherwise plaintext
+                final PrintWriter pw = response.getWriter();
+                pw.print(p);
+                pw.flush();
+            }
         } catch (JSONException e) {
             logger.error("doPost: Got a JSONException: " + e, e);
             response.sendError(500);
