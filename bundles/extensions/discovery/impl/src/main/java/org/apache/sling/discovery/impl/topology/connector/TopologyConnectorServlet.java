@@ -18,7 +18,6 @@
  */
 package org.apache.sling.discovery.impl.topology.connector;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -30,17 +29,15 @@ import java.util.StringTokenizer;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
-import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.sling.SlingServlet;
-import org.apache.sling.api.SlingHttpServletRequest;
-import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.request.RequestPathInfo;
-import org.apache.sling.api.servlets.SlingAllMethodsServlet;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
@@ -52,19 +49,27 @@ import org.apache.sling.discovery.impl.topology.connector.wl.SubnetWhitelistEntr
 import org.apache.sling.discovery.impl.topology.connector.wl.WhitelistEntry;
 import org.apache.sling.discovery.impl.topology.connector.wl.WildcardWhitelistEntry;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.http.HttpService;
+import org.osgi.service.http.NamespaceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Servlet which receives topology announcements at
- * /libs/sling/topology/connector (which is reachable without authorization)
+ * /libs/sling/topology/connector*
+ * without authorization (authorization is handled either via
+ * hmac-signature with a shared key or via a flexible whitelist)
  */
 @SuppressWarnings("serial")
-@SlingServlet(paths = { TopologyConnectorServlet.TOPOLOGY_CONNECTOR_PATH })
-@Property(name = "sling.auth.requirements", value = { "-"+TopologyConnectorServlet.TOPOLOGY_CONNECTOR_PATH })
-public class TopologyConnectorServlet extends SlingAllMethodsServlet {
+@Component(immediate = true)
+@Service(value=TopologyConnectorServlet.class)
+public class TopologyConnectorServlet extends HttpServlet {
 
-    public static final String TOPOLOGY_CONNECTOR_PATH = "/libs/sling/topology/connector";
+    /** 
+     * prefix under which the topology connector servlet is registered -
+     * the URL will consist of this prefix + "connector.slingId.json" 
+     */
+    private static final String TOPOLOGY_CONNECTOR_PREFIX = "/libs/sling/topology";
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -77,6 +82,9 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
     @Reference
     private HeartbeatHandler heartbeatHandler;
 
+    @Reference
+    private HttpService httpService;
+    
     @Reference
     private Config config;
 
@@ -91,6 +99,7 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
 
     private TopologyRequestValidator requestValidator;
 
+    @Activate
     protected void activate(final ComponentContext context) {
         whitelist.clear();
         if (!config.isHmacEnabled()) {
@@ -98,6 +107,22 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             initWhitelist(whitelistConfig);
         }
         requestValidator = new TopologyRequestValidator(config);
+        
+        try {
+            httpService.registerServlet(TopologyConnectorServlet.TOPOLOGY_CONNECTOR_PREFIX, 
+                    this, null, null);
+            logger.info("activate: connector servlet registered at "+
+                    TopologyConnectorServlet.TOPOLOGY_CONNECTOR_PREFIX);
+        } catch (ServletException e) {
+            logger.error("activate: ServletException while registering topology connector servlet: "+e, e);
+        } catch (NamespaceException e) {
+            logger.error("activate: NamespaceException while registering topology connector servlet: "+e, e);
+        }
+    }
+    
+    @Deactivate
+    protected void deactivate() {
+        httpService.unregister(TOPOLOGY_CONNECTOR_PREFIX);
     }
 
     void initWhitelist(String[] whitelistConfig) {
@@ -149,9 +174,8 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
     }
 
     @Override
-    protected void doDelete(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws ServletException,
-            IOException {
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
         if (!isWhitelisted(request)) {
             // in theory it would be 403==forbidden, but that would reveal that
@@ -160,21 +184,20 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             return;
         }
 
-        final RequestPathInfo pathInfo = request.getRequestPathInfo();
-        final String extension = pathInfo.getExtension();
+        final String[] pathInfo = request.getPathInfo().split("\\.");
+        final String extension = pathInfo.length==3 ? pathInfo[2] : "";
         if (!"json".equals(extension)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        final String selector = pathInfo.getSelectorString();
+        final String selector = pathInfo.length==3 ? pathInfo[1] : "";
 
         announcementRegistry.unregisterAnnouncement(selector);
     }
-
+    
     @Override
-    protected void doPut(SlingHttpServletRequest request,
-            SlingHttpServletResponse response) throws ServletException,
-            IOException {
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
         if (!isWhitelisted(request)) {
             // in theory it would be 403==forbidden, but that would reveal that
@@ -183,13 +206,14 @@ public class TopologyConnectorServlet extends SlingAllMethodsServlet {
             return;
         }
 
-        final RequestPathInfo pathInfo = request.getRequestPathInfo();
-        final String extension = pathInfo.getExtension();
+        final String[] pathInfo = request.getPathInfo().split("\\.");
+        final String extension = pathInfo.length==3 ? pathInfo[2] : "";
         if (!"json".equals(extension)) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        final String selector = pathInfo.getSelectorString();
+        
+        final String selector = pathInfo.length==3 ? pathInfo[1] : "";
 
         String topologyAnnouncementJSON = requestValidator.decodeMessage(request);
     	if (logger.isDebugEnabled()) {
