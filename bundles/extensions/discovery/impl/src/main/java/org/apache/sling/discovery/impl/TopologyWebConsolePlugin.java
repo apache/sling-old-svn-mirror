@@ -92,7 +92,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     private final List<String> topologyLog = new LinkedList<String>();
 
     /** the date format used in the truncated log of topology events **/
-    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
 
     @Reference
     private ClusterViewService clusterViewService;
