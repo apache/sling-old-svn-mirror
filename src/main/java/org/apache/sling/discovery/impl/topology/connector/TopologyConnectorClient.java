@@ -199,6 +199,9 @@ public class TopologyConnectorClient implements
             method.addRequestHeader("Accept-Encoding", "gzip");
             DefaultHttpMethodRetryHandler retryhandler = new DefaultHttpMethodRetryHandler(0, false);
             httpClient.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, retryhandler);
+            httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(1000*config.getConnectionTimeout());
+            httpClient.getHttpConnectionManager().getParams().setSoTimeout(1000*config.getSoTimeout());
+            method.getParams().setSoTimeout(1000*config.getSoTimeout());
             httpClient.executeMethod(method);
         	if (logger.isDebugEnabled()) {
 	            logger.debug("ping: done. code=" + method.getStatusCode() + " - "
