@@ -237,7 +237,7 @@ public class MergedResourceProvider implements ResourceProvider {
             }
             final List<Resource> children = new ArrayList<Resource>();
             for(final ResourceHolder holder : candidates) {
-                final Resource mergedResource = this.createMergedResource(resolver, relativePath + '/' + holder.name, holder);
+                final Resource mergedResource = this.createMergedResource(resolver, (relativePath.length() == 0 ? holder.name : relativePath + '/' + holder.name), holder);
                 if ( mergedResource != null ) {
                     children.add(mergedResource);
                 }
