@@ -52,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
 
 @RunWith(PaxExam.class)
@@ -131,6 +132,21 @@ public class BindingsValuesProvidersByContextIT {
         };
         
         regs.add(bundleContext.registerService(BindingsValuesProvider.class.getName(), bvp, getProperties(context, engineName)));
+    }
+    
+    private void addBVPWithServiceRanking(final String id, String context, String engineName, int serviceRanking) {
+        final BindingsValuesProvider bvp = new BindingsValuesProvider() {
+            @Override
+            public String toString() {
+                return id;
+            }
+            
+            public void addBindings(Bindings b) {
+            }
+        };
+        final Dictionary<String, Object> properties = getProperties(context, engineName);
+        properties.put(Constants.SERVICE_RANKING, serviceRanking);
+        regs.add(bundleContext.registerService(BindingsValuesProvider.class.getName(), bvp, properties));
     }
     
     private void addMap(final String id, String context, String engineName) {
@@ -280,5 +296,32 @@ public class BindingsValuesProvidersByContextIT {
         
         final String unsorted = asString(bvpProvider.getBindingsValuesProviders(factory("python"), "python"), false);
         assertTrue("Expecting python language-specific BVP at the end", unsorted.endsWith("M_python"));
+    }
+    
+    @Test
+    public void testBVPsWithServiceRankingA() {
+        addBVPWithServiceRanking("last", null, "js", Integer.MAX_VALUE);
+        addBVPWithServiceRanking("second", null, "js", 0);
+        addBVPWithServiceRanking("first", null, "js", Integer.MIN_VALUE);
+        assertEquals("first,second,last", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null), false));
+    }
+    
+    @Test
+    public void testBVPsWithServiceRankingB() {
+        addBVPWithServiceRanking("first", null, "js", Integer.MIN_VALUE);
+        addBVPWithServiceRanking("second", null, "js", 0);
+        addBVPWithServiceRanking("last", null, "js", Integer.MAX_VALUE);
+        assertEquals("first,second,last", asString(bvpProvider.getBindingsValuesProviders(factory("js"), null), false));
+    }
+    
+    @Test
+    public void testBVPsWithServiceRankingC() {
+        addBVPWithServiceRanking("second", "request", "js", 0);
+        addBVPWithServiceRanking("first", "request", "js", Integer.MIN_VALUE);
+        addBVPWithServiceRanking("genericThree", "request", null, 42);
+        addBVPWithServiceRanking("genericTwo", "request", null, 0);
+        addBVPWithServiceRanking("last", "request", "js", Integer.MAX_VALUE);
+        addBVPWithServiceRanking("genericOne", "request", null, -42);
+        assertEquals("genericOne,genericTwo,genericThree,first,second,last", asString(bvpProvider.getBindingsValuesProviders(factory("js"), "request"), false));
     }
 }
