@@ -74,6 +74,23 @@ public class Config {
     public static final String MIN_EVENT_DELAY_KEY = "minEventDelay";
     private int minEventDelay = DEFAULT_MIN_EVENT_DELAY;
 
+    /** Configure the socket connect timeout for topology connectors. */
+    public static final int DEFAULT_CONNECTION_TIMEOUT = 10;
+    @Property(intValue=DEFAULT_CONNECTION_TIMEOUT)
+    public static final String CONNECTION_TIMEOUT_KEY = "connectionTimeout";
+    private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+
+    /** Configure the socket read timeout (SO_TIMEOUT) for topology connectors. */
+    public static final int DEFAULT_SO_TIMEOUT = 10;
+    @Property(intValue=DEFAULT_SO_TIMEOUT)
+    public static final String SO_TIMEOUT_KEY = "soTimeout";
+    private int soTimeout = DEFAULT_SO_TIMEOUT;
+
+    /** Name of the repository descriptor to be taken into account for leader election:
+        those instances have preference to become leader which have the corresponding descriptor value of 'false' */
+    @Property
+    public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
+    
     /** URLs where to join a topology, eg http://localhost:4502/libs/sling/topology/connector */
     @Property(cardinality=1024)
     public static final String TOPOLOGY_CONNECTOR_URLS_KEY = "topologyConnectorUrls";
@@ -90,11 +107,6 @@ public class Config {
     @Property(value=DEFAULT_DISCOVERY_RESOURCE_PATH, propertyPrivate=true)
     public static final String DISCOVERY_RESOURCE_PATH_KEY = "discoveryResourcePath";
     private String discoveryResourcePath = DEFAULT_DISCOVERY_RESOURCE_PATH;
-
-    /** Name of the repository descriptor to be taken into account for leader election:
-        those instances have preference to become leader which have the corresponding descriptor value of 'false' */
-    @Property
-    public static final String LEADER_ELECTION_REPOSITORY_DESCRIPTOR_NAME_KEY = "leaderElectionRepositoryDescriptor";
 
     /**
      * If set to true, local-loops of topology connectors are automatically stopped when detected so.
@@ -188,6 +200,19 @@ public class Config {
         logger.debug("configure: minEventDelay='{}'",
                 this.minEventDelay);
         
+        this.connectionTimeout = PropertiesUtil.toInteger(
+                properties.get(CONNECTION_TIMEOUT_KEY),
+                DEFAULT_CONNECTION_TIMEOUT);
+        logger.debug("configure: connectionTimeout='{}'",
+                this.connectionTimeout);
+        
+        this.soTimeout = PropertiesUtil.toInteger(
+                properties.get(SO_TIMEOUT_KEY),
+                DEFAULT_SO_TIMEOUT);
+        logger.debug("configure: soTimeout='{}'",
+                this.soTimeout);
+        
+        
         String[] topologyConnectorUrlsStr = PropertiesUtil.toStringArray(
                 properties.get(TOPOLOGY_CONNECTOR_URLS_KEY), null);
         if (topologyConnectorUrlsStr!=null && topologyConnectorUrlsStr.length > 0) {
@@ -262,7 +287,23 @@ public class Config {
     public long getHeartbeatTimeout() {
         return heartbeatTimeout;
     }
+    
+    /**
+     * Returns the socket connect() timeout used by the topology connector, 0 disables the timeout
+     * @return the socket connect() timeout used by the topology connector, 0 disables the timeout
+     */
+    public int getConnectionTimeout() {
+        return connectionTimeout;
+    }
 
+    /**
+     * Returns the socket read timeout (SO_TIMEOUT) used by the topology connector, 0 disables the timeout
+     * @return the socket read timeout (SO_TIMEOUT) used by the topology connector, 0 disables the timeout
+     */
+    public int getSoTimeout() {
+        return soTimeout;
+    }
+    
     /**
      * Returns the interval (in seconds) in which heartbeats are sent
      * @return the interval (in seconds) in which heartbeats are sent
