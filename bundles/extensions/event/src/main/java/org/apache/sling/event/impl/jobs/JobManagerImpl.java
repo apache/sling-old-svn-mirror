@@ -403,7 +403,8 @@ public class JobManagerImpl
 
     private void outdateQueue(final AbstractJobQueue queue) {
         // remove the queue with the old name
-        this.queues.remove(queue.getName());
+        final String oldName = ResourceHelper.filterName(queue.getName());
+        this.queues.remove(oldName);
         // check if we can close or have to rename
         if ( queue.tryToClose() ) {
             // copy statistics
@@ -413,10 +414,10 @@ public class JobManagerImpl
         } else {
             queue.outdate();
             // readd with new name
-            String newName = queue.getName();
+            String newName = ResourceHelper.filterName(queue.getName());
             int index = 0;
             while ( this.queues.containsKey(newName) ) {
-                newName = queue.getName() + '$' + String.valueOf(index++);
+                newName = ResourceHelper.filterName(queue.getName()) + '$' + String.valueOf(index++);
             }
             this.queues.put(newName, queue);
             // update mbeans
@@ -664,7 +665,7 @@ public class JobManagerImpl
      */
     @Override
     public Queue getQueue(final String name) {
-        return this.queues.get(name);
+        return this.queues.get(ResourceHelper.filterName(name));
     }
 
     /**
