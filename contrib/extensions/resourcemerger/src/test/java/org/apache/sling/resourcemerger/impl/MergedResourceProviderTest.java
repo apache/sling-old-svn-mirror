@@ -48,11 +48,21 @@ public class MergedResourceProviderTest {
                                           .resource("a")
                                             .resource("1").p("a", "1").p("b", "2")
                                             .resource("./2").p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "apps")
+                                            .resource("./3").p("e", "2")
+                                                            .p(MergedResourceConstants.PN_HIDE_PROPERTIES, "*")
+                                                            .p("b", "x")
+                                                            .p("d", "1")
+                                            .resource("./4").p("e", "2")
+                                                            .p(MergedResourceConstants.PN_HIDE_PROPERTIES, new String[] {"a", "c"})
+                                                            .p("b", "x")
+                                                            .p("d", "1")
                                             .resource("./X")
                                         .resource("/libs")
                                           .resource("a")
                                             .resource("1").p("a", "5").p("c", "2")
                                             .resource("./2").p(ResourceResolver.PROPERTY_RESOURCE_TYPE, "libs")
+                                            .resource("./3").p("a", "1").p("b", "2").p("c", "3")
+                                            .resource("./4").p("a", "1").p("b", "2").p("c", "3")
                                             .resource("./Y")
                                         .commit();
 
@@ -68,9 +78,11 @@ public class MergedResourceProviderTest {
         while ( i.hasNext() ) {
             names.add(i.next().getName());
         }
-        assertEquals(4, names.size());
+        assertEquals(6, names.size());
         assertTrue(names.contains("1"));
         assertTrue(names.contains("2"));
+        assertTrue(names.contains("3"));
+        assertTrue(names.contains("4"));
         assertTrue(names.contains("Y"));
         assertTrue(names.contains("X"));
     }
@@ -94,5 +106,22 @@ public class MergedResourceProviderTest {
         final Resource rsrcA1 = this.provider.getResource(this.resolver, "/merged/a/1");
         assertEquals("a/1", rsrcA1.getResourceType());
 
+    }
+
+    @Test public void testClearProperties() {
+        final Resource rsrcA3 = this.provider.getResource(this.resolver, "/merged/a/3");
+        final ValueMap vm = rsrcA3.adaptTo(ValueMap.class);
+        assertNotNull(vm);
+        assertEquals(0, vm.size());
+    }
+
+    @Test public void testHideProperties() {
+        final Resource rsrcA4 = this.provider.getResource(this.resolver, "/merged/a/4");
+        final ValueMap vm = rsrcA4.adaptTo(ValueMap.class);
+        assertNotNull(vm);
+        assertEquals(3, vm.size());
+        assertEquals("1", vm.get("d"));
+        assertEquals("2", vm.get("e"));
+        assertEquals("x", vm.get("b"));
     }
 }
