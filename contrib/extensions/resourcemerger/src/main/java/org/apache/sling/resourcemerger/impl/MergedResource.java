@@ -18,7 +18,6 @@
  */
 package org.apache.sling.resourcemerger.impl;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.sling.api.resource.AbstractResource;
@@ -32,14 +31,20 @@ import org.apache.sling.api.resource.ValueMap;
  */
 public class MergedResource extends AbstractResource {
 
+    private static final String MD_FLAG = "sling.mappedResource";
+    private static final String MD_RESOURCES = "sling.mappedResources";
+
+    /** The resource resolver. */
     private final ResourceResolver resolver;
+
+    /** Full path of the resource. */
     private final String path;
-    private final String relativePath;
-    private final List<String> mappedResources = new ArrayList<String>();
 
-    private final ResourceMetadata metadata = new ResourceMetadata();
-
+    /** Resource type. */
     private final String resourceType;
+
+    /** Resource metadata. */
+    private final ResourceMetadata metadata = new ResourceMetadata();
 
     /** Cache value map. */
     private ValueMap properties;
@@ -59,16 +64,16 @@ public class MergedResource extends AbstractResource {
                    final List<ValueMap> valueMaps) {
         this.resolver = resolver;
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
-        this.relativePath = (relativePath.length() == 0 ? "/" : relativePath);
-        if ( mappedResources != null ) {
-            for(final Resource rsrc : mappedResources) {
-                this.mappedResources.add(rsrc.getPath());
-            }
-        }
         this.properties = new MergedValueMap(valueMaps);
-        this.resourceType = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.relativePath);
-        metadata.put("sling.mergedResource", true);
-        metadata.put("sling.mappedResources", this.mappedResources.toArray(new String[this.mappedResources.size()]));
+        this.resourceType = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, (relativePath.length() == 0 ? "/" : relativePath));
+        metadata.put(MD_FLAG, true);
+        final String[] resourcePaths = new String[mappedResources.size()];
+        int i = 0;
+        for(final Resource rsrc : mappedResources) {
+            resourcePaths[i] = rsrc.getPath();
+            i++;
+        }
+        metadata.put(MD_RESOURCES, resourcePaths);
     }
 
     /**
@@ -156,6 +161,6 @@ public class MergedResource extends AbstractResource {
     @Override
     public String toString() {
         return "MergedResource [path=" + this.path +
-               ", resources=" + this.mappedResources + "]";
+               ", resources=" + this.metadata.get(MD_RESOURCES) + "]";
     }
 }
