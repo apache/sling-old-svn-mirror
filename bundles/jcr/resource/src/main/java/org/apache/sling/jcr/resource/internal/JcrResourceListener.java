@@ -174,9 +174,9 @@ public class JcrResourceListener implements EventListener {
         if ( localEA == null ) {
             return;
         }
-        final Map<String, Event> addedEvents = new HashMap<String, Event>();
+        final Map<String, Dictionary<String, Object>> addedEvents = new HashMap<String, Dictionary<String, Object>>();
         final Map<String, ChangedAttributes> changedEvents = new HashMap<String, ChangedAttributes>();
-        final Map<String, Event> removedEvents = new HashMap<String, Event>();
+        final Map<String, Dictionary<String, Object>> removedEvents = new HashMap<String, Dictionary<String, Object>>();
         while ( events.hasNext() ) {
             final Event event = events.nextEvent();
             try {
@@ -195,26 +195,26 @@ public class JcrResourceListener implements EventListener {
                     this.updateChangedEvent(changedEvents, nodePath, event, propName);
 
                 } else if ( event.getType() == Event.NODE_ADDED ) {
-                    addedEvents.put(eventPath, event);
+                    addedEvents.put(eventPath, createEventProperties(event));
 
                 } else if ( event.getType() == Event.NODE_REMOVED) {
                     // remove is the strongest operation, therefore remove all removed
                     // paths from added
                     addedEvents.remove(eventPath);
-                    removedEvents.put(eventPath, event);
+                    removedEvents.put(eventPath, createEventProperties(event));
                 }
             } catch (final RepositoryException e) {
                 logger.error("Error during modification: {}", e.getMessage());
             }
         }
 
-        for (final Entry<String, Event> e : removedEvents.entrySet()) {
+        for (final Entry<String, Dictionary<String, Object>> e : removedEvents.entrySet()) {
             // Launch an OSGi event
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_REMOVED,
                 null);
         }
 
-        for (final Entry<String, Event> e : addedEvents.entrySet()) {
+        for (final Entry<String, Dictionary<String, Object>> e : addedEvents.entrySet()) {
             // Launch an OSGi event.
             sendOsgiEvent(e.getKey(), e.getValue(), SlingConstants.TOPIC_RESOURCE_ADDED,
                 changedEvents.remove(e.getKey()));
@@ -223,16 +223,16 @@ public class JcrResourceListener implements EventListener {
         // Send the changed events.
         for (final Entry<String, ChangedAttributes> e : changedEvents.entrySet()) {
             // Launch an OSGi event.
-            sendOsgiEvent(e.getKey(), e.getValue().firstEvent, SlingConstants.TOPIC_RESOURCE_CHANGED, e.getValue());
+            sendOsgiEvent(e.getKey(), e.getValue().getProperties(), SlingConstants.TOPIC_RESOURCE_CHANGED, e.getValue());
         }
     }
 
     private static final class ChangedAttributes {
 
-        private final Event firstEvent;
+        private final Dictionary<String, Object> properties;
 
-        public ChangedAttributes(final Event event) {
-            this.firstEvent = event;
+        public ChangedAttributes(final Dictionary<String, Object> properties) {
+            this.properties = properties;
         }
 
         public Set<String> addedAttributes, changedAttributes, removedAttributes;
@@ -262,7 +262,7 @@ public class JcrResourceListener implements EventListener {
             }
         }
 
-        public void addProperties(final Dictionary<String, Object> properties) {
+        public final Dictionary<String, Object> getProperties() {
             if ( addedAttributes != null )  {
                 properties.put(SlingConstants.PROPERTY_ADDED_ATTRIBUTES, addedAttributes.toArray(new String[addedAttributes.size()]));
             }
@@ -272,6 +272,7 @@ public class JcrResourceListener implements EventListener {
             if ( removedAttributes != null )  {
                 properties.put(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES, removedAttributes.toArray(new String[removedAttributes.size()]));
             }
+            return properties;
         }
     }
 
@@ -279,22 +280,16 @@ public class JcrResourceListener implements EventListener {
             final Event event, final String propName) {
         ChangedAttributes storedEvent = changedEvents.get(path);
         if ( storedEvent == null ) {
-            storedEvent = new ChangedAttributes(event);
+            storedEvent = new ChangedAttributes(createEventProperties(event));
             changedEvents.put(path, storedEvent);
         }
         storedEvent.addEvent(event, propName);
     }
 
     /**
-     * Send an OSGi event based on a JCR Observation Event.
-     *
-     * @param path The path too the node where the event occurred.
-     * @param event The JCR observation event.
-     * @param topic The topic that should be used for the OSGi event.
+     * Create the base OSGi event properties based on the JCR event object
      */
-    private void sendOsgiEvent(final String path, final Event event, final String topic,
-            final ChangedAttributes changedAttributes) {
-
+    private Dictionary<String, Object> createEventProperties(final Event event) {
         final Dictionary<String, Object> properties = new Hashtable<String, Object>();
 
         if (this.isExternal(event)) {
@@ -305,10 +300,21 @@ public class JcrResourceListener implements EventListener {
                 properties.put(SlingConstants.PROPERTY_USERID, userID);
             }
         }
-        if (changedAttributes != null) {
-            changedAttributes.addProperties(properties);
-        }
 
+        return properties;
+    }
+
+    /**
+     * Send an OSGi event based on a JCR Observation Event.
+     *
+     * @param path The path too the node where the event occurred.
+     * @param properties The base properties for this event.
+     * @param topic The topic that should be used for the OSGi event.
+     */
+    private void sendOsgiEvent(final String path,
+            final Dictionary<String, Object> properties,
+            final String topic,
+            final ChangedAttributes changedAttributes) {
         // set the path (might have been changed for nt:file content)
         properties.put(SlingConstants.PROPERTY_PATH, path);
         properties.put(EventConstants.EVENT_TOPIC, topic);
@@ -319,7 +325,7 @@ public class JcrResourceListener implements EventListener {
 
     /**
      * Get a resource resolver.
-     * We don't need any syncing as this is called from the process osgi thread.
+     * We don't need any syncing as this is called from the process OSGi thread.
      */
     private ResourceResolver getResourceResolver() {
         if ( this.resourceResolver == null ) {
