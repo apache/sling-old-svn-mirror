@@ -20,10 +20,9 @@ package org.apache.sling.resourcemerger.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import org.apache.sling.api.resource.Resource;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.api.wrappers.ValueMapDecorator;
 
@@ -50,34 +49,30 @@ public class MergedValueMap extends ValueMapDecorator {
      *
      * @param resource The merged resource to get properties from
      */
-    public MergedValueMap(final MergedResource resource) {
+    public MergedValueMap(final List<ValueMap> valueMaps) {
         super(new HashMap<String, Object>());
-        // Iterate over physical resources
-        for (final String r : resource.getMappedResources()) {
-            final Resource rsrc = resource.getResourceResolver().getResource(r);
-            if ( rsrc != null ) {
-                final ValueMap vm = ResourceUtil.getValueMap(rsrc);
-                if (this.isEmpty()) {
-                    // Add all properties
-                    this.putAll(vm);
-                } else {
-                    // Get properties to add or override
-                    for (final String key : vm.keySet()) {
-                        if (!isExcludedProperty(key)) {
-                            this.put(key, vm.get(key));
-                        }
+        // Iterate over value maps
+        for (final ValueMap vm : valueMaps) {
+            if (this.isEmpty()) {
+                // Add all properties
+                this.putAll(vm);
+            } else {
+                // Get properties to add or override
+                for (final String key : vm.keySet()) {
+                    if (!isExcludedProperty(key)) {
+                        this.put(key, vm.get(key));
                     }
+                }
 
-                    // Get properties to hide
-                    final String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
-                    if ( propertiesToHide != null ) {
-                        for (final String propName : propertiesToHide) {
-                            if (propName.equals("*")) {
-                                this.clear();
-                                break;
-                            } else {
-                                this.remove(propName);
-                            }
+                // Get properties to hide
+                final String[] propertiesToHide = vm.get(MergedResourceConstants.PN_HIDE_PROPERTIES, String[].class);
+                if ( propertiesToHide != null ) {
+                    for (final String propName : propertiesToHide) {
+                        if (propName.equals("*")) {
+                            this.clear();
+                            break;
+                        } else {
+                            this.remove(propName);
                         }
                     }
                 }

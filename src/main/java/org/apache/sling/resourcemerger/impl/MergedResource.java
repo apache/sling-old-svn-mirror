@@ -48,19 +48,6 @@ public class MergedResource extends AbstractResource {
      * Constructor
      *
      * @param resolver      Resource resolver
-     * @param mergeRootPath Merge root path
-     * @param relativePath  Relative path
-     */
-    MergedResource(final ResourceResolver resolver,
-                   final String mergeRootPath,
-                   final String relativePath) {
-        this(resolver, mergeRootPath, relativePath, null);
-    }
-
-    /**
-     * Constructor
-     *
-     * @param resolver      Resource resolver
      * @param mergeRootPath   Merge root path
      * @param relativePath    Relative path
      * @param mappedResources List of physical mapped resources' paths
@@ -68,34 +55,21 @@ public class MergedResource extends AbstractResource {
     MergedResource(final ResourceResolver resolver,
                    final String mergeRootPath,
                    final String relativePath,
-                   final List<String> mappedResources) {
+                   final List<Resource> mappedResources,
+                   final List<ValueMap> valueMaps) {
         this.resolver = resolver;
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
         this.relativePath = (relativePath.length() == 0 ? "/" : relativePath);
         if ( mappedResources != null ) {
-            this.mappedResources.addAll(mappedResources);
+            for(final Resource rsrc : mappedResources) {
+                this.mappedResources.add(rsrc.getPath());
+            }
         }
-        this.resourceType = this.adaptTo(ValueMap.class).get(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.relativePath);
+        this.properties = new MergedValueMap(valueMaps);
+        this.resourceType = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, this.relativePath);
         metadata.put("sling.mergedResource", true);
-        metadata.put("sling.mappedResources", mappedResources.toArray(new String[mappedResources.size()]));
+        metadata.put("sling.mappedResources", this.mappedResources.toArray(new String[this.mappedResources.size()]));
     }
-
-
-    // ---- MergedResource interface ------------------------------------------
-
-    public String getRelativePath() {
-        return relativePath;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Iterable<String> getMappedResources() {
-        return mappedResources;
-    }
-
-
-    // ---- Resource interface ------------------------------------------------
 
     /**
      * {@inheritDoc}
@@ -141,9 +115,6 @@ public class MergedResource extends AbstractResource {
     @SuppressWarnings("unchecked")
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         if (type == ValueMap.class) {
-            if ( this.properties == null ) {
-                this.properties = new MergedValueMap(this);
-            }
             return (AdapterType) this.properties;
         }
 
