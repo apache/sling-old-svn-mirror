@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -41,67 +42,66 @@ class ContextBvpCollector {
     /**
      * The BindingsValuesProvider impls which apply to all languages. Keys are serviceIds.
      */
-    private final Map<Object, BindingsValuesProvider> genericBindingsValuesProviders;
+    private final Map<ServiceReference, BindingsValuesProvider> genericBindingsValuesProviders;
 
     /**
      * The BindingsValuesProvider impls which apply to a specific language.
      */
-    private final Map<String, Map<Object, BindingsValuesProvider>> langBindingsValuesProviders;
+    private final Map<String, Map<ServiceReference, BindingsValuesProvider>> langBindingsValuesProviders;
     
     ContextBvpCollector(BundleContext bc) {
         bundleContext = bc;
-        genericBindingsValuesProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
-        langBindingsValuesProviders = new ConcurrentHashMap<String, Map<Object, BindingsValuesProvider>>();
+        genericBindingsValuesProviders = new ConcurrentSkipListMap<ServiceReference, BindingsValuesProvider>();
+        langBindingsValuesProviders = new ConcurrentHashMap<String, Map<ServiceReference, BindingsValuesProvider>>();
     }
 
     @SuppressWarnings("unchecked")
     public Object addingService(final ServiceReference ref) {
         final String[] engineNames = PropertiesUtil
                 .toStringArray(ref.getProperty(ScriptEngine.NAME), new String[0]);
-        final Object serviceId = ref.getProperty(Constants.SERVICE_ID);
         Object service = bundleContext.getService(ref);
         if (service != null) {
             if (service instanceof Map) {
                 service = new MapWrappingBindingsValuesProvider((Map<String, Object>) service);
             }
             if (engineNames.length == 0) {
-                genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
+                genericBindingsValuesProviders.put(ref, (BindingsValuesProvider) service);
             } else if (engineNames.length == 1 && ANY_ENGINE.contains(engineNames[0].toUpperCase())) {
-                genericBindingsValuesProviders.put(serviceId, (BindingsValuesProvider) service);
+                genericBindingsValuesProviders.put(ref, (BindingsValuesProvider) service);
             } else {
                 for (String engineName : engineNames) {
-                    Map<Object, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
+                    Map<ServiceReference, BindingsValuesProvider> langProviders = langBindingsValuesProviders.get(engineName);
                     if (langProviders == null) {
-                        langProviders = new ConcurrentHashMap<Object, BindingsValuesProvider>();
+                        langProviders = new ConcurrentSkipListMap<ServiceReference, BindingsValuesProvider>();
                         langBindingsValuesProviders.put(engineName, langProviders);
                     }
 
-                    langProviders.put(serviceId, (BindingsValuesProvider) service);
+                    langProviders.put(ref, (BindingsValuesProvider) service);
                 }
             }
         }
         return service;
     }
 
-    public void modifiedService(final ServiceReference ref, final Object service) {
-        removedService(ref, service);
+    public void modifiedService(final ServiceReference ref) {
+        removedService(ref);
         addingService(ref);
     }
 
-    public void removedService(final ServiceReference ref, final Object service) {
+    public void removedService(final ServiceReference ref) {
         Object serviceId = ref.getProperty(Constants.SERVICE_ID);
         if (genericBindingsValuesProviders.remove(serviceId) == null) {
-            for (Map<Object, BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
-                coll.remove(serviceId);
+            for (Map<ServiceReference, BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
+                coll.remove(ref);
             }
         }
     }
     
-    Map<Object, BindingsValuesProvider> getGenericBindingsValuesProviders() {
+    Map<ServiceReference, BindingsValuesProvider> getGenericBindingsValuesProviders() {
         return genericBindingsValuesProviders;
     }
 
-    Map<String, Map<Object, BindingsValuesProvider>> getLangBindingsValuesProviders() {
+    Map<String, Map<ServiceReference, BindingsValuesProvider>> getLangBindingsValuesProviders() {
         return langBindingsValuesProviders;
     }
 

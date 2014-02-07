@@ -145,7 +145,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         if (factoryProps != null) {
             String[] compatibleLangs = PropertiesUtil.toStringArray(factoryProps.get("compatible.javax.script.name"), new String[0]);
             for (final String name : compatibleLangs) {
-                final Map<Object, BindingsValuesProvider> langProviders = bvpc.getLangBindingsValuesProviders().get(name);
+                final Map<ServiceReference, BindingsValuesProvider> langProviders = bvpc.getLangBindingsValuesProviders().get(name);
                 if (langProviders != null) {
                     results.addAll(langProviders.values());
                 }
@@ -154,7 +154,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         }
 
         for (final String name : scriptEngineFactory.getNames()) {
-            final Map<Object, BindingsValuesProvider> langProviders = bvpc.getLangBindingsValuesProviders().get(name);
+            final Map<ServiceReference, BindingsValuesProvider> langProviders = bvpc.getLangBindingsValuesProviders().get(name);
             if (langProviders != null) {
                 results.addAll(langProviders.values());
             }
@@ -196,7 +196,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         new ContextLoop() {
             @Override
             protected void applyInContext(ContextBvpCollector c) {
-                c.modifiedService(reference, service);
+                c.modifiedService(reference);
                 if (eventAdmin != null) {
                     eventAdmin.postEvent(newEvent(TOPIC_MODIFIED, reference));
                 }
@@ -214,7 +214,7 @@ public class BindingsValuesProvidersByContextImpl implements BindingsValuesProvi
         new ContextLoop() {
             @Override
             protected void applyInContext(ContextBvpCollector c) {
-                c.removedService(reference, service);
+                c.removedService(reference);
                 if (eventAdmin != null) {
                     eventAdmin.postEvent(newEvent(TOPIC_REMOVED, reference));
                 }
