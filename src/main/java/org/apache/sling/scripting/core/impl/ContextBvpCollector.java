@@ -85,6 +85,12 @@ class ContextBvpCollector {
 
     public void modifiedService(final ServiceReference ref) {
         removedService(ref);
+        // Note that any calls to our get* methods at this
+        // point won't see the service. We could synchronize
+        // to make sure this methods acts atomically, but it
+        // doesn't seem worth it, as we don't expect BVPs to 
+        // be modified often. Living with that small inconsistency
+        // is probably worth it for the sake of simpler code.
         addingService(ref);
     }
 
