@@ -94,14 +94,14 @@ public class JackrabbitRepositoryIT extends CommonTests {
 
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.1.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.2.1-SNAPSHOT"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.4.2"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.4.2"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-spi", "2.4.2"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-spi-commons", "2.4.2"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-rmi", "2.4.2"),
                 mavenBundle("org.apache.derby", "derby", "10.5.3.0_1"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.1.2"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.jackrabbit.server", "2.1.3-SNAPSHOT"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.testing.tools", "1.0.6"),
                 mavenBundle("org.apache.httpcomponents", "httpcore-osgi", "4.1.2"),
