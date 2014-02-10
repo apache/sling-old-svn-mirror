@@ -91,9 +91,10 @@ public class JackrabbitRepositoryIT extends CommonTests {
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.contentloader", "2.1.2"),
                 mavenBundle("org.apache.sling", "org.apache.sling.engine", "2.2.6"),
                 mavenBundle("org.apache.sling", "org.apache.sling.event", "3.2.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.serviceusermapper", "1.0.0"),
 
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.jcr-wrapper", "2.0.0"),
-                mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.1.0"),
+                mavenBundle("org.apache.sling", "org.apache.sling.jcr.api", "2.2.1-SNAPSHOT"),
                 mavenBundle("org.apache.sling", "org.apache.sling.jcr.base", "2.2.1-SNAPSHOT"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-api", "2.4.2"),
                 mavenBundle("org.apache.jackrabbit", "jackrabbit-jcr-commons", "2.4.2"),
