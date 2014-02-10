@@ -145,6 +145,7 @@ public class LogbackManager extends LoggerContextAwareBase {
         resetListeners.add(configSourceTracker);
         resetListeners.add(filterTracker);
         resetListeners.add(turboFilterTracker);
+        resetListeners.add(new RootLoggerListener()); //Should be invoked at last
 
         //Record trackers for shutdown later
         serviceTrackers.add(appenderTracker);
@@ -461,7 +462,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             context.setPackagingDataEnabled(logConfigManager.isPackagingDataEnabled());
 
             // Attach a console appender to handle logging untill we configure
-            // one. This would be removed in LogConfigManager.reset
+            // one. This would be removed in RootLoggerListener.reset
             final Logger rootLogger = getLoggerContext().getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
             rootLogger.setLevel(Level.INFO);
             rootLogger.addAppender(logConfigManager.getDefaultAppender());
@@ -484,6 +485,30 @@ public class LogbackManager extends LoggerContextAwareBase {
         public void onLevelChange(Logger logger, Level level) {
         }
 
+    }
+
+    private class RootLoggerListener implements LogbackResetListener {
+
+        @Override
+        public void onResetStart(LoggerContext context) {
+
+        }
+
+        @Override
+        public void onResetComplete(LoggerContext context) {
+            // Remove the default console appender that we attached at start of
+            // reset
+            ch.qos.logback.classic.Logger root = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+            Iterator<Appender<ILoggingEvent>> appenderItr = root.iteratorForAppenders();
+
+            //Root logger has at least 1 appender associated with it. Remove the one added by us
+            if (appenderItr.hasNext()) {
+                root.detachAppender(LogConfigManager.DEFAULT_CONSOLE_APPENDER_NAME);
+            } else {
+                addInfo("No appender was found to be associated with root logger. Registering " +
+                        "a Console based logger");
+            }
+        }
     }
 
     // ~--------------------------------Configurator Base

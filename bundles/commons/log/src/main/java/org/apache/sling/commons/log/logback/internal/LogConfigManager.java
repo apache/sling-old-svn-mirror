@@ -81,7 +81,7 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public static final String FACTORY_PID_CONFIGS = PID + ".factory.config";
 
-    private static final String DEFAULT_CONSOLE_APPENDER_NAME = "org.apache.sling.commons.log.CONSOLE";
+    public static final String DEFAULT_CONSOLE_APPENDER_NAME = "org.apache.sling.commons.log.CONSOLE";
 
     private final LoggerContext loggerContext;
 
@@ -293,10 +293,6 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 }
             }
         }
-
-        // Remove the default console appender that we attached at start of
-        // reset
-        context.getLogger(Logger.ROOT_LOGGER_NAME).detachAppender(DEFAULT_CONSOLE_APPENDER_NAME);
     }
 
 
