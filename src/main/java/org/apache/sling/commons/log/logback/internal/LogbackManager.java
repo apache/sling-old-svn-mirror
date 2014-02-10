@@ -1,6 +1,7 @@
 package org.apache.sling.commons.log.logback.internal;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -26,13 +27,16 @@ import ch.qos.logback.classic.spi.LoggerContextListener;
 import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.classic.util.EnvUtil;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.Context;
 import ch.qos.logback.core.joran.GenericConfigurator;
 import ch.qos.logback.core.joran.event.SaxEvent;
 import ch.qos.logback.core.joran.spi.InterpretationContext;
 import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.status.ErrorStatus;
 import ch.qos.logback.core.status.OnConsoleStatusListener;
 import ch.qos.logback.core.status.StatusListener;
 import ch.qos.logback.core.status.StatusListenerAsList;
+import ch.qos.logback.core.status.StatusManager;
 import ch.qos.logback.core.status.StatusUtil;
 import ch.qos.logback.core.util.StatusPrinter;
 import org.apache.sling.commons.log.logback.internal.AppenderTracker.AppenderInfo;
@@ -264,6 +268,7 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     public void fireResetCompleteListeners(){
         for(LogbackResetListener listener : resetListeners){
+            addInfo("Firing reset listener - onResetComplete"+listener.getClass());
             listener.onResetComplete(getLoggerContext());
         }
     }
@@ -305,6 +310,7 @@ public class LogbackManager extends LoggerContextAwareBase {
     }
 
     private void configure(ConfiguratorCallback cb) {
+        long startTime = System.currentTimeMillis();
         StatusListener statusListener = new StatusListenerAsList();
         if (debug) {
             statusListener = new OnConsoleStatusListener();
@@ -335,7 +341,33 @@ public class LogbackManager extends LoggerContextAwareBase {
                 cb.fallbackConfiguration(eventList, createConfigurator(), statusListener);
             }
             getStatusManager().remove(statusListener);
-            StatusPrinter.printInCaseOfErrorsOrWarnings(getLoggerContext(), resetStartTime);
+            printInCaseOfErrorsOrWarnings(getLoggerContext(), resetStartTime, startTime);
+        }
+    }
+
+
+    /**
+     * Based on StatusPrinter. printInCaseOfErrorsOrWarnings. This has been adapted
+     * to print more context i.e. some message from before the error message to better understand
+     * the failure scenario
+     *
+     * @param threshold time since which the message have to be checked for errors/warnings
+     * @param msgSince time form which we are interested in the message logs
+     */
+    private static void printInCaseOfErrorsOrWarnings(Context context, long threshold, long msgSince) {
+        if (context == null) {
+            throw new IllegalArgumentException("Context argument cannot be null");
+        }
+        PrintStream ps = System.out;
+        StatusManager sm = context.getStatusManager();
+        if (sm == null) {
+            ps.println("WARN: Context named \"" + context.getName()
+                    + "\" has no status manager");
+        } else {
+            StatusUtil statusUtil = new StatusUtil(context);
+            if (statusUtil.getHighestLevel(threshold) >= ErrorStatus.WARN) {
+                StatusPrinter.print(sm, msgSince);
+            }
         }
     }
 
@@ -467,14 +499,15 @@ public class LogbackManager extends LoggerContextAwareBase {
             rootLogger.setLevel(Level.INFO);
             rootLogger.addAppender(logConfigManager.getDefaultAppender());
 
-
             // Now record the time of reset with a default appender attached to
             // root logger. We also add a milli second extra to account for logs which would have
             // got fired in same duration
             resetStartTime = System.currentTimeMillis() + TimeUnit.MILLISECONDS.toMillis(1);
+            addInfo("Registered a default console based logger");
 
             context.putObject(LogbackManager.class.getName(), LogbackManager.this);
             for (LogbackResetListener l : resetListeners) {
+                addInfo("Firing reset listener - onResetStart"+l.getClass());
                 l.onResetStart(context);
             }
         }
@@ -504,6 +537,7 @@ public class LogbackManager extends LoggerContextAwareBase {
             //Root logger has at least 1 appender associated with it. Remove the one added by us
             if (appenderItr.hasNext()) {
                 root.detachAppender(LogConfigManager.DEFAULT_CONSOLE_APPENDER_NAME);
+                addInfo("Found appender attached with root logger. Detaching the default console based logger");
             } else {
                 addInfo("No appender was found to be associated with root logger. Registering " +
                         "a Console based logger");
