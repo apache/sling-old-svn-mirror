@@ -268,7 +268,7 @@ public class LogbackManager extends LoggerContextAwareBase {
 
     public void fireResetCompleteListeners(){
         for(LogbackResetListener listener : resetListeners){
-            addInfo("Firing reset listener - onResetComplete"+listener.getClass());
+            addInfo("Firing reset listener - onResetComplete "+listener.getClass());
             listener.onResetComplete(getLoggerContext());
         }
     }
@@ -507,7 +507,7 @@ public class LogbackManager extends LoggerContextAwareBase {
 
             context.putObject(LogbackManager.class.getName(), LogbackManager.this);
             for (LogbackResetListener l : resetListeners) {
-                addInfo("Firing reset listener - onResetStart"+l.getClass());
+                addInfo("Firing reset listener - onResetStart "+l.getClass());
                 l.onResetStart(context);
             }
         }

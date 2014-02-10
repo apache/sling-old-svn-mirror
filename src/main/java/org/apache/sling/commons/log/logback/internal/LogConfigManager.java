@@ -290,6 +290,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 if (appender != null) {
                     logger.setAdditive(config.isAdditive());
                     logger.addAppender(appender);
+                    contextUtil.addInfo("Registering appender "+appender.getName()+ "("+appender.getClass()+
+                            ") with logger "+logger.getName());
                 }
             }
         }
