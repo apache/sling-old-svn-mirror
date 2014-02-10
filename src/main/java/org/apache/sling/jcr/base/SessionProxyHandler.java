@@ -32,21 +32,25 @@ import javax.jcr.Session;
  * The session proxy handler creates session proxies to handle
  * the namespace mapping support if impersonate is called on
  * the session.
+ * <p>
+ * This class is not really part of the API is not intended to be used
+ * directly by consumers or implementors of this API. It is used internally
+ * to support namespace mapping.
  */
 public class SessionProxyHandler  {
 
     /** The array of proxied interfaces. */
     private Class<?>[] interfaces;
 
-    /** The repository */
-    private final AbstractNamespaceMappingRepository repository;
+    /** The namespaceSupport */
+    private final NamespaceMappingSupport namespaceSupport;
 
-    public SessionProxyHandler(final AbstractNamespaceMappingRepository repo) {
-        this.repository = repo;
+    public SessionProxyHandler(final NamespaceMappingSupport namespaceSupport) {
+        this.namespaceSupport = namespaceSupport;
     }
 
     /** Calculate the interfaces.
-     * This is done only once - we simply assume that the same repository is
+     * This is done only once - we simply assume that the same namespaceSupport is
      * emitting session from the same class.
      */
     private Class<?>[] getInterfaces(final Class<?> sessionClass) {
@@ -74,21 +78,21 @@ public class SessionProxyHandler  {
         final Class<?>[] interfaces = getInterfaces(sessionClass);
         return (Session)Proxy.newProxyInstance(sessionClass.getClassLoader(),
                 interfaces,
-                new SessionProxyInvocationHandler(session, this.repository, interfaces));
+                new SessionProxyInvocationHandler(session, this.namespaceSupport, interfaces));
 
     }
 
 
     public static final class SessionProxyInvocationHandler implements InvocationHandler {
         private final Session delegatee;
-        private final AbstractNamespaceMappingRepository repository;
+        private final NamespaceMappingSupport namespaceSupport;
         private final Class<?>[] interfaces;
 
         public SessionProxyInvocationHandler(final Session delegatee,
-                            final AbstractNamespaceMappingRepository repo,
+                            final NamespaceMappingSupport namespaceSupport,
                             final Class<?>[] interfaces) {
             this.delegatee = delegatee;
-            this.repository = repo;
+            this.namespaceSupport = namespaceSupport;
             this.interfaces = interfaces;
         }
 
@@ -99,11 +103,11 @@ public class SessionProxyHandler  {
         throws Throwable {
             if ( method.getName().equals("impersonate") && args != null && args.length == 1) {
                 final Session session = this.delegatee.impersonate((Credentials)args[0]);
-                this.repository.defineNamespacePrefixes(session);
+                this.namespaceSupport.defineNamespacePrefixes(session);
                 final Class<?> sessionClass = session.getClass();
                 return Proxy.newProxyInstance(sessionClass.getClassLoader(),
                         interfaces,
-                        new SessionProxyInvocationHandler(session, this.repository, interfaces));
+                        new SessionProxyInvocationHandler(session, this.namespaceSupport, interfaces));
             }
             try {
                 return method.invoke(this.delegatee, args);

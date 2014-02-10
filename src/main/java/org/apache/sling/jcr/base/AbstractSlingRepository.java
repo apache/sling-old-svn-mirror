@@ -47,6 +47,8 @@ import org.osgi.service.component.ComponentContext;
 import org.osgi.service.log.LogService;
 import org.slf4j.LoggerFactory;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>AbstractSlingRepository</code> is an abstract implementation of the
  * {@link SlingRepository} interface which provides default support for attached
@@ -79,7 +81,13 @@ import org.slf4j.LoggerFactory;
  * method must replace this overwritten method with overwriting the new
  * {@link #getServiceRegistrationInterfaces()} and/or
  * {@link #getServiceRegistrationProperties()} methods.
+ *
+ * @deprecated as of API version 2.3 (bundle version 2.3). Use
+ *             {@link AbstractSlingRepositoryManager} and
+ *             {@link AbstractSlingRepository2} instead.
  */
+@Deprecated
+@ProviderType
 @Component(componentAbstract=true)
 public abstract class AbstractSlingRepository
     extends AbstractNamespaceMappingRepository

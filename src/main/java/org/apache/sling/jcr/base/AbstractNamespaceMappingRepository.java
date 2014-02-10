@@ -18,35 +18,46 @@
  */
 package org.apache.sling.jcr.base;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.sling.jcr.api.NamespaceMapper;
 import org.apache.sling.jcr.api.SlingRepository;
-import org.apache.sling.jcr.base.internal.loader.Loader;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
- * The <code>AbstractNamespaceMappingRepository</code> is an abstract implementation of
- * the {@link SlingRepository} interface which provides default support for
- * namespace mapping.
+ * The <code>AbstractNamespaceMappingRepository</code> is an abstract
+ * implementation of the {@link SlingRepository} interface which provides
+ * default support for namespace mapping.
+ *
+ * @deprecated as of API version 2.3 (bundle version 2.3). Use
+ *             {@link NamespaceMappingSupport} or
+ *             {@link AbstractSlingRepositoryManager} and
+ *             {@link AbstractSlingRepository2} instead.
  */
-public abstract class AbstractNamespaceMappingRepository implements SlingRepository {
-
-    /** Namespace handler. */
-    private Loader namespaceHandler;
-
-    /** Session proxy handler. */
-    private SessionProxyHandler sessionProxyHandler;
+@Deprecated
+@ProviderType
+public abstract class AbstractNamespaceMappingRepository extends NamespaceMappingSupport implements SlingRepository {
 
     private ServiceTracker namespaceMapperTracker;
 
+    protected final NamespaceMapper[] getNamespaceMapperServices() {
+        if (namespaceMapperTracker != null) {
+            // call namespace mappers
+            final Object[] nsMappers = namespaceMapperTracker.getServices();
+            if (nsMappers != null) {
+                NamespaceMapper[] mappers = new NamespaceMapper[nsMappers.length];
+                System.arraycopy(nsMappers, 0, mappers, 0, nsMappers.length);
+                return mappers;
+            }
+        }
+        return null;
+    }
+
     protected void setup(final BundleContext bundleContext) {
+        super.setup(bundleContext, this);
         this.namespaceMapperTracker = new ServiceTracker(bundleContext, NamespaceMapper.class.getName(), null);
         this.namespaceMapperTracker.open();
-        this.namespaceHandler = new Loader(this, bundleContext);
-        this.sessionProxyHandler = new SessionProxyHandler(this);
     }
 
     protected void tearDown() {
@@ -54,46 +65,7 @@ public abstract class AbstractNamespaceMappingRepository implements SlingReposit
             this.namespaceMapperTracker.close();
             this.namespaceMapperTracker = null;
         }
-        if (this.namespaceHandler != null) {
-            this.namespaceHandler.dispose();
-            this.namespaceHandler = null;
-        }
-        this.sessionProxyHandler = null;
+        super.tearDown();
     }
 
-    void defineNamespacePrefixes(final Session session) throws RepositoryException {
-        final Loader localHandler = this.namespaceHandler;
-        if (localHandler != null) {
-            // apply namespace mapping
-            localHandler.defineNamespacePrefixes(session);
-        }
-
-        if (namespaceMapperTracker != null) {
-            // call namespace mappers
-            final Object[] nsMappers = namespaceMapperTracker.getServices();
-            if (nsMappers != null) {
-                for (int i = 0; i < nsMappers.length; i++) {
-                    ((NamespaceMapper) nsMappers[i]).defineNamespacePrefixes(session);
-                }
-            }
-        }
-    }
-
-    /**
-     * Return a namespace aware session.
-     */
-    protected Session getNamespaceAwareSession(final Session session) throws RepositoryException {
-        if ( session == null ) {  // sanity check
-            return null;
-        }
-        defineNamespacePrefixes(session);
-
-        // to support namespace prefixes if session.impersonate is called
-        // we have to use a proxy
-        final SessionProxyHandler localHandler = this.sessionProxyHandler;
-        if ( localHandler != null ) {
-            return localHandler.createProxy(session);
-        }
-        return session;
-    }
 }
