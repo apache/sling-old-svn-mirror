@@ -277,11 +277,11 @@ public class Activator implements BundleActivator, ServiceListener {
         // default config values
         props.put(SLING_CONTEXT, slingContext);
         if (configFileUrl != null) {
-            props.put(SlingServerRepository.REPOSITORY_CONFIG_URL,
+            props.put(SlingServerRepositoryManager.REPOSITORY_CONFIG_URL,
                 configFileUrl);
         }
-        props.put(SlingServerRepository.REPOSITORY_HOME_DIR, home);
-        props.put(SlingServerRepository.REPOSITORY_REGISTRATION_NAME,
+        props.put(SlingServerRepositoryManager.REPOSITORY_HOME_DIR, home);
+        props.put(SlingServerRepositoryManager.REPOSITORY_REGISTRATION_NAME,
             this.getRepositoryName());
 
         // password properties are not used any more, set to a n/a value
@@ -340,13 +340,13 @@ public class Activator implements BundleActivator, ServiceListener {
             URL contextConfigURL = new URL("context:repository.xml");
             InputStream contextConfigStream = contextConfigURL.openStream();
             if (contextConfigStream != null) {
-                SlingServerRepository.copyStream(contextConfigStream, configFile);
+                SlingServerRepositoryManager.copyStream(contextConfigStream, configFile);
                 copied = true;
             }
         } catch (Exception e) {}
 
         if (!copied) {
-            SlingServerRepository.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
+            SlingServerRepositoryManager.copyFile(bundleContext.getBundle(), "repository.xml", configFile);
         }
 
         // config file is repository.xml (default) in homeDir
