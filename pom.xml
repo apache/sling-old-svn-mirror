@@ -54,11 +54,12 @@
                     <instructions>
                         <Export-Package>
                             org.apache.sling.scripting.javascript,
-                            org.mozilla.javascript
+                            org.mozilla.javascript;
+                            org.mozilla.classfile;
+                            org.mozilla.javascript.debug;version=0.0.0.1_7R4
                         </Export-Package>
                         <Private-Package>
                             org.apache.sling.scripting.javascript.*,
-                            org.mozilla.classfile,
                             !org.mozilla.javascript.xml.impl.xmlbeans,
                             org.mozilla.javascript.*
                         </Private-Package>
