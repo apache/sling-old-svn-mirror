@@ -1,6 +1,8 @@
 package org.apache.sling.extensions.leakdetector.internal;
 
 import java.io.PrintWriter;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -195,6 +197,27 @@ public class LeakDetector implements Runnable, BundleActivator {
                     pw.printf("%s%s - %s %n", tab, tab, ci);
                 }
             }
+        }
+        pw.println();
+
+        addHelp(pw);
+    }
+
+    private static void addHelp(PrintWriter pw){
+        RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+        List<String> argList = bean.getInputArguments();
+
+        boolean containsRequiredArgs = argList.contains("-XX:+UseConcMarkSweepGC")
+                && argList.contains("-XX:+CMSClassUnloadingEnabled");
+
+        if(!containsRequiredArgs){
+            pw.println("Required VM Options Missing");
+            pw.println("===========================");
+            pw.println("Leak detector relies on garbage collection of classloaders. By default");
+            pw.println("the classloaders are not garbage collected. To enable garbage collection of");
+            pw.println("classloader start the JVM with following options ");
+            pw.println("");
+            pw.println("    -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled");
         }
     }
 
