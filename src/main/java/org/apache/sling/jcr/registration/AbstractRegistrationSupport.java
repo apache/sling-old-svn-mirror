@@ -214,8 +214,8 @@ public abstract class AbstractRegistrationSupport {
     protected String getName(ServiceReference reference) {
         String name = (String) reference.getProperty(REPOSITORY_REGISTRATION_NAME);
         if (name == null || name.length() == 0) {
-            this.log.log(LogService.LOG_DEBUG,
-                "registerRepository: Repository not to be registered");
+            log(LogService.LOG_DEBUG,
+                    "registerRepository: Repository not to be registered", null);
             return null;
         }
 
