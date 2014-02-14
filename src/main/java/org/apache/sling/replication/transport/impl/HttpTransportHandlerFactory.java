@@ -44,7 +44,6 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
 
     private static final String DEFAULT_AUTHENTICATION_FACTORY = "(name=" + UserCredentialsTransportAuthenticationProviderFactory.TYPE + ")";
 
-
     @Property(boolValue = true)
     private static final String ENABLED = "enabled";
 
@@ -53,7 +52,6 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
 
     @Property(cardinality = 1000)
     private static final String ENDPOINT = ReplicationAgentConfiguration.ENDPOINT;
-
 
     @Property(options = {
             @PropertyOption(name = "All",
@@ -75,7 +73,6 @@ public class HttpTransportHandlerFactory extends AbstractTransportHandlerFactory
 
     @Property
     private static final String AUTHENTICATION_PROPERTIES = ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES;
-
 
     @Property(boolValue = false)
     private static final String USE_CUSTOM_HEADERS = "useCustomHeaders";

@@ -18,6 +18,12 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
@@ -26,8 +32,6 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
-
-import java.util.*;
 
 public abstract class AbstractTransportHandlerFactory {
 
@@ -43,7 +47,6 @@ public abstract class AbstractTransportHandlerFactory {
             String name = PropertiesUtil
                     .toString(config.get(ReplicationAgentConfiguration.NAME), String.valueOf(new Random().nextInt(1000)));
             props.put(ReplicationAgentConfiguration.NAME, name);
-
 
             Map<String, String> authenticationProperties = PropertiesUtil.toMap(config.get(ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES), new String[0]);
             props.put(ReplicationAgentConfiguration.AUTHENTICATION_PROPERTIES, authenticationProperties);
@@ -65,8 +68,8 @@ public abstract class AbstractTransportHandlerFactory {
 
             List<ReplicationEndpoint> replicationEndpoints = new ArrayList<ReplicationEndpoint>();
 
-            for(String endpoint : endpoints){
-                if(endpoint != null && endpoint.length() > 0){
+            for (String endpoint : endpoints) {
+                if (endpoint != null && endpoint.length() > 0) {
                     replicationEndpoints.add(new ReplicationEndpoint(endpoint));
                 }
             }
@@ -88,7 +91,7 @@ public abstract class AbstractTransportHandlerFactory {
     }
 
     protected void deactivate() {
-        if(serviceRegistration != null){
+        if (serviceRegistration != null) {
             serviceRegistration.unregister();
             serviceRegistration = null;
         }

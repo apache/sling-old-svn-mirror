@@ -43,16 +43,13 @@ import java.util.Map;
 public class PollingTransportHandlerFactory extends AbstractTransportHandlerFactory {
     static final String SERVICE_PID = "org.apache.sling.replication.transport.impl.PollingTransportHandlerFactory";
 
-
     private static final String DEFAULT_AUTHENTICATION_FACTORY = "(name=" + UserCredentialsTransportAuthenticationProviderFactory.TYPE + ")";
-
 
     @Property(boolValue = true)
     private static final String ENABLED = "enabled";
 
     @Property
     private static final String NAME = "name";
-
 
     @Property(cardinality = 1000)
     private static final String ENDPOINT = ReplicationAgentConfiguration.ENDPOINT;
@@ -69,7 +66,6 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
 
     @Reference
     private ReplicationPackageImporter replicationPackageImporter;
-
 
 
     protected TransportHandler createTransportHandler(Map<String, ?> config,
@@ -91,8 +87,6 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
     protected TransportAuthenticationProviderFactory getAuthenticationFactory() {
         return transportAuthenticationProviderFactory;
     }
-
-
 
     @Activate
     protected void activate(BundleContext context, Map<String, ?> config) throws Exception {

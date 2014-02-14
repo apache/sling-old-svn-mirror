@@ -208,7 +208,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         try {
             ReplicationPackage replicationPackage = packageBuilder.getPackage(itemInfo.getId());
 
-            if (replicationPackage == null || transportHandler == null) {
+            if (replicationPackage == null || isPassive()) {
                 log.info("agent {} processing skipped", name);
                 return false;
             } else {
@@ -254,22 +254,26 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
 
 
     public void enable() {
+        log.info("enabling agent");
         // apply rules if any
         if (rules.length > 0) {
             ruleEngine.applyRules(this, rules);
         }
 
-        if (!isPassive())
+        if (!isPassive()) {
             queueProvider.enableQueueProcessing(this, this);
+        }
     }
 
     public void disable() {
+        log.info("disabling agent");
         if (rules != null) {
             ruleEngine.unapplyRules(this, rules);
         }
 
-        if (!isPassive())
+        if (!isPassive()) {
             queueProvider.disableQueueProcessing(this);
+        }
     }
 
 }

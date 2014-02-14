@@ -49,11 +49,11 @@ import org.slf4j.LoggerFactory;
 @Service(value = ResourceProvider.class)
 @Properties({
         @Property(name = ResourceProvider.ROOTS,
-            value = {
-                    ReplicationAgentResource.BASE_PATH,
-                    ReplicationAgentConfigurationResource.BASE_PATH,
-                    ReplicationAgentResource.IMPORTER_BASE_PATH
-            })
+                value = {
+                        ReplicationAgentResource.BASE_PATH,
+                        ReplicationAgentConfigurationResource.BASE_PATH,
+                        ReplicationAgentResource.IMPORTER_BASE_PATH
+                })
 
 })
 public class ReplicationAgentResourceProvider implements ResourceProvider {
@@ -82,7 +82,7 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
 
     public Resource getResource(ResourceResolver resourceResolver, String path) {
 
-        if(!isAuthorized(resourceResolver)) return null;
+        if (!isAuthorized(resourceResolver)) return null;
 
         Resource resource = null;
 
@@ -118,7 +118,7 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
             } else {
                 log.warn("could not find a configuration manager service");
             }
-        } else if(path.startsWith(ReplicationAgentResource.BASE_PATH+"/")) {
+        } else if (path.startsWith(ReplicationAgentResource.BASE_PATH + "/")) {
 
             if (path.endsWith(ReplicationAgentQueueResource.SUFFIX_PATH)) {
                 String agentPath = path.substring(0, path.lastIndexOf('/'));
@@ -131,10 +131,11 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
                 } catch (ReplicationQueueException e) {
                     log.warn("could not find a queue for agent {}", agentPath);
                 }
+            } else if (path.endsWith(ReplicationAgentQueueResource.EVENT_SUFFIX_PATH)) {
+                resource = new SyntheticResource(resourceResolver, path, ReplicationAgentQueueResource.EVENT_RESOURCE_TYPE);
             } else {
-                String agentPath = path;
                 ReplicationAgent replicationAgent = getAgentAtPath(path);
-                log.info("resolving agent with path {}", agentPath);
+                log.info("resolving agent with path {}", path);
 
                 resource = replicationAgent != null ? new ReplicationAgentResource(replicationAgent,
                         resourceResolver) : null;
@@ -146,22 +147,20 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
     }
 
 
-    private boolean isAuthorized(ResourceResolver resourceResolver){
+    private boolean isAuthorized(ResourceResolver resourceResolver) {
         boolean isAuthorized = false;
         Session session = resourceResolver.adaptTo(Session.class);
-        if(session != null) {
-            try{
+        if (session != null) {
+            try {
                 isAuthorized = session.nodeExists(SECURITY_OBJECT);
-            }
-            catch (Exception ex){
+            } catch (Exception ex) {
             }
         }
 
 
-        if(isAuthorized){
+        if (isAuthorized) {
             log.debug("granting access to agent resources as user can read /system/replication/security");
-        }
-        else {
+        } else {
             log.debug("denying access to agent resources as user can't read /system/replication/security");
         }
 
@@ -169,9 +168,7 @@ public class ReplicationAgentResourceProvider implements ResourceProvider {
     }
 
     private String getAgentNameAtPath(String path) {
-        String agentName = path.substring(path.lastIndexOf('/') + 1);
-
-        return agentName;
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
     private ReplicationAgent getAgentAtPath(String path) {
