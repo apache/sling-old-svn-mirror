@@ -61,14 +61,15 @@ public class ScheduleReplicateReplicationRule implements ReplicationRule {
     public void apply(String ruleString, ReplicationAgent agent) {
         if (signatureMatches(ruleString)) {
             Matcher matcher = signaturePattern.matcher(ruleString);
-            matcher.find();
-            String action = matcher.group(2);
-            ReplicationActionType actionType = ReplicationActionType.fromName(action.toUpperCase());
-            String path = matcher.group(5); // can be null
-            int seconds = Integer.parseInt(matcher.group(7));
-            ScheduleOptions options = scheduler.NOW(-1, seconds);
-            options.name(agent.getName() + " " + ruleString);
-            scheduler.schedule(new ScheduledReplication(agent, actionType, path), options);
+            if (matcher.find()) {
+                String action = matcher.group(2);
+                ReplicationActionType actionType = ReplicationActionType.fromName(action.toUpperCase());
+                String path = matcher.group(5); // can be null
+                int seconds = Integer.parseInt(matcher.group(7));
+                ScheduleOptions options = scheduler.NOW(-1, seconds);
+                options.name(agent.getName() + " " + ruleString);
+                scheduler.schedule(new ScheduledReplication(agent, actionType, path), options);
+            }
         }
     }
 

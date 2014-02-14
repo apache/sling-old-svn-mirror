@@ -79,6 +79,7 @@
                     org.apache.sling.replication.rule,
                     org.apache.sling.replication.serialization
                   </Export-Package>
+                  <Embed-Dependency>httpasyncclient</Embed-Dependency>
                 </instructions>
               </configuration>
             </plugin>
@@ -178,12 +179,22 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>fluent-hc</artifactId>
-      <version>4.2</version>
+      <version>4.3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpasyncclient</artifactId>
+      <version>4.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpcore-osgi</artifactId>
-      <version>4.2</version>
+      <version>4.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-osgi</artifactId>
+      <version>4.3.2</version>
     </dependency>
     <!-- JACKRABBIT -->
     <dependency>

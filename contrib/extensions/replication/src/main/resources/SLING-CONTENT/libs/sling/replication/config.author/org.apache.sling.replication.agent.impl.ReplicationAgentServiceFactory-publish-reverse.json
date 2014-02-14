@@ -4,6 +4,6 @@
     "TransportHandler.target" : "(name=http-publish-poll)",
     "ReplicationPackageBuilder.target" : "(name=void)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
-    "ReplicationQueueDistributionStrategy.target" : "(name=single)",
+    "ReplicationQueueDistributionStrategy.target" : "(name=error)",
     "rules" : ["scheduled poll every 30 sec"]
 }

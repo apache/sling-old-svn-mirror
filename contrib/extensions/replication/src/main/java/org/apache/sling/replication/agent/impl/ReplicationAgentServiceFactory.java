@@ -113,8 +113,6 @@ public class ReplicationAgentServiceFactory {
 
     private ServiceRegistration agentReg;
 
-    private ServiceRegistration jobReg;
-
     @Reference
     private ReplicationRuleEngine replicationRuleEngine;
 
@@ -183,9 +181,7 @@ public class ReplicationAgentServiceFactory {
 
             replicationAgent.disable();
 
-            if (agentReg != null) {
-                agentReg.unregister();
-            }
+            agentReg.unregister();
         }
     }
 }
