@@ -39,7 +39,7 @@ public class VanityPathTest extends HttpTestBase {
     private String vanityUrl;
     private int mappingEventCount;
     public static final String MAPPING_UPDATE_TOPIC = "org/apache/sling/api/resource/ResourceResolverMapping/CHANGED";
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -168,7 +168,7 @@ public class VanityPathTest extends HttpTestBase {
 
         waitForMapReload();
         resetMappingEventCount();
-        
+
         String pathWithExtension = removeHttpBase(createdNodeUrl) + ".ext";
         List<NameValuePair> moveParams = Arrays.asList(
                 new NameValuePair(":dest", pathWithExtension),
@@ -200,6 +200,6 @@ public class VanityPathTest extends HttpTestBase {
      * before making the corresponding content changes.
      */
     private void waitForMapReload() {
-        EventsCounterUtil.waitForEvent(this, MAPPING_UPDATE_TOPIC, 5000, mappingEventCount);
+        EventsCounterUtil.waitForEvent(this, MAPPING_UPDATE_TOPIC, 5, mappingEventCount);
     }
 }
