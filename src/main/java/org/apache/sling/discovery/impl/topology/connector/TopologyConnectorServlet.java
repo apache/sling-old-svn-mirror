@@ -39,6 +39,7 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
@@ -272,9 +273,10 @@ public class TopologyConnectorServlet extends HttpServlet {
                 replyAnnouncement.setLoop(true);
             } else {
                 // normal, successful case: replying with the part of the topology which this instance sees
-                replyAnnouncement.setLocalCluster(clusterViewService
-                        .getClusterView());
-                announcementRegistry.addAllExcept(replyAnnouncement,
+                final ClusterView clusterView = clusterViewService
+                        .getClusterView();
+                replyAnnouncement.setLocalCluster(clusterView);
+                announcementRegistry.addAllExcept(replyAnnouncement, clusterView,
                         new AnnouncementFilter() {
 
                             public boolean accept(final String receivingSlingId, Announcement announcement) {

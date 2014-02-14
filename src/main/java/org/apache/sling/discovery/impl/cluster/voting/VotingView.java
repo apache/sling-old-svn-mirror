@@ -165,7 +165,7 @@ public class VotingView extends View {
         }
         final long now = System.currentTimeMillis();
         final long diff = now - votingStart;
-        return diff < 1000 * config.getHeartbeatTimeout();
+        return diff < config.getHeartbeatTimeoutMillis();
     }
 
     /**
@@ -179,7 +179,7 @@ public class VotingView extends View {
         }
         final long now = System.currentTimeMillis();
         final long diff = now - votingStart;
-        return diff > 1000 * config.getHeartbeatTimeout();
+        return diff > config.getHeartbeatTimeoutMillis();
     }
 
     /** Get the value of the votingStart property - or -1 if anything goes wrong reading that **/

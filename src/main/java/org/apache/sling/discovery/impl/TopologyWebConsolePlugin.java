@@ -57,7 +57,7 @@ import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
-import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry.ListScope;
+import org.apache.sling.discovery.impl.topology.announcement.CachedAnnouncement;
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
 import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
 import org.osgi.framework.BundleContext;
@@ -231,7 +231,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<th class=\"header ui-widget-header\">Local instance</th>");
         pw.println("<th class=\"header ui-widget-header\">Leader instance</th>");
         pw.println("<th class=\"header ui-widget-header\">In local cluster</th>");
-        pw.println("<th class=\"header ui-widget-header\">Announced by</th>");
+        pw.println("<th class=\"header ui-widget-header\">Announced by instance</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody>");
@@ -239,7 +239,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         Set<ClusterView> clusters = topology.getClusterViews();
         ClusterView myCluster = topology.getLocalInstance().getClusterView();
         boolean odd = true;
-        renderCluster(pw, myCluster, odd);
+        renderCluster(pw, myCluster, myCluster, odd);
 
         for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
             ClusterView clusterView = it.next();
@@ -248,7 +248,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 continue;
             }
             odd = !odd;
-            renderCluster(pw, clusterView, odd);
+            renderCluster(pw, clusterView, myCluster, odd);
         }
 
         pw.println("</tbody>");
@@ -284,11 +284,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * Render a particular cluster (into table rows)
      */
-    private void renderCluster(final PrintWriter pw, final ClusterView cluster, final boolean odd) {
-        final Collection<Announcement> announcements = announcementRegistry
-                .listAnnouncements(ListScope.AllInSameCluster);
+    private void renderCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster, final boolean odd) {
+        final Collection<Announcement> announcements = announcementRegistry.listAnnouncementsInSameCluster(localCluster);
 
-        for (Iterator<InstanceDescription> it = cluster.getInstances()
+        for (Iterator<InstanceDescription> it = renderCluster.getInstances()
                 .iterator(); it.hasNext();) {
             final InstanceDescription instanceDescription = it.next();
             final boolean inLocalCluster = clusterViewService.contains(instanceDescription.getSlingId());
@@ -370,6 +369,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<th class=\"header ui-widget-header\">Connector url</th>");
         pw.println("<th class=\"header ui-widget-header\">Connected to slingId</th>");
         pw.println("<th class=\"header ui-widget-header\">Connector status</th>");
+        pw.println("<th class=\"header ui-widget-header\">Last heartbeat sent</th>");
         pw.println("<th class=\"header ui-widget-header\">Request encoding</th>");
         pw.println("<th class=\"header ui-widget-header\">Response encoding</th>");
         // pw.println("<th class=\"header ui-widget-header\">Fallback connector urls</th>");
@@ -428,6 +428,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td><b>not connected</b></td>");
                 pw.println("<td"+tooltip+"><b>not ok (HTTP Status-Code: "+statusCode+", "+statusDetails+")</b></td>");
             }
+            pw.println("<td>"+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent())+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastRequestEncoding()+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastResponseEncoding()+"</td>");
             // //TODO fallback urls are not yet implemented!
@@ -451,6 +452,24 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("</table>");
     }
 
+    private String beautifiedTimeDiff(long heartbeatTime) {
+        final long diff = System.currentTimeMillis() - heartbeatTime;
+        long seconds = (diff/1000);
+        if (heartbeatTime<=0) {
+            return "n/a";
+        } else if (seconds==0) {
+            return diff+" milliseconds ago";
+        } else if (seconds==1) {
+            return "1 second ago";
+        } else if (seconds<300) {
+            // then print seconds
+            return seconds+" seconds ago";
+        } else {
+            // then print seconds
+            return (seconds/60)+" minute ago";
+        }
+    }
+
     /**
      * Render the incoming topology connectors - including the header-div and table
      */
@@ -464,15 +483,16 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<tr>");
         pw.println("<th class=\"header ui-widget-header\">Owner slingId</th>");
         pw.println("<th class=\"header ui-widget-header\">Server info</th>");
+        pw.println("<th class=\"header ui-widget-header\">Last heartbeat received at</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody>");
 
-        Collection<Announcement> outgoingConnections = announcementRegistry
-                .listAnnouncements(ListScope.OnlyInherited);
-        for (Iterator<Announcement> it = outgoingConnections.iterator(); it
+        Collection<CachedAnnouncement> incomingConnections = announcementRegistry.listLocalIncomingAnnouncements();
+        for (Iterator<CachedAnnouncement> it = incomingConnections.iterator(); it
                 .hasNext();) {
-            Announcement incomingAnnouncement = it.next();
+            CachedAnnouncement incomingCachedAnnouncement = it.next();
+            Announcement incomingAnnouncement = incomingCachedAnnouncement.getAnnouncement();
             String oddEven = odd ? "odd" : "even";
             odd = !odd;
 
@@ -483,8 +503,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                         + "</td>");
             } else {
                 pw.println("<td><i>n/a</i></td>");
-
             }
+            pw.println("<td>"+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat())+"</td>");
 
             pw.println("</tr>");
         }
@@ -696,7 +716,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
 
         final Set<ClusterView> clusters = topology.getClusterViews();
         final ClusterView myCluster = topology.getLocalInstance().getClusterView();
-        printCluster(pw, myCluster);
+        printCluster(pw, myCluster, myCluster);
 
         for (Iterator<ClusterView> it = clusters.iterator(); it.hasNext();) {
             ClusterView clusterView = it.next();
@@ -704,18 +724,19 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 // skip - I already rendered that
                 continue;
             }
-            printCluster(pw, clusterView);
+            printCluster(pw, clusterView, myCluster);
         }
 
         pw.println();
         pw.println();
 
-        final Collection<Announcement> incomingConnections = announcementRegistry.listAnnouncements(ListScope.OnlyInherited);
+        final Collection<CachedAnnouncement> incomingConnections = announcementRegistry.listLocalIncomingAnnouncements();
         if ( incomingConnections.size() > 0 ) {
             pw.println("Incoming topology connectors");
             pw.println("---------------------------------------");
 
-            for(final Announcement incomingAnnouncement : incomingConnections) {
+            for(final CachedAnnouncement incomingCachedAnnouncement : incomingConnections) {
+                Announcement incomingAnnouncement = incomingCachedAnnouncement.getAnnouncement();
                 pw.print("Owner Sling Id : ");
                 pw.print(incomingAnnouncement.getOwnerId());
                 pw.println();
@@ -724,6 +745,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.print(incomingAnnouncement.getServerInfo());
                     pw.println();
                 }
+                pw.println("Last heartbeat received : "+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat()));
 
                 pw.println();
             }
@@ -783,6 +805,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     }
                     pw.print(" (HTTP StatusCode: "+statusCode+", "+statusDetails+")");
                     pw.println();
+                    pw.println("Last heartbeat sent : "+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent()));
                 }
                 pw.println();
             }
@@ -813,10 +836,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
     /**
      * Render a particular cluster
      */
-    private void printCluster(final PrintWriter pw, final ClusterView cluster) {
-        final Collection<Announcement> announcements = announcementRegistry.listAnnouncements(ListScope.AllInSameCluster);
+    private void printCluster(final PrintWriter pw, final ClusterView renderCluster, final ClusterView localCluster) {
+        final Collection<Announcement> announcements = announcementRegistry.listAnnouncementsInSameCluster(localCluster);
 
-        for(final InstanceDescription instanceDescription : cluster.getInstances() ) {
+        for(final InstanceDescription instanceDescription : renderCluster.getInstances() ) {
             final boolean inLocalCluster = clusterViewService.contains(instanceDescription.getSlingId());
             Announcement parentAnnouncement = null;
             for (Iterator<Announcement> it2 = announcements.iterator(); it2

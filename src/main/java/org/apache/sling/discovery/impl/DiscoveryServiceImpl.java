@@ -366,14 +366,26 @@ public class DiscoveryServiceImpl implements DiscoveryService {
                 }
             }
 
+            boolean anyChanges = false;
             for(final Entry<String, String> entry : newProps.entrySet()) {
-            	if (logger.isDebugEnabled()) {
-	                logger.debug("doUpdateProperties: {}={}", entry.getKey(), entry.getValue());
+            	Object existingValue = myInstanceMap.get(entry.getKey());
+            	if (entry.getValue().equals(existingValue)) {
+            	    // SLING-3389: dont rewrite the properties if nothing changed!
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("doUpdateProperties: unchanged: {}={}", entry.getKey(), entry.getValue());
+                    }
+            	    continue;
             	}
+            	if (logger.isDebugEnabled()) {
+            	    logger.debug("doUpdateProperties: changed: {}={}", entry.getKey(), entry.getValue());
+            	}
+            	anyChanges = true;
                 myInstanceMap.put(entry.getKey(), entry.getValue());
             }
 
-            resourceResolver.commit();
+            if (anyChanges) {
+                resourceResolver.commit();
+            }
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
@@ -409,7 +421,7 @@ public class DiscoveryServiceImpl implements DiscoveryService {
         topology.addInstances(localInstances);
 
         Collection<InstanceDescription> attachedInstances = announcementRegistry
-                .listInstances();
+                .listInstances(localClusterView);
         topology.addInstances(attachedInstances);
 
         // TODO: isCurrent() might be wrong!!!
@@ -422,9 +434,11 @@ public class DiscoveryServiceImpl implements DiscoveryService {
      */
     public void updateProperties() {
         synchronized (lock) {
+            logger.debug("updateProperties: calling doUpdateProperties.");
             doUpdateProperties();
             logger.debug("updateProperties: calling handlePotentialTopologyChange.");
             handlePotentialTopologyChange();
+            logger.debug("updateProperties: done.");
         }
     }
 

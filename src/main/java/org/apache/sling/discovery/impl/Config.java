@@ -289,6 +289,14 @@ public class Config {
     }
     
     /**
+     * Returns the timeout (in milliseconds) after which an instance or voting is considered invalid/timed out
+     * @return the timeout (in milliseconds) after which an instance or voting is considered invalid/timed out
+     */
+    public long getHeartbeatTimeoutMillis() {
+        return getHeartbeatTimeout() * 1000;
+    }
+    
+    /**
      * Returns the socket connect() timeout used by the topology connector, 0 disables the timeout
      * @return the socket connect() timeout used by the topology connector, 0 disables the timeout
      */

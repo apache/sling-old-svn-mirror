@@ -74,7 +74,7 @@ public class ViewHelper {
         }
         final long then = lastHeartbeat.getTime();
         final long diff = now - then;
-        return (diff < 1000 * config.getHeartbeatTimeout());
+        return (diff < config.getHeartbeatTimeoutMillis());
     }
 
     /**

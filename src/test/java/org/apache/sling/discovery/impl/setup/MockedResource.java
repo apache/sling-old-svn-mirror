@@ -207,7 +207,18 @@ public class MockedResource extends SyntheticResource {
                 }
                 
                 public Object get(Object arg0) {
-                	throw new UnsupportedOperationException();
+                    Session session = getSession();
+                    try{
+                        final Node node = session.getNode(getPath());
+                        final String key = String.valueOf(arg0);
+                        if (node.hasProperty(key)) {
+                            return node.getProperty(key);
+                        } else {
+                            return null;
+                        }
+                    } catch(RepositoryException re) {
+                        throw new RuntimeException(re);
+                    }
                 }
                 
                 public Set<Entry<String, Object>> entrySet() {
