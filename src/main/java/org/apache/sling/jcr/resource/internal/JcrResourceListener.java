@@ -223,7 +223,7 @@ public class JcrResourceListener implements EventListener {
         // Send the changed events.
         for (final Entry<String, ChangedAttributes> e : changedEvents.entrySet()) {
             // Launch an OSGi event.
-            sendOsgiEvent(e.getKey(), e.getValue().getProperties(), SlingConstants.TOPIC_RESOURCE_CHANGED, e.getValue());
+            sendOsgiEvent(e.getKey(), e.getValue().toEventProperties(), SlingConstants.TOPIC_RESOURCE_CHANGED, null);
         }
     }
 
@@ -262,7 +262,15 @@ public class JcrResourceListener implements EventListener {
             }
         }
 
-        public final Dictionary<String, Object> getProperties() {
+        /**
+         * Merges lists of added, changed, and removed properties to the given
+         * non-{@code null} {@code properties} and returns that object.
+         *
+         * @param properties The {@code Dictionary} to add the attribute lists
+         *            to.
+         * @return The {@code properties} object is returned.
+         */
+        public final Dictionary<String, Object> mergeAttributesInto(final Dictionary<String, Object> properties) {
             if ( addedAttributes != null )  {
                 properties.put(SlingConstants.PROPERTY_ADDED_ATTRIBUTES, addedAttributes.toArray(new String[addedAttributes.size()]));
             }
@@ -273,6 +281,14 @@ public class JcrResourceListener implements EventListener {
                 properties.put(SlingConstants.PROPERTY_REMOVED_ATTRIBUTES, removedAttributes.toArray(new String[removedAttributes.size()]));
             }
             return properties;
+        }
+
+        /**
+         * @return a {@code Dicitioanry} with all changes recorded including
+         *         original JCR event information.
+         */
+        public final Dictionary<String, Object> toEventProperties() {
+            return mergeAttributesInto(properties);
         }
     }
 
@@ -315,6 +331,11 @@ public class JcrResourceListener implements EventListener {
             final Dictionary<String, Object> properties,
             final String topic,
             final ChangedAttributes changedAttributes) {
+
+        if (changedAttributes != null) {
+            changedAttributes.mergeAttributesInto(properties);
+        }
+
         // set the path (might have been changed for nt:file content)
         properties.put(SlingConstants.PROPERTY_PATH, path);
         properties.put(EventConstants.EVENT_TOPIC, topic);
