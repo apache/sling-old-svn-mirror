@@ -43,6 +43,16 @@ public class ResourceHelper {
     	return ResourceUtil.getOrCreateResource(resourceResolver, path,
     			(String)null, null, true);
     }
+    
+    public static boolean deleteResource(
+            final ResourceResolver resourceResolver, final String path) throws PersistenceException {
+        final Resource resource = resourceResolver.getResource(path);
+        if (resource==null) {
+            return false;
+        }
+        resourceResolver.delete(resource);
+        return true;
+    }
 
     /**
      * @deprecated use {@link #getOrCreateResource(ResourceResolver, String)} instead

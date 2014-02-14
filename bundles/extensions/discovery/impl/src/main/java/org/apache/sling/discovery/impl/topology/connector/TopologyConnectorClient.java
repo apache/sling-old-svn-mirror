@@ -21,6 +21,7 @@ package org.apache.sling.discovery.impl.topology.connector;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
@@ -40,6 +41,7 @@ import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.sling.commons.json.JSONException;
+import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.impl.Config;
 import org.apache.sling.discovery.impl.cluster.ClusterViewService;
@@ -76,6 +78,9 @@ public class TopologyConnectorClient implements
     /** the last inherited announcement **/
     private Announcement lastInheritedAnnouncement;
 
+    /** the time when the last announcement was inherited - for webconsole use only **/
+    private long lastPingedAt;
+    
     /** the information about this server **/
     private final String serverInfo;
     
@@ -138,6 +143,7 @@ public class TopologyConnectorClient implements
     	}
         HttpClient httpClient = new HttpClient();
         final PutMethod method = new PutMethod(uri);
+        Announcement resultingAnnouncement = null;
         try {
             String userInfo = connectorUrl.getUserInfo();
             if (userInfo != null) {
@@ -150,9 +156,10 @@ public class TopologyConnectorClient implements
             Announcement topologyAnnouncement = new Announcement(
                     clusterViewService.getSlingId());
             topologyAnnouncement.setServerInfo(serverInfo);
-            topologyAnnouncement.setLocalCluster(clusterViewService
-                    .getClusterView());
-            announcementRegistry.addAllExcept(topologyAnnouncement, new AnnouncementFilter() {
+            final ClusterView clusterView = clusterViewService
+                    .getClusterView();
+            topologyAnnouncement.setLocalCluster(clusterView);
+            announcementRegistry.addAllExcept(topologyAnnouncement, clusterView, new AnnouncementFilter() {
                 
                 public boolean accept(final String receivingSlingId, final Announcement announcement) {
                     // filter out announcements that are of old cluster instances
@@ -245,26 +252,22 @@ public class TopologyConnectorClient implements
 	                            logger.debug("ping: connector response is from an instance which I already see in my topology"
 	                                    + inheritedAnnouncement);
                         	}
-                            lastInheritedAnnouncement = null;
                             statusDetails = "receiving side is seeing me via another path (connector or cluster) already (loop)";
                             return;
                         }
                     }
-                    lastInheritedAnnouncement = inheritedAnnouncement;
+                    resultingAnnouncement = inheritedAnnouncement;
                     statusDetails = null;
                 } else {
-                    lastInheritedAnnouncement = null;
                     statusDetails = "no response body received";
                 }
             } else {
-                lastInheritedAnnouncement = null;
                 statusDetails = "got HTTP Status-Code: "+lastStatusCode;
             }
         	// SLING-2882 : reset suppressPingWarnings_ flag in success case
     		suppressPingWarnings_ = false;
         } catch (URIException e) {
             logger.warn("ping: Got URIException: " + e + ", uri=" + uri);
-            lastInheritedAnnouncement = null;
             statusDetails = "got URIException: "+e;
         } catch (IOException e) {
         	// SLING-2882 : set/check the suppressPingWarnings_ flag
@@ -276,18 +279,17 @@ public class TopologyConnectorClient implements
         		suppressPingWarnings_ = true;
     			logger.warn("ping: got IOException [suppressing further warns]: " + e + ", uri=" + uri);
         	}
-            lastInheritedAnnouncement = null;
             statusDetails = "got IOException: "+e;
         } catch (JSONException e) {
             logger.warn("ping: got JSONException: " + e);
-            lastInheritedAnnouncement = null;
             statusDetails = "got JSONException: "+e;
         } catch (RuntimeException re) {
             logger.warn("ping: got RuntimeException: " + re, re);
-            lastInheritedAnnouncement = null;
             statusDetails = "got RuntimeException: "+re;
         } finally {
             method.releaseConnection();
+            lastInheritedAnnouncement = resultingAnnouncement;
+            lastPingedAt = System.currentTimeMillis();
         }
     }
 
@@ -317,7 +319,7 @@ public class TopologyConnectorClient implements
         if (lastInheritedAnnouncement == null) {
             return false;
         } else {
-            return !lastInheritedAnnouncement.hasExpired(config);
+            return announcementRegistry.hasActiveAnnouncement(lastInheritedAnnouncement.getOwnerId());
         }
     }
     
@@ -328,12 +330,17 @@ public class TopologyConnectorClient implements
         if (lastInheritedAnnouncement == null) {
             return statusDetails;
         } else {
-            if (!lastInheritedAnnouncement.hasExpired(config)) {
+            if (announcementRegistry.hasActiveAnnouncement(lastInheritedAnnouncement.getOwnerId())) {
+                // still active - so no status details
                 return null;
             } else {
-                return "received announcement has expired (it was created "+lastInheritedAnnouncement.getCreated()+") - consider increasing heartbeat timeout";
+                return "received announcement has expired (it was last renewed "+new Date(lastPingedAt)+") - consider increasing heartbeat timeout";
             }
         }
+    }
+    
+    public long getLastHeartbeatSent() {
+        return lastPingedAt;
     }
     
     public boolean isAutoStopped() {

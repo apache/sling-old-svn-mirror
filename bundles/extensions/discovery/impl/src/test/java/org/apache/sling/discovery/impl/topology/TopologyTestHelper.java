@@ -92,14 +92,18 @@ public class TopologyTestHelper {
 
     public static DefaultInstanceDescriptionImpl createInstanceDescription(
             ClusterView clusterView) {
+        return createInstanceDescription(UUID.randomUUID().toString(), false, clusterView);
+    }
+    
+    public static DefaultInstanceDescriptionImpl createInstanceDescription(
+            String instanceId, boolean isLocal, ClusterView clusterView) {
         if (!(clusterView instanceof DefaultClusterViewImpl)) {
             throw new IllegalArgumentException(
                     "Must pass a clusterView of type "
                             + DefaultClusterViewImpl.class);
         }
         DefaultInstanceDescriptionImpl i = new DefaultInstanceDescriptionImpl(
-                (DefaultClusterViewImpl) clusterView, false, false, UUID
-                        .randomUUID().toString(), new HashMap<String, String>());
+                (DefaultClusterViewImpl) clusterView, false, isLocal, instanceId, new HashMap<String, String>());
         return i;
     }
 

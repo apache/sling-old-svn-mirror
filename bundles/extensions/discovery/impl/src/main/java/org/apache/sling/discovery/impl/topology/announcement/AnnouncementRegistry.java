@@ -20,6 +20,7 @@ package org.apache.sling.discovery.impl.topology.announcement;
 
 import java.util.Collection;
 
+import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 
 /**
@@ -29,31 +30,31 @@ import org.apache.sling.discovery.InstanceDescription;
  */
 public interface AnnouncementRegistry {
 
-    enum ListScope {
-        OnlyInherited, // lists only announcements that were inherited from a
-                       // TopologyConnectorServlet by a client
-        AllLocally, // lists all announcements that were received by the local
-                    // instance
-        AllInSameCluster // lists all announcements - also those that were
-                         // received by other instances in the same cluster
-    }
-
     /** Register the given announcement **/
     boolean registerAnnouncement(Announcement topologyAnnouncement);
-
-    /** List all announcements that match the given scope **/
-    Collection<Announcement> listAnnouncements(ListScope scope);
-
+    
+    /** list all announcements that were received by instances in the local cluster **/
+    Collection<Announcement> listAnnouncementsInSameCluster(ClusterView localClusterView);
+    
+    /** list all announcements that were received (incoming or inherited) by this instance **/
+    Collection<Announcement> listLocalAnnouncements();
+    
+    /** list all announcements that this instance received (incoming) **/ 
+    Collection<CachedAnnouncement> listLocalIncomingAnnouncements();
+    
     /** Check for expired announcements and remove any if applicable **/
     void checkExpiredAnnouncements();
 
     /** Returns the list of instances contained in all non-expired announcements of this registry **/
-    Collection<InstanceDescription> listInstances();
+    Collection<InstanceDescription> listInstances(ClusterView localClusterView);
 
     /** Add all registered announcements to the given target announcement that are accepted by the given filter **/
-    void addAllExcept(Announcement target, AnnouncementFilter filter);
+    void addAllExcept(Announcement target, ClusterView localClusterView, AnnouncementFilter filter);
 
     /** Unregister the announcement owned by the given slingId **/
     void unregisterAnnouncement(String ownerId);
+
+    /** Whether or not the given owner has an active (ie not expired) announcement registered **/
+    boolean hasActiveAnnouncement(String ownerId);
 
 }
