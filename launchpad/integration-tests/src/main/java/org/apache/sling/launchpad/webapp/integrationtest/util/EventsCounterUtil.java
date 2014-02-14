@@ -44,6 +44,6 @@ public class EventsCounterUtil {
                 return getEventsCount(b, topic) > previousCount;
             }
         };
-        new RetryLoop(c, timeoutMsec, 500);
+        new RetryLoop(c, timeoutSeconds, 500);
     }
 }
