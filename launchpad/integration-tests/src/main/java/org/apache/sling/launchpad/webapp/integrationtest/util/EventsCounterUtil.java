@@ -33,11 +33,11 @@ public class EventsCounterUtil {
         final JSONObject json = new JSONObject(b.getContent(HttpTest.HTTP_BASE_URL + "/testing/EventsCounter.json", HttpTest.CONTENT_TYPE_JSON));
         return json.has(topic) ? json.getInt(topic) : 0;
     }
-    
-    public static void waitForEvent(final HttpTestBase b, final String topic, int timeoutMsec, final int previousCount) {
+
+    public static void waitForEvent(final HttpTestBase b, final String topic, int timeoutSeconds, final int previousCount) {
         final Condition c = new Condition() {
             public String getDescription() {
-                return "Wait for OSGi event on topic " + topic; 
+                return "Wait for OSGi event on topic " + topic;
             }
 
             public boolean isTrue() throws Exception {
