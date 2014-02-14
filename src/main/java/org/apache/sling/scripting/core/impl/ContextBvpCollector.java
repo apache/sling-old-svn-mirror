@@ -28,17 +28,16 @@ import javax.script.ScriptEngine;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.scripting.api.BindingsValuesProvider;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 /** Keeps track of {@link BindingsValuesProvider} for a single context */
 class ContextBvpCollector {
-    
+
     /** list of service property values which indicate 'any' script engine */
     private static final List<String> ANY_ENGINE = Arrays.asList("*", "ANY");
 
     private final BundleContext bundleContext;
-    
+
     /**
      * The BindingsValuesProvider impls which apply to all languages. Keys are serviceIds.
      */
@@ -48,7 +47,7 @@ class ContextBvpCollector {
      * The BindingsValuesProvider impls which apply to a specific language.
      */
     private final Map<String, Map<ServiceReference, BindingsValuesProvider>> langBindingsValuesProviders;
-    
+
     ContextBvpCollector(BundleContext bc) {
         bundleContext = bc;
         genericBindingsValuesProviders = new ConcurrentSkipListMap<ServiceReference, BindingsValuesProvider>();
@@ -88,21 +87,20 @@ class ContextBvpCollector {
         // Note that any calls to our get* methods at this
         // point won't see the service. We could synchronize
         // to make sure this methods acts atomically, but it
-        // doesn't seem worth it, as we don't expect BVPs to 
+        // doesn't seem worth it, as we don't expect BVPs to
         // be modified often. Living with that small inconsistency
         // is probably worth it for the sake of simpler code.
         addingService(ref);
     }
 
     public void removedService(final ServiceReference ref) {
-        Object serviceId = ref.getProperty(Constants.SERVICE_ID);
-        if (genericBindingsValuesProviders.remove(serviceId) == null) {
+        if (genericBindingsValuesProviders.remove(ref) == null) {
             for (Map<ServiceReference, BindingsValuesProvider> coll : langBindingsValuesProviders.values()) {
                 coll.remove(ref);
             }
         }
     }
-    
+
     Map<ServiceReference, BindingsValuesProvider> getGenericBindingsValuesProviders() {
         return genericBindingsValuesProviders;
     }
@@ -124,7 +122,7 @@ class ContextBvpCollector {
                 bindings.put(key, map.get(key));
             }
         }
-        
+
         @Override
         public String toString() {
             return map.toString();
