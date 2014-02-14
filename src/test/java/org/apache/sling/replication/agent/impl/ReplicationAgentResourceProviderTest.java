@@ -90,7 +90,7 @@ public class ReplicationAgentResourceProviderTest {
         when(context.getServiceReferences(ReplicationAgent.class.getName(), filter)).thenReturn(
                         agentServiceReferences);
         SimpleReplicationAgent replicationAgent = new SimpleReplicationAgent(path, null, true,
-                        null, null, null, null, null);
+                        null, null, null, null, null, null);
         when(context.getService(serviceReference)).thenReturn(replicationAgent);
         return replicationAgent;
     }

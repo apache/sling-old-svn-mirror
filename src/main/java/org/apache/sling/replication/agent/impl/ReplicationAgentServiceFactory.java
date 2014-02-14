@@ -33,6 +33,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
+import org.apache.sling.replication.event.ReplicationEventFactory;
 import org.apache.sling.replication.queue.ReplicationQueueDistributionStrategy;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.SingleQueueDistributionStrategy;
@@ -41,6 +42,7 @@ import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.apache.sling.replication.transport.TransportHandler;
+import org.apache.sling.replication.transport.impl.NopTransportHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -93,8 +95,8 @@ public class ReplicationAgentServiceFactory {
     @Property(boolValue = true)
     private static final String USE_AGGREGATE_PATHS = ReplicationAgentConfiguration.USE_AGGREGATE_PATHS;
 
-    @Property(name = TRANSPORT)
-    @Reference(name = "TransportHandler", policy = ReferencePolicy.DYNAMIC)
+    @Property(name = TRANSPORT, value = "(name=" + NopTransportHandler.NAME + ")")
+    @Reference(name = "TransportHandler", target = "(name=" + NopTransportHandler.NAME + ")", policy = ReferencePolicy.DYNAMIC)
     private TransportHandler transportHandler;
 
     @Property(name = PACKAGING, value = DEFAULT_PACKAGING)
@@ -115,6 +117,9 @@ public class ReplicationAgentServiceFactory {
 
     @Reference
     private ReplicationRuleEngine replicationRuleEngine;
+
+    @Reference
+    private ReplicationEventFactory replicationEventFactory;
 
     @Activate
     public void activate(BundleContext context, Map<String, ?> config) throws Exception {
@@ -142,7 +147,6 @@ public class ReplicationAgentServiceFactory {
             String distribution = PropertiesUtil.toString(config.get(QUEUE_DISTRIBUTION), "");
             props.put(QUEUE_DISTRIBUTION, distribution);
 
-
             String[] rules = PropertiesUtil.toStringArray(config.get(RULES), new String[0]);
             props.put(RULES, rules);
 
@@ -162,7 +166,7 @@ public class ReplicationAgentServiceFactory {
             }
 
             ReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths,
-                    transportHandler, packageBuilder, queueProvider, queueDistributionStrategy, replicationRuleEngine);
+                    transportHandler, packageBuilder, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);
 
             // register agent service
             agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
