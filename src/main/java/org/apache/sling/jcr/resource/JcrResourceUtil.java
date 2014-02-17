@@ -283,7 +283,13 @@ public class JcrResourceUtil {
             throws RepositoryException {
         if (path == null || path.length() == 0 || "/".equals(path)) {
             return session.getRootNode();
-        } else if (!session.itemExists(path)) {
+        }
+        // sanitize path if it ends with a slash
+        if ( path.endsWith("/") ) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        if (!session.itemExists(path)) {
             String existingPath = findExistingPath(path, session);
 
 
@@ -329,7 +335,13 @@ public class JcrResourceUtil {
     throws RepositoryException {
         if (relativePath == null || relativePath.length() == 0 || "/".equals(relativePath)) {
             return parentNode;
-        } else if (!parentNode.hasNode(relativePath)) {
+        }
+        // sanitize path if it ends with a slash
+        if ( relativePath.endsWith("/") ) {
+            relativePath = relativePath.substring(0, relativePath.length() - 1);
+        }
+
+        if (!parentNode.hasNode(relativePath)) {
             Session session = parentNode.getSession();
             String path = parentNode.getPath() + "/" + relativePath;
             String existingPath = findExistingPath(path, session);
