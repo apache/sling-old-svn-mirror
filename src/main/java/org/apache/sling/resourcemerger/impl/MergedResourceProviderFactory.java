@@ -46,7 +46,7 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
  */
 public class MergedResourceProviderFactory implements ResourceProviderFactory {
 
-    public static final String DEFAULT_ROOT = "/mnt/merged";
+    public static final String DEFAULT_ROOT = "/mnt/overlay";
 
     private String mergeRootPath;
 
