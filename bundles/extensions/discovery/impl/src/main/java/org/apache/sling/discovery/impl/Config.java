@@ -57,13 +57,13 @@ public class Config {
     private static final String ONGOING_VOTING_RESOURCE = "ongoingVotings";
 
     /** Configure the timeout (in seconds) after which an instance is considered dead/crashed. */
-    public static final long DEFAULT_HEARTBEAT_TIMEOUT = 45;
+    public static final long DEFAULT_HEARTBEAT_TIMEOUT = 60;
     @Property(longValue=DEFAULT_HEARTBEAT_TIMEOUT)
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
     private long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
 
     /** Configure the interval (in seconds) according to which the heartbeats are exchanged in the topology. */
-    public static final long DEFAULT_HEARTBEAT_INTERVAL = 15;
+    public static final long DEFAULT_HEARTBEAT_INTERVAL = 30;
     @Property(longValue=DEFAULT_HEARTBEAT_INTERVAL)
     public static final String HEARTBEAT_INTERVAL_KEY = "heartbeatInterval";
     private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
