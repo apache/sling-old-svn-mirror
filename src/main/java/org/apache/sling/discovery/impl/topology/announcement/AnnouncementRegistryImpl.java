@@ -190,8 +190,8 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     // with the repository
                 }
             }
-
-            resourceResolver.commit();
+            // since SLING-3389 this method does only read operations, hence
+            // no commit necessary anymore - close happens in below finally block
         } catch (LoginException e) {
             logger.error(
                     "listAnnouncementsInSameCluster: could not log in administratively: " + e, e);
@@ -413,7 +413,8 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                     target.addIncomingTopologyAnnouncement(topologyAnnouncement);
                 }
             }
-            resourceResolver.commit();
+            // even before SLING-3389 this method only did read operations,
+            // hence no commit was ever necessary. The close happens in the finally block
         } catch (LoginException e) {
             logger.error(
                     "handleEvent: could not log in administratively: " + e, e);
