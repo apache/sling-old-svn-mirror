@@ -43,11 +43,18 @@ public class ParameterSupport {
     private static final String ATTR_NAME = ParameterSupport.class.getName();
 
     /**
-     * The name of the request attribute to set to get the Jetty servlet
-     * container to decode the request query using ISO-8859-1 encoding (value is
-     * "org.mortbay.jetty.Request.queryEncoding").
+     * The name of the request attribute to set to get the Jetty 6 (and older)
+     * servlet container to decode the request query using ISO-8859-1 encoding
+     * (value is "org.mortbay.jetty.Request.queryEncoding").
      */
-    private static final String ATTR_JETTY_QUERY_ENCODING = "org.mortbay.jetty.Request.queryEncoding";
+    private static final String ATTR_JETTY_QUERY_ENCODING_1 = "org.mortbay.jetty.Request.queryEncoding";
+
+    /**
+     * The name of the request attribute to set to get the Jetty 7 (and newer)
+     * servlet container to decode the request query using ISO-8859-1 encoding
+     * (value is "org.eclipse.jetty.server.Request.queryEncoding").
+     */
+    private static final String ATTR_JETTY_QUERY_ENCODING_2 = "org.eclipse.jetty.server.Request.queryEncoding";
 
     private final HttpServletRequest servletRequest;
 
@@ -79,8 +86,8 @@ public class ParameterSupport {
             // SLING-559: Hack to get Jetty into decoding the request
             // query with ISO-8859-1 as stipulated by the servlet
             // spec. Other containers ignore this parameter
-            servletRequest.setAttribute(ATTR_JETTY_QUERY_ENCODING,
-                Util.ENCODING_DIRECT);
+            servletRequest.setAttribute(ATTR_JETTY_QUERY_ENCODING_1, Util.ENCODING_DIRECT);
+            servletRequest.setAttribute(ATTR_JETTY_QUERY_ENCODING_2, Util.ENCODING_DIRECT);
         }
         return instance;
     }
