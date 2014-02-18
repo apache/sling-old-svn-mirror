@@ -75,7 +75,7 @@ public class JcrResourceListenerScalabilityTest {
         when(events.nextEvent()).thenReturn(event);
     }
 
-    @Ignore("SLING-3279")  // FIXME SLING-3279
+    @Ignore("SLING-3399")  // FIXME SLING-3399
     @Test
     public void testManyEvents() throws RepositoryException, InterruptedException, InvalidSyntaxException {
         jcrResourceListener.onEvent(events);
