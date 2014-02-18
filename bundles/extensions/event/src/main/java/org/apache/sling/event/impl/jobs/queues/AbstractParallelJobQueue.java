@@ -84,6 +84,7 @@ public abstract class AbstractParallelJobQueue extends AbstractJobQueue {
                         this.syncLock.wait();
                     } catch (final InterruptedException e) {
                         this.ignoreException(e);
+                        Thread.currentThread().interrupt();
                     }
                 }
                 this.logger.debug("Job queue {} is continuing.", this.queueName);

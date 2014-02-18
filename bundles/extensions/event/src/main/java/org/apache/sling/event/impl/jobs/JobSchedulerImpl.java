@@ -142,6 +142,7 @@ public class JobSchedulerImpl
             this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -174,8 +175,9 @@ public class JobSchedulerImpl
                 try {
                     event = this.queue.take();
                 } catch (final InterruptedException e) {
-                    // we ignore this
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
+                    this.running = false;
                 }
             }
             if ( event != null && this.running ) {
@@ -370,8 +372,8 @@ public class JobSchedulerImpl
                                                 try {
                                                     queue.put(result.event);
                                                 } catch (InterruptedException e) {
-                                                    // we ignore this exception as this should never occur
                                                     ignoreException(e);
+                                                    Thread.currentThread().interrupt();
                                                 }
                                             }
                                         }
@@ -402,6 +404,7 @@ public class JobSchedulerImpl
                         this.queue.put(event);
                     } catch (final InterruptedException ignore) {
                         this.ignoreException(ignore);
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
@@ -446,6 +449,7 @@ public class JobSchedulerImpl
                                 this.queue.put(readResult.event);
                             } catch (final InterruptedException e) {
                                 this.ignoreException(e);
+                                Thread.currentThread().interrupt();
                             }
                         }
                     }

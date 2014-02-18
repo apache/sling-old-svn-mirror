@@ -100,6 +100,7 @@ public final class TopicRoundRobinJobQueue extends AbstractParallelJobQueue {
                         this.topicMap.wait();
                     } catch (final InterruptedException ie) {
                         this.ignoreException(ie);
+                        Thread.currentThread().interrupt();
                     }
                 }
             }

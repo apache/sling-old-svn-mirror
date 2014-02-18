@@ -103,6 +103,7 @@ public class DistributedEventSender
             this.queue.put("");
         } catch (final InterruptedException e) {
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -159,8 +160,9 @@ public class DistributedEventSender
             try {
                 path = this.queue.take();
             } catch (final InterruptedException e) {
-                // we ignore this
                 this.ignoreException(e);
+                Thread.currentThread().interrupt();
+                this.running = false;
             }
             if ( path != null && path.length() > 0 && this.running ) {
                 ResourceResolver resolver = null;
@@ -203,8 +205,8 @@ public class DistributedEventSender
             try {
                 this.queue.put(path);
             } catch (final InterruptedException ex) {
-                // we ignore this
                 this.ignoreException(ex);
+                Thread.currentThread().interrupt();
             }
         }
     }

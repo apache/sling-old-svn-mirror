@@ -55,8 +55,8 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
             this.isWaitingForNext = false;
             this.queue.put(event);
         } catch (final InterruptedException e) {
-            // this should never happen
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -66,8 +66,8 @@ public final class ParallelJobQueue extends AbstractParallelJobQueue {
             this.isWaitingForNext = true;
             return this.queue.take();
         } catch (final InterruptedException e) {
-            // this should never happen
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         } finally {
             this.isWaitingForNext = false;
         }
