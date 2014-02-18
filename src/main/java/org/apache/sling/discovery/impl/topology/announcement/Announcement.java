@@ -73,6 +73,12 @@ public class Announcement {
     /** whether or not this announcement represents a loop detected in the topology connectors **/
     private boolean loop = false;
 
+    /** SLING-3382: Sets the backoffInterval which the connector servlets passes back to the client to use as the next heartbeatInterval **/
+    private long backoffInterval = -1;
+
+    /** SLING-3382: the resetBackoff flag is sent from client to server and indicates that the client wants to start from (backoff) scratch **/
+    private boolean resetBackoff = false;
+
     public Announcement(final String ownerId) {
         this(ownerId, PROTOCOL_VERSION);
     }
@@ -156,6 +162,26 @@ public class Announcement {
     public void setLoop(final boolean loop) {
         this.loop = loop;
     }
+    
+    /** Sets the backoffInterval which the connector servlets passes back to the client to use as the next heartbeatInterval **/
+    public void setBackoffInterval(long backoffInterval) {
+        this.backoffInterval = backoffInterval;
+    }
+    
+    /** Gets the backoffInterval which the connector servlets passes back to the client to use as the next heartbeatInterval **/
+    public long getBackoffInterval() {
+        return this.backoffInterval;
+    }
+    
+    /** sets the resetBackoff flag **/
+    public void setResetBackoff(boolean resetBackoff) {
+        this.resetBackoff = resetBackoff;
+    }
+    
+    /** gets the resetBackoff flag **/
+    public boolean getResetBackoff() {
+        return resetBackoff;
+    }
 
     /** Returns the loop flag - set when this announcement represents a loop detected in the topology connectors **/
     public boolean isLoop() {
@@ -188,12 +214,19 @@ public class Announcement {
 
     /** Convert this announcement into a json object **/
     public JSONObject asJSONObject() throws JSONException {
+        return asJSONObject(false);
+    }
+    
+    /** Convert this announcement into a json object **/
+    private JSONObject asJSONObject(boolean filterTimes) throws JSONException {
         JSONObject announcement = new JSONObject();
         announcement.put("ownerId", ownerId);
         announcement.put("protocolVersion", protocolVersion);
         // SLING-3389: leaving the 'created' property in the announcement
         // for backwards compatibility!
-        announcement.put("created", System.currentTimeMillis());
+        if (!filterTimes) {
+            announcement.put("created", System.currentTimeMillis());
+        }
         announcement.put("inherited", inherited);
         if (loop) {
             announcement.put("loop", loop);
@@ -204,10 +237,16 @@ public class Announcement {
         if (localCluster!=null) {
             announcement.put("localClusterView", asJSON(localCluster));
         }
+        if (!filterTimes && backoffInterval>0) {
+            announcement.put("backoffInterval", backoffInterval);
+        }
+        if (resetBackoff) {
+            announcement.put("resetBackoff", resetBackoff);
+        }
         JSONArray incomingAnnouncements = new JSONArray();
         for (Iterator<Announcement> it = incomings.iterator(); it.hasNext();) {
             Announcement incoming = it.next();
-            incomingAnnouncements.put(incoming.asJSONObject());
+            incomingAnnouncements.put(incoming.asJSONObject(filterTimes));
         }
         announcement.put("topologyAnnouncements", incomingAnnouncements);
         return announcement;
@@ -225,6 +264,14 @@ public class Announcement {
             protocolVersion = announcement.getInt("protocolVersion");
         }
         final Announcement result = new Announcement(ownerId, protocolVersion);
+        if (announcement.has("backoffInterval")) {
+            long backoffInterval = announcement.getLong("backoffInterval");
+            result.backoffInterval = backoffInterval;
+        }
+        if (announcement.has("resetBackoff")) {
+            boolean resetBackoff = announcement.getBoolean("resetBackoff");
+            result.resetBackoff = resetBackoff;
+        }
         if (announcement.has("loop") && announcement.getBoolean("loop")) {
             result.setLoop(true);
             return result;
@@ -400,13 +447,12 @@ public class Announcement {
     /**
      * Compare this Announcement with another one, ignoring the 'created'
      * property - which gets added to the JSON object automatically due
-     * to SLING-3389 wire-backwards-compatibility 
+     * to SLING-3389 wire-backwards-compatibility - and backoffInterval
+     * introduced as part of SLING-3382
      */
-    public boolean equalsIgnoreCreated(Announcement announcement) throws JSONException {
-        final JSONObject myJson = asJSONObject();
-        myJson.remove("created");
-        final JSONObject otherJson = announcement.asJSONObject();
-        otherJson.remove("created");
+    public boolean correspondsTo(Announcement announcement) throws JSONException {
+        final JSONObject myJson = asJSONObject(true);
+        final JSONObject otherJson = announcement.asJSONObject(true);
         return myJson.toString().equals(otherJson.toString());
     }
 

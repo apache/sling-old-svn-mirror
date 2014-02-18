@@ -102,7 +102,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
                     serverInfo);
             outgoingClientsMap.put(client.getId(), client);
         }
-        client.ping();
+        client.ping(false);
         return client;
     }
 
@@ -127,7 +127,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
         }
     }
 
-    public void pingOutgoingConnectors() {
+    public void pingOutgoingConnectors(boolean force) {
         List<TopologyConnectorClient> outgoingTemplatesClone;
         synchronized (outgoingClientsMap) {
             outgoingTemplatesClone = new ArrayList<TopologyConnectorClient>(
@@ -135,7 +135,7 @@ public class ConnectorRegistryImpl implements ConnectorRegistry {
         }
         for (Iterator<TopologyConnectorClient> it = outgoingTemplatesClone
                 .iterator(); it.hasNext();) {
-            it.next().ping();
+            it.next().ping(force);
         }
     }
 

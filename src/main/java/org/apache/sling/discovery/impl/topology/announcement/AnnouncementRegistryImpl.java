@@ -115,9 +115,11 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             CachedAnnouncement cachedAnnouncement = it.next();
             if (cachedAnnouncement.getAnnouncement().isInherited()) {
                 it.remove();
+                continue;
             }
-            if (System.currentTimeMillis() > cachedAnnouncement.getLastHeartbeat() + config.getHeartbeatTimeoutMillis()) {
+            if (cachedAnnouncement.hasExpired()) {
                 it.remove();
+                continue;
             }
         }
         return result;
@@ -221,7 +223,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
         for (Iterator<Entry<String, CachedAnnouncement>> it = ownAnnouncementsCache.entrySet().iterator(); it
                 .hasNext();) {
             final Entry<String, CachedAnnouncement> entry = it.next();
-            if (System.currentTimeMillis() > entry.getValue().getLastHeartbeat() + config.getHeartbeatTimeoutMillis()) {
+            if (entry.getValue().hasExpired()) {
                 // filter this one out then
                 continue;
             }
@@ -251,20 +253,20 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             return false;
         }
         
-        return !(System.currentTimeMillis() > cachedAnnouncement.getLastHeartbeat() + config.getHeartbeatTimeoutMillis());
+        return !cachedAnnouncement.hasExpired();
     }
 
-    public synchronized boolean registerAnnouncement(final Announcement topologyAnnouncement) {
+    public synchronized long registerAnnouncement(final Announcement topologyAnnouncement) {
         if (topologyAnnouncement==null) {
             throw new IllegalArgumentException("topologyAnnouncement must not be null");
         }
         if (!topologyAnnouncement.isValid()) {
             logger.warn("topologyAnnouncement is not valid");
-            return false;
+            return -1;
         }
         if (resourceResolverFactory == null) {
             logger.error("registerAnnouncement: resourceResolverFactory is null");
-            return false;
+            return -1;
         }
         
         final CachedAnnouncement cachedAnnouncement = 
@@ -274,16 +276,14 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 logger.debug("registerAnnouncement: got existing cached announcement for ownerId="+topologyAnnouncement.getOwnerId());
             }
             try{
-                if (topologyAnnouncement.equalsIgnoreCreated(cachedAnnouncement.getAnnouncement())) {
+                if (topologyAnnouncement.correspondsTo(cachedAnnouncement.getAnnouncement())) {
                     // then nothing has changed with this announcement, so just update
                     // the heartbeat and fine is.
                     // this should actually be the normal case for a stable connector
                     logger.debug("registerAnnouncement: nothing has changed, only updating heartbeat in-memory.");
-                    cachedAnnouncement.registerHeartbeat();
-                    return true;
+                    return cachedAnnouncement.registerHeartbeat(topologyAnnouncement, config);
                 }
-                
-                logger.debug("registerAnnouncement: incoming announcement differs existing one!");
+                logger.debug("registerAnnouncement: incoming announcement differs from existing one!");
                 
             } catch(JSONException e) {
                 logger.error("registerAnnouncement: got JSONException while converting incoming announcement to JSON: "+e, e);
@@ -320,7 +320,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                         instanceDescription.getSlingId())) {
                     logger.info("registerAnnouncement: already have this instance attached: "
                             + instanceDescription.getSlingId());
-                    return false;
+                    return -1;
                 }
             }
         }
@@ -341,7 +341,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
             topologyAnnouncement.persistTo(announcementsResource);
             resourceResolver.commit();
             ownAnnouncementsCache.put(topologyAnnouncement.getOwnerId(), 
-                    new CachedAnnouncement(topologyAnnouncement));
+                    new CachedAnnouncement(topologyAnnouncement, config));
         } catch (LoginException e) {
             logger.error(
                     "registerAnnouncement: could not log in administratively: "
@@ -362,7 +362,7 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
                 resourceResolver.close();
             }
         }
-        return true;
+        return 0;
     }
 
     public synchronized void addAllExcept(final Announcement target, final ClusterView clusterView, 
@@ -436,12 +436,10 @@ public class AnnouncementRegistryImpl implements AnnouncementRegistry {
     }
 
     public synchronized void checkExpiredAnnouncements() {
-        final long now = System.currentTimeMillis();
         for (Iterator<Entry<String, CachedAnnouncement>> it = 
                 ownAnnouncementsCache.entrySet().iterator(); it.hasNext();) {
             final Entry<String, CachedAnnouncement> entry = it.next();
-            final long lastHeartbeat = entry.getValue().getLastHeartbeat();
-            if (now-lastHeartbeat>config.getHeartbeatTimeoutMillis()) {
+            if (entry.getValue().hasExpired()) {
                 // then we have an expiry
                 it.remove();
                 

@@ -110,12 +110,12 @@ public class TopologyAnnouncementRegistryTest {
         
         Announcement ann = new Announcement(slingId);
         assertFalse(ann.isValid());
-        assertFalse(registry.registerAnnouncement(ann));
+        assertFalse(registry.registerAnnouncement(ann)!=-1);
         
         DefaultClusterViewImpl localCluster = new DefaultClusterViewImpl(UUID.randomUUID().toString());
         ann.setLocalCluster(localCluster);
         assertFalse(ann.isValid());
-        assertFalse(registry.registerAnnouncement(ann));
+        assertFalse(registry.registerAnnouncement(ann)!=-1);
 
         try{
             registry.listInstances(localCluster);
@@ -127,7 +127,7 @@ public class TopologyAnnouncementRegistryTest {
         DefaultInstanceDescriptionImpl instance = TopologyTestHelper.createInstanceDescription(ann.getOwnerId(), true, localCluster);
         assertEquals(instance.getSlingId(), ann.getOwnerId());
         assertTrue(ann.isValid());
-        assertTrue(registry.registerAnnouncement(ann));
+        assertTrue(registry.registerAnnouncement(ann)!=-1);
         
         assertEquals(1, registry.listInstances(localCluster).size());
         
@@ -137,7 +137,7 @@ public class TopologyAnnouncementRegistryTest {
         registry.unregisterAnnouncement(ann.getOwnerId());
         assertEquals(0, registry.listInstances(localCluster).size());
         assertTrue(ann.isValid());
-        assertTrue(registry.registerAnnouncement(ann));
+        assertTrue(registry.registerAnnouncement(ann)!=-1);
         assertEquals(1, registry.listInstances(localCluster).size());
 
         Thread.sleep(1500);
@@ -260,9 +260,9 @@ public class TopologyAnnouncementRegistryTest {
         Announcement ann2 = createAnnouncement(cluster2, 1, true);
         Announcement ann3 = createAnnouncement(cluster3, 1, false);
         
-        assertTrue(registry.registerAnnouncement(ann1));
-        assertTrue(registry.registerAnnouncement(ann2));
-        assertTrue(registry.registerAnnouncement(ann3));
+        assertTrue(registry.registerAnnouncement(ann1)!=-1);
+        assertTrue(registry.registerAnnouncement(ann2)!=-1);
+        assertTrue(registry.registerAnnouncement(ann3)!=-1);
         assertTrue(registry.hasActiveAnnouncement(cluster1.getInstances().get(0).getSlingId()));
         assertTrue(registry.hasActiveAnnouncement(cluster2.getInstances().get(1).getSlingId()));
         assertTrue(registry.hasActiveAnnouncement(cluster3.getInstances().get(1).getSlingId()));
@@ -286,7 +286,7 @@ public class TopologyAnnouncementRegistryTest {
             registry.addAllExcept(testAnn, myCluster, null);
             assertEquals(13, testAnn.listInstances().size());
         }
-        assertTrue(registry.registerAnnouncement(ann3));
+        assertTrue(registry.registerAnnouncement(ann3)!=-1);
         {
             Announcement testAnn = createAnnouncement(myCluster, 0, false);
             assertEquals(1, testAnn.listInstances().size());
@@ -333,9 +333,9 @@ public class TopologyAnnouncementRegistryTest {
         AnnouncementRegistryImpl registry3 = (AnnouncementRegistryImpl) OSGiFactory.createITopologyAnnouncementRegistry(
                 resourceResolverFactory, config, instance3);
 
-        assertTrue(registry1.registerAnnouncement(ann1));
-        assertTrue(registry2.registerAnnouncement(ann2));
-        assertTrue(registry3.registerAnnouncement(ann3));
+        assertTrue(registry1.registerAnnouncement(ann1)!=-1);
+        assertTrue(registry2.registerAnnouncement(ann2)!=-1);
+        assertTrue(registry3.registerAnnouncement(ann3)!=-1);
         
         assertTrue(registry1.hasActiveAnnouncement(cluster1.getInstances().get(1).getSlingId()));
         assertTrue(registry2.hasActiveAnnouncement(cluster2.getInstances().get(2).getSlingId()));
