@@ -26,14 +26,17 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
 import org.apache.sling.api.resource.LoginException;
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceProviderFactory;
+import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
+import org.apache.sling.resourcemerger.api.ResourceMergerService;
 
 @Component(name = "Apache Sling Merged Resource Provider Factory",
            description = "This resource provider delivers merged resources based on the search paths.",
            metatype=true)
-@Service(value = ResourceProviderFactory.class)
+@Service(value = {ResourceProviderFactory.class, ResourceMergerService.class})
 @Properties({
     @Property(name = ResourceProvider.ROOTS, value=MergedResourceProviderFactory.DEFAULT_ROOT,
             label="Root",
@@ -42,9 +45,9 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 })
 /**
  * The <code>MergedResourceProviderFactory</code> creates merged resource
- * providers.
+ * providers and implements the <code>ResourceMergerService</code>.
  */
-public class MergedResourceProviderFactory implements ResourceProviderFactory {
+public class MergedResourceProviderFactory implements ResourceProviderFactory, ResourceMergerService {
 
     public static final String DEFAULT_ROOT = "/mnt/overlay";
 
@@ -66,11 +69,54 @@ public class MergedResourceProviderFactory implements ResourceProviderFactory {
         return new MergedResourceProvider(mergeRootPath);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public String getMergedResourcePath(final String relativePath) {
+        if (relativePath == null) {
+            throw new IllegalArgumentException("Provided relative path is null");
+        }
+
+        if (relativePath.startsWith("/")) {
+            throw new IllegalArgumentException("Provided path is not a relative path");
+        }
+
+        return mergeRootPath + "/" + relativePath;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Resource getMergedResource(final Resource resource) {
+        if (resource != null) {
+            final ResourceResolver resolver = resource.getResourceResolver();
+            final String[] searchPaths = resolver.getSearchPath();
+            for (final String searchPathPrefix : searchPaths) {
+                if (resource.getPath().startsWith(searchPathPrefix)) {
+                    final String searchPath = searchPathPrefix.substring(0, searchPathPrefix.length() - 1);
+                    return resolver.getResource(resource.getPath().replaceFirst(searchPath, mergeRootPath));
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isMergedResource(final Resource resource) {
+        if (resource == null) {
+            return false;
+        }
+
+        return Boolean.TRUE.equals(resource.getResourceMetadata().get(MergedResourceConstants.METADATA_FLAG));
+    }
+
     @Activate
     protected void configure(final Map<String, Object> properties) {
         mergeRootPath = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), DEFAULT_ROOT);
-        if ( mergeRootPath.endsWith("/") ) {
-            mergeRootPath = mergeRootPath.substring(mergeRootPath.length() - 1);
+        if (mergeRootPath.endsWith("/")) {
+            mergeRootPath = mergeRootPath.substring(0, mergeRootPath.length() - 1);
         }
     }
 }

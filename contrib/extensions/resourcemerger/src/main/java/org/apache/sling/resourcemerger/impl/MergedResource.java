@@ -31,9 +31,6 @@ import org.apache.sling.api.resource.ValueMap;
  */
 public class MergedResource extends AbstractResource {
 
-    private static final String MD_FLAG = "sling.mappedResource";
-    private static final String MD_RESOURCES = "sling.mappedResources";
-
     /** The resource resolver. */
     private final ResourceResolver resolver;
 
@@ -43,7 +40,7 @@ public class MergedResource extends AbstractResource {
     /** Resource type. */
     private final String resourceType;
 
-    /** Resource metadata. */
+    /** Resource meta data. */
     private final ResourceMetadata metadata = new ResourceMetadata();
 
     /** Cache value map. */
@@ -66,14 +63,14 @@ public class MergedResource extends AbstractResource {
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
         this.properties = new MergedValueMap(valueMaps);
         this.resourceType = this.properties.get(ResourceResolver.PROPERTY_RESOURCE_TYPE, (relativePath.length() == 0 ? "/" : relativePath));
-        metadata.put(MD_FLAG, true);
+        metadata.put(MergedResourceConstants.METADATA_FLAG, true);
         final String[] resourcePaths = new String[mappedResources.size()];
         int i = 0;
         for(final Resource rsrc : mappedResources) {
             resourcePaths[i] = rsrc.getPath();
             i++;
         }
-        metadata.put(MD_RESOURCES, resourcePaths);
+        metadata.put(MergedResourceConstants.METADATA_RESOURCES, resourcePaths);
     }
 
     /**
@@ -161,6 +158,6 @@ public class MergedResource extends AbstractResource {
     @Override
     public String toString() {
         return "MergedResource [path=" + this.path +
-               ", resources=" + this.metadata.get(MD_RESOURCES) + "]";
+               ", resources=" + this.metadata.get(MergedResourceConstants.METADATA_RESOURCES) + "]";
     }
 }
