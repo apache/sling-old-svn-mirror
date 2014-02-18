@@ -145,6 +145,20 @@ public class Config {
 
     @Property(longValue=DEFAULT_SHARED_KEY_INTERVAL)
     private static final String SHARED_KEY_INTERVAL = "hmacSharedKeyTTL";
+    
+    /**
+     * The property for defining the backoff factor for standby (loop) connectors
+     */
+    @Property
+    private static final String BACKOFF_STANDBY_FACTOR = "backoffStandbyFactor";
+    private static final int DEFAULT_BACKOFF_STANDBY_FACTOR = 5;
+    
+    /**
+     * The property for defining the maximum backoff factor for stable connectors
+     */
+    @Property
+    private static final String BACKOFF_STABLE_FACTOR = "backoffStableFactor";
+    private static final int DEFAULT_BACKOFF_STABLE_FACTOR = 5;
 
     private String leaderElectionRepositoryDescriptor ;
 
@@ -176,6 +190,12 @@ public class Config {
      */
     private boolean gzipConnectorRequestsEnabled;
 
+    /** the backoff factor to be used for standby (loop) connectors **/
+    private int backoffStandbyFactor = DEFAULT_BACKOFF_STANDBY_FACTOR;
+    
+    /** the maximum backoff factor to be used for stable connectors **/
+    private int backoffStableFactor = DEFAULT_BACKOFF_STABLE_FACTOR;
+    
     @Activate
     protected void activate(final Map<String, Object> properties) {
 		logger.debug("activate: config activated.");
@@ -277,7 +297,11 @@ public class Config {
         encryptionEnabled = PropertiesUtil.toBoolean(properties.get(ENCRYPTION_ENABLED), false);
         sharedKey = PropertiesUtil.toString(properties.get(SHARED_KEY), null);
         keyInterval = PropertiesUtil.toLong(SHARED_KEY_INTERVAL, DEFAULT_SHARED_KEY_INTERVAL);
-
+        
+        backoffStandbyFactor = PropertiesUtil.toInteger(properties.get(BACKOFF_STANDBY_FACTOR), 
+                DEFAULT_BACKOFF_STANDBY_FACTOR);
+        backoffStableFactor = PropertiesUtil.toInteger(properties.get(BACKOFF_STABLE_FACTOR), 
+                DEFAULT_BACKOFF_STABLE_FACTOR);
     }
 
     /**
@@ -434,5 +458,34 @@ public class Config {
      */
     public boolean isAutoStopLocalLoopEnabled() {
         return autoStopLocalLoopEnabled;
+    }
+
+    /**
+     * Returns the backoff factor to be used for standby (loop) connectors
+     * @return the backoff factor to be used for standby (loop) connectors
+     */
+    public int getBackoffStandbyFactor() {
+        return backoffStandbyFactor;
+    }
+
+    /**
+     * Returns the (maximum) backoff factor to be used for stable connectors
+     * @return the (maximum) backoff factor to be used for stable connectors
+     */
+    public int getBackoffStableFactor() {
+        return backoffStableFactor;
+    }
+
+    /**
+     * Returns the backoff interval for standby (loop) connectors in seconds
+     * @return the backoff interval for standby (loop) connectors in seconds
+     */
+    public long getBackoffStandbyInterval() {
+        final int factor = getBackoffStandbyFactor();
+        if (factor<=1) {
+            return -1;
+        } else {
+            return factor * getHeartbeatInterval();
+        }
     }
 }

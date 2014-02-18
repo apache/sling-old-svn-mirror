@@ -21,9 +21,14 @@ package org.apache.sling.discovery.impl.setup;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -40,6 +45,7 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
+import javax.servlet.Servlet;
 
 import junitx.util.PrivateAccessor;
 
@@ -50,6 +56,7 @@ import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.commons.scheduler.impl.QuartzScheduler;
 import org.apache.sling.commons.threads.ThreadPoolManager;
 import org.apache.sling.commons.threads.impl.DefaultThreadPoolManager;
+import org.apache.sling.discovery.DiscoveryService;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.PropertyProvider;
 import org.apache.sling.discovery.TopologyEventListener;
@@ -61,11 +68,85 @@ import org.apache.sling.discovery.impl.cluster.voting.VotingHandler;
 import org.apache.sling.discovery.impl.common.heartbeat.HeartbeatHandler;
 import org.apache.sling.discovery.impl.topology.announcement.AnnouncementRegistry;
 import org.apache.sling.discovery.impl.topology.connector.ConnectorRegistry;
+import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
+import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorServlet;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.jmock.Expectations;
+import org.jmock.Mockery;
+import org.jmock.integration.junit4.JUnit4Mockery;
 import org.osgi.framework.Constants;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.http.HttpContext;
+import org.osgi.service.http.HttpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Instance {
+    
+    public class MyConfig extends Config {
+        
+        long heartbeatTimeout;
+        long heartbeatInterval;
+        int minEventDelay;
+        List<String> whitelist;
+        
+        @Override
+        public long getHeartbeatInterval() {
+            return heartbeatInterval;
+        }
+        
+        public void setHeartbeatInterval(long heartbeatInterval) {
+            this.heartbeatInterval = heartbeatInterval;
+        }
+        
+        @Override
+        public long getHeartbeatTimeout() {
+            return heartbeatTimeout;
+        }
+
+        public void setHeartbeatTimeout(long heartbeatTimeout) {
+            this.heartbeatTimeout = heartbeatTimeout;
+        }
+        
+        @Override
+        public int getMinEventDelay() {
+            return minEventDelay;
+        }
+        
+        public void setMinEventDelay(int minEventDelay) {
+            this.minEventDelay = minEventDelay;
+        }
+        
+        @Override
+        public String[] getTopologyConnectorWhitelist() {
+            if (whitelist==null) {
+                return null;
+            }
+            return whitelist.toArray(new String[whitelist.size()]);
+        }
+        
+        public void addTopologyConnectorWhitelistEntry(String whitelistEntry) {
+            if (whitelist==null) {
+                whitelist = new LinkedList<String>();
+            }
+            whitelist.add(whitelistEntry);
+        }
+        
+        @Override
+        public int getBackoffStableFactor() {
+            return 1;
+        }
+        
+        @Override
+        public int getBackoffStandbyFactor() {
+            return 1;
+        }
+        
+    }
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -115,6 +196,12 @@ public class Instance {
     }
     
     private HeartbeatRunner heartbeatRunner = null;
+
+    private ServletContextHandler servletContext;
+
+    private Server jettyServer;
+
+    private MyConfig config;
     
     private class HeartbeatRunner implements Runnable {
     	
@@ -168,17 +255,12 @@ public class Instance {
 
         this.resourceResolverFactory = resourceResolverFactory;
 
-        Config config = new Config() {
-            @Override
-            public long getHeartbeatTimeout() {
-                return heartbeatTimeout;
-            }
-
-            @Override
-            public int getMinEventDelay() {
-            	return minEventDelay;
-            }
-        };
+        this.config = new MyConfig();
+        config.setHeartbeatTimeout(heartbeatTimeout);
+        config.setHeartbeatInterval(20);
+        config.setMinEventDelay(minEventDelay);
+        config.addTopologyConnectorWhitelistEntry("127.0.0.1");
+                
         PrivateAccessor.setField(config, "discoveryResourcePath", discoveryResourcePath);
         
         clusterViewService = OSGiFactory.createClusterViewServiceImpl(slingId,
@@ -322,6 +404,64 @@ public class Instance {
         return clusterViewService;
     }
     
+    public DiscoveryService getDiscoveryService() {
+        return discoveryService;
+    }
+    
+    public AnnouncementRegistry getAnnouncementRegistry() {
+        return announcementRegistry;
+    }
+    
+    public synchronized void startJetty() throws Throwable {
+        if (jettyServer!=null) {
+            return;
+        }
+        servletContext = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
+        servletContext.setContextPath("/");
+
+        TopologyConnectorServlet servlet = new TopologyConnectorServlet();
+        PrivateAccessor.setField(servlet, "config", config);
+        PrivateAccessor.setField(servlet, "clusterViewService", clusterViewService);
+        PrivateAccessor.setField(servlet, "announcementRegistry", announcementRegistry);
+
+        Mockery context = new JUnit4Mockery();
+        final HttpService httpService = context.mock(HttpService.class);
+        context.checking(new Expectations() {
+            {
+                allowing(httpService).registerServlet(with(any(String.class)), 
+                        with(any(Servlet.class)), 
+                        with(any(Dictionary.class)), 
+                        with(any(HttpContext.class)));
+            }
+        });
+        PrivateAccessor.setField(servlet, "httpService", httpService);
+        ComponentContext cc = null;
+        PrivateAccessor.invoke(servlet, "activate", new Class[] {ComponentContext.class}, new Object[] {cc});
+        
+        ServletHolder holder =
+                new ServletHolder(servlet);
+        
+        servletContext.addServlet(holder, "/system/console/topology/*");
+
+        jettyServer = new Server();
+        jettyServer.setHandler(servletContext);
+        Connector connector=new SelectChannelConnector();
+        jettyServer.setConnectors(new Connector[]{connector});
+        jettyServer.start();
+    }
+    
+    public synchronized int getJettyPort() {
+        if (jettyServer==null) {
+            throw new IllegalStateException("jettyServer not started");
+        }
+        final Connector[] connectors = jettyServer.getConnectors();
+        return connectors[0].getLocalPort();
+    }
+
+    public TopologyConnectorClientInformation connectTo(String url) throws MalformedURLException {
+        return connectorRegistry.registerOutgoingConnector(clusterViewService, new URL(url));
+    }
+
     public InstanceDescription getLocalInstanceDescription() {
     	final Iterator<InstanceDescription> it = getClusterViewService().getClusterView().getInstances().iterator();
     	while(it.hasNext()) {
@@ -450,6 +590,10 @@ public class Instance {
         PrivateAccessor.invoke(discoveryService, "bindTopologyEventListener",
                 new Class[] { TopologyEventListener.class },
                 new Object[] { eventListener });
+    }
+
+    public MyConfig getConfig() {
+        return config;
     }
 
 }

@@ -58,4 +58,6 @@ public interface TopologyConnectorClientInformation {
     /** the unix-millis when the last heartbeat was sent **/
     long getLastHeartbeatSent();
 
+    /** the seconds until the next heartbeat is due **/
+    int getNextHeartbeatDue();
 }

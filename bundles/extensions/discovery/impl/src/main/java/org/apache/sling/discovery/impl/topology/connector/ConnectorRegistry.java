@@ -36,7 +36,7 @@ public interface ConnectorRegistry {
     Collection<TopologyConnectorClientInformation> listOutgoingConnectors();
 
     /** ping all outgoing topology connectors **/
-    void pingOutgoingConnectors();
+    void pingOutgoingConnectors(boolean force);
 
     /** Unregister an outgoing topology connector identified by the given (connector) id **/
     boolean unregisterOutgoingConnector(String id);

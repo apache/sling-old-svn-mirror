@@ -104,6 +104,9 @@ public class TopologyConnectorClient implements
     /** value of Content-Encoding of the last repsonse **/
     private String lastResponseEncoding;
 
+    /** SLING-3382: unix-time at which point the backoff-period ends and pings can be sent again **/
+    private long backoffPeriodEnd = -1;
+    
     TopologyConnectorClient(final ClusterViewService clusterViewService,
             final AnnouncementRegistry announcementRegistry, final Config config,
             final URL connectorUrl, final String serverInfo) {
@@ -131,11 +134,21 @@ public class TopologyConnectorClient implements
     }
 
     /** ping the server and pass the announcements between the two **/
-    void ping() {
+    void ping(final boolean force) {
     	if (autoStopped) {
     		// then we suppress any further pings!
     		logger.debug("ping: autoStopped=true, hence suppressing any further pings.");
     		return;
+    	}
+    	if (force) {
+    	    backoffPeriodEnd = -1;
+    	} else if (backoffPeriodEnd>0) {
+    	    if (System.currentTimeMillis()<backoffPeriodEnd) {
+    	        logger.debug("ping: not issueing a heartbeat due to backoff instruction from peer.");
+    	        return;
+    	    } else {
+                logger.debug("ping: backoff period ended, issuing another ping now.");
+    	    }
     	}
         final String uri = connectorUrl.toString()+"."+clusterViewService.getSlingId()+".json";
     	if (logger.isDebugEnabled()) {
@@ -159,6 +172,10 @@ public class TopologyConnectorClient implements
             final ClusterView clusterView = clusterViewService
                     .getClusterView();
             topologyAnnouncement.setLocalCluster(clusterView);
+            if (force) {
+                logger.debug("ping: sending a resetBackoff");
+                topologyAnnouncement.setResetBackoff(true);
+            }
             announcementRegistry.addAllExcept(topologyAnnouncement, clusterView, new AnnouncementFilter() {
                 
                 public boolean accept(final String receivingSlingId, final Announcement announcement) {
@@ -231,6 +248,17 @@ public class TopologyConnectorClient implements
                 if (responseBody!=null && responseBody.length()>0) {
                     Announcement inheritedAnnouncement = Announcement
                             .fromJSON(responseBody);
+                    final long backoffInterval = inheritedAnnouncement.getBackoffInterval();
+                    if (backoffInterval>0) {
+                        // then reset the backoffPeriodEnd:
+                        
+                        /* minus 1 sec to avoid slipping the interval by a few millis */
+                        this.backoffPeriodEnd = System.currentTimeMillis() + (1000 * backoffInterval) - 1000;
+                        logger.debug("ping: servlet instructed to backoff: backoffInterval="+backoffInterval+", resulting in period end of "+new Date(backoffPeriodEnd));
+                    } else {
+                        logger.debug("ping: servlet did not instruct any backoff-ing at this stage");
+                        this.backoffPeriodEnd = -1;
+                    }
                     if (inheritedAnnouncement.isLoop()) {
                     	if (logger.isDebugEnabled()) {
 	                        logger.debug("ping: connector response indicated a loop detected. not registering this announcement from "+
@@ -246,8 +274,8 @@ public class TopologyConnectorClient implements
                     	}
                     } else {
                         inheritedAnnouncement.setInherited(true);
-                        if (!announcementRegistry
-                                .registerAnnouncement(inheritedAnnouncement)) {
+                        if (announcementRegistry
+                                .registerAnnouncement(inheritedAnnouncement)==-1) {
                         	if (logger.isDebugEnabled()) {
 	                            logger.debug("ping: connector response is from an instance which I already see in my topology"
 	                                    + inheritedAnnouncement);
@@ -268,7 +296,7 @@ public class TopologyConnectorClient implements
     		suppressPingWarnings_ = false;
         } catch (URIException e) {
             logger.warn("ping: Got URIException: " + e + ", uri=" + uri);
-            statusDetails = "got URIException: "+e;
+            statusDetails = e.toString();
         } catch (IOException e) {
         	// SLING-2882 : set/check the suppressPingWarnings_ flag
         	if (suppressPingWarnings_) {
@@ -279,13 +307,13 @@ public class TopologyConnectorClient implements
         		suppressPingWarnings_ = true;
     			logger.warn("ping: got IOException [suppressing further warns]: " + e + ", uri=" + uri);
         	}
-            statusDetails = "got IOException: "+e;
+            statusDetails = e.toString();
         } catch (JSONException e) {
             logger.warn("ping: got JSONException: " + e);
-            statusDetails = "got JSONException: "+e;
+            statusDetails = e.toString();
         } catch (RuntimeException re) {
             logger.warn("ping: got RuntimeException: " + re, re);
-            statusDetails = "got RuntimeException: "+re;
+            statusDetails = re.toString();
         } finally {
             method.releaseConnection();
             lastInheritedAnnouncement = resultingAnnouncement;
@@ -341,6 +369,21 @@ public class TopologyConnectorClient implements
     
     public long getLastHeartbeatSent() {
         return lastPingedAt;
+    }
+    
+    public int getNextHeartbeatDue() {
+        final long absDue;
+        if (backoffPeriodEnd>0) {
+            absDue = backoffPeriodEnd;
+        } else {
+            absDue = lastPingedAt + 1000*config.getHeartbeatInterval();
+        }
+        final int relDue = (int) ((absDue - System.currentTimeMillis()) / 1000);
+        if (relDue<0) {
+            return -1;
+        } else {
+            return relDue;
+        }
     }
     
     public boolean isAutoStopped() {

@@ -30,8 +30,14 @@ import org.apache.sling.discovery.InstanceDescription;
  */
 public interface AnnouncementRegistry {
 
-    /** Register the given announcement **/
-    boolean registerAnnouncement(Announcement topologyAnnouncement);
+    /** 
+     * Register the given announcement - and returns the backoff interval (in seconds)
+     * for stable connectors
+     * - or -1 if the registration was not successful (likely indicating a loop) 
+     * @return the backoff interval (in seconds) for stable connectors
+     * - or -1 if the registration was not successful (likely indicating a loop) 
+     */
+    long registerAnnouncement(Announcement topologyAnnouncement);
     
     /** list all announcements that were received by instances in the local cluster **/
     Collection<Announcement> listAnnouncementsInSameCluster(ClusterView localClusterView);

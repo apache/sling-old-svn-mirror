@@ -369,9 +369,10 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<th class=\"header ui-widget-header\">Connector url</th>");
         pw.println("<th class=\"header ui-widget-header\">Connected to slingId</th>");
         pw.println("<th class=\"header ui-widget-header\">Connector status</th>");
-        pw.println("<th class=\"header ui-widget-header\">Last heartbeat sent</th>");
-        pw.println("<th class=\"header ui-widget-header\">Request encoding</th>");
-        pw.println("<th class=\"header ui-widget-header\">Response encoding</th>");
+        pw.println("<th class=\"header ui-widget-header\">Last heartbeat&nbsp;</th>");
+        pw.println("<th class=\"header ui-widget-header\">Next heartbeat&nbsp;</th>");
+        pw.println("<th class=\"header ui-widget-header\">Request encoding&nbsp;</th>");
+        pw.println("<th class=\"header ui-widget-header\">Response encoding&nbsp;</th>");
         // pw.println("<th class=\"header ui-widget-header\">Fallback connector urls</th>");
         pw.println("</tr>");
         pw.println("</thead>");
@@ -429,6 +430,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td"+tooltip+"><b>not ok (HTTP Status-Code: "+statusCode+", "+statusDetails+")</b></td>");
             }
             pw.println("<td>"+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent())+"</td>");
+            pw.println("<td>"+beautifiedDueTime(topologyConnectorClient.getNextHeartbeatDue())+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastRequestEncoding()+"</td>");
             pw.println("<td>"+topologyConnectorClient.getLastResponseEncoding()+"</td>");
             // //TODO fallback urls are not yet implemented!
@@ -451,6 +453,23 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("</tbody>");
         pw.println("</table>");
     }
+    
+    private String beautifiedDueTime(long secondsDue) {
+        if (secondsDue<-1) {
+            return "overdue";
+        } else if (secondsDue<=0) {
+            return "now-ish";
+        } else if (secondsDue==1) {
+            return "in 1 second";
+        } else {
+            int minsDue = (int) (secondsDue / 60);
+            if (minsDue<5) {
+                return "in "+secondsDue+" seconds";
+            } else {
+                return "in "+minsDue+" minutes";
+            }
+        }
+    }
 
     private String beautifiedTimeDiff(long heartbeatTime) {
         final long diff = System.currentTimeMillis() - heartbeatTime;
@@ -458,7 +477,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         if (heartbeatTime<=0) {
             return "n/a";
         } else if (seconds==0) {
-            return diff+" milliseconds ago";
+            return diff+" millis ago";
         } else if (seconds==1) {
             return "1 second ago";
         } else if (seconds<300) {
@@ -483,7 +502,8 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
         pw.println("<tr>");
         pw.println("<th class=\"header ui-widget-header\">Owner slingId</th>");
         pw.println("<th class=\"header ui-widget-header\">Server info</th>");
-        pw.println("<th class=\"header ui-widget-header\">Last heartbeat received at</th>");
+        pw.println("<th class=\"header ui-widget-header\">Last heartbeat</th>");
+        pw.println("<th class=\"header ui-widget-header\">Timeout</th>");
         pw.println("</tr>");
         pw.println("</thead>");
         pw.println("<tbody>");
@@ -505,6 +525,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                 pw.println("<td><i>n/a</i></td>");
             }
             pw.println("<td>"+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat())+"</td>");
+            pw.println("<td>"+beautifiedDueTime(incomingCachedAnnouncement.getSecondsUntilTimeout())+"</td>");
 
             pw.println("</tr>");
         }
@@ -746,6 +767,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.println();
                 }
                 pw.println("Last heartbeat received : "+beautifiedTimeDiff(incomingCachedAnnouncement.getLastHeartbeat()));
+                pw.println("Timeout : "+beautifiedDueTime(incomingCachedAnnouncement.getSecondsUntilTimeout()));
 
                 pw.println();
             }
@@ -806,6 +828,7 @@ public class TopologyWebConsolePlugin extends AbstractWebConsolePlugin implement
                     pw.print(" (HTTP StatusCode: "+statusCode+", "+statusDetails+")");
                     pw.println();
                     pw.println("Last heartbeat sent : "+beautifiedTimeDiff(topologyConnectorClient.getLastHeartbeatSent()));
+                    pw.println("Next heartbeat due : "+beautifiedDueTime(topologyConnectorClient.getNextHeartbeatDue()));
                 }
                 pw.println();
             }

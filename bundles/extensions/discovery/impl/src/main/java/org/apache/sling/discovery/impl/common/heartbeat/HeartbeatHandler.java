@@ -123,6 +123,9 @@ public class HeartbeatHandler implements Runnable, StartupListener {
     
     /** SLING-2968 : start issuing remote heartbeats only after startup finished **/
     private boolean startupFinished = false;
+
+    /** SLING-3382 : force ping instructs the servlet to start the backoff from scratch again **/
+    private boolean forcePing;
     
     public void inform(StartupMode mode, boolean finished) {
     	if (finished) {
@@ -226,6 +229,7 @@ public class HeartbeatHandler implements Runnable, StartupListener {
 
     /** Trigger the issuance of the next heartbeat asap instead of at next heartbeat interval **/
     public void triggerHeartbeat() {
+        forcePing = true;
         try {
             // then fire a job immediately
             scheduler.fireJob(this, null);
@@ -262,7 +266,8 @@ public class HeartbeatHandler implements Runnable, StartupListener {
         	logger.debug("issueRemoteHeartbeats: not issuing remote heartbeat yet, startup not yet finished");
         	return;
         }
-        connectorRegistry.pingOutgoingConnectors();
+        connectorRegistry.pingOutgoingConnectors(forcePing);
+        forcePing = false;
     }
 
     /** Issue a cluster local heartbeat (into the repository) **/
