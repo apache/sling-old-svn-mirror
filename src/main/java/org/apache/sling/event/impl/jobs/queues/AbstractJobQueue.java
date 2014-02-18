@@ -262,9 +262,9 @@ public abstract class AbstractJobQueue
             if ( restartJobs.size() > 0 ) {
                 try {
                     Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    // we just ignore this
+                } catch (final InterruptedException e) {
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
                 }
             }
             final Iterator<JobHandler> jobIter = restartJobs.iterator();
@@ -482,6 +482,7 @@ public abstract class AbstractJobQueue
                     this.suspendLock.wait(MAX_SUSPEND_TIME);
                 } catch (final InterruptedException ignore) {
                     this.ignoreException(ignore);
+                    Thread.currentThread().interrupt();
                 }
                 if ( System.currentTimeMillis() > this.suspendedSince + MAX_SUSPEND_TIME ) {
                     this.resume();

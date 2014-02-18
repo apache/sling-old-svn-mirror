@@ -104,6 +104,7 @@ public class EventAdminBridge
         try {
             this.writeQueue.put(new Event("deactivate", (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
+            Thread.currentThread().interrupt();
             this.ignoreException(e);
         }
         logger.info("Apache Sling Job Event Bridge stopped on instance {}", Environment.APPLICATION_ID);
@@ -142,8 +143,9 @@ public class EventAdminBridge
             try {
                 event = this.writeQueue.take();
             } catch (final InterruptedException e) {
-                // we ignore this
                 this.ignoreException(e);
+                Thread.currentThread().interrupt();
+                this.running = false;
             }
             if ( event != null && this.running ) {
                 final JobManager jm = this.jobManager;
@@ -153,6 +155,8 @@ public class EventAdminBridge
                         Thread.sleep(500);
                     } catch (final InterruptedException ie) {
                         this.ignoreException(ie);
+                        Thread.currentThread().interrupt();
+                        this.running = false;
                     }
                 } else {
                     final String jobTopic = (String)event.getProperty(ResourceHelper.PROPERTY_JOB_TOPIC);
@@ -193,8 +197,8 @@ public class EventAdminBridge
                 try {
                     this.writeQueue.put(event);
                 } catch (final InterruptedException e) {
-                    // this should never happen
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
                 }
             } else {
                 this.logger.warn(errorMessage + " : {}", EventUtil.toString(event));

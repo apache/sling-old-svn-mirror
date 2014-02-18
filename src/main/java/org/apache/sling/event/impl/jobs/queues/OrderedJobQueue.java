@@ -95,8 +95,9 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                 while ( this.isWaiting ) {
                     try {
                         this.syncLock.wait();
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         this.ignoreException(e);
+                        Thread.currentThread().interrupt();
                     }
                 }
                 this.logger.debug("Job queue {} is continuing.", this.queueName);
@@ -142,6 +143,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                     this.queue.wait();
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
                 }
                 this.isWaitingForNext = false;
             }
@@ -184,6 +186,7 @@ public final class OrderedJobQueue extends AbstractJobQueue {
                     this.sleepLock.wait(delay);
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
                 }
                 this.sleepLock.sleepingSince = -1;
                 final JobHandler result = this.sleepLock.jobHandler;

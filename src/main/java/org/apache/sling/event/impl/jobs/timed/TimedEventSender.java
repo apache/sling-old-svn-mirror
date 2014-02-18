@@ -158,6 +158,7 @@ public class TimedEventSender
             this.queue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -191,8 +192,9 @@ public class TimedEventSender
                 try {
                     event = this.queue.take();
                 } catch (final InterruptedException e) {
-                    // we ignore this
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
+                    this.running = false;
                 }
             }
             if ( event != null && this.running ) {
@@ -245,8 +247,9 @@ public class TimedEventSender
                             try {
                                 this.queue.put(event);
                             } catch (final InterruptedException e) {
-                                // this should never happen, so we ignore it
                                 this.ignoreException(e);
+                                Thread.currentThread().interrupt();
+                                this.running = false;
                             }
                         }
                     }
@@ -364,8 +367,9 @@ public class TimedEventSender
                                                 try {
                                                     queue.put(result.event);
                                                 } catch (InterruptedException e) {
-                                                    // we ignore this exception as this should never occur
                                                     ignoreException(e);
+                                                    Thread.currentThread().interrupt();
+                                                    break;
                                                 }
                                             }
                                         }
@@ -396,6 +400,7 @@ public class TimedEventSender
                         this.queue.put(event);
                     } catch (final InterruptedException ignore) {
                         this.ignoreException(ignore);
+                        Thread.currentThread().interrupt();
                     }
                 }
             }
@@ -493,6 +498,8 @@ public class TimedEventSender
                                 this.queue.put(readResult.event);
                             } catch (final InterruptedException e) {
                                 this.ignoreException(e);
+                                Thread.currentThread().interrupt();
+                                break;
                             }
                         }
                     }

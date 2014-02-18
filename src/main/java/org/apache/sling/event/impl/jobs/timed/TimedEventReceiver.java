@@ -125,6 +125,7 @@ public class TimedEventReceiver implements EventHandler {
             this.writeQueue.put(new Event(Utility.TOPIC_STOPPED, (Dictionary<String, Object>)null));
         } catch (final InterruptedException e) {
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -137,8 +138,9 @@ public class TimedEventReceiver implements EventHandler {
             try {
                 event = this.writeQueue.take();
             } catch (final InterruptedException e) {
-                // we ignore this
                 this.ignoreException(e);
+                Thread.currentThread().interrupt();
+                this.running = false;
             }
             if ( this.running && event != null ) {
                 // check for schedule info
@@ -251,8 +253,8 @@ public class TimedEventReceiver implements EventHandler {
         try {
             this.writeQueue.put(event);
         } catch (final InterruptedException e) {
-            // this should never happen
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 

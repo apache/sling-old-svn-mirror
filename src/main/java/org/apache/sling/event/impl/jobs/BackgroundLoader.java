@@ -155,6 +155,7 @@ public class BackgroundLoader implements Runnable {
             this.actionQueue.put(END_TOKEN);
         } catch (final InterruptedException e) {
             this.ignoreException(e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -178,7 +179,8 @@ public class BackgroundLoader implements Runnable {
                     try {
                         this.loadLock.wait();
                     } catch (final InterruptedException e) {
-                        // ignore
+                        Thread.currentThread().interrupt();
+                        this.active.set(false);
                     }
                 }
                 startTime = System.currentTimeMillis();
@@ -190,7 +192,8 @@ public class BackgroundLoader implements Runnable {
                     try {
                         this.stopLock.wait(1000 * this.configuration.getBackgroundLoadDelay());
                     } catch (final InterruptedException e) {
-                        // ignore
+                        Thread.currentThread().interrupt();
+                        this.active.set(false);
                     }
                 }
             }
@@ -210,6 +213,8 @@ public class BackgroundLoader implements Runnable {
                     nextPathOrJob = this.actionQueue.take();
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
+                    this.active.set(false);
                 }
                 if ( nextPathOrJob instanceof JobImpl ) {
                     this.jobManager.process((JobImpl)nextPathOrJob);
@@ -371,8 +376,10 @@ public class BackgroundLoader implements Runnable {
                             if ( isRunning() ) {
                                 try {
                                     actionQueue.put(iter.next());
-                                } catch (InterruptedException e) {
+                                } catch (final InterruptedException e) {
                                     ignoreException(e);
+                                    Thread.currentThread().interrupt();
+                                    running = false;
                                 }
                             }
                         }
@@ -394,6 +401,7 @@ public class BackgroundLoader implements Runnable {
                     this.actionQueue.put(path);
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
                 }
             }
         }
@@ -409,6 +417,7 @@ public class BackgroundLoader implements Runnable {
                     this.actionQueue.put(job);
                 } catch (final InterruptedException e) {
                     this.ignoreException(e);
+                    Thread.currentThread().interrupt();
                 }
             }
         }
