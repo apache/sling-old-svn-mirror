@@ -48,4 +48,14 @@ public class MergedResourceConstants {
      */
     public static final String PN_ORDER_BEFORE = "sling:orderBefore";
 
+    /**
+     * Resource meta data entry indicating that the resource is a merged resource
+     */
+    public static final String METADATA_FLAG = "sling.mergedResource";
+
+    /**
+     * Resource meta data entry containing the paths of the merged resources.
+     */
+    public static final String METADATA_RESOURCES = "sling.mergedResources";
+
 }
