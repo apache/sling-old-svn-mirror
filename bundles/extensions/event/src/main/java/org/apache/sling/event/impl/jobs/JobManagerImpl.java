@@ -1202,7 +1202,7 @@ public class JobManagerImpl
     /**
      * Try to get a "lock" for a resource
      */
-    private boolean lock(final String id) {
+    private boolean lock(final String jobTopic, final String id) {
         if ( logger.isDebugEnabled() ) {
             logger.debug("Trying to get lock for {}", id);
         }
@@ -1212,6 +1212,8 @@ public class JobManagerImpl
             resolver = this.resourceResolverFactory.getAdministrativeResourceResolver(null);
             final String lockName = ResourceHelper.filterName(id);
             final StringBuilder sb = new StringBuilder(this.configuration.getLocksPath());
+            sb.append('/');
+            sb.append(jobTopic.replace('/', '.'));
             sb.append('/');
             sb.append(lockName);
             final String path = sb.toString();
@@ -1282,7 +1284,7 @@ public class JobManagerImpl
             Utility.sendNotification(this.eventAdmin, NotificationConstants.TOPIC_JOB_CANCELLED, jobTopic, jobName, jobProperties, null);
         } else {
             // check for unique jobs
-            if ( jobName != null && !this.lock(jobName) ) {
+            if ( jobName != null && !this.lock(jobTopic, jobName) ) {
                 logger.debug("Discarding duplicate job {}", Utility.toString(jobTopic, jobName, jobProperties));
                 return null;
             } else {
