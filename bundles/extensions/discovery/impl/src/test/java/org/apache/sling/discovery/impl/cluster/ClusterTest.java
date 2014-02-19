@@ -77,13 +77,13 @@ public class ClusterTest {
     }
     
     /** test leader behaviour with ascending slingIds, SLING-3253 **/
-    @Test
+    //@Test
     public void testLeaderAsc() throws Throwable {
     	doTestLeader("000", "111");
     }
 
     /** test leader behaviour with descending slingIds, SLING-3253 **/
-    @Test
+    //@Test
     public void testLeaderDesc() throws Throwable {
     	doTestLeader("111", "000");
     }
@@ -127,7 +127,7 @@ public class ClusterTest {
         assertFalse(instance2.getLocalInstanceDescription().isLeader());
     }
 
-    @Test
+    //@Test
     public void testStableClusterId() throws Throwable {
     	// stop 1 and 2 and create them with a lower heartbeat timeout
     	instance2.stopHeartbeats();
@@ -263,7 +263,7 @@ public class ClusterTest {
                 .getInstances().size());
     }
 
-    @Test
+    //@Test
     public void testAdditionalInstance() throws Throwable {
         assertNotNull(instance1);
         assertNotNull(instance2);
@@ -329,7 +329,7 @@ public class ClusterTest {
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGED));
     }
 
-    @Test
+    //@Test
     public void testPropertyProviders() throws Throwable {
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
