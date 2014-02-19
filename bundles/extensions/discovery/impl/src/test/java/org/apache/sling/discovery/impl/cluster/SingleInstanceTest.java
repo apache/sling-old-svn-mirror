@@ -189,7 +189,7 @@ public class SingleInstanceTest {
 
     }
 
-    @Test
+    //@Test
     public void testBootstrap() throws Throwable {
         ClusterView initialClusterView = instance.getClusterViewService()
                 .getClusterView();
