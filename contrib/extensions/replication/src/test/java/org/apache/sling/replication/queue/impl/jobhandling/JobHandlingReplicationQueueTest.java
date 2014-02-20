@@ -47,6 +47,10 @@ public class JobHandlingReplicationQueueTest {
     public void testPackageAddition() throws Exception {
         JobManager jobManager = mock(JobManager.class);
         JobBuilder builder = mock(JobBuilder.class);
+        when(builder.properties(any(Map.class))).thenReturn(builder);
+        Job job = mock(Job.class);
+        when(job.getId()).thenReturn("id-123");
+        when(builder.add()).thenReturn(job);
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + "/aname";
         when(jobManager.createJob(topic)).thenReturn(builder);
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
@@ -61,6 +65,10 @@ public class JobHandlingReplicationQueueTest {
     public void testPackageAdditionAndStatusCheck() throws Exception {
         JobManager jobManager = mock(JobManager.class);
         JobBuilder builder = mock(JobBuilder.class);
+        when(builder.properties(any(Map.class))).thenReturn(builder);
+        Job job = mock(Job.class);
+        when(job.getId()).thenReturn("id-123");
+        when(builder.add()).thenReturn(job);
         String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + "/aname";
         when(jobManager.createJob(topic)).thenReturn(builder);
         when(jobManager.findJobs(JobManager.QueryType.ALL, topic, -1)).thenReturn(Collections.<Job>emptySet());
