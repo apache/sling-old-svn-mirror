@@ -69,7 +69,7 @@ public class JobHandlingReplicationQueue implements ReplicationQueue {
 
             Job job = jobManager.createJob(topic).properties(properties).add();
             if (log.isInfoEnabled()) {
-                log.info("job added {}", job);
+                log.info("job {} added", job.getId());
             }
         } catch (Exception e) {
             if (log.isErrorEnabled()) {
