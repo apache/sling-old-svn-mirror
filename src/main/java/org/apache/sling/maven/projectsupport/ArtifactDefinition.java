@@ -67,14 +67,22 @@ public class ArtifactDefinition {
         this.runModes = bundle.getRunModes();
     }
 
-    public ArtifactDefinition(Xpp3Dom config) {
-        this.groupId = nodeValue(config, "groupId", null);
-        this.artifactId = nodeValue(config, "artifactId", null);
-        this.type = nodeValue(config, "type", null);
-        this.version = nodeValue(config, "version", null);
-        this.classifier = nodeValue(config, "classifier", null);
-        this.startLevel = nodeValue(config, "startLevel", 0);
-        this.runModes = nodeValue(config, "runModes", null);
+    public ArtifactDefinition(final Xpp3Dom config) {
+        if ( config.getChild("bundles") != null ) {
+            final Xpp3Dom[] children = config.getChild("bundles").getChildren("bundle");
+            this.bundles = new ArtifactDefinition[children.length];
+            for(int i=0; i<this.bundles.length; i++) {
+                this.bundles[i] = new ArtifactDefinition(children[i]);
+            }
+        } else {
+            this.groupId = nodeValue(config, "groupId", null);
+            this.artifactId = nodeValue(config, "artifactId", null);
+            this.type = nodeValue(config, "type", null);
+            this.version = nodeValue(config, "version", null);
+            this.classifier = nodeValue(config, "classifier", null);
+            this.startLevel = nodeValue(config, "startLevel", 0);
+            this.runModes = nodeValue(config, "runModes", null);
+        }
     }
 
     public String getArtifactId() {
@@ -150,15 +158,23 @@ public class ArtifactDefinition {
      */
     public void initDefaults(String commaDelimitedList) {
         String[] values = commaDelimitedList.split(",");
-        if (values.length != 6) {
+        if (values.length == 0 || values.length % 6 != 0 ) {
             throw new IllegalArgumentException(
                     String
                             .format(
-                                    "The string %s does not have the correct number of items (6).",
+                                    "The string %s does not have the correct number of items (a multiple of 6).",
                                     commaDelimitedList));
         }
-        initDefaults(values[0], values[1], values[2], values[3], values[4],
-                Integer.valueOf(values[5]));
+        if ( values.length == 6 ) {
+            initDefaults(values[0], values[1], values[2], values[3], values[4],
+                    Integer.valueOf(values[5]));
+        }
+        this.bundles = new ArtifactDefinition[values.length / 6];
+        for(int i=0; i<values.length / 6; i++) {
+            this.bundles[i] = new ArtifactDefinition();
+            this.bundles[i].initDefaults(values[i*6 + 0], values[i*6 + 1], values[i*6 + 2], values[i*6 + 3], values[i*6 + 4],
+                    Integer.valueOf(values[i*6 + 5]));
+        }
     }
 
     /**
