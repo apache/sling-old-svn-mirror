@@ -136,7 +136,7 @@ public class PreparePackageMojo extends AbstractLaunchpadFrameworkMojo {
     @Override
     protected void initBundleList(BundleList bundleList) {
         if (packaging.equals(JAR)) {
-            bundleList.add(jarWebSupport.toBundle());
+            bundleList.add(jarWebSupport.toBundleList());
         }
     }
 

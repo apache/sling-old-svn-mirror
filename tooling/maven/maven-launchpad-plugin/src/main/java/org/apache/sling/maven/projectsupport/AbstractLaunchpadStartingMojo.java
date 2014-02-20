@@ -234,6 +234,6 @@ public abstract class AbstractLaunchpadStartingMojo extends AbstractUsingBundleL
      */
     @Override
     protected void initBundleList(BundleList bundleList) {
-        bundleList.add(jarWebSupport.toBundle());
+        bundleList.add(jarWebSupport.toBundleList());
     }
 }
