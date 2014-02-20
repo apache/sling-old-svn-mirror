@@ -19,6 +19,7 @@ package org.apache.sling.maven.projectsupport;
 import static org.apache.sling.maven.projectsupport.BundleListUtils.nodeValue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.maven.model.Dependency;
@@ -137,12 +138,20 @@ public class ArtifactDefinition {
         this.version = version;
     }
 
+    public ArtifactDefinition[] getContainedArtifacts() {
+        return this.bundles;
+    }
+
     @Override
     public String toString() {
-        return "ArtifactDefinition [artifactId=" + artifactId + ", classifier="
-                + classifier + ", groupId=" + groupId + ", startLevel="
-                + startLevel + ", type=" + type + ", version=" + version
-                + ", runModes=" + runModes + "]";
+        if ( this.bundles == null ) {
+            return "ArtifactDefinition [artifactId=" + artifactId + ", classifier="
+                    + classifier + ", groupId=" + groupId + ", startLevel="
+                    + startLevel + ", type=" + type + ", version=" + version
+                    + ", runModes=" + runModes + "]";
+        } else {
+            return "ArtifactDefinition [artifacts=" + Arrays.toString(this.bundles) + "]";
+        }
     }
 
     /**
@@ -157,13 +166,26 @@ public class ArtifactDefinition {
      *            the comma-delimited list
      */
     public void initDefaults(String commaDelimitedList) {
-        String[] values = commaDelimitedList.split(",");
+        this.initDefaults(commaDelimitedList, ',');
+    }
+
+    /**
+     * Initialize this ArtifactDefinition with a set of default values from a
+     * delimited string. This string must have 6 items in it:
+     * [groupId],[artifactId],[version],[type],[classifier],[startLevel]
+     *
+     * @param valueList the delimited list
+     * @param delimiter the delimiter
+     */
+    public void initDefaults(final String valueList, final char delimiter) {
+        final String delString = "" + delimiter;
+        String[] values = valueList.split(delString);
         if (values.length == 0 || values.length % 6 != 0 ) {
             throw new IllegalArgumentException(
                     String
                             .format(
-                                    "The string %s does not have the correct number of items (a multiple of 6).",
-                                    commaDelimitedList));
+                                    "The string %s does not have the correct number of items (a multiple of 6) separated by %s",
+                                    valueList, delString));
         }
         if ( values.length == 6 ) {
             initDefaults(values[0], values[1], values[2], values[3], values[4],
