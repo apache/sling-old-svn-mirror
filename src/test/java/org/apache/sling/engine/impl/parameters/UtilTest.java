@@ -100,19 +100,25 @@ public class UtilTest extends TestCase {
 
     public void test_decode_query() throws IllegalArgumentException, UnsupportedEncodingException, IOException {
         final ParameterMap map = new ParameterMap();
-        final String query = "a=1&b=2&c=3";
+        final String query = "a=1&b=2&c=3&a=1&b=2&c=3";
         Util.parseQueryString(new ByteArrayInputStream(query.getBytes(Util.ENCODING_DIRECT)), Util.ENCODING_DIRECT, map, false);
 
         assertEquals(3, map.size());
 
         List<RequestParameter> pars = map.getRequestParameterList();
-        assertEquals(3, pars.size());
+        assertEquals(6, pars.size());
         assertEquals("a", pars.get(0).getName());
         assertEquals("1", pars.get(0).getString());
         assertEquals("b", pars.get(1).getName());
         assertEquals("2", pars.get(1).getString());
         assertEquals("c", pars.get(2).getName());
         assertEquals("3", pars.get(2).getString());
+        assertEquals("a", pars.get(3).getName());
+        assertEquals("1", pars.get(3).getString());
+        assertEquals("b", pars.get(4).getName());
+        assertEquals("2", pars.get(4).getString());
+        assertEquals("c", pars.get(5).getName());
+        assertEquals("3", pars.get(5).getString());
     }
 
     public void test_getParameter_with_space() throws Exception {
