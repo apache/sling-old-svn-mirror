@@ -39,6 +39,12 @@ import aQute.bnd.annotation.ProviderType;
 public interface RequestParameter {
 
     /**
+     * @return the name of this {@code RequestParameter}
+     * @since 2.4 (bundle version 2.6)
+     */
+    String getName();
+
+    /**
      * Determines whether or not this instance represents a simple form field or
      * an uploaded file.
      *

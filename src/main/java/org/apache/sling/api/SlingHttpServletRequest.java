@@ -19,6 +19,7 @@
 package org.apache.sling.api;
 
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -34,7 +35,6 @@ import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-
 import aQute.bnd.annotation.ProviderType;
 
 /**
@@ -143,6 +143,18 @@ public interface SlingHttpServletRequest extends HttpServletRequest, Adaptable {
      *         are of type {@link RequestParameter} array (<code>RequestParameter[]</code>).
      */
     RequestParameterMap getRequestParameterMap();
+
+    /**
+     * Returns the request parameters as instances of the
+     * {@link RequestParameter} interface in the order or the request where the
+     * query string parameters are first and the POST request parameters are
+     * second.
+     *
+     * @return The list of {@link RequestParameter} in request declaration
+     *         order.
+     * @since 2.3 (bundle version 2.6)
+     */
+    List<RequestParameter> getRequestParameterList();
 
     /**
      * Returns a <code>RequestDispatcher</code> object that acts as a wrapper
