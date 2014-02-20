@@ -39,15 +39,18 @@ public abstract class BaseBundleList {
         return null;
     }
 
-    public boolean remove(Bundle bundle, boolean compareVersions) {
-        for (StartLevel sl : getStartLevels()) {
-            if (sl.removeBundle(bundle, compareVersions)) {
-                return true;
+    public boolean remove(List<Bundle> bundles, boolean compareVersions) {
+        boolean result = false;
+        for (Bundle bundle : bundles) {
+            for (StartLevel sl : getStartLevels()) {
+                if (sl.removeBundle(bundle, compareVersions)) {
+                    result = true;
+                    break;
+                }
             }
         }
-        return false;
+        return result;
     }
-
 
     /**
      * Merge the current bundle list with an additional list.
@@ -69,8 +72,10 @@ public abstract class BaseBundleList {
      *
      * @param newBnd the bundle to add
      */
-    public void add(Bundle newBnd) {
-       add(null, newBnd);
+    public void add(List<Bundle> newBnd) {
+        for (Bundle bundle : newBnd) {
+            add(null, bundle);
+        }
     }
 
     /**

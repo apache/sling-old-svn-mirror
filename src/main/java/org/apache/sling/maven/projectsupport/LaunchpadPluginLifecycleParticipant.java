@@ -5,9 +5,9 @@
  * licenses this file to You under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -50,7 +50,7 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 public class LaunchpadPluginLifecycleParticipant extends AbstractMavenLifecycleParticipant {
 
     private static final String PLUGIN_ID = "maven-launchpad-plugin";
-    
+
     private static final String PROVIDED = "provided";
 
     @Requirement
@@ -100,43 +100,43 @@ public class LaunchpadPluginLifecycleParticipant extends AbstractMavenLifecycleP
 
         void addDependencies() throws Exception {
             readConfiguration();
-            
+
             addBundleListDependencies();
 
             if (hasPreparePackageExecution()) {
                 if (includeDefaultBundles && !isCurrentArtifact(project, defaultBundleList)) {
                     log.debug(String.format("adding default bundle list (%s) to dependencies of project %s", defaultBundleList, project));
-                    project.getDependencies().add(defaultBundleList.toDependency(PROVIDED));
+                    project.getDependencies().addAll(defaultBundleList.toDependencyList(PROVIDED));
                 }
 
                 if (hasJarPackagingExecution()) {
                     log.debug(String.format("adding jar web support (%s) to dependencies of project %s", jarWebSupport, project));
-                    project.getDependencies().add(jarWebSupport.toDependency(PROVIDED));
+                    project.getDependencies().addAll(jarWebSupport.toDependencyList(PROVIDED));
                 }
             }
         }
 
         private void addBundleListDependencies() throws IOException, XmlPullParserException, MojoExecutionException {
             BundleList bundleList;
-            
+
             if (bundleListFile.exists()) {
                 bundleList = readBundleList(bundleListFile);
             } else {
                 bundleList = new BundleList();
             }
-            
+
             if (additionalBundles != null) {
                 for (ArtifactDefinition def : additionalBundles) {
-                    bundleList.add(def.toBundle());
+                    bundleList.add(def.toBundleList());
                 }
             }
-            
+
             interpolateProperties(bundleList, project, session);
-            
+
             for (StartLevel startLevel : bundleList.getStartLevels()) {
                 for (Bundle bundle : startLevel.getBundles()) {
                     log.debug(String.format("adding bundle (%s) from bundle list to dependencies of project %s", bundle, project));
-                    project.getDependencies().add(ArtifactDefinition.toDependency(bundle, PROVIDED));
+                    project.getDependencies().addAll(ArtifactDefinition.toDependencyList(bundle, PROVIDED));
                 }
             }
         }
@@ -161,10 +161,10 @@ public class LaunchpadPluginLifecycleParticipant extends AbstractMavenLifecycleP
                 if (bundleListFileConfig != null) {
                     bundleListFile = new File(project.getBasedir(), bundleListFileConfig.getValue());
                 }
-                
+
                 configureAdditionalBundles(configuration);
             }
-            
+
             for (PluginExecution execution : plugin.getExecutions()) {
                 Xpp3Dom executionConfiguration = (Xpp3Dom) execution.getConfiguration();
                 if (executionConfiguration != null) {

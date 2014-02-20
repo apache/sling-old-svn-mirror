@@ -255,7 +255,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         // add additional bundles
         if (additionalBundles != null) {
             for (ArtifactDefinition def : additionalBundles) {
-                initializedBundleList.add(def.toBundle());
+                initializedBundleList.add(def.toBundleList());
             }
         }
 
@@ -273,7 +273,7 @@ public abstract class AbstractUsingBundleListMojo extends AbstractBundleListMojo
         // handle exclusions
         if (bundleExclusions != null) {
             for (ArtifactDefinition def : bundleExclusions) {
-                initializedBundleList.remove(def.toBundle(), false);
+                initializedBundleList.remove(def.toBundleList(), false);
             }
         }
 
