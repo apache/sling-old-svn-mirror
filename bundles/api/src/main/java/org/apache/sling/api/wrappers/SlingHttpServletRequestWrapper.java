@@ -19,6 +19,7 @@
 package org.apache.sling.api.wrappers;
 
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -86,6 +87,10 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
         return getSlingRequest().getRequestParameterMap();
     }
 
+    public List<RequestParameter> getRequestParameterList() {
+        return getSlingRequest().getRequestParameterList();
+    }
+
     public RequestParameter[] getRequestParameters(String name) {
         return getSlingRequest().getRequestParameters(name);
     }
@@ -109,7 +114,7 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
     public ResourceBundle getResourceBundle(String baseName, Locale locale) {
         return getSlingRequest().getResourceBundle(baseName, locale);
     }
-    
+
     public String getResponseContentType() {
         return getSlingRequest().getResponseContentType();
     }
@@ -117,7 +122,7 @@ public class SlingHttpServletRequestWrapper extends HttpServletRequestWrapper
     public Enumeration<String> getResponseContentTypes() {
         return getSlingRequest().getResponseContentTypes();
     }
-    
+
     public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
         return getSlingRequest().adaptTo(type);
     }
