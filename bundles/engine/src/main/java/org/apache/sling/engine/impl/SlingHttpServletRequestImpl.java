@@ -185,6 +185,13 @@ public class SlingHttpServletRequestImpl extends HttpServletRequestWrapper imple
     }
 
     /**
+     * @see org.apache.sling.api.SlingHttpServletRequest#getRequestParameterList()
+     */
+    public List<RequestParameter> getRequestParameterList() {
+        return this.getParameterSupport().getRequestParameterList();
+    }
+
+    /**
      * @see org.apache.sling.api.SlingHttpServletRequest#getCookie(java.lang.String)
      */
     public Cookie getCookie(String name) {

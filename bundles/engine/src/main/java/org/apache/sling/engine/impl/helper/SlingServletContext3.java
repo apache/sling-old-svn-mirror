@@ -16,35 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.engine.impl.parameters;
+package org.apache.sling.engine.impl.helper;
 
-import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.engine.impl.SlingMainServlet;
+import org.osgi.framework.BundleContext;
 
-abstract class AbstractRequestParameter implements RequestParameter {
+public class SlingServletContext3 extends SlingServletContext {
 
-    private String name;
+    public SlingServletContext3(BundleContext bundleContext, SlingMainServlet slingMainServlet) {
+        super(bundleContext, slingMainServlet);
 
-    private String encoding;
-
-    protected AbstractRequestParameter(String name, String encoding) {
-        this.name = name;
-        this.encoding = encoding;
-    }
-
-    void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
-    public String getEncoding() {
-        return this.encoding;
+        throw new InternalError("Wrong class in bundle");
     }
 
 }

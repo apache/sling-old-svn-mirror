@@ -937,7 +937,7 @@ class CustomLogFormat {
         }
 
         protected String getValue(RequestLoggerResponse response) {
-            return escape(response.getHeaders(this.headerName));
+            return escape(response.getHeadersString(this.headerName));
         }
     }
 }

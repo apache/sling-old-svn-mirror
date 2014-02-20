@@ -76,8 +76,8 @@ public class SlingFilterConfig implements FilterConfig {
     /**
      * @see javax.servlet.FilterConfig#getInitParameterNames()
      */
-    public Enumeration<?> getInitParameterNames() {
-        List<?> keys = Arrays.asList(reference.getPropertyKeys());
+    public Enumeration<String> getInitParameterNames() {
+        List<String> keys = Arrays.asList(reference.getPropertyKeys());
         return Collections.enumeration(keys);
     }
 

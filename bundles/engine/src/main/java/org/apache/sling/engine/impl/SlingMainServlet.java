@@ -56,7 +56,7 @@ import org.apache.sling.engine.SlingRequestProcessor;
 import org.apache.sling.engine.impl.filter.ServletFilterManager;
 import org.apache.sling.engine.impl.helper.RequestListenerManager;
 import org.apache.sling.engine.impl.helper.SlingServletContext;
-import org.apache.sling.engine.impl.parameters.ParameterSupport;
+import org.apache.sling.engine.impl.helper.SlingServletContext3;
 import org.apache.sling.engine.impl.request.RequestData;
 import org.apache.sling.engine.impl.request.RequestHistoryConsolePlugin;
 import org.apache.sling.engine.jmx.RequestProcessorMBean;
@@ -108,7 +108,6 @@ public class SlingMainServlet extends GenericServlet {
     @Property(unbounded=PropertyUnbounded.ARRAY)
     private static final String PROP_TRACK_PATTERNS_REQUESTS = "sling.store.pattern.requests";
 
-    @Property
     private static final String PROP_DEFAULT_PARAMETER_ENCODING = "sling.default.parameter.encoding";
 
     @Reference
@@ -374,8 +373,14 @@ public class SlingMainServlet extends GenericServlet {
         RequestData.setSlingMainServlet(this);
 
         // configure default request parameter encoding
-        ParameterSupport.setDefaultParameterEncoding(OsgiUtil.toString(
-            componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING), null));
+        // log a message if such configuration exists ....
+        if (componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING) != null) {
+            log.warn("Configure default request parameter encoding with 'org.apache.sling.parameters.config' configuration; the property "
+                + PROP_DEFAULT_PARAMETER_ENCODING
+                + "="
+                + componentConfig.get(PROP_DEFAULT_PARAMETER_ENCODING)
+                + " is ignored");
+        }
 
         // register the servlet and resources
         try {
@@ -392,7 +397,11 @@ public class SlingMainServlet extends GenericServlet {
 
         // now that the sling main servlet is registered with the HttpService
         // and initialized we can register the servlet context
-        slingServletContext = new SlingServletContext(bundleContext, this);
+        if (getServletContext() == null || getServletContext().getMajorVersion() < 3) {
+            slingServletContext = new SlingServletContext(bundleContext, this);
+        } else {
+            slingServletContext = new SlingServletContext3(bundleContext, this);
+        }
 
         // register render filters already registered after registration with
         // the HttpService as filter initialization may cause the servlet

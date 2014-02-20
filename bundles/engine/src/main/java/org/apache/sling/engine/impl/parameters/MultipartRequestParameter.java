@@ -25,9 +25,14 @@ import java.io.UnsupportedEncodingException;
 import org.apache.commons.fileupload.FileItem;
 
 /**
- * The <code>MultipartRequestParameter</code> TODO
+ * The <code>MultipartRequestParameter</code> represents a request parameter
+ * from a multipart/form-data POST request.
+ * <p>
+ * To not add a dependency to Servlet API 3 this class does not implement the
+ * Servlet API 3 {@code Part} interface. To support Servlet API 3 {@code Part}s
+ * the {@link SlingPart} class wraps instances of this class.
  */
-class MultipartRequestParameter extends AbstractRequestParameter {
+public class MultipartRequestParameter extends AbstractRequestParameter {
 
     private final FileItem delegatee;
 
@@ -35,16 +40,17 @@ class MultipartRequestParameter extends AbstractRequestParameter {
 
     private String cachedValue;
 
-    /**
-     *
-     */
-    MultipartRequestParameter(FileItem delegatee) {
-        super(null);
+    public MultipartRequestParameter(FileItem delegatee) {
+        super(delegatee.getFieldName(), null);
         this.delegatee = delegatee;
     }
 
     void dispose() {
         this.delegatee.delete();
+    }
+
+    FileItem getFileItem() {
+        return this.delegatee;
     }
 
     @Override
@@ -53,30 +59,18 @@ class MultipartRequestParameter extends AbstractRequestParameter {
         cachedValue = null;
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#get()
-     */
     public byte[] get() {
         return this.delegatee.get();
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#getContentType()
-     */
     public String getContentType() {
         return this.delegatee.getContentType();
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#getInputStream()
-     */
     public InputStream getInputStream() throws IOException {
         return this.delegatee.getInputStream();
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#getFileName()
-     */
     public String getFileName() {
         if (this.encodedFileName == null && this.delegatee.getName() != null) {
             String tmpFileName = this.delegatee.getName();
@@ -94,16 +88,10 @@ class MultipartRequestParameter extends AbstractRequestParameter {
         return this.encodedFileName;
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#getSize()
-     */
     public long getSize() {
         return this.delegatee.getSize();
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#getString()
-     */
     public String getString() {
         // only apply encoding in the case of a form field
         if (this.isFormField()) {
@@ -132,16 +120,10 @@ class MultipartRequestParameter extends AbstractRequestParameter {
         return this.delegatee.getString();
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#getString(java.lang.String)
-     */
     public String getString(String enc) throws UnsupportedEncodingException {
         return this.delegatee.getString(enc);
     }
 
-    /**
-     * @see org.apache.sling.api.request.RequestParameter#isFormField()
-     */
     public boolean isFormField() {
         return this.delegatee.isFormField();
     }
@@ -151,7 +133,6 @@ class MultipartRequestParameter extends AbstractRequestParameter {
             return this.getString();
         }
 
-        return "File: " + this.getFileName() + " (" + this.getSize()
-            + " bytes)";
+        return "File: " + this.getFileName() + " (" + this.getSize() + " bytes)";
     }
 }

@@ -18,9 +18,14 @@
  */
 package org.apache.sling.engine.impl.parameters;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import junit.framework.TestCase;
+
+import org.apache.sling.api.request.RequestParameter;
 
 public class UtilTest extends TestCase {
 
@@ -63,33 +68,11 @@ public class UtilTest extends TestCase {
         assertEquals(Util.ENCODING_DIRECT, Util.getDefaultFixEncoding());
     }
 
-    public void test_default_fix_encoding_via_ParameterSupport() {
-        assertEquals(Util.ENCODING_DIRECT, Util.getDefaultFixEncoding());
-
-        ParameterSupport.setDefaultParameterEncoding(utf8);
-        assertEquals(utf8, Util.getDefaultFixEncoding());
-
-        ParameterSupport.setDefaultParameterEncoding(Util.ENCODING_DIRECT);
-        assertEquals(Util.ENCODING_DIRECT, Util.getDefaultFixEncoding());
-
-        ParameterSupport.setDefaultParameterEncoding("XX_invalid_encoding_scheme_XX");
-        assertEquals(Util.ENCODING_DIRECT, Util.getDefaultFixEncoding());
-
-        ParameterSupport.setDefaultParameterEncoding(utf8);
-        assertEquals(utf8, Util.getDefaultFixEncoding());
-
-        ParameterSupport.setDefaultParameterEncoding("XX_invalid_encoding_scheme_XX");
-        assertEquals(utf8, Util.getDefaultFixEncoding());
-
-        ParameterSupport.setDefaultParameterEncoding(Util.ENCODING_DIRECT);
-        assertEquals(Util.ENCODING_DIRECT, Util.getDefaultFixEncoding());
-    }
-
-    public void test_fix_encoding_direct() throws UnsupportedEncodingException {
+    public void test_fix_encoding_direct() {
 
         ParameterMap pm = new ParameterMap();
-        pm.addParameter("par", new ContainerRequestParameter(utf8Coded,
-            Util.ENCODING_DIRECT));
+        pm.addParameter(new ContainerRequestParameter("par", utf8Coded,
+            Util.ENCODING_DIRECT), false);
         Util.fixEncoding(pm);
         assertEquals(utf8Coded, pm.getValue("par").getString());
 
@@ -97,21 +80,51 @@ public class UtilTest extends TestCase {
 
     public void test_fix_encoding_charset() {
         ParameterMap pm2 = new ParameterMap();
-        pm2.addParameter("par", new ContainerRequestParameter(utf8Coded,
-            Util.ENCODING_DIRECT));
-        pm2.addParameter("_charset_", new ContainerRequestParameter(utf8,
-            Util.ENCODING_DIRECT));
+        pm2.addParameter(new ContainerRequestParameter("par", utf8Coded,
+            Util.ENCODING_DIRECT), false);
+        pm2.addParameter(new ContainerRequestParameter("_charset_", utf8,
+            Util.ENCODING_DIRECT), false);
         Util.fixEncoding(pm2);
         assertEquals(utf8String, pm2.getValue("par").getString());
     }
 
     public void test_fix_encoding_configured() {
         ParameterMap pm3 = new ParameterMap();
-        pm3.addParameter("par", new ContainerRequestParameter(utf8Coded,
-            Util.ENCODING_DIRECT));
+        pm3.addParameter(new ContainerRequestParameter("par", utf8Coded,
+            Util.ENCODING_DIRECT), false);
         Util.setDefaultFixEncoding(utf8);
         Util.fixEncoding(pm3);
         assertEquals(utf8String, pm3.getValue("par").getString());
         Util.setDefaultFixEncoding(Util.ENCODING_DIRECT);
+    }
+
+    public void test_decode_query() throws IllegalArgumentException, UnsupportedEncodingException, IOException {
+        final ParameterMap map = new ParameterMap();
+        final String query = "a=1&b=2&c=3";
+        Util.parseQueryString(new ByteArrayInputStream(query.getBytes(Util.ENCODING_DIRECT)), Util.ENCODING_DIRECT, map, false);
+
+        assertEquals(3, map.size());
+
+        List<RequestParameter> pars = map.getRequestParameterList();
+        assertEquals(3, pars.size());
+        assertEquals("a", pars.get(0).getName());
+        assertEquals("1", pars.get(0).getString());
+        assertEquals("b", pars.get(1).getName());
+        assertEquals("2", pars.get(1).getString());
+        assertEquals("c", pars.get(2).getName());
+        assertEquals("3", pars.get(2).getString());
+    }
+
+    public void test_getParameter_with_space() throws Exception {
+        final ParameterMap map = new ParameterMap();
+        final String query = "cmsaction=createPage&templateName=/apps/geometrixx/templates/contentpage"
+            + "&label=&title=Some Page&parentPath=/content/geometrixx";
+        Util.parseQueryString(new ByteArrayInputStream(query.getBytes(Util.ENCODING_DIRECT)), Util.ENCODING_DIRECT,
+            map, false);
+        assertEquals("createPage", map.getStringValue("cmsaction"));
+        assertEquals("/apps/geometrixx/templates/contentpage", map.getStringValue("templateName"));
+        assertEquals("", map.getStringValue("label"));
+        assertEquals("Some Page", map.getStringValue("title"));
+        assertEquals("/content/geometrixx", map.getStringValue("parentPath"));
     }
 }

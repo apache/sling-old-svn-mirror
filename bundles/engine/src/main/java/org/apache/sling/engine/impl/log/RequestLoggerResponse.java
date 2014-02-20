@@ -271,7 +271,7 @@ class RequestLoggerResponse extends HttpServletResponseWrapper {
         return (this.cookies != null) ? (Cookie) this.cookies.get(name) : null;
     }
 
-    public String getHeaders(String name) {
+    public String getHeadersString(String name) {
         // normalize header name to lower case to support case-insensitive
         // headers
         name = name.toLowerCase();

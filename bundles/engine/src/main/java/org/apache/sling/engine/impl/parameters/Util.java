@@ -19,27 +19,74 @@
 package org.apache.sling.engine.impl.parameters;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.sling.api.request.RequestParameter;
+import org.apache.sling.commons.osgi.PropertiesUtil;
 
-/**
- * The <code>Util</code> TODO
- */
-class Util {
+@Component(
+        metatype = true,
+        name = "org.apache.sling.engine.parameters",
+        label = "Apache Sling Request Parameter Handling",
+        description = "Configures Sling's request parameter handling.")
+public class Util {
 
-    /** The name of the form encoding parameter */
-    public final static String PARAMETER_FORMENCODING = "_charset_";
+    //     * @see javax.servlet.annotation.MultipartConfig#maxFileSize
+//    * @see javax.servlet.annotation.MultipartConfig#maxRequestSize
+
+    @Property(value = Util.ENCODING_DIRECT,
+            label = "Default Parameter Encoding",
+            description = "The default request parameter encoding used to decode request "
+                + "parameters into strings. If this property is not set the default encoding "
+                + "is 'ISO-8859-1' as mandated by the Servlet API spec. This default encoding "
+                + "is used if the '_charset_' request parameter is not set to another "
+                + "(supported) character encoding. Applications being sure to always use the "
+                + "same encoding (e.g. UTF-8) can set this default here and may omit the "
+                + "'_charset_' request parameter")
+    private static final String PROP_FIX_ENCODING = "sling.default.parameter.encoding";
+
+    @Property(
+            intValue = ParameterMap.DEFAULT_MAX_PARAMS,
+            label = "Maximum POST Parameters",
+            description = "The maximum number of parameters supported. To prevent a DOS-style attack with an "
+                + "overrunning number of parameters the number of parameters supported can be limited. This "
+                + "includes all of the query string as well as application/x-www-form-urlencoded and "
+                + "multipart/form-data parameters. The default value is " + ParameterMap.DEFAULT_MAX_PARAMS + ".")
+    private static final String PROP_MAX_PARAMS = "sling.default.max.parameters";
+
+    @Property(
+            label = "Temporary File Location",
+            description = "The size threshold after which the file will be written to disk")
+    private static final String PROP_FILE_LOCATION = "file.location";
+
+    @Property(
+            label = "File Save Threshold",
+            description = "The size threshold after which the file will be written to disk")
+    private static final String PROP_FILE_SIZE_THRESHOLD = "file.threshold";
+
+    @Property(
+            label = "Maximum File Size",
+            description = "The maximum size allowed for uploaded files. The default is -1, which means unlimited.")
+    private static final String PROP_FILE_SIZE_MAX = "file.max";
+
+    @Property(
+            label = "Maximum Request Size",
+            description = "The maximum size allowed for multipart/form-data requests. The default is -1, which means unlimited.")
+    private static final String PROP_MAX_REQUEST_SIZE = "request.max";
+
+
 
     // ISO-8859-1 mapps all characters 0..255 to \u0000..\u00ff directly
     public static final String ENCODING_DIRECT = "ISO-8859-1";
-
-    // the default encoding used in #fixEncoding if the _charset_ request
-    // parameter is not set
-    private static String defaultFixEncoding = ENCODING_DIRECT;
 
     // Default query (and www-form-encoded) parameter encoding as per
     // HTML spec.
@@ -48,7 +95,50 @@ class Util {
 
     public static final byte[] NO_CONTENT = new byte[0];
 
-    static void setDefaultFixEncoding(final String encoding) {
+    // the default encoding used in #fixEncoding if the _charset_ request
+    // parameter is not set
+    private static String defaultFixEncoding = ENCODING_DIRECT;
+
+    /** Parse state constant */
+    private static final int BEFORE_NAME =  0;
+
+    /** Parse state constant */
+    private static final int INSIDE_NAME =  BEFORE_NAME + 1;
+
+    /** Parse state constant */
+    private static final int ESC_NAME =  INSIDE_NAME + 1;
+
+    /** Parse state constant */
+    private static final int BEFORE_EQU =  ESC_NAME + 1;
+
+    /** Parse state constant */
+    private static final int BEFORE_VALUE =  BEFORE_EQU + 1;
+
+    /** Parse state constant */
+    private static final int INSIDE_VALUE =  BEFORE_VALUE + 1;
+
+    /** Parse state constant */
+    private static final int ESC_VALUE =  INSIDE_VALUE + 1;
+
+    /** Parse state constant */
+    private static final int AFTER_VALUE =  INSIDE_VALUE + 1;
+
+    /** Parse state constant */
+    private static final int BEFORE_SEP =  AFTER_VALUE + 1;
+
+    @Activate
+    @Deactivate
+    private void configure(Map<String, Object> props) {
+        setDefaultFixEncoding(PropertiesUtil.toString(props.get(PROP_FIX_ENCODING), ENCODING_DIRECT));
+        ParameterMap.setMaxParameters(PropertiesUtil.toInteger(props.get(PROP_MAX_PARAMS),
+            ParameterMap.DEFAULT_MAX_PARAMS));
+        ParameterSupport.configure(PropertiesUtil.toLong(props.get(PROP_MAX_REQUEST_SIZE), -1),
+            PropertiesUtil.toString(props.get(PROP_FILE_LOCATION), null),
+            PropertiesUtil.toLong(props.get(PROP_FILE_SIZE_MAX), -1),
+            PropertiesUtil.toInteger(props.get(PROP_FILE_SIZE_THRESHOLD), -1));
+    }
+
+    public static void setDefaultFixEncoding(final String encoding) {
         defaultFixEncoding = validateEncoding(encoding);
     }
 
@@ -80,7 +170,7 @@ class Util {
         return data;
     }
 
-    static InputStream getInputStream(String source) {
+    static InputStream toInputStream(String source) {
         byte[] data = fromIdentityEncodedString(source);
         return new ByteArrayInputStream(data);
     }
@@ -90,7 +180,7 @@ class Util {
         String formEncoding = defaultFixEncoding;
 
         // check whether a form encoding parameter overwrites this default
-        RequestParameter[] feParm = parameterMap.get(PARAMETER_FORMENCODING);
+        RequestParameter[] feParm = parameterMap.get(ParameterSupport.PARAMETER_FORMENCODING);
         if (feParm != null) {
             // get and check form encoding
             byte[] rawEncoding = feParm[0].get();
@@ -172,5 +262,164 @@ class Util {
 
         // no encoding or unsupported encoding
         return defaultFixEncoding;
+    }
+
+    /**
+     * Parse a query string and store entries inside a map
+     *
+     * @param data       querystring data
+     * @param encoding   encoding to use for converting bytes to characters
+     * @param map        map to populate
+     * @param prependNew whether to prepend new values
+     *
+     * @exception IllegalArgumentException if the query string is malformed
+     * @exception UnsupportedEncodingException if the encoding is not supported
+     * @throws IOException If an error occurs reading from the data
+     */
+    public static void parseQueryString(InputStream data, String encoding, ParameterMap map,
+                                        boolean prependNew)
+            throws IllegalArgumentException, UnsupportedEncodingException, IOException {
+
+        parseNVPairString(data, encoding, map, '&', false, prependNew);
+    }
+
+    /**
+     * Parse a name/value pair string and populate a map with key -> value[s]
+     *
+     * @param data        name value data
+     * @param encoding    encoding to use for converting bytes to characters
+     * @param map         map to populate
+     * @param separator   multi-value separator character
+     * @param allowSpaces allow spaces inside name/values
+     * @param prependNew  whether to prepend new values
+     *
+     * @exception IllegalArgumentException if the nv string is malformed
+     */
+    private static void parseNVPairString(InputStream data, String encoding, ParameterMap map,
+                                          char separator, boolean allowSpaces,
+                                          boolean prependNew)
+            throws IllegalArgumentException, UnsupportedEncodingException, IOException {
+
+        ByteArrayOutputStream keyBuffer   = new ByteArrayOutputStream(256);
+        ByteArrayOutputStream valueBuffer = new ByteArrayOutputStream(256);
+        char[] chCode = new char[2];
+
+        int state = BEFORE_NAME;
+        int subState = 0;
+
+        for (int in = data.read(); in >= 0; in = data.read()) {
+            char ch = (char) in;
+
+            switch (state) {
+                case BEFORE_NAME:
+                    if (ch == ' ') {
+                        continue;
+                    } else if (ch == '%') {
+                        state = ESC_NAME;
+                        subState = 0;
+                    } else if (ch == '+' && !allowSpaces) {
+                        keyBuffer.write(' ');
+                        state = INSIDE_NAME;
+                    } else {
+                        keyBuffer.write(ch);
+                        state = INSIDE_NAME;
+                    }
+                    break;
+                case INSIDE_NAME:
+                    if (ch == '=') {
+                        state = BEFORE_VALUE;
+                    } else if (ch == '+' && !allowSpaces) {
+                        keyBuffer.write(' ');
+                    } else if (ch == '%') {
+                        state = ESC_NAME;
+                        subState = 0;
+                    } else if (ch == '&') {
+                        addNVPair(map, keyBuffer, valueBuffer, encoding, prependNew);
+                        state = BEFORE_NAME;
+                    } else {
+                        keyBuffer.write(ch);
+                    }
+                    break;
+                case ESC_NAME:
+                    chCode[subState++] = ch;
+                    if (subState == chCode.length) {
+                        String code = new String(chCode);
+                        try {
+                            keyBuffer.write(Integer.parseInt(code, 16));
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException(
+                                    "Bad escape sequence: %" + code);
+                        }
+                        state = INSIDE_NAME;
+                    }
+                    break;
+                case BEFORE_EQU:
+                    if (ch == '=') {
+                        state = BEFORE_VALUE;
+                    }
+                    break;
+                case BEFORE_VALUE:
+                    if (ch == ' ') {
+                        continue;
+                    } else if (ch == '%') {
+                        state = ESC_VALUE;
+                        subState = 0;
+                    } else if (ch == '+' && !allowSpaces) {
+                        valueBuffer.write(' ');
+                        state = INSIDE_VALUE;
+                    } else if (ch == separator) {
+                        addNVPair(map, keyBuffer, valueBuffer, encoding, prependNew);
+                        state = BEFORE_NAME;
+                    } else {
+                        valueBuffer.write(ch);
+                        state = INSIDE_VALUE;
+                    }
+                    break;
+                case INSIDE_VALUE:
+                    if (ch == separator) {
+                        addNVPair(map, keyBuffer, valueBuffer, encoding, prependNew);
+                        state = BEFORE_NAME;
+                    } else if (ch == '+' && !allowSpaces) {
+                        valueBuffer.write(' ');
+                    } else if (ch == '%') {
+                        state = ESC_VALUE;
+                        subState = 0;
+                    } else {
+                        valueBuffer.write(ch);
+                    }
+                    break;
+                case ESC_VALUE:
+                    chCode[subState++] = ch;
+                    if (subState == chCode.length) {
+                        String code = new String(chCode);
+                        try {
+                            valueBuffer.write(Integer.parseInt(code, 16));
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException(
+                                    "Bad escape sequence: %" + code);
+                        }
+                        state = INSIDE_VALUE;
+                    }
+                    break;
+                case BEFORE_SEP:
+                    if (ch == separator) {
+                        state = BEFORE_NAME;
+                    }
+                    break;
+            }
+        }
+
+        if (keyBuffer.size() > 0) {
+            addNVPair(map, keyBuffer, valueBuffer, encoding, prependNew);
+        }
+    }
+
+    private static void addNVPair(ParameterMap map, ByteArrayOutputStream keyBuffer, ByteArrayOutputStream valueBuffer,
+            String encoding, boolean prependNew) throws UnsupportedEncodingException {
+        final String key = keyBuffer.toString(encoding);
+        final String value = valueBuffer.toString(encoding);
+        map.addParameter(new ContainerRequestParameter(key, value, encoding), prependNew);
+        keyBuffer.reset();
+        valueBuffer.reset();
     }
 }

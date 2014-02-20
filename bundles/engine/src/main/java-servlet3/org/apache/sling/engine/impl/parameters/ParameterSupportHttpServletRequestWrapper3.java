@@ -18,33 +18,24 @@
  */
 package org.apache.sling.engine.impl.parameters;
 
-import org.apache.sling.api.request.RequestParameter;
+import java.util.Collection;
 
-abstract class AbstractRequestParameter implements RequestParameter {
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 
-    private String name;
-
-    private String encoding;
-
-    protected AbstractRequestParameter(String name, String encoding) {
-        this.name = name;
-        this.encoding = encoding;
+public class ParameterSupportHttpServletRequestWrapper3 extends ParameterSupportHttpServletRequestWrapper2x {
+    public ParameterSupportHttpServletRequestWrapper3(HttpServletRequest request) {
+        super(request);
     }
 
-    void setName(String name) {
-        this.name = name;
+    @Override
+    public Part getPart(String name) {
+        return (Part) getParameterSupport().getPart(name);
     }
 
-    public String getName() {
-        return this.name;
+    @Override
+    @SuppressWarnings("unchecked")
+    public Collection<Part> getParts() {
+        return (Collection<Part>) getParameterSupport().getParts();
     }
-
-    void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
-    public String getEncoding() {
-        return this.encoding;
-    }
-
 }
