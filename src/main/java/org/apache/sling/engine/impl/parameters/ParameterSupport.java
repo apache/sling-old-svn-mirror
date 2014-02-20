@@ -18,16 +18,19 @@
  */
 package org.apache.sling.engine.impl.parameters;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.RequestContext;
@@ -40,6 +43,17 @@ import org.slf4j.LoggerFactory;
 
 public class ParameterSupport {
 
+    /**
+     * The name of the form encoding request parameter indicating the character
+     * encoding of submitted request parameters. This request parameter
+     * overwrites any value of the {@code ServletRequest.getCharacterEncoding()}
+     * method (which unfortunately happens to be returning {@code null} most of
+     * the time.
+     */
+    public final static String PARAMETER_FORMENCODING = "_charset_";
+
+    // name of the request attribute caching the ParameterSupport instance
+    // used during the request
     private static final String ATTR_NAME = ParameterSupport.class.getName();
 
     /**
@@ -56,6 +70,34 @@ public class ParameterSupport {
      */
     private static final String ATTR_JETTY_QUERY_ENCODING_2 = "org.eclipse.jetty.server.Request.queryEncoding";
 
+    /** Content type signaling parameters in request body */
+    private static final String WWW_FORM_URL_ENC = "application/x-www-form-urlencoded";
+
+    /**
+     * The maximum size allowed for <tt>multipart/form-data</tt>
+     * requests
+     *
+     * <p>The default is <tt>-1L</tt>, which means unlimited.
+     */
+    private static long maxRequestSize = -1L;
+
+    /**
+     * The directory location where files will be stored
+     */
+    private static File location = null;
+
+    /**
+     * The maximum size allowed for uploaded files.
+     *
+     * <p>The default is <tt>-1L</tt>, which means unlimited.
+     */
+    private static long maxFileSize = -1L;
+
+    /**
+     * The size threshold after which the file will be written to disk
+     */
+    private static int fileSizeThreshold = 256000;
+
     private final HttpServletRequest servletRequest;
 
     private ParameterMap postParameterMap;
@@ -63,25 +105,60 @@ public class ParameterSupport {
     private boolean requestDataUsed;
 
     /**
-     * Sets the default encoding used to decode request parameters if the
-     * <code>_charset_</code> request parameter is not set (or is not set to an
-     * encoding supported by the platform). By default this default encoding is
-     * <code>ISO-8859-1</code>. For applications which alway use the same
-     * encoding this default can be changed.
+     * Returns the {@code ParameterSupport} instance supporting request
+     * parameter for the give {@code request}. For a single request only a
+     * single instance is actually used. This single instance is cached as a
+     * request attribute. If such an attribute already exists which is not an
+     * instance of this class, the request parameter is replaced.
      *
-     * @param encoding The default encoding to be used. If this encoding is
-     *            <code>null</code> or not supported by the platform the current
-     *            default encoding remains unchanged.
+     * @param request The {@code HttpServletRequest} for which to return request
+     *            parameter support.
+     * @return The {@code ParameterSupport} for the given request.
      */
-    public static void setDefaultParameterEncoding(final String encoding) {
-        Util.setDefaultFixEncoding(encoding);
+    public static ParameterSupport getInstance(HttpServletRequest request) {
+        Object instance = request.getAttribute(ATTR_NAME);
+        if (!(instance instanceof ParameterSupport)) {
+            instance = new ParameterSupport(request);
+            request.setAttribute(ATTR_NAME, instance);
+        }
+        return (ParameterSupport) instance;
     }
 
-    public static ParameterSupport getInstance(ServletRequest servletRequest) {
-        ParameterSupport instance = (ParameterSupport) servletRequest.getAttribute(ATTR_NAME);
-        if (instance == null) {
-            instance = new ParameterSupport((HttpServletRequest) servletRequest);
-            servletRequest.setAttribute(ATTR_NAME, instance);
+    /**
+     * Returns a {@code HttpServletRequestWrapper} which implements request
+     * parameter access backed by an instance of the {@code ParameterSupport}
+     * class.
+     * <p>
+     * If used in a Servlet API 3 context, this method supports the additional
+     * {@code Part} API introduced with Servlet API 3.
+     *
+     * @param request The {@code HttpServletRequest} to wrap
+     * @return The wrapped {@code request}
+     */
+    public static HttpServletRequestWrapper getParameterSupportRequestWrapper(final HttpServletRequest request) {
+
+        try {
+            if (request.getClass().getMethod("getServletContext") != null) {
+                return new ParameterSupportHttpServletRequestWrapper3(request);
+            }
+        } catch (Exception e) {
+            // If the getServletContext method does not exist or
+            // is not visible, fall back to a Servlet API 2.x wrapper
+        }
+
+        return new ParameterSupportHttpServletRequestWrapper2x(request);
+    }
+
+    static void configure(final long maxRequestSize, final String location, final long maxFileSize,
+            final int fileSizeThreshold) {
+        ParameterSupport.maxRequestSize = (maxRequestSize > 0) ? maxRequestSize : -1;
+        ParameterSupport.location = (location != null) ? new File(location) : null;
+        ParameterSupport.maxFileSize = (maxFileSize > 0) ? maxFileSize : -1;
+        ParameterSupport.fileSizeThreshold = (fileSizeThreshold > 0) ? fileSizeThreshold : 256000;
+    }
+
+    private ParameterSupport(HttpServletRequest servletRequest) {
+        this.servletRequest = servletRequest;
 
             // SLING-559: Hack to get Jetty into decoding the request
             // query with ISO-8859-1 as stipulated by the servlet
@@ -89,12 +166,6 @@ public class ParameterSupport {
             servletRequest.setAttribute(ATTR_JETTY_QUERY_ENCODING_1, Util.ENCODING_DIRECT);
             servletRequest.setAttribute(ATTR_JETTY_QUERY_ENCODING_2, Util.ENCODING_DIRECT);
         }
-        return instance;
-    }
-
-    private ParameterSupport(HttpServletRequest servletRequest) {
-        this.servletRequest = servletRequest;
-    }
 
     private HttpServletRequest getServletRequest() {
         return servletRequest;
@@ -116,10 +187,18 @@ public class ParameterSupport {
         return getRequestParameterMapInternal().getStringParameterMap();
     }
 
-    @SuppressWarnings("unchecked")
     public Enumeration<String> getParameterNames() {
-        return new IteratorEnumeration(
-            this.getRequestParameterMapInternal().keySet().iterator());
+        return new Enumeration<String>() {
+            private final Iterator<String> base = ParameterSupport.this.getRequestParameterMapInternal().keySet().iterator();
+
+            public boolean hasMoreElements() {
+                return this.base.hasNext();
+            }
+
+            public String nextElement() {
+                return this.base.next();
+            }
+        };
     }
 
     public RequestParameter getRequestParameter(String name) {
@@ -130,8 +209,20 @@ public class ParameterSupport {
         return getRequestParameterMapInternal().getValues(name);
     }
 
+    public Object getPart(String name) {
+        return getRequestParameterMapInternal().getPart(name);
+    }
+
+    public Collection<?> getParts() {
+        return getRequestParameterMapInternal().getParts();
+    }
+
     public RequestParameterMap getRequestParameterMap() {
         return getRequestParameterMapInternal();
+    }
+
+    public List<RequestParameter> getRequestParameterList() {
+        return getRequestParameterMapInternal().getRequestParameterList();
     }
 
     private ParameterMap getRequestParameterMapInternal() {
@@ -173,29 +264,57 @@ public class ParameterSupport {
             }
         }
 
-        final Map<?, ?> pMap = getServletRequest().getParameterMap();
-        for (Map.Entry<?, ?> entry : pMap.entrySet()) {
-
-            final String name = (String) entry.getKey();
-            final String[] values = (String[]) entry.getValue();
-
-            for (int i = 0; i < values.length; i++) {
-                parameters.addParameter(name, new ContainerRequestParameter(
-                    values[i], encoding));
+        final String query = getServletRequest().getQueryString();
+        if (query != null) {
+            try {
+                InputStream input = Util.toInputStream(query);
+                Util.parseQueryString(input, encoding, parameters, false);
+            } catch (UnsupportedEncodingException e) {
+                // TODO: don't expect this, thus log !!
+            } catch (IOException e) {
+                // TODO: don't expect this, thus log !!
             }
-
         }
-    }
+
+        // only read input in case of multipart-POST not handled
+        // by the servlet container
+        if ("POST".equals(this.getServletRequest().getMethod())
+            && WWW_FORM_URL_ENC.equalsIgnoreCase(this.getServletRequest().getContentType())) {
+            try {
+                InputStream input = this.getServletRequest().getInputStream();
+                Util.parseQueryString(input, encoding, parameters, false);
+            } catch (IllegalArgumentException e) {
+                // TODO: don't expect this, thus log !!
+            } catch (UnsupportedEncodingException e) {
+                // TODO: don't expect this, thus log !!
+            } catch (IOException e) {
+                // TODO: don't expect this, thus log !!
+            }
+            this.requestDataUsed = true;
+        }
+
+//        final Map<?, ?> pMap = getServletRequest().getParameterMap();
+//        for (Map.Entry<?, ?> entry : pMap.entrySet()) {
+//
+//            final String name = (String) entry.getKey();
+//            final String[] values = (String[]) entry.getValue();
+//
+//            for (int i = 0; i < values.length; i++) {
+//                parameters.addParameter(name, new ContainerRequestParameter(
+//                    values[i], encoding));
+//            }
+//
+//        }
+        }
 
     private void parseMultiPartPost(ParameterMap parameters) {
-        // parameters not read yet, read now
-        // Create a factory for disk-based file items
-        DiskFileItemFactory factory = new DiskFileItemFactory();
-        factory.setSizeThreshold(256000);
 
         // Create a new file upload handler
-        ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setSizeMax(-1);
+        ServletFileUpload upload = new ServletFileUpload();
+        upload.setSizeMax(ParameterSupport.maxRequestSize);
+        upload.setFileSizeMax(ParameterSupport.maxFileSize);
+        upload.setFileItemFactory(new DiskFileItemFactory(ParameterSupport.fileSizeThreshold,
+            ParameterSupport.location));
 
         RequestContext rc = new ServletRequestContext(this.getServletRequest()) {
             public String getCharacterEncoding() {
@@ -216,7 +335,7 @@ public class ParameterSupport {
             for (Iterator<?> ii = items.iterator(); ii.hasNext();) {
                 FileItem fileItem = (FileItem) ii.next();
                 RequestParameter pp = new MultipartRequestParameter(fileItem);
-                parameters.addParameter(fileItem.getFieldName(), pp);
+                parameters.addParameter(pp, false);
             }
         }
     }

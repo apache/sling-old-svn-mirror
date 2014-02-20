@@ -47,104 +47,108 @@ class ExternalServletContextWrapper implements ServletContext {
         this.delegate = sc;
     }
 
+    protected final ServletContext getServletContext() {
+        return delegate;
+    }
+
     public ServletContext getContext(String s) {
-        return delegate.getContext(s);
+        return getServletContext().getContext(s);
     }
 
     public int getMajorVersion() {
-        return delegate.getMajorVersion();
+        return getServletContext().getMajorVersion();
     }
 
     public int getMinorVersion() {
-        return delegate.getMinorVersion();
+        return getServletContext().getMinorVersion();
     }
 
     public String getMimeType(String s) {
-        return delegate.getMimeType(s);
+        return getServletContext().getMimeType(s);
     }
 
     public Set getResourcePaths(String s) {
-        return delegate.getResourcePaths(s);
+        return getServletContext().getResourcePaths(s);
     }
 
     public URL getResource(String s) throws MalformedURLException {
-        return delegate.getResource(s);
+        return getServletContext().getResource(s);
     }
 
     public InputStream getResourceAsStream(String s) {
-        return delegate.getResourceAsStream(s);
+        return getServletContext().getResourceAsStream(s);
     }
 
     public RequestDispatcher getRequestDispatcher(String s) {
-        return new RequestDispatcherWrapper(delegate.getRequestDispatcher(s));
+        return new RequestDispatcherWrapper(getServletContext().getRequestDispatcher(s));
     }
 
     public RequestDispatcher getNamedDispatcher(String s) {
-        return new RequestDispatcherWrapper(delegate.getNamedDispatcher(s));
+        return new RequestDispatcherWrapper(getServletContext().getNamedDispatcher(s));
     }
 
     public Servlet getServlet(String s) throws ServletException {
-        return delegate.getServlet(s);
+        return getServletContext().getServlet(s);
     }
 
     public Enumeration getServlets() {
-        return delegate.getServlets();
+        return getServletContext().getServlets();
     }
 
     public Enumeration getServletNames() {
-        return delegate.getServletNames();
+        return getServletContext().getServletNames();
     }
 
     public void log(String s) {
-        delegate.log(s);
+        getServletContext().log(s);
     }
 
     public void log(Exception exception, String s) {
-        delegate.log(exception, s);
+        getServletContext().log(exception, s);
     }
 
     public void log(String s, Throwable throwable) {
-        delegate.log(s, throwable);
+        getServletContext().log(s, throwable);
     }
 
     public String getRealPath(String s) {
-        return delegate.getRealPath(s);
+        return getServletContext().getRealPath(s);
     }
 
     public String getServerInfo() {
-        return delegate.getServerInfo();
+        return getServletContext().getServerInfo();
     }
 
     public String getInitParameter(String s) {
-        return delegate.getInitParameter(s);
+        return getServletContext().getInitParameter(s);
     }
 
     public Enumeration getInitParameterNames() {
-        return delegate.getInitParameterNames();
+        return getServletContext().getInitParameterNames();
     }
 
     public Object getAttribute(String s) {
-        return delegate.getAttribute(s);
+        return getServletContext().getAttribute(s);
     }
 
     public Enumeration getAttributeNames() {
-        return delegate.getAttributeNames();
+        return getServletContext().getAttributeNames();
     }
 
     public void setAttribute(String s, Object obj) {
-        delegate.setAttribute(s, obj);
+        getServletContext().setAttribute(s, obj);
     }
 
     public void removeAttribute(String s) {
-        delegate.removeAttribute(s);
+        getServletContext().removeAttribute(s);
     }
 
     public String getServletContextName() {
-        return delegate.getServletContextName();
+        return getServletContext().getServletContextName();
     }
 
     public String getContextPath() {
-        return delegate.getContextPath();
+        return getServletContext().getContextPath();
     }
 
     static class RequestDispatcherWrapper implements RequestDispatcher {
@@ -200,5 +204,4 @@ class ExternalServletContextWrapper implements ServletContext {
         }
 
     }
-
 }

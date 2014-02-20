@@ -37,7 +37,7 @@ public class ContainerRequestParameterTest extends TestCase {
         // encoded LATIN-1 String of UTF-8 encoding
         testInternal("\u00c3\u00b6\u00c3\u00a4\u00c3\u00bc", UTF8, LATIN1);
     }
-    
+
     public void testChangeEncodingUpper() throws UnsupportedEncodingException {
         // runic letter e, katakana letter pa, halfwidth katakana letter no
         // encoded LATIN-1 String of UTF-8 encoding
@@ -46,7 +46,7 @@ public class ContainerRequestParameterTest extends TestCase {
 
     private void testInternal(String value, String baseEncoding,
             String targetEncoding) throws UnsupportedEncodingException {
-        ContainerRequestParameter par = new ContainerRequestParameter(value,
+        ContainerRequestParameter par = new ContainerRequestParameter("name", value,
             baseEncoding);
 
         assertEquals(baseEncoding, par.getEncoding());

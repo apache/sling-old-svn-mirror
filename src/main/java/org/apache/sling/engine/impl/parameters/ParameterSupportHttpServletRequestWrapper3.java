@@ -18,33 +18,12 @@
  */
 package org.apache.sling.engine.impl.parameters;
 
-import org.apache.sling.api.request.RequestParameter;
+import javax.servlet.http.HttpServletRequest;
 
-abstract class AbstractRequestParameter implements RequestParameter {
+public class ParameterSupportHttpServletRequestWrapper3 extends ParameterSupportHttpServletRequestWrapper2x {
 
-    private String name;
-
-    private String encoding;
-
-    protected AbstractRequestParameter(String name, String encoding) {
-        this.name = name;
-        this.encoding = encoding;
+    public ParameterSupportHttpServletRequestWrapper3(HttpServletRequest request) {
+        super(request);
+        throw new InternalError("Wrong class in bundle");
     }
-
-    void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
-
-    public String getEncoding() {
-        return this.encoding;
-    }
-
 }

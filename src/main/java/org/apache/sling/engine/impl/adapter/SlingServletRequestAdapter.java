@@ -101,12 +101,12 @@ public class SlingServletRequestAdapter extends SlingHttpServletRequestWrapper {
     }
 
     @Override
-    public Enumeration<?> getHeaderNames() {
+    public Enumeration<String> getHeaderNames() {
         return request.getHeaderNames();
     }
 
     @Override
-    public Enumeration<?> getHeaders(String name) {
+    public Enumeration<String> getHeaders(String name) {
         return request.getHeaders(name);
     }
 
@@ -207,7 +207,7 @@ public class SlingServletRequestAdapter extends SlingHttpServletRequestWrapper {
     }
 
     @Override
-    public Enumeration<?> getAttributeNames() {
+    public Enumeration<String> getAttributeNames() {
         return request.getAttributeNames();
     }
 
@@ -237,7 +237,7 @@ public class SlingServletRequestAdapter extends SlingHttpServletRequestWrapper {
     }
 
     @Override
-    public Enumeration<?> getLocales() {
+    public Enumeration<Locale> getLocales() {
         return request.getLocales();
     }
 
@@ -247,12 +247,12 @@ public class SlingServletRequestAdapter extends SlingHttpServletRequestWrapper {
     }
 
     @Override
-    public Map<?, ?> getParameterMap() {
+    public Map<String, String[]> getParameterMap() {
         return request.getParameterMap();
     }
 
     @Override
-    public Enumeration<?> getParameterNames() {
+    public Enumeration<String> getParameterNames() {
         return request.getParameterNames();
     }
 

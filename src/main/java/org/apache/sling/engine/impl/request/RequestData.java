@@ -47,6 +47,7 @@ import org.apache.sling.api.servlets.ServletResolver;
 import org.apache.sling.api.wrappers.SlingHttpServletRequestWrapper;
 import org.apache.sling.api.wrappers.SlingHttpServletResponseWrapper;
 import org.apache.sling.engine.impl.SlingHttpServletRequestImpl;
+import org.apache.sling.engine.impl.SlingHttpServletRequestImpl3;
 import org.apache.sling.engine.impl.SlingHttpServletResponseImpl;
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.SlingRequestProcessorImpl;
@@ -106,9 +107,11 @@ public class RequestData {
 
     private static SlingMainServlet SLING_MAIN_SERVLET;
 
+    private static SlingHttpServletRequestFactory REQUEST_FACTORY;
+
     /** The SlingMainServlet used for request dispatching and other stuff */
     private final SlingRequestProcessorImpl slingRequestProcessor;
-    
+
     private final long startTimestamp;
 
     /** The original servlet Servlet Request Object */
@@ -175,19 +178,19 @@ public class RequestData {
 
     public static void setSlingMainServlet(final SlingMainServlet slingMainServlet) {
         RequestData.SLING_MAIN_SERVLET = slingMainServlet;
+        RequestData.REQUEST_FACTORY = null;
     }
 
     public RequestData(SlingRequestProcessorImpl slingRequestProcessor,
             HttpServletRequest request, HttpServletResponse response) {
         this.startTimestamp = System.currentTimeMillis();
-        
+
         this.slingRequestProcessor = slingRequestProcessor;
 
         this.servletRequest = request;
         this.servletResponse = response;
 
-        this.slingRequest = new SlingHttpServletRequestImpl(this,
-            servletRequest);
+        this.slingRequest = getSlingHttpServletRequestFactory().createRequest(this, this.servletRequest);
         this.slingResponse = new SlingHttpServletResponseImpl(this,
             servletResponse);
 
@@ -550,15 +553,15 @@ public class RequestData {
     public RequestProgressTracker getRequestProgressTracker() {
         return requestProgressTracker;
     }
-    
+
     public int getPeakRecusionDepth() {
         return peakRecusionDepth;
     }
-    
+
     public int getServletCallCount() {
         return servletCallCounter;
     }
-    
+
     public long getElapsedTimeMsec() {
         return System.currentTimeMillis() - startTimestamp;
     }
@@ -623,5 +626,35 @@ public class RequestData {
         }
 
         return parameterSupport;
+    }
+
+    // SlingHttpServletRequest instance factory
+
+    private static SlingHttpServletRequestFactory getSlingHttpServletRequestFactory() {
+        SlingHttpServletRequestFactory factory = RequestData.REQUEST_FACTORY;
+        if (factory == null) {
+            SlingMainServlet servlet = RequestData.SLING_MAIN_SERVLET;
+            if (servlet == null || servlet.getServletContext() == null
+                || servlet.getServletContext().getMajorVersion() < 3) {
+
+                factory = new SlingHttpServletRequestFactory() {
+                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
+                        return new SlingHttpServletRequestImpl(requestData, request);
+                    }
+                };
+            } else {
+                factory = new SlingHttpServletRequestFactory() {
+                    public SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request) {
+                        return new SlingHttpServletRequestImpl3(requestData, request);
+                    }
+                };
+            }
+            RequestData.REQUEST_FACTORY = factory;
+        }
+        return factory;
+    }
+
+    private static interface SlingHttpServletRequestFactory {
+        SlingHttpServletRequest createRequest(RequestData requestData, HttpServletRequest request);
     }
 }

@@ -20,11 +20,8 @@ package org.apache.sling.engine.impl;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.sling.auth.core.AuthenticationSupport;
@@ -119,31 +116,7 @@ class SlingHttpContext implements HttpContext {
 
             // SLING-559: ensure correct parameter handling according to
             // ParameterSupport
-            request = new HttpServletRequestWrapper(request) {
-                @Override
-                public String getParameter(String name) {
-                    return getParameterSupport().getParameter(name);
-                }
-
-                @Override
-                public Map<String, String[]> getParameterMap() {
-                    return getParameterSupport().getParameterMap();
-                }
-
-                @Override
-                public Enumeration<String> getParameterNames() {
-                    return getParameterSupport().getParameterNames();
-                }
-
-                @Override
-                public String[] getParameterValues(String name) {
-                    return getParameterSupport().getParameterValues(name);
-                }
-
-                private ParameterSupport getParameterSupport() {
-                    return ParameterSupport.getInstance(getRequest());
-                }
-            };
+            request = ParameterSupport.getParameterSupportRequestWrapper(request);
 
             return authenticator.handleSecurity(request, response);
 

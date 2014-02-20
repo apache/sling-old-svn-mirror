@@ -30,7 +30,6 @@ import java.util.Set;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
-
 import org.apache.sling.engine.impl.SlingMainServlet;
 import org.apache.sling.engine.impl.request.SlingRequestDispatcher;
 import org.osgi.framework.BundleContext;
@@ -40,10 +39,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The <code>SlingServletContext</code> class is the
- * <code>ServletContext</code> which is registered as a service usable by
- * servlets and helpers inside Sling. Most methods just call into the servlet
- * context in which the {@link SlingMainServlet} is running.
+ * The <code>SlingServletContext</code> class is the <code>ServletContext</code>
+ * which is registered as a service usable by servlets and helpers inside Sling.
+ * Most methods just call into the servlet context in which the
+ * {@link SlingMainServlet} is running.
  * <dl>
  * <dt><b>MIME Type Mapping</b></dt>
  * <dd>Just forwards to the servlet context of the {@link SlingMainServlet} for
@@ -62,9 +61,12 @@ import org.slf4j.LoggerFactory;
  * <dd>Initialization parameters and context attributes are shared with the
  * servlet context in which the {@link SlingMainServlet} is running.</dd>
  * <dt><b>Logging</b></dt>
- * <dd>Logging is diverted to a logger whose name is the fully qualified name
- * of this class.</dd>
+ * <dd>Logging is diverted to a logger whose name is the fully qualified name of
+ * this class.</dd>
  * </dl>
+ * <p>
+ * This class implements the Servlet API 2.5 {@code ServletContext} interface.
+ * See {@link SlingServletContext3} for the Servlet API 3 implementation.
  */
 public class SlingServletContext implements ServletContext {
 
@@ -408,7 +410,7 @@ public class SlingServletContext implements ServletContext {
         if (delegatee != null) {
             ServletContext otherContext = delegatee.getContext(uripath);
             if (otherContext != null && otherContext != delegatee) {
-                return new ExternalServletContextWrapper(otherContext);
+                return wrapServletContext(otherContext);
             }
         }
 
@@ -423,14 +425,14 @@ public class SlingServletContext implements ServletContext {
 
     /** Returns an empty enumeration as defined in Servlet API 2.4 */
     @Deprecated
-    public Enumeration<?> getServletNames() {
-        return Collections.enumeration(Collections.emptyList());
+    public Enumeration<String> getServletNames() {
+        return Collections.enumeration(Collections.<String>emptyList());
     }
 
     /** Returns an empty enumeration as defined in Servlet API 2.4 */
     @Deprecated
-    public Enumeration<?> getServlets() {
-        return Collections.enumeration(Collections.emptyList());
+    public Enumeration<Servlet> getServlets() {
+        return Collections.enumeration(Collections.<Servlet>emptyList());
     }
 
     // ---------- internal -----------------------------------------------------
@@ -439,7 +441,11 @@ public class SlingServletContext implements ServletContext {
      * Returns the real servlet context of the servlet container in which the
      * Sling Servlet is running.
      */
-    private ServletContext getServletContext() {
+    protected ServletContext getServletContext() {
         return slingMainServlet.getServletContext();
+    }
+
+    protected ServletContext wrapServletContext(ServletContext context) {
+        return new ExternalServletContextWrapper(context);
     }
 }

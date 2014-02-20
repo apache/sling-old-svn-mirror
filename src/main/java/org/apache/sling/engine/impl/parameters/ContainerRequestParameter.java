@@ -31,14 +31,14 @@ public class ContainerRequestParameter extends AbstractRequestParameter {
 
     private byte[] content;
 
-    ContainerRequestParameter(String value, String encoding) {
-        super(encoding);
+    public ContainerRequestParameter(String name, String value, String encoding) {
+        super(name, encoding);
         this.value = value;
         this.content = null;
     }
 
     @Override
-    void setEncoding(String encoding) {
+    public void setEncoding(String encoding) {
         // recode this parameter by encoding the string with the current
         // encoding and decode the bytes with the encoding
         try {
@@ -46,7 +46,7 @@ public class ContainerRequestParameter extends AbstractRequestParameter {
         } catch (UnsupportedEncodingException uee) {
             throw new SlingUnsupportedEncodingException(uee);
         }
-        
+
         super.setEncoding(encoding);
     }
 
