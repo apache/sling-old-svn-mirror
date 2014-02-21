@@ -74,8 +74,8 @@
                                     srcdir="${basedir}/src/main/java-servlet3"
                                     destdir="${project.build.outputDirectory}"
                                     encoding="${project.build.sourceEncoding}"
-                                    target="1.5"
-                                    source="1.5"
+                                    target="1.${sling.java.version}"
+                                    source="1.${sling.java.version}"
                                     includeantruntime="false"
                                 >
                                     <classpath
