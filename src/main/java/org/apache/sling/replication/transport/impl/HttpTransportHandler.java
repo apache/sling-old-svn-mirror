@@ -32,6 +32,7 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.entity.ContentType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
@@ -79,7 +80,7 @@ public class HttpTransportHandler extends AbstractTransportHandler
 
     @Override
     public void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
-                                         ReplicationEndpoint replicationEndpoint) throws Exception {
+                                         ReplicationEndpoint replicationEndpoint, ReplicationQueueProcessor responseProcessor) throws Exception {
         log.info("delivering package {} to {} using auth {}",
                 new Object[]{replicationPackage.getId(),
                         replicationEndpoint.getUri(), transportAuthenticationProvider});

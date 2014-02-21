@@ -49,15 +49,14 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getDefaultQueue(agent)).thenReturn(queue);
+        when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(true);
         when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNotNull(returnedState);
         assertTrue(returnedState.isSuccessful());
     }
@@ -72,15 +71,14 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content/sample1"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue(agent, "/content")).thenReturn(queue);
+        when(queueProvider.getQueue("agentName", "/content")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(true);
         when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNotNull(returnedState);
         assertTrue(returnedState.isSuccessful());
     }
@@ -95,15 +93,14 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getDefaultQueue(agent)).thenReturn(queue);
+        when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNotNull(returnedState);
         assertFalse(returnedState.isSuccessful());
     }
@@ -118,15 +115,14 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/content/sample2"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue(agent, "/content")).thenReturn(queue);
+        when(queueProvider.getQueue("agentName", "/content")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(state.isSuccessful()).thenReturn(false);
         when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNotNull(returnedState);
         assertFalse(returnedState.isSuccessful());
     }
@@ -141,12 +137,11 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getDefaultQueue(agent)).thenReturn(queue);
+        when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNull(returnedState);
     }
 
@@ -160,12 +155,11 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps/some/stuff"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue(agent, "/apps")).thenReturn(queue);
+        when(queueProvider.getQueue("agentName", "/apps")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNull(returnedState);
     }
 
@@ -179,14 +173,13 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/etc"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getDefaultQueue(agent)).thenReturn(queue);
+        when(queueProvider.getDefaultQueue("agentName")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNotNull(returnedState);
     }
 
@@ -200,14 +193,13 @@ public class PriorityPathQueueDistributionStrategyTest {
         priorityPathDistributionStrategy.activate(context);
         ReplicationQueueItem replicationPackage = mock(ReplicationQueueItem.class);
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps"});
-        ReplicationAgent agent = mock(ReplicationAgent.class);
         ReplicationQueueProvider queueProvider = mock(ReplicationQueueProvider.class);
         ReplicationQueue queue = mock(ReplicationQueue.class);
-        when(queueProvider.getQueue(agent, "/apps")).thenReturn(queue);
+        when(queueProvider.getQueue("agentName", "/apps")).thenReturn(queue);
         when(queue.add(replicationPackage)).thenReturn(true);
         ReplicationQueueItemState state = mock(ReplicationQueueItemState.class);
         when(queue.getStatus(replicationPackage)).thenReturn(state);
-        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add(replicationPackage, agent, queueProvider);
+        ReplicationQueueItemState returnedState = priorityPathDistributionStrategy.add("agentName", replicationPackage, queueProvider);
         assertNotNull(returnedState);
     }
 }

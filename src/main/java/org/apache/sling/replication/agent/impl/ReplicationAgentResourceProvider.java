@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link ResourceProvider} for {@link ReplicationAgent}s
  */
-@Component(metatype = false)
+@Component(metatype = false, label = "Replication Agent ResourceProvider")
 @Service(value = ResourceProvider.class)
 @Properties({
         @Property(name = ResourceProvider.ROOTS,

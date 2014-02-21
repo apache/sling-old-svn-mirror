@@ -18,6 +18,8 @@
  */
 package org.apache.sling.replication.agent.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.List;
@@ -39,6 +41,7 @@ import org.apache.sling.replication.rule.ReplicationRuleEngine;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
+import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.impl.NopTransportHandler;
@@ -48,7 +51,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Basic implementation of a {@link ReplicationAgent}
  */
-public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueueProcessor {
+public class SimpleReplicationAgent implements ReplicationAgent {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -69,6 +72,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
     private final boolean useAggregatePaths;
 
     private final ReplicationRuleEngine ruleEngine;
+
+    private final String RESPONSE_QUEUE = "response";
 
     public SimpleReplicationAgent(String name, String[] rules,
                                   boolean useAggregatePaths,
@@ -164,7 +169,7 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
 
         if (offer) {
             try {
-                queueDistributionStrategy.offer(replicationQueueItem, this, queueProvider);
+                queueDistributionStrategy.offer(getName(), replicationQueueItem, queueProvider);
                 if (isPassive()) {
                     generatePackageQueuedEvent(replicationQueueItem);
                 }
@@ -175,8 +180,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         } else {
             // send the replication package to the queue distribution handler
             try {
-                ReplicationQueueItemState state = queueDistributionStrategy.add(replicationQueueItem,
-                        this, queueProvider);
+                ReplicationQueueItemState state = queueDistributionStrategy.add(getName(), replicationQueueItem,
+                        queueProvider);
                 if (isPassive()) {
                     generatePackageQueuedEvent(replicationQueueItem);
                 }
@@ -204,25 +209,6 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         replicationEventFactory.generateEvent(ReplicationEventType.PACKAGE_QUEUED, properties);
     }
 
-    public boolean process(ReplicationQueueItem itemInfo) {
-        try {
-            ReplicationPackage replicationPackage = packageBuilder.getPackage(itemInfo.getId());
-
-            if (replicationPackage == null || isPassive()) {
-                log.info("agent {} processing skipped", name);
-                return false;
-            } else {
-                transportHandler.transport(replicationPackage);
-                replicationPackage.delete();
-                return true;
-            }
-
-        } catch (ReplicationTransportException e) {
-            log.error("transport error", e);
-            return false;
-        }
-    }
-
     public ReplicationPackage removeHead(String queueName) throws ReplicationQueueException {
         ReplicationPackage replicationPackage = null;
         if (isPassive()) {
@@ -245,9 +231,9 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
     public ReplicationQueue getQueue(String name) throws ReplicationQueueException {
         ReplicationQueue queue;
         if (name != null && name.length() > 0) {
-            queue = queueProvider.getQueue(this, name);
+            queue = queueProvider.getQueue(getName(), name);
         } else {
-            queue = queueProvider.getDefaultQueue(this);
+            queue = queueProvider.getDefaultQueue(getName());
         }
         return queue;
     }
@@ -261,7 +247,8 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         }
 
         if (!isPassive()) {
-            queueProvider.enableQueueProcessing(this, this);
+            queueProvider.enableQueueProcessing(getName(), new PackageQueueProcessor());
+            transportHandler.enableProcessing(getName(), new ResponseProcessor());
         }
     }
 
@@ -272,7 +259,62 @@ public class SimpleReplicationAgent implements ReplicationAgent, ReplicationQueu
         }
 
         if (!isPassive()) {
-            queueProvider.disableQueueProcessing(this);
+            queueProvider.disableQueueProcessing(getName());
+            transportHandler.disableProcessing(getName());
+        }
+    }
+
+    private boolean processResponseQueue(ReplicationQueueItem queueItem) {
+        InputStream stream = new ByteArrayInputStream(queueItem.getBytes());
+        log.debug("reading package from stream {}", stream);
+        try {
+            ReplicationPackage replicationPackage = packageBuilder.readPackage(stream, true);
+            replicationPackage.delete();
+            return true;
+        } catch (ReplicationPackageReadingException e) {
+            return false;
+        }
+    }
+
+    private boolean processTransportQueue(ReplicationQueueItem queueItem) {
+        try {
+            ReplicationPackage replicationPackage = packageBuilder.getPackage(queueItem.getId());
+            if (replicationPackage == null) {
+                return false;
+            }
+            if (transportHandler != null) {
+                transportHandler.transport(getName(), replicationPackage);
+                replicationPackage.delete();
+                return true;
+            } else {
+                log.info("agent {} processing skipped", name);
+                return false;
+            }
+        } catch (ReplicationTransportException e) {
+            log.error("transport error", e);
+            return false;
+        }
+    }
+
+    class PackageQueueProcessor implements ReplicationQueueProcessor {
+        public boolean process(String queueName, ReplicationQueueItem packageInfo) {
+            log.info("running package queue processor");
+            if (RESPONSE_QUEUE.equalsIgnoreCase(queueName)) {
+                return processResponseQueue(packageInfo);
+            } else {
+                return processTransportQueue(packageInfo);
+            }
+        }
+    }
+
+    class ResponseProcessor implements ReplicationQueueProcessor {
+        public boolean process(String queueName, ReplicationQueueItem queueItem) {
+            log.info("running response processor");
+            try {
+                return getQueue(RESPONSE_QUEUE).add(queueItem);
+            } catch (Exception e) {
+                return false;
+            }
         }
     }
 

@@ -21,10 +21,7 @@ package org.apache.sling.replication.queue.impl.jobhandling;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.sling.event.jobs.Job;
-import org.apache.sling.event.jobs.JobManager;
-import org.apache.sling.event.jobs.ScheduledJobInfo;
 import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,35 +38,77 @@ public class JobHandlingUtils {
 
     protected static final String ACTION = "replication.package.action";
 
+    protected static final String BYTES = "replication.package.bytes";
+
 
     public static ReplicationQueueItem getPackage(final Job job) {
-        return new ReplicationQueueItem(String.valueOf(job.getProperty(ID)),
-                (String[]) job.getProperty(PATHS),
-                String.valueOf(job.getProperty(ACTION)),
-                String.valueOf(job.getProperty(TYPE)));
+        String id = (String) job.getProperty(ID);
+        if (id != null) {
+            return new ReplicationQueueItem((String) job.getProperty(ID),
+                    (String[]) job.getProperty(PATHS),
+                    String.valueOf(job.getProperty(ACTION)),
+                    String.valueOf(job.getProperty(TYPE)));
+        } else {
+            return new ReplicationQueueItem((String[]) job.getProperty(PATHS),
+                    String.valueOf(job.getProperty(ACTION)),
+                    String.valueOf(job.getProperty(TYPE)),
+                    unBox((Byte[]) job.getProperty(BYTES)));
+        }
     }
 
     public static Map<String, Object> createFullPropertiesFromPackage(
-                    ReplicationQueueItem replicationPackage) throws IOException {
+            ReplicationQueueItem replicationPackage) throws IOException {
         Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ID, replicationPackage.getId());
+
+        if (replicationPackage.getId() != null)
+            properties.put(ID, replicationPackage.getId());
         properties.put(PATHS, replicationPackage.getPaths());
         properties.put(ACTION, replicationPackage.getAction());
         properties.put(TYPE, replicationPackage.getType());
+
+        if (replicationPackage.getBytes() != null)
+            properties.put(BYTES, box(replicationPackage.getBytes()));
+
         return properties;
     }
 
     public static Map<String, Object> createIdPropertiesFromPackage(
-                    ReplicationQueueItem replicationPackage) {
+            ReplicationQueueItem replicationPackage) {
         Map<String, Object> properties = new HashMap<String, Object>();
         properties.put(ID, replicationPackage.getId());
         return properties;
     }
 
-    public static Map<String, Object> createIdPropertiesFromId(String id) {
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put(ID, id);
-        return properties;
+    public static Byte[] box(byte[] bytes) {
+        if (bytes == null) return null;
+        Byte[] result = new Byte[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            result[i] = bytes[i];
+        }
+        return result;
     }
+
+    public static byte[] unBox(Byte[] bytes) {
+        if (bytes == null) return null;
+        byte[] result = new byte[bytes.length];
+        for (int i = 0; i < bytes.length; i++) {
+            result[i] = bytes[i];
+        }
+        return result;
+    }
+
+    public static String getQueueName(Job job) {
+
+        String topic = job.getTopic();
+        if (topic == null || !topic.startsWith(JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC)) return null;
+
+        String queue = topic.substring(JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC.length() + 1);
+        int idx = queue.indexOf("/");
+
+        if (idx < 0) return "";
+
+        return queue.substring(idx + 1);
+    }
+
 
 }

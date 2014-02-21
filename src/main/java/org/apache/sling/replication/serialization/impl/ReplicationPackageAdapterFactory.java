@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * {@link AdapterFactory} for
  * {@link org.apache.sling.replication.serialization.ReplicationPackage}s
  */
-@Component
+@Component(label = "Adapter Factory for Replication Packages")
 @Service(value = org.apache.sling.api.adapter.AdapterFactory.class)
 @Properties({
         @Property(name = "adaptables", value = { "org.apache.sling.api.SlingHttpServletRequest" }),

@@ -48,7 +48,7 @@ public class RepositoryTransportHandlerTest {
                 transportAuthenticationProvider,
                 new ReplicationEndpoint[] {  new ReplicationEndpoint("repo://var/outbox/replication/rev1") });
         try {
-            handler.transport(null);
+            handler.transport("agentName", null);
             fail("cannot deliver without a proper session");
         } catch (ReplicationTransportException re) {
             // failure expected
@@ -84,6 +84,6 @@ public class RepositoryTransportHandlerTest {
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
         when(replicationPackage.getId()).thenReturn("some-id");
         when(replicationPackage.getPaths()).thenReturn(new String[]{"/apps", "/libs"});
-        handler.transport(replicationPackage);
+        handler.transport("agentName", replicationPackage);
     }
 }

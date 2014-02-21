@@ -143,7 +143,8 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
                     finally {
                         IOUtils.closeQuietly(inputStream);
                     }
-                    response.setHeader(ReplicationHeader.TYPE.toString(), head.getType());
+
+                    setPackageHeaders(response, head);
 
                     // delete the package permanently
                     head.delete();
@@ -171,6 +172,15 @@ public class ReplicationAgentServlet extends SlingAllMethodsServlet {
         }
 
         return l.toArray(new String[0]);
+
+    }
+
+    void setPackageHeaders(SlingHttpServletResponse response, ReplicationPackage replicationPackage){
+        response.setHeader(ReplicationHeader.TYPE.toString(), replicationPackage.getType());
+        response.setHeader(ReplicationHeader.ACTION.toString(), replicationPackage.getAction());
+        for (String path : replicationPackage.getPaths()){
+            response.setHeader(ReplicationHeader.PATH.toString(), path);
+        }
 
     }
 }

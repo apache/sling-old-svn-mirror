@@ -31,7 +31,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-@Component(metatype = false)
+@Component(metatype = false, label = "Void Replication Package Builder")
 @Service(value = ReplicationPackageBuilder.class)
 @Property(name = "name", value = VoidReplicationPackageBuilder.NAME)
 public class VoidReplicationPackageBuilder implements ReplicationPackageBuilder {

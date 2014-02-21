@@ -37,9 +37,9 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilderProvider;
 
 /**
- * Default implementation of {@link org.apache.sling.replication.agent.ReplicationAgentsManager}
+ * Default implementation of {@link org.apache.sling.replication.serialization.ReplicationPackageBuilderProvider}
  */
-@Component
+@Component(label = "Default Replication Package Builder Provider")
 @References({ 
     @Reference(name = "replicationPackageBuilder", 
                referenceInterface = ReplicationPackageBuilder.class, 

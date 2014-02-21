@@ -18,6 +18,7 @@
  */
 package org.apache.sling.replication.transport.impl;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -26,13 +27,18 @@ import org.apache.http.client.fluent.Request;
 import org.apache.sling.replication.communication.ReplicationActionType;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
 import org.apache.sling.replication.communication.ReplicationHeader;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationContext;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * basic HTTP GET {@link TransportHandler}
@@ -43,22 +49,20 @@ public class PollingTransportHandler extends AbstractTransportHandler
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider;
-    private final ReplicationPackageImporter replicationPackageImporter;
     private final int pollItems;
 
-    public PollingTransportHandler(ReplicationPackageImporter replicationPackageImporter,
-                                   int pollItems,
+    public PollingTransportHandler(int pollItems,
                                    TransportAuthenticationProvider<Executor, Executor> transportAuthenticationProvider,
                                    ReplicationEndpoint[] replicationEndpoints){
         super(replicationEndpoints, TransportEndpointStrategyType.All);
-
-        this.replicationPackageImporter = replicationPackageImporter;
         this.pollItems = pollItems;
         this.transportAuthenticationProvider = transportAuthenticationProvider;
     }
 
     @Override
-    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint)
+    public void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
+                                         ReplicationEndpoint replicationEndpoint,
+                                         ReplicationQueueProcessor responseProcessor)
             throws Exception {
         log.info("polling from {}", replicationEndpoint.getUri());
 
@@ -79,19 +83,35 @@ public class PollingTransportHandler extends AbstractTransportHandler
         HttpResponse httpResponse;
         while ((httpResponse = executor.execute(req).returnResponse()).containsHeader(ReplicationHeader.TYPE.toString())
                 && polls != 0) {
-            HttpEntity entity = httpResponse.getEntity();
-            Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
+            ReplicationQueueItem queueItem = readPackageHeaders(httpResponse);
 
-            if (entity.getContentLength() > 0) {
-                replicationPackageImporter.scheduleImport(entity.getContent(), typeHeader.getValue());
-                polls--;
-                log.info("scheduled import of package stream");
-
-            } else {
-                log.info("nothing to fetch");
-                break;
-            }
+            if(responseProcessor != null)
+                responseProcessor.process("poll", queueItem);
+            polls--;
         }
+
+    }
+
+
+     ReplicationQueueItem readPackageHeaders(HttpResponse httpResponse) throws IOException {
+        Header typeHeader = httpResponse.getFirstHeader(ReplicationHeader.TYPE.toString());
+        Header actionHeader = httpResponse.getFirstHeader(ReplicationHeader.ACTION.toString());
+        Header[] pathHeaders = httpResponse.getHeaders(ReplicationHeader.PATH.toString());
+        List<String> pathList = new ArrayList<String>();
+
+        for(Header pathHeader : pathHeaders){
+            pathHeader.getValue();
+            pathList.add(pathHeader.getValue());
+        }
+
+        HttpEntity entity = httpResponse.getEntity();
+        byte[] bytes = IOUtils.toByteArray(entity.getContent());
+
+
+        return new ReplicationQueueItem(pathList.toArray(new String[0]),
+                actionHeader.getValue(),
+                typeHeader.getValue(),
+                bytes);
 
     }
 

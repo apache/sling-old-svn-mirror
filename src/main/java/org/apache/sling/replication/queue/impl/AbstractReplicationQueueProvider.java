@@ -19,17 +19,13 @@
 package org.apache.sling.replication.queue.impl;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.sling.replication.agent.ReplicationAgent;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
-import org.apache.sling.replication.serialization.ReplicationPackage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * abstract base implementation of a {@link ReplicationQueueProvider}
@@ -38,32 +34,25 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final Map<String, ReplicationQueue> queueMap = new HashMap<String, ReplicationQueue>();
+    private final Map<String, ReplicationQueue> queueMap = new ConcurrentHashMap<String, ReplicationQueue>();
 
-
-    public ReplicationQueue getQueue(ReplicationAgent agent, String queueName)
+    public ReplicationQueue getQueue(String agentName, String queueName)
                     throws ReplicationQueueException {
-        String key = agent.getName() + queueName;
+        String key = agentName + queueName;
 
         ReplicationQueue queue = queueMap.get(key);
         if (queue == null) {
-            if (log.isInfoEnabled()) {
-                log.info("creating a queue with key {}", key);
-            }
-            queue = getOrCreateQueue(agent, queueName);
+            log.info("creating a queue with key {}", key);
+            queue = getOrCreateQueue(agentName, queueName);
             queueMap.put(key, queue);
-            if (log.isInfoEnabled()) {
-                log.info("queue created {}", queue);
-            }
+            log.info("queue created {}", queue);
         }
         return queue;
     }
 
-    protected abstract ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String selector) throws ReplicationQueueException;
-
-    public ReplicationQueue getDefaultQueue(ReplicationAgent agent)
+    public ReplicationQueue getDefaultQueue(String agentName)
                     throws ReplicationQueueException {
-        return getQueue(agent, "");
+        return getQueue(agentName, "");
     }
 
     public Collection<ReplicationQueue> getAllQueues() {
@@ -79,6 +68,8 @@ public abstract class AbstractReplicationQueueProvider implements ReplicationQue
             }
         }
     }
+
+    protected abstract ReplicationQueue getOrCreateQueue(String agentName, String queueName) throws ReplicationQueueException;
 
     protected abstract void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException;
 

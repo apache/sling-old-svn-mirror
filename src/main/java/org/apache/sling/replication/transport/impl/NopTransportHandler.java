@@ -21,6 +21,7 @@ package org.apache.sling.replication.transport.impl;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
@@ -28,13 +29,18 @@ import org.apache.sling.replication.transport.TransportHandler;
 /**
  * A no-operation {@link org.apache.sling.replication.transport.TransportHandler}
  */
-@Component(metatype = false)
+@Component(metatype = false, label = "Nop Transport Handler")
 @Service(value = TransportHandler.class)
 @Property(name = "name", value = NopTransportHandler.NAME)
 public class NopTransportHandler implements TransportHandler {
     public static final String NAME = "nop";
 
-    public void transport(ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    public void transport(String agentName, ReplicationPackage replicationPackage) throws ReplicationTransportException {
+    }
 
+    public void enableProcessing(String agentName, ReplicationQueueProcessor responseProcessor) {
+    }
+
+    public void disableProcessing(String agentName) {
     }
 }

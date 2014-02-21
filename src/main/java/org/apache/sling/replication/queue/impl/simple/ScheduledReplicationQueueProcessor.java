@@ -51,7 +51,7 @@ public class ScheduledReplicationQueueProcessor implements Runnable {
                     // synchronized (queue) {
                     ReplicationQueueItem item = queue.getHead();
                     if (item != null) {
-                        if (queueProcessor.process(item)) {
+                        if (queueProcessor.process(queue.getName(), item)) {
                             queue.removeHead();
                         } else {
                             log.warn("processing of item {} failed",

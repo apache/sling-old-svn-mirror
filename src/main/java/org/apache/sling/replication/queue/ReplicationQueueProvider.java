@@ -20,8 +20,6 @@ package org.apache.sling.replication.queue;
 
 import java.util.Collection;
 
-import org.apache.sling.replication.agent.ReplicationAgent;
-
 /**
  * A provider for {@link ReplicationQueue}s
  */
@@ -31,26 +29,28 @@ public interface ReplicationQueueProvider {
      * provide the queue to be used for a certain agent and package or creates it if it doesn't
      * exist
      * 
-     * @param agent
+     *
+     * @param agentName
      *            the replication agent needing the queue
      * @param name
      *            the name of the queue to retrieve
      * @return a replication queue to be used for the given parameters
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getQueue(ReplicationAgent agent, String name)
+    ReplicationQueue getQueue(String agentName, String name)
                     throws ReplicationQueueException;
 
 
     /**
      * get the default queue to be used for a certain agent
      * 
-     * @param agent
+     *
+     * @param agentName
      *            a replication agent
      * @return the default replication queue for the given agent
      * @throws ReplicationQueueException
      */
-    ReplicationQueue getDefaultQueue(ReplicationAgent agent)
+    ReplicationQueue getDefaultQueue(String agentName)
                     throws ReplicationQueueException;
 
     /**
@@ -72,18 +72,17 @@ public interface ReplicationQueueProvider {
 
     /**
      * enables queue driven processing for an agent.
-     * @param agent
+     * @param agentName
      *          a replication agent
      * @param queueProcessor
-     *          the callback that is called when an item needs processing
      */
-    void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor);
+    void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor);
 
 
     /**
      * disables queue driven processing for an agent
-     * @param agent
+     * @param agentName
      *          a replication agent
      */
-    void disableQueueProcessing(ReplicationAgent agent);
+    void disableQueueProcessing(String agentName);
 }

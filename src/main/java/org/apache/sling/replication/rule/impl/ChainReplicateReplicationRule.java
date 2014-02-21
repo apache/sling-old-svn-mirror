@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * a rule for triggering a chain replication upon replication package installation {@link ReplicationEventType.PACKAGE_INSTALLED}
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Rule for Chain Replication")
 @Service(value = ReplicationRule.class)
 public class ChainReplicateReplicationRule implements ReplicationRule {
 

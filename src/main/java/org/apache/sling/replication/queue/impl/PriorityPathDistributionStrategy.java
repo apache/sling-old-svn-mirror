@@ -31,14 +31,13 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 
 /**
  * Distribution algorithm which keeps one specific queue to handle specific paths and another queue
  * for handling all the other paths
  */
-@Component(immediate = true, metatype = true)
+@Component(immediate = true, metatype = true, label = "Priority Path Queue Distribution Strategy")
 @Service(value = ReplicationQueueDistributionStrategy.class)
 @Property(name = "name", value = PriorityPathDistributionStrategy.NAME, propertyPrivate = true)
 public class PriorityPathDistributionStrategy implements ReplicationQueueDistributionStrategy {
@@ -57,15 +56,15 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
         priorityPaths = PropertiesUtil.toStringArray(context.getProperties().get(PRIORITYPATHS));
     }
 
-    public ReplicationQueueItemState add(ReplicationQueueItem replicationPackage,
-                    ReplicationAgent agent, ReplicationQueueProvider queueProvider)
+    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
+                                         ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
         if (log.isInfoEnabled()) {
             log.info("using path priority based queue distribution");
         }
         ReplicationQueueItemState state = new ReplicationQueueItemState();
 
-        ReplicationQueue queue = getQueue(replicationPackage, agent, queueProvider);
+        ReplicationQueue queue = getQueue(agentName, replicationPackage, queueProvider);
         if (log.isInfoEnabled()) {
             log.info("obtained queue {}", queue);
         }
@@ -85,14 +84,13 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
             }
             return state;
         } else {
-            throw new ReplicationQueueException("could not get a queue for agent "
-                            + agent.getName());
+            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
         }
 
     }
 
-    private ReplicationQueue getQueue(ReplicationQueueItem replicationPackage,
-                    ReplicationAgent agent, ReplicationQueueProvider queueProvider)
+    private ReplicationQueue getQueue(String agentName, ReplicationQueueItem replicationPackage,
+                                      ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
         String[] paths = replicationPackage.getPaths();
 
@@ -117,24 +115,23 @@ public class PriorityPathDistributionStrategy implements ReplicationQueueDistrib
             if (log.isInfoEnabled()) {
                 log.info("using priority queue for path {}", pp);
             }
-            queue = queueProvider.getQueue(agent, pp);
+            queue = queueProvider.getQueue(agentName, pp);
         } else {
             if (log.isInfoEnabled()) {
                 log.info("using default queue");
             }
-            queue = queueProvider.getDefaultQueue(agent);
+            queue = queueProvider.getDefaultQueue(agentName);
         }
         return queue;
     }
 
-    public boolean offer(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
+    public boolean offer(String agentName, ReplicationQueueItem replicationPackage,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue queue = getQueue(replicationPackage, agent, queueProvider);
+        ReplicationQueue queue = getQueue(agentName, replicationPackage, queueProvider);
         if (queue != null) {
             return queue.add(replicationPackage);
         } else {
-            throw new ReplicationQueueException("could not get a queue for agent "
-                            + agent.getName());
+            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
         }
 
     }

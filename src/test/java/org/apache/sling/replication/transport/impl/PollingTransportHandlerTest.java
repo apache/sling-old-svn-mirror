@@ -46,7 +46,7 @@ public class PollingTransportHandlerTest {
         ReplicationEndpoint replicationEndpoint = new ReplicationEndpoint(new URI("http://localhost:8080/system/replication/agent/reverse"));
 
 
-        PollingTransportHandler pollingTransportHandler = new PollingTransportHandler(null, -1,
+        PollingTransportHandler pollingTransportHandler = new PollingTransportHandler( -1,
                 transportAuthenticationProvider,
                 new ReplicationEndpoint[] { replicationEndpoint });
         ReplicationPackage replicationPackage = mock(ReplicationPackage.class);
@@ -61,6 +61,6 @@ public class PollingTransportHandlerTest {
         when(httpResponse.getEntity()).thenReturn(entity);
         when(executor.execute(any(Request.class))).thenReturn(response);
         when(transportAuthenticationProvider.authenticate(any(Executor.class), any(TransportAuthenticationContext.class))).thenReturn(executor);
-        pollingTransportHandler.transport(replicationPackage);
+        pollingTransportHandler.transport("agentName", replicationPackage);
     }
 }

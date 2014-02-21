@@ -18,20 +18,24 @@
  */
 package org.apache.sling.replication.transport.impl;
 
-import org.apache.felix.scr.annotations.*;
+import java.util.Dictionary;
+import java.util.Map;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.http.client.fluent.Executor;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.ReplicationAgentConfiguration;
 import org.apache.sling.replication.communication.ReplicationEndpoint;
-import org.apache.sling.replication.serialization.ReplicationPackageImporter;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 import org.apache.sling.replication.transport.authentication.impl.UserCredentialsTransportAuthenticationProviderFactory;
 import org.osgi.framework.BundleContext;
-
-import java.util.Dictionary;
-import java.util.Map;
 
 @Component(metatype = true,
         label = "Replication Transport Handler Factory - Http Poll",
@@ -64,9 +68,6 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
     @Property(name = "poll items", description = "number of subsequent poll requests to make", intValue = -1)
     private static final String POLL_ITEMS = "poll.items";
 
-    @Reference
-    private ReplicationPackageImporter replicationPackageImporter;
-
 
     protected TransportHandler createTransportHandler(Map<String, ?> config,
                                                       Dictionary<String, Object> props,
@@ -77,8 +78,7 @@ public class PollingTransportHandlerFactory extends AbstractTransportHandlerFact
 
 
 
-        return new PollingTransportHandler(replicationPackageImporter,
-                pollItems,
+        return new PollingTransportHandler(pollItems,
                 (TransportAuthenticationProvider<Executor, Executor>) transportAuthenticationProvider,
                 endpoints);
     }

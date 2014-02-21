@@ -19,9 +19,14 @@
 package org.apache.sling.replication.transport.impl;
 
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.queue.ReplicationQueueItem;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.ReplicationTransportException;
 import org.apache.sling.replication.transport.TransportHandler;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractTransportHandler implements TransportHandler {
     private final ReplicationEndpoint[] endpoints;
@@ -29,13 +34,18 @@ public abstract class AbstractTransportHandler implements TransportHandler {
 
     private int lastSuccessfulEnpointId = 0;
 
+
+    private Map<String, ReplicationQueueProcessor> responseProcessorMap = new ConcurrentHashMap<String, ReplicationQueueProcessor>();
+
     public AbstractTransportHandler(ReplicationEndpoint[] endpoints, TransportEndpointStrategyType endpointStrategyType) {
         this.endpoints = endpoints;
         this.endpointStrategyType = endpointStrategyType;
     }
 
-    public void transport(ReplicationPackage replicationPackage)
+    public void transport(String agentName, ReplicationPackage replicationPackage)
             throws ReplicationTransportException {
+
+        ReplicationQueueProcessor responseProcessor = responseProcessorMap.get(agentName);
 
         ReplicationTransportException lastException = null;
         int offset = 0;
@@ -48,11 +58,11 @@ public abstract class AbstractTransportHandler implements TransportHandler {
 
             ReplicationEndpoint replicationEndpoint = endpoints[currentId];
             try {
-                deliverPackage(replicationPackage, replicationEndpoint);
+                deliverPackage(replicationPackage, replicationEndpoint, responseProcessor);
                 lastSuccessfulEnpointId = currentId;
                 if (endpointStrategyType.equals(TransportEndpointStrategyType.FirstSuccessful) ||
                         endpointStrategyType.equals(TransportEndpointStrategyType.OneSuccessful))
-                    return;
+                    break;
             } catch (ReplicationTransportException ex) {
                 lastException = ex;
             }
@@ -60,23 +70,36 @@ public abstract class AbstractTransportHandler implements TransportHandler {
 
         if (lastException != null)
             throw lastException;
-
     }
 
-    private void deliverPackage(ReplicationPackage replicationPackage, ReplicationEndpoint replicationEndpoint)
+
+    public void enableProcessing(String agentName, ReplicationQueueProcessor responseProcessor){
+        responseProcessorMap.put(agentName, responseProcessor);
+    }
+
+    public void disableProcessing(String agentName){
+        responseProcessorMap.remove(agentName);
+    }
+
+
+    private void deliverPackage(ReplicationPackage replicationPackage,
+                                ReplicationEndpoint replicationEndpoint,
+                                ReplicationQueueProcessor responseProcessor)
             throws ReplicationTransportException {
         if (!validateEndpoint(replicationEndpoint))
             throw new ReplicationTransportException("invalid endpoint " + replicationEndpoint.getUri());
 
         try {
-            deliverPackageToEndpoint(replicationPackage, replicationEndpoint);
+            deliverPackageToEndpoint(replicationPackage, replicationEndpoint, responseProcessor);
         } catch (Exception e) {
             throw new ReplicationTransportException(e);
         }
     }
 
     protected abstract void deliverPackageToEndpoint(ReplicationPackage replicationPackage,
-                                                     ReplicationEndpoint replicationEndpoint) throws Exception;
+                                                     ReplicationEndpoint replicationEndpoint,
+                                                     ReplicationQueueProcessor responseProcessor)
+            throws Exception;
 
     protected abstract boolean validateEndpoint(ReplicationEndpoint endpoint);
 

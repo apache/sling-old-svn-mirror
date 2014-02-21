@@ -117,53 +117,6 @@ public class DefaultReplicationPackageImporterTest {
         assertFalse(importer.importStream(stream, null));
     }
 
-    @Test
-    public void testAsynchronousImportWithoutServices() throws Exception {
-        try {
-            DefaultReplicationPackageImporter importer = new DefaultReplicationPackageImporter();
-            InputStream stream = new ByteArrayInputStream("something".getBytes());
-            importer.scheduleImport(stream, "some-type");
-            importer.scheduleImport(stream, null);
-            fail("cannot work without a JobManager");
-        } catch (Exception e) {
-            // expected
-        }
-    }
 
 
-    @Test
-    public void testAsynchronousImportWithTypeParameter() throws Exception {
-        DefaultReplicationPackageImporter importer = new DefaultReplicationPackageImporter();
-
-        Field jobManagerField = importer.getClass().getDeclaredField("jobManager");
-        jobManagerField.setAccessible(true);
-        JobManager jobManager = mock(JobManager.class);
-        JobBuilder jobBuilder = mock(JobBuilder.class);
-        when(jobBuilder.properties(any(Map.class))).thenReturn(jobBuilder);
-        Job job = mock(Job.class);
-        when(jobBuilder.add()).thenReturn(job);
-        when(jobManager.createJob("org/apache/sling/replication/import")).thenReturn(jobBuilder);
-        jobManagerField.set(importer, jobManager);
-
-        InputStream stream = new ByteArrayInputStream("something".getBytes());
-        importer.scheduleImport(stream, "void");
-    }
-
-    @Test
-    public void testAsynchronousImportWithoutTypeParameter() throws Exception {
-        DefaultReplicationPackageImporter importer = new DefaultReplicationPackageImporter();
-
-        Field jobManagerField = importer.getClass().getDeclaredField("jobManager");
-        jobManagerField.setAccessible(true);
-        JobManager jobManager = mock(JobManager.class);
-        JobBuilder jobBuilder = mock(JobBuilder.class);
-        when(jobBuilder.properties(any(Map.class))).thenReturn(jobBuilder);
-        Job job = mock(Job.class);
-        when(jobBuilder.add()).thenReturn(job);
-        when(jobManager.createJob("org/apache/sling/replication/import")).thenReturn(jobBuilder);
-        jobManagerField.set(importer, jobManager);
-
-        InputStream stream = new ByteArrayInputStream("something".getBytes());
-        importer.scheduleImport(stream, null);
-    }
 }

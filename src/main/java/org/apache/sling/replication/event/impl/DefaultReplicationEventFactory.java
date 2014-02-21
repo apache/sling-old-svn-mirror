@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link ReplicationEventFactory} OSGi service
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Event Factory for Replication Events")
 @Service(value = ReplicationEventFactory.class)
 public class DefaultReplicationEventFactory implements ReplicationEventFactory {
 
