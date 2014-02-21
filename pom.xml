@@ -90,12 +90,19 @@
                     </execution>
                 </executions>
                 <dependencies>
+                    <!--
+                        SLING-3403: Need tools.jar for compilation. See
+                        non-mac-tools-jar and mac-tools-jar profiles for
+                        definition of the toolsjar property.
+                        See http://stackoverflow.com/questions/3080437/jdk-tools-jar-as-maven-dependency#answer-3080695
+                        for background of the trick.
+                    -->
                     <dependency>
                         <groupId>com.sun</groupId>
                         <artifactId>tools</artifactId>
                         <version>1.5.0</version>
                         <scope>system</scope>
-                        <systemPath>${java.home}/../lib/tools.jar</systemPath>
+                        <systemPath>${toolsjar}</systemPath>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -292,6 +299,30 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>non-mac-tools-jar</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <file>
+                    <exists>${java.home}/../lib/tools.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <toolsjar>${java.home}/../lib/tools.jar</toolsjar>
+            </properties>
+        </profile>
+        <profile>
+            <id>mac-tools-jar</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <file>
+                    <exists>${java.home}/../Classes/classes.jar</exists>
+                </file>
+            </activation>
+            <properties>
+                <toolsjar>${java.home}/../Classes/classes.jar</toolsjar>
+            </properties>
         </profile>
     </profiles>
 </project>
