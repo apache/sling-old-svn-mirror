@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,11 +20,10 @@ public class ReplicationAgentJobConsumerTest {
 
     @Test
     public void testJobWithSuccessfulAgent() throws Exception {
-        SimpleReplicationAgent replicationAgent = mock(SimpleReplicationAgent.class);
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
-        when(queueProcessor.process(any(ReplicationQueueItem.class))).thenReturn(true);
+        when(queueProcessor.process(anyString(), any(ReplicationQueueItem.class))).thenReturn(true);
 
-        ReplicationAgentJobConsumer replicationAgentJobConsumer = new ReplicationAgentJobConsumer(replicationAgent, queueProcessor);
+        ReplicationAgentJobConsumer replicationAgentJobConsumer = new ReplicationAgentJobConsumer(queueProcessor);
         Job job = mock(Job.class);
         JobConsumer.JobResult jobResult = replicationAgentJobConsumer.process(job);
         assertEquals(JobConsumer.JobResult.OK, jobResult);
@@ -31,11 +31,10 @@ public class ReplicationAgentJobConsumerTest {
 
     @Test
     public void testJobWithUnsuccessfulAgent() throws Exception {
-        SimpleReplicationAgent replicationAgent = mock(SimpleReplicationAgent.class);
         ReplicationQueueProcessor queueProcessor = mock(ReplicationQueueProcessor.class);
-        when(queueProcessor.process(any(ReplicationQueueItem.class))).thenReturn(false);
+        when(queueProcessor.process(anyString(), any(ReplicationQueueItem.class))).thenReturn(false);
 
-        ReplicationAgentJobConsumer replicationAgentJobConsumer = new ReplicationAgentJobConsumer(replicationAgent, queueProcessor);
+        ReplicationAgentJobConsumer replicationAgentJobConsumer = new ReplicationAgentJobConsumer(queueProcessor);
         Job job = mock(Job.class);
         JobConsumer.JobResult jobResult = replicationAgentJobConsumer.process(job);
         assertEquals(JobConsumer.JobResult.FAILED, jobResult);

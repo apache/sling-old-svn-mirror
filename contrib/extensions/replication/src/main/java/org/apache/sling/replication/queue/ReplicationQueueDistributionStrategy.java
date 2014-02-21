@@ -31,28 +31,26 @@ public interface ReplicationQueueDistributionStrategy {
      * synchronously distribute a {@link ReplicationPackage} to a {@link ReplicationAgent} to a {@link ReplicationQueue}
      * provided by the given {@link ReplicationQueueProvider}
      *
-     *
+     * @param agentName the name of a {@link ReplicationAgent}
      * @param replicationPackage a {@link org.apache.sling.replication.serialization.ReplicationPackage} to distribute
-     * @param agent              the {@link org.apache.sling.replication.agent.ReplicationAgent} to be used for replicating the package
-     * @param queueProvider      the {@link org.apache.sling.replication.queue.ReplicationQueueProvider} used to provide the queue to be used for the given package
+     * @param queueProvider      the {@link ReplicationQueueProvider} used to provide the queue to be used for the given package
      * @return a {@link ReplicationQueueItemState} representing the state of the package in the queue after its distribution
      * @throws ReplicationQueueException
      */
-    ReplicationQueueItemState add(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
+    ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
                                   ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
 
     /**
      * asynchronously distribute a {@link ReplicationPackage} to a {@link ReplicationAgent} to a {@link ReplicationQueue}
      * provided by the given {@link ReplicationQueueProvider}
      *
-     *
+     * @param agentName the name of a {@link ReplicationAgent}
      * @param replicationPackage a {@link org.apache.sling.replication.serialization.ReplicationPackage} to distribute
-     * @param agent              the {@link org.apache.sling.replication.agent.ReplicationAgent} to be used for replicating the package
-     * @param queueProvider      the {@link org.apache.sling.replication.queue.ReplicationQueueProvider} used to provide the queue to be used for the given package
+     * @param queueProvider      the {@link ReplicationQueueProvider} used to provide the queue to be used for the given package
      * @return <code>true</code> if the package could be distributed to a {@link ReplicationQueue}, <code>false</code> otherwise
      * @throws ReplicationQueueException
      */
-    boolean offer(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
+    boolean offer(String agentName, ReplicationQueueItem replicationPackage,
                   ReplicationQueueProvider queueProvider) throws ReplicationQueueException;
 
 }

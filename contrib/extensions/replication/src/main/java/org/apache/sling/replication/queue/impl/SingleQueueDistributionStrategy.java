@@ -26,14 +26,13 @@ import org.apache.sling.replication.queue.ReplicationQueueItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueueItemState.ItemState;
 
 /**
  * The default strategy for delivering packages to queues. Each agent just manages a single queue,
  * no failure / stuck handling where each package is put regardless of anything.
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Single Queue Distribution Strategy")
 @Service(value = ReplicationQueueDistributionStrategy.class)
 @Property(name = "name", value = SingleQueueDistributionStrategy.NAME)
 public class SingleQueueDistributionStrategy implements ReplicationQueueDistributionStrategy {
@@ -42,46 +41,38 @@ public class SingleQueueDistributionStrategy implements ReplicationQueueDistribu
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public ReplicationQueueItemState add(ReplicationQueueItem replicationPackage,
-                    ReplicationAgent agent, ReplicationQueueProvider queueProvider)
+    public ReplicationQueueItemState add(String agentName, ReplicationQueueItem replicationPackage,
+                                         ReplicationQueueProvider queueProvider)
                     throws ReplicationQueueException {
-        if (log.isInfoEnabled()) {
-            log.info("using single queue distribution");
-        }
+        log.info("using single queue distribution");
+
         ReplicationQueueItemState state = new ReplicationQueueItemState();
-        ReplicationQueue queue = queueProvider.getDefaultQueue(agent);
-        if (log.isInfoEnabled()) {
-            log.info("obtained queue {}", queue);
-        }
+        ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
+        log.info("obtained queue {}", queue);
+
         if (queue != null) {
             if (queue.add(replicationPackage)) {
                 state = queue.getStatus(replicationPackage);
-                if (log.isInfoEnabled()) {
-                    log.info("replication status: {}", state);
-                }
+                log.info("replication status: {}", state);
             } else {
-                if (log.isErrorEnabled()) {
-                    log.error("could not add the item to the queue {}", queue);
-                }
+                log.error("could not add the item to the queue {}", queue);
                 state.setItemState(ItemState.ERROR);
                 state.setSuccessful(false);
             }
             return state;
         } else {
-            throw new ReplicationQueueException("could not get a queue for agent "
-                            + agent.getName());
+            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
         }
 
     }
 
-    public boolean offer(ReplicationQueueItem replicationPackage, ReplicationAgent agent,
+    public boolean offer(String agentName, ReplicationQueueItem replicationPackage,
                          ReplicationQueueProvider queueProvider) throws ReplicationQueueException {
-        ReplicationQueue queue = queueProvider.getDefaultQueue(agent);
+        ReplicationQueue queue = queueProvider.getDefaultQueue(agentName);
         if (queue != null) {
             return queue.add(replicationPackage);
         } else {
-            throw new ReplicationQueueException("could not get a queue for agent "
-                            + agent.getName());
+            throw new ReplicationQueueException("could not get a queue for agent " + agentName);
         }
 
     }

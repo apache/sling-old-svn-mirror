@@ -19,6 +19,7 @@
 package org.apache.sling.replication.transport;
 
 import org.apache.sling.replication.communication.ReplicationEndpoint;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProvider;
 
@@ -29,12 +30,31 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 public interface TransportHandler {
 
     /**
-     * execute the transport of a given {@link ReplicationPackage} to a specific {@link ReplicationEndpoint} using this
+     * Executes the transport of a given {@link ReplicationPackage} to a specific {@link ReplicationEndpoint} using this
      * transport and the supplied {@link TransportAuthenticationProvider} for authenticating the endpoint
      *
+     * @param  agentName a replication agent name
      * @param replicationPackage  a {@link ReplicationPackage} to transport
      * @throws ReplicationTransportException if any error occurs during the transport
      */
-    void transport(ReplicationPackage replicationPackage) throws ReplicationTransportException;
+    void transport(String agentName, ReplicationPackage replicationPackage) throws ReplicationTransportException;
+
+
+    /**
+     * Enables response processing for this <code>TransportHandler</code> for a certain <code>ReplicationAgent</code>
+     *
+     * @param agentName the name of the <code>ReplicationAgent</code>
+     * @param responseProcessor a <code>ReplicationQueueProcessor</code> that is called by the <code>TransportHandler</code>
+     *                          whenever a response is received
+     */
+    void enableProcessing(String agentName, ReplicationQueueProcessor responseProcessor);
+
+    /**
+     *
+     * Disables response processing for this <code>TransportHandler</code>
+     *
+     * @param agentName the name of the <code>ReplicationAgent</code>
+     */
+    void disableProcessing(String agentName);
 
 }

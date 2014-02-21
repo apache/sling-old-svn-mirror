@@ -27,7 +27,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
 
-@Component(immediate = true)
+@Component(immediate = true, label = "Factory for Nop Authentication Providers")
 @Service(value = TransportAuthenticationProviderFactory.class)
 @Property(name = "name", value = NopTransportAuthenticationProviderFactory.TYPE)
 public class NopTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {

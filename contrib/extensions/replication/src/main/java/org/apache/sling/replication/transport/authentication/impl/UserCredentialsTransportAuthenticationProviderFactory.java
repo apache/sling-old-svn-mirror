@@ -28,7 +28,7 @@ import org.apache.sling.replication.transport.authentication.TransportAuthentica
 import org.apache.sling.replication.transport.authentication.TransportAuthenticationProviderFactory;
 
 
-@Component(immediate = true)
+@Component(immediate = true, label = "Factory for User based Transport Authentication Providers")
 @Service(value = TransportAuthenticationProviderFactory.class)
 @Property(name = "name", value = UserCredentialsTransportAuthenticationProviderFactory.TYPE)
 public class UserCredentialsTransportAuthenticationProviderFactory implements TransportAuthenticationProviderFactory {

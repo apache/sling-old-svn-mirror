@@ -37,8 +37,7 @@ public class SimpleReplicationQueueTest {
 
     @Test
     public void testPackageAddition() throws Exception {
-        ReplicationAgent agent = mock(ReplicationAgent.class);
-        ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
+        ReplicationQueue queue = new SimpleReplicationQueue("agentName", "default");
         ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
@@ -46,8 +45,7 @@ public class SimpleReplicationQueueTest {
 
     @Test
     public void testPackageAdditionAndRemoval() throws Exception {
-        ReplicationAgent agent = mock(ReplicationAgent.class);
-        ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
+        ReplicationQueue queue = new SimpleReplicationQueue("agentName", "default");
         ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());
@@ -60,8 +58,7 @@ public class SimpleReplicationQueueTest {
 
     @Test
     public void testPackageAdditionRetrievalAndRemoval() throws Exception {
-        ReplicationAgent agent = mock(ReplicationAgent.class);
-        ReplicationQueue queue = new SimpleReplicationQueue(agent, "default");
+        ReplicationQueue queue = new SimpleReplicationQueue("agentName", "default");
         ReplicationQueueItem pkg = mock(ReplicationQueueItem.class);
         assertTrue(queue.add(pkg));
         assertFalse(queue.isEmpty());

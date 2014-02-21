@@ -34,7 +34,6 @@ import org.apache.sling.event.jobs.JobManager;
 import org.apache.sling.event.jobs.Queue;
 import org.apache.sling.event.jobs.QueueConfiguration;
 import org.apache.sling.event.jobs.consumer.JobConsumer;
-import org.apache.sling.replication.agent.ReplicationAgent;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
 import org.apache.sling.replication.queue.ReplicationQueueProcessor;
@@ -47,7 +46,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(metatype = false)
+@Component(metatype = false, label = "Sling Job handling based Replication Queue Provider")
 @Service(value = ReplicationQueueProvider.class)
 @Property(name = "name", value = JobHandlingReplicationQueueProvider.NAME)
 public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueueProvider
@@ -67,10 +66,13 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
     private BundleContext context;
 
     @Override
-    protected ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String queueName)
+    protected ReplicationQueue getOrCreateQueue(String agentName, String queueName)
             throws ReplicationQueueException {
         try {
-            String name = agent.getName() + queueName;
+            String name = agentName;
+            if (queueName.length() > 0) {
+                name += "/" + queueName;
+            }
             String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + name;
             if (jobManager.getQueue(name) == null) {
                 Configuration config = configAdmin.createFactoryConfiguration(
@@ -97,28 +99,28 @@ public class JobHandlingReplicationQueueProvider extends AbstractReplicationQueu
         q.removeAll();
     }
 
-    public void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor) {
         // eventually register job consumer for sling job handling based queues
         Dictionary<String, Object> jobProps = new Hashtable<String, Object>();
-        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agent.getName();
+        String topic = JobHandlingReplicationQueue.REPLICATION_QUEUE_TOPIC + '/' + agentName;
         String childTopic = topic + "/*";
         jobProps.put(JobConsumer.PROPERTY_TOPICS, new String[]{topic, childTopic});
         synchronized (jobs) {
-            log.info("registering job consumer for agent {}", agent.getName());
+            log.info("registering job consumer for agent {}", agentName);
             ServiceRegistration jobReg = context.registerService(JobConsumer.class.getName(),
-                    new ReplicationAgentJobConsumer(agent, queueProcessor), jobProps);
-            jobs.put(agent.getName(), jobReg);
-            log.info("job consumer for agent {} registered", agent.getName());
+                    new ReplicationAgentJobConsumer(queueProcessor), jobProps);
+            jobs.put(agentName, jobReg);
+            log.info("job consumer for agent {} registered", agentName);
         }
     }
 
-    public void disableQueueProcessing(ReplicationAgent agent) {
+    public void disableQueueProcessing(String agentName) {
         synchronized (jobs) {
-            log.info("unregistering job consumer for agent {}", agent.getName());
-            ServiceRegistration jobReg = jobs.remove(agent.getName());
+            log.info("unregistering job consumer for agent {}", agentName);
+            ServiceRegistration jobReg = jobs.remove(agentName);
             if (jobReg != null) {
                 jobReg.unregister();
-                log.info("job consumer for agent {} unregistered", agent.getName());
+                log.info("job consumer for agent {} unregistered", agentName);
             }
         }
     }

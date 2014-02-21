@@ -34,11 +34,4 @@ public interface ReplicationPackageImporter {
      */
     boolean importStream(InputStream stream, String type);
 
-    /**
-     * Asynchronously schedules the import of the {@link org.apache.sling.replication.serialization.ReplicationPackage}
-     *
-     * @param stream the <code>InputStream</code> of the given <code>ReplicationPackage</code>
-     * @param type   the <code>String</code> representing the ({@link ReplicationPackage#getType() type} of the given package
-     */
-    void scheduleImport(InputStream stream, String type) throws Exception;
 }

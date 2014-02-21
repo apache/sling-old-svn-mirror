@@ -51,7 +51,7 @@ public class ReplicationAgentConfiguration {
 
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
-    public static final String[] COMPONENTS = {TRANSPORT, PACKAGING};
+    public static final String[] COMPONENTS = { TRANSPORT, PACKAGING };
 
     private final boolean enabled;
 

@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * a rule for triggering a specific agent upon node / properties being changed under a certain path
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Rule for triggering replications for changes under certain paths")
 @Service(value = ReplicationRule.class)
 public class TriggerPathReplicationRule implements ReplicationRule {
 
@@ -112,8 +112,7 @@ public class TriggerPathReplicationRule implements ReplicationRule {
             if (serviceRegistration != null) {
                 serviceRegistration.unregister();
             }
-        }
-        else {
+        } else {
             if (log.isWarnEnabled()) {
                 log.warn("rule {} doesn't match signature: {}", ruleString, SIGNATURE);
             }

@@ -22,13 +22,8 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.ConfigurationPolicy;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferencePolicy;
+
+import org.apache.felix.scr.annotations.*;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
@@ -83,31 +78,34 @@ public class ReplicationAgentServiceFactory {
     private static final String DEFAULT_DISTRIBUTION = "(name="
             + SingleQueueDistributionStrategy.NAME + ")";
 
-    @Property(boolValue = true)
+    private static final String DEFAULT_TRANSPORT = "(name="
+            + NopTransportHandler.NAME + ")";
+
+    @Property(boolValue = true, label = "Enabled")
     private static final String ENABLED = ReplicationAgentConfiguration.ENABLED;
 
-    @Property
+    @Property(label = "Name")
     private static final String NAME = ReplicationAgentConfiguration.NAME;
 
-    @Property
+    @Property(label = "Rules")
     private static final String RULES = ReplicationAgentConfiguration.RULES;
 
-    @Property(boolValue = true)
+    @Property(boolValue = true, label = "Replicate using aggregated paths")
     private static final String USE_AGGREGATE_PATHS = ReplicationAgentConfiguration.USE_AGGREGATE_PATHS;
 
-    @Property(name = TRANSPORT, value = "(name=" + NopTransportHandler.NAME + ")")
+    @Property(label = "Target TransportHandler", name = TRANSPORT, value = "(name=" + NopTransportHandler.NAME + ")")
     @Reference(name = "TransportHandler", target = "(name=" + NopTransportHandler.NAME + ")", policy = ReferencePolicy.DYNAMIC)
     private TransportHandler transportHandler;
 
-    @Property(name = PACKAGING, value = DEFAULT_PACKAGING)
+    @Property(label = "Target ReplicationPackageBuilder",name = PACKAGING, value = DEFAULT_PACKAGING)
     @Reference(name = "ReplicationPackageBuilder", target = DEFAULT_PACKAGING, policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageBuilder packageBuilder;
 
-    @Property(name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
+    @Property(label = "Target ReplicationQueueProvider",name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
     private ReplicationQueueProvider queueProvider;
 
-    @Property(name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
+    @Property(label = "Target QueueDistributionStrategy",name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
     @Reference(name = "ReplicationQueueDistributionStrategy", target = DEFAULT_DISTRIBUTION, policy = ReferencePolicy.DYNAMIC)
     private ReplicationQueueDistributionStrategy queueDistributionStrategy;
 
@@ -118,6 +116,7 @@ public class ReplicationAgentServiceFactory {
 
     @Reference
     private ReplicationEventFactory replicationEventFactory;
+
 
     @Activate
     public void activate(BundleContext context, Map<String, ?> config) throws Exception {

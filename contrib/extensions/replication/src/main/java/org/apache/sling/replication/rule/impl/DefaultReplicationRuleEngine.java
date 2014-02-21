@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * default implementation of {@link ReplicationRuleEngine}
  */
-@Component
+@Component(label = "Replication Rule Engine")
 @References({
         @Reference(name = "replicationRule",
                 referenceInterface = ReplicationRule.class,

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Default implementation of {@link ReplicationAgentConfigurationManager}
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Default Replication Agent Configuration Manager")
 @Service(value = ReplicationAgentConfigurationManager.class)
 public class DefaultReplicationAgentConfigurationManager implements
         ReplicationAgentConfigurationManager {
@@ -70,10 +70,10 @@ public class DefaultReplicationAgentConfigurationManager implements
     private Dictionary getOrSetProperties(String agentName, Dictionary properties) throws Exception {
         Configuration agentConfiguration = getAgentConfiguration(agentName);
 
-        if(agentConfiguration == null)
+        if (agentConfiguration == null)
             throw new Exception("no configuration found");
 
-        if(properties != null)
+        if (properties != null)
             agentConfiguration.update(properties);
         return agentConfiguration.getProperties();
     }
@@ -84,15 +84,15 @@ public class DefaultReplicationAgentConfigurationManager implements
 
         Configuration agentConfiguration = getAgentConfiguration(agentName);
 
-        for(String component : ReplicationAgentConfiguration.COMPONENTS){
+        for (String component : ReplicationAgentConfiguration.COMPONENTS) {
             Configuration componentConfiguration = getComponentConfiguration(agentConfiguration, component);
 
-            if(componentConfiguration == null)
+            if (componentConfiguration == null)
                 continue;
 
-            if(properties != null){
+            if (properties != null) {
                 Dictionary componentProperties = properties.get(component);
-                if(componentProperties != null)
+                if (componentProperties != null)
                     componentConfiguration.update(componentProperties);
             }
 
@@ -108,18 +108,17 @@ public class DefaultReplicationAgentConfigurationManager implements
     }
 
     private Configuration getComponentConfiguration(Configuration agentConfiguration, String component) throws Exception {
-        try{
+        try {
             String filter = PropertiesUtil.toString(agentConfiguration.getProperties().get(component), "");
             return getOsgiConfiguration(filter);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             return null;
         }
     }
 
     private Configuration getOsgiConfiguration(String filter) throws Exception {
         Configuration[] configurations = getAllOsgiConfigurations(filter);
-        if(configurations == null || configurations.length == 0){
+        if (configurations == null || configurations.length == 0) {
             log.info("no configurations for filter {}", filter);
             return null;
         } else if (configurations.length == 1) {
@@ -132,20 +131,19 @@ public class DefaultReplicationAgentConfigurationManager implements
     }
 
     private Configuration[] getAllOsgiConfigurations(String filter) throws Exception {
-        Configuration[] configurations = configAdmin.listConfigurations(filter);
-        return configurations;
+        return configAdmin.listConfigurations(filter);
     }
 
     public ReplicationAgentConfiguration updateConfiguration(String agentName,
                                                              Map<String, Object> updateProperties) throws AgentConfigurationException {
         try {
 
-            String configName = PropertiesUtil.toString(updateProperties.get("name"),"");
+            String configName = PropertiesUtil.toString(updateProperties.get("name"), "");
 
-            if(agentName == null || agentName.length() ==0)
+            if (agentName == null || agentName.length() == 0)
                 throw new Exception("agent name cannot be empty");
 
-            if(!agentName.equals(configName))
+            if (!agentName.equals(configName))
                 throw new Exception("cannot change name of a configuration");
 
             Dictionary agentProperties = getOrSetProperties(agentName, null);
@@ -159,13 +157,12 @@ public class DefaultReplicationAgentConfigurationManager implements
 
 
                 String component = extractComponent(key);
-                if(component != null){
-                    key = key.substring(component.length()+1);
+                if (component != null) {
+                    key = key.substring(component.length() + 1);
                     Dictionary dictionary = componentProperties.get(component);
-                    if(dictionary!= null)
+                    if (dictionary != null)
                         dictionary.put(key, entry.getValue());
-                }
-                else {
+                } else {
                     agentProperties.put(key, entry.getValue());
                 }
             }
@@ -183,9 +180,9 @@ public class DefaultReplicationAgentConfigurationManager implements
     }
 
 
-    String extractComponent(String string){
-        for(String component : ReplicationAgentConfiguration.COMPONENTS){
-            if(string.startsWith(component+ "."))
+    String extractComponent(String string) {
+        for (String component : ReplicationAgentConfiguration.COMPONENTS) {
+            if (string.startsWith(component + "."))
                 return component;
         }
         return null;
@@ -198,12 +195,12 @@ public class DefaultReplicationAgentConfigurationManager implements
 
                 Configuration configuration = getAgentConfiguration(agentName);
 
-                if(configuration != null)
+                if (configuration != null)
                     throw new Exception("the agent name is already in use");
 
                 configuration = configAdmin.createFactoryConfiguration(ReplicationAgentServiceFactory.SERVICE_PID);
 
-                if(configuration == null)
+                if (configuration == null)
                     throw new Exception("configuration cannot be created");
 
                 @SuppressWarnings("unchecked")
@@ -234,7 +231,7 @@ public class DefaultReplicationAgentConfigurationManager implements
 
         if (agentName != null) {
             try {
-                Configuration configuration =  getAgentConfiguration(agentName);
+                Configuration configuration = getAgentConfiguration(agentName);
 
                 configuration.delete();
             } catch (Exception e) {
@@ -249,11 +246,11 @@ public class DefaultReplicationAgentConfigurationManager implements
 
     public ReplicationAgentConfiguration[] listAllAgentConfigurations() throws AgentConfigurationException {
         try {
-            String filter = "("+ ConfigurationAdmin.SERVICE_FACTORYPID + "=" + ReplicationAgentServiceFactory.SERVICE_PID + ")";
+            String filter = "(" + ConfigurationAdmin.SERVICE_FACTORYPID + "=" + ReplicationAgentServiceFactory.SERVICE_PID + ")";
             Configuration[] configurations = getAllOsgiConfigurations(filter);
 
             ReplicationAgentConfiguration[] result = new ReplicationAgentConfiguration[configurations.length];
-            for(int i=0; i< configurations.length; i++){
+            for (int i = 0; i < configurations.length; i++) {
                 String agentName = (String) configurations[i].getProperties().get("name");
                 result[i] = getConfiguration(agentName);
             }

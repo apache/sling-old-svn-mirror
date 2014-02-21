@@ -43,7 +43,7 @@ public class SimpleReplicationQueue implements ReplicationQueue {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ReplicationAgent agent;
+    private final String agentName;
 
     private final String name;
 
@@ -51,11 +51,11 @@ public class SimpleReplicationQueue implements ReplicationQueue {
 
     private final Map<ReplicationQueueItem, ReplicationQueueItemState> statusMap;
 
-    public SimpleReplicationQueue(ReplicationAgent agent, String name) {
+    public SimpleReplicationQueue(String agentName, String name) {
         if (log.isInfoEnabled()) {
-            log.info("starting a simple queue for agent {}", agent.getName());
+            log.info("starting a simple queue for agent {}", agentName);
         }
-        this.agent = agent;
+        this.agentName = agentName;
         this.name = name;
         this.queue = new LinkedBlockingQueue<ReplicationQueueItem>();
         this.statusMap = new WeakHashMap<ReplicationQueueItem, ReplicationQueueItemState>(10);
@@ -88,10 +88,6 @@ public class SimpleReplicationQueue implements ReplicationQueue {
             status.setItemState(ItemState.SUCCEEDED);
         }
         return status;
-    }
-
-    public ReplicationAgent getAgent() {
-        return agent;
     }
 
     public ReplicationQueueItem getHead() {

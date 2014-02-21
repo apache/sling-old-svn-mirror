@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link org.apache.sling.replication.rule.ReplicationRule} to schedule replications on a certain {@link org.apache.sling.replication.agent.ReplicationAgent}
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Rule for Scheduled Replications")
 @Service(value = ReplicationRule.class)
 public class ScheduleReplicateReplicationRule implements ReplicationRule {
     private static final String SIGNATURE = "scheduled {action} [on ${path} ]every {seconds} sec";

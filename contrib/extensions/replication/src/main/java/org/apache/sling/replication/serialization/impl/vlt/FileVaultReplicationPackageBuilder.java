@@ -21,12 +21,15 @@ package org.apache.sling.replication.serialization.impl.vlt;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Properties;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-
-import org.apache.felix.scr.annotations.*;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Modified;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.vault.fs.api.PathFilterSet;
 import org.apache.jackrabbit.vault.fs.config.DefaultMetaInf;
 import org.apache.jackrabbit.vault.fs.config.DefaultWorkspaceFilter;
@@ -37,13 +40,10 @@ import org.apache.jackrabbit.vault.packaging.Packaging;
 import org.apache.jackrabbit.vault.packaging.VaultPackage;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.jcr.api.SlingRepository;
-
-import org.apache.sling.replication.communication.ReplicationHeader;
 import org.apache.sling.replication.communication.ReplicationRequest;
 import org.apache.sling.replication.serialization.ReplicationPackage;
 import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.ReplicationPackageBuildingException;
-
 import org.apache.sling.replication.serialization.ReplicationPackageReadingException;
 import org.apache.sling.replication.serialization.impl.AbstractReplicationPackageBuilder;
 import org.osgi.service.component.ComponentContext;
@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * backed by a {@link VaultPackage}. 
  */
 @Component(metatype = true,
-        label = "Replication Package Builder - FileVault",
+        label = "FileVault based Replication Package Builder",
         description = "OSGi configuration based PackageBuilder service factory",
         name = FileVaultReplicationPackageBuilder.SERVICE_PID)
 @Service(value = ReplicationPackageBuilder.class)

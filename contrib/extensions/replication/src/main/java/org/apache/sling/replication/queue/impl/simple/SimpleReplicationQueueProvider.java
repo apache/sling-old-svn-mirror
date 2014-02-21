@@ -22,13 +22,11 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-
 import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
-import org.apache.sling.replication.agent.ReplicationAgent;
-import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueue;
 import org.apache.sling.replication.queue.ReplicationQueueException;
+import org.apache.sling.replication.queue.ReplicationQueueProcessor;
 import org.apache.sling.replication.queue.ReplicationQueueProvider;
 import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
 
@@ -36,7 +34,7 @@ import org.apache.sling.replication.queue.impl.AbstractReplicationQueueProvider;
  * an OSGi service implementing {@link ReplicationQueueProvider} for simple in memory
  * {@link ReplicationQueue}s
  */
-@Component(metatype = false)
+@Component(metatype = false, label = "In memory Replication Queue Provider")
 @Service(value = ReplicationQueueProvider.class)
 @Property(name = "name", value = SimpleReplicationQueueProvider.NAME)
 public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProvider implements
@@ -47,27 +45,27 @@ public class SimpleReplicationQueueProvider extends AbstractReplicationQueueProv
 
     public static final String NAME = "simple";
 
-    protected ReplicationQueue getOrCreateQueue(ReplicationAgent agent, String selector)
+    protected ReplicationQueue getOrCreateQueue(String agentName, String selector)
                     throws ReplicationQueueException {
-        return new SimpleReplicationQueue(agent, selector);
+        return new SimpleReplicationQueue(agentName, selector);
     }
 
     protected void deleteQueue(ReplicationQueue queue) throws ReplicationQueueException {
         // do nothing as queues just exist in the cache
     }
 
-    public void enableQueueProcessing(ReplicationAgent agent, ReplicationQueueProcessor queueProcessor) {
+    public void enableQueueProcessing(String agentName, ReplicationQueueProcessor queueProcessor) {
         ScheduleOptions options = scheduler.NOW(-1, 10)
                 .canRunConcurrently(false)
-                .name(getJobName(agent));
+                .name(getJobName(agentName));
         scheduler.schedule(new ScheduledReplicationQueueProcessor(this, queueProcessor), options);
     }
 
-    public void disableQueueProcessing(ReplicationAgent agent) {
-        scheduler.unschedule(getJobName(agent));
+    public void disableQueueProcessing(String agentName) {
+        scheduler.unschedule(getJobName(agentName));
     }
 
-    private String getJobName(ReplicationAgent agent){
-        return SimpleReplicationQueueProvider.NAME+"-queueProcessor-"+agent.getName();
+    private String getJobName(String  agentName){
+        return SimpleReplicationQueueProvider.NAME+"-queueProcessor-"+agentName;
     }
 }

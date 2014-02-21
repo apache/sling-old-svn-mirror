@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link org.apache.sling.replication.rule.ReplicationRule} to trigger
  */
-@Component(immediate = true)
+@Component(immediate = true, label = "Rule for generating Server Sent Events for Queues")
 @Service(value = ReplicationRule.class)
 public class ReplicateOnQueueEventRule implements ReplicationRule {
 
