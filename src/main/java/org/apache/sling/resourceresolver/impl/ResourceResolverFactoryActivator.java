@@ -187,7 +187,7 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
               description = "This flag controls whether all resources with a sling:vanityPath property " +
                             "are processed and added to the mappoing table.")
     private static final String PROP_ENABLE_VANITY_PATH = "resource.resolver.enable.vanitypath";
-    
+
     private static final boolean DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION = true;
     @Property(boolValue = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION ,
               label = "Optimize alias resolution",
@@ -265,7 +265,7 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
     /** vanityPath enabled? */
     private boolean enableVanityPath = DEFAULT_ENABLE_VANITY_PATH;
-    
+
     /** alias resource resolution optimization enabled? */
     private boolean enableOptimizeAliasResolution = DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION;
 
@@ -337,7 +337,7 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
     public boolean isVanityPathEnabled() {
         return this.enableVanityPath;
     }
-    
+
     public boolean isOptimizeAliasResolutionEnabled() {
         return this.enableOptimizeAliasResolution;
     }
@@ -405,7 +405,7 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
         defaultVanityPathRedirectStatus = PropertiesUtil.toInteger(properties.get(PROP_DEFAULT_VANITY_PATH_REDIRECT_STATUS),
                                                                    MapEntries.DEFAULT_DEFAULT_VANITY_PATH_REDIRECT_STATUS);
         this.enableVanityPath = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_VANITY_PATH), DEFAULT_ENABLE_VANITY_PATH);
-        
+
         this.enableOptimizeAliasResolution = PropertiesUtil.toBoolean(properties.get(PROP_ENABLE_OPTIMIZE_ALIAS_RESOLUTION), DEFAULT_ENABLE_OPTIMIZE_ALIAS_RESOLUTION);
 
         final BundleContext bc = componentContext.getBundleContext();
@@ -473,7 +473,6 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
 
         if ( local != null ) {
             // activate and register factory
-
             final Dictionary<String, Object> serviceProps = new Hashtable<String, Object>();
             serviceProps.put(Constants.SERVICE_VENDOR, localContext.getProperties().get(Constants.SERVICE_VENDOR));
             serviceProps.put(Constants.SERVICE_DESCRIPTION, localContext.getProperties().get(Constants.SERVICE_DESCRIPTION));
@@ -557,6 +556,14 @@ public class ResourceResolverFactoryActivator implements FeaturesHolder {
         this.rootProviderEntry.unbindResourceProviderFactory(provider, props);
         this.preconds.unbindProvider(props);
         this.checkFactoryPreconditions();
+        boolean unregister = false;
+        synchronized ( this ) {
+            unregister = this.factoryRegistration != null;
+        }
+        if (unregister ) {
+            this.unregisterFactory();
+            this.checkFactoryPreconditions();
+        }
     }
 
     /**
