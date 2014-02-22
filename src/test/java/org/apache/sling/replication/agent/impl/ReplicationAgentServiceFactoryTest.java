@@ -73,7 +73,6 @@ public class ReplicationAgentServiceFactoryTest {
     public void testActivationWithNoServicesBound() throws Exception {
         try {
             ReplicationAgentServiceFactory serviceFactory = new ReplicationAgentServiceFactory();
-
             Map<String, Object> dictionary = new HashMap<String, Object>();
             BundleContext context = mock(BundleContext.class);
             serviceFactory.activate(context, dictionary);

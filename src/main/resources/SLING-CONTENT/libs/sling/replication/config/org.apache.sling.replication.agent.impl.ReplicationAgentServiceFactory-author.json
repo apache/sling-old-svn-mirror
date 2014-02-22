@@ -6,5 +6,6 @@
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "ReplicationQueueDistributionStrategy.target" : "(name=error)",
     "rules" : ["trigger on path: /content/usergenerated"],
-    "enabled" : false
+    "enabled" : false,
+    "runModes" : ["publish"]
 }
