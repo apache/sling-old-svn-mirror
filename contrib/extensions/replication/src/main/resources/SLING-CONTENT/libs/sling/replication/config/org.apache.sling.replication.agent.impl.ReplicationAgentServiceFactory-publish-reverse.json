@@ -5,5 +5,6 @@
     "ReplicationPackageBuilder.target" : "(name=vlt)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "ReplicationQueueDistributionStrategy.target" : "(name=error)",
-    "rules" : ["scheduled poll every 30 sec"]
+    "rules" : ["scheduled poll every 30 sec"],
+    "runModes" : ["author"]
 }

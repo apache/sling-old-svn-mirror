@@ -65,8 +65,8 @@ public interface ReplicationAgent {
     /**
      * removes a package from the top of the queue
      * @param queueName
-     *          the name of a {@link ReplicationQueue} bound tothis agent
-     * @return
+     *          the name of a {@link ReplicationQueue} bound to this agent
+     * @return the <code>ReplicationPackage</code> popped from the underlying <code>ReplicationQueue</code>
      * @throws ReplicationQueueException
      */
     ReplicationPackage removeHead(String queueName) throws ReplicationQueueException;

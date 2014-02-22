@@ -51,7 +51,9 @@ public class ReplicationAgentConfiguration {
 
     public static final String USE_AGGREGATE_PATHS = "useAggregatePaths";
 
-    public static final String[] COMPONENTS = { TRANSPORT, PACKAGING };
+    public static final String[] COMPONENTS = {TRANSPORT, PACKAGING};
+
+    public static final String RUNMODES = "runModes";
 
     private final boolean enabled;
 
@@ -75,6 +77,8 @@ public class ReplicationAgentConfiguration {
 
     private final boolean useAggregatePaths;
 
+    private final String[] runModes;
+
     private final Dictionary<String, Dictionary> componentConfiguration;
 
     public ReplicationAgentConfiguration(Dictionary<?, ?> dictionary, Dictionary<String, Dictionary> componentConfiguration) {
@@ -92,6 +96,7 @@ public class ReplicationAgentConfiguration {
         this.authenticationProperties = ap != null ? ap : new String[0];
         this.rules = PropertiesUtil.toStringArray(dictionary.get(RULES), new String[0]);
         this.useAggregatePaths = PropertiesUtil.toBoolean(dictionary.get(USE_AGGREGATE_PATHS), true);
+        this.runModes = PropertiesUtil.toStringArray(dictionary.get(RUNMODES), new String[0]);
 
         this.componentConfiguration = componentConfiguration;
     }
@@ -108,6 +113,8 @@ public class ReplicationAgentConfiguration {
     public String getName() {
         return name;
     }
+
+    public String[] getRules() { return rules; }
 
     public String getTargetAuthenticationHandlerFactory() {
         return targetAuthenticationHandlerFactory;
@@ -129,6 +136,8 @@ public class ReplicationAgentConfiguration {
         return targetReplicationQueueDistributionStrategy;
     }
 
+    public String[] getRunModes() { return runModes; }
+
     @Override
     public String toString() {
         String result = "{\"";
@@ -145,7 +154,9 @@ public class ReplicationAgentConfiguration {
 
         result += toComponentString();
 
-        result += RULES + "\":\"" + Arrays.toString(rules) + "\"}";
+        result += RULES + "\":\"" + Arrays.toString(rules);
+        result += RUNMODES +"\":\"" + Arrays.toString(runModes);
+        result += "\"}";
         return result;
     }
 

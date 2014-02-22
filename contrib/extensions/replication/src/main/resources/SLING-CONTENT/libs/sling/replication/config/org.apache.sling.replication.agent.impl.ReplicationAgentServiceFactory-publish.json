@@ -4,5 +4,6 @@
     "TransportHandler.target" : "(name=http-publish-receive)",
     "ReplicationPackageBuilder.target" : "(name=vlt)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
-    "ReplicationQueueDistributionStrategy.target" : "(name=single)"
+    "ReplicationQueueDistributionStrategy.target" : "(name=single)",
+    "runModes" : ["author"]
 }

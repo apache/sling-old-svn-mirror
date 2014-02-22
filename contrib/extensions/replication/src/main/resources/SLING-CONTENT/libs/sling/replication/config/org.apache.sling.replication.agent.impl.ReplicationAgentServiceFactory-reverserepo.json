@@ -4,5 +4,6 @@
     "ReplicationPackageBuilder.target" : "(name=vlt)",
     "ReplicationQueueProvider.target" : "(name=sjh)",
     "ReplicationQueueDistributionStrategy.target" : "(name=error)",
-    "rules" : ["trigger on path: /content/usergenerated"]
+    "rules" : ["trigger on path: /content/usergenerated"],
+    "runModes" : ["publish"]
 }

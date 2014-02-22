@@ -7,5 +7,6 @@
     "ReplicationQueueProvider.target" : "(name=simple)",
     "ReplicationQueueDistributionStrategy.target" : "(name=single)",
     "rules" : ["trigger on path: /content/usergenerated"],
-    "enabled" : false
+    "enabled" : false,
+    "runModes" : ["publish"]
 }

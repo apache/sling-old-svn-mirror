@@ -22,8 +22,14 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Random;
-
-import org.apache.felix.scr.annotations.*;
+import java.util.Set;
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Deactivate;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.replication.agent.AgentConfigurationException;
 import org.apache.sling.replication.agent.ReplicationAgent;
@@ -38,6 +44,7 @@ import org.apache.sling.replication.serialization.ReplicationPackageBuilder;
 import org.apache.sling.replication.serialization.impl.vlt.FileVaultReplicationPackageBuilder;
 import org.apache.sling.replication.transport.TransportHandler;
 import org.apache.sling.replication.transport.impl.NopTransportHandler;
+import org.apache.sling.settings.SlingSettingsService;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -97,17 +104,20 @@ public class ReplicationAgentServiceFactory {
     @Reference(name = "TransportHandler", target = "(name=" + NopTransportHandler.NAME + ")", policy = ReferencePolicy.DYNAMIC)
     private TransportHandler transportHandler;
 
-    @Property(label = "Target ReplicationPackageBuilder",name = PACKAGING, value = DEFAULT_PACKAGING)
+    @Property(label = "Target ReplicationPackageBuilder", name = PACKAGING, value = DEFAULT_PACKAGING)
     @Reference(name = "ReplicationPackageBuilder", target = DEFAULT_PACKAGING, policy = ReferencePolicy.DYNAMIC)
     private ReplicationPackageBuilder packageBuilder;
 
-    @Property(label = "Target ReplicationQueueProvider",name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
+    @Property(label = "Target ReplicationQueueProvider", name = QUEUEPROVIDER, value = DEFAULT_QUEUEPROVIDER)
     @Reference(name = "ReplicationQueueProvider", target = DEFAULT_QUEUEPROVIDER, policy = ReferencePolicy.DYNAMIC)
     private ReplicationQueueProvider queueProvider;
 
-    @Property(label = "Target QueueDistributionStrategy",name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
+    @Property(label = "Target QueueDistributionStrategy", name = QUEUE_DISTRIBUTION, value = DEFAULT_DISTRIBUTION)
     @Reference(name = "ReplicationQueueDistributionStrategy", target = DEFAULT_DISTRIBUTION, policy = ReferencePolicy.DYNAMIC)
     private ReplicationQueueDistributionStrategy queueDistributionStrategy;
+
+    @Property(label = "Runmodes")
+    private static final String RUNMODES = ReplicationAgentConfiguration.RUNMODES;
 
     private ServiceRegistration agentReg;
 
@@ -117,6 +127,8 @@ public class ReplicationAgentServiceFactory {
     @Reference
     private ReplicationEventFactory replicationEventFactory;
 
+    @Reference
+    private SlingSettingsService settingsService;
 
     @Activate
     public void activate(BundleContext context, Map<String, ?> config) throws Exception {
@@ -125,8 +137,12 @@ public class ReplicationAgentServiceFactory {
         Dictionary<String, Object> props = new Hashtable<String, Object>();
 
         boolean enabled = PropertiesUtil.toBoolean(config.get(ENABLED), true);
+
         if (enabled) {
             props.put(ENABLED, true);
+
+            String[] runModes = PropertiesUtil.toStringArray(config.get(RUNMODES), new String[0]);
+            props.put(RUNMODES, runModes);
 
             String name = PropertiesUtil
                     .toString(config.get(NAME), String.valueOf(new Random().nextInt(1000)));
@@ -165,11 +181,30 @@ public class ReplicationAgentServiceFactory {
             ReplicationAgent agent = new SimpleReplicationAgent(name, rules, useAggregatePaths,
                     transportHandler, packageBuilder, queueProvider, queueDistributionStrategy, replicationEventFactory, replicationRuleEngine);
 
-            // register agent service
-            agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
 
-            agent.enable();
+            // only enable if instance runmodes match configured ones
+            if (matchRunmodes(runModes)) {
+                // register agent service
+                agentReg = context.registerService(ReplicationAgent.class.getName(), agent, props);
+                agent.enable();
+            }
         }
+    }
+
+    private boolean matchRunmodes(String[] configuredRunModes) {
+        boolean match = configuredRunModes == null || configuredRunModes.length == 0;
+        if (!match) {
+            Set<String> activeRunModes = settingsService.getRunModes();
+            for (String activeRunMode : activeRunModes) {
+                for (String configuredRunMode : configuredRunModes) {
+                    if (activeRunMode.equals(configuredRunMode)) {
+                        match = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return match;
     }
 
     @Deactivate
@@ -177,10 +212,9 @@ public class ReplicationAgentServiceFactory {
         if (agentReg != null) {
             ServiceReference reference = agentReg.getReference();
             ReplicationAgent replicationAgent = (ReplicationAgent) context.getService(reference);
-
             replicationAgent.disable();
-
             agentReg.unregister();
         }
+
     }
 }

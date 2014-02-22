@@ -138,7 +138,13 @@
       <artifactId>org.apache.sling.hc.core</artifactId>
       <version>1.0.6</version>
       <scope>provided</scope>
-   </dependency>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.sling</groupId>
+      <artifactId>org.apache.sling.settings</artifactId>
+      <version>1.3.0</version>
+      <scope>provided</scope>
+    </dependency>
     <!-- LOGGING -->
     <dependency>
       <groupId>org.slf4j</groupId>
