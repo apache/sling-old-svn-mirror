@@ -80,6 +80,9 @@
         <metatype:AD id="org.apache.sling.commons.log.file.size"
             type="String" default="'.'yyyy-MM-dd" name="%log.file.size.name"
             description="%log.file.size.description" />
+        <metatype:AD id="org.apache.sling.commons.log.file.buffered"
+             type="Boolean" default="false" name="%log.file.buffered.name"
+             description="%log.file.buffered.description" />
     </metatype:OCD>
     <metatype:Designate
         pid="org.apache.sling.commons.log.LogManager.factory.writer"

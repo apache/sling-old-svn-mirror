@@ -27,9 +27,11 @@ import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.Context;
 import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.encoder.Encoder;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import org.apache.sling.commons.log.logback.internal.util.SlingContextUtil;
 import org.apache.sling.commons.log.logback.internal.util.SlingRollingFileAppender;
 
 /**
@@ -71,7 +73,9 @@ public class LogWriter {
 
     private final String appenderName;
 
-    public LogWriter(String configurationPID, String appenderName, int logNumber, String logRotation, String fileName) {
+    private final boolean bufferedLogging;
+
+    public LogWriter(String configurationPID, String appenderName, int logNumber, String logRotation, String fileName, boolean bufferedLogging) {
         this.appenderName = appenderName;
         if (fileName == null || fileName.length() == 0) {
             fileName = FILE_NAME_CONSOLE;
@@ -89,10 +93,11 @@ public class LogWriter {
         this.fileName = fileName;
         this.logNumber = logNumber;
         this.logRotation = logRotation;
+        this.bufferedLogging = bufferedLogging;
     }
 
     public LogWriter(String appenderName,String fileName, int logNumber, String logRotation) {
-        this(null, appenderName, logNumber, logRotation, fileName);
+        this(null, appenderName, logNumber, logRotation, fileName, false);
     }
 
     public String getConfigurationPID() {
@@ -124,12 +129,14 @@ public class LogWriter {
     }
 
     public Appender<ILoggingEvent> createAppender(final Context context, final Encoder<ILoggingEvent> encoder) {
-
+        SlingContextUtil ctxUtil = new SlingContextUtil(context, this);
         OutputStreamAppender<ILoggingEvent> appender;
         if (FILE_NAME_CONSOLE.equals(fileName)) {
             appender = new ConsoleAppender<ILoggingEvent>();
             appender.setName(FILE_NAME_CONSOLE);
         } else {
+            ctxUtil.addInfo("Configuring appender "+getFileName());
+
             SlingRollingFileAppender<ILoggingEvent> rollingAppender = new SlingRollingFileAppender<ILoggingEvent>();
             rollingAppender.setAppend(true);
             rollingAppender.setFile(getFileName());
@@ -186,12 +193,15 @@ public class LogWriter {
                 rollingAppender.setRollingPolicy(pol);
             } else {
                 TimeBasedRollingPolicy<ILoggingEvent> policy = new TimeBasedRollingPolicy<ILoggingEvent>();
-                policy.setFileNamePattern(createFileNamePattern(getFileName(), getLogRotation()));
+                String fileNamePattern = createFileNamePattern(getFileName(), getLogRotation());
+                policy.setFileNamePattern(fileNamePattern);
                 policy.setMaxHistory(getLogNumber());
                 policy.setContext(context);
                 policy.setParent(rollingAppender);
                 policy.start();
                 rollingAppender.setTriggeringPolicy(policy);
+
+                ctxUtil.addInfo("Configured TimeBasedRollingPolicy with pattern "+ fileNamePattern);
             }
 
             rollingAppender.setLogWriter(this);
@@ -200,9 +210,19 @@ public class LogWriter {
             appender = rollingAppender;
         }
 
+        if(bufferedLogging && encoder instanceof LayoutWrappingEncoder){
+            ((LayoutWrappingEncoder) encoder).setImmediateFlush(false);
+            ctxUtil.addInfo("Setting immediateFlush to false");
+        } else{
+            ctxUtil.addInfo("immediateFlush property not modified. Defaults to true");
+        }
+
         appender.setContext(context);
         appender.setEncoder(encoder);
         appender.start();
+
+        ctxUtil.addInfo("Completed configuring appender with name "+getFileName());
+
         return appender;
     }
 
