@@ -223,56 +223,56 @@ public class ScriptableResourceTest extends RepositoryScriptingTestBase {
             return ResourceUtil.getName(getPath());
         }
 
-		public Resource getChild(String relPath) {
-			try
-			{
-				Node childNode = node.getNode( relPath );
-				if ( childNode !=  null ) {
-					return new TestResource( childNode );
-				} else {
-					return null;
-				}
-			} catch ( RepositoryException re )
-			{
-				return null;
-			}
-		}
+        public Resource getChild(String relPath) {
+            try
+            {
+                Node childNode = node.getNode( relPath );
+                if ( childNode !=  null ) {
+                    return new TestResource( childNode );
+                } else {
+                    return null;
+                }
+            } catch ( RepositoryException re )
+            {
+                return null;
+            }
+        }
 
-		public Resource getParent() {
-			try
-			{
-				Node parentNode = node.getParent();
-				if ( parentNode !=  null ) {
-					return new TestResource( parentNode );
-				} else {
-					return null;
-				}
-			} catch ( RepositoryException re )
-			{
-				return null;
-			}
-		}
+        public Resource getParent() {
+            try
+            {
+                Node parentNode = node.getParent();
+                if ( parentNode !=  null ) {
+                    return new TestResource( parentNode );
+                } else {
+                    return null;
+                }
+            } catch ( RepositoryException re )
+            {
+                return null;
+            }
+        }
 
-		public boolean isResourceType(String resourceType) {
-			return getResourceType().equals( resourceType );
-		}
+        public boolean isResourceType(String resourceType) {
+            return getResourceType().equals( resourceType );
+        }
 
-		public Iterator<Resource> listChildren() {
-			try
-			{
-				List<Resource> childList = new ArrayList();
-				NodeIterator it = node.getNodes();
-				while ( it.hasNext() )
-				{
-					Node nextNode = it.nextNode();
-					childList.add( new TestResource( nextNode ) );
-				}
-				return childList.iterator();
-			} catch ( RepositoryException re )
-			{
-				return null;
-			}
-		}
+        public Iterator<Resource> listChildren() {
+            try
+            {
+                List<Resource> childList = new ArrayList<Resource>();
+                NodeIterator it = node.getNodes();
+                while ( it.hasNext() )
+                {
+                    Node nextNode = it.nextNode();
+                    childList.add( new TestResource( nextNode ) );
+                }
+                return childList.iterator();
+            } catch ( RepositoryException re )
+            {
+                return null;
+            }
+        }
 
 
     }
