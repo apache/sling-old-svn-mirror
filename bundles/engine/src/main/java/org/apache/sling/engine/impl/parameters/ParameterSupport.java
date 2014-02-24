@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,6 +40,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.fileupload.servlet.ServletRequestContext;
 import org.apache.sling.api.request.RequestParameter;
 import org.apache.sling.api.request.RequestParameterMap;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ParameterSupport {
@@ -72,6 +74,9 @@ public class ParameterSupport {
 
     /** Content type signaling parameters in request body */
     private static final String WWW_FORM_URL_ENC = "application/x-www-form-urlencoded";
+
+    /** default log */
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /**
      * The maximum size allowed for <tt>multipart/form-data</tt>
@@ -228,15 +233,55 @@ public class ParameterSupport {
     private ParameterMap getRequestParameterMapInternal() {
         if (this.postParameterMap == null) {
 
+            // SLING-508 Try to force servlet container to decode parameters
+            // as ISO-8859-1 such that we can recode later
+            String encoding = getServletRequest().getCharacterEncoding();
+            if (encoding == null) {
+                encoding = Util.ENCODING_DIRECT;
+                try {
+                    getServletRequest().setCharacterEncoding(encoding);
+                } catch (UnsupportedEncodingException uee) {
+                    throw new SlingUnsupportedEncodingException(uee);
+                }
+            }
+
             // SLING-152 Get parameters from the servlet Container
             ParameterMap parameters = new ParameterMap();
-            getContainerParameters(parameters);
 
-            // only read input in case of multipart-POST not handled
-            // by the servlet container
+            // Query String
+            final String query = getServletRequest().getQueryString();
+            if (query != null) {
+                try {
+                    InputStream input = Util.toInputStream(query);
+                    Util.parseQueryString(input, encoding, parameters, false);
+                } catch (IllegalArgumentException e) {
+                    this.log.error("getRequestParameterMapInternal: Error parsing request", e);
+                } catch (UnsupportedEncodingException e) {
+                    throw new SlingUnsupportedEncodingException(e);
+                } catch (IOException e) {
+                    this.log.error("getRequestParameterMapInternal: Error parsing request", e);
+                }
+            }
+
+            // POST requests
             if ("POST".equals(this.getServletRequest().getMethod())) {
-                if (ServletFileUpload.isMultipartContent(new ServletRequestContext(
-                    this.getServletRequest()))) {
+                // WWW URL Form Encoded POST
+                if (isWWWFormEncodedContent(this.getServletRequest())) {
+                    try {
+                        InputStream input = this.getServletRequest().getInputStream();
+                        Util.parseQueryString(input, encoding, parameters, false);
+                    } catch (IllegalArgumentException e) {
+                        this.log.error("getRequestParameterMapInternal: Error parsing request", e);
+                    } catch (UnsupportedEncodingException e) {
+                        throw new SlingUnsupportedEncodingException(e);
+                    } catch (IOException e) {
+                        this.log.error("getRequestParameterMapInternal: Error parsing request", e);
+                    }
+                    this.requestDataUsed = true;
+                }
+
+                // Multipart POST
+                if (ServletFileUpload.isMultipartContent(new ServletRequestContext(this.getServletRequest()))) {
                     this.parseMultiPartPost(parameters);
                     this.requestDataUsed = true;
                 }
@@ -250,62 +295,23 @@ public class ParameterSupport {
         return this.postParameterMap;
     }
 
-    private void getContainerParameters(ParameterMap parameters) {
-
-        // SLING-508 Try to force servlet container to decode parameters
-        // as ISO-8859-1 such that we can recode later
-        String encoding = getServletRequest().getCharacterEncoding();
-        if (encoding == null) {
-            encoding = Util.ENCODING_DIRECT;
-            try {
-                getServletRequest().setCharacterEncoding(encoding);
-            } catch (UnsupportedEncodingException uee) {
-                throw new SlingUnsupportedEncodingException(uee);
-            }
+    private static final boolean isWWWFormEncodedContent(HttpServletRequest request) {
+        String contentType = request.getContentType();
+        if (contentType == null) {
+            return false;
         }
 
-        final String query = getServletRequest().getQueryString();
-        if (query != null) {
-            try {
-                InputStream input = Util.toInputStream(query);
-                Util.parseQueryString(input, encoding, parameters, false);
-            } catch (UnsupportedEncodingException e) {
-                // TODO: don't expect this, thus log !!
-            } catch (IOException e) {
-                // TODO: don't expect this, thus log !!
-            }
+        // This check assumes the content type ends after the WWW_FORM_URL_ENC
+        // or continues with blank or semicolon. It will probably break if
+        // the content type is some string extension of WWW_FORM_URL_ENC
+        // such as "application/x-www-form-urlencoded-bla"
+        if (contentType.toLowerCase(Locale.ENGLISH).startsWith(WWW_FORM_URL_ENC)) {
+            return true;
         }
 
-        // only read input in case of multipart-POST not handled
-        // by the servlet container
-        if ("POST".equals(this.getServletRequest().getMethod())
-            && WWW_FORM_URL_ENC.equalsIgnoreCase(this.getServletRequest().getContentType())) {
-            try {
-                InputStream input = this.getServletRequest().getInputStream();
-                Util.parseQueryString(input, encoding, parameters, false);
-            } catch (IllegalArgumentException e) {
-                // TODO: don't expect this, thus log !!
-            } catch (UnsupportedEncodingException e) {
-                // TODO: don't expect this, thus log !!
-            } catch (IOException e) {
-                // TODO: don't expect this, thus log !!
-            }
-            this.requestDataUsed = true;
-        }
+        return false;
+    }
 
-//        final Map<?, ?> pMap = getServletRequest().getParameterMap();
-//        for (Map.Entry<?, ?> entry : pMap.entrySet()) {
-//
-//            final String name = (String) entry.getKey();
-//            final String[] values = (String[]) entry.getValue();
-//
-//            for (int i = 0; i < values.length; i++) {
-//                parameters.addParameter(name, new ContainerRequestParameter(
-//                    values[i], encoding));
-//            }
-//
-//        }
-        }
 
     private void parseMultiPartPost(ParameterMap parameters) {
 
@@ -328,7 +334,7 @@ public class ParameterSupport {
         try {
             items = upload.parseRequest(rc);
         } catch (FileUploadException fue) {
-            LoggerFactory.getLogger(getClass()).error("parseMultiPartPost: Error parsing request", fue);
+            this.log.error("parseMultiPartPost: Error parsing request", fue);
         }
 
         if (items != null && items.size() > 0) {
