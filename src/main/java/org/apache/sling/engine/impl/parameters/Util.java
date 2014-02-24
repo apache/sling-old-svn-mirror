@@ -26,64 +26,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Activate;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
-import org.apache.felix.scr.annotations.Property;
 import org.apache.sling.api.request.RequestParameter;
-import org.apache.sling.commons.osgi.PropertiesUtil;
 
-@Component(
-        metatype = true,
-        name = "org.apache.sling.engine.parameters",
-        label = "Apache Sling Request Parameter Handling",
-        description = "Configures Sling's request parameter handling.")
 public class Util {
-
-    //     * @see javax.servlet.annotation.MultipartConfig#maxFileSize
-//    * @see javax.servlet.annotation.MultipartConfig#maxRequestSize
-
-    @Property(value = Util.ENCODING_DIRECT,
-            label = "Default Parameter Encoding",
-            description = "The default request parameter encoding used to decode request "
-                + "parameters into strings. If this property is not set the default encoding "
-                + "is 'ISO-8859-1' as mandated by the Servlet API spec. This default encoding "
-                + "is used if the '_charset_' request parameter is not set to another "
-                + "(supported) character encoding. Applications being sure to always use the "
-                + "same encoding (e.g. UTF-8) can set this default here and may omit the "
-                + "'_charset_' request parameter")
-    private static final String PROP_FIX_ENCODING = "sling.default.parameter.encoding";
-
-    @Property(
-            intValue = ParameterMap.DEFAULT_MAX_PARAMS,
-            label = "Maximum POST Parameters",
-            description = "The maximum number of parameters supported. To prevent a DOS-style attack with an "
-                + "overrunning number of parameters the number of parameters supported can be limited. This "
-                + "includes all of the query string as well as application/x-www-form-urlencoded and "
-                + "multipart/form-data parameters. The default value is " + ParameterMap.DEFAULT_MAX_PARAMS + ".")
-    private static final String PROP_MAX_PARAMS = "sling.default.max.parameters";
-
-    @Property(
-            label = "Temporary File Location",
-            description = "The size threshold after which the file will be written to disk")
-    private static final String PROP_FILE_LOCATION = "file.location";
-
-    @Property(
-            label = "File Save Threshold",
-            description = "The size threshold after which the file will be written to disk")
-    private static final String PROP_FILE_SIZE_THRESHOLD = "file.threshold";
-
-    @Property(
-            label = "Maximum File Size",
-            description = "The maximum size allowed for uploaded files. The default is -1, which means unlimited.")
-    private static final String PROP_FILE_SIZE_MAX = "file.max";
-
-    @Property(
-            label = "Maximum Request Size",
-            description = "The maximum size allowed for multipart/form-data requests. The default is -1, which means unlimited.")
-    private static final String PROP_MAX_REQUEST_SIZE = "request.max";
-
-
 
     // ISO-8859-1 mapps all characters 0..255 to \u0000..\u00ff directly
     public static final String ENCODING_DIRECT = "ISO-8859-1";
@@ -126,18 +71,6 @@ public class Util {
     /** Parse state constant */
     private static final int BEFORE_SEP =  AFTER_VALUE + 1;
 
-    @Activate
-    @Deactivate
-    private void configure(Map<String, Object> props) {
-        setDefaultFixEncoding(PropertiesUtil.toString(props.get(PROP_FIX_ENCODING), ENCODING_DIRECT));
-        ParameterMap.setMaxParameters(PropertiesUtil.toInteger(props.get(PROP_MAX_PARAMS),
-            ParameterMap.DEFAULT_MAX_PARAMS));
-        ParameterSupport.configure(PropertiesUtil.toLong(props.get(PROP_MAX_REQUEST_SIZE), -1),
-            PropertiesUtil.toString(props.get(PROP_FILE_LOCATION), null),
-            PropertiesUtil.toLong(props.get(PROP_FILE_SIZE_MAX), -1),
-            PropertiesUtil.toInteger(props.get(PROP_FILE_SIZE_THRESHOLD), -1));
-    }
-
     public static void setDefaultFixEncoding(final String encoding) {
         defaultFixEncoding = validateEncoding(encoding);
     }
@@ -177,7 +110,7 @@ public class Util {
 
     static void fixEncoding(ParameterMap parameterMap) {
         // default the encoding to defaultFixEncoding
-        String formEncoding = defaultFixEncoding;
+        String formEncoding = getDefaultFixEncoding();
 
         // check whether a form encoding parameter overwrites this default
         RequestParameter[] feParm = parameterMap.get(ParameterSupport.PARAMETER_FORMENCODING);
@@ -261,24 +194,23 @@ public class Util {
         }
 
         // no encoding or unsupported encoding
-        return defaultFixEncoding;
+        return getDefaultFixEncoding();
     }
 
     /**
      * Parse a query string and store entries inside a map
      *
-     * @param data       querystring data
-     * @param encoding   encoding to use for converting bytes to characters
-     * @param map        map to populate
+     * @param data querystring data
+     * @param encoding encoding to use for converting bytes to characters
+     * @param map map to populate
      * @param prependNew whether to prepend new values
-     *
-     * @exception IllegalArgumentException if the query string is malformed
-     * @exception UnsupportedEncodingException if the encoding is not supported
-     * @throws IOException If an error occurs reading from the data
+     * @throws IllegalArgumentException if the nv string is malformed
+     * @throws UnsupportedEncodingException if the {@code encoding} is not
+     *             supported
+     * @throws IOException if an error occurrs reading from {@code data}
      */
-    public static void parseQueryString(InputStream data, String encoding, ParameterMap map,
-                                        boolean prependNew)
-            throws IllegalArgumentException, UnsupportedEncodingException, IOException {
+    public static void parseQueryString(InputStream data, String encoding, ParameterMap map, boolean prependNew)
+            throws UnsupportedEncodingException, IOException {
 
         parseNVPairString(data, encoding, map, '&', false, prependNew);
     }
@@ -286,19 +218,19 @@ public class Util {
     /**
      * Parse a name/value pair string and populate a map with key -> value[s]
      *
-     * @param data        name value data
-     * @param encoding    encoding to use for converting bytes to characters
-     * @param map         map to populate
-     * @param separator   multi-value separator character
+     * @param data name value data
+     * @param encoding encoding to use for converting bytes to characters
+     * @param map map to populate
+     * @param separator multi-value separator character
      * @param allowSpaces allow spaces inside name/values
-     * @param prependNew  whether to prepend new values
-     *
-     * @exception IllegalArgumentException if the nv string is malformed
+     * @param prependNew whether to prepend new values
+     * @throws IllegalArgumentException if the nv string is malformed
+     * @throws UnsupportedEncodingException if the {@code encoding} is not
+     *             supported
+     * @throws IOException if an error occurrs reading from {@code data}
      */
-    private static void parseNVPairString(InputStream data, String encoding, ParameterMap map,
-                                          char separator, boolean allowSpaces,
-                                          boolean prependNew)
-            throws IllegalArgumentException, UnsupportedEncodingException, IOException {
+    private static void parseNVPairString(InputStream data, String encoding, ParameterMap map, char separator,
+            boolean allowSpaces, boolean prependNew) throws UnsupportedEncodingException, IOException {
 
         ByteArrayOutputStream keyBuffer   = new ByteArrayOutputStream(256);
         ByteArrayOutputStream valueBuffer = new ByteArrayOutputStream(256);
