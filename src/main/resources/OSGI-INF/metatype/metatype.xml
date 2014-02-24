@@ -44,7 +44,7 @@
             description="%log.file.size.description" />
         <metatype:AD id="org.apache.sling.commons.log.pattern"
             type="String"
-            default="{0\,date\,dd.MM.yyyy HH:mm:ss.SSS} *{4}* [{2}] {3} {5}"
+            default="%d{dd.MM.yyyy HH:mm:ss.SSS} *%level* [%thread] %logger %msg%n"
             name="%log.pattern.name"
             description="%log.pattern.description" />
         <metatype:AD id="org.apache.sling.commons.log.configurationFile"
@@ -55,6 +55,11 @@
              type="Boolean"
              name="%log.config.packagingData.name"
              description="%log.config.packagingData.description" />
+        <metatype:AD id="org.apache.sling.commons.log.maxCallerDataDepth"
+             type="Integer"
+             default="7"
+             name="%log.config.maxCallerDataDepth.name"
+             description="%log.config.maxCallerDataDepth.description" />
     </metatype:OCD>
     <metatype:Designate pid="org.apache.sling.commons.log.LogManager">
         <metatype:Object
