@@ -46,7 +46,7 @@ public class ResourceAccessGateHandler implements Comparable<ResourceAccessGateH
         resourceAccessGate = (ResourceAccessGate) resourceAccessGateRef.getBundle().
                 getBundleContext().getService(resourceAccessGateRef);
         // extract the service property "path"
-        String path = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.PATH);
+        final String path = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.PATH);
         if ( path != null ) {
             pathPattern = Pattern.compile(path);
         } else {
@@ -54,27 +54,25 @@ public class ResourceAccessGateHandler implements Comparable<ResourceAccessGateH
         }
 
         // extract the service property "operations"
-        String ops = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.OPERATIONS);
-        if ( ops != null ) {
-            String[] opsArray = PropertiesUtil.toStringArray(ops);
-            for (String opAsString : opsArray) {
-                ResourceAccessGate.Operation operation = ResourceAccessGate.Operation.fromString(opAsString);
+        final String[] opsArray = PropertiesUtil.toStringArray(resourceAccessGateRef.getProperty(ResourceAccessGate.OPERATIONS));
+        if ( opsArray != null ) {
+            for (final String opAsString : opsArray) {
+                final ResourceAccessGate.Operation operation = ResourceAccessGate.Operation.fromString(opAsString);
                 if ( operation != null ) {
                     operations.add(operation);
                 }
             }
         } else {
-           for (ResourceAccessGate.Operation op : ResourceAccessGate.Operation.values() ) {
+           for (final ResourceAccessGate.Operation op : ResourceAccessGate.Operation.values() ) {
                operations.add(op);
            }
         }
 
         // extract the service property "finaloperations"
-        String finOps = (String) resourceAccessGateRef.getProperty(ResourceAccessGate.FINALOPERATIONS);
-        if ( finOps != null ) {
-            String[] finOpsArray = PropertiesUtil.toStringArray(finOps);
-            for (String opAsString : finOpsArray) {
-                ResourceAccessGate.Operation operation = ResourceAccessGate.Operation.fromString(opAsString);
+        final String[] finOpsArray = PropertiesUtil.toStringArray(resourceAccessGateRef.getProperty(ResourceAccessGate.FINALOPERATIONS));
+        if ( finOpsArray != null ) {
+            for (final String opAsString : finOpsArray) {
+                final ResourceAccessGate.Operation operation = ResourceAccessGate.Operation.fromString(opAsString);
                 if ( operation != null ) {
                     finalOperations.add(operation);
                 }
