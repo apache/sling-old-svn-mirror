@@ -80,8 +80,13 @@ public class SlingStatusPrinter {
             sb.append(CoreConstants.LINE_SEPARATOR);
         }
 
+        String prefix = "";
+        if(initSuccess){
+            prefix = "*Logback Status* ";
+        }
+
         for (Status s : statusList) {
-            StatusPrinter.buildStr(sb, "", s);
+            StatusPrinter.buildStr(sb, prefix, s);
         }
 
         //In case logging system completely fails then log the message in System out
