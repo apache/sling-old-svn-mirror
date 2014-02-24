@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import ch.qos.logback.classic.ClassicConstants;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
@@ -68,6 +69,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     public static final String LOG_ADDITIV = "org.apache.sling.commons.log.additiv";
 
     public static final String LOG_PACKAGING_DATA = "org.apache.sling.commons.log.packagingDataEnabled";
+
+    public static final String LOG_MAX_CLALLER_DEPTH = "org.apache.sling.commons.log.maxCallerDataDepth";
 
     public static final String LOG_LEVEL_DEFAULT = "INFO";
 
@@ -120,6 +123,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
     private File logbackConfigFile;
 
     private boolean packagingDataEnabled;
+
+    private int maxCallerDataDepth;
 
     /**
      * Logs a message an optional stack trace to error output. This method is
@@ -564,6 +569,10 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
         return packagingDataEnabled;
     }
 
+    public int getMaxCallerDataDepth() {
+        return maxCallerDataDepth;
+    }
+
     // ---------- ManagedService interface -------------------------------------
 
     private Dictionary<String, String> getBundleConfiguration(BundleContext bundleContext) {
@@ -614,6 +623,9 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
             //Defaults to false i.e. disabled in OSGi env
             packagingDataEnabled = false;
         }
+
+        maxCallerDataDepth = Util.toInteger(configuration.get(LOG_MAX_CLALLER_DEPTH),
+                ClassicConstants.DEFAULT_MAX_CALLEDER_DATA_DEPTH);
     }
 
     // ---------- Internal helpers ---------------------------------------------

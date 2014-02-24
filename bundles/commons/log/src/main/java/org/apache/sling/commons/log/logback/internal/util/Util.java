@@ -76,4 +76,51 @@ public class Util {
         }
     }
 
+    //-------------Taken from org.apache.sling.commons.osgi.PropertiesUtil
+
+    /**
+     * Returns the parameter as an integer or the
+     * <code>defaultValue</code> if the parameter is <code>null</code> or if
+     * the parameter is not an <code>Integer</code> and cannot be converted to
+     * an <code>Integer</code> from the parameter's string value.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default integer value
+     */
+    public static int toInteger(Object propValue, int defaultValue) {
+        propValue = toObject(propValue);
+        if (propValue instanceof Integer) {
+            return (Integer) propValue;
+        } else if (propValue != null) {
+            try {
+                return Integer.valueOf(String.valueOf(propValue));
+            } catch (NumberFormatException nfe) {
+                // don't care, fall through to default value
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Returns the parameter as a single value. If the
+     * parameter is neither an array nor a <code>java.util.Collection</code> the
+     * parameter is returned unmodified. If the parameter is a non-empty array,
+     * the first array element is returned. If the property is a non-empty
+     * <code>java.util.Collection</code>, the first collection element is returned.
+     * Otherwise <code>null</code> is returned.
+     * @param propValue the parameter to convert.
+     */
+    public static Object toObject(Object propValue) {
+        if (propValue == null) {
+            return null;
+        } else if (propValue.getClass().isArray()) {
+            Object[] prop = (Object[]) propValue;
+            return prop.length > 0 ? prop[0] : null;
+        } else if (propValue instanceof Collection<?>) {
+            Collection<?> prop = (Collection<?>) propValue;
+            return prop.isEmpty() ? null : prop.iterator().next();
+        } else {
+            return propValue;
+        }
+    }
 }

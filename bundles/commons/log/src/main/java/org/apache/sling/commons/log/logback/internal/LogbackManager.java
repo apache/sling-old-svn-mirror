@@ -462,6 +462,7 @@ public class LogbackManager extends LoggerContextAwareBase {
                 + " listeners");
 
             context.setPackagingDataEnabled(logConfigManager.isPackagingDataEnabled());
+            context.setMaxCallerDataDepth(logConfigManager.getMaxCallerDataDepth());
 
             // Attach a console appender to handle logging untill we configure
             // one. This would be removed in RootLoggerListener.reset
