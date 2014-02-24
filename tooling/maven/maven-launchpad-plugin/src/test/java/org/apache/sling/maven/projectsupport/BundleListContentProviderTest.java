@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -59,6 +60,7 @@ public class BundleListContentProviderTest {
     private File resourceProviderFile;
     private File configDirectory;
     private int logWarningsCount;
+    private String fakeBundlePath;
     
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -89,17 +91,26 @@ public class BundleListContentProviderTest {
             assertTrue("Expecting temporary config file to have been created: " + f.getAbsolutePath(), f.exists());
         }
         configDirectory = tempFolder.getRoot();
-        
+
         resourceProviderRoot = new File(tempFolder.getRoot(), "RESOURCE_PROVIDER_ROOT");
         resourceProviderRoot.mkdirs();
         resourceProviderFile = new File(resourceProviderRoot, "RP_FILE_" + System.currentTimeMillis());
         resourceProviderFile.createNewFile();
+        fakeBundlePath = getFakeBundlePath();
     }
     
     private File getConfigFile(String name) {
         return new File(tempFolder.getRoot(), name);
     }
-    
+
+    private String getFakeBundlePath() {
+        try {
+            return new File("/FAKE_BUNDLE").toURI().toURL().toExternalForm();
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Before
     public void setupProvider() {
         final Log log = Mockito.mock(Log.class);
@@ -276,55 +287,55 @@ public class BundleListContentProviderTest {
     
     @Test
     public void testInstall0() {
-        assertChildren("resources/install/0", 
-                "file:/FAKE_BUNDLE/commons-io/0/null", 
-                "file:/FAKE_BUNDLE/commons-fileupload/0/null", 
-                "file:/FAKE_BUNDLE/commons-collections/0/null"); 
+        assertChildren("resources/install/0",
+                fakeBundlePath + "/commons-io/0/null",
+                fakeBundlePath + "/commons-fileupload/0/null",
+                fakeBundlePath + "/commons-collections/0/null");
     }
     
     @Test
     public void testBootstrapBundles() {
-        assertChildren("resources/bundles/1", 
-                "file:/FAKE_BUNDLE/slf4j-api/-1/null", 
-                "file:/FAKE_BUNDLE/org.apache.sling.commons.log/-1/null"); 
+        assertChildren("resources/bundles/1",
+                fakeBundlePath + "/slf4j-api/-1/null",
+                fakeBundlePath + "/org.apache.sling.commons.log/-1/null");
     }
     
     @Test
     public void testInstall5() {
-        assertChildren("resources/install/5", 
-                "file:/FAKE_BUNDLE/five.norunmode/5/null"); 
+        assertChildren("resources/install/5",
+                fakeBundlePath + "/five.norunmode/5/null");
     }
     
     @Test
     public void testInstall5Dev() {
-        assertChildren("resources/install.dev/5", 
-                "file:/FAKE_BUNDLE/org.apache.sling.extensions.webconsolebranding/5/dev"); 
+        assertChildren("resources/install.dev/5",
+                fakeBundlePath + "/org.apache.sling.extensions.webconsolebranding/5/dev");
     }
     
     @Test
     public void testInstall5Test() {
-        assertChildren("resources/install.test/5", 
-                "file:/FAKE_BUNDLE/org.apache.sling.extensions.webconsolesecurityprovider/5/test");
+        assertChildren("resources/install.test/5",
+                fakeBundlePath + "/org.apache.sling.extensions.webconsolesecurityprovider/5/test");
     }
     
     @Test
     public void testInstall15() {
         assertChildren("resources/install/15",
-                "file:/FAKE_BUNDLE/fifteen.norunmode/15/null"); 
+                fakeBundlePath + "/fifteen.norunmode/15/null");
     }
     
     @Test
     public void testInstall15Oak() {
-        assertChildren("resources/install.oak/15", 
-                "file:/FAKE_BUNDLE/org.apache.sling.jcr.oak.server/15/oak",
-                "file:/FAKE_BUNDLE/jsr305/15/oak,jackrabbit"); 
+        assertChildren("resources/install.oak/15",
+                fakeBundlePath + "/org.apache.sling.jcr.oak.server/15/oak",
+                fakeBundlePath + "/jsr305/15/oak,jackrabbit");
     }
     
     @Test
     public void testInstall15Jackrabbit() {
-        assertChildren("resources/install.jackrabbit/15", 
-                "file:/FAKE_BUNDLE/guava/15/jackrabbit", 
-                "file:/FAKE_BUNDLE/jsr305/15/oak,jackrabbit"); 
+        assertChildren("resources/install.jackrabbit/15",
+                fakeBundlePath + "/guava/15/jackrabbit",
+                fakeBundlePath + "/jsr305/15/oak,jackrabbit");
     }
     
     @Test
