@@ -79,6 +79,26 @@ public class Util {
     //-------------Taken from org.apache.sling.commons.osgi.PropertiesUtil
 
     /**
+     * Returns the boolean value of the parameter or the
+     * <code>defaultValue</code> if the parameter is <code>null</code>.
+     * If the parameter is not a <code>Boolean</code> it is converted
+     * by calling <code>Boolean.valueOf</code> on the string value of the
+     * object.
+     * @param propValue the property value or <code>null</code>
+     * @param defaultValue the default boolean value
+     */
+    public static boolean toBoolean(Object propValue, boolean defaultValue) {
+        propValue = toObject(propValue);
+        if (propValue instanceof Boolean) {
+            return (Boolean) propValue;
+        } else if (propValue != null) {
+            return Boolean.valueOf(String.valueOf(propValue));
+        }
+
+        return defaultValue;
+    }
+
+    /**
      * Returns the parameter as an integer or the
      * <code>defaultValue</code> if the parameter is <code>null</code> or if
      * the parameter is not an <code>Integer</code> and cannot be converted to

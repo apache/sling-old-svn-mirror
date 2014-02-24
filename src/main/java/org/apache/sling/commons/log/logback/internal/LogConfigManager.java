@@ -60,6 +60,8 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
 
     public static final String LOG_FILE_SIZE = "org.apache.sling.commons.log.file.size";
 
+    public static final String LOG_FILE_BUFFERED = "org.apache.sling.commons.log.file.buffered";
+
     public static final String LOG_PATTERN = "org.apache.sling.commons.log.pattern";
 
     public static final String LOG_PATTERN_DEFAULT = "%d{dd.MM.yyyy HH:mm:ss.SSS} *%level* [%thread] %logger %msg%n";
@@ -418,7 +420,10 @@ public class LogConfigManager implements LogbackResetListener, LogConfig.LogWrit
                 fileSize = fileSizeProp.toString();
             }
 
-            LogWriter newWriter = new LogWriter(pid, getAppnderName(logFileName), fileNum, fileSize, logFileName);
+            boolean bufferedLogging = Util.toBoolean(configuration.get(LogConfigManager.LOG_FILE_BUFFERED), false);
+
+            LogWriter newWriter = new LogWriter(pid, getAppnderName(logFileName), fileNum,
+                    fileSize, logFileName, bufferedLogging);
             if (oldWriter != null) {
                 writerByFileName.remove(oldWriter.getFileName());
             }
