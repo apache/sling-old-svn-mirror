@@ -284,7 +284,7 @@ public class JcrResourceListener implements EventListener {
         }
 
         /**
-         * @return a {@code Dicitioanry} with all changes recorded including
+         * @return a {@code Dictionary} with all changes recorded including
          *         original JCR event information.
          */
         public final Dictionary<String, Object> toEventProperties() {
