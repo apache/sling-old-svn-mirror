@@ -28,6 +28,9 @@ import aQute.bnd.annotation.ProviderType;
  * <p>
  * As soon as the resource resolver is not used anymore,
  * {@link ResourceResolver#close()} should be called.
+ * <p>
+ * All resource resolvers returned by the same resource resolver factory
+ * must use the same search path
  *
  * @since 2.1
  */

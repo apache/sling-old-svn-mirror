@@ -335,9 +335,13 @@ public interface ResourceResolver extends Adaptable {
      * to search for resources by relative path. If no search path is set an
      * empty array is returned.
      * <p>
-     * The returns array of Strings is a copy of the internal value, so
+     * The returned array of strings is a copy of the internal value, so
      * modifications to this array have no influence on the operation of the
      * ResourceResolver.
+     * <p>
+     * The search path of a resource resolver never changes during the lifetime
+     * of the resource resolver. Therefore clients may call this method once
+     * and use the stored value together with this resource resolver.
      * <p>
      * Each entry in the array is an absolute path terminated with a slash
      * character. Thus to create an absolute path from a search path entry and a
@@ -449,14 +453,14 @@ public interface ResourceResolver extends Adaptable {
 
     /**
      * Checks if the specified resource has any direct child resources.
-     * 
+     *
      * @param resource
      *            the resource to check for direct children
      * @return <code>true</code> if the resource has any child resources
      * @since 2.4.4
      */
     boolean hasChildren(Resource resource);
-    
+
     /**
      * Returns a new <code>ResourceResolver</code> instance based on the given
      * <code>authenticationInfo</code> map and the original authentication info
