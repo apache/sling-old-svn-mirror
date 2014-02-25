@@ -29,7 +29,7 @@
 
     <artifactId>org.apache.sling.engine</artifactId>
     <packaging>bundle</packaging>
-    <version>2.2.11-SNAPSHOT</version>
+    <version>2.3.0</version>
 
     <name>Apache Sling Engine Implementation</name>
     <description>
@@ -37,9 +37,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/engine</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/engine</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/sling/engine</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.engine-2.3.0</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.engine-2.3.0</developerConnection>
+        <url>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.engine-2.3.0</url>
     </scm>
 
     <properties>
@@ -58,28 +58,15 @@
                         <phase>compile</phase>
                         <configuration>
                             <target>
-                                <property name="maven_compile_classpath"
-                                    refid="maven.compile.classpath" />
+                                <property name="maven_compile_classpath" refid="maven.compile.classpath" />
 
-                                <delete
-                                    file="${project.build.outputDirectory}/org/apache/sling/engine/impl/SlingHttpServletRequestImpl3.class" />
-                                <delete
-                                    file="${project.build.outputDirectory}/org/apache/sling/engine/impl/helper/ExternalServletContextWrapper3.class" />
-                                <delete
-                                    file="${project.build.outputDirectory}/org/apache/sling/engine/impl/helper/SlingServletContext3.class" />
-                                <delete
-                                    file="${project.build.outputDirectory}/org/apache/sling/engine/impl/parameters/ParameterSupportHttpServletRequestWrapper3.class" />
+                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/SlingHttpServletRequestImpl3.class" />
+                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/helper/ExternalServletContextWrapper3.class" />
+                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/helper/SlingServletContext3.class" />
+                                <delete file="${project.build.outputDirectory}/org/apache/sling/engine/impl/parameters/ParameterSupportHttpServletRequestWrapper3.class" />
 
-                                <javac
-                                    srcdir="${basedir}/src/main/java-servlet3"
-                                    destdir="${project.build.outputDirectory}"
-                                    encoding="${project.build.sourceEncoding}"
-                                    target="1.${sling.java.version}"
-                                    source="1.${sling.java.version}"
-                                    includeantruntime="false"
-                                >
-                                    <classpath
-                                        path="${javax.servlet:javax.servlet-api:jar}:${maven_compile_classpath}" />
+                                <javac srcdir="${basedir}/src/main/java-servlet3" destdir="${project.build.outputDirectory}" encoding="${project.build.sourceEncoding}" target="1.${sling.java.version}" source="1.${sling.java.version}" includeantruntime="false">
+                                    <classpath path="${javax.servlet:javax.servlet-api:jar}:${maven_compile_classpath}" />
                                 </javac>
 
                             </target>
