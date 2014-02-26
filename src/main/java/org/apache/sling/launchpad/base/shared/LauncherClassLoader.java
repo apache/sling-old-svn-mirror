@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -73,25 +75,41 @@ public class LauncherClassLoader extends URLClassLoader {
      */
     private final Set<String> launcherPackages;
 
-    LauncherClassLoader(File launcherJar) throws MalformedURLException {
+    LauncherClassLoader(File launcherJar, File[] extJars) throws MalformedURLException {
         super(new URL[] { launcherJar.toURI().toURL() },
             LauncherClassLoader.class.getClassLoader());
 
         Set<String> collectedPackages = new HashSet<String>();
 
+        //process launcher jar
+        processJarPackages(launcherJar, collectedPackages);
+
+        //process extension jars
+        List<File> extJarFileList = getExtJarFileList(extJars);
+
+        //add external jars to classloader
+        for(File extJarFile:extJarFileList){
+            addURL(extJarFile.toURI().toURL());
+            processJarPackages(extJarFile, collectedPackages);
+        }
+
+        launcherPackages = collectedPackages;
+    }
+
+    private void processJarPackages(File jarFile, Set<String> packageSet ){
         JarFile jar = null;
         try {
-            jar = new JarFile(launcherJar, false);
+            jar = new JarFile(jarFile, false);
             Enumeration<JarEntry> entries = jar.entries();
             while (entries.hasMoreElements()) {
                 String entryName = entries.nextElement().getName();
                 if (entryName.endsWith(".class")
-                    && !entryName.startsWith("META-INF/")
-                    && !entryName.startsWith("javax/")) {
+                        && !entryName.startsWith("META-INF/")
+                        && !entryName.startsWith("javax/")) {
                     String packageName = getPackageName(entryName, '/');
                     if (packageName != null
-                        && collectedPackages.add(packageName)) {
-                        collectedPackages.add(packageName.replace('/', '.'));
+                            && packageSet.add(packageName)) {
+                        packageSet.add(packageName.replace('/', '.'));
                     }
                 }
             }
@@ -105,8 +123,17 @@ public class LauncherClassLoader extends URLClassLoader {
                 }
             }
         }
+    }
 
-        launcherPackages = collectedPackages;
+
+    private List<File> getExtJarFileList(File[] extJars) throws MalformedURLException {
+        List<File> jarList = new ArrayList<File>();
+        for (File extJarFile : extJars) {
+            if (extJarFile != null && extJarFile.exists()) {
+                jarList.add(extJarFile);
+            }
+        }
+        return jarList;
     }
 
     /**
