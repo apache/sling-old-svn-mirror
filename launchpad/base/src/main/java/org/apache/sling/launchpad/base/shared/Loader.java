@@ -22,6 +22,7 @@ import java.beans.Introspector;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -50,6 +51,13 @@ public class Loader {
      */
     private final File launchpadHome;
 
+    private final File extLibHome;
+
+    /**
+     * Default External Library Home
+     */
+    private static final String EXTENSION_LIB_PATH="ext";
+
     /**
      * Creates a loader instance to load from the given launchpad home folder.
      * Besides ensuring the existence of the launchpad home folder, the
@@ -70,6 +78,7 @@ public class Loader {
         }
 
         this.launchpadHome = getLaunchpadHomeFile(launchpadHome);
+        extLibHome = getExtensionLibHome();
         removeOldLauncherJars();
     }
 
@@ -98,10 +107,10 @@ public class Loader {
 
         final ClassLoader loader;
         try {
-            loader = new LauncherClassLoader(launcherJarFile);
+            loader = new LauncherClassLoader(launcherJarFile, getExtLibs());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(
-                "Cannot create an URL from the Sling Launcher JAR path name", e);
+                "Cannot create an URL from the  JAR path name", e);
         }
 
         try {
@@ -220,9 +229,6 @@ public class Loader {
     /**
      * Removes old candidate launcher JAR files leaving the most recent one as
      * the launcher JAR file to use on next Sling startup.
-     *
-     * @param launchpadHome The Sling home directory location containing the
-     *            candidate launcher JAR files.
      */
     private void removeOldLauncherJars() {
         final File[] launcherJars = getLauncherJarFiles();
@@ -319,8 +325,6 @@ public class Loader {
      * {@link SharedConstants#LAUNCHER_JAR_REL_PATH}. This list may be empty if
      * the launcher JAR file has not been installed yet.
      *
-     * @param launchpadHome The sling home directory where the launcher JAR
-     *            files are stored
      * @return The list of candidate launcher JAR files, which may be empty.
      *         <code>null</code> is returned if an IO error occurs trying to
      *         list the files.
@@ -401,5 +405,49 @@ public class Loader {
 
     /** Meant to be overridden to display or log info */
     protected void info(String msg) {
+    }
+
+    private File getExtensionLibHome(){
+        //check if sling home is initialized
+        if(launchpadHome == null || !launchpadHome.exists()){
+            throw new IllegalArgumentException("Sling Home  has not been initialized" );
+        }
+        //assumes launchpadHome is initialized
+        File extLibFile=new File(launchpadHome, EXTENSION_LIB_PATH);
+        if (extLibFile.exists()) {
+            if (!extLibFile.isDirectory()) {
+                throw new IllegalArgumentException("Sling  Extension Lib Home " + extLibFile
+                        + " exists but is not a directory");
+            }
+        }
+
+        info("Sling  Extension Lib Home : " + extLibFile);
+        return extLibFile;
+    }
+
+    private File[] getExtLibs(){
+        if (extLibHome == null || !extLibHome.exists()) {
+            info("External Libs Home (ext) is null or does not exists.");
+            return new File[]{};
+        }
+        File[] libs = extLibHome.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return (name.endsWith(".jar"));
+            }
+        });
+
+        if (libs == null) {
+            libs = new File[]{};
+        }
+        StringBuilder logStringBldr = new StringBuilder("Sling Extension jars found = [ ");
+
+        for(File lib:libs){
+            logStringBldr.append(lib);
+            logStringBldr.append(",");
+        }
+
+        logStringBldr.append(" ] ");
+        info(logStringBldr.toString());
+        return libs;
     }
 }
