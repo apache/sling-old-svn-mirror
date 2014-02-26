@@ -21,9 +21,12 @@ package org.apache.sling.resourcemerger.impl;
 import java.util.List;
 
 import org.apache.sling.api.resource.AbstractResource;
+import org.apache.sling.api.resource.ModifiableValueMap;
+import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceMetadata;
 import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 
 /**
@@ -44,7 +47,10 @@ public class MergedResource extends AbstractResource {
     private final ResourceMetadata metadata = new ResourceMetadata();
 
     /** Cache value map. */
-    private ValueMap properties;
+    private final ValueMap properties;
+
+    /** Root path */
+    private final String mergedRootPath;
 
     /**
      * Constructor
@@ -58,7 +64,8 @@ public class MergedResource extends AbstractResource {
                    final String mergeRootPath,
                    final String relativePath,
                    final List<Resource> mappedResources,
-                   final List<ValueMap> valueMaps) {
+                   final List<ValueMap> valueMaps,
+                   final String mergedRootPath) {
         this.resolver = resolver;
         this.path = (relativePath.length() == 0 ? mergeRootPath : mergeRootPath + "/" + relativePath);
         this.properties = new MergedValueMap(valueMaps);
@@ -71,6 +78,7 @@ public class MergedResource extends AbstractResource {
             i++;
         }
         metadata.put(MergedResourceConstants.METADATA_RESOURCES, resourcePaths);
+        this.mergedRootPath = mergedRootPath;
     }
 
     /**
@@ -115,11 +123,34 @@ public class MergedResource extends AbstractResource {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
+    public <AdapterType> AdapterType adaptTo(final Class<AdapterType> type) {
         if (type == ValueMap.class) {
             return (AdapterType) this.properties;
         }
+        if (type == ModifiableValueMap.class) {
+            final String paths[] = (String[])this.metadata.get(MergedResourceConstants.METADATA_RESOURCES);
+            final String[] searchPaths = resolver.getSearchPath();
+            final String lastSearchPath = searchPaths[searchPaths.length-1];
 
+            if ( paths.length == 1 && paths[0].startsWith(lastSearchPath) ) {
+                final Resource copyResource = resolver.getResource(paths[0]);
+                if ( searchPaths.length == 1 ) {
+                    return (AdapterType)copyResource.adaptTo(ModifiableValueMap.class);
+                }
+                final String prefix = searchPaths[searchPaths.length-2];
+                final String createPath = prefix + path.substring(this.mergedRootPath.length() + 1);
+                try {
+                    final Resource newResource = ResourceUtil.getOrCreateResource(resolver, ResourceUtil.getParent(createPath),copyResource.getResourceType(), null, false);
+                    return (AdapterType)newResource.adaptTo(ModifiableValueMap.class);
+                } catch ( final PersistenceException pe) {
+                    // we ignore this for now
+                    return null;
+                }
+            }
+            final String resourcePath = paths[paths.length-1];
+            final Resource rsrc = resolver.getResource(resourcePath);
+            return (AdapterType)rsrc.adaptTo(ModifiableValueMap.class);
+        }
         return super.adaptTo(type);
     }
 
