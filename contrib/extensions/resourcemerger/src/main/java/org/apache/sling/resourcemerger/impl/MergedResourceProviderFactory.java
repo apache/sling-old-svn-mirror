@@ -33,7 +33,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.resourcemerger.api.ResourceMergerService;
 
-@Component(name = "Apache Sling Merged Resource Provider Factory",
+@Component(label = "Apache Sling Merged Resource Provider Factory",
            description = "This resource provider delivers merged resources based on the search paths.",
            metatype=true)
 @Service(value = {ResourceProviderFactory.class, ResourceMergerService.class})
