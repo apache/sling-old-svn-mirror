@@ -27,7 +27,7 @@ public class MockResourceResolverFactoryOptions {
 
     private EventAdmin eventAdmin;
 
-    private String[] searchPaths = new String[] {"/apps", "/libs"};
+    private String[] searchPaths = new String[] {"/apps/", "/libs/"};
 
     public EventAdmin getEventAdmin() {
         return eventAdmin;
