@@ -20,6 +20,7 @@ package org.apache.sling.commons.log.logback.internal;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -30,12 +31,16 @@ import java.util.List;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
+import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.status.Status;
+import ch.qos.logback.core.util.CachingDateFormatter;
 
 /**
  * The <code>SlingConfigurationPrinter</code> is an Apache Felix Web Console
  * plugin to display the currently configured log files.
  */
 public class SlingConfigurationPrinter {
+    private static final CachingDateFormatter SDF = new CachingDateFormatter("yyyy-MM-dd HH:mm:ss");
     private final LogbackManager logbackManager;
 
     public SlingConfigurationPrinter(LogbackManager logbackManager) {
@@ -48,6 +53,7 @@ public class SlingConfigurationPrinter {
     @SuppressWarnings("UnusedDeclaration")
     public void printConfiguration(PrintWriter printWriter) {
         LogbackManager.LoggerStateContext ctx = logbackManager.determineLoggerState();
+        dumpLogbackStatus(logbackManager, printWriter);
         for (Appender<ILoggingEvent> appender : ctx.getAllAppenders()) {
             if (appender instanceof FileAppender) {
                 final File file = new File(((FileAppender) appender).getFile());
@@ -69,7 +75,7 @@ public class SlingConfigurationPrinter {
                         if (fr != null) {
                             try {
                                 fr.close();
-                            } catch (IOException ignoreCloseException) {
+                            } catch (IOException ignored) {
                             }
                         }
                     }
@@ -80,8 +86,10 @@ public class SlingConfigurationPrinter {
     }
 
     /**
-     * TODO Need to see how to implement this with LogBack as we cannot get
-     * information about all rolled over policy
+     * Attempts to determine all log files created even via rotation.
+     * if some complex rotation logic is used where rotated file get different names
+     * or get created in different directory then those files would not be
+     * included
      * 
      * @see org.apache.felix.webconsole.AttachmentProvider#getAttachments(String)
      */
@@ -93,15 +101,7 @@ public class SlingConfigurationPrinter {
             LogbackManager.LoggerStateContext ctx = logbackManager.determineLoggerState();
             for (Appender<ILoggingEvent> appender : ctx.getAllAppenders()) {
                 if (appender instanceof FileAppender) {
-                    final File file = new File(((FileAppender) appender).getFile());
-                    // TODO With LogBack there is no straightforward way to get
-                    // information
-                    // about rolled over files
-                    // final File[] files =
-                    // writer.getFileRotator().getRotatedFiles(writer.getFile());
-                    final File[] files = new File[] {
-                        file
-                    };
+                    final File[] files = getRotatedFiles((FileAppender) appender);
                     for (File f : files) {
                         try {
                             urls.add(f.toURI().toURL());
@@ -114,6 +114,57 @@ public class SlingConfigurationPrinter {
             if (urls.size() > 0) {
                 return urls.toArray(new URL[urls.size()]);
             }
+        }
+        return null;
+    }
+
+    private static File[] getRotatedFiles(FileAppender app) {
+        final File file = new File(app.getFile());
+
+        //If RollingFileAppender then make an attempt to list files
+        //This might not work in all cases if complex rolling patterns
+        //are used in Logback
+        if (app instanceof RollingFileAppender) {
+            final File dir = file.getParentFile();
+            final String baseName = file.getName();
+            return dir.listFiles(new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    return name.startsWith(baseName);
+                }
+            });
+        }
+
+        //Not a RollingFileAppender then just return the actual file
+        return new File[]{file};
+    }
+
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
+    private static void dumpLogbackStatus(LogbackManager logbackManager, PrintWriter pw) {
+        List<Status> statusList = logbackManager.getStatusManager().getCopyOfStatusList();
+        pw.println("Logback Status");
+        pw.println("--------------------------------------------------");
+        for (Status s : statusList) {
+            pw.printf("%s *%s* %s - %s %n",
+                    SDF.format(s.getDate()),
+                    statusLevelAsString(s),
+                    SlingLogPanel.abbreviatedOrigin(s),
+                    s.getMessage());
+            if (s.getThrowable() != null) {
+                s.getThrowable().printStackTrace(pw);
+            }
+        }
+
+        pw.println();
+    }
+
+    private static String statusLevelAsString(Status s) {
+        switch (s.getEffectiveLevel()) {
+            case Status.INFO:
+                return "INFO";
+            case Status.WARN:
+                return "WARN";
+            case Status.ERROR:
+                return "ERROR";
         }
         return null;
     }

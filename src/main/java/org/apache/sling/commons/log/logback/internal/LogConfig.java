@@ -19,6 +19,7 @@
 package org.apache.sling.commons.log.logback.internal;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,7 +54,7 @@ public class LogConfig {
         this.logWriterProvider = logWriterProvider;
         this.configPid = configPid;
         this.pattern = pattern;
-        this.categories = categories;
+        this.categories = Collections.unmodifiableSet(categories);
         this.logLevel = logLevel;
         this.logWriterName = logWriterName;
         this.loggerContext = loggerContext;
