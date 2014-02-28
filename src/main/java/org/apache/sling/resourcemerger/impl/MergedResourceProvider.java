@@ -19,15 +19,11 @@
 package org.apache.sling.resourcemerger.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.sling.api.resource.ModifyingResourceProvider;
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
 import org.apache.sling.api.resource.ResourceResolver;
@@ -39,7 +35,7 @@ import org.apache.sling.api.resource.ValueMap;
  * access to {@link MergedResource} objects.
  */
 public class MergedResourceProvider
-    implements ResourceProvider, ModifyingResourceProvider {
+    implements ResourceProvider {
 
     private final String mergeRootPath;
 
@@ -54,46 +50,23 @@ public class MergedResourceProvider
         return getResource(resolver, path);
     }
 
-    private static final class ExcludeEntry {
-
-        public final String name;
-        public final boolean exclude;
-
-        public ExcludeEntry(final String value) {
-            if ( value.startsWith("!!") ) {
-                this.name = value.substring(1);
-                this.exclude = false;
-            } else if ( value.startsWith("!") ) {
-                this.name = value.substring(1);
-                this.exclude = true;
-            } else {
-                this.name = value;
-                this.exclude = false;
-            }
-        }
-    }
-
     private static final class ParentHidingHandler {
 
-        private final List<ExcludeEntry> entries = new ArrayList<MergedResourceProvider.ExcludeEntry>();
+        private final String[] childrenToHideArray;
 
         public ParentHidingHandler(final Resource parent) {
             final ValueMap parentProps = ResourceUtil.getValueMap(parent);
-            final String[] childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
-            if ( childrenToHideArray != null ) {
-                for(final String value : childrenToHideArray) {
-                    final ExcludeEntry entry = new ExcludeEntry(value);
-                    this.entries.add(entry);
-                }
-            }
+            this.childrenToHideArray = parentProps.get(MergedResourceConstants.PN_HIDE_CHILDREN, String[].class);
         }
 
         public boolean isHidden(final String name) {
             boolean hidden = false;
-            for(final ExcludeEntry entry : this.entries) {
-                if ( entry.name.equals("*") || entry.name.equals(name) ) {
-                    hidden = !entry.exclude;
-                    break;
+            if ( this.childrenToHideArray != null ) {
+                for(final String entry : childrenToHideArray) {
+                    if ( entry.equals("*") || entry.equals(name) ) {
+                        hidden = true;
+                        break;
+                    }
                 }
             }
             return hidden;
@@ -173,7 +146,7 @@ public class MergedResourceProvider
 
         if (!holder.resources.isEmpty()) {
             // create a new merged resource based on the list of mapped physical resources
-            return new MergedResource(resolver, mergeRootPath, relativePath, holder.resources, holder.valueMaps, this.mergeRootPath);
+            return new MergedResource(resolver, mergeRootPath, relativePath, holder.resources, holder.valueMaps);
         }
         return null;
     }
@@ -271,136 +244,5 @@ public class MergedResourceProvider
             }
         }
         return null;
-    }
-
-    private ResourceHolder getAllResources(final ResourceResolver resolver,
-            final String path,
-            final String relativePath) {
-        final ResourceHolder holder = new ResourceHolder(ResourceUtil.getName(path));
-
-        // Loop over provided base paths, start with least import
-        final String[] searchPaths = resolver.getSearchPath();
-        for(int i=searchPaths.length-1; i >= 0; i--) {
-            final String basePath = searchPaths[i];
-
-            // Try to get the corresponding physical resource for this base path
-            final String fullPath = basePath + relativePath;
-
-            // check parent for hiding
-            final Resource parent = resolver.getResource(ResourceUtil.getParent(fullPath));
-            if ( parent != null ) {
-                final boolean hidden = new ParentHidingHandler(parent).isHidden(holder.name);
-                if ( hidden ) {
-                    holder.resources.clear();
-                } else {
-                    final Resource baseRes = resolver.getResource(fullPath);
-                    if (baseRes != null) {
-                        holder.resources.add(baseRes);
-                    }
-                }
-            }
-        }
-        return holder;
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#create(org.apache.sling.api.resource.ResourceResolver, java.lang.String, java.util.Map)
-     */
-    public Resource create(final ResourceResolver resolver,
-            final String path,
-            final Map<String, Object> properties)
-    throws PersistenceException {
-        // we only support modifications if there is more than one search path
-        final String[] searchPaths = resolver.getSearchPath();
-        if ( searchPaths.length < 2 ) {
-            throw new PersistenceException("Modifying is only supported with at least two search paths", null, path, null);
-        }
-        // check if the resource exists
-        final Resource mountResource = this.getResource(resolver, path);
-        if ( mountResource != null ) {
-            throw new PersistenceException("Resource at " + path + " already exists.", null, path, null);
-        }
-        // creating of the root mount resource is not supported
-        final String relativePath = getRelativePath(path);
-        if ( relativePath == null || relativePath.length() == 0 ) {
-            throw new PersistenceException("Resource at " + path + " can't be created.", null, path, null);
-        }
-
-        final String lastSearchPath = searchPaths[searchPaths.length-1];
-        final ResourceHolder holder = this.getAllResources(resolver, path, relativePath);
-        if ( holder.resources.size() == 0 || holder.resources.size() == 1 && holder.resources.get(0).getPath().startsWith(lastSearchPath) ) {
-            final String useSearchPath = searchPaths[searchPaths.length-2];
-
-            final String createPath = useSearchPath + path.substring(this.mergeRootPath.length() + 1);
-            final Resource parentResource = ResourceUtil.getOrCreateResource(resolver, ResourceUtil.getParent(createPath), (String)null, null, false);
-            resolver.create(parentResource, ResourceUtil.getName(createPath), properties);
-        }
-        // TODO check hiding flag
-        return this.getResource(resolver, path);
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#delete(org.apache.sling.api.resource.ResourceResolver, java.lang.String)
-     */
-    public void delete(final ResourceResolver resolver, final String path)
-    throws PersistenceException {
-        // we only support modifications if there is more than one search path
-        final String[] searchPaths = resolver.getSearchPath();
-        if ( searchPaths.length < 2 ) {
-            throw new PersistenceException("Modifying is only supported with at least two search paths");
-        }
-        // deleting of the root mount resource is not supported
-        final String relativePath = getRelativePath(path);
-        if ( relativePath == null || relativePath.length() == 0 ) {
-            throw new PersistenceException("Resource at " + path + " can't be created.", null, path, null);
-        }
-
-        // check if the resource exists
-        final Resource mntResource = this.getResource(resolver, path);
-        if ( mntResource == null ) {
-            throw new PersistenceException("Resource at " + path + " does not exist", null, path, null);
-        }
-        final ResourceHolder holder = this.getAllResources(resolver, path, relativePath);
-        final String lastSearchPath = searchPaths[searchPaths.length-1];
-
-        int deleted = 0;
-        for(final Resource rsrc : holder.resources) {
-            final String p = rsrc.getPath();
-            if ( !p.startsWith(lastSearchPath) ) {
-                resolver.delete(rsrc);
-                deleted++;
-            }
-        }
-        if ( deleted < holder.resources.size() ) {
-            // create overlay resource which is hiding the other
-            final String prefix = searchPaths[searchPaths.length-2];
-            final String createPath = prefix + path.substring(this.mergeRootPath.length() + 1);
-            final Resource parentResource = ResourceUtil.getOrCreateResource(resolver, ResourceUtil.getParent(createPath), (String)null, null, false);
-            final Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put(MergedResourceConstants.PN_HIDE_RESOURCE, Boolean.TRUE);
-            resolver.create(parentResource, ResourceUtil.getName(createPath), properties);
-        }
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#revert(org.apache.sling.api.resource.ResourceResolver)
-     */
-    public void revert(final ResourceResolver resolver) {
-        // the provider for the search paths will revert
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#commit(org.apache.sling.api.resource.ResourceResolver)
-     */
-    public void commit(final ResourceResolver resolver) throws PersistenceException {
-        // the provider for the search paths will commit
-    }
-
-    /**
-     * @see org.apache.sling.api.resource.ModifyingResourceProvider#hasChanges(org.apache.sling.api.resource.ResourceResolver)
-     */
-    public boolean hasChanges(final ResourceResolver resolver) {
-        // the provider for the search paths will return in case of changes
-        return false;
     }
 }

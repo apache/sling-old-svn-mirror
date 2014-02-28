@@ -24,15 +24,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.sling.api.resource.PersistenceException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
 import org.apache.sling.testing.resourceresolver.MockHelper;
 import org.apache.sling.testing.resourceresolver.MockResourceResolverFactory;
@@ -152,30 +149,5 @@ public class MergedResourceProviderTest {
         assertEquals("1", vm.get("d"));
         assertEquals("2", vm.get("e"));
         assertEquals("x", vm.get("b"));
-    }
-
-    @Test public void testSimpleCreateAndDelete() throws PersistenceException {
-        final String path = "/merged/a/new";
-        try {
-            final Resource rsrc = this.provider.create(this.resolver, path, Collections.singletonMap("foo", (Object)"bla"));
-            assertNotNull(rsrc);
-            assertEquals(path, rsrc.getPath());
-            final ValueMap vm = ResourceUtil.getValueMap(rsrc);
-            assertEquals("bla", vm.get("foo"));
-
-            final Resource realResource = this.resolver.getResource("/apps/a/new");
-            assertNotNull(realResource);
-            final ValueMap vmReal = ResourceUtil.getValueMap(realResource);
-            assertEquals("bla", vmReal.get("foo"));
-            assertNull(this.resolver.getResource("/libs/a/new"));
-
-            this.provider.delete(this.resolver, path);
-            assertNull(this.provider.getResource(this.resolver, path));
-            assertNull(this.resolver.getResource("/libs/a/new"));
-            assertNull(this.resolver.getResource("/apps/a/new"));
-
-        } finally {
-            this.resolver.revert();
-        }
     }
 }
