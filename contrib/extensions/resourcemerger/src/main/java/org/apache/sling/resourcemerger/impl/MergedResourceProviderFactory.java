@@ -112,6 +112,19 @@ public class MergedResourceProviderFactory implements ResourceProviderFactory, R
         return Boolean.TRUE.equals(resource.getResourceMetadata().get(MergedResourceConstants.METADATA_FLAG));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public String getResourcePath(final String searchPath, final String mergedResourcePath) {
+        if( searchPath == null || !searchPath.startsWith("/") || !searchPath.endsWith("/") ) {
+            throw new IllegalArgumentException("Provided path is not a valid search path: " + searchPath);
+        }
+        if ( mergedResourcePath == null || !mergedResourcePath.startsWith(this.mergeRootPath + "/") ) {
+            throw new IllegalArgumentException("Provided path does not point to a merged resource: " + mergedResourcePath);
+        }
+        return searchPath + mergedResourcePath.substring(this.mergeRootPath.length() + 1);
+    }
+
     @Activate
     protected void configure(final Map<String, Object> properties) {
         mergeRootPath = PropertiesUtil.toString(properties.get(ResourceProvider.ROOTS), DEFAULT_ROOT);

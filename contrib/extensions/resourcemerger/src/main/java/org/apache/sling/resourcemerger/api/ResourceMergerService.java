@@ -54,4 +54,22 @@ public interface ResourceMergerService {
      * @return Returns <code>true</code> if the provided {@link Resource} is a merged resource.
      */
     boolean isMergedResource(Resource resource);
+
+    /**
+     * Return a resource path by taking the path of the merged resource, removing
+     * the mount point and replacing it with the search path.
+     *
+     * For example, if the provided search path is "/apps/" and the merged resource
+     * path is "/mnt/overlay/my/resource", the result will be "/apps/my/resource".
+     *
+     * @param searchPath The search path, this is an absolute path ending with a slash
+     *                   as returned by the resource resolver
+     * @param mergedResourcePath An absolute path to a merged resource
+     * @return The path to the resource
+     * @throws IllegalArgumentException If search path is not absolute or does not end
+     *                                  with a slash or if the merged resource path
+     *                                  is not within the space of the merged resources.
+     * @since 1.1
+     */
+    String getResourcePath(String searchPath, String mergedResourcePath);
 }
