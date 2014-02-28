@@ -79,6 +79,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+	        <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -218,19 +219,18 @@
         </dependency>
         
         <!-- using log4j under slf4j to allow fine-grained logging config (see src/test/resources/log4j.properties) -->
-	    <dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.5.2</version>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>1.6.1</version>
 			<scope>test</scope>
-	    </dependency>
+		</dependency>
 	    <dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.13</version>
 			<scope>test</scope>
 	    </dependency>
-
         <dependency>
         	<groupId>org.apache.sling</groupId>
         	<artifactId>org.apache.sling.commons.threads</artifactId>
