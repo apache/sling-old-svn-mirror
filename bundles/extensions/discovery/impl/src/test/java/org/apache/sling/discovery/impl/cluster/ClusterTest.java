@@ -263,7 +263,7 @@ public class ClusterTest {
                 .getInstances().size());
     }
 
-    //@Test
+    @Test
     public void testAdditionalInstance() throws Throwable {
         assertNotNull(instance1);
         assertNotNull(instance2);
