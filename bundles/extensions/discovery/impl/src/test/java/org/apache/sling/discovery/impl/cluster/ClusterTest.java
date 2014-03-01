@@ -127,7 +127,7 @@ public class ClusterTest {
         assertFalse(instance2.getLocalInstanceDescription().isLeader());
     }
 
-    //@Test
+    @Test
     public void testStableClusterId() throws Throwable {
     	// stop 1 and 2 and create them with a lower heartbeat timeout
     	instance2.stopHeartbeats();
@@ -329,7 +329,7 @@ public class ClusterTest {
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGED));
     }
 
-    //@Test
+    @Test
     public void testPropertyProviders() throws Throwable {
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
