@@ -77,13 +77,13 @@ public class ClusterTest {
     }
     
     /** test leader behaviour with ascending slingIds, SLING-3253 **/
-    //@Test
+    @Test
     public void testLeaderAsc() throws Throwable {
     	doTestLeader("000", "111");
     }
 
     /** test leader behaviour with descending slingIds, SLING-3253 **/
-    //@Test
+    @Test
     public void testLeaderDesc() throws Throwable {
     	doTestLeader("111", "000");
     }
