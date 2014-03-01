@@ -214,7 +214,7 @@ public class Instance {
     	}
 		
 		public synchronized void stop() {
-			System.err.println("Stopping Instance ["+slingId+"]");
+			logger.info("Stopping Instance ["+slingId+"]");
 			stopped_ = true;
 		}
 
@@ -222,7 +222,7 @@ public class Instance {
 			while(true) {
 				synchronized(this) {
 					if (stopped_) {
-						System.err.println("Instance ["+slingId+"] stopps.");
+						logger.info("Instance ["+slingId+"] stopps.");
 						return;
 					}
 				}
@@ -291,8 +291,6 @@ public class Instance {
         resourceResolver = resourceResolverFactory
                 .getAdministrativeResourceResolver(null);
         Session session = resourceResolver.adaptTo(Session.class);
-        System.out
-                .println("GOING TO REGISTER LISTENER WITH SESSION " + session);
         ObservationManager observationManager = session.getWorkspace()
                 .getObservationManager();
 
@@ -520,23 +518,13 @@ public class Instance {
     public void dumpRepo() throws Exception {
         Session session = resourceResolverFactory
                 .getAdministrativeResourceResolver(null).adaptTo(Session.class);
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: start");
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: |");
+        logger.info("dumpRepo: ====== START =====");
         logger.info("dumpRepo: repo = " + session.getRepository());
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: |");
 
         dump(session.getRootNode());
 
         // session.logout();
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: end");
-        logger.info("dumpRepo: |");
-        logger.info("dumpRepo: |");
+        logger.info("dumpRepo: ======  END  =====");
 
         session.logout();
     }
@@ -566,7 +554,11 @@ public class Instance {
             }
         }
 
-        logger.info("dump: node=" + node + "   - properties:" + sb);
+        StringBuffer depth = new StringBuffer();
+        for(int i=0; i<node.getDepth(); i++) {
+            depth.append(" ");
+        }
+        logger.info(depth + "/" + node.getName() + " -- " + sb);
         NodeIterator it = node.getNodes();
         while (it.hasNext()) {
             Node child = it.nextNode();
