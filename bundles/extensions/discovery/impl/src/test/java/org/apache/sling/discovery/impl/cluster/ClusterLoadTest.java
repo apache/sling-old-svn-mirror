@@ -11,6 +11,7 @@ import java.util.Random;
 import org.apache.sling.discovery.impl.common.resource.EstablishedInstanceDescription;
 import org.apache.sling.discovery.impl.common.resource.IsolatedInstanceDescription;
 import org.apache.sling.discovery.impl.setup.Instance;
+import org.apache.sling.discovery.impl.setup.WithholdingAppender;
 import org.apache.sling.testing.tools.retry.RetryLoop;
 import org.junit.After;
 import org.junit.Test;
@@ -114,7 +115,29 @@ public class ClusterLoadTest {
     	doTest(7, 10);
     }
 
-	private void doTest(final int size, final int loopCnt) throws Throwable {
+    private void doTest(final int size, final int loopCnt) throws Throwable {
+        WithholdingAppender withholdingAppender = null;
+        boolean failure = true;
+        try{
+            logger.info("doTest("+size+","+loopCnt+"): muting log output...");
+            withholdingAppender = WithholdingAppender.install();
+            doDoTest(size, loopCnt);
+            failure = false;
+        } finally {
+            if (withholdingAppender!=null) {
+                if (failure) {
+                    logger.info("doTest("+size+","+loopCnt+"): writing muted log output due to failure...");
+                }
+                withholdingAppender.release(failure);
+                if (!failure) {
+                    logger.info("doTest("+size+","+loopCnt+"): not writing muted log output due to success...");
+                }
+            }
+            logger.info("doTest("+size+","+loopCnt+"): unmuted log output.");
+        }
+    }
+    
+	private void doDoTest(final int size, final int loopCnt) throws Throwable {
 		if (size<2) {
 			fail("can only test 2 or more instances");
 		}
