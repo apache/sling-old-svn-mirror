@@ -215,16 +215,27 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-simple</artifactId>
                 </exclusion>
+                <!--  also excluding jcl-over-slf4j as we need a newer vesion of this which is compatible with slf4j 1.6 -->
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         
         <!-- using log4j under slf4j to allow fine-grained logging config (see src/test/resources/log4j.properties) -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>log4j-over-slf4j</artifactId>
-			<version>1.6.1</version>
-			<scope>test</scope>
-		</dependency>
+        <dependency>
+        	<groupId>org.slf4j</groupId>
+        	<artifactId>slf4j-log4j12</artifactId>
+        	<version>1.7.5</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.slf4j</groupId>
+        	<artifactId>jcl-over-slf4j</artifactId>
+        	<version>1.7.5</version>
+        	<scope>test</scope>
+        </dependency>
 	    <dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
