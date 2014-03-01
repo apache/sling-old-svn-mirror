@@ -222,10 +222,9 @@ public class LocationIterator implements Iterator<String> {
         return superType;
     }
 
-    // this method is largely duplicated from ResourceUtil, but takes the configured
-    // workspaceName into account.
+    // this method is largely duplicated from ResourceUtil
     private String getResourceSuperType(final ResourceResolver resourceResolver,
-                                              final String resourceType) {
+                                        final String resourceType) {
         // normalize resource type to a path string
         final String rtPath = ResourceUtil.resourceTypeToPath(resourceType);
         // get the resource type resource and check its super type
