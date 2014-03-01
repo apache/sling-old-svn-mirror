@@ -33,7 +33,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -55,7 +55,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /apps/foo/bar
@@ -78,7 +78,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /apps/foo/bar
@@ -113,7 +113,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -140,7 +140,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -168,7 +168,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -199,7 +199,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -230,7 +230,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /apps/foo/bar
@@ -262,7 +262,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /apps/foo/bar
@@ -310,7 +310,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -346,7 +346,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -383,7 +383,7 @@ public class LocationIteratorTest extends HelperTestBase {
         final Resource r = request.getResource();
         LocationIterator li = new LocationIterator(r.getResourceType(),
                 r.getResourceSuperType(),
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /foo/bar
@@ -416,7 +416,7 @@ public class LocationIteratorTest extends HelperTestBase {
         resourceResolver.setSearchPath(root0, root1);
         LocationIterator li = new LocationIterator("",
                 null,
-                "", null,
+                "",
                 resourceResolver);
         assertTrue(li.hasNext());
         assertEquals("/apps/", li.next());
@@ -431,7 +431,7 @@ public class LocationIteratorTest extends HelperTestBase {
         resourceResolver.setSearchPath(root0, root1);
         LocationIterator li = new LocationIterator("a/b",
                 null,
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
         assertTrue(li.hasNext());
         assertEquals(root0 + "/a/b", li.next());
@@ -450,7 +450,7 @@ public class LocationIteratorTest extends HelperTestBase {
         resourceResolver.setSearchPath(root0, root1);
         LocationIterator li = new LocationIterator("a/b",
                 "c/d",
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
         assertTrue(li.hasNext());
         assertEquals(root0 + "/a/b", li.next());
@@ -487,7 +487,7 @@ public class LocationIteratorTest extends HelperTestBase {
 
         LocationIterator li = new LocationIterator(resourceType,
                 resourceSuperType,
-                DEFAULT_SERVLET_NAME, null,
+                DEFAULT_SERVLET_NAME,
                 resourceResolver);
 
         // 1. /libs/foo/bar

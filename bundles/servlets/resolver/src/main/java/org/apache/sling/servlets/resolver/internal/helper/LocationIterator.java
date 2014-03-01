@@ -86,9 +86,6 @@ public class LocationIterator implements Iterator<String> {
 
     /** Set of used resource types to detect a circular resource type hierarchy. */
     private final Set<String> usedResourceTypes = new HashSet<String>();
-    
-    // the workspace name
-    private String workspaceName;
 
     /**
      * Creates an instance of this iterator starting with a location built from
@@ -101,10 +98,9 @@ public class LocationIterator implements Iterator<String> {
      * @param resolver The resource resolver
      */
     public LocationIterator(String resourceType, String resourceSuperType, String baseResourceType,
-            String workspaceName, ResourceResolver resolver) {
+            ResourceResolver resolver) {
         this.resolver = resolver;
         this.baseResourceType = baseResourceType;
-        this.workspaceName = workspaceName;
 
         String[] tmpPath = resolver.getSearchPath();
         if (tmpPath == null || tmpPath.length == 0) {
@@ -225,7 +221,7 @@ public class LocationIterator implements Iterator<String> {
 
         return superType;
     }
-   
+
     // this method is largely duplicated from ResourceUtil, but takes the configured
     // workspaceName into account.
     private String getResourceSuperType(final ResourceResolver resourceResolver,
@@ -236,13 +232,8 @@ public class LocationIterator implements Iterator<String> {
         String resourceSuperType = null;
         // if the path is absolute, use it directly
         if ( rtPath != null && rtPath.startsWith("/") ) {
-            final String candidatePath;
-            if ( this.workspaceName != null ) {
-                candidatePath = workspaceName + ':' + rtPath;
-            } else {
-                candidatePath = rtPath;
-            }
-            
+            final String candidatePath = rtPath;
+
             final Resource rtResource = resourceResolver.getResource(candidatePath);
             if ( rtResource != null ) {
                 resourceSuperType = rtResource.getResourceSuperType();
@@ -251,12 +242,7 @@ public class LocationIterator implements Iterator<String> {
         } else {
             // if the path is relative we use the search paths
             for(final String searchPath : resourceResolver.getSearchPath()) {
-                final String candidatePath;
-                if ( this.workspaceName != null ) {
-                    candidatePath = workspaceName + ':' + searchPath + rtPath;
-                } else {
-                    candidatePath = searchPath + rtPath;
-                }
+                final String candidatePath = searchPath + rtPath;
                 final Resource rtResource = resourceResolver.getResource(candidatePath);
                 if ( rtResource != null && rtResource.getResourceSuperType() != null ) {
                     resourceSuperType = rtResource.getResourceSuperType();

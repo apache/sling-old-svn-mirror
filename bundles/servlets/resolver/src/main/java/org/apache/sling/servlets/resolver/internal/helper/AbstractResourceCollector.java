@@ -52,13 +52,9 @@ public abstract class AbstractResourceCollector {
 
     protected final String[] executionPaths;
 
-    protected final String workspaceName;
-
-
     public AbstractResourceCollector(final String baseResourceType,
             final String resourceType,
             final String resourceSuperType,
-            final String workspaceName,
             final String extension,
             final String[] executionPaths) {
         this.baseResourceType = baseResourceType;
@@ -66,14 +62,13 @@ public abstract class AbstractResourceCollector {
         this.resourceSuperType = resourceSuperType;
         this.extension = extension;
         this.executionPaths = executionPaths;
-        this.workspaceName = workspaceName;
     }
 
     public final Collection<Resource> getServlets(ResourceResolver resolver) {
 
         final SortedSet<Resource> resources = new TreeSet<Resource>();
         final Iterator<String> locations = new LocationIterator(resourceType, resourceSuperType,
-                                                                baseResourceType, workspaceName, resolver);
+                                                                baseResourceType, resolver);
         while (locations.hasNext()) {
             final String location = locations.next();
 
@@ -132,9 +127,6 @@ public abstract class AbstractResourceCollector {
      */
     protected final Resource getResource(final ResourceResolver resolver,
                                          String path) {
-        if ( this.workspaceName != null ) {
-            path = workspaceName + ':' + path;
-        }
         Resource res = resolver.getResource(path);
 
         if (res == null) {
@@ -160,8 +152,7 @@ public abstract class AbstractResourceCollector {
         if ( stringEquals(resourceType, o.resourceType)
              && stringEquals(resourceSuperType, o.resourceSuperType)
              && stringEquals(extension, o.extension)
-             && stringEquals(baseResourceType, o.baseResourceType)
-             && stringEquals(workspaceName, o.workspaceName)) {
+             && stringEquals(baseResourceType, o.baseResourceType)) {
             return true;
         }
         return false;
