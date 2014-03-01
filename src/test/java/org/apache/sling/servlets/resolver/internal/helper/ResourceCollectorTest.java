@@ -270,7 +270,7 @@ public class ResourceCollectorTest extends HelperTestBase {
             pathMap.put(name, path);
         }
 
-        ResourceCollector lu = ResourceCollector.create(request, null, null, new String[] {"html"});
+        ResourceCollector lu = ResourceCollector.create(request, null, new String[] {"html"});
         Collection<Resource> res = lu.getServlets(request.getResource().getResourceResolver());
         Iterator<Resource> rIter = res.iterator();
 

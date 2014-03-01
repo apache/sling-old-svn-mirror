@@ -18,7 +18,6 @@
  */
 package org.apache.sling.servlets.resolver.internal.helper;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -28,7 +27,6 @@ import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
-import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.servlets.resolver.internal.ServletResolverConstants;
 import org.apache.sling.servlets.resolver.internal.resource.ServletResourceProviderFactory;
 
@@ -81,27 +79,25 @@ public class ResourceCollector extends AbstractResourceCollector {
      *
      * @param request The <code>SlingHttpServletRequest</code> for which to
      *            return a <code>ResourceCollector</code>.
-     * @param workspaceName
      * @return The <code>ResourceCollector</code> to find servlets and scripts
      *         suitable for handling the <code>request</code>.
      */
     public static ResourceCollector create(
-            final SlingHttpServletRequest request, final String workspaceName,
+            final SlingHttpServletRequest request,
             final String[] executionPaths, final String[] defaultExtensions) {
         final RequestPathInfo requestPathInfo = request.getRequestPathInfo();
         final boolean isDefaultExtension = ArrayUtils.contains(defaultExtensions, requestPathInfo.getExtension());
-        return new ResourceCollector(request.getResource(), workspaceName, requestPathInfo.getExtension(), executionPaths, isDefaultExtension,
+        return new ResourceCollector(request.getResource(), requestPathInfo.getExtension(), executionPaths, isDefaultExtension,
                 request.getMethod(), requestPathInfo.getSelectors());
     }
-    
-    public static ResourceCollector create(final Resource resource, 
-            final String workspaceName,
+
+    public static ResourceCollector create(final Resource resource,
             final String extension,
             final String[] executionPaths, final String[] defaultExtensions,
             final String methodName, final String[] selectors
             ) {
         boolean isDefaultExtension = ArrayUtils.contains(defaultExtensions, extension);
-        return new ResourceCollector(resource, workspaceName, extension, executionPaths, isDefaultExtension, methodName, selectors);
+        return new ResourceCollector(resource, extension, executionPaths, isDefaultExtension, methodName, selectors);
     }
 
     /**
@@ -120,12 +116,12 @@ public class ResourceCollector extends AbstractResourceCollector {
      */
     public ResourceCollector(final String methodName,
             final String baseResourceType, final Resource resource,
-            final String workspaceName, final String[] executionPaths) {
+            final String[] executionPaths) {
         super((baseResourceType != null
                 ? baseResourceType
                 : ServletResolverConstants.DEFAULT_SERVLET_NAME),
             resource.getResourceType(), resource.getResourceSuperType(),
-            workspaceName, null, executionPaths);
+            null, executionPaths);
         this.methodName = methodName;
         this.requestSelectors = new String[0];
         this.numRequestSelectors = 0;
@@ -140,8 +136,7 @@ public class ResourceCollector extends AbstractResourceCollector {
         final String key = methodName + ':' + baseResourceType + ':'
             + extension + "::"
             + (this.resourceType == null ? "" : this.resourceType) + ':'
-            + (this.resourceSuperType == null ? "" : this.resourceSuperType)
-            + ':' + (this.workspaceName == null ? "" : this.workspaceName);
+            + (this.resourceSuperType == null ? "" : this.resourceSuperType);
         this.hashCode = key.hashCode();
     }
 
@@ -151,7 +146,6 @@ public class ResourceCollector extends AbstractResourceCollector {
      *
      * @param methodName The <code>methodName</code> used to find scripts for.
      *            This must not be <code>null</code>.
-     * @param workspaceName The <code>workspaceName</code>.
      * @param baseResourceType The basic resource type to use as a final
      *            resource super type. If this is <code>null</code> the default
      *            value
@@ -159,14 +153,14 @@ public class ResourceCollector extends AbstractResourceCollector {
      *            is assumed.
      */
     private ResourceCollector(final Resource resource,
-            final String workspaceName, final String extension,
+            final String extension,
             final String[] executionPaths,
             final boolean isDefaultExtension,
             final String methodName,
             final String[] selectors) {
         super(ServletResolverConstants.DEFAULT_SERVLET_NAME,
                 resource.getResourceType(),
-                resource.getResourceSuperType(), workspaceName,
+                resource.getResourceSuperType(),
                 extension, executionPaths);
             this.methodName = methodName;
 
@@ -184,17 +178,17 @@ public class ResourceCollector extends AbstractResourceCollector {
             final String key = methodName + ':' + baseResourceType + ':'
                 + extension + ':' + StringUtils.join(requestSelectors, '.') + ':'
                 + (this.resourceType == null ? "" : this.resourceType) + ':'
-                + (this.resourceSuperType == null ? "" : this.resourceSuperType)
-                + ':' + (this.workspaceName == null ? "" : this.workspaceName);
+                + (this.resourceSuperType == null ? "" : this.resourceSuperType);
             this.hashCode = key.hashCode();
     }
 
+    @Override
     protected void getWeightedResources(final Set<Resource> resources,
             final Resource location) {
 
         final ResourceResolver resolver = location.getResourceResolver();
         Resource current = location;
-        String parentName = ResourceUtil.getName(current);
+        String parentName = current.getName();
 
         int selIdx = 0;
         String selector;
@@ -210,7 +204,7 @@ public class ResourceCollector extends AbstractResourceCollector {
                 if (!this.isPathAllowed(child.getPath())) {
                     continue;
                 }
-                String scriptName = ResourceUtil.getName(child);
+                String scriptName = child.getName();
                 int lastDot = scriptName.lastIndexOf('.');
                 if (lastDot < 0) {
                     // no extension in the name, this is not a script

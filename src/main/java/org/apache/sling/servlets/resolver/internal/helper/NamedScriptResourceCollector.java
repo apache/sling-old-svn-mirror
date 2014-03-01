@@ -74,7 +74,7 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
                               final String scriptName,
                               final String extension,
                               final String[] executionPaths) {
-        super(baseResourceType, resourceType, resourceSuperType, null, extension, executionPaths);
+        super(baseResourceType, resourceType, resourceSuperType, extension, executionPaths);
         this.scriptName = scriptName;
         // create the hash code once
         final String key = baseResourceType + ':' + this.scriptName + ':' +
@@ -83,6 +83,7 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
         this.hashCode = key.hashCode();
     }
 
+    @Override
     protected void getWeightedResources(final Set<Resource> resources,
                                         final Resource location) {
         final ResourceResolver resolver = location.getResourceResolver();
@@ -115,7 +116,7 @@ public class NamedScriptResourceCollector extends AbstractResourceCollector {
             if ( !this.isPathAllowed(child.getPath()) ) {
                 continue;
             }
-            final String currentScriptName = ResourceUtil.getName(child);
+            final String currentScriptName = child.getName();
             final int lastDot = currentScriptName.lastIndexOf('.');
             if (lastDot < 0) {
                 // no extension in the name, this is not a script

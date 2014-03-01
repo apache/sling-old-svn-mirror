@@ -74,6 +74,7 @@ public class SlingServletResolverTest {
 
     @Before public void setUp() throws Exception {
         mockResourceResolver = new MockResourceResolver() {
+            @Override
             public void close() {
                 // nothing to do;
             }
@@ -101,16 +102,9 @@ public class SlingServletResolverTest {
         };
 
         servlet = new MockSlingRequestHandlerServlet();
-        servletResolver = new SlingServletResolver() {
+        servletResolver = new SlingServletResolver();
 
-            @Override
-            String getWorkspaceName(SlingHttpServletRequest request) {
-                return getRequestWorkspaceName();
-            }
-
-        };
-
-        Class<?> resolverClass = servletResolver.getClass().getSuperclass();
+        Class<?> resolverClass = servletResolver.getClass();
 
         // set resource resolver factory
         final Field resolverField = resolverClass.getDeclaredField("resourceResolverFactory");
@@ -123,7 +117,7 @@ public class SlingServletResolverTest {
             public ServiceRegistration registerService(String s, Object o, Dictionary dictionary) {
                 return null;
             }
-            
+
             @Override
             public ServiceRegistration registerService(String[] strings, Object o, Dictionary dictionary) {
                 return null;
