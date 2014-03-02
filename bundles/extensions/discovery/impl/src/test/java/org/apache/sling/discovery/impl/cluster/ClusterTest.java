@@ -197,8 +197,8 @@ public class ClusterTest {
         instance1.dumpRepo();
         String actualClusterId = instance1.getClusterViewService()
                 .getClusterView().getId();
-        System.err.println("expected cluster id: "+newClusterId1);
-        System.err.println("actual   cluster id: "+actualClusterId);
+        logger.info("expected cluster id: "+newClusterId1);
+        logger.info("actual   cluster id: "+actualClusterId);
 		assertEquals(newClusterId1, actualClusterId);
     }
     

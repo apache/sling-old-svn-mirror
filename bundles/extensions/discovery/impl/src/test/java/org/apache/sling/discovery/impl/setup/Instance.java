@@ -202,6 +202,10 @@ public class Instance {
     private Server jettyServer;
 
     private MyConfig config;
+
+    private EventListener observationListener;
+    
+    private ObservationManager observationManager;
     
     private class HeartbeatRunner implements Runnable {
     	
@@ -291,10 +295,10 @@ public class Instance {
         resourceResolver = resourceResolverFactory
                 .getAdministrativeResourceResolver(null);
         Session session = resourceResolver.adaptTo(Session.class);
-        ObservationManager observationManager = session.getWorkspace()
+        observationManager = session.getWorkspace()
                 .getObservationManager();
 
-        observationManager.addEventListener(
+        observationListener =
                 new EventListener() {
 
                     public void onEvent(EventIterator events) {
@@ -331,7 +335,10 @@ public class Instance {
                                     "Throwable occurred in onEvent: " + th, th);
                         }
                     }
-                }, Event.NODE_ADDED | Event.NODE_REMOVED | Event.NODE_MOVED
+        };
+        observationManager.addEventListener(
+                observationListener
+                , Event.NODE_ADDED | Event.NODE_REMOVED | Event.NODE_MOVED
                         | Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED
                         | Event.PROPERTY_REMOVED | Event.PERSIST, "/", true,
                 null,
@@ -571,6 +578,10 @@ public class Instance {
     		heartbeatRunner.stop();
     		heartbeatRunner = null;
     	}
+    	if ((observationListener != null) && (observationManager != null)) {
+            observationManager.removeEventListener(observationListener);
+    	}
+    	
         if (resourceResolver != null) {
             resourceResolver.close();
         }
