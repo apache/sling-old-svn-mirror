@@ -53,16 +53,21 @@ public class SingleInstanceTest {
 
     @Before
     public void setup() throws Exception {
+        logger.info("setup: creating new standalone instance");
         instance = Instance.newStandaloneInstance("standaloneInstance", true);
+        logger.info("setup: creating new standalone instance done.");
     }
 
     @After
     public void tearDown() throws Exception {
+        logger.info("tearDown: stopping standalone instance");
         instance.stop();
+        logger.info("tearDown: stopping standalone instance done");
     }
 
     @Test
     public void testGetters() {
+        logger.info("testGetters: start");
         assertNotNull(instance);
         logger.info("sling id=" + instance.getSlingId());
         assertNotNull(instance.getClusterViewService().getClusterView());
@@ -90,10 +95,12 @@ public class SingleInstanceTest {
         assertTrue(myInstance.isLeader());
 
         assertTrue(myInstance.isLocal());
+        logger.info("testGetters: end");
     }
 
     @Test
     public void testPropertyProviders() throws Throwable {
+        logger.info("testPropertyProviders: start");
         final String propertyName = UUID.randomUUID().toString();
         propertyValue = UUID.randomUUID().toString();
         PropertyProviderImpl pp = new PropertyProviderImpl();
@@ -114,10 +121,12 @@ public class SingleInstanceTest {
         assertNull(instance.getClusterViewService().getClusterView()
                 .getInstances().get(0)
                 .getProperty(UUID.randomUUID().toString()));
+        logger.info("testPropertyProviders: end");
     }
     
     @Test
     public void testInvalidProperties() throws Throwable {
+        logger.info("testInvalidProperties: start");
         final String propertyValue = UUID.randomUUID().toString();
         doTestProperty(UUID.randomUUID().toString(), propertyValue, propertyValue);
 
@@ -128,6 +137,7 @@ public class SingleInstanceTest {
         doTestProperty("var/" + UUID.randomUUID().toString(), propertyValue, null);
         doTestProperty(UUID.randomUUID().toString() + "@test", propertyValue, null);
         doTestProperty(UUID.randomUUID().toString() + "!test", propertyValue, null);
+        logger.info("testInvalidProperties: end");
     }
 
 	private void doTestProperty(final String propertyName,
@@ -143,9 +153,12 @@ public class SingleInstanceTest {
     
     @Test
     public void testTopologyEventListeners() throws Throwable {
+        logger.info("testTopologyEventListeners: start");
         instance.runHeartbeatOnce();
+        logger.info("testTopologyEventListeners: 1st sleep 2s");
         Thread.sleep(2000);
         instance.runHeartbeatOnce();
+        logger.info("testTopologyEventListeners: 2nd sleep 2s");
         Thread.sleep(2000);
 
         AssertingTopologyEventListener assertingTopologyEventListener = new AssertingTopologyEventListener();
@@ -163,6 +176,7 @@ public class SingleInstanceTest {
         assertEquals(1, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(0, pp.getGetCnt());
         instance.bindPropertyProvider(pp, propertyName);
+        logger.info("testTopologyEventListeners: 3rd sleep 1.5s");
         Thread.sleep(1500);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         // we can only assume that the getProperty was called at least once - it
@@ -177,16 +191,18 @@ public class SingleInstanceTest {
         pp.setProperty(propertyName, propertyValue);
         assertEquals(0, pp.getGetCnt());
         instance.runHeartbeatOnce();
+        logger.info("testTopologyEventListeners: 4th sleep 2s");
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(2, pp.getGetCnt());
 
         // a heartbeat repeat should not result in another call though
         instance.runHeartbeatOnce();
+        logger.info("testTopologyEventListeners: 5th sleep 2s");
         Thread.sleep(2000);
         assertEquals(0, assertingTopologyEventListener.getRemainingExpectedCount());
         assertEquals(3, pp.getGetCnt());
-
+        logger.info("testTopologyEventListeners: done");
     }
 
     @Test
