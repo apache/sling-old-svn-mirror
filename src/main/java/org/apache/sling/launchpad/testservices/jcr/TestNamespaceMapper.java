@@ -39,7 +39,7 @@ import org.apache.sling.jcr.api.NamespaceMapper;
 public class TestNamespaceMapper implements NamespaceMapper {
 
     public void defineNamespacePrefixes(Session session) throws RepositoryException {
-        session.setNamespacePrefix("test2", "test2=http://sling.apache.org/test/two");
+        session.setNamespacePrefix("test2", "http://sling.apache.org/test/two");
     }
 
 }
