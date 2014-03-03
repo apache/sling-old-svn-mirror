@@ -49,6 +49,9 @@ public class View {
     private final Resource resource;
 
     public View(final Resource resource) {
+        if (resource == null) {
+            throw new IllegalArgumentException("resource must not be null");
+        }
         this.resource = resource;
     }
 
