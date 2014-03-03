@@ -79,16 +79,21 @@ public class ClusterTest {
     /** test leader behaviour with ascending slingIds, SLING-3253 **/
     @Test
     public void testLeaderAsc() throws Throwable {
+        logger.info("testLeaderAsc: start");
     	doTestLeader("000", "111");
+        logger.info("testLeaderAsc: end");
     }
 
     /** test leader behaviour with descending slingIds, SLING-3253 **/
     @Test
     public void testLeaderDesc() throws Throwable {
+        logger.info("testLeaderDesc: start");
     	doTestLeader("111", "000");
+        logger.info("testLeaderDesc: end");
     }
 
     private void doTestLeader(String slingId1, String slingId2) throws Throwable {
+        logger.info("doTestLeader("+slingId1+","+slingId2+"): start");
     	// stop 1 and 2 and create them with a lower heartbeat timeout
     	instance2.stopHeartbeats();
     	instance1.stopHeartbeats();
@@ -96,6 +101,7 @@ public class ClusterTest {
         instance1.stop();
         instance1 = Instance.newStandaloneInstance("/var/discovery/impl/", "firstInstance", true, 1, 1, slingId1);
         // sleep so that the two dont have the same startup time, and thus leaderElectionId is lower for instance1
+        logger.info("doTestLeader: 1st sleep 200ms");
         Thread.sleep(200);
         instance2 = Instance.newClusterInstance("/var/discovery/impl/", "secondInstance", instance1,
                 false, 1, 1, slingId2);
@@ -111,9 +117,11 @@ public class ClusterTest {
         // let the sync/voting happen
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
+        logger.info("doTestLeader: 2nd sleep 500ms");
         Thread.sleep(500);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
+        logger.info("doTestLeader: 3rd sleep 500ms");
         Thread.sleep(500);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
@@ -125,10 +133,12 @@ public class ClusterTest {
         // the first instance should be the leader - since it was started first
         assertTrue(instance1.getLocalInstanceDescription().isLeader());
         assertFalse(instance2.getLocalInstanceDescription().isLeader());
+        logger.info("doTestLeader("+slingId1+","+slingId2+"): end");
     }
 
     @Test
     public void testStableClusterId() throws Throwable {
+        logger.info("testStableClusterId: start");
     	// stop 1 and 2 and create them with a lower heartbeat timeout
     	instance2.stopHeartbeats();
     	instance1.stopHeartbeats();
@@ -200,10 +210,12 @@ public class ClusterTest {
         logger.info("expected cluster id: "+newClusterId1);
         logger.info("actual   cluster id: "+actualClusterId);
 		assertEquals(newClusterId1, actualClusterId);
+        logger.info("testStableClusterId: end");
     }
     
     @Test
     public void testClusterView() throws Exception {
+        logger.info("testClusterView: start");
         assertNotNull(instance1);
         assertNotNull(instance2);
         assertNull(instance3);
@@ -235,11 +247,13 @@ public class ClusterTest {
         instance3.runHeartbeatOnce();
 
         instance1.dumpRepo();
+        logger.info("testClusterView: 1st 2s sleep");
         Thread.sleep(2000);
 
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         instance3.runHeartbeatOnce();
+        logger.info("testClusterView: 2nd 2s sleep");
         Thread.sleep(2000);
 
         instance1.dumpRepo();
@@ -261,10 +275,12 @@ public class ClusterTest {
                 .getInstances().size());
         assertEquals(3, instance3.getClusterViewService().getClusterView()
                 .getInstances().size());
+        logger.info("testClusterView: end");
     }
 
     @Test
     public void testAdditionalInstance() throws Throwable {
+        logger.info("testAdditionalInstance: start");
         assertNotNull(instance1);
         assertNotNull(instance2);
 
@@ -284,10 +300,12 @@ public class ClusterTest {
         instance2.runHeartbeatOnce();
 
         instance1.dumpRepo();
+        logger.info("testAdditionalInstance: 1st 2s sleep");
         Thread.sleep(2000);
 
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
+        logger.info("testAdditionalInstance: 2nd 2s sleep");
         Thread.sleep(2000);
 
         instance1.dumpRepo();
@@ -320,27 +338,33 @@ public class ClusterTest {
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         instance3.runHeartbeatOnce();
+        logger.info("testAdditionalInstance: 3rd 2s sleep");
         Thread.sleep(2000);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         instance3.runHeartbeatOnce();
+        logger.info("testAdditionalInstance: 4th 2s sleep");
         Thread.sleep(2000);
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGING));
         assertEquals(1, acceptsMultiple.getEventCnt(Type.TOPOLOGY_CHANGED));
+        logger.info("testAdditionalInstance: end");
     }
 
     @Test
     public void testPropertyProviders() throws Throwable {
+        logger.info("testPropertyProviders: start");
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         assertNull(instance3);
         instance3 = Instance.newClusterInstance("thirdInstance", instance1,
                 false);
         instance3.runHeartbeatOnce();
+        logger.info("testPropertyProviders: 1st 2s sleep");
         Thread.sleep(2000);
         instance1.runHeartbeatOnce();
         instance2.runHeartbeatOnce();
         instance3.runHeartbeatOnce();
+        logger.info("testPropertyProviders: 2nd 2s sleep");
         Thread.sleep(2000);
 
         property1Value = UUID.randomUUID().toString();
@@ -369,6 +393,7 @@ public class ClusterTest {
         assertNull(instance2.getClusterViewService().getClusterView()
                 .getInstances().get(0)
                 .getProperty(UUID.randomUUID().toString()));
+        logger.info("testPropertyProviders: start");
     }
 
     private void assertPropertyValues() {
