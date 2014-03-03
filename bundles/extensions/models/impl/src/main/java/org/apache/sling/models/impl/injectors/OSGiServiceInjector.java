@@ -148,6 +148,9 @@ public class OSGiServiceInjector implements Injector {
             Class<?> injectedClass = (Class<?>) type;
             if (injectedClass.isArray()) {
                 Object[] services = getServices(adaptable, injectedClass.getComponentType(), filterString, callbackRegistry);
+                if (services == null) {
+                    return null;
+                }
                 Object arr = Array.newInstance(injectedClass.getComponentType(), services.length);
                 for (int i = 0; i < services.length; i++) {
                     Array.set(arr, i, services[i]);
@@ -168,6 +171,9 @@ public class OSGiServiceInjector implements Injector {
 
             Class<?> serviceType = (Class<?>) ptype.getActualTypeArguments()[0];
             Object[] services = getServices(adaptable, serviceType, filterString, callbackRegistry);
+            if (services == null) {
+                return null;
+            }
             return Arrays.asList(services);
         } else {
             log.warn("Cannot handle type {}", type);
