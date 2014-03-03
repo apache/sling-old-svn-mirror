@@ -109,8 +109,6 @@ import org.slf4j.LoggerFactory;
 @Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class})
 @Properties({
     @Property(name="service.description", value="Sling Servlet Resolver and Error Handler"),
-    @Property(name="service.vendor", value="The Apache Software Foundation"),
-    @Property(name="service.ranking", intValue=10000), // for the resource decorator
     @Property(name="event.topics", propertyPrivate=true,
          value={"org/apache/sling/api/resource/Resource/*",
                     "org/apache/sling/api/resource/ResourceProvider/*",
