@@ -53,7 +53,15 @@ public class EstablishedClusterView extends DefaultClusterViewImpl {
         super(view.getViewId());
 
         String leaderId = view.getResource().adaptTo(ValueMap.class).get("leaderId", String.class);
-        final Iterator<Resource> it1 = view.getResource().getChild("members")
+        final Resource viewRes = view.getResource();
+        if (viewRes == null) {
+            throw new IllegalStateException("viewRes must not be null");
+        }
+        final Resource members = viewRes.getChild("members");
+        if (members == null) {
+            throw new IllegalStateException("members must not be null");
+        }
+        final Iterator<Resource> it1 = members
                 .getChildren().iterator();
         final List<Resource> instanceRess = new LinkedList<Resource>();
         while (it1.hasNext()) {
