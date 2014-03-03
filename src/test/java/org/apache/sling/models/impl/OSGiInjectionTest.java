@@ -30,6 +30,8 @@ import org.apache.sling.models.impl.injectors.OSGiServiceInjector;
 import org.apache.sling.models.testmodels.classes.ArrayOSGiModel;
 import org.apache.sling.models.testmodels.classes.CollectionOSGiModel;
 import org.apache.sling.models.testmodels.classes.ListOSGiModel;
+import org.apache.sling.models.testmodels.classes.OptionalArrayOSGiModel;
+import org.apache.sling.models.testmodels.classes.OptionalListOSGiModel;
 import org.apache.sling.models.testmodels.classes.RequestOSGiModel;
 import org.apache.sling.models.testmodels.classes.SetOSGiModel;
 import org.apache.sling.models.testmodels.classes.SimpleOSGiModel;
@@ -156,6 +158,29 @@ public class OSGiInjectionTest {
         assertEquals(2, model.getServices().length);
         assertEquals(service1, model.getServices()[0]);
         assertEquals(service2, model.getServices()[1]);
+
+        verifyNoMoreInteractions(res);
+    }
+
+    @Test
+    public void testOptionalArrayOSGiModel() throws Exception {
+
+        Resource res = mock(Resource.class);
+
+        OptionalArrayOSGiModel model = factory.getAdapter(res, OptionalArrayOSGiModel.class);
+        assertNotNull(model);
+        assertNull(model.getServices());
+
+        verifyNoMoreInteractions(res);
+    }
+
+    @Test
+    public void testOptionalListOSGiModel() throws Exception {
+        Resource res = mock(Resource.class);
+
+        OptionalListOSGiModel model = factory.getAdapter(res, OptionalListOSGiModel.class);
+        assertNotNull(model);
+        assertNull(model.getServices());
 
         verifyNoMoreInteractions(res);
     }
