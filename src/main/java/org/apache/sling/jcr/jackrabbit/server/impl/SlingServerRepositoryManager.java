@@ -57,7 +57,6 @@ import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -137,10 +136,11 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
 
     private Map<String, ServiceRegistration> statisticsServices = new ConcurrentHashMap<String, ServiceRegistration>();
 
-    private Map<ServiceReference, NamespaceMapper> namespaceMapperRefs = new TreeMap<ServiceReference, NamespaceMapper>();
+    private Map<Long, NamespaceMapper> namespaceMapperRefs = new TreeMap<Long, NamespaceMapper>();
 
     // ---------- Repository Management ----------------------------------------
 
+    @Override
     protected Repository acquireRepository() {
 
         @SuppressWarnings("unchecked")
@@ -263,6 +263,7 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
      * @since bundle version 2.2.0 replacing the previously overwriting of the
      *        now final {@code AbstractSlingRepository.registerService} method.
      */
+    @Override
     protected String[] getServiceRegistrationInterfaces() {
         return new String[] {
             SlingRepository.class.getName(), Repository.class.getName(), RepositoryManager.class.getName()
@@ -289,6 +290,7 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
         return this.serviceUserMapper;
     }
 
+    @Override
     protected void disposeRepository(Repository repository) {
         unregisterStatistics(repository);
 
@@ -358,21 +360,20 @@ public class SlingServerRepositoryManager extends AbstractSlingRepositoryManager
     }
 
     @SuppressWarnings("unused")
-    private void bindNamespaceMapper(final ServiceReference ref) {
+    private void bindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
         synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.put(ref,
-                (NamespaceMapper) this.getComponentContext().locateService("namespaceMapper", ref));
+            this.namespaceMapperRefs.put((Long)props.get(Constants.SERVICE_ID), namespaceMapper);
             this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                new NamespaceMapper[this.namespaceMapperRefs.values().size()]);
+                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
         }
     }
 
     @SuppressWarnings("unused")
-    private void unbindNamespaceMapper(final ServiceReference ref) {
+    private void unbindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
         synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.remove(ref);
+            this.namespaceMapperRefs.remove(props.get(Constants.SERVICE_ID));
             this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                new NamespaceMapper[this.namespaceMapperRefs.values().size()]);
+                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
         }
     }
 
