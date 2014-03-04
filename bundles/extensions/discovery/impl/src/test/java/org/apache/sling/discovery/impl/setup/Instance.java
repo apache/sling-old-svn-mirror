@@ -576,10 +576,11 @@ public class Instance {
 
     public void stop() throws Exception {
         logger.info("stop: stopping slingId="+slingId+", debugName="+debugName);
-    	if (heartbeatRunner!=null) {
-    		heartbeatRunner.stop();
-    		heartbeatRunner = null;
-    	}
+        try {
+            stopHeartbeats();
+        } catch (Throwable e) {
+            throw new Exception("Caught Throwable in stopHeartbeats: "+e, e);
+        }
     	if ((observationListener != null) && (observationManager != null)) {
     	    logger.info("stop: removing listener for slingId="+slingId+": "+observationListener);
             observationManager.removeEventListener(observationListener);
