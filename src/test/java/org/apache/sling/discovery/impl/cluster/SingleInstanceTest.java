@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.sling.discovery.ClusterView;
 import org.apache.sling.discovery.InstanceDescription;
 import org.apache.sling.discovery.TopologyEvent;
@@ -51,8 +53,13 @@ public class SingleInstanceTest {
 
     String propertyValue;
 
+    private Level logLevel;
+
     @Before
     public void setup() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        logLevel = discoveryLogger.getLevel();
+        discoveryLogger.setLevel(Level.DEBUG);
         logger.info("setup: creating new standalone instance");
         instance = Instance.newStandaloneInstance("standaloneInstance", true);
         logger.info("setup: creating new standalone instance done.");
@@ -60,6 +67,9 @@ public class SingleInstanceTest {
 
     @After
     public void tearDown() throws Exception {
+        final org.apache.log4j.Logger discoveryLogger = LogManager.getRootLogger().getLogger("org.apache.sling.discovery");
+        discoveryLogger.setLevel(logLevel);
+        LogManager.getRootLogger().setLevel(logLevel);
         logger.info("tearDown: stopping standalone instance");
         instance.stop();
         logger.info("tearDown: stopping standalone instance done");

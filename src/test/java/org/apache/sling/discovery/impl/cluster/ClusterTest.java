@@ -393,7 +393,7 @@ public class ClusterTest {
         assertNull(instance2.getClusterViewService().getClusterView()
                 .getInstances().get(0)
                 .getProperty(UUID.randomUUID().toString()));
-        logger.info("testPropertyProviders: start");
+        logger.info("testPropertyProviders: end");
     }
 
     private void assertPropertyValues() {
