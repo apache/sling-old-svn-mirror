@@ -33,9 +33,14 @@ import org.apache.sling.discovery.TopologyView;
 import org.apache.sling.discovery.impl.setup.Instance;
 import org.apache.sling.discovery.impl.topology.announcement.Announcement;
 import org.apache.sling.discovery.impl.topology.connector.TopologyConnectorClientInformation;
+import org.junit.After;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TopologyTest {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     class Connector {
         
@@ -53,8 +58,20 @@ public class TopologyTest {
         }
     }
     
+    private final List<Instance> instances = new LinkedList<Instance>();
+    
+    @After
+    public void tearDown() throws Exception {
+        for (Iterator<Instance> it = instances.iterator(); it.hasNext();) {
+            final Instance instance = it.next();
+            instance.stop();
+        }
+    }
+    
     private Instance createInstance(String debugName) throws Exception {
-        return Instance.newStandaloneInstance(debugName, true);
+        final Instance instance = Instance.newStandaloneInstance(debugName, true);
+        instances.add(instance);
+        return instance;
     }
 
     private Connector createConnector(Instance instance1, Instance instance2) throws Throwable {
@@ -152,17 +169,22 @@ public class TopologyTest {
     
     @Test
     public void testLargeTopologyWithHub() throws Throwable {
+        logger.info("testLargeTopologyWithHub: start");
         final int TEST_SIZE = 100;
         Instance hub = createInstance("hub");
         
         List<String> slingIds = new LinkedList<String>();
         slingIds.add(hub.getSlingId());
         for(int i=0; i<TEST_SIZE; i++) {
+//            logger.info("testLargeTopologyWithHub: adding instance "+i);
             Instance instance = createInstance("instance"+i);
+//            logger.info("testLargeTopologyWithHub: adding connector "+i);
             Connector connector = createConnector(instance, hub);
             slingIds.add(instance.getSlingId());
         }
+        logger.info("testLargeTopologyWithHub: checking if all connectors are registered");
         assertTopologyConsistsOf(hub.getDiscoveryService().getTopology(), slingIds.toArray(new String[slingIds.size()]));
+        logger.info("testLargeTopologyWithHub: end");
     }
 
 }
