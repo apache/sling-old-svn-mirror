@@ -111,6 +111,9 @@ public class VotingHandler implements EventHandler {
             return;
         }
         try {
+            if (logger.isDebugEnabled()) {
+                logger.debug("handleEvent: path = "+resourcePath+", event = "+event);
+            }
             analyzeVotings(resourceResolver);
         } catch (PersistenceException e) {
             logger.error(
@@ -130,6 +133,8 @@ public class VotingHandler implements EventHandler {
      * by the HearbeatHandler.doCheckView and the VotingHandler.handleEvent.
      */
     public synchronized void analyzeVotings(final ResourceResolver resourceResolver) throws PersistenceException {
+        // SLING-3406: refreshing resourceResolver/session here to get the latest state from the repository
+        resourceResolver.refresh();
         VotingView winningVote = VotingHelper.getWinningVoting(
                 resourceResolver, config);
         if (winningVote != null) {
@@ -139,6 +144,8 @@ public class VotingHandler implements EventHandler {
 	                        + winningVote);
             	}
                 promote(resourceResolver, winningVote.getResource());
+                // SLING-3406: committing resourceResolver/session here, while we're in the synchronized
+                resourceResolver.commit();
             } else {
             	if (logger.isDebugEnabled()) {
             		logger.debug("analyzeVotings: there is a winning vote. No need to vote any further. Expecting it to get promoted to established: "
