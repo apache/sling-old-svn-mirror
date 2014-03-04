@@ -52,7 +52,7 @@
                 <configuration>
                     <instructions>
                         <Embed-Dependency>
-                            commons-beanutils;inline="org/apache/commons/beanutils/PropertyUtils.class|org/apache/commons/beanutils/PropertyUtilsBean.class|org/apache/commons/beanutils/DynaProperty.class|org/apache/commons/beanutils/expression/*.class",
+                            *;scope=compile,
                             org.osgi.compendium;inline="org/osgi/util/tracker/*"</Embed-Dependency>
                     </instructions>
                 </configuration>
