@@ -216,6 +216,7 @@ public class SingleInstanceTest {
 
     @Test
     public void testBootstrap() throws Throwable {
+        logger.info("testBootstrap: start");
         ClusterView initialClusterView = instance.getClusterViewService()
                 .getClusterView();
         assertNotNull(initialClusterView);
@@ -252,6 +253,7 @@ public class SingleInstanceTest {
         assertEquals(EstablishedInstanceDescription.class, instance
                 .getClusterViewService().getClusterView().getInstances().get(0)
                 .getClass());
+        logger.info("testBootstrap: end");
     }
 
 }
