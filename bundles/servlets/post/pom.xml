@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.servlets.post</artifactId>
     <packaging>bundle</packaging>
-    <version>2.3.3-SNAPSHOT</version>
+    <version>2.3.4</version>
 
     <name>Apache Sling Default POST Servlets</name>
     <description>
@@ -36,9 +36,9 @@
     </description>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/servlets/post</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/servlets/post</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/trunk/bundles/servlets/post</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.servlets.post-2.3.4</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.servlets.post-2.3.4</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.servlets.post-2.3.4</url>
     </scm>
 
     <properties>
