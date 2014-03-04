@@ -254,6 +254,7 @@ public class Instance {
             throws Exception {
     	this.slingId = slingId;
         this.debugName = debugName;
+        logger.info("<init>: starting slingId="+slingId+", debugName="+debugName);
 
         osgiMock = new OSGiMock();
 
@@ -574,18 +575,23 @@ public class Instance {
     }
 
     public void stop() throws Exception {
+        logger.info("stop: stopping slingId="+slingId+", debugName="+debugName);
     	if (heartbeatRunner!=null) {
     		heartbeatRunner.stop();
     		heartbeatRunner = null;
     	}
     	if ((observationListener != null) && (observationManager != null)) {
+    	    logger.info("stop: removing listener for slingId="+slingId+": "+observationListener);
             observationManager.removeEventListener(observationListener);
+    	} else {
+    	    logger.warn("stop: could not remove listener for slingId="+slingId+", debugName="+debugName+", observationManager="+observationManager+", observationListener="+observationListener);
     	}
     	
         if (resourceResolver != null) {
             resourceResolver.close();
         }
         osgiMock.deactivateAll();
+        logger.info("stop: stopped slingId="+slingId+", debugName="+debugName);
     }
 
     public void bindTopologyEventListener(TopologyEventListener eventListener)
