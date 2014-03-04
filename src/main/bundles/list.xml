@@ -159,7 +159,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.event</artifactId>
-            <version>3.3.4</version>
+            <version>3.3.7-SNAPSHOT</version>
         </bundle>
 
         <bundle>
@@ -269,7 +269,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.scripting.core</artifactId>
-            <version>2.0.25-SNAPSHOT</version>
+            <version>2.0.27-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
