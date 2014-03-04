@@ -191,8 +191,7 @@ public class VotingHandler implements EventHandler {
 
         if (winningVote != null) {
         	if (logger.isDebugEnabled()) {
-	            logger.debug("analyzeVotings: done with vote-handling. there was a winner: "
-	                    + winningVote);
+	            logger.debug("analyzeVotings: done with vote-handling. there was a winner.");
         	}
             return;
         }
