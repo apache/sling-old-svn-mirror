@@ -154,7 +154,7 @@
         <bundle>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.discovery.impl</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.5-SNAPSHOT</version>
         </bundle>
         <bundle>
             <groupId>org.apache.sling</groupId>
