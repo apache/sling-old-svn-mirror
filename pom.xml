@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>org.apache.sling.jcr.resource</artifactId>
-    <version>2.3.2</version>
+    <version>2.3.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>Apache Sling JCR Resource Resolver</name>
@@ -37,13 +37,13 @@
 
     <scm>
         <connection>
-            scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.resource-2.3.2
+            scm:svn:http://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/resource
         </connection>
         <developerConnection>
-            scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.jcr.resource-2.3.2
+            scm:svn:https://svn.apache.org/repos/asf/sling/trunk/bundles/jcr/resource
         </developerConnection>
         <url>
-            http://svn.apache.org/viewvc/sling/tags/org.apache.sling.jcr.resource-2.3.2
+            http://svn.apache.org/viewvc/sling/trunk/bundles/jcr/resource
         </url>
     </scm>
 
