@@ -57,7 +57,7 @@ public class Config {
     private static final String ONGOING_VOTING_RESOURCE = "ongoingVotings";
 
     /** Configure the timeout (in seconds) after which an instance is considered dead/crashed. */
-    public static final long DEFAULT_HEARTBEAT_TIMEOUT = 60;
+    public static final long DEFAULT_HEARTBEAT_TIMEOUT = 120;
     @Property(longValue=DEFAULT_HEARTBEAT_TIMEOUT)
     public static final String HEARTBEAT_TIMEOUT_KEY = "heartbeatTimeout";
     private long heartbeatTimeout = DEFAULT_HEARTBEAT_TIMEOUT;
