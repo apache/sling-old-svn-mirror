@@ -86,7 +86,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -107,13 +106,12 @@
                         <sling.launchpad.version>${sling.launchpad.version}</sling.launchpad.version>
                     </systemPropertyVariables>
                     <classpathDependencyExcludes>
-                     -->   <!-- The osgi.org dependencies cause trouble with pax exam --><!--
+                     <!-- The osgi.org dependencies cause trouble with pax exam -->
                         <classpathDependencyExcludes>org.osgi:org.osgi.core</classpathDependencyExcludes> 
                         <classpathDependencyExcludes>org.osgi:org.osgi.compendium</classpathDependencyExcludes> 
                     </classpathDependencyExcludes>
                 </configuration>
             </plugin>
-            -->
             <plugin>
                 <artifactId>maven-clean-plugin</artifactId>
                 <configuration>
@@ -144,7 +142,6 @@
             <version>2.1.0</version>
             <scope>provided</scope>
         </dependency>
-<!--
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.launchpad</artifactId>
@@ -153,7 +150,6 @@
             <classifier>bundlelist</classifier>
             <scope>test</scope>
         </dependency>
--->
         <dependency>
             <groupId>org.apache.sling</groupId>
             <artifactId>org.apache.sling.jcr.api</artifactId>
