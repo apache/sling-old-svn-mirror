@@ -28,7 +28,7 @@
 
     <artifactId>org.apache.sling.i18n</artifactId>
     <packaging>bundle</packaging>
-    <version>2.2.8</version>
+    <version>2.2.9-SNAPSHOT</version>
 
     <name>Apache Sling Internationalization Support</name>
     <description>
@@ -46,9 +46,9 @@
     </properties>
 
     <scm>
-        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/tags/org.apache.sling.i18n-2.2.8</connection>
-        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/tags/org.apache.sling.i18n-2.2.8</developerConnection>
-        <url>http://svn.apache.org/viewvc/sling/tags/org.apache.sling.i18n-2.2.8</url>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/i18n</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/contrib/extensions/i18n</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/contrib/extensions/i18n</url>
     </scm>
 
     <build>
