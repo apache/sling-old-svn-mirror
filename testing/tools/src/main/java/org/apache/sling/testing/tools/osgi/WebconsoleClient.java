@@ -51,9 +51,13 @@ public class WebconsoleClient {
         this.password = password;
     }
     
-    /** Install a bundle using the Felix webconsole HTTP interface */
+    /** Install a bundle using the Felix webconsole HTTP interface, with a specific start level */
     public void installBundle(File f, boolean startBundle) throws Exception {
-        log.info("Installing bundle {}", f.getName());
+        installBundle(f, startBundle, 0);
+    }
+    
+    /** Install a bundle using the Felix webconsole HTTP interface, with a specific start level */
+    public void installBundle(File f, boolean startBundle, int startLevel) throws Exception {
         
         // Setup request for Felix Webconsole bundle install
         final MultipartEntity entity = new MultipartEntity();
@@ -62,6 +66,13 @@ public class WebconsoleClient {
             entity.addPart("bundlestart", new StringBody("true"));
         }
         entity.addPart("bundlefile", new FileBody(f));
+        
+        if(startLevel > 0) {
+            entity.addPart("bundlestartlevel", new StringBody(String.valueOf(startLevel)));
+            log.info("Installing bundle {} at start level {}", f.getName(), startLevel);
+        } else {
+            log.info("Installing bundle {} at default start level", f.getName());
+        }
         
         // Console returns a 302 on success (and in a POST this
         // is not handled automatically as per HTTP spec)
