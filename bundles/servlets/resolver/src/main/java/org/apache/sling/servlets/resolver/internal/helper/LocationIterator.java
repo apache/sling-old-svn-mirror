@@ -240,7 +240,7 @@ public class LocationIterator implements Iterator<String> {
 
         } else {
             // if the path is relative we use the search paths
-            for(final String searchPath : resourceResolver.getSearchPath()) {
+            for(final String searchPath : this.searchPath) {
                 final String candidatePath = searchPath + rtPath;
                 final Resource rtResource = resourceResolver.getResource(candidatePath);
                 if ( rtResource != null && rtResource.getResourceSuperType() != null ) {

@@ -271,7 +271,7 @@ public class ResourceCollectorTest extends HelperTestBase {
         }
 
         ResourceCollector lu = ResourceCollector.create(request, null, new String[] {"html"});
-        Collection<Resource> res = lu.getServlets(request.getResource().getResourceResolver());
+        Collection<Resource> res = lu.getServlets(request.getResourceResolver());
         Iterator<Resource> rIter = res.iterator();
 
         for (int index : indices) {
