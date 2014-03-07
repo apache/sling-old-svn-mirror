@@ -64,7 +64,7 @@ public abstract class AbstractResourceCollector {
         this.executionPaths = executionPaths;
     }
 
-    public final Collection<Resource> getServlets(ResourceResolver resolver) {
+    public final Collection<Resource> getServlets(final ResourceResolver resolver) {
 
         final SortedSet<Resource> resources = new TreeSet<Resource>();
         final Iterator<String> locations = new LocationIterator(resourceType, resourceSuperType,

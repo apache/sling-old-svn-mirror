@@ -65,6 +65,8 @@ import org.apache.sling.api.SlingHttpServletResponse;
 import org.apache.sling.api.request.RequestPathInfo;
 import org.apache.sling.api.request.RequestProgressTracker;
 import org.apache.sling.api.request.RequestUtil;
+import org.apache.sling.api.request.SlingRequestEvent;
+import org.apache.sling.api.request.SlingRequestListener;
 import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceProvider;
@@ -106,7 +108,7 @@ import org.slf4j.LoggerFactory;
  */
 @Component(name="org.apache.sling.servlets.resolver.SlingServletResolver", metatype=true,
            label="%servletresolver.name", description="%servletresolver.description")
-@Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class})
+@Service(value={ServletResolver.class, SlingScriptResolver.class, ErrorHandler.class, SlingRequestListener.class})
 @Properties({
     @Property(name="service.description", value="Sling Servlet Resolver and Error Handler"),
     @Property(name="event.topics", propertyPrivate=true,
@@ -121,6 +123,7 @@ import org.slf4j.LoggerFactory;
 public class SlingServletResolver
     implements ServletResolver,
                SlingScriptResolver,
+               SlingRequestListener,
                ErrorHandler,
                EventHandler {
 
@@ -162,7 +165,7 @@ public class SlingServletResolver
     @Reference
     private ResourceResolverFactory resourceResolverFactory;
 
-    private ResourceResolver scriptResolver;
+    private ResourceResolver sharedScriptResolver;
 
     private final Map<ServiceReference, ServletReg> servletsByReference = new HashMap<ServiceReference, ServletReg>();
 
@@ -199,6 +202,11 @@ public class SlingServletResolver
     private String[] executionPaths;
 
     /**
+     * The search paths
+     */
+    private String[] searchPaths;
+
+    /**
      * The default extensions
      */
     private String[] defaultExtensions;
@@ -223,10 +231,11 @@ public class SlingServletResolver
             LOGGER.debug("resolveServlet called for resource {}", resource);
         }
 
+        final ResourceResolver scriptResolver = this.getScriptResourceResolver();
         Servlet servlet = null;
 
         if ( type != null && type.length() > 0 ) {
-            servlet = resolveServletInternal(request, type);
+            servlet = resolveServletInternal(request, type, scriptResolver);
         }
 
         // last resort, use the core bundle default servlet
@@ -267,7 +276,8 @@ public class SlingServletResolver
             LOGGER.debug("resolveServlet called for resource {} with script name {}", resource, scriptName);
         }
 
-        final Servlet servlet = resolveServletInternal(resource, scriptName);
+        final ResourceResolver scriptResolver = this.getScriptResourceResolver();
+        final Servlet servlet = resolveServletInternal(resource, scriptName, scriptResolver);
 
         // log the servlet found
         if (LOGGER.isDebugEnabled()) {
@@ -292,7 +302,8 @@ public class SlingServletResolver
             LOGGER.debug("resolveServlet called for for script name {}", scriptName);
         }
 
-        final Servlet servlet = resolveServletInternal((Resource)null, scriptName);
+        final ResourceResolver scriptResolver = this.getScriptResourceResolver();
+        final Servlet servlet = resolveServletInternal((Resource)null, scriptName, scriptResolver);
 
         // log the servlet found
         if (LOGGER.isDebugEnabled()) {
@@ -309,7 +320,8 @@ public class SlingServletResolver
     /** Internal method to resolve a servlet. */
     private Servlet resolveServletInternal(
             final Resource resource,
-            final String scriptName) {
+            final String scriptName,
+            final ResourceResolver resolver) {
         Servlet servlet = null;
 
         // first check whether the type of a resource is the absolute
@@ -317,7 +329,7 @@ public class SlingServletResolver
         if (scriptName.charAt(0) == '/') {
             final String scriptPath = ResourceUtil.normalize(scriptName);
             if ( this.isPathAllowed(scriptPath) ) {
-                final Resource res = this.scriptResolver.getResource(scriptPath);
+                final Resource res = resolver.getResource(scriptPath);
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
@@ -330,7 +342,7 @@ public class SlingServletResolver
         if ( servlet == null ) {
             // the resource type is not absolute, so lets go for the deep search
             final NamedScriptResourceCollector locationUtil = NamedScriptResourceCollector.create(scriptName, resource, this.executionPaths);
-            servlet = getServletInternal(locationUtil, null);
+            servlet = getServletInternal(locationUtil, null, resolver);
 
             if (LOGGER.isDebugEnabled() && servlet != null) {
                 LOGGER.debug("resolveServlet returns servlet {}", RequestUtil.getServletName(servlet));
@@ -407,6 +419,7 @@ public class SlingServletResolver
         String timerName = "handleError:status=" + status;
         tracker.startTimer(timerName);
 
+        final ResourceResolver scriptResolver = this.getScriptResourceResolver();
         try {
             // find the error handler component
             Resource resource = getErrorResource(request);
@@ -415,11 +428,11 @@ public class SlingServletResolver
             ResourceCollector locationUtil = new ResourceCollector(String.valueOf(status),
                     ServletResolverConstants.ERROR_HANDLER_PATH, resource,
                     this.executionPaths);
-            Servlet servlet = getServletInternal(locationUtil, request);
+            Servlet servlet = getServletInternal(locationUtil, request, scriptResolver);
 
             // fall back to default servlet if none
             if (servlet == null) {
-                servlet = getDefaultErrorServlet(request, resource);
+                servlet = getDefaultErrorServlet(request, resource, scriptResolver);
             }
 
             // set the message properties
@@ -439,9 +452,7 @@ public class SlingServletResolver
             handleError(servlet, request, response);
 
         } finally {
-
             tracker.logTimer(timerName, "Error handler finished");
-
         }
     }
 
@@ -461,6 +472,7 @@ public class SlingServletResolver
         String timerName = "handleError:throwable=" + throwable.getClass().getName();
         tracker.startTimer(timerName);
 
+        final ResourceResolver scriptResolver = this.getScriptResourceResolver();
         try {
             // find the error handler component
             Servlet servlet = null;
@@ -472,14 +484,14 @@ public class SlingServletResolver
                 ResourceCollector locationUtil = new ResourceCollector(tClass.getSimpleName(),
                         ServletResolverConstants.ERROR_HANDLER_PATH, resource,
                         this.executionPaths);
-                servlet = getServletInternal(locationUtil, request);
+                servlet = getServletInternal(locationUtil, request, scriptResolver);
 
                 // go to the base class
                 tClass = tClass.getSuperclass();
             }
 
             if (servlet == null) {
-                servlet = getDefaultErrorServlet(request, resource);
+                servlet = getDefaultErrorServlet(request, resource, scriptResolver);
             }
 
             // set the message properties
@@ -492,13 +504,44 @@ public class SlingServletResolver
 
             handleError(servlet, request, response);
         } finally {
-
             tracker.logTimer(timerName, "Error handler finished");
-
         }
     }
 
     // ---------- internal helper ---------------------------------------------
+
+    private ResourceResolver getScriptResourceResolver() {
+        ResourceResolver scriptResolver = this.perThreadScriptResolver.get();
+        if ( scriptResolver == null ) {
+            // no per thread, let's use the shared one
+            synchronized ( this.sharedScriptResolver ) {
+                this.sharedScriptResolver.refresh();
+            }
+            scriptResolver = this.sharedScriptResolver;
+        }
+        return scriptResolver;
+    }
+
+    private final ThreadLocal<ResourceResolver> perThreadScriptResolver = new ThreadLocal<ResourceResolver>();
+
+    /**
+     * @see org.apache.sling.api.request.SlingRequestListener#onEvent(org.apache.sling.api.request.SlingRequestEvent)
+     */
+    public void onEvent(final SlingRequestEvent event) {
+        if ( event.getType() == SlingRequestEvent.EventType.EVENT_INIT ) {
+            try {
+                this.perThreadScriptResolver.set(this.sharedScriptResolver.clone(null));
+            } catch (final LoginException e) {
+                LOGGER.error("Unable to create new script resolver clone", e);
+            }
+        } else if ( event.getType() == SlingRequestEvent.EventType.EVENT_DESTROY ) {
+            final ResourceResolver resolver = this.perThreadScriptResolver.get();
+            if ( resolver != null ) {
+                this.perThreadScriptResolver.remove();
+                resolver.close();
+            }
+        }
+    }
 
     /**
      * Returns the resource of the given request to be used as the basis for
@@ -523,7 +566,8 @@ public class SlingServletResolver
      * using the provided ResourceResolver
      */
     private Servlet resolveServletInternal(final SlingHttpServletRequest request,
-            final String type) {
+            final String type,
+            final ResourceResolver resolver) {
         Servlet servlet = null;
 
         // first check whether the type of a resource is the absolute
@@ -531,7 +575,7 @@ public class SlingServletResolver
         if (type.charAt(0) == '/') {
             String scriptPath = ResourceUtil.normalize(type);
             if ( this.isPathAllowed(scriptPath) ) {
-                final Resource res = this.scriptResolver.getResource(scriptPath);
+                final Resource res = resolver.getResource(scriptPath);
                 if (res != null) {
                     servlet = res.adaptTo(Servlet.class);
                 }
@@ -549,7 +593,7 @@ public class SlingServletResolver
         if ( servlet == null ) {
             // the resource type is not absolute, so lets go for the deep search
             final ResourceCollector locationUtil = ResourceCollector.create(request, this.executionPaths, this.defaultExtensions);
-            servlet = getServletInternal(locationUtil, request);
+            servlet = getServletInternal(locationUtil, request, resolver);
 
             if (servlet != null && LOGGER.isDebugEnabled()) {
                 LOGGER.debug("getServlet returns servlet {}", RequestUtil.getServletName(servlet));
@@ -580,7 +624,8 @@ public class SlingServletResolver
      *         such servlet willing to handle the request could be found.
      */
     private Servlet getServletInternal(final AbstractResourceCollector locationUtil,
-            final SlingHttpServletRequest request) {
+            final SlingHttpServletRequest request,
+            final ResourceResolver resolver) {
         final Servlet scriptServlet = (this.cache != null ? this.cache.get(locationUtil) : null);
         if (scriptServlet != null) {
             if ( LOGGER.isDebugEnabled() ) {
@@ -589,7 +634,7 @@ public class SlingServletResolver
             return scriptServlet;
         }
 
-        final Collection<Resource> candidates = locationUtil.getServlets(this.scriptResolver);
+        final Collection<Resource> candidates = locationUtil.getServlets(resolver);
 
         if (LOGGER.isDebugEnabled()) {
             if (candidates.isEmpty()) {
@@ -676,7 +721,8 @@ public class SlingServletResolver
      */
     private Servlet getDefaultErrorServlet(
             final SlingHttpServletRequest request,
-            final Resource resource) {
+            final Resource resource,
+            final ResourceResolver resolver) {
 
         // find a default error handler according to the resource type
         // tree of the given resource
@@ -684,7 +730,7 @@ public class SlingServletResolver
             ServletResolverConstants.DEFAULT_ERROR_HANDLER_NAME,
             ServletResolverConstants.ERROR_HANDLER_PATH, resource,
             this.executionPaths);
-        final Servlet servlet = getServletInternal(locationUtil, request);
+        final Servlet servlet = getServletInternal(locationUtil, request, resolver);
         if (servlet != null) {
             return servlet;
         }
@@ -763,11 +809,10 @@ public class SlingServletResolver
             refs = new ArrayList<ServiceReference>(pendingServlets);
             pendingServlets.clear();
 
-            this.scriptResolver =
+            this.sharedScriptResolver =
                     resourceResolverFactory.getAdministrativeResourceResolver(this.createAuthenticationInfo(context.getProperties()));
-
-            servletResourceProviderFactory = new ServletResourceProviderFactory(servletRoot,
-                    this.scriptResolver.getSearchPath());
+            this.searchPaths = this.sharedScriptResolver.getSearchPath();
+            servletResourceProviderFactory = new ServletResourceProviderFactory(servletRoot, this.searchPaths);
 
             // register servlets immediately from now on
             this.context = context;
@@ -855,9 +900,9 @@ public class SlingServletResolver
             }
         }
 
-        if (this.scriptResolver != null) {
-            this.scriptResolver.close();
-            this.scriptResolver = null;
+        if (this.sharedScriptResolver != null) {
+            this.sharedScriptResolver.close();
+            this.sharedScriptResolver = null;
         }
 
         this.cache = null;
@@ -998,21 +1043,19 @@ public class SlingServletResolver
                 // bindings values provide factory added or removed: we always flush
                 flushCache = true;
             } else {
-                // this is a resource event
+                // this is a resource or resource provider event
 
                 // if the path of the event is a sub path of a search path
                 // we flush the whole cache
-                String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
-                if (path.contains(":")) {
-                    path = path.substring(path.indexOf(":") + 1);
-                }
-                final String[] searchPaths = this.scriptResolver.getSearchPath();
-                int index = 0;
-                while (!flushCache && index < searchPaths.length) {
-                    if (path.startsWith(searchPaths[index])) {
-                        flushCache = true;
+                final String path = (String) event.getProperty(SlingConstants.PROPERTY_PATH);
+                if ( path != null ) {
+                    int index = 0;
+                    while (!flushCache && index < searchPaths.length) {
+                        if (path.startsWith(this.searchPaths[index])) {
+                            flushCache = true;
+                        }
+                        index++;
                     }
-                    index++;
                 }
             }
             if (flushCache) {

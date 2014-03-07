@@ -83,6 +83,16 @@ public class SlingServletResolverTest {
             public <AdapterType> AdapterType adaptTo(Class<AdapterType> type) {
                 return null;
             }
+
+            @Override
+            public ResourceResolver clone(Map<String, Object> authenticationInfo)
+                    throws LoginException {
+                throw new LoginException("MockResourceResolver can't be cloned - excepted for this test!");
+            }
+
+            public void refresh() {
+                // nothing to do
+            }
         };
         mockResourceResolver.setSearchPath("/");
 
