@@ -25,7 +25,6 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Dictionary;
 import java.util.HashMap;
-
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
 import javax.servlet.Servlet;
@@ -477,10 +476,10 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             	result = false;
             } else {
             	// check whether redirect is requested by the resource parameter
-            	final String resource = getLoginResource(request, null);
+            	final String resource = AuthUtil.getLoginResource(request, null);
             	if (resource != null) {
             		try {
-            			response.sendRedirect(resource);
+                        AuthUtil.sendRedirect(request,response,resource,request.getParameterMap());
             		} catch (IOException ioe) {
             			log.error("Failed to send redirect to: " + resource, ioe);
             		}

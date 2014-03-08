@@ -18,22 +18,26 @@
  */
 package org.apache.sling.auth.form;
 
-import org.apache.sling.auth.form.FormReason;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class FormReasonTest extends TestCase {
+public class FormReasonTest {
 
+    @Test
     public void test_TIMEOUT() {
         assertEquals(FormReason.TIMEOUT,
             FormReason.valueOf(FormReason.TIMEOUT.name()));
     }
 
+    @Test
     public void test_INVALID_CREDENTIALS() {
         assertEquals(FormReason.INVALID_CREDENTIALS,
             FormReason.valueOf(FormReason.INVALID_CREDENTIALS.name()));
     }
 
+    @Test
     public void test_INVALID() {
         try {
             FormReason.valueOf("INVALID");
