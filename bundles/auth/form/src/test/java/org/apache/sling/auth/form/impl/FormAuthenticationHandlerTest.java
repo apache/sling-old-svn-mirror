@@ -18,21 +18,43 @@
  */
 package org.apache.sling.auth.form.impl;
 
+import static org.easymock.EasyMock.cmpEq;
+import static org.easymock.EasyMock.createMock;
+import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.expectLastCall;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
+import java.lang.reflect.Method;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import junit.framework.TestCase;
-
-import org.apache.sling.auth.form.impl.FormAuthenticationHandler;
+import org.apache.sling.api.auth.Authenticator;
+import org.apache.sling.auth.core.spi.AuthenticationInfo;
+import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
 import org.hamcrest.Description;
 import org.hamcrest.text.StringStartsWith;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.api.Action;
 import org.jmock.api.Invocation;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
+import org.powermock.api.easymock.PowerMock;
+import org.powermock.api.support.membermodification.MemberMatcher;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-public class FormAuthenticationHandlerTest extends TestCase {
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(FormAuthenticationHandler.class)
+public class FormAuthenticationHandlerTest {
 
+    @Test
     public void test_getTokenFile() {
         final File root = new File("bundle999").getAbsoluteFile();
         final SlingHomeAction slingHome = new SlingHomeAction();
@@ -49,7 +71,7 @@ public class FormAuthenticationHandlerTest extends TestCase {
 
                 // mock no data file support with file names starting with sl
                 allowing(bundleContext).getDataFile(
-                    with(new StringStartsWith("sl")));
+                        with(new StringStartsWith("sl")));
                 will(returnValue(null));
 
                 // mock data file support for any other name
@@ -85,6 +107,7 @@ public class FormAuthenticationHandlerTest extends TestCase {
         assertEquals(absFile, absFile0);
     }
 
+    @Test
     public void test_getUserid() {
         final FormAuthenticationHandler handler = new FormAuthenticationHandler();
         assertEquals(null, handler.getUserId(null));
@@ -93,6 +116,68 @@ public class FormAuthenticationHandlerTest extends TestCase {
         assertEquals(null, handler.getUserId("field0@field1"));
         assertEquals("field3", handler.getUserId("field0@field1@field3"));
         assertEquals("field3@field4", handler.getUserId("field0@field1@field3@field4"));
+    }
+
+    /**
+     * Test for SLING-3443 Parameter based redirection vulnerability in FormAuthenticationHandler
+     * @throws Exception PowerMock.expectPrivate throws Exception and UrlEncoder.encode
+     *                          throws UnsupportedEncodingException
+     * @since 1.0.5
+     */
+    @Test
+    public void testRedirectionAfterLogin() throws Exception {
+        // Create mocks
+        HttpServletRequest request = createMock(HttpServletRequest.class);
+        HttpServletResponse response = createMock(HttpServletResponse.class);
+        AuthenticationInfo authenticationInfo = createMock(AuthenticationInfo.class);
+
+        // Use PowerMock to mock private method
+        String methodName = "refreshAuthData";
+        FormAuthenticationHandler authenticationHandler = PowerMock.createPartialMock(FormAuthenticationHandler.class,
+                methodName);
+        Method[] methods = MemberMatcher.methods(FormAuthenticationHandler.class, methodName);
+        PowerMock.expectPrivate(authenticationHandler, methods[0], request, response, authenticationInfo);
+
+        // Mock the static method since we are just unit testing the authentication succeeded flow
+        PowerMock.mockStatic(DefaultAuthenticationFeedbackHandler.class);
+        expect(DefaultAuthenticationFeedbackHandler.handleRedirect(request, response)).andReturn(false);
+
+        // Mocks the Authenticator.LOGIN_RESOURCE attribute
+        String url = "http://www.blah.com";
+        expect(request.getAttribute(Authenticator.LOGIN_RESOURCE)).andReturn(url);
+
+        // Mocks the request parameters
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put(Authenticator.LOGIN_RESOURCE, url);
+        expect(request.getParameterMap()).andReturn(map);
+
+        // Mocks the HttpServletRequest and HttpServletResponse object
+        expect(request.getMethod()).andReturn("POST");
+        expect(request.getRequestURI()).andReturn("http://blah/blah/j_security_check");
+        String contextPath = "/blah";
+        expect(request.getContextPath()).andReturn(contextPath).anyTimes();
+        expect(response.isCommitted()).andReturn(false);
+
+        // Mocking method with void return type
+        response.resetBuffer();
+        expectLastCall().once();
+
+        // The request should be redirected to a URL encoded Authenticator.LOGIN_RESOURCE parameter rather than the
+        // passing the parameter directly
+        response.sendRedirect(cmpEq(contextPath + "?" + Authenticator.LOGIN_RESOURCE + "=" +
+                URLEncoder.encode(url, "UTF-8")));
+
+        // Replay the mocks
+        replay(request);
+        replay(response);
+        replay(authenticationInfo);
+        replay(authenticationHandler);
+
+        // Test the method
+        authenticationHandler.authenticationSucceeded(request, response, authenticationInfo);
+
+        // Verify mocks
+        verify(request, response, authenticationInfo, authenticationHandler);
     }
 
     /**
