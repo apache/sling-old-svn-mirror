@@ -25,6 +25,14 @@ package org.apache.sling.resourceresolver.impl.helper;
  */
 public interface FeaturesHolder {
 
+    /** This holder always returns null */
+    FeaturesHolder EMPTY_HOLDER = new FeaturesHolder() {
+
+        public Object getFeatures() {
+            return null;
+        }
+    };
+
     /**
      * @return The {@code Features} service if available, {@code null} otherwise
      */

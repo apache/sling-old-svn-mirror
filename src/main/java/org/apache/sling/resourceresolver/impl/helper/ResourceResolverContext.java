@@ -33,6 +33,7 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.api.resource.ResourceUtil;
 import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.featureflags.FeatureConstants;
 import org.apache.sling.featureflags.Features;
 import org.apache.sling.resourceresolver.impl.ResourceAccessSecurityTracker;
 
@@ -88,7 +89,19 @@ public class ResourceResolverContext {
         this.isAdmin = isAdmin;
         this.originalAuthInfo = originalAuthInfo;
         this.resourceAccessSecurityTracker = resourceAccessSecurityTracker;
-        this.featuresHolder = featuresHolder;
+        // check if features are enabled
+        boolean featuresEnabled = false;
+        if ( originalAuthInfo != null ) {
+            final Object featuresEnabledAttr = originalAuthInfo.get(FeatureConstants.RESOLVER_ATTR_FEATURES_ENABLED);
+            if ( featuresEnabledAttr != null && featuresEnabledAttr instanceof Boolean ) {
+                featuresEnabled = (Boolean)featuresEnabledAttr;
+            }
+        }
+        if ( featuresEnabled ) {
+            this.featuresHolder = featuresHolder;
+        } else {
+            this.featuresHolder = FeaturesHolder.EMPTY_HOLDER;
+        }
     }
 
     /**
