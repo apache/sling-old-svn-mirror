@@ -228,6 +228,7 @@ public class ParameterSupport {
             // SLING-152 Get parameters from the servlet Container
             ParameterMap parameters = new ParameterMap();
 
+            final boolean isPost = "POST".equals(this.getServletRequest().getMethod());
             // Query String
             final String query = getServletRequest().getQueryString();
             if (query != null) {
@@ -241,10 +242,12 @@ public class ParameterSupport {
                 } catch (IOException e) {
                     this.log.error("getRequestParameterMapInternal: Error parsing request", e);
                 }
+            } else if (!isPost) {
+                getContainerParameters(parameters, encoding);
             }
 
             // POST requests
-            if ("POST".equals(this.getServletRequest().getMethod())) {
+            if (isPost) {
                 // WWW URL Form Encoded POST
                 if (isWWWFormEncodedContent(this.getServletRequest())) {
                     try {
@@ -275,6 +278,21 @@ public class ParameterSupport {
         return this.postParameterMap;
     }
 
+    private void getContainerParameters(final ParameterMap parameters, final String encoding) {
+        final Map<?, ?> pMap = getServletRequest().getParameterMap();
+        for (Map.Entry<?, ?> entry : pMap.entrySet()) {
+
+            final String name = (String) entry.getKey();
+            final String[] values = (String[]) entry.getValue();
+
+            for (int i = 0; i < values.length; i++) {
+                parameters.addParameter(new ContainerRequestParameter(
+                    name, values[i], encoding), false);
+            }
+
+        }
+    }
+
     private static final boolean isWWWFormEncodedContent(HttpServletRequest request) {
         String contentType = request.getContentType();
         if (contentType == null) {
@@ -303,6 +321,7 @@ public class ParameterSupport {
             ParameterSupport.location));
 
         RequestContext rc = new ServletRequestContext(this.getServletRequest()) {
+            @Override
             public String getCharacterEncoding() {
                 String enc = super.getCharacterEncoding();
                 return (enc != null) ? enc : Util.ENCODING_DIRECT;
