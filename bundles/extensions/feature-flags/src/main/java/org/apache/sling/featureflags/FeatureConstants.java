@@ -16,26 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.sling.resourceresolver.impl.helper;
+package org.apache.sling.featureflags;
 
-/**
- * The <code>FeaturesHolder</code> interface is an API to provide dynamic
- * access to the Features service without having to hold on to the
- * Features instance directly.
- */
-public interface FeaturesHolder {
 
-    /** This holder always returns null */
-    FeaturesHolder EMPTY_HOLDER = new FeaturesHolder() {
-
-        public Object getFeatures() {
-            return null;
-        }
-    };
+public abstract class FeatureConstants {
 
     /**
-     * @return The {@code Features} service if available, {@code null} otherwise
+     * The name of the resource resolver attribute which is set if the
+     * feature flag support should be enabled in the resource resolver.
+     * The value of this property should be of type Boolean. The default
+     * is <code>false</code>
      */
-    public Object getFeatures();
-
+    public static final String RESOLVER_ATTR_FEATURES_ENABLED = "sling.resourceresolver.feature";
 }
