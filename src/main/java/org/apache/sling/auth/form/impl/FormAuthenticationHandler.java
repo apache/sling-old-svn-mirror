@@ -37,6 +37,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
@@ -51,7 +52,6 @@ import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
 import org.apache.sling.auth.core.AuthConstants;
 import org.apache.sling.auth.core.AuthUtil;
-import org.apache.sling.auth.core.spi.AbstractAuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationHandler;
 import org.apache.sling.auth.core.spi.AuthenticationInfo;
 import org.apache.sling.auth.core.spi.DefaultAuthenticationFeedbackHandler;
@@ -76,7 +76,7 @@ import org.slf4j.LoggerFactory;
     @Property(name = AuthenticationHandler.TYPE_PROPERTY, value = HttpServletRequest.FORM_AUTH, propertyPrivate = true),
     @Property(name = Constants.SERVICE_RANKING, intValue = 0, propertyPrivate = false) })
 @Service
-public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
+public class FormAuthenticationHandler extends DefaultAuthenticationFeedbackHandler implements AuthenticationHandler {
 
     /**
      * The name of the parameter providing the login form URL.
@@ -322,7 +322,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                     // so that the invalid cookie isn't present on the authN
                     // operation.
                     authStorage.clear(request, response);
-                    if (this.loginAfterExpire || isValidateRequest(request)) {
+                    if (this.loginAfterExpire || AuthUtil.isValidateRequest(request)) {
                         // signal the requestCredentials method a previous login
                         // failure
                         request.setAttribute(FAILURE_REASON, FormReason.TIMEOUT);
@@ -355,13 +355,13 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             return false;
         }
 
-        //check the referer to see if the request is for this handler
+        //check the referrer to see if the request is for this handler
         if (!AuthUtil.checkReferer(request, loginForm)) {
         	//not for this handler, so return
         	return false;
         }
 
-        final String resource = setLoginResourceAttribute(request,
+        final String resource = AuthUtil.setLoginResourceAttribute(request,
             request.getRequestURI());
 
         if (includeLoginForm && (resourceResolverFactory != null)) {
@@ -401,7 +401,7 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         }
 
         try {
-            sendRedirect(request, response, loginForm, params);
+            AuthUtil.sendRedirect(request, response, loginForm, params);
         } catch (IOException e) {
             log.error("Failed to redirect to the login form " + loginForm, e);
         }
@@ -477,12 +477,25 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
             	result = false;
             } else {
             	// check whether redirect is requested by the resource parameter
-            	final String resource = getLoginResource(request, null);
-            	if (resource != null) {
+            	final String targetResource = AuthUtil.getLoginResource(request, null);
+            	if (targetResource != null) {
             		try {
-            			response.sendRedirect(resource);
+            	        if (response.isCommitted()) {
+            	            throw new IllegalStateException("Response is already committed");
+            	        }
+            	        response.resetBuffer();
+
+            	        StringBuilder b = new StringBuilder();
+            	        if (AuthUtil.isRedirectValid(request, targetResource)) {
+            	            b.append(targetResource);
+            	        } else if (request.getContextPath().length() == 0) {
+            	            b.append("/");
+            	        } else {
+            	            b.append(request.getContextPath());
+            	        }
+            	        response.sendRedirect(b.toString());
             		} catch (IOException ioe) {
-            			log.error("Failed to send redirect to: " + resource, ioe);
+            			log.error("Failed to send redirect to: " + targetResource, ioe);
             		}
 
             		// terminate request, all done
@@ -593,8 +606,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
                 // as a POST request to the j_security_check page (unless
                 // the j_validate parameter is set); but only if this is not
                 // a validation request
-                if (!isValidateRequest(request)) {
-                    setLoginResourceAttribute(request, request.getContextPath());
+                if (!AuthUtil.isValidateRequest(request)) {
+                    AuthUtil.setLoginResourceAttribute(request, request.getContextPath());
                 }
             }
         }
@@ -731,8 +744,8 @@ public class FormAuthenticationHandler extends AbstractAuthenticationHandler {
         this.loginAfterExpire = OsgiUtil.toBoolean(properties.get(PAR_LOGIN_AFTER_EXPIRE), DEFAULT_LOGIN_AFTER_EXPIRE);
     }
 
-    protected void deactivate(
-            @SuppressWarnings("unused") ComponentContext componentContext) {
+    @Deactivate
+    protected void deactivate() {
         if (loginModule != null) {
             loginModule.unregister();
             loginModule = null;

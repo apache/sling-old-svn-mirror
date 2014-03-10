@@ -18,23 +18,24 @@
  */
 package org.apache.sling.auth.form;
 
-import org.apache.sling.auth.form.FormReason;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
-public class FormReasonTest extends TestCase {
+public class FormReasonTest {
 
-    public void test_TIMEOUT() {
+    @Test public void test_TIMEOUT() {
         assertEquals(FormReason.TIMEOUT,
             FormReason.valueOf(FormReason.TIMEOUT.name()));
     }
 
-    public void test_INVALID_CREDENTIALS() {
+    @Test public void test_INVALID_CREDENTIALS() {
         assertEquals(FormReason.INVALID_CREDENTIALS,
             FormReason.valueOf(FormReason.INVALID_CREDENTIALS.name()));
     }
 
-    public void test_INVALID() {
+    @Test public void test_INVALID() {
         try {
             FormReason.valueOf("INVALID");
             fail("unexpected result getting value of an invalid constant");
