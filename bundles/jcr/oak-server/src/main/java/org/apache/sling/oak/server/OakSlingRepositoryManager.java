@@ -86,6 +86,7 @@ import org.apache.sling.jcr.base.AbstractSlingRepositoryManager;
 import org.apache.sling.serviceusermapping.ServiceUserMapper;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
@@ -152,7 +153,7 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
 
     private ComponentContext componentContext;
 
-    private Map<ServiceReference, NamespaceMapper> namespaceMapperRefs = new TreeMap<ServiceReference, NamespaceMapper>();
+    private Map<Long, NamespaceMapper> namespaceMapperRefs = new TreeMap<Long, NamespaceMapper>();
 
     private NamespaceMapper[] namespaceMappers;
 
@@ -299,21 +300,20 @@ public class OakSlingRepositoryManager extends AbstractSlingRepositoryManager {
     }
 
     @SuppressWarnings("unused")
-    private void bindNamespaceMapper(final ServiceReference ref) {
+    private void bindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
         synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.put(ref,
-                (NamespaceMapper) this.getComponentContext().locateService("namespaceMapper", ref));
+            this.namespaceMapperRefs.put((Long)props.get(Constants.SERVICE_ID), namespaceMapper);
             this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                new NamespaceMapper[this.namespaceMapperRefs.values().size()]);
+                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
         }
     }
 
     @SuppressWarnings("unused")
-    private void unbindNamespaceMapper(final ServiceReference ref) {
+    private void unbindNamespaceMapper(final NamespaceMapper namespaceMapper, final Map<String, Object> props) {
         synchronized (this.namespaceMapperRefs) {
-            this.namespaceMapperRefs.remove(ref);
+            this.namespaceMapperRefs.remove(props.get(Constants.SERVICE_ID));
             this.namespaceMappers = this.namespaceMapperRefs.values().toArray(
-                new NamespaceMapper[this.namespaceMapperRefs.values().size()]);
+                    new NamespaceMapper[this.namespaceMapperRefs.size()]);
         }
     }
 
