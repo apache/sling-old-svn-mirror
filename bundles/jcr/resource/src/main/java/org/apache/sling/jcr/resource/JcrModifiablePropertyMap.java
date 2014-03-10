@@ -180,7 +180,9 @@ public final class JcrModifiablePropertyMap
                             node.setProperty(name, entry.values[0]);
                         }
                     } else {
-                        node.setProperty(name, (String)null);
+                        if ( node.hasProperty(name) ) {
+                            node.getProperty(name).remove();
+                        }
                     }
                 }
             }

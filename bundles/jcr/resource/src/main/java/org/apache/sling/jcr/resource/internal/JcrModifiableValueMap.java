@@ -686,7 +686,9 @@ public final class JcrModifiableValueMap
         this.valueCache.remove(key);
         try {
             final String name = escapeKeyName(key);
-            this.node.setProperty(name, (String)null);
+            if ( node.hasProperty(name) ) {
+                node.getProperty(name).remove();
+            }
         } catch (final RepositoryException re) {
             throw new IllegalArgumentException("Value for key " + key + " can't be removed from node.", re);
         }
